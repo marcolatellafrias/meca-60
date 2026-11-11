@@ -1,0 +1,514 @@
+[gd_resource type="Resource" script_class="HeadForms" load_steps=84 format=3]
+
+[ext_resource type="Script" path="res://game/character/archetypes/head_cut.gd" id="1_83r40"]
+[ext_resource type="Script" path="res://game/character/archetypes/head_form.gd" id="2_ky2jp"]
+[ext_resource type="Script" path="res://game/character/archetypes/head_forms.gd" id="3_uyiw5"]
+
+[sub_resource type="Resource" id="Resource_83r40"]
+script = ExtResource("1_83r40")
+at = 0.125
+width = 0.13499999
+forward = 0.0105
+
+[sub_resource type="Resource" id="Resource_ky2jp"]
+script = ExtResource("1_83r40")
+at = 0.25
+width = 0.14
+forward = 0.009
+
+[sub_resource type="Resource" id="Resource_uyiw5"]
+script = ExtResource("1_83r40")
+at = 0.375
+width = 0.145
+forward = 0.0075000003
+
+[sub_resource type="Resource" id="Resource_5if7t"]
+script = ExtResource("1_83r40")
+width = 0.15
+forward = 0.006
+
+[sub_resource type="Resource" id="Resource_81bo5"]
+script = ExtResource("1_83r40")
+at = 0.625
+width = 0.155
+forward = 0.0045
+
+[sub_resource type="Resource" id="Resource_quo5o"]
+script = ExtResource("1_83r40")
+at = 0.75
+forward = 0.003
+
+[sub_resource type="Resource" id="Resource_2tm56"]
+script = ExtResource("1_83r40")
+at = 0.875
+width = 0.165
+forward = 0.0015
+
+[sub_resource type="Resource" id="Resource_t51ck"]
+script = ExtResource("2_ky2jp")
+name = "huevo con mentón adelante"
+height = 0.1
+bottom_width = 0.13
+bottom_forward = 0.012
+bottom_dome = 0.06
+top_width = 0.17
+top_dome = 0.08
+mouth_drop = 0.21
+mouth_width = 0.62
+cuts = Array[ExtResource("1_83r40")]([SubResource("Resource_83r40"), SubResource("Resource_ky2jp"), SubResource("Resource_uyiw5"), SubResource("Resource_5if7t"), SubResource("Resource_81bo5"), SubResource("Resource_quo5o"), SubResource("Resource_2tm56")])
+
+[sub_resource type="Resource" id="Resource_a0kj1"]
+script = ExtResource("1_83r40")
+at = 0.125
+width = 0.13499999
+forward = 0.011500005
+
+[sub_resource type="Resource" id="Resource_61cpk"]
+script = ExtResource("1_83r40")
+at = 0.25
+width = 0.14
+forward = 0.009
+
+[sub_resource type="Resource" id="Resource_decl3"]
+script = ExtResource("1_83r40")
+active = true
+at = 0.375
+width = 0.168
+
+[sub_resource type="Resource" id="Resource_o7yyp"]
+script = ExtResource("1_83r40")
+width = 0.15
+forward = 0.003999997
+
+[sub_resource type="Resource" id="Resource_q1fb7"]
+script = ExtResource("1_83r40")
+at = 0.625
+width = 0.155
+forward = 0.0014999994
+
+[sub_resource type="Resource" id="Resource_3svj0"]
+script = ExtResource("1_83r40")
+at = 0.75
+forward = -0.0009999982
+
+[sub_resource type="Resource" id="Resource_1raqw"]
+script = ExtResource("1_83r40")
+at = 0.875
+width = 0.165
+forward = -0.0035000034
+
+[sub_resource type="Resource" id="Resource_uvvoo"]
+script = ExtResource("2_ky2jp")
+name = "pómulos alineados, un poco más larga"
+height = 0.13
+flat_front = true
+bottom_width = 0.13
+bottom_forward = 0.014
+top_width = 0.17
+top_dome = 0.08
+mouth_width = 0.62
+atlas = 0.36
+cuts = Array[ExtResource("1_83r40")]([SubResource("Resource_a0kj1"), SubResource("Resource_61cpk"), SubResource("Resource_decl3"), SubResource("Resource_o7yyp"), SubResource("Resource_q1fb7"), SubResource("Resource_3svj0"), SubResource("Resource_1raqw")])
+
+[sub_resource type="Resource" id="Resource_0jogp"]
+script = ExtResource("1_83r40")
+at = 0.125
+width = 0.13499999
+forward = 0.011500005
+
+[sub_resource type="Resource" id="Resource_lqum5"]
+script = ExtResource("1_83r40")
+active = true
+at = 0.25
+width = 0.166
+
+[sub_resource type="Resource" id="Resource_4v6ob"]
+script = ExtResource("1_83r40")
+at = 0.375
+width = 0.145
+forward = 0.006500002
+
+[sub_resource type="Resource" id="Resource_u3c32"]
+script = ExtResource("1_83r40")
+width = 0.15
+forward = 0.003999997
+
+[sub_resource type="Resource" id="Resource_momd3"]
+script = ExtResource("1_83r40")
+at = 0.625
+width = 0.155
+forward = 0.0014999994
+
+[sub_resource type="Resource" id="Resource_1nytx"]
+script = ExtResource("1_83r40")
+at = 0.75
+forward = -0.0009999982
+
+[sub_resource type="Resource" id="Resource_3i7b4"]
+script = ExtResource("1_83r40")
+at = 0.875
+width = 0.165
+forward = -0.0035000034
+
+[sub_resource type="Resource" id="Resource_jx5ko"]
+script = ExtResource("2_ky2jp")
+name = "pómulos alineados, larga, pómulos bajos"
+height = 0.16
+flat_front = true
+bottom_width = 0.13
+bottom_forward = 0.014
+top_width = 0.17
+top_dome = 0.08
+atlas = 0.31
+cuts = Array[ExtResource("1_83r40")]([SubResource("Resource_0jogp"), SubResource("Resource_lqum5"), SubResource("Resource_4v6ob"), SubResource("Resource_u3c32"), SubResource("Resource_momd3"), SubResource("Resource_1nytx"), SubResource("Resource_3i7b4")])
+
+[sub_resource type="Resource" id="Resource_twsbg"]
+script = ExtResource("1_83r40")
+at = 0.125
+width = 0.13499999
+forward = 0.011500005
+
+[sub_resource type="Resource" id="Resource_0k8c6"]
+script = ExtResource("1_83r40")
+at = 0.25
+width = 0.14
+forward = 0.009
+
+[sub_resource type="Resource" id="Resource_cvpjk"]
+script = ExtResource("1_83r40")
+active = true
+at = 0.375
+width = 0.168
+
+[sub_resource type="Resource" id="Resource_plj1p"]
+script = ExtResource("1_83r40")
+width = 0.15
+forward = 0.003999997
+
+[sub_resource type="Resource" id="Resource_fh1qw"]
+script = ExtResource("1_83r40")
+at = 0.625
+width = 0.155
+forward = 0.0014999994
+
+[sub_resource type="Resource" id="Resource_f0mhj"]
+script = ExtResource("1_83r40")
+at = 0.75
+forward = -0.0009999982
+
+[sub_resource type="Resource" id="Resource_syw4q"]
+script = ExtResource("1_83r40")
+at = 0.875
+width = 0.165
+forward = -0.0035000034
+
+[sub_resource type="Resource" id="Resource_kbktm"]
+script = ExtResource("2_ky2jp")
+name = "pómulos alineados, larga, mentón largo"
+height = 0.15
+flat_front = true
+bottom_width = 0.13
+bottom_forward = 0.014
+bottom_dome = 0.07
+top_width = 0.17
+top_dome = 0.08
+atlas = 0.41
+cuts = Array[ExtResource("1_83r40")]([SubResource("Resource_twsbg"), SubResource("Resource_0k8c6"), SubResource("Resource_cvpjk"), SubResource("Resource_plj1p"), SubResource("Resource_fh1qw"), SubResource("Resource_f0mhj"), SubResource("Resource_syw4q")])
+
+[sub_resource type="Resource" id="Resource_t8sk6"]
+script = ExtResource("1_83r40")
+at = 0.125
+width = 0.155625
+
+[sub_resource type="Resource" id="Resource_0xr30"]
+script = ExtResource("1_83r40")
+at = 0.25
+width = 0.15625
+
+[sub_resource type="Resource" id="Resource_ofbtm"]
+script = ExtResource("1_83r40")
+at = 0.375
+width = 0.156875
+
+[sub_resource type="Resource" id="Resource_4xp7g"]
+script = ExtResource("1_83r40")
+width = 0.1575
+
+[sub_resource type="Resource" id="Resource_v1w8k"]
+script = ExtResource("1_83r40")
+at = 0.625
+width = 0.158125
+
+[sub_resource type="Resource" id="Resource_w8wtr"]
+script = ExtResource("1_83r40")
+at = 0.75
+width = 0.15875
+
+[sub_resource type="Resource" id="Resource_un0b6"]
+script = ExtResource("1_83r40")
+at = 0.875
+width = 0.159375
+
+[sub_resource type="Resource" id="Resource_i80lg"]
+script = ExtResource("2_ky2jp")
+name = "redonda, abajo 6 cm"
+height = 0.07
+bottom_width = 0.155
+bottom_dome = 0.06
+top_dome = 0.09
+atlas = 0.38
+cuts = Array[ExtResource("1_83r40")]([SubResource("Resource_t8sk6"), SubResource("Resource_0xr30"), SubResource("Resource_ofbtm"), SubResource("Resource_4xp7g"), SubResource("Resource_v1w8k"), SubResource("Resource_w8wtr"), SubResource("Resource_un0b6")])
+
+[sub_resource type="Resource" id="Resource_mrw8v"]
+script = ExtResource("1_83r40")
+at = 0.125
+width = 0.155625
+
+[sub_resource type="Resource" id="Resource_d2hgq"]
+script = ExtResource("1_83r40")
+at = 0.25
+width = 0.15625
+
+[sub_resource type="Resource" id="Resource_4ho1c"]
+script = ExtResource("1_83r40")
+at = 0.375
+width = 0.156875
+
+[sub_resource type="Resource" id="Resource_u4jnl"]
+script = ExtResource("1_83r40")
+width = 0.1575
+
+[sub_resource type="Resource" id="Resource_7thj1"]
+script = ExtResource("1_83r40")
+at = 0.625
+width = 0.158125
+
+[sub_resource type="Resource" id="Resource_rgrps"]
+script = ExtResource("1_83r40")
+at = 0.75
+width = 0.15875
+
+[sub_resource type="Resource" id="Resource_48l8g"]
+script = ExtResource("1_83r40")
+at = 0.875
+width = 0.159375
+
+[sub_resource type="Resource" id="Resource_s7a87"]
+script = ExtResource("2_ky2jp")
+name = "redonda, abajo 4,5 cm"
+height = 0.07
+bottom_width = 0.155
+bottom_dome = 0.045
+top_dome = 0.09
+mouth_drop = 0.195
+mouth_width = 0.47
+eye_apart = 0.165
+eye_size = 0.78
+atlas = 0.25
+cuts = Array[ExtResource("1_83r40")]([SubResource("Resource_mrw8v"), SubResource("Resource_d2hgq"), SubResource("Resource_4ho1c"), SubResource("Resource_u4jnl"), SubResource("Resource_7thj1"), SubResource("Resource_rgrps"), SubResource("Resource_48l8g")])
+
+[sub_resource type="Resource" id="Resource_u56vu"]
+script = ExtResource("1_83r40")
+at = 0.125
+width = 0.154375
+
+[sub_resource type="Resource" id="Resource_nywqr"]
+script = ExtResource("1_83r40")
+at = 0.25
+width = 0.15375
+
+[sub_resource type="Resource" id="Resource_ls6b2"]
+script = ExtResource("1_83r40")
+at = 0.375
+width = 0.153125
+
+[sub_resource type="Resource" id="Resource_cuq7e"]
+script = ExtResource("1_83r40")
+width = 0.1525
+
+[sub_resource type="Resource" id="Resource_lnij4"]
+script = ExtResource("1_83r40")
+at = 0.625
+width = 0.151875
+
+[sub_resource type="Resource" id="Resource_1xjwo"]
+script = ExtResource("1_83r40")
+at = 0.75
+width = 0.15125
+
+[sub_resource type="Resource" id="Resource_dmyuv"]
+script = ExtResource("1_83r40")
+at = 0.875
+width = 0.150625
+
+[sub_resource type="Resource" id="Resource_qfgyi"]
+script = ExtResource("2_ky2jp")
+name = "redonda, abajo 6, arriba 15"
+height = 0.07
+bottom_width = 0.155
+bottom_dome = 0.06
+top_width = 0.15
+top_dome = 0.09
+mouth_drop = 0.205
+atlas = 0.26
+cuts = Array[ExtResource("1_83r40")]([SubResource("Resource_u56vu"), SubResource("Resource_nywqr"), SubResource("Resource_ls6b2"), SubResource("Resource_cuq7e"), SubResource("Resource_lnij4"), SubResource("Resource_1xjwo"), SubResource("Resource_dmyuv")])
+
+[sub_resource type="Resource" id="Resource_34yvy"]
+script = ExtResource("1_83r40")
+at = 0.125
+width = 0.166875
+
+[sub_resource type="Resource" id="Resource_lwx7o"]
+script = ExtResource("1_83r40")
+at = 0.25
+width = 0.16375
+
+[sub_resource type="Resource" id="Resource_p6i53"]
+script = ExtResource("1_83r40")
+at = 0.375
+width = 0.160625
+
+[sub_resource type="Resource" id="Resource_xj65h"]
+script = ExtResource("1_83r40")
+width = 0.1575
+
+[sub_resource type="Resource" id="Resource_aq6p4"]
+script = ExtResource("1_83r40")
+active = true
+at = 0.625
+width = 0.17
+
+[sub_resource type="Resource" id="Resource_htrdp"]
+script = ExtResource("1_83r40")
+at = 0.75
+width = 0.15125
+
+[sub_resource type="Resource" id="Resource_qilvt"]
+script = ExtResource("1_83r40")
+at = 0.875
+width = 0.148125
+
+[sub_resource type="Resource" id="Resource_mobwm"]
+script = ExtResource("2_ky2jp")
+name = "pera recta abajo 17, corte al 62 %"
+height = 0.11
+bottom_width = 0.17
+top_width = 0.145
+atlas = 0.23
+cuts = Array[ExtResource("1_83r40")]([SubResource("Resource_34yvy"), SubResource("Resource_lwx7o"), SubResource("Resource_p6i53"), SubResource("Resource_xj65h"), SubResource("Resource_aq6p4"), SubResource("Resource_htrdp"), SubResource("Resource_qilvt")])
+
+[sub_resource type="Resource" id="Resource_31flo"]
+script = ExtResource("1_83r40")
+at = 0.125
+width = 0.166875
+
+[sub_resource type="Resource" id="Resource_x2piw"]
+script = ExtResource("1_83r40")
+at = 0.25
+width = 0.16375
+
+[sub_resource type="Resource" id="Resource_376do"]
+script = ExtResource("1_83r40")
+at = 0.375
+width = 0.160625
+
+[sub_resource type="Resource" id="Resource_wstfr"]
+script = ExtResource("1_83r40")
+width = 0.1575
+
+[sub_resource type="Resource" id="Resource_fxa8m"]
+script = ExtResource("1_83r40")
+active = true
+at = 0.625
+width = 0.17
+
+[sub_resource type="Resource" id="Resource_benj8"]
+script = ExtResource("1_83r40")
+at = 0.75
+width = 0.15125
+
+[sub_resource type="Resource" id="Resource_pb0hg"]
+script = ExtResource("1_83r40")
+at = 0.875
+width = 0.148125
+
+[sub_resource type="Resource" id="Resource_yxufj"]
+script = ExtResource("2_ky2jp")
+name = "pera recta abajo 17, corte al 62 %"
+height = 0.11
+bottom_width = 0.17
+top_width = 0.145
+mouth_drop = 0.185
+cuts = Array[ExtResource("1_83r40")]([SubResource("Resource_31flo"), SubResource("Resource_x2piw"), SubResource("Resource_376do"), SubResource("Resource_wstfr"), SubResource("Resource_fxa8m"), SubResource("Resource_benj8"), SubResource("Resource_pb0hg")])
+
+[sub_resource type="Resource" id="Resource_5e0my"]
+script = ExtResource("1_83r40")
+at = 0.125
+width = 0.13499999
+forward = 0.011500005
+
+[sub_resource type="Resource" id="Resource_vcjhn"]
+script = ExtResource("1_83r40")
+active = true
+at = 0.25
+width = 0.165
+
+[sub_resource type="Resource" id="Resource_h737c"]
+script = ExtResource("1_83r40")
+at = 0.375
+width = 0.145
+forward = 0.006500002
+
+[sub_resource type="Resource" id="Resource_o53xd"]
+script = ExtResource("1_83r40")
+width = 0.15
+forward = 0.003999997
+
+[sub_resource type="Resource" id="Resource_m5py5"]
+script = ExtResource("1_83r40")
+at = 0.625
+width = 0.155
+forward = 0.0014999994
+
+[sub_resource type="Resource" id="Resource_wj31v"]
+script = ExtResource("1_83r40")
+at = 0.75
+width = 0.16
+forward = -0.0009999982
+
+[sub_resource type="Resource" id="Resource_m16ti"]
+script = ExtResource("1_83r40")
+at = 0.875
+width = 0.165
+forward = -0.0035000034
+
+[sub_resource type="Resource" id="Resource_deaj3"]
+script = ExtResource("2_ky2jp")
+name = "pómulos alineados, más abajo"
+height = 0.1
+flat_front = true
+bottom_width = 0.13
+bottom_forward = 0.014
+top_width = 0.17
+top_dome = 0.08
+mouth_drop = 0.21000000000000002
+mouth_width = 0.6000000000000001
+eye_apart = 0.18
+eye_size = 0.94
+atlas = 0.3
+cuts = Array[ExtResource("1_83r40")]([SubResource("Resource_5e0my"), SubResource("Resource_vcjhn"), SubResource("Resource_h737c"), SubResource("Resource_o53xd"), SubResource("Resource_m5py5"), SubResource("Resource_wj31v"), SubResource("Resource_m16ti")])
+
+[resource]
+script = ExtResource("3_uyiw5")
+by_slot = {
+0: SubResource("Resource_t51ck"),
+1: SubResource("Resource_deaj3"),
+3: SubResource("Resource_uvvoo"),
+4: SubResource("Resource_jx5ko"),
+5: SubResource("Resource_kbktm"),
+6: SubResource("Resource_i80lg"),
+7: SubResource("Resource_s7a87"),
+8: SubResource("Resource_qfgyi"),
+9: SubResource("Resource_mobwm"),
+24: SubResource("Resource_yxufj")
+}

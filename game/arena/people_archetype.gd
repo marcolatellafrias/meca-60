@@ -1,0 +1,78 @@
+class_name PeopleArchetype
+extends SeededArchetype
+
+## UNA PERSONA DE CHARACTER-PARAMETRIC en su parcela: el personaje de allá entero (esqueleto, cuerpo, cara, cápsula
+## física, equilibrio y muñeco), traído al proyecto (ver game/character_port/LEEME.md). Uno por arquetipo, en la fila
+## Personajes, parados; se los empuja y se caen como allá, y se levantan solos (ver CharacterGetUp). Para ver la escala
+## al lado de la meca y que reaccionen con el mismo sistema que la meca de equilibrio (lo pidió el usuario el
+## 11/11/2026). J, K y L tiran bolas como en la parcela de la meca de equilibrio (ver TestBall).
+##
+## Sin el genérico (el usuario no lo quiere ver); el gordo atlético sí. Sin ropa, como la fila de allá.
+
+const PLAYER_SCENE := preload("res://game/character/player.tscn")
+const FOOTPRINT := Vector2(4.5, 4.5)
+## El orden de la fila, el mismo que allá, sin el genérico.
+const ROW_ORDER: Array[EntityArchetype.Archetype] = [EntityArchetype.Archetype.fat_man, EntityArchetype.Archetype.buff,
+	EntityArchetype.Archetype.lanky, EntityArchetype.Archetype.kid, EntityArchetype.Archetype.old,
+	EntityArchetype.Archetype.fat_athletic]
+
+var archetype := EntityArchetype.Archetype.fat_man
+
+
+static func catalogue() -> Array[SeededArchetype]:
+	var out: Array[SeededArchetype] = []
+	for each in ROW_ORDER:
+		var row := PeopleArchetype.new()
+		row.archetype = each
+		row.display_name = String(EntityArchetype.Archetype.keys()[each]).capitalize()
+		out.append(row)
+	return out
+
+
+func max_footprint() -> Vector2:
+	return FOOTPRINT
+
+
+func describe(_seed_value: int) -> PackedStringArray:
+	var arch := EntityArchetype.create(archetype)
+	return PackedStringArray([
+		"el personaje de character-parametric, sin ropa",
+		"%d kg · se levanta a los %.1f s de quedar quieto" % [roundi(arch.weight), arch.time_to_standup],
+	])
+
+
+func build(_seed_value: int, parent: Node3D) -> Node3D:
+	var root := Node3D.new()
+	root.name = "Persona"
+	parent.add_child(root)
+	# Mirando hacia donde uno llega (−X).
+	PeopleArchetype.spawn(root, archetype, root.global_position, PI * 0.5)
+	return root
+
+
+func parcel_options() -> Array[Dictionary]:
+	return TestBall.parcel_options()
+
+
+## UNA PERSONA DE CHARACTER-PARAMETRIC parada en `at` (en el mundo), mirando a `yaw`, colgada de `parent`: como la arma
+## la fila de personajes de allá (CharacterArchetype.build), pero de las que se simulan (`CharacterKind.npc`: se la
+## choca y se cae) y con quien la levante (CharacterGetUp).
+static func spawn(parent: Node3D, archetype_kind: EntityArchetype.Archetype, at: Vector3, yaw: float) -> BoneInstantiator:
+	var look := CharacterLooks.for_archetype(archetype_kind)
+	var bi := PLAYER_SCENE.instantiate() as BoneInstantiator
+	bi.master_seed = EntityInstantiation.debug_seed(archetype_kind, look.seed)
+	look.dress(bi)
+	bi.suit = -1
+	bi.hat = -1
+	bi.belt = -1
+	bi.face_wear = PackedInt32Array()
+	bi.hair = -1
+	bi.beard = -1
+	bi.kind = CharacterKind.npc()
+	bi.name = String(EntityArchetype.Archetype.keys()[archetype_kind]).capitalize()
+	parent.add_child(bi)
+	bi.place_at(at, yaw)
+	var get_up := CharacterGetUp.new()
+	get_up.bi = bi
+	bi.add_child(get_up)
+	return bi

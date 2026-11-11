@@ -28,6 +28,7 @@ var _current: SandboxParcel = null
 static func categories() -> Array[Dictionary]:
 	return [
 		{"name": "Meca", "archetypes": [MechTestArchetype.new(), BalanceTestArchetype.new()]},
+		{"name": "Personajes", "archetypes": PeopleArchetype.catalogue()},
 	]
 
 

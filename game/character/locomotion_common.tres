@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="LocomotionCommon" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/character/locomotion_common.gd" id="1_agyrb"]
+
+[resource]
+script = ExtResource("1_agyrb")
+carry_lean_mode = 2
+carry_lean_by_weight = false
+impact_fall_linear = 3.0
+landing_brake = true
+ragdoll_in_air = true
+legs_fall_s = 0.6000000000000001
+fall_front_deg = 152.0
+fall_out_deg = 44.0
+fall_bend = 0.35
+jump_squat = 1.6
+landing_depth = 3.5
+landing_steps_s = 0.8
+shoulder_inside = true

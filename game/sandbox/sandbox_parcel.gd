@@ -102,3 +102,9 @@ static func _flat(color: Color) -> StandardMaterial3D:
 	material.albedo_color = color
 	material.roughness = 1.0
 	return material
+
+
+## Lo que suma a la máscara de choque de quien vive en una parcela (lo piden los personajes de character-parametric, cuyas
+## parcelas tienen bordes que los atajan). Acá las parcelas no tienen bordes: nada.
+static func bound_mask(_node: Node) -> int:
+	return 0

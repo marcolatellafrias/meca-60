@@ -48,14 +48,48 @@ func _ready() -> void:
 	await _throw(3, Vector3.RIGHT, "de costado")
 	# DOS SEGUIDAS de frente, de 20 m/s (sola no la tira): ¿se acumula?
 	_aim_from(Vector3.FORWARD)
-	_archetype.level = 1
+	TestBall.level = 1
 	TestBall.throw_from_camera(_parcel, 1)
 	await _seconds(0.5)
 	TestBall.throw_from_camera(_parcel, 1)
 	await _seconds(1.5)
 	print("DOS SEGUIDAS de 20 m/s: pico %d %% · caídas %d" % [roundi(_dummy.peak_lean * 100.0), _dummy.falls])
 	await _wait_standing()
+	# LAS PERSONAS: bolas chicas, de 10 y de 30 m/s, a cada una.
+	TestBall.small = true
+	for person: BoneInstantiator in _parcel.find_children("*", "BoneInstantiator", true, false):
+		for force: int in [0, 2]:
+			await _throw_at_person(person, force)
+	TestBall.small = false
 	get_tree().quit()
+
+
+func _throw_at_person(person: BoneInstantiator, force: int) -> void:
+	var at := person.char_rigidbody.global_position
+	_eye.global_position = at + Vector3(-6.0, 1.2, 0.0)
+	_eye.look_at(at + Vector3(0, 1.0, 0))
+	await _frames(2)
+	TestBall.throw_from_camera(_parcel, force)
+	var fell := false
+	var peak := 0.0
+	for i in 90:
+		await get_tree().physics_frame
+		peak = maxf(peak, person.char_rigidbody.impact_xz.length())
+		if person.ragdoll_util.is_active:
+			fell = true
+	if fell:
+		_eye.global_position = at + Vector3(-7.0, 3.0, 4.0)
+		_eye.look_at(at)
+		await _shot("%s, bola chica de %d m/s" % [person.name, roundi(float(TestBall.SPEEDS[force]))],
+			"persona_%s_%d" % [person.name, force])
+	print("PERSONA %s, bola chica de %d m/s: inclinación pico %d %% · se cayó %s" % [person.name,
+		roundi(float(TestBall.SPEEDS[force])), roundi(peak * 100.0), fell])
+	if fell:
+		for i in 900:
+			if not person.ragdoll_util.is_active and not person.ragdoll_util.is_recovering:
+				print("  se levantó")
+				break
+			await _frames(1)
 
 
 ## Pone la cámara a 25 m de la meca, del lado `side` (en el espacio de la meca: FORWARD es su frente), mirándola.

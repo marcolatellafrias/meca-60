@@ -1,0 +1,196 @@
+[gd_resource type="Resource" script_class="CharacterLooks" load_steps=24 format=3]
+
+[ext_resource type="Script" path="res://game/character/archetypes/bone_shape.gd" id="1_5aibg"]
+[ext_resource type="Script" path="res://game/character/archetypes/character_look.gd" id="1_y5uqa"]
+[ext_resource type="Script" path="res://game/character/archetypes/character_looks.gd" id="2_5aibg"]
+
+[sub_resource type="Resource" id="Resource_eu8f6"]
+script = ExtResource("1_5aibg")
+radius_top = 0.43
+radius_bottom = 0.44
+length = 0.6499999999999999
+
+[sub_resource type="Resource" id="Resource_mlyae"]
+script = ExtResource("1_5aibg")
+radius_top = 1.71
+radius_bottom = 1.6700000000000002
+
+[sub_resource type="Resource" id="Resource_h0csa"]
+script = ExtResource("1_5aibg")
+radius_top = 1.33
+radius_bottom = 0.8200000000000001
+dome_top = 0.35
+offset_top = -0.29000000000000004
+offset_bottom = 0.30000000000000004
+
+[sub_resource type="Resource" id="Resource_uhwpf"]
+script = ExtResource("1_5aibg")
+radius_top = 1.28
+radius_bottom = 1.19
+dome_top = 0.74
+offset_top = 0.4
+offset_bottom = 0.4
+
+[sub_resource type="Resource" id="Resource_mvom8"]
+script = ExtResource("1_y5uqa")
+seed = 9
+head_form = 7
+mouth = 2
+lip_color = Color(0.6953125, 0.22000122, 0.22000122, 1)
+face_wear = 1
+belt = 0
+suit = 0
+skin = Color(0.94921875, 0.7426483, 0.5450592, 1)
+brows = 2
+beard = 0
+hair_color = Color(0.12, 0.1, 0.09, 1)
+bones = {
+"cuello": SubResource("Resource_eu8f6"),
+"espalda": SubResource("Resource_mlyae"),
+"lumbar": SubResource("Resource_h0csa"),
+"pecho": SubResource("Resource_uhwpf")
+}
+pose_modifiers = PackedStringArray()
+
+[sub_resource type="Resource" id="Resource_5aibg"]
+script = ExtResource("1_y5uqa")
+belt = 0
+suit = 0
+skin = Color(0.96, 0.7, 0.43, 1)
+brows = 4
+hair = 4
+hair_color = Color(0.45, 0.3, 0.18, 1)
+pose_modifiers = PackedStringArray()
+
+[sub_resource type="Resource" id="Resource_u8jl7"]
+script = ExtResource("1_y5uqa")
+mouth = 2
+lips = 0.032
+lip_color = Color(0.7734375, 0.18127441, 0.18127441, 1)
+belt = 0
+suit = 0
+skin = Color(0.93, 0.72, 0.52, 1)
+brows = 2
+hair_color = Color(0.15, 0.12, 0.11, 1)
+pose_modifiers = PackedStringArray()
+
+[sub_resource type="Resource" id="Resource_cnf0c"]
+script = ExtResource("1_y5uqa")
+belt = 0
+suit = 0
+skin = Color(0.88, 0.67, 0.49, 1)
+brows = 1
+hair = 3
+beard = 1
+hair_color = Color(0.19, 0.14, 0.11, 1)
+pose_modifiers = PackedStringArray()
+
+[sub_resource type="Resource" id="Resource_ux6wo"]
+script = ExtResource("1_5aibg")
+radius_top = 1.92
+radius_bottom = 2.1599999999999997
+
+[sub_resource type="Resource" id="Resource_2h25a"]
+script = ExtResource("1_5aibg")
+length = 0.7
+
+[sub_resource type="Resource" id="Resource_0uy6e"]
+script = ExtResource("1_5aibg")
+radius_top = 2.61
+radius_bottom = 0.97
+dome_top = 1.12
+dome_bottom = 1.67
+offset_bottom = 0.92
+
+[sub_resource type="Resource" id="Resource_wqeuy"]
+script = ExtResource("1_5aibg")
+radius_top = 1.99
+radius_bottom = 1.9
+offset_top = 0.4
+offset_bottom = 0.4
+
+[sub_resource type="Resource" id="Resource_ner1q"]
+script = ExtResource("1_y5uqa")
+head_form = 3
+face_wear = 2
+belt = 0
+suit = 0
+skin = Color(0.87109375, 0.5999403, 0.36068726, 1)
+brows = 3
+hair = 2
+hair_color = Color(0.88, 0.88, 0.86, 1)
+bones = {
+"espalda": SubResource("Resource_ux6wo"),
+"hombro": SubResource("Resource_2h25a"),
+"lumbar": SubResource("Resource_0uy6e"),
+"pecho": SubResource("Resource_wqeuy")
+}
+pose_modifiers = PackedStringArray()
+
+[sub_resource type="Resource" id="Resource_ip30r"]
+script = ExtResource("1_5aibg")
+radius_top = 0.3
+radius_bottom = 0.61
+offset_bottom = 1.0
+
+[sub_resource type="Resource" id="Resource_r5hpk"]
+script = ExtResource("1_5aibg")
+radius_top = 0.5800000000000001
+radius_bottom = 0.6699999999999999
+offset_top = 1.0
+offset_bottom = 1.0
+
+[sub_resource type="Resource" id="Resource_1nv4s"]
+script = ExtResource("1_5aibg")
+offset_top = -0.05000000000000004
+offset_depth = -0.5700000000000001
+
+[sub_resource type="Resource" id="Resource_n817s"]
+script = ExtResource("1_5aibg")
+radius_top = 0.3
+radius_bottom = 0.63
+dome_top = 1.28
+
+[sub_resource type="Resource" id="Resource_oesfr"]
+script = ExtResource("1_5aibg")
+radius_top = 0.62
+
+[sub_resource type="Resource" id="Resource_gk2jk"]
+script = ExtResource("1_5aibg")
+radius_top = 1.38
+radius_bottom = 1.02
+length = 0.8899999999999999
+dome_top = 1.29
+dome_bottom = 2.62
+offset_top = -0.49
+offset_bottom = 1.16
+
+[sub_resource type="Resource" id="Resource_k2ipc"]
+script = ExtResource("1_y5uqa")
+face_wear = 4
+belt = 0
+skin = Color(0.87109375, 0.5074291, 0.38110352, 1)
+brows = 2
+hair = 4
+beard = 0
+hair_color = Color(0.36, 0.25, 0.17, 1)
+bones = {
+"antebrazo": SubResource("Resource_ip30r"),
+"brazo": SubResource("Resource_r5hpk"),
+"cabeza": SubResource("Resource_1nv4s"),
+"cuello": SubResource("Resource_n817s"),
+"hombro": SubResource("Resource_oesfr"),
+"lumbar": SubResource("Resource_gk2jk")
+}
+pose_modifiers = PackedStringArray()
+
+[resource]
+script = ExtResource("2_5aibg")
+by_archetype = {
+0: SubResource("Resource_mvom8"),
+1: SubResource("Resource_5aibg"),
+2: SubResource("Resource_u8jl7"),
+3: SubResource("Resource_cnf0c"),
+4: SubResource("Resource_ner1q"),
+5: SubResource("Resource_k2ipc")
+}

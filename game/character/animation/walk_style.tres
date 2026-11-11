@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="WalkStyle" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/character/animation/walk_style.gd" id="1_eo6f8"]
+
+[resource]
+script = ExtResource("1_eo6f8")
+bounce_down = 1.6
+twist = 1.45
+shoulders = 1.3
+run_elbow = 0.0
+lean = 0.04999999999999999

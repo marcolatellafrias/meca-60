@@ -2,12 +2,11 @@ class_name BalanceTestArchetype
 extends SeededArchetype
 
 ## LA PARCELA DEL EQUILIBRIO: la meca de equilibrio (MechDummy, el sistema de los personajes de character-parametric)
-## sola en un piso, con una persona al lado para la escala. J le tira una bola desde la cámara, con la fuerza que se
-## elige con K y L, para ver cómo reacciona a distintos empujones (lo pidió el usuario el 11/11/2026).
+## en un piso, con dos personas de character-parametric al lado (el gordo y el chico; ver PeopleArchetype) para la
+## escala y para ver que reaccionan con el mismo sistema. J les tira una bola desde la cámara, K y L la fuerza y M la
+## bola (grande para la meca, chica para las personas; ver TestBall). Lo pidió el usuario el 11/11/2026.
 
 const FOOTPRINT := 70.0
-
-var level := 2
 
 
 func _init() -> void:
@@ -34,18 +33,12 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	# Mirando hacia donde uno llega (−X).
 	dummy.rotation.y = PI * 0.5
 	root.add_child(dummy)
-	# Una persona, para la escala.
-	Clay.box(root, Vector3(0.5, 1.8, 0.3), Vector3(-14.0, 0.9, 8.0), Clay.DARK)
+	# Dos personas al costado, mirando hacia donde uno llega, como la meca.
+	var side := root.global_position + Vector3(-12.0, 0.0, 9.0)
+	PeopleArchetype.spawn(root, EntityArchetype.Archetype.fat_man, side, PI * 0.5)
+	PeopleArchetype.spawn(root, EntityArchetype.Archetype.kid, side + Vector3(0.0, 0.0, 3.0), PI * 0.5)
 	return root
 
 
 func parcel_options() -> Array[Dictionary]:
-	return [
-		{"key": KEY_J, "label": func() -> String: return "tirar una bola (fuerza %d de %d: %d m/s)" % [level + 1,
-				TestBall.SPEEDS.size(), roundi(float(TestBall.SPEEDS[level]))],
-			"apply": func(parcel: SandboxParcel) -> void: TestBall.throw_from_camera(parcel, level)},
-		{"key": KEY_K, "label": "menos fuerza",
-			"apply": func(_parcel: SandboxParcel) -> void: level = maxi(level - 1, 0)},
-		{"key": KEY_L, "label": "más fuerza",
-			"apply": func(_parcel: SandboxParcel) -> void: level = mini(level + 1, TestBall.SPEEDS.size() - 1)},
-	]
+	return TestBall.parcel_options()

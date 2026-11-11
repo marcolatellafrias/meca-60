@@ -1,0 +1,129 @@
+[gd_resource type="Resource" script_class="BlockShapes" load_steps=8 format=3]
+
+[ext_resource type="Script" path="res://game/character/archetypes/block_shapes.gd" id="1_am6yi"]
+[ext_resource type="Script" path="res://game/character/archetypes/block_shape.gd" id="2_layy0"]
+
+[sub_resource type="Resource" id="Resource_am6yi"]
+script = ExtResource("2_layy0")
+leg_length = 0.74
+knee_at = 0.5
+leg_width = 0.15
+torso_height = 0.53
+lower_width = 0.3
+lower_depth = 0.18
+middle_width = 0.28
+middle_depth = 0.18
+chest_width = 0.31
+chest_depth = 0.18
+arm_length = 0.52
+elbow_at = 0.55
+arm_width = 0.13
+neck_length = 0.045
+neck_width = 0.095
+head_width = 0.16
+head_height = 0.235
+head_depth = 0.195
+atlas = 0.3
+foot_length = 0.23
+
+[sub_resource type="Resource" id="Resource_layy0"]
+script = ExtResource("2_layy0")
+leg_length = 1.0
+knee_at = 0.5
+leg_width = 0.2
+torso_height = 0.66
+lower_width = 0.345
+lower_depth = 0.205
+middle_width = 0.345
+middle_depth = 0.205
+chest_width = 0.41
+chest_depth = 0.205
+arm_length = 0.675
+elbow_at = 0.56
+arm_width = 0.155
+arm_open = 4.0
+neck_length = 0.075
+head_width = 0.15
+head_height = 0.235
+head_depth = 0.195
+atlas = 0.3
+foot_length = 0.28
+
+[sub_resource type="Resource" id="Resource_apc8x"]
+script = ExtResource("2_layy0")
+leg_length = 0.9
+knee_at = 0.5
+leg_width = 0.2
+torso_height = 0.68
+lower_width = 0.35
+lower_depth = 0.26
+middle_width = 0.365
+middle_depth = 0.26
+chest_width = 0.47
+arm_length = 0.62
+elbow_at = 0.56
+arm_width = 0.18
+arm_open = 12.0
+neck_width = 0.17
+head_width = 0.165
+head_height = 0.24
+head_depth = 0.205
+atlas = 0.3
+foot_length = 0.28
+
+[sub_resource type="Resource" id="Resource_lhlwh"]
+script = ExtResource("2_layy0")
+leg_length = 0.8
+knee_at = 0.5
+leg_width = 0.15
+torso_height = 0.62
+lower_width = 0.33
+lower_depth = 0.22
+middle_width = 0.32
+middle_depth = 0.22
+chest_width = 0.33
+chest_depth = 0.22
+arm_length = 0.58
+elbow_at = 0.56
+arm_width = 0.14
+arm_open = 7.0
+neck_width = 0.11
+head_width = 0.15
+head_height = 0.23
+head_depth = 0.195
+atlas = 0.3
+neck_forward = true
+
+[sub_resource type="Resource" id="Resource_14yia"]
+script = ExtResource("2_layy0")
+leg_length = 0.8
+knee_at = 0.5
+leg_width = 0.22
+torso_height = 0.665
+lower_width = 0.44
+lower_depth = 0.34
+middle_width = 0.47
+middle_depth = 0.34
+chest_width = 0.47
+chest_depth = 0.34
+arm_length = 0.58
+elbow_at = 0.56
+arm_width = 0.15
+arm_open = 16.0
+neck_length = 0.04
+neck_width = 0.16
+head_width = 0.17
+head_height = 0.245
+head_depth = 0.21
+atlas = 0.3
+foot_length = 0.27
+
+[resource]
+script = ExtResource("1_am6yi")
+shapes = {
+0: SubResource("Resource_14yia"),
+1: SubResource("Resource_am6yi"),
+2: SubResource("Resource_layy0"),
+3: SubResource("Resource_apc8x"),
+4: SubResource("Resource_lhlwh")
+}

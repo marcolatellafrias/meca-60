@@ -1,0 +1,66 @@
+[gd_resource type="Resource" script_class="PoseShapes" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/character/archetypes/pose_shapes.gd" id="1_t2wlx"]
+
+[resource]
+script = ExtResource("1_t2wlx")
+by_archetype = {
+0: {
+"arm_bentness": 0.05,
+"root_bounciness": 0.5,
+"stance_width": 1.8,
+"stride_reach": 0.63
+},
+1: {
+"acceleration": 0.7999999999999999,
+"speed": 0.35,
+"sprint_multiplier": 2.0,
+"stride_reach": 0.55
+},
+2: {
+"arm_swing": 1.12,
+"shoulder_swing": 0.9,
+"shoulders_drop": -0.65,
+"shoulders_forward": 1.0,
+"side_swing": 2.0,
+"slouch": 0.3,
+"sprint_multiplier": 2.0,
+"step_height": 0.6,
+"stride_reach": 0.5,
+"walk_hip_sway": 0.25,
+"walk_twist": 0.375
+},
+3: {
+"acceleration": 0.35,
+"arm_swing": 0.9500000000000001,
+"shoulder_swing": 2.0,
+"shoulders_forward": 0.6000000000000001,
+"side_swing": 1.3,
+"slouch": 0.75,
+"speed": 0.25,
+"sprint_multiplier": 1.5,
+"step_height": 0.5,
+"stride_reach": 0.4,
+"walk_hip_sway": 0.9,
+"walk_twist": 0.9167000000000001
+},
+4: {
+"leg_bentness": 0.4,
+"shoulders_drop": 0.17999999999999994,
+"speed": 0.18,
+"spine_bend": 0.5,
+"sprint_multiplier": 2.0
+},
+5: {
+"arm_openness": 0.5,
+"slouch": 0.13,
+"stance_width": 1.05
+},
+6: {
+"acceleration": 0.30000000000000004,
+"arm_swing": 1.04,
+"speed": 0.4,
+"sprint_multiplier": 2.0,
+"stance_width": 1.9
+}
+}
