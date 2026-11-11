@@ -27,7 +27,7 @@ var _current: SandboxParcel = null
 ## EL CATÁLOGO: una entrada por fila, en orden. Una fila nueva se agrega acá.
 static func categories() -> Array[Dictionary]:
 	return [
-		{"name": "Meca", "archetypes": [MechTestArchetype.new()]},
+		{"name": "Meca", "archetypes": [MechTestArchetype.new(), BalanceTestArchetype.new()]},
 	]
 
 

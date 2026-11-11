@@ -38,6 +38,10 @@ En el sandbox, la fila **Meca** («Pelea de prueba»):
   - Desde cualquier puesto (para probar de a uno): flechas caminan, B se afirma, Z/X el torso, F/H los brazos, G cañón.
 - **N** el rival quieto o agresivo, **R** otra arena. **V** es el modo creativo del sandbox (volar atravesando).
 
+Al lado, **«Meca de equilibrio»**: una copia de la meca que sólo se tambalea, se cae y se levanta, con el sistema de
+equilibrio de los personajes de character-parametric. **J** le tira una bola desde la cámara; **K** y **L** bajan y suben
+la fuerza (10 a 60 m/s).
+
 ## Dónde va cada cosa
 Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`.
 - `game/mech/` — **la meca**: `Mech` (la raíz en el suelo, la marcha, el torso que gira aparte, el equilibrio y la
@@ -45,10 +49,11 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   `MechTorso` (el torso de tres pisos con la escalera de incendio atrás), `MechSeat` (un puesto con su nivel de
   equilibrio y su cámara), `MechLift` (el montacargas), `MechLeg` (una pierna, sólo dibujo; `joint` resuelve rodilla y
   codo), `MechArm` (un brazo: la piña cargada, el puño que barre y se traba, el cañón encima con su bala `MechShell`),
-  `MechHud` (lo de pantalla para probar) y `Clay` (la arcilla de los bocetos). Todo lo que tiene
+  `MechHud` (lo de pantalla para probar), `MechDummy` (la meca de equilibrio: el cuerpo físico, el resorte y el
+  muñeco de character-parametric) y `Clay` (la arcilla de los bocetos). Todo lo que tiene
   `take_hit(amount, direction, push)` recibe golpes.
-- `game/arena/` — `TestArena` (el redondel con edificios y las dos mecas, que no se pisan) y `MechTestArchetype` (la
-  fila Meca).
+- `game/arena/` — `TestArena` (el redondel con edificios y las dos mecas, que no se pisan), `MechTestArchetype` (su
+  parcela), `BalanceTestArchetype` (la parcela de la meca de equilibrio) y `TestBall` (la bola de la J).
 - `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas). Teclas del sandbox: WASD,
   espacio, shift, Ctrl, R, C, V, Escape; no repetirlas. Sentado sólo valen las de la meca.
 - `game/ui/` — el menú de pausa (autoload `PauseMenu`, Escape) y sus Opciones (`GameOptions`, `user://opciones.cfg`).
@@ -62,3 +67,5 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   capturado y el giro y las piñas no se miden): maneja desde afuera, gira el torso, pega piñas sin cargar, cargadas y
   un gancho, tira al rival, pasa a primera persona, pone al rival agresivo, traba un brazo contra un edificio y pega
   sentado en los brazos.
+- `tests/balance_check.tscn` (headless o con ventana): le tira bolas de cada fuerza de frente y de costado a la meca
+  de equilibrio, imprime el golpe medido, la inclinación y si se cayó, y espera que se levante.
