@@ -16,6 +16,9 @@ func _ready() -> void:
 	_dot.size = Vector2(6, 6)
 	_dot.set_anchors_preset(Control.PRESET_CENTER)
 	_dot.position -= _dot.size * 0.5
+	# La mira está justo donde queda el mouse capturado: si lo atajara, la meca no recibiría ni el movimiento ni los
+	# clics (así pasaba el 11/11/2026: el mouse sentado no movía nada).
+	_dot.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_dot)
 	_text = Label.new()
 	_text.set_anchors_preset(Control.PRESET_BOTTOM_LEFT)
@@ -24,6 +27,7 @@ func _ready() -> void:
 	_text.add_theme_color_override("font_color", Color(1, 1, 1))
 	_text.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_text.add_theme_constant_override("outline_size", 6)
+	_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_text)
 	visible = false
 

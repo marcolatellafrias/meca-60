@@ -91,6 +91,20 @@ func _ready() -> void:
 	await _shot("La meca, caída", "7_meca_caida")
 	await _seconds(6.0)
 	print("MECA después: estado %d (0 = parada otra vez)" % mech.state)
+	# EL MOUSE SENTADO: mover el mouse gira la cabeza (en piernas) y clic izquierdo tira el puño (en brazos).
+	var legs_seat := mech.torso.seats[0]
+	var before := legs_seat.camera.rotation
+	await _mouse_motion(Vector2(200, 0))
+	print("MOUSE en piernas: la cabeza giró %.1f° (tiene que ser distinto de 0)" % rad_to_deg(
+		legs_seat.camera.rotation.y - before.y))
+	await _key(KEY_E)
+	_walker.global_position = mech.torso.seats[1].global_position + mech.torso.global_basis * Vector3(0, 0.2, 0.6)
+	await _seconds(0.3)
+	await _key(KEY_E)
+	await _seconds(0.8)
+	var arms_ready := mech.fist.ready_to_use()
+	await _click(MOUSE_BUTTON_LEFT)
+	print("MOUSE en brazos: clic izquierdo tiró el puño: %s (listo antes: %s)" % [not mech.fist.ready_to_use(), arms_ready])
 	# La vigía: la cámara de afuera.
 	await _key(KEY_E)
 	_walker.global_position = mech.torso.seats[2].global_position + mech.torso.global_basis * Vector3(0, 0.2, 0.6)
@@ -148,3 +162,26 @@ func _shot(title: String, file_name: String) -> void:
 	var path := "%s/%s.png" % [_folder, file_name]
 	get_viewport().get_texture().get_image().save_png(path)
 	print("CAPTURA ", path)
+
+
+func _mouse_motion(relative: Vector2) -> void:
+	var centre := get_viewport().get_visible_rect().size * 0.5
+	for i in 10:
+		var motion := InputEventMouseMotion.new()
+		motion.relative = relative / 10.0
+		motion.position = centre
+		motion.global_position = centre
+		Input.parse_input_event(motion)
+		await _frames(1)
+
+
+func _click(button: MouseButton) -> void:
+	var centre := get_viewport().get_visible_rect().size * 0.5
+	for pressed in [true, false]:
+		var click := InputEventMouseButton.new()
+		click.button_index = button
+		click.pressed = pressed
+		click.position = centre
+		click.global_position = centre
+		Input.parse_input_event(click)
+		await _frames(1)
