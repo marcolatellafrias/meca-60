@@ -27,16 +27,23 @@ func pose(hip: Vector3, foot: Vector3, forward: Vector3) -> void:
 	var ankle := foot + Vector3(0, 0.6, 0)
 	var reach := ankle - hip
 	var distance := clampf(reach.length(), 0.5, THIGH + SHIN - 0.01)
-	var along := reach.normalized()
-	# La rodilla: ley del coseno en la cadera, doblada hacia `forward` sin la parte que va a lo largo de la pierna.
-	var cosine := (THIGH * THIGH + distance * distance - SHIN * SHIN) / (2.0 * THIGH * distance)
-	var angle := acos(clampf(cosine, -1.0, 1.0))
-	var bend := (forward - along * forward.dot(along)).normalized()
-	if bend.length_squared() < 0.01:
-		bend = Vector3.FORWARD
-	var knee := hip + along * cos(angle) * THIGH + bend * sin(angle) * THIGH
-	var end := hip + along * distance
+	var knee := MechLeg.joint(hip, ankle, THIGH, SHIN, forward)
+	var end := hip + reach.normalized() * distance
 	Clay.segment(_thigh, hip, knee, THICKNESS)
 	Clay.segment(_shin, knee, end, THICKNESS * 0.9)
 	_knee.position = knee
 	_foot.position = foot + Vector3(0, 0.35, -0.4)
+
+
+## LA ARTICULACIÓN DEL MEDIO de dos huesos (`first` desde `root`, `second` hasta `end`): ley del coseno en la raíz,
+## doblada hacia `hint` sin la parte que va a lo largo. Sirve para la rodilla y para el codo (ver MechArm).
+static func joint(root: Vector3, end: Vector3, first: float, second: float, hint: Vector3) -> Vector3:
+	var reach := end - root
+	var distance := clampf(reach.length(), 0.5, first + second - 0.01)
+	var along := reach.normalized()
+	var cosine := (first * first + distance * distance - second * second) / (2.0 * first * distance)
+	var angle := acos(clampf(cosine, -1.0, 1.0))
+	var bend := (hint - along * hint.dot(along)).normalized()
+	if bend.length_squared() < 0.01:
+		bend = Vector3.FORWARD
+	return root + along * cos(angle) * first + bend * sin(angle) * first

@@ -1,8 +1,8 @@
 class_name MechTestArchetype
 extends SeededArchetype
 
-## LA FILA MECA DEL SANDBOX: la pelea de prueba en una parcela grande (TestArena): la meca y el bicho de prueba. Para
-## sentir cómo se maneja una meca de a uno, cómo se siente pegarle a algo grande y la escala del lugar.
+## LA FILA MECA DEL SANDBOX: la pelea de prueba en una parcela grande (TestArena): la meca y la meca rival. Para
+## sentir cómo se maneja una meca de a uno, cómo se siente la pelea y la escala del lugar.
 
 func _init() -> void:
 	display_name = "Pelea de prueba"
@@ -15,9 +15,9 @@ func max_footprint() -> Vector2:
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"U subirse a la meca (al piso de las piernas)",
+		"O manejarla desde afuera (T primera persona)",
 		"E sentarse en un puesto / levantarse / montacargas",
-		"Sentado: flechas caminan · B se afirma · F puño · G cañón",
-		"N otro bicho (otra semilla)",
+		"N el rival: quieto o agresivo",
 	])
 
 
@@ -33,6 +33,8 @@ func parcel_options() -> Array[Dictionary]:
 	return [
 		{"key": KEY_U, "label": "subirse a la meca",
 			"apply": func(parcel: SandboxParcel) -> void: (parcel.root() as TestArena).mech.board()},
-		{"key": KEY_N, "label": "otro bicho",
-			"apply": func(parcel: SandboxParcel) -> void: (parcel.root() as TestArena).new_beast(randi() & 0x7fffffff)},
+		{"key": KEY_O, "label": "manejarla desde afuera", "seated": true,
+			"apply": func(parcel: SandboxParcel) -> void: (parcel.root() as TestArena).mech.toggle_outside()},
+		{"key": KEY_N, "label": "rival quieto / agresivo", "seated": true,
+			"apply": func(parcel: SandboxParcel) -> void: (parcel.root() as TestArena).toggle_rival()},
 	]

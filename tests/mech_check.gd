@@ -1,8 +1,9 @@
 extends Node
 
-## LA MECA, PROBADA POR CÓDIGO: arma el sandbox, sube al que camina a la meca (la U), se sienta en las piernas (E),
-## camina con las flechas hacia el bicho, pega con el puño y dispara (F y G), y empuja el equilibrio hasta que la meca
-## se cae y se levanta. Imprime lo que mide, y con ventana saca capturas.
+## LA PELEA, PROBADA POR CÓDIGO: arma el sandbox, maneja la meca desde afuera (O), camina hacia el rival, gira el torso,
+## carga y suelta piñas (sin cargar, cargadas y un gancho doblado con el mouse), tira al rival hasta que se cae y se
+## levanta, pasa a primera persona (T), pone al rival agresivo y mira si pega, traba un brazo contra un edificio y, al
+## final, adentro, pega sentado en los brazos. Imprime lo que mide, y con ventana saca capturas.
 ##   headless:     godot --headless --path . res://tests/mech_check.tscn
 ##   con capturas: tools/godot_ventana.sh res://tests/mech_check.tscn -- --salida=C:/carpeta
 
@@ -33,93 +34,129 @@ func _ready() -> void:
 			_arena = parcel.root() as TestArena
 	_walker = sandbox.find_children("*", "SandboxWalker", true, false)[0] as SandboxWalker
 	var mech := _arena.mech
-	print("PARTES del bicho: ", ", ".join(_arena.beast.parts.map(func(p: BeastPart) -> String:
-		return "%s %d" % [p.part_name, p.health])))
-	# Desde afuera, de costado: la meca, el bicho y la arena.
+	var rival := _arena.rival
+	# Desde afuera, de costado: las dos mecas y la arena.
 	var eye := Camera3D.new()
 	add_child(eye)
-	eye.global_position = _arena.global_position + Vector3(0, 70, 85)
-	eye.look_at(_arena.global_position + Vector3(0, 4, 0))
+	eye.global_position = _arena.global_position + Vector3(0, 60, 75)
+	eye.look_at(_arena.global_position + Vector3(0, 8, 0))
 	eye.make_current()
-	await _shot("La arena: la meca y el bicho de prueba", "1_arena")
-	eye.global_position = mech.torso.global_transform * Vector3(-14, 4, 26)
-	eye.look_at(mech.torso.global_transform * Vector3(0, 3, 4))
-	await _shot("La meca de atrás: escalera de incendio y montacargas", "2_meca_atras")
-	# Subirse y sentarse en las piernas.
+	await _shot("La arena: la meca y el rival", "1_arena")
+	# MANEJAR DESDE AFUERA (la O; el que camina está en la parcela).
+	_walker.global_position = _arena.global_position + Vector3(0, 0.2, 40)
+	await _seconds(0.3)
+	await _key(KEY_O)
+	print("DESDE AFUERA: %s · cámara: %s" % [mech.driven_from_outside(), get_viewport().get_camera_3d().name])
+	await _shot("Desde afuera: la cámara atrás del torso", "2_desde_afuera")
+	var start := mech.global_position
+	await _hold(KEY_W, 6.5)
+	await _seconds(3.0)
+	print("CAMINÓ: %.1f m · distancia al rival %.1f m · equilibrio %.2f" % [start.distance_to(mech.global_position),
+		mech.global_position.distance_to(rival.global_position), mech.stability.length()])
+	# EL TORSO GIRA APARTE: el mouse lo pide, y llega a su velocidad.
+	var legs_before := mech.global_rotation.y
+	await _mouse_motion(Vector2(-300, 0))
+	var asked := rad_to_deg(wrapf(mech.torso_aim - mech.global_rotation.y, -PI, PI))
+	await _seconds(0.3)
+	var after_short := rad_to_deg(wrapf(mech.torso_yaw() - mech.global_rotation.y, -PI, PI))
+	await _seconds(1.5)
+	print("TORSO: pedido %.0f°, a los 0,3 s va %.0f°, después %.0f° · piernas quietas: %s" % [asked, after_short,
+		rad_to_deg(wrapf(mech.torso_yaw() - mech.global_rotation.y, -PI, PI)),
+		is_equal_approx(legs_before, mech.global_rotation.y)])
+	await _mouse_motion(Vector2(300, 0))
+	await _seconds(1.5)
+	# PIÑAS: sin cargar y cargada, a la meca rival (quieta).
+	await _punch(MOUSE_BUTTON_LEFT, 0.05, Vector2.ZERO)
+	var weak := mech.left_arm.last_hit_speed
+	await _seconds(1.0)
+	await _punch(MOUSE_BUTTON_LEFT, 0.9, Vector2.ZERO)
+	var strong := mech.left_arm.last_hit_speed
+	print("PIÑA sin cargar: %.0f m/s · cargada: %.0f m/s · equilibrio del rival %.2f · golpes %d" % [weak, strong,
+		rival.stability.length(), rival.hits_taken])
+	await _seconds(1.5)
+	# UN GANCHO: la derecha cargada, doblada hacia la izquierda con el mouse.
+	await _punch(MOUSE_BUTTON_RIGHT, 0.7, Vector2(-60, 0))
+	await _shot("Un gancho de derecha", "3_gancho")
+	print("GANCHO: pegó a %.0f m/s · trabado %s" % [mech.right_arm.last_hit_speed, mech.right_arm.jammed])
+	await _seconds(1.5)
+	# TIRAR AL RIVAL: piñas cargadas seguidas.
+	for i in 8:
+		var arm := mech.left_arm if i % 2 == 0 else mech.right_arm
+		await _punch(MOUSE_BUTTON_LEFT if i % 2 == 0 else MOUSE_BUTTON_RIGHT, 0.8, Vector2.ZERO)
+		print("  piña %d: %.0f m/s · trabada %s · distancia %.1f · equilibrio del rival %.2f" % [i, arm.last_hit_speed,
+			arm.jammed, mech.global_position.distance_to(rival.global_position), rival.stability.length()])
+		if rival.state != Mech.State.STANDING:
+			break
+		await _seconds(0.2)
+	print("RIVAL: estado %d (0 parado, 1 cayéndose, 2 en el suelo) · golpes %d" % [rival.state, rival.hits_taken])
+	await _seconds(1.0)
+	eye.global_position = rival.global_position + Vector3(-12, 16, 36)
+	eye.look_at(rival.global_position + Vector3(0, 6, 0))
+	eye.make_current()
+	await _shot("El rival, caído", "4_rival_caido")
+	await _seconds(7.0)
+	print("RIVAL después: estado %d (0 = parado otra vez)" % rival.state)
+	# PRIMERA PERSONA (T).
+	await _key(KEY_T)
+	await _seconds(0.3)
+	mech._camera.make_current()
+	print("PRIMERA PERSONA: cámara a %.1f m del frente del torso" % mech._camera.global_position.distance_to(
+		mech.torso.global_transform * Vector3(0, MechTorso.floor_y(1) + 1.6, -MechTorso.DEPTH * 0.5)))
+	await _shot("Desde afuera, en primera persona", "5_primera_persona")
+	await _key(KEY_T)
+	# EL RIVAL AGRESIVO: que pegue.
+	await _key(KEY_N)
+	print("RIVAL modo: %s" % MechBrain.NAMES[rival.brain.mode])
+	var taken := mech.hits_taken
+	await _seconds(8.0)
+	print("RIVAL agresivo: me pegó %d veces · mi estado %d · equilibrio %.2f" % [mech.hits_taken - taken, mech.state,
+		mech.stability.length()])
+	await _shot("El rival agresivo, peleando", "6_rival_agresivo")
+	await _key(KEY_N)
+	# EL BRAZO SE TRABA: la meca al lado de un edificio, una piña hacia él.
+	var block: Rect2 = _arena._blocks[0]
+	var centre := _arena.to_global(Vector3(block.get_center().x, 0, block.get_center().y))
+	var out := _arena.global_position - centre
+	out.y = 0.0
+	out = out.normalized()
+	mech.global_position = centre + out * (maxf(block.size.x, block.size.y) * 0.5 + Mech.RADIUS + 3.0)
+	var toward := centre - mech.global_position
+	mech.global_rotation = Vector3(0, atan2(-toward.x, -toward.z), 0)
+	mech.torso_aim = mech.global_rotation.y
+	await _seconds(2.0)
+	mech.left_arm.hold()
+	await _seconds(0.6)
+	mech.left_arm.let_go(centre + Vector3(0, 12, 0))
+	await _seconds(0.6)
+	print("TRABADO contra el edificio: %s · pegó %.0f" % [mech.left_arm.jammed, mech.left_arm.last_hit_speed])
+	# ADENTRO: subirse, sentarse en los brazos y pegar con el mouse.
 	mech.board()
 	await _seconds(0.5)
-	print("SUBIÓ: el que camina en %s (torso en %s)" % [_walker.global_position, mech.torso.global_position])
-	await _key(KEY_E)
-	print("SENTADO: %s" % (mech._seat.name if mech._seat != null else "no"))
-	await _shot("Sentado en el puesto de las piernas", "3_puesto_piernas")
-	var start := mech.global_position
-	await _hold(KEY_UP, 3.0)
-	print("CAMINÓ 3 s: %.1f m · equilibrio %.2f" % [start.distance_to(mech.global_position), mech.stability.length()])
-	await _shot("Caminando hacia el bicho", "4_caminando")
-	# Pegar y disparar.
-	var health_before := _beast_health()
-	await _hold(KEY_UP, 2.0)
-	await _seconds(1.5)
-	print("DISTANCIA al bicho: %.1f m" % mech.global_position.distance_to(_arena.beast.global_position))
-	for shot in 4:
-		await _key(KEY_G)
-		await _seconds(0.8)
-	await _key(KEY_F)
-	await _seconds(0.12)
-	await _shot("El puño de resorte, estirado", "5_puno")
-	await _seconds(1.0)
-	print("VIDA del bicho: %d → %d · equilibrio del bicho %.2f · estado %d" % [health_before, _beast_health(),
-		_arena.beast.stability.length(), _arena.beast.state])
-	# Tirar al bicho: empujones fuertes.
-	for i in 3:
-		_arena.beast.push(Vector3(1, 0, 0), 1.2)
-		await _seconds(0.2)
-	await _seconds(1.5)
-	print("BICHO empujado: estado %d (0 parado, 1 cayéndose, 2 en el suelo)" % _arena.beast.state)
-	eye.global_position = _arena.beast.global_position + Vector3(-10, 14, 34)
-	eye.look_at(_arena.beast.global_position + Vector3(0, 4, 0))
-	eye.make_current()
-	await _shot("El bicho, caído", "6_bicho_caido")
-	# Hacer caer a la meca: empujones hacia adelante.
-	for i in 3:
-		mech.push(-mech.global_basis.z, 2.0)
-		await _seconds(0.1)
-	await _seconds(1.6)
-	print("MECA empujada: estado %d · cayó: %s" % [mech.state, mech.state != Mech.State.STANDING])
-	eye.global_position = mech.global_position + Vector3(20, 14, 26)
-	eye.look_at(mech.global_position + Vector3(0, 4, 0))
-	await _shot("La meca, caída", "7_meca_caida")
-	await _seconds(6.0)
-	print("MECA después: estado %d (0 = parada otra vez)" % mech.state)
-	# EL MOUSE SENTADO: mover el mouse gira la cabeza (en piernas) y clic izquierdo tira el puño (en brazos).
-	var legs_seat := mech.torso.seats[0]
-	var before := legs_seat.camera.rotation
-	await _mouse_motion(Vector2(200, 0))
-	print("MOUSE en piernas: la cabeza giró %.1f° (tiene que ser distinto de 0)" % rad_to_deg(
-		legs_seat.camera.rotation.y - before.y))
-	await _key(KEY_E)
 	_walker.global_position = mech.torso.seats[1].global_position + mech.torso.global_basis * Vector3(0, 0.2, 0.6)
 	await _seconds(0.3)
 	await _key(KEY_E)
-	await _seconds(0.8)
-	var arms_ready := mech.fist.ready_to_use()
-	await _click(MOUSE_BUTTON_LEFT)
-	print("MOUSE en brazos: clic izquierdo tiró el puño: %s (listo antes: %s)" % [not mech.fist.ready_to_use(), arms_ready])
-	# La vigía: la cámara de afuera.
-	await _key(KEY_E)
-	_walker.global_position = mech.torso.seats[2].global_position + mech.torso.global_basis * Vector3(0, 0.2, 0.6)
-	await _seconds(0.3)
-	await _key(KEY_E)
-	print("VIGÍA: %s" % (mech._seat.name if mech._seat != null else "no"))
-	await _shot("Desde la vigía: la cámara de afuera", "8_vigia")
+	print("SENTADO: %s" % (mech._seat.name if mech._seat != null else "no"))
+	var aim_before := mech.torso_aim
+	await _mouse_motion(Vector2(120, 0))
+	print("MOUSE en brazos: el torso pidió %.1f°" % rad_to_deg(mech.torso_aim - aim_before))
+	await _shot("Sentado en el puesto de los brazos", "7_puesto_brazos")
+	await _button(MOUSE_BUTTON_LEFT, true)
+	await _seconds(0.4)
+	await _button(MOUSE_BUTTON_LEFT, false)
+	await _frames(2)
+	print("MOUSE en brazos: la piña salió (fase %s)" % MechArm.NAMES[mech.left_arm.phase])
 	get_tree().quit()
 
 
-func _beast_health() -> int:
-	var total := 0.0
-	for part in _arena.beast.parts:
-		total += part.health
-	return roundi(total)
+## Una piña con el mouse: aprieta, carga `seconds`, suelta y dobla con `bend` (píxeles) mientras sale.
+func _punch(button: MouseButton, seconds: float, bend: Vector2) -> void:
+	await _button(button, true)
+	await _seconds(seconds)
+	await _button(button, false)
+	if bend != Vector2.ZERO:
+		await _frames(4)
+		await _mouse_motion(bend)
+	await _seconds(0.5)
 
 
 func _key(code: Key) -> void:
@@ -175,13 +212,12 @@ func _mouse_motion(relative: Vector2) -> void:
 		await _frames(1)
 
 
-func _click(button: MouseButton) -> void:
+func _button(button: MouseButton, pressed: bool) -> void:
 	var centre := get_viewport().get_visible_rect().size * 0.5
-	for pressed in [true, false]:
-		var click := InputEventMouseButton.new()
-		click.button_index = button
-		click.pressed = pressed
-		click.position = centre
-		click.global_position = centre
-		Input.parse_input_event(click)
-		await _frames(1)
+	var click := InputEventMouseButton.new()
+	click.button_index = button
+	click.pressed = pressed
+	click.position = centre
+	click.global_position = centre
+	Input.parse_input_event(click)
+	await _frames(1)
