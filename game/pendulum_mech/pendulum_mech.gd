@@ -14,7 +14,9 @@ extends PendulumCube
 ## CON EL MUNDO: lo de afuera —el piso, las bolas, las paredes— lo sigue recibiendo la caja de siempre, 1:1. Son las
 ## formas de `_interior`, de las que el marco hace su SOMBRA: el que entra al volumen (el cubo) pasa a ir en el marco,
 ## que lo lleva con la meca, y adentro choca sólo con esa sombra. Y la caja de afuera deja de chocar con él (`_ride`).
-## Todavía no hay escalera: la U del sandbox lo sube (`board`), o el ente entra volando.
+## AFUERA TAMBIÉN (MechExterior): la pasarela de planta baja y el zigzag de atrás son parte del marco; por las puertas se
+## pasa de los balcones a los pisos. Todavía no se sube desde el suelo: la U del sandbox lo sube (`board`), o el ente
+## entra volando.
 ## LOS BRAZOS SON FÍSICOS (12/11/2026; el usuario: «hacer los brazos físicos en la meca péndulo. Así de paso veo cómo
 ## reaccionan los brazos cuando giro»): dos brazos con músculos (MuscleArm), colgados de sus hombros. Persiguen su
 ## postura con fuerza tope, así que van atrás cuando la meca gira o se frena, ceden si les pegan, y una piña sacude al
@@ -100,6 +102,7 @@ func _build_frame() -> void:
 	add_child(frame)
 	frame.floor_height = floor_y(0) + SLAB * 0.5
 	frame.add_volume(AABB(Vector3.ONE * -SIZE * 0.5, Vector3.ONE * SIZE))
+	frame.add_volume(MechExterior.bounds())
 	_interior.collision_layer = 1
 	frame.cast_shadow(_interior)
 	_interior.collision_layer = 0
@@ -294,6 +297,8 @@ func _build_cabin() -> void:
 		Clay.box(_look, Vector3(0.6, 0.5, 0.6), seat + Vector3(0, 0.25, 0), Clay.DARK)
 		Clay.box(_look, Vector3(0.6, 0.7, 0.12), seat + Vector3(0, 0.85, 0.3), Clay.DARK)
 		_solid(Vector3(1.4, 0.8, 0.5), seat + Vector3(0, 0.4, -0.95), metal.darkened(0.25))
+	# EL AFUERA: la pasarela de planta baja y el zigzag de atrás (ver MechExterior).
+	MechExterior.build(_look, _interior)
 
 
 ## Una pieza de la cabina que se ve y que, adentro, se choca (ver EL MARCO).

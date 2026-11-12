@@ -28,6 +28,41 @@ func _ready() -> void:
 	print("SUBIÓ: en el marco %s · la caja no lo ve %s · pies a %.2f m del piso del medio · caído %s" % [
 		MotionFrame.frame_of(_body) == _mech.frame, _mech._riders.has(_body), _feet() - floor_at, player.ragdoll_util.is_active])
 	await _shot("1_adentro")
+	# AFUERA (ver MechExterior): parado en la pasarela, en el balcón y en un tramo; y del balcón al piso por la puerta.
+	var half := HoverCube.SIZE * 0.5
+	var floors := [PendulumMech.floor_y(0) + PendulumMech.SLAB * 0.5, PendulumMech.floor_y(1) + PendulumMech.SLAB * 0.5]
+	var spots := [
+		["la pasarela, al costado", Vector3(half + 0.55, floors[0], 1.5), floors[0]],
+		["la pasarela, atrás", Vector3(0.0, floors[0], half + 0.55), floors[0]],
+		["el medio del primer tramo", Vector3(0.0, (floors[0] + floors[1]) * 0.5, MechExterior.FLIGHT_Z), (floors[0] + floors[1]) * 0.5],
+		["el balcón del segundo piso", Vector3(1.2, floors[1], half + 0.55), floors[1]],
+	]
+	for spot: Array in spots:
+		player.place_at(_mech.global_transform * ((spot[1] as Vector3) + Vector3(0, 0.1, 0)), _mech._yaw())
+		await _seconds(1.5)
+		print("AFUERA, en %s: en el marco %s · pies a %.2f m de donde va · caído %s" % [spot[0],
+			MotionFrame.frame_of(_body) == _mech.frame, _feet() - float(spot[2]), player.ragdoll_util.is_active])
+		if spot == spots[0]:
+			await _shot("1b_pasarela")
+	player.place_at(_mech.global_transform * Vector3(0.0, floors[1] + 0.1, half + 0.6), _mech._yaw())
+	await _seconds(1.0)
+	await _shot("1c_balcon")
+	var key := InputEventKey.new()
+	key.physical_keycode = KEY_W
+	key.keycode = KEY_W
+	key.pressed = true
+	Input.parse_input_event(key)
+	await _seconds(1.6)
+	key = InputEventKey.new()
+	key.physical_keycode = KEY_W
+	key.keycode = KEY_W
+	key.pressed = false
+	Input.parse_input_event(key)
+	await _seconds(0.5)
+	print("DEL BALCÓN AL PISO, caminando por la puerta: quedó a z = %.1f (la pared de atrás está en %.1f; adentro es menos) · pies a %.2f m del piso · caído %s" % [
+		_local().z, half, _feet() - floors[1], player.ragdoll_util.is_active])
+	_mech.board()
+	await _seconds(1.5)
 	# LA MECA SE CORRE (empujada 2,5 s): el de adentro va con ella.
 	var before := _local()
 	var start := _mech.global_position
