@@ -46,6 +46,7 @@ static func categories() -> Array[Dictionary]:
 		{"name": "Cubo con piernas", "archetypes": [LeggedCubeArchetype.new()]},
 		{"name": "Meca discreta", "archetypes": [MechArchetype.new(Mech.Arms.POSE)]},
 		{"name": "Meca física", "archetypes": [MechArchetype.new(Mech.Arms.MUSCLE)]},
+		{"name": "Mapa de pelea", "archetypes": [BattlefieldArchetype.new()]},
 		{"name": "Brazo", "archetypes": [MuscleArmArchetype.new()]},
 		{"name": "Personajes", "archetypes": PeopleArchetype.catalogue()},
 		{"name": "Recursos", "archetypes": [ObjectLotArchetype.new()]},
