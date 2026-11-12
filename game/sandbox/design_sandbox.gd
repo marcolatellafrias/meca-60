@@ -50,6 +50,7 @@ static func categories() -> Array[Dictionary]:
 		{"name": "Mapa de pelea", "archetypes": [BattlefieldArchetype.new()]},
 		{"name": "Brazo", "archetypes": [MuscleArmArchetype.new()]},
 		{"name": "Personajes", "archetypes": PeopleArchetype.catalogue()},
+		{"name": "Locomoción", "archetypes": LocomotionLabArchetype.catalogue()},
 		{"name": "Recursos", "archetypes": [ObjectLotArchetype.new()]},
 		{"name": "Multijugador", "archetypes": [MultiplayerArchetype.new()]},
 		{"name": "Partículas", "archetypes": ParticleArchetype.catalogue()},
@@ -90,6 +91,11 @@ func _mount_tuners() -> void:
 		_mount(MechKnockPanel.new(), row, "pegarle arriba, suave o fuerte, y el ascensor", KEY_F2)
 	_mount(MuscleArmPanel.new(), "Brazo", "el brazo con músculos: el resorte, el freno y la fuerza", KEY_F1)
 	_mount(PixelPaintPanel.new(), "Píxeles", "pintar con píxeles la cara que mirás", KEY_F1)
+	_mount(LocomotionPanel.new(), "Locomoción", "lo de todos los arquetipos: caerse, llevar, tirar, el aire", KEY_F1)
+	for row: String in ["Locomoción", "Personajes"]:
+		var tuner := LocomotionTuner.new()
+		tuner.ui_copy = row
+		_mount(tuner, row, "lo de cada arquetipo: caminata, pose, movimiento, equilibrio, salto, cuerpo", KEY_F3)
 
 
 func _mount(tuner: TunerPanel, category_name: String, label: String, key: Key) -> void:

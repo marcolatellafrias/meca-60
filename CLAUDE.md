@@ -100,7 +100,7 @@ bomba (dinamita); al fondo, fijos, los cubos de la meca que muestran la munició
 nada: la mecánica acordada (el indicador, acomodarse solo, un tipo por hueco, sacar el viejo antes, el gastado se
 desvanece) está en la nota.
 
-Más filas: **Personajes** (los seis arquetipos de allá, que se caen y se levantan; también con la bola), **Multijugador** (la red de allá: **H** abre sesión en esta
+Más filas: **Personajes** (los seis arquetipos de allá, que se caen y se levantan; también con la bola), **Locomoción** (los seis corriendo, saltando, cayendo, llevando, tirando, atajando y chocando, solos; ver docs/personajes-traidos.md), **Multijugador** (la red de allá: **H** abre sesión en esta
 compu y otra instancia se une con **J**, **G** abre por Steam, **K** va al menú de inicio para unirse por código, **L**
 sale) y **Partículas** (cada sistema en su poste; **M** cambia la malla de toda la fila). Por la red van los personajes
 y los objetos de esa parcela; **las mecas todavía no**.

@@ -24,9 +24,29 @@ números de juego (peso, fuerza, velocidad). **Nada más**: sin trajes, sombrero
   arquetipo (la cuenta vieja lo multiplicaba por una escala, por error: de 7° a 5° en el gordo), y las cápsulas del
   ragdoll son del ancho de la caja o el miembro de cada hueso.*
 
+## La fila Locomoción (13/11/2026)
+Para mirar cómo se mueven: seis parcelas con los seis arquetipos en carriles, que arrancan solas al entrar (K otra vez,
+J y U la variante; arriba de cada uno, su velocidad):
+1. **Correr y frenar**: aceleran y al final sueltan, frenan apretando para atrás o se dan contra una pared.
+2. **Saltar**: una valla de 0,3, 0,6 o 0,9 m, o una viga a la altura de la cabeza que no ven.
+3. **Caer de alto**: se tiran corriendo de una plataforma de 2, 4 u 8 m.
+4. **Llevar y tirar**: levantan un cubo de 63 cm, lo llevan y lo tiran con la carga elegida.
+5. **Atajar**: les tiran un cubo a 5, 8 u 11 m/s, de frente, alto o al costado.
+6. **Chocar**: de a dos (gordo y chico, musculoso y flaco alto, gordo atlético y viejo), de frente, en ángulo o contra
+   uno quieto, con o sin cubo (Y).
+
+Los maneja **`CharacterActions`**: aprieta los mismos botones que un jugador (moverse, correr, saltar, agarrar, tirar) y
+las manos son las del jugador (un `InteractionController` con un ojo en la cabeza). No busca camino ni esquiva. *Viene
+de la parcela «Experimentos de locomoción» y de `ExhibitOperator` de character-parametric (unas 3.500 líneas entre los
+dos), sin los pasillos de obstáculos, los botones, las sillas de la nave ni los controles.* Sus paneles, traídos de
+allá: **F1** lo de todos los arquetipos (`LocomotionPanel`: caerse, llevar, tirar, el aire) y **F3** lo de cada arquetipo
+(`LocomotionTuner`: caminata, pose, movimiento, equilibrio, salto y cuerpo, que también está en la fila Personajes).
+
 Pruebas:
 - `tests/people_look.tscn` (con ventana, unos 12 segundos): los seis en fila, sus cabezas de cerca, y caminando 3
   segundos (imprime cuánto anduvo cada uno y si quedó de pie). `--cabezas=0.29,0.28,…` prueba altos de cabeza.
+- `tests/locomotion_look.tscn` (con ventana, unos 80 segundos): cada escena de la fila Locomoción sola, con capturas;
+  imprime la velocidad máxima de cada uno, cuánto anduvo, si se cayó y si tuvo el cubo.
 - `tests/sizes_check.tscn` (headless, un segundo): imprime cada medida de los seis y dónde cae cada hueso. **Si un cambio
   no debería cambiar a nadie, correrlo antes y después y comparar**.
 
