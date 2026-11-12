@@ -85,6 +85,28 @@ func _ready() -> void:
 		print("VOLCAR %s: inclinación pico %.0f° · se cayó %s · de vuelta flotando %s a los %.1f s · lo más lejos del centro %.1f m (borde a %.0f) · %s" % [
 			"fuerte" if strong else "suave", most, _cube.falls > falls, _cube.state == HoverCube.State.HOVER, clock, farthest,
 			_parcel.size.x * 0.5, _track_text(start, push_side.normalized())])
+	# MANEJARLO: W 3 s y soltar; que no frene en seco (lo propio frena con su freno, no con el del retroceso).
+	# Desde el medio (a 30 m de la pared), y después contra la pared: al soltar, que no lo despida para atrás.
+	_parcel.regenerate(_parcel.seed_value)
+	await _frames(2)
+	_cube = _parcel.find_children("*", "HoverCube", true, false)[0] as HoverCube
+	await _seconds(2.0)
+	for hold: float in [2.5, 9.0]:
+		_cube.driving = true
+		_press(KEY_W, true)
+		await _seconds(hold)
+		var top := Vector3(_cube.linear_velocity.x, 0.0, _cube.linear_velocity.z).length()
+		var let_go := _cube.global_position
+		_press(KEY_W, false)
+		var stop_clock := 0.0
+		while stop_clock < 10.0 and Vector3(_cube.linear_velocity.x, 0.0, _cube.linear_velocity.z).length() > 0.1:
+			await get_tree().physics_frame
+			stop_clock += 1.0 / 240.0
+		_cube.driving = false
+		print("MANEJAR %.1f s con W: a %.1f m/s · al soltar frena en %.1f s y %.1f m · inclinación %.0f° · caídas %d · estado %d" % [
+			hold, top, stop_clock, (_cube.global_position - let_go).length(), _cube.tilt, _cube.falls, _cube.state])
+		await _wait_hover()
+		await _seconds(1.0)
 	# EL REBOTE: soltarlo de 4 m más arriba.
 	await _wait_hover()
 	await _seconds(1.0)
@@ -188,6 +210,14 @@ func _side_view() -> void:
 	var at := _cube.global_position
 	_eye.global_position = at + Vector3(-26.0, 6.0, 18.0)
 	_eye.look_at(at)
+
+
+func _press(code: Key, down: bool) -> void:
+	var event := InputEventKey.new()
+	event.physical_keycode = code
+	event.keycode = code
+	event.pressed = down
+	Input.parse_input_event(event)
 
 
 func _frames(count: int) -> void:

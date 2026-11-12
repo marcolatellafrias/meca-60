@@ -71,7 +71,7 @@ la firmeza por lado, el cuerpo, la caída), que salen de `MechBalanceSettings`.
 
 **Cubo** (11/11/2026; quedó uno solo el 12/11/2026): la caída y la recuperación, aparte de la caminata. Un cubo grande
 que flota con un **resorte vertical** (el del cuerpo de los personajes de character-parametric antes del 13/03/2026) y
-**parado no gira**: un golpe nunca le cambia hacia dónde mira. **El golpe lo corre** (el freno de costado dice cuánto) y
+**parado no gira**: un golpe nunca le cambia hacia dónde mira. **El golpe lo corre** (el freno del retroceso dice cuánto; manejándolo con la **O**, lo propio tiene su propio freno al soltar) y
 **aparte lo inclina** con la línea de equilibrio (cualquier golpe, a cualquier altura; golpes seguidos se suman; se ve
 inclinando el dibujo sobre el canto de abajo). Al pasarla **tropieza**: el cuerpo toma esa inclinación y recibe, una
 sola vez, el giro justo para que su base quede quieta; de ahí es física y cae para el lado del golpe. Caído pesa un poco

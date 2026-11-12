@@ -13,7 +13,10 @@ extends RigidBody3D
 ##     rayos al piso, la gravedad compensada, el error y la fuerza con tope): cualquier golpe de arriba o de abajo lo
 ##     hunde y rebota solo.
 ##   · NO GIRA: sus giros están trabados. Un golpe nunca le cambia hacia dónde mira.
-##   · EL GOLPE LO CORRE: le cambia la velocidad y el cuerpo sale para ese lado (lo frena `slide_brake`).
+##   · DOS VELOCIDADES DE COSTADO, APARTE: la PROPIA (la que pide el que lo maneja, con la O: arranca con `walk_accel`
+##     y, al soltar, frena con `walk_brake`, de a poco) y la del RETROCESO (la que le dejan los golpes, que frena
+##     `knock_brake`). Así un golpe puede correrlo mucho sin que manejarlo se vuelva resbaloso, y al revés (lo pidió el
+##     usuario el 12/11/2026: «no quiero que al soltar W frenes en seco, pero sí quiero tener dos perillas»).
 ##   · LA LÍNEA DE EQUILIBRIO (`lean`): ese mismo golpe —medido como lo que cambió la velocidad sin que él lo pidiera, a
 ##     cualquier altura— le suma a la velocidad de la inclinación (`lean_per_ms` × `push_rate`); un resorte la devuelve
 ##     (`stiffness`, `damping`). Golpes seguidos se suman. Se ve inclinando el DIBUJO sobre el canto de abajo.
@@ -56,6 +59,13 @@ var last_hit := 0.0
 
 var _lean_speed := Vector2.ZERO
 var _velocity_after := Vector3.ZERO
+## La velocidad de costado propia y la del retroceso (ver arriba); parado, la del cuerpo es su suma.
+var _walk := Vector3.ZERO
+var _knock := Vector3.ZERO
+## MANEJARLO DESDE AFUERA (la O de su fila): W/S adelante y atrás, A/D gira; la cámara lo sigue de atrás.
+var driving := false
+var _camera: Camera3D = null
+var _chase_yaw := 0.0
 var _clock := 0.0
 var _nozzles: Array[Dictionary] = []
 var _label: Label3D = null
@@ -90,6 +100,11 @@ func _ready() -> void:
 	_label.outline_size = 14
 	_label.modulate = Color(1.0, 0.95, 0.6)
 	add_child(_label)
+	_camera = Camera3D.new()
+	_camera.name = "Cámara de afuera"
+	_camera.top_level = true
+	_camera.far = 2000.0
+	add_child(_camera)
 	_lock(true)
 
 
@@ -155,6 +170,7 @@ func _physics_process(delta: float) -> void:
 			if tilt <= knobs.upright_done and angular_velocity.length() < 0.4:
 				_recovered()
 	_fire_nozzles(knobs)
+	_place_camera(delta)
 	_label.global_position = global_position + Vector3(0, SIZE + 2.0, 0)
 	_label.text = "%s · altura %.1f m · inclinación %.0f°\núltimo golpe %.1f m/s · caídas %d" % [
 		["parado", "TIRADO", "sube", "se endereza"][state], height, tilt, last_hit, falls]
@@ -164,6 +180,7 @@ func _physics_process(delta: float) -> void:
 
 func _standing(knobs: HoverCubeSettings, delta: float) -> void:
 	_measure_hit(knobs)
+	_move(knobs, delta)
 	_hover(knobs)
 	_lean_speed += (-lean * knobs.stiffness - _lean_speed * knobs.damping) * delta
 	lean += _lean_speed * delta
@@ -175,19 +192,28 @@ func _standing(knobs: HoverCubeSettings, delta: float) -> void:
 
 
 ## EL GOLPE: lo que cambió la velocidad de costado desde el paso anterior sin que él lo pidiera (su freno es muy poco por
-## paso para contar), a la velocidad de la inclinación.
+## paso para contar), a la velocidad de la inclinación. Lo que va contra su propio avance (chocar caminando, empujar una
+## pared) sale de la velocidad propia y no queda como retroceso: si no, al soltar W la pared lo despediría para atrás.
 func _measure_hit(knobs: HoverCubeSettings) -> void:
 	var change := linear_velocity - _velocity_after
 	var flat := Vector3(change.x, 0.0, change.z)
+	var rest := flat
+	if _walk.length_squared() > 0.0001:
+		var heading := _walk.normalized()
+		var taken := maxf(flat.dot(heading), -_walk.length())
+		if taken < 0.0:
+			_walk += heading * taken
+			rest -= heading * taken
 	if flat.length() <= HIT_NOISE:
 		return
 	last_hit = flat.length()
+	_knock += rest
 	var local := global_basis.inverse() * flat
 	_lean_speed += Vector2(local.x, -local.z) * knobs.lean_per_ms * knobs.push_rate
 
 
 ## EL RESORTE VERTICAL: dos rayos desde la cara de abajo; la altura es la del medio de los que tocan. Empuja hacia
-## arriba, en el centro, con la gravedad compensada, el error con tope y la fuerza con tope. Y el freno de costado.
+## arriba, en el centro, con la gravedad compensada, el error con tope y la fuerza con tope. (Lo de costado, en `_move`.)
 func _hover(knobs: HoverCubeSettings) -> void:
 	var reach := knobs.hover_height + knobs.max_height_error + 1.0
 	var starts: Array[Vector3] = []
@@ -198,7 +224,6 @@ func _hover(knobs: HoverCubeSettings) -> void:
 		if not hit.is_empty():
 			starts.append(start)
 			grounds.append(hit["position"])
-	_slide_brake(knobs)
 	if grounds.is_empty():
 		height = reach
 		return
@@ -213,11 +238,20 @@ func _hover(knobs: HoverCubeSettings) -> void:
 	apply_central_force(Vector3.UP * CUBE_MASS * clampf(accel, 0.0, knobs.max_up))
 
 
-func _slide_brake(knobs: HoverCubeSettings) -> void:
-	var side := Vector3(linear_velocity.x, 0.0, linear_velocity.z)
-	var brake := minf(side.length() / maxf(get_physics_process_delta_time(), 0.0001), knobs.slide_brake)
-	if side.length() > 0.001:
-		apply_central_force(-side.normalized() * brake * CUBE_MASS)
+## LAS DOS VELOCIDADES DE COSTADO: la propia va hacia la pedida (arranca con `walk_accel`, frena con `walk_brake`), el
+## retroceso se apaga con `knock_brake`, y el cuerpo va con las dos sumadas. Manejándolo, A/D lo gira (sus giros están
+## trabados para la física, no para él).
+func _move(knobs: HoverCubeSettings, delta: float) -> void:
+	var wanted := Vector3.ZERO
+	if driving and UIState.gameplay_active():
+		var yaw := global_rotation.y + HoverCube._axis(KEY_A, KEY_D) * deg_to_rad(knobs.turn_speed) * delta
+		global_basis = Basis(Vector3.UP, yaw)
+		wanted = -global_basis.z * HoverCube._axis(KEY_W, KEY_S) * knobs.walk_speed
+	var rate := knobs.walk_accel if wanted.length_squared() > 0.0001 else knobs.walk_brake
+	_walk = _walk.move_toward(wanted, rate * delta)
+	_knock = _knock.move_toward(Vector3.ZERO, knobs.knock_brake * delta)
+	var side := _walk + _knock
+	linear_velocity = Vector3(side.x, linear_velocity.y, side.z)
 
 
 ## El dibujo inclinado sobre el canto de abajo hacia donde se inclina (ver MechBody.tilt).
@@ -244,6 +278,8 @@ func _trip(knobs: HoverCubeSettings) -> void:
 		+ Vector3.UP.cross(direction) * tipping * knobs.tip_carry
 	lean = Vector2.ZERO
 	_lean_speed = Vector2.ZERO
+	_walk = Vector3.ZERO
+	_knock = Vector3.ZERO
 	state = State.LIMP
 	_clock = 0.0
 	falls += 1
@@ -286,6 +322,9 @@ func _recovered() -> void:
 	lean = Vector2.ZERO
 	_lean_speed = Vector2.ZERO
 	_velocity_after = linear_velocity
+	# Lo que le quede de velocidad de costado, como retroceso: se apaga solo.
+	_walk = Vector3.ZERO
+	_knock = Vector3(linear_velocity.x, 0.0, linear_velocity.z)
 	state = State.HOVER
 
 
@@ -363,6 +402,64 @@ static func delta_v_for_lean(target: float) -> float:
 		if speed_now < 0.0:
 			break
 	return target / maxf(peak * knobs.lean_per_ms * knobs.push_rate, 0.0001)
+
+
+## ── MANEJARLO DESDE AFUERA (como la meca, ver Mech.toggle_outside) ─────────────────────────────────────────────
+## El jugador se apaga mientras tanto (ni se ve ni lee teclas) y queda donde estaba. O o E vuelve.
+func toggle_drive() -> void:
+	if driving:
+		_leave_drive()
+		return
+	var player := DesignSandbox.player_of(get_tree())
+	if player == null:
+		return
+	if player.is_seated and player.current_seat is SeatInteractable:
+		(player.current_seat as SeatInteractable).release_occupant_in_place()
+	driving = true
+	add_to_group("driving")
+	player.set_active(false)
+	_chase_yaw = global_rotation.y
+	_camera.make_current()
+
+
+func _leave_drive() -> void:
+	driving = false
+	remove_from_group("driving")
+	var player := DesignSandbox.player_of(get_tree())
+	if player == null:
+		return
+	player.set_active(true)
+	if is_instance_valid(player.player_camera):
+		player.player_camera.make_current()
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	var key := event as InputEventKey
+	if driving and key != null and key.pressed and not key.echo and key.physical_keycode == KEY_E:
+		_leave_drive()
+		get_viewport().set_input_as_handled()
+
+
+func _exit_tree() -> void:
+	if driving:
+		_leave_drive()
+
+
+## La cámara, atrás y arriba, siguiéndolo con un poco de atraso.
+func _place_camera(delta: float) -> void:
+	if not driving:
+		return
+	var forward := -global_basis.z
+	forward.y = 0.0
+	if forward.length_squared() > 0.01:
+		_chase_yaw = lerp_angle(_chase_yaw, atan2(-forward.x, -forward.z), 1.0 - exp(-4.0 * delta))
+	var behind := Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 14.0, 34.0)
+	_camera.global_position = global_position + behind
+	_camera.look_at(global_position + Vector3(0.0, 2.0, 0.0), Vector3.UP)
+
+
+static func _axis(positive: Key, negative: Key) -> float:
+	return (1.0 if Input.is_physical_key_pressed(positive) else 0.0) - (1.0 if Input.is_physical_key_pressed(negative) else 0.0)
 
 
 ## ── LO QUE MIDE ──────────────────────────────────────────────────────────────────────────────────────────────────

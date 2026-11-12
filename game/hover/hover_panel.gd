@@ -9,7 +9,9 @@ const PANEL_WIDTH := 420.0
 const LABELS := {
 	"hover_height": "altura de flotar (m)", "height_kp": "resorte de altura", "height_kd": "freno de altura",
 	"max_height_error": "error de altura con tope (m)", "max_up": "empuje para arriba con tope (m/s²)",
-	"slide_brake": "freno de costado: cuánto lo corre (m/s²)",
+	"walk_speed": "velocidad propia (m/s)", "walk_accel": "cuánto tarda en arrancar (m/s²)",
+	"walk_brake": "freno al soltar (m/s²)", "turn_speed": "giro con A/D (°/s)",
+	"knock_brake": "freno del retroceso: cuánto lo corre un golpe (m/s²)",
 	"lean_per_ms": "inclinación por m/s de golpe", "push_rate": "cuánto empuja la inclinación",
 	"stiffness": "resorte que lo endereza", "damping": "freno de la inclinación", "fall_at": "se cae en",
 	"lean_angle": "inclinación del dibujo en 1 (°)", "base_grip": "cuánto se le traba la base al caer",

@@ -9,12 +9,12 @@ caminata.
 - **Flota con un resorte vertical**: dos rayos al piso desde la cara de abajo, la gravedad compensada, error y fuerza
   con tope. Un golpe de arriba o de abajo lo hunde y rebota solo.
 - **No gira**: sus giros están trabados. Ningún golpe le cambia hacia dónde mira.
-- **El golpe lo corre**: le cambia la velocidad; el *freno de costado* dice cuánto se desliza.
+- **Dos velocidades de costado, aparte**: la propia (manejándolo con la **O**: arranca con *cuánto tarda en arrancar* y, al soltar, frena de a poco con *freno al soltar*) y la del retroceso que le dejan los golpes (*freno del retroceso*). Un golpe puede correrlo mucho sin que manejarlo se vuelva resbaloso.
 - **La línea de equilibrio**: el mismo golpe (lo que cambió la velocidad sin que él lo pidiera) suma a la velocidad de la
   inclinación; un resorte la devuelve. Golpes seguidos se suman. Se dibuja inclinando el dibujo sobre el canto de abajo.
   Ver [[equilibrio]].
 
-Corrimiento e inclinación salen del **mismo golpe medido**, pero se escalan aparte: *freno de costado* (cuánto se corre)
+Corrimiento e inclinación salen del **mismo golpe medido**, pero se escalan aparte: *freno del retroceso* (cuánto se corre)
 e *inclinación por m/s de golpe* (cuánto se inclina).
 
 ## Tropezar y caer

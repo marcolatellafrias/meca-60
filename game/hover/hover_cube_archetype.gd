@@ -2,7 +2,7 @@ class_name HoverCubeArchetype
 extends SeededArchetype
 
 ## LA PARCELA DEL CUBO (ver HoverCube): el cubo flotando en el medio, para tirarle bolas (J tira, K pasa por los cuatro
-## tiros: lenta o rápida, que lo voltea o no) y volcarlo con el panel chico (F2). F1 abre su panel (HoverPanel). R lo
+## tiros: lenta o rápida, que lo voltea o no) y volcarlo con el panel chico (F2). F1 abre su panel (HoverPanel). O lo maneja desde afuera. R lo
 ## vuelve a poner, flotando.
 
 ## Grande: el cubo cae y se corre (el usuario: «aumentar el tamaño de la parcela de la caja»).
@@ -42,7 +42,12 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 
 
 func parcel_options() -> Array[Dictionary]:
-	return TestBall.parcel_options(self)
+	var options := TestBall.parcel_options(self)
+	options.append({"key": KEY_O, "label": "manejarlo desde afuera (W/S, A/D; O o E vuelve)", "seated": true,
+		"apply": func(parcel: SandboxParcel) -> void:
+			for cube: HoverCube in parcel.find_children("*", "HoverCube", true, false):
+				cube.toggle_drive()})
+	return options
 
 
 ## LOS CUATRO TIROS (lo pidió el usuario: «lento que no voltee, lento que voltee, rápido que no voltee y rápido que

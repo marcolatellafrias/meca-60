@@ -18,8 +18,17 @@ static var current := HoverCubeSettings.new()
 @export_range(0.1, 6.0, 0.1) var max_height_error := 2.5
 ## Lo más que empuja para arriba (m/s², con la gravedad).
 @export_range(5.0, 60.0, 0.5) var max_up := 30.0
-## El freno de costado mientras flota (m/s²): cuánto lo corre un golpe (sin él, queda deslizándose para siempre).
-@export_range(0.0, 20.0, 0.1) var slide_brake := 3.0
+
+@export_group("Moverse y el retroceso")
+## Lo propio (manejándolo con la O): a qué velocidad va (m/s), cuánto tarda en llegar (m/s²) y cómo frena al soltar
+## (m/s²: poco, frena de a poco; mucho, en seco).
+@export_range(0.5, 30.0, 0.5) var walk_speed := 8.0
+@export_range(0.5, 40.0, 0.5) var walk_accel := 6.0
+@export_range(0.5, 40.0, 0.5) var walk_brake := 5.0
+## Cuánto gira con A/D (grados por segundo).
+@export_range(5.0, 180.0, 5.0) var turn_speed := 45.0
+## El freno del retroceso (m/s²): cuánto lo corre un golpe (poco, lo corre mucho; sin él, queda deslizándose).
+@export_range(0.0, 20.0, 0.1) var knock_brake := 3.0
 
 @export_group("La línea de equilibrio")
 ## Cuánto lo inclina cada m/s de golpe (cualquier golpe en el cuerpo, a cualquier altura: simplificado). El golpe se suma
