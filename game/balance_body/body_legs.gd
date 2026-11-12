@@ -1,8 +1,9 @@
-class_name MechLegs
+class_name BodyLegs
 extends Node3D
 
-## LA PELVIS Y LAS PIERNAS DE LA MECA: DIBUJO (IK, MechBody; cada pierna, un MechLeg). No sostienen nada: siguen al
-## apoyo del péndulo (ver Mech). El usuario: «las piernas van a seguir siendo IK».
+## LA PELVIS Y LAS PIERNAS DE UN CUERPO CON EQUILIBRIO (ver BalanceBody), DOS, DESDE UNA PELVIS DEBAJO DE LA CAJA: DIBUJO (IK, MechBody; cada pierna, un MechLeg). No sostienen nada: siguen al
+## apoyo del péndulo (ver BalanceBody). Es la pieza de piernas de la meca propia; un cuerpo con otro medio de moverse
+## —cuatro patas, patas que salen de los costados de la caja y no de abajo, ruedas— arma otra (ver docs/base-comun.md). El usuario: «las piernas van a seguir siendo IK».
 ##   · PISAN POR RADIO alrededor del punto de apoyo, mirando hacia donde mira el torso: cada pie queda donde pisó hasta
 ##     que su lugar —al costado del apoyo, adelantado con la marcha— se aleja más que `step_radius`; ahí da un paso
 ##     hasta ese lugar, de a un pie.
@@ -12,7 +13,7 @@ extends Node3D
 ##     hacia debajo de las caderas: al quedar derecha ya está parada.
 ##   · EL PIE, NUNCA MÁS LEJOS DE LO QUE LA PIERNA ALCANZA: en el aire cuelga de la cadera.
 
-var mech: Mech = null
+var body: BalanceBody = null
 var steps_taken := 0
 
 var _feet: Array[Vector3] = [Vector3.ZERO, Vector3.ZERO]
@@ -39,15 +40,15 @@ func replant() -> void:
 	_planted = false
 
 
-func place(k: MechSettings, delta: float) -> void:
-	var standing := mech.state == Mech.State.STANDING and mech.grounded
+func place(k: BodySettings, delta: float) -> void:
+	var standing := body.state == BalanceBody.State.STANDING and body.grounded
 	# RECOGIDAS tirada y subiendo; ESTIRADAS parada y ya al empezar a enderezarse.
-	var folded := mech.state == Mech.State.DOWN or mech.state == Mech.State.LIFT
+	var folded := body.state == BalanceBody.State.DOWN or body.state == BalanceBody.State.LIFT
 	_tuck = move_toward(_tuck, 1.0 if folded else 0.0, delta / maxf(k.fold_time if folded else k.unfold_time, 0.01))
 	var share := smoothstep(0.0, 1.0, _tuck)
-	var yaw := mech.yaw()
-	var centre := mech.global_position
-	var under := mech.support if standing else Vector3(centre.x, centre.y - mech.ground_distance(centre), centre.z)
+	var yaw := body.yaw()
+	var centre := body.global_position
+	var under := body.support if standing else Vector3(centre.x, centre.y - body.ground_distance(centre), centre.z)
 	var root := Transform3D(Basis(Vector3.UP, yaw), under)
 	if standing:
 		if not _planted:
@@ -60,11 +61,11 @@ func place(k: MechSettings, delta: float) -> void:
 		_step = {}
 	# LA PELVIS: cuelga de la caja, inclinada como ella, mirando al promedio de los dos pies.
 	var pelvis_yaw := lerp_angle(_feet_yaw[0], _feet_yaw[1], 0.5) if standing else yaw
-	var leaning := Basis(Quaternion(Vector3.UP, mech.global_basis.y.normalized())) if mech.tilt > 0.01 else Basis()
+	var leaning := Basis(Quaternion(Vector3.UP, body.global_basis.y.normalized())) if body.tilt > 0.01 else Basis()
 	var waist := Transform3D(leaning * Basis(Vector3.UP, pelvis_yaw),
-		mech.global_transform * Vector3(0.0, -Mech.SIZE * 0.5, 0.0))
+		body.global_transform * Vector3(0.0, -body.size.y * 0.5, 0.0))
 	if not standing:
-		waist.basis = mech.global_basis
+		waist.basis = body.global_basis
 	_pelvis.global_transform = MechBody.pelvis(waist)
 	for i in 2:
 		var side := -1.0 if i == 0 else 1.0
@@ -77,12 +78,12 @@ func place(k: MechSettings, delta: float) -> void:
 		if to_ankle.length() > reach:
 			ground = hip + to_ankle.normalized() * reach - Vector3.UP * MechBody.ANKLE
 		var open := MechBody.leg(hip, ground, facing)
-		_legs[i].pose(MechLegs._blend(open, _tucked_leg(waist, side), share) if share > 0.001 else open)
+		_legs[i].pose(BodyLegs._blend(open, _tucked_leg(waist, side), share) if share > 0.001 else open)
 
 
 ## LOS PASOS POR RADIO (ver arriba).
-func _stepping(k: MechSettings, delta: float, root: Transform3D, yaw: float) -> void:
-	var ahead := Transform3D(root.basis, root.origin + mech.support_speed * k.step_lead)
+func _stepping(k: BodySettings, delta: float, root: Transform3D, yaw: float) -> void:
+	var ahead := Transform3D(root.basis, root.origin + body.support_speed * k.step_lead)
 	if not _step.is_empty():
 		var foot := int(_step["foot"])
 		_step["clock"] = float(_step["clock"]) + delta
@@ -107,7 +108,7 @@ func _stepping(k: MechSettings, delta: float, root: Transform3D, yaw: float) -> 
 	steps_taken += 1
 
 
-func _foot_ground(k: MechSettings, index: int) -> Vector3:
+func _foot_ground(k: BodySettings, index: int) -> Vector3:
 	if _step.is_empty() or int(_step["foot"]) != index:
 		return _feet[index]
 	var share := clampf(float(_step["clock"]) / k.step_time, 0.0, 1.0)

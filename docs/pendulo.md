@@ -1,6 +1,6 @@
 # El péndulo: el equilibrio de la meca
 
-`game/mech/mech.gd` (el equilibrio de `Mech`) · ver [[meca]] y [[estructura]]
+`game/balance_body/balance_body.gd` (el equilibrio de `BalanceBody`, que hereda la meca) · ver [[meca]] y [[estructura]]
 
 *Nació como una fila aparte, el Cubo péndulo; desde el 13/11/2026 es el equilibrio de la meca, sin fila propia. Donde
 esta nota dice «el cubo», es la caja de la meca.*
@@ -73,4 +73,4 @@ Hoy es la **B**. Pendiente probar la C y la D.
 2. Un brazo con músculos (estilo PuppetMaster: cuerpos unidos que persiguen la pose de la IK o de una piña), en su fila.
 3. El torso mismo como músculo del mismo sistema.
 
-Perillas: `MechSettings` (F1). Test: `tests/mech_balance_check.tscn`.
+Perillas: `BodySettings` (F1). Test: `tests/mech_balance_check.tscn`.

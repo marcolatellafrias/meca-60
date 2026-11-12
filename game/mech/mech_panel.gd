@@ -1,7 +1,7 @@
 class_name MechPanel
 extends TunerPanel
 
-## EL PANEL DE LA MECA (F1 en sus filas): todas sus perillas (MechSettings), y vuelven a lo del código con el botón de
+## EL PANEL DE LA MECA (F1 en sus filas): todas sus perillas (BodySettings), y vuelven a lo del código con el botón de
 ## cada una.
 
 const PANEL_WIDTH := 420.0
@@ -43,5 +43,5 @@ func setup_panel() -> void:
 
 
 func sections() -> Array[Dictionary]:
-	return [{"title": "MechSettings (game/mech/mech_settings.gd)", "target": MechSettings.current, "labels": LABELS,
-		"defaults": MechSettings.new()}]
+	return [{"title": "BodySettings (game/balance_body/body_settings.gd)", "target": BodySettings.current, "labels": LABELS,
+		"defaults": BodySettings.new()}]

@@ -36,7 +36,7 @@ func _ready() -> void:
 	_eye.far = 2000.0
 	add_child(_eye)
 	_eye.make_current()
-	var knobs := MechSettings.current
+	var knobs := BodySettings.current
 	await _fresh()
 	print("ASENTARSE: altura %.2f · inclinación %.1f° · estado %d" % [_cube.height, _cube.tilt, _cube.state])
 	_view()
@@ -124,7 +124,7 @@ func _ready() -> void:
 		clock = 0.0
 		var most := 0.0
 		var shots := 0
-		while clock < 20.0 and (clock < 4.0 or _cube.state != Mech.State.STANDING):
+		while clock < 20.0 and (clock < 4.0 or _cube.state != BalanceBody.State.STANDING):
 			await get_tree().physics_frame
 			clock += 1.0 / 240.0
 			most = maxf(most, _cube.tilt)
@@ -134,7 +134,7 @@ func _ready() -> void:
 					"5_%02d" % shots)
 				shots += 1
 		print("F2 %s: inclinación pico %.0f° · se cayó %s · parado otra vez %s a los %.1f s" % ["fuerte" if strong else "suave",
-			most, _cube.falls > 0, _cube.state == Mech.State.STANDING, clock])
+			most, _cube.falls > 0, _cube.state == BalanceBody.State.STANDING, clock])
 	await _seconds(1.0)
 	print("DESPUÉS: inclinación %.1f° · altura %.2f · estado %d" % [_cube.tilt, _cube.height, _cube.state])
 	get_tree().quit()

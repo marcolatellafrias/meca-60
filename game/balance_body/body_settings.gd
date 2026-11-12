@@ -1,11 +1,12 @@
-class_name MechSettings
+class_name BodySettings
 extends Resource
 
-## LAS PERILLAS DE LA MECA (ver Mech y sus piezas): una sola copia para todas (`current`), que arma el panel de sus
+## LAS PERILLAS DE UN CUERPO CON EQUILIBRIO (ver BalanceBody y sus piezas): una sola copia para todos (`current`), la
+## de la meca propia; un jefe puede llevar la suya (`BalanceBody.knobs`), que arma el panel de sus
 ## filas (MechPanel, F1) leyendo estas propiedades —lo que el recurso exporta es lo que se ve—. Las fuerzas van como
 ## ACELERACIONES (m/s²): la masa de la caja no las cambia.
 
-static var current := MechSettings.new()
+static var current := BodySettings.new()
 
 @export_group("Caminar")
 ## A qué altura del piso va la cara de abajo de la caja (m): de ahí sale el largo del palo del péndulo.

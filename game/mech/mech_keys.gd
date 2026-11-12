@@ -45,11 +45,11 @@ func _unhandled_input(event: InputEvent) -> void:
 			return
 		var sensitivity := 0.0025 * GameOptions.mouse_sensitivity
 		_head_pitch = clampf(_head_pitch - motion.relative.y * sensitivity, deg_to_rad(-60.0), deg_to_rad(60.0))
-		if mech.state == Mech.State.STANDING:
+		if mech.state == BalanceBody.State.STANDING:
 			mech.aim_yaw -= motion.relative.x * sensitivity
 		get_viewport().set_input_as_handled()
 		return
-	if mech.state != Mech.State.STANDING or not UIState.gameplay_active():
+	if mech.state != BalanceBody.State.STANDING or not UIState.gameplay_active():
 		return
 	var click := event as InputEventMouseButton
 	if click != null and click.pressed and click.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
@@ -101,7 +101,7 @@ func end() -> void:
 
 ## Cuánto está girada la cabeza del que va sentado respecto de la cabina: lo que el pedido le lleva al torso.
 func head_yaw() -> float:
-	return wrapf(mech.aim_yaw - mech.yaw(), -PI, PI) if mech.state == Mech.State.STANDING else 0.0
+	return wrapf(mech.aim_yaw - mech.yaw(), -PI, PI) if mech.state == BalanceBody.State.STANDING else 0.0
 
 
 ## La cámara. EN PRIMERA PERSONA, LA DEL QUE VA SENTADO (el usuario: «uno de los asientos… como si estuvieras sentado…

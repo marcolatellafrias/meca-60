@@ -1,7 +1,7 @@
-class_name MechMoves
+class_name BodyMoves
 extends RefCounted
 
-## LO QUE HACE LA MECA CON LO QUE SE LE PIDE (ver Mech, LO QUE SE LE PIDE): caminar, correr, agacharse, saltar y el
+## LO QUE HACE UN CUERPO CON EQUILIBRIO CON LO QUE SE LE PIDE (ver BalanceBody, LO QUE SE LE PIDE): caminar, correr, agacharse, saltar y el
 ## propulsor. Todo son FUERZAS sobre la caja, o el largo del palo del péndulo: nunca la mueve por código. (Acá van a
 ## ir los propulsores de costado y los dashes.)
 ##   · CAMINAR (`move`): empuja al torso, en su centro, hacia la velocidad pedida —adelante hacia donde mira, y de
@@ -21,72 +21,72 @@ var fuel := 1.0
 ## El largo del palo de ahora, en partes del entero (agachada, cargando).
 var rod_scale := 1.0
 
-var _mech: Mech = null
+var _body: BalanceBody = null
 var _jump_was := false
 ## En el aire, el salto empuja recién cuando se lo vuelve a pedir (el que soltó para saltar no cuenta).
 var _thrust_armed := false
 
 
-func _init(mech: Mech) -> void:
-	_mech = mech
+func _init(body: BalanceBody) -> void:
+	_body = body
 
 
 ## Agacharse, cargar y soltar el salto, y el propulsor: lo que se pide en este paso.
-func step(k: MechSettings, delta: float) -> void:
-	var crouching := _mech.crouch
-	if _mech.airborne:
+func step(k: BodySettings, delta: float) -> void:
+	var crouching := _body.crouch
+	if _body.airborne:
 		jump_charge = 0.0
-		if not _mech.jump:
+		if not _body.jump:
 			_thrust_armed = true
-		if _mech.jump and _thrust_armed and fuel > 0.0:
+		if _body.jump and _thrust_armed and fuel > 0.0:
 			fuel = maxf(fuel - delta / k.thrust_time, 0.0)
-			_mech.nozzles.push(Vector3.UP * k.thrust * Mech.MASS, Vector3.ZERO, k)
+			_body.nozzles.push(Vector3.UP * k.thrust * _body.mass, Vector3.ZERO, k)
 	else:
 		_thrust_armed = false
 		fuel = minf(fuel + delta / k.thrust_refill, 1.0)
-		if _mech.jump and not crouching and _mech.grounded:
+		if _body.jump and not crouching and _body.grounded:
 			jump_charge = minf(jump_charge + delta / k.jump_charge_time, 1.0)
-		elif _jump_was and jump_charge > 0.0 and _mech.grounded:
+		elif _jump_was and jump_charge > 0.0 and _body.grounded:
 			_jump(k)
 		else:
 			jump_charge = 0.0
-	_jump_was = _mech.jump
-	var low := k.crouch_rod if crouching and not _mech.airborne else 1.0
+	_jump_was = _body.jump
+	var low := k.crouch_rod if crouching and not _body.airborne else 1.0
 	rod_scale = move_toward(rod_scale, minf(low, lerpf(1.0, k.jump_squat, jump_charge)), k.rod_rate * delta)
 
 
 ## SALTA: la altura sale de lo cargado, y de ahí la velocidad (v = √(2·g·h)). Es un cambio de velocidad propio y hacia
 ## arriba: el péndulo no lo lee como un golpe.
-func _jump(k: MechSettings) -> void:
+func _jump(k: BodySettings) -> void:
 	var rise := lerpf(k.jump_least, 1.0, jump_charge) * k.jump_height
-	_mech.linear_velocity.y = sqrt(2.0 * Mech.gravity() * rise)
+	_body.linear_velocity.y = sqrt(2.0 * BalanceBody.gravity() * rise)
 	jump_charge = 0.0
-	_mech.take_off()
+	_body.take_off()
 
 
 ## CAMINAR, CORRER Y AGACHADA. En el aire casi no cambia su velocidad de costado.
-func drive(k: MechSettings, delta: float) -> void:
-	var crouching := _mech.crouch and not _mech.airborne
+func drive(k: BodySettings, delta: float) -> void:
+	var crouching := _body.crouch and not _body.airborne
 	var walk := k.walk_speed * (k.crouch_speed if crouching else 1.0)
-	var stick := Vector3(_mech.move.x, 0.0, -_mech.move.y)
-	var sprinting := _mech.sprint and stick.z < 0.0 and not crouching
-	var wanted := Basis(Vector3.UP, _mech.yaw()) * stick.limit_length(1.0) * walk * (k.sprint_multiplier if sprinting else 1.0)
-	var flat := Vector3(_mech.linear_velocity.x, 0.0, _mech.linear_velocity.z)
+	var stick := Vector3(_body.move.x, 0.0, -_body.move.y)
+	var sprinting := _body.sprint and stick.z < 0.0 and not crouching
+	var wanted := Basis(Vector3.UP, _body.yaw()) * stick.limit_length(1.0) * walk * (k.sprint_multiplier if sprinting else 1.0)
+	var flat := Vector3(_body.linear_velocity.x, 0.0, _body.linear_velocity.z)
 	var most := k.walk_accel if wanted.length_squared() > 0.0001 else k.walk_brake
 	# LA BANDA DEL SPRINT: por encima de la caminata, la velocidad se gana y se pierde más despacio.
 	if flat.length() > walk:
 		most *= k.sprint_accel
-	if _mech.airborne:
+	if _body.airborne:
 		most = k.air_accel
-	_mech.apply_central_force(((wanted - flat) / maxf(delta, 0.0001)).limit_length(most) * Mech.MASS)
+	_body.apply_central_force(((wanted - flat) / maxf(delta, 0.0001)).limit_length(most) * _body.mass)
 
 
 ## El salto cargándose y el propulsor, para el cartel de poseer.
 func status() -> String:
 	var parts := PackedStringArray()
 	if jump_charge > 0.0:
-		parts.append("salto %s %d %%" % [MechMoves._bar(jump_charge), roundi(jump_charge * 100.0)])
-	parts.append("propulsor %s %d %%" % [MechMoves._bar(fuel), roundi(fuel * 100.0)])
+		parts.append("salto %s %d %%" % [BodyMoves._bar(jump_charge), roundi(jump_charge * 100.0)])
+	parts.append("propulsor %s %d %%" % [BodyMoves._bar(fuel), roundi(fuel * 100.0)])
 	return "   ".join(parts)
 
 

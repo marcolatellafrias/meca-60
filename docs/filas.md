@@ -17,8 +17,9 @@ columna, se queda). Cómo está armado el código, en [[estructura]].
 | Píxeles | `PixelArtArchetype` | `game/pixel_art/` entero, `tools/pixel_art_modelos_prueba.py` | `PixelPaintPanel` (F1) | `pixel_art_look` | `Clay`, `SupplyLook` (colores) |
 
 ## La meca (lo que comparten sus dos filas)
-`game/mech/` entero: `Mech` y sus piezas (`MechCabin`, `MechExterior`, `PelvisLift`, `MechLegs`, `MechLeg`,
-`MechNozzles`, `MechMoves`, `MechKeys`, `MechArm`, `MechHand`, `MechBody`), `MechSettings`, sus dos paneles, su parcela
+`game/balance_body/` entero (el cuerpo con equilibrio, que comparte con los jefes: `BalanceBody`, `BodyLegs`,
+`BodyNozzles`, `BodyMoves`, `BodySettings`) y `game/mech/` entero: `Mech` y sus piezas (`MechCabin`, `MechExterior`,
+`PelvisLift`, `MechLeg`, `MechKeys`, `MechArm`, `MechHand`, `MechBody`), sus dos paneles, su parcela
 y `Clay`. Tests: `mech_balance_check` (el equilibrio), `mech_ride_check` (caminar adentro y afuera), `possess_check`.
 
 **Borrar un camino**: la Meca discreta se lleva `game/pose_arm/`; la Meca física, `game/muscle_arm/` y la fila Brazo. En

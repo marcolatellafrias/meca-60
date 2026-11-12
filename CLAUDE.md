@@ -105,12 +105,14 @@ y los objetos de esa parcela; **las mecas todavía no**.
 ## Dónde va cada cosa
 Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`. La tabla completa, con las reglas que la
 ordenan y lo que todavía se le critica, en [docs/estructura.md](docs/estructura.md).
+- `game/balance_body/` — **el cuerpo con equilibrio, la base común de la meca y los jefes** (ver docs/base-comun.md):
+  `BalanceBody` (la caja, el péndulo, caerse y volver, lo que se le pide; ganchos `_build`, `_think`, `_after_step`),
+  `BodyLegs`, `BodyNozzles`, `BodyMoves` (acá van los dashes) y `BodySettings` (las perillas).
 - `game/mech/` — **la meca, una clase con sus piezas aparte** (aplanada el 13/11/2026; antes eran tres clases apiladas):
-  `Mech` (el cuerpo físico y su equilibrio, el péndulo; llama a sus piezas en orden), `MechCabin` (los pisos, el marco;
-  con `MechExterior` y `PelvisLift`), `MechLegs` (la pelvis y las piernas, con `MechLeg`), `MechNozzles` (las toberas:
-  levantarse y el propulsor), `MechMoves` (caminar, correr, agacharse, saltar: **acá van los dashes**), `MechKeys` (**el
+  `Mech` (hereda de `BalanceBody`; agrega cabina, teclas y brazos), `MechCabin` (los pisos, el marco;
+  con `MechExterior` y `PelvisLift`), `MechLeg` (una pierna), `MechKeys` (**el
   único lugar que lee teclas**, y la cámara de poseer), `MechArm` (lo que se le pide a un brazo), `MechHand`,
-  `MechBody` (medidas e IK), `MechSettings` (todas las perillas), `MechPanel` y `MechKnockPanel` (F1 y F2),
+  `MechBody` (medidas e IK), `MechPanel` y `MechKnockPanel` (F1 y F2),
   `MechArchetype` (la parcela de las dos filas) y `Clay` (la arcilla de los bocetos).
   **Lo que se le pide a la meca son variables** (`move`, `sprint`, `crouch`, `jump`, `aim_yaw`, `covering`, y `punch()`
   en sus brazos): hoy las escribe `MechKeys`; mañana, las consolas o un jefe. Nada más lee teclas.

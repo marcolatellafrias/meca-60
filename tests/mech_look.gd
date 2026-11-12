@@ -39,7 +39,7 @@ func _ready() -> void:
 	world.environment.ambient_light_color = Color(0.8, 0.82, 0.85)
 	world.environment.ambient_light_energy = 0.6
 	add_child(world)
-	var knobs := MechSettings.current
+	var knobs := BodySettings.current
 	_mech = Mech.new()
 	_mech.arms_kind = Mech.Arms.MUSCLE
 	_mech.position = Vector3(0.0, knobs.hover_height + Mech.SIZE * 0.5, 0.0)
@@ -173,10 +173,10 @@ func _ready() -> void:
 	var clock := 0.0
 	var shots := 0
 	var next := 0.0
-	while clock < 14.0 and not (_mech.falls > 0 and _mech.state == Mech.State.STANDING):
+	while clock < 14.0 and not (_mech.falls > 0 and _mech.state == BalanceBody.State.STANDING):
 		await get_tree().physics_frame
 		clock += 1.0 / 240.0
-		if _mech.state != Mech.State.STANDING and clock >= next and shots < 8:
+		if _mech.state != BalanceBody.State.STANDING and clock >= next and shots < 8:
 			next = clock + 0.45
 			_from(Vector3(-12.0, 5.0 - _mech.global_position.y * 0.3, -30.0), Vector3(0.0, 0.0, 0.0))
 			await _shot("Caída: %s · %.1f s" % [["parada", "tirada", "sube y se endereza", "termina de enderezarse"][_mech.state],

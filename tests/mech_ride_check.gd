@@ -103,7 +103,7 @@ func _ready() -> void:
 	# SE CAE Y SE RECUPERA.
 	_mech.knock(true)
 	var clock := 0.0
-	while clock < 14.0 and not (_mech.falls > 0 and _mech.state == Mech.State.STANDING):
+	while clock < 14.0 and not (_mech.falls > 0 and _mech.state == BalanceBody.State.STANDING):
 		await get_tree().physics_frame
 		clock += 1.0 / 240.0
 	await _seconds(3.0)

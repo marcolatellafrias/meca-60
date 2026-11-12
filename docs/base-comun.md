@@ -1,8 +1,8 @@
-# La base común de las mecas (pendiente)
+# La base común de las mecas
 
-Lo que van a compartir **la meca propia** y **las mecas enemigas (los jefes)**. Todavía no está separada: hoy vive
-adentro de `Mech` (ver [[estructura]] y [[pendulo]]). Esta nota junta lo acordado, para decírselo a quien haga la meca
-y a quien haga los jefes cuando arranquen.
+Lo que comparten **la meca propia** y **las mecas enemigas (los jefes)**: `BalanceBody`, en `game/balance_body/`
+(separada de `Mech` el 13/11/2026; ver [[estructura]] y [[pendulo]]). La meca propia hereda de ella; un jefe también.
+Esta nota junta lo acordado, para quien haga la meca y quien haga los jefes.
 
 ## Qué es
 **Un solo cuerpo físico** que se inclina, pierde el equilibrio y recibe golpes. Nada más. El usuario (13/11/2026): «los
@@ -21,7 +21,7 @@ que lo limite.
 
 ## Para tener en cuenta al diseñarla
 - **Las piernas no siempre salen de la pelvis.** En algunos van **en el cuerpo físico mismo**: una araña larga con las
-  patas saliendo de los costados, en vez de abajo (el usuario, 13/11/2026). Hoy `MechLegs` cuelga las dos piernas de una
+  patas saliendo de los costados, en vez de abajo (el usuario, 13/11/2026). Hoy `BodyLegs` cuelga las dos piernas de una
   pelvis debajo de la caja; la pieza de las piernas tiene que poder decir **de dónde sale cada pata** —de una pelvis o de
   puntos del cuerpo— y cuántas son. «Es un detalle mínimo, pero se puede estandarizar.»
 - **El equilibrio es el péndulo** (el cuerpo sobre un punto de apoyo que lo sigue): con cuatro patas o con ruedas, lo
@@ -29,6 +29,14 @@ que lo limite.
 - **Todo se mueve con fuerzas e impulsos**, nunca por código.
 - **Los brazos simulados** (`MuscleArm`) se guardan por si sirven para un jefe.
 
+## Cómo se usa
+Un cuerpo nuevo hereda de `BalanceBody`, pone su `size` y su masa en `_init`, y redefine tres ganchos: `_build` (arma sus
+piezas: cerebro, armas, otro medio de moverse), `_think` (al empezar cada paso escribe lo que se le pide) y
+`_after_step`. Puede llevar sus propias perillas (`knobs`, un `BodySettings`).
+
+**Lo que falta**: la pieza de las piernas todavía es una sola, `BodyLegs` (dos patas desde una pelvis). Las patas que
+salen del cuerpo, las cuatro patas o las ruedas son otra pieza que hay que poder elegir en `_build`; hoy el cuerpo arma
+siempre `BodyLegs`.
+
 ## Quién
-La separa quien tiene la visión general, antes de que arranquen las sesiones de la meca y de los jefes; después es de
-la sesión de la meca, y la de jefes la usa y pide cambios.
+Es de la sesión de la meca; la de jefes la usa y le pide cambios.

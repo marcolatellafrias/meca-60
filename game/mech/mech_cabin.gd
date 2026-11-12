@@ -41,7 +41,7 @@ static func seat() -> Vector3:
 
 
 func _ready() -> void:
-	name = "Dibujo"
+	name = "Cabina"
 	interior = StaticBody3D.new()
 	interior.name = "Interior"
 	interior.collision_layer = 0

@@ -106,4 +106,4 @@ El cartel de poseer muestra la carga del salto y lo que le queda al propulsor.
 - Propulsor: con el salto entero y todo el combustible llega a unos 42 m.
 - Camina a 8 m/s y corre a 14,4; al soltar Shift tarda unos 3 s en volver a 8.
 
-Perillas: `MechSettings` (F1). Test para mirar: `tests/mech_look.tscn` (unos 25 s, sin el sandbox).
+Perillas: `BodySettings` (F1). Test para mirar: `tests/mech_look.tscn` (unos 25 s, sin el sandbox).
