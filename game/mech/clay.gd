@@ -44,6 +44,28 @@ static func cylinder(parent: Node3D, radius: float, height: float, at: Vector3, 
 	return part
 
 
+## UN MIEMBRO (un brazo, una pierna): un cilindro de pocas caras (`LIMB_SIDES`) con el largo sobre su Z, centrado en `at`.
+## Lo pidió el usuario el 12/11/2026 («brazos y piernas cilíndricas en vez de cuadradas, medianamente low poly, pueden
+## ser 8 segmentos»). Girado medio lado: una cara plana mira al frente y otra al costado, no una arista.
+const LIMB_SIDES := 8
+
+
+static func limb(parent: Node3D, radius: float, length: float, at: Vector3, color: Color) -> MeshInstance3D:
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = radius
+	mesh.bottom_radius = radius
+	mesh.height = length
+	mesh.radial_segments = LIMB_SIDES
+	mesh.rings = 0
+	# Acostado sobre Z, dentro de un nodo que es el que se mueve: quien lo posa le escribe la transformación entera.
+	var holder := MeshInstance3D.new()
+	holder.position = at
+	parent.add_child(holder)
+	var part := _instance(holder, mesh, Vector3.ZERO, color)
+	part.basis = Basis(Vector3.RIGHT, PI * 0.5) * Basis(Vector3.UP, PI / LIMB_SIDES)
+	return holder
+
+
 static func sphere(parent: Node3D, radius: float, at: Vector3, color: Color) -> MeshInstance3D:
 	var mesh := SphereMesh.new()
 	mesh.radius = radius

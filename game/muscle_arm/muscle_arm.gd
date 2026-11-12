@@ -148,7 +148,9 @@ func _piece(piece_name: String, piece_mass: float, size: Vector3, at: Transform3
 	body.continuous_cd = true
 	body.transform = at
 	add_child(body)
-	Clay.solid(body, size, Vector3.ZERO, color)
+	# Choca como una caja; se ve como un cilindro de pocas caras (ver Clay.limb).
+	Clay.shape_box(body, size, Vector3.ZERO)
+	Clay.limb(body, size.x * 0.5, size.z, Vector3.ZERO, color)
 	# SU RESISTENCIA A GIRAR, que es muy distinta según el eje: de punta a punta, desde la articulación (una barra,
 	# m·L²/3), y sobre su propio largo (casi nada). El músculo mide su fuerza con la de cada eje (ver `_muscle`).
 	body.set_meta("across", piece_mass * size.z * size.z / 3.0)
