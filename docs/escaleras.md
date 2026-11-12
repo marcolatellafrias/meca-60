@@ -16,7 +16,7 @@ son DOS cuerpos:
 | Se ve | sí | no |
 | Capa | Escalones (14, `PhysicsLayers.FEET`) | Rampa (13, `PhysicsLayers.RAMP`) |
 | La ven | los rayos de los pies y el ragdoll | la cápsula y su rayo de piso |
-| Forma | cajas de 15 cm de alto y 30 de pisada | una tabla por los **rincones de abajo** de cada escalón |
+| Forma | cajas de 15 cm de alto y 31,5 de pisada | una tabla por los **rincones de abajo** de cada escalón |
 
 Así **toda pisada queda entre 0 y un escalón por encima de la cápsula**: la pierna la alcanza doblándose y nunca le falta
 largo. *En el laboratorio, con la rampa por los bordes de arriba de los escalones, algún pie quedaba fuera de alcance el
@@ -27,9 +27,10 @@ largo. *En el laboratorio, con la rampa por los bordes de arriba de los escalone
   puntas.
 - **El descanso que da a un piso común** (un techo, la calle): la tabla de la cápsula sube ese escalón a lo ancho del
   descanso, para empalmar sin escalón.
-- **La medida**: 15 cm de alto (un tramo lo ajusta un pelo para cerrar justo) y **30 cm de pisada**. *El laboratorio
-  usaba 50 cm; con eso un piso de 3 m pide un tramo de 10 m, que no entra en una fachada. Si los pies no se sienten
-  bien jugando, la pisada es lo primero que hay que mirar.*
+- **La medida**: 15 cm de alto (un tramo lo ajusta un pelo para cerrar justo) y **31,5 cm de pisada** (`CabinGrid.CELL`
+  × 8: la misma en la meca y en el mundo; en la cabina, 4 celdas de alto por 17 escalones dan justo un piso de 2,68 m).
+  *El laboratorio usaba 50 cm; con eso un piso de 3 m pide un tramo de 10 m, que no entra en una fachada. Si los pies
+  no se sienten bien jugando, la pisada es lo primero que hay que mirar.*
 - **Nada más que los personajes pisa una escalera**: ni la meca ni los objetos sueltos (un cubo que se suelta en una
   escalera, cae).
 
@@ -41,7 +42,7 @@ largo. *En el laboratorio, con la rampa por los bordes de arriba de los escalone
 
 ## Las escaleras de incendio del mapa (`Battlefield.stairs`)
 Pegadas a la fachada que mira al centro, en zigzag por dos carriles de 1,4 m: **un tramo por piso** (unos 3 m, 18 a 20
-escalones, 5,4 a 6 m de largo) y un descanso de 1,6 m en cada vuelta; el último da al techo.
+escalones, 5,7 a 6,3 m de largo) y un descanso de 1,6 m en cada vuelta; el último da al techo.
 
 ## Lo que se probó (`battlefield_check`)
 Una cápsula de persona que, como la del personaje, pisa el piso y la rampa (no los escalones) sube la escalera de una
@@ -49,4 +50,5 @@ casa de 11 m (4 tramos) y la de una torre de 30 m (10 tramos) hasta el techo. En
 queda **de 0,00 a 0,15 m** sobre el piso de la cápsula. **Falta verlo con el personaje de verdad, jugando.**
 
 ## Lo que todavía no cumple la regla
-- **La escalera de atrás de la meca** (`MechExterior`, de la sesión de la meca): sus tramos son rampas.
+- **La escalera de atrás de la meca** (`MechExterior`): sus tramos son rampas. La sesión del interior la está pasando a
+  `Stairs`.
