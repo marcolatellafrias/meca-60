@@ -5,15 +5,17 @@
 El [[cubo-pendulo]] camino a ser la meca: mismo equilibrio (el torso es un péndulo sobre su apoyo, los pies lo siguen),
 con cabina de tres pisos, brazos, y correr, agacharse, saltar y volar. El cubo péndulo queda como estaba, de referencia.
 
-## Por dentro
-**Tres pisos** con la proporción del cubo (2,67 m cada uno): vidrio con parantes al frente, **la puerta atrás** (el
-hueco, sin escalera todavía) y un asiento con su consola. Es dibujo. La primera persona de [[poseer]] es la del asiento
-del medio.
+## Por dentro y por fuera
+Se arma con **paredes de verdad**, no con una caja pintada: **tres pisos** con la proporción del cubo (2,67 m cada uno),
+cada uno con el hueco del frente con su **vidrio** y sus parantes (se ve para adentro y para afuera), **el hueco de la
+puerta atrás** (sin escalera todavía) y un asiento con su consola. Es dibujo: todavía no se camina adentro. La primera
+persona de [[poseer]] es la del asiento del medio.
 
 ## Los brazos
-Dibujo, en guardia: el hombro y el codo son **esferas**, la muñeca un **cubo**, y los dedos **cilindros**, piezas
-separadas; el pulgar va en la cara de costado del cubo. No pegan ni chocan todavía: los brazos con músculos son el paso
-que sigue.
+Dibujo: el hombro y el codo son **esferas**; la muñeca, una **palma** apenas más gruesa que un dedo; y los dedos, cuatro
+de tres **falanges** y el pulgar de dos, **cilindros**, todas piezas separadas. El pulgar va en el canto de arriba de la
+palma. Parada van **en guardia**; **al caer se recogen a los costados de la caja** y se estiran al enderezarse, con las
+piernas. No pegan ni chocan todavía: los brazos con músculos son el paso que sigue.
 
 ## Lo que hace (poseída)
 Lo vertical sale del **largo del palo** del péndulo, como en los personajes sale de su resorte de altura.

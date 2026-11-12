@@ -52,7 +52,7 @@ func _ready() -> void:
 	await _shot("De frente: tres pisos y los brazos", "1_frente")
 	_from(Vector3(16.0, 4.0, 24.0))
 	await _shot("De atrás: las puertas", "2_atras")
-	_from(Vector3(-6.0, 1.0, -13.0), Vector3(-4.5, -1.0, -5.0))
+	_from(Vector3(-11.0, 0.5, -11.5), Vector3(-3.5, -1.2, -6.0))
 	await _shot("La mano: la muñeca, los dedos y el pulgar", "3_mano")
 	_eye.global_transform = _mech.possess_camera(true, 0.0)
 	await _shot("Desde el asiento del medio", "4_asiento")
@@ -113,6 +113,23 @@ func _ready() -> void:
 	print("CORRER: camina a %.1f m/s · corre a %.1f m/s (inclinación %.0f°) · suelta Shift y a los 3 s va a %.1f m/s · caídas %d" % [
 		walking, running, _mech.tilt, _speed(), _mech.falls])
 	_press(KEY_W, false)
+	await _seconds(2.5)
+	# LA CAÍDA: los brazos y las piernas se recogen; al enderezarse, se estiran.
+	_mech.driving = false
+	_mech.knock(true)
+	var clock := 0.0
+	var shots := 0
+	var next := 0.0
+	while clock < 14.0 and not (_mech.falls > 0 and _mech.state == HoverCube.State.HOVER):
+		await get_tree().physics_frame
+		clock += 1.0 / 240.0
+		if _mech.state != HoverCube.State.HOVER and clock >= next and shots < 8:
+			next = clock + 0.45
+			_from(Vector3(-12.0, 5.0 - _mech.global_position.y * 0.3, -30.0), Vector3(0.0, 0.0, 0.0))
+			await _shot("Caída: %s · %.1f s" % [["parada", "tirada", "sube y se endereza", "termina de enderezarse"][_mech.state],
+				clock], "10_caida_%02d" % shots)
+			shots += 1
+	print("CAÍDA: parada otra vez a los %.1f s · brazos recogidos %d %%" % [clock, roundi(_mech._tuck * 100.0)])
 	get_tree().quit()
 
 

@@ -109,9 +109,7 @@ func _ready() -> void:
 	_look.name = "Dibujo"
 	add_child(_look)
 	_shape = Clay.shape_box(self, Vector3.ONE * SIZE, Vector3.ZERO)
-	Clay.box(_look, Vector3.ONE * SIZE, Vector3.ZERO, Clay.METAL)
-	# Una franja en el frente, para leer hacia dónde mira y cuánto se inclina.
-	Clay.box(_look, Vector3(SIZE * 0.7, SIZE * 0.12, 0.05), Vector3(0, SIZE * 0.25, -SIZE * 0.5 - 0.03), Clay.YELLOW)
+	_build_shell()
 	_build_nozzles()
 	_build_cabin()
 	_label = Label3D.new()
@@ -124,6 +122,13 @@ func _ready() -> void:
 	add_child(_label)
 	add_to_group(SandboxPossession.GROUP)
 	_lock(true)
+
+
+## LO DE AFUERA: la caja, y una franja amarilla en el frente para leer hacia dónde mira y cuánto se inclina. (Quien se
+## arma con paredes de verdad, no la usa.)
+func _build_shell() -> void:
+	Clay.box(_look, Vector3.ONE * SIZE, Vector3.ZERO, Clay.METAL)
+	Clay.box(_look, Vector3(SIZE * 0.7, SIZE * 0.12, 0.05), Vector3(0, SIZE * 0.25, -SIZE * 0.5 - 0.03), Clay.YELLOW)
 
 
 ## LA CABINA, por dentro (lo pidió el usuario el 12/11/2026: la primera persona es «uno de los asientos… como si

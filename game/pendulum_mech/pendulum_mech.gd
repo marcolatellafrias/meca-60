@@ -6,11 +6,13 @@ extends PendulumCube
 ## que los otros… simplemente las puertas… que tenga brazos… saltar… propulsor… se agacha… corre»). En su propia fila; el
 ## cubo péndulo queda como estaba.
 ##
-## POR DENTRO, TRES PISOS con la proporción del cubo (`_build_cabin`): cada uno con su vidrio y sus parantes al frente,
-## su PUERTA atrás (el hueco, sin escalera todavía) y su asiento. La primera persona es la del asiento del medio.
-## LOS BRAZOS (`_build_arms`), dibujo, en guardia: el hombro y el codo son ESFERAS, la muñeca un CUBO, y los dedos
-## CILINDROS, piezas separadas; el pulgar va en la cara de costado del cubo. No pegan todavía: los brazos con músculos
-## son el paso que sigue.
+## SE ARMA CON PAREDES DE VERDAD, no con una caja pintada (`_build_cabin`): TRES PISOS con la proporción del cubo, cada
+## uno con su vidrio y sus parantes al frente —un hueco con un vidrio: se ve para adentro y para afuera—, el HUECO DE LA
+## PUERTA atrás (sin escalera todavía) y su asiento. La primera persona es la del asiento del medio.
+## LOS BRAZOS (`_build_arms`), dibujo: el hombro y el codo son ESFERAS, la muñeca una PALMA apenas más gruesa que un
+## dedo, y los dedos, con sus FALANGES, cilindros; todas piezas separadas; el pulgar va en el canto de arriba de la palma.
+## Parada van en guardia; AL CAER SE RECOGEN A LOS COSTADOS de la caja, y se estiran al enderezarse, con las piernas
+## (`_place_arms`). No pegan todavía: los brazos con músculos son el paso que sigue.
 ##
 ## LO QUE HACE, poseída (lo vertical sale del largo del palo del péndulo, `_rod`, como en los personajes sale de su
 ## resorte de altura):
@@ -36,8 +38,11 @@ const DOOR := Vector2(1.1, 2.05)
 const SHOULDER := Vector3(SIZE * 0.5 + 1.0, 1.9, -0.4)
 const GUARD := Vector3(-1.5, -2.6, -6.2)
 const ARM_THICKNESS := 1.5
-const HAND := 1.9
-const FINGER := Vector2(0.24, 1.25)
+## LA MANO: el dedo (radio, y el largo de cada falange, de la palma a la punta) y la palma (apenas más gruesa que un
+## dedo, del alto de los cuatro dedos, y su largo).
+const FINGER_RADIUS := 0.23
+const PHALANGES := [0.62, 0.5, 0.4]
+const PALM := Vector3(FINGER_RADIUS * 2.0 * 1.3, FINGER_RADIUS * 2.0 * 4.4, 1.5)
 
 ## Lo cargado del salto y lo que le queda al propulsor (0 a 1), para mirar.
 var jump_charge := 0.0
@@ -48,6 +53,8 @@ var _rod_scale := 1.0
 var _space_was := false
 ## En el aire, el espacio empuja recién cuando se lo vuelve a apretar (el que soltó para saltar no cuenta).
 var _thrust_armed := false
+## Las piezas de cada brazo (el izquierdo y el derecho): `shoulder`, `upper`, `elbow`, `forearm`, `hand`.
+var _arms: Array[Dictionary] = []
 
 
 func _ready() -> void:
@@ -58,6 +65,11 @@ func _ready() -> void:
 
 func tuning() -> HoverCubeSettings:
 	return PendulumMechSettings.tuned
+
+
+func _physics_process(delta: float) -> void:
+	super(delta)
+	_place_arms()
 
 
 ## ── LO QUE HACE ──────────────────────────────────────────────────────────────────────────────────────────────────
@@ -161,7 +173,7 @@ static func _bar(share: float) -> String:
 	return "█".repeat(full) + "░".repeat(10 - full)
 
 
-## ── POR DENTRO: TRES PISOS ───────────────────────────────────────────────────────────────────────────────────────
+## ── POR DENTRO Y POR FUERA: TRES PISOS ───────────────────────────────────────────────────────────────────────────
 
 ## El piso `index` (0 el de abajo), en el espacio del cubo.
 static func floor_y(index: int) -> float:
@@ -169,42 +181,45 @@ static func floor_y(index: int) -> float:
 
 
 func _seat() -> Vector3:
-	return Vector3(0.0, floor_y(1), -SIZE * 0.5 + 1.6)
+	return Vector3(0.0, floor_y(1) + SLAB * 0.5, -SIZE * 0.5 + 1.6)
 
+
+## No hay caja pintada ni franja: lo de afuera son sus paredes (ver `_build_cabin`).
+func _build_shell() -> void:
+	pass
+
+
+const SLAB := 0.2
+const WALL := 0.2
 
 ## Tres pisos como los de la meca de pelea (MechTorso), con la proporción del cubo: las losas, los costados, al frente
-## el antepecho, el vidrio con sus parantes y el dintel, atrás la pared con su puerta, y un asiento con su consola. Es
-## dibujo: de afuera lo tapa la caja, y el vidrio y las puertas se dibujan también por fuera.
+## el antepecho, el HUECO con su vidrio y sus parantes y el dintel, atrás la pared con el HUECO de la puerta, y un
+## asiento con su consola. Las paredes son lo que se ve de afuera y de adentro: por los huecos se ve del otro lado.
 func _build_cabin() -> void:
-	var metal := Clay.METAL.darkened(0.08)
-	var half := SIZE * 0.5 - 0.08
-	var wall_h := FLOOR_HEIGHT - 0.12
-	var lintel := wall_h - SILL - GLASS
+	var metal := Clay.METAL
+	var half := SIZE * 0.5 - WALL * 0.5
 	for index in FLOORS + 1:
-		Clay.box(_look, Vector3(SIZE - 0.1, 0.12, SIZE - 0.1), Vector3(0, floor_y(index), 0), metal.darkened(0.15))
+		var y := clampf(floor_y(index), -half, half)
+		Clay.box(_look, Vector3(SIZE, SLAB, SIZE), Vector3(0, y, 0), metal.darkened(0.12))
 	for index in FLOORS:
-		var base := floor_y(index) + 0.06
+		var base := floor_y(index) + SLAB * 0.5
+		var wall_h := FLOOR_HEIGHT - SLAB
 		var mid := base + wall_h * 0.5
 		var glass_mid := base + SILL + GLASS * 0.5
+		var lintel := wall_h - SILL - GLASS
 		for side: float in [-1.0, 1.0]:
-			Clay.box(_look, Vector3(0.1, wall_h, SIZE - 0.1), Vector3(side * half, mid, 0), metal)
-		# El frente.
-		Clay.box(_look, Vector3(SIZE - 0.1, SILL, 0.1), Vector3(0, base + SILL * 0.5, -half), metal)
-		Clay.box(_look, Vector3(SIZE - 0.1, lintel, 0.1), Vector3(0, base + wall_h - lintel * 0.5, -half), metal)
-		for post_x: float in [-half + 0.1, -1.6, 1.6, half - 0.1]:
-			Clay.box(_look, Vector3(0.2, GLASS, 0.2), Vector3(post_x, glass_mid, -half), metal.darkened(0.2))
-		Clay.box(_look, Vector3(SIZE - 0.4, GLASS, 0.04), Vector3(0, glass_mid, -half - 0.04), Clay.GLASS)
-		Clay.box(_look, Vector3(SIZE - 0.4, GLASS, 0.04), Vector3(0, glass_mid, -SIZE * 0.5 - 0.03), Clay.GLASS)
-		for post_x: float in [-1.6, 1.6]:
-			Clay.box(_look, Vector3(0.2, GLASS, 0.06), Vector3(post_x, glass_mid, -SIZE * 0.5 - 0.05), metal.darkened(0.2))
-		# Atrás: la pared a los costados y arriba de la puerta; por fuera, la puerta marcada.
-		var beside := (SIZE - 0.1 - DOOR.x) * 0.5
+			Clay.box(_look, Vector3(WALL, wall_h, SIZE - WALL * 2.0), Vector3(side * half, mid, 0), metal)
+		# El frente: el antepecho, el dintel, los parantes y UN vidrio en el hueco.
+		Clay.box(_look, Vector3(SIZE, SILL, WALL), Vector3(0, base + SILL * 0.5, -half), metal)
+		Clay.box(_look, Vector3(SIZE, lintel, WALL), Vector3(0, base + wall_h - lintel * 0.5, -half), metal)
+		for post_x: float in [-half, -1.6, 1.6, half]:
+			Clay.box(_look, Vector3(WALL, GLASS, WALL), Vector3(post_x, glass_mid, -half), metal.darkened(0.2))
+		Clay.box(_look, Vector3(SIZE - WALL * 2.0, GLASS, 0.04), Vector3(0, glass_mid, -half), Clay.GLASS)
+		# Atrás: la pared a los costados y arriba del hueco de la puerta.
+		var beside := (SIZE - DOOR.x) * 0.5
 		for side: float in [-1.0, 1.0]:
-			Clay.box(_look, Vector3(beside, wall_h, 0.1), Vector3(side * (DOOR.x + beside) * 0.5, mid, half), metal)
-		Clay.box(_look, Vector3(DOOR.x, wall_h - DOOR.y, 0.1), Vector3(0, base + DOOR.y + (wall_h - DOOR.y) * 0.5, half), metal)
-		Clay.box(_look, Vector3(DOOR.x, DOOR.y, 0.06), Vector3(0, base + DOOR.y * 0.5, SIZE * 0.5 + 0.03), Clay.DARK)
-		Clay.box(_look, Vector3(DOOR.x + 0.3, DOOR.y + 0.15, 0.04), Vector3(0, base + DOOR.y * 0.5 + 0.075, SIZE * 0.5 + 0.02),
-			metal.darkened(0.3))
+			Clay.box(_look, Vector3(beside, wall_h, WALL), Vector3(side * (DOOR.x + beside) * 0.5, mid, half), metal)
+		Clay.box(_look, Vector3(DOOR.x, wall_h - DOOR.y, WALL), Vector3(0, base + DOOR.y + (wall_h - DOOR.y) * 0.5, half), metal)
 		# El asiento y su consola.
 		var seat := Vector3(0.0, base, -SIZE * 0.5 + 1.6)
 		Clay.box(_look, Vector3(0.6, 0.5, 0.6), seat + Vector3(0, 0.25, 0), Clay.DARK)
@@ -212,34 +227,93 @@ func _build_cabin() -> void:
 		Clay.box(_look, Vector3(1.4, 0.8, 0.5), seat + Vector3(0, 0.4, -0.95), metal.darkened(0.25))
 
 
-## ── LOS BRAZOS (dibujo, en guardia) ──────────────────────────────────────────────────────────────────────────────
+## ── LOS BRAZOS (dibujo) ──────────────────────────────────────────────────────────────────────────────────────────
 
-## Cada brazo: la esfera del hombro, el brazo, la esfera del codo, el antebrazo, el cubo de la muñeca y los dedos
-## —cuatro cilindros al frente del cubo, uno al lado del otro, y el pulgar en su cara de costado, la de adentro—. Los
-## largos y la postura son los del cuerpo de la meca (MechBody.arm).
+## Las piezas de cada brazo, sueltas (las ubica `_place_arms`): la esfera del hombro, el brazo, la esfera del codo, el
+## antebrazo y la mano.
 func _build_arms() -> void:
 	for side: float in [-1.0, 1.0]:
+		var upper := Clay.box(_look, Vector3(ARM_THICKNESS, ARM_THICKNESS, MechBody.UPPER_ARM), Vector3.ZERO,
+			Clay.METAL.darkened(0.1))
+		var forearm := Clay.box(_look, Vector3(ARM_THICKNESS * 0.88, ARM_THICKNESS * 0.88, MechBody.FOREARM), Vector3.ZERO,
+			Clay.METAL.darkened(0.2))
+		_arms.append({
+			"shoulder": Clay.sphere(_look, ARM_THICKNESS * 0.78, Vector3.ZERO, MechBody.JOINT_COLOR),
+			"upper": upper,
+			"elbow": Clay.sphere(_look, ARM_THICKNESS * 0.66, Vector3.ZERO, MechBody.JOINT_COLOR),
+			"forearm": forearm,
+			"hand": _build_hand(side),
+		})
+	_place_arms()
+
+
+## LA MANO, en la punta del antebrazo (su −Z va hacia los dedos): la PALMA, apenas más gruesa que un dedo; los cuatro
+## DEDOS al frente, uno arriba del otro, cada uno con sus tres FALANGES —cilindros sueltos, cada una un poco más cerrada
+## que la anterior, hacia adentro—; y el PULGAR, de dos falanges, en el canto de arriba de la palma.
+func _build_hand(side: float) -> Node3D:
+	var hand := Node3D.new()
+	_look.add_child(hand)
+	var color := Clay.METAL.darkened(0.15)
+	Clay.box(hand, PALM, Vector3(0.0, 0.0, -PALM.z * 0.5), MechBody.JOINT_COLOR)
+	for finger in 4:
+		var knuckle := Vector3(0.0, (finger - 1.5) * FINGER_RADIUS * 2.2, -PALM.z)
+		_build_finger(hand, knuckle, Basis(), PHALANGES, color, -side)
+	# El pulgar sale del canto de arriba, hacia adelante y un poco hacia arriba.
+	var thumb := Vector3(0.0, PALM.y * 0.5, -PALM.z * 0.35)
+	_build_finger(hand, thumb, Basis(Vector3.RIGHT, deg_to_rad(40.0)), [PHALANGES[0] * 0.9, PHALANGES[1]], color, -side)
+	return hand
+
+
+## UN DEDO: una falange tras otra desde `from`, hacia el −Z de `basis`, cada una girada `CURL` más que la anterior
+## alrededor del eje vertical de la mano, hacia `inward` (el lado de adentro).
+func _build_finger(hand: Node3D, from: Vector3, basis: Basis, lengths: Array, color: Color, inward: float) -> void:
+	var at := from
+	var turn := basis
+	for length: float in lengths:
+		turn = turn * Basis(Vector3.UP, inward * deg_to_rad(14.0))
+		var along := turn * Vector3.FORWARD
+		var piece := Clay.cylinder(hand, FINGER_RADIUS, length - 0.06, Vector3.ZERO, color)
+		# El cilindro tiene el largo en su Y: se lo acuesta sobre el −Z del dedo.
+		piece.transform = Transform3D(turn * Basis(Vector3.RIGHT, -PI * 0.5), at + along * length * 0.5)
+		at += along * length
+
+
+## UBICA LOS BRAZOS, en el espacio del cubo: en guardia parada, y RECOGIDOS A LOS COSTADOS caída (con la misma medida
+## que las piernas, `_tuck`: se recogen al caer y se estiran al enderezarse).
+func _place_arms() -> void:
+	var share := smoothstep(0.0, 1.0, _tuck)
+	for index in _arms.size():
+		var side := -1.0 if index == 0 else 1.0
 		var shoulder := Vector3(side * SHOULDER.x, SHOULDER.y, SHOULDER.z)
-		var fist := shoulder + Vector3(side * GUARD.x, GUARD.y, GUARD.z)
-		var arm := MechBody.arm(shoulder, fist, side, Basis())
-		var upper: Transform3D = arm["upper"]
-		var forearm: Transform3D = arm["forearm"]
-		Clay.sphere(_look, ARM_THICKNESS * 0.78, shoulder, MechBody.JOINT_COLOR)
-		Clay.box(_look, Vector3(ARM_THICKNESS, ARM_THICKNESS, MechBody.UPPER_ARM), Vector3.ZERO,
-			Clay.METAL.darkened(0.1)).transform = upper
-		Clay.sphere(_look, ARM_THICKNESS * 0.66, arm["elbow"], MechBody.JOINT_COLOR)
-		Clay.box(_look, Vector3(ARM_THICKNESS * 0.88, ARM_THICKNESS * 0.88, MechBody.FOREARM), Vector3.ZERO,
-			Clay.METAL.darkened(0.2)).transform = forearm
-		# La muñeca: un cubo en la punta del antebrazo, con su orientación.
-		var hand := Node3D.new()
-		hand.transform = Transform3D(forearm.basis, arm["wrist"] as Vector3)
-		_look.add_child(hand)
-		Clay.box(hand, Vector3.ONE * HAND, Vector3.ZERO, MechBody.JOINT_COLOR)
-		# Los dedos salen de la cara del frente (−Z), uno al lado del otro a lo alto.
-		for finger in 4:
-			var y := (finger - 1.5) * HAND * 0.25
-			Clay.cylinder(hand, FINGER.x, FINGER.y, Vector3(0.0, y, -HAND * 0.5 - FINGER.y * 0.5 - 0.06),
-				Clay.METAL.darkened(0.15), Vector3(90, 0, 0))
-		# El pulgar, en la cara de costado de adentro, apuntando adelante.
-		Clay.cylinder(hand, FINGER.x * 1.1, FINGER.y * 0.8, Vector3(-side * (HAND * 0.5 + FINGER.x * 1.1 + 0.05), HAND * 0.2,
-			-HAND * 0.25), Clay.METAL.darkened(0.15), Vector3(90, 0, 0))
+		var pose := MechBody.arm(shoulder, shoulder + Vector3(side * GUARD.x, GUARD.y, GUARD.z), side, Basis())
+		if share > 0.001:
+			pose = _blend_arm(pose, _tucked_arm(shoulder), share)
+		var arm := _arms[index]
+		var forearm: Transform3D = pose["forearm"]
+		(arm["shoulder"] as Node3D).position = shoulder
+		(arm["upper"] as Node3D).transform = pose["upper"]
+		(arm["elbow"] as Node3D).position = pose["elbow"]
+		(arm["forearm"] as Node3D).transform = forearm
+		(arm["hand"] as Node3D).transform = Transform3D(forearm.basis, pose["wrist"] as Vector3)
+
+
+## EL BRAZO RECOGIDO: pegado al costado de la caja, el brazo derecho hacia abajo y el antebrazo de vuelta hacia arriba,
+## apenas adelante, con la mano a la altura del hombro.
+func _tucked_arm(shoulder: Vector3) -> Dictionary:
+	var elbow := shoulder + Vector3(0.0, -MechBody.UPPER_ARM, 0.4)
+	var wrist := elbow + Vector3(0.0, 0.97, -0.24).normalized() * MechBody.FOREARM
+	return {
+		"upper": MechBody.segment(shoulder, elbow, Vector3.FORWARD),
+		"forearm": MechBody.segment(elbow, wrist, Vector3.FORWARD),
+		"elbow": elbow,
+		"wrist": wrist,
+	}
+
+
+static func _blend_arm(from: Dictionary, to: Dictionary, share: float) -> Dictionary:
+	return {
+		"upper": (from["upper"] as Transform3D).interpolate_with(to["upper"], share),
+		"forearm": (from["forearm"] as Transform3D).interpolate_with(to["forearm"], share),
+		"elbow": (from["elbow"] as Vector3).lerp(to["elbow"], share),
+		"wrist": (from["wrist"] as Vector3).lerp(to["wrist"], share),
+	}
