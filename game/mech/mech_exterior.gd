@@ -12,6 +12,8 @@ extends RefCounted
 ##     una persona (`CLEAR`). *El primer zigzag (12/11/2026) tenía los dos tramos en el mismo carril, uno encima del
 ##     otro: donde se daban vuelta quedaba 1,1 m de altura (lo vio el usuario: «son imposibles»). Se había armado a ojo,
 ##     sin medir.*
+##   · LA ESCALERA, CON `Stairs` (13/11/2026, la regla del usuario para toda escalera: ver docs/escaleras.md): los
+##     escalones para los pies y una rampa invisible para la cápsula. *Hasta entonces los tramos eran rampas.*
 ##   · LAS BARANDAS VAN DONDE HAY CAÍDA: en cada borde de cada superficie, salvo donde del otro lado sigue otra
 ##     superficie a la misma altura o está la pared del cubo.
 ## Todo de barras y rejilla finas. SE CAMINA: cada piso, cada tramo (una rampa) y cada baranda le agrega su forma de
@@ -40,10 +42,9 @@ const CLEAR := 2.1
 const STEEL := Color(0.24, 0.25, 0.28)
 const GRATE := Color(0.36, 0.38, 0.41)
 
-## La escalera: dónde arranca el descanso de abajo de cada tramo (x), y el largo de un descanso y de un tramo, en planta.
-const STAIR_START := -74 * C
+## La escalera: el largo de un descanso, en planta. El de un tramo sale de los escalones (`flight_run`), y todo queda
+## centrado atrás (`stair_start`).
 const LANDING := 23 * C
-const FLIGHT := 102 * C
 
 
 ## Lo arma colgado de `holder` (el dibujo) y `solid` (sus formas de choque).
@@ -66,6 +67,17 @@ static func bounds() -> AABB:
 	var outer := HALF + WALK + 0.25
 	var back := _lane(1).y + 0.3
 	return AABB(Vector3(-outer, -HALF - 0.3, SIDE_END - 0.3), Vector3(outer * 2.0, CabinGrid.SIZE + 2.4, back - SIDE_END + 0.3))
+
+
+## LA ESCALERA SE ARMA CON `Stairs` (la regla del usuario, ver docs/escaleras.md): escalones para los pies y una
+## rampa invisible para la cápsula. Lo largo de un tramo: el de los escalones que suben un piso.
+static func flight_run() -> float:
+	return Stairs.run_for(CabinGrid.FLOOR_HEIGHT)
+
+
+## Dónde arranca el descanso de abajo de cada tramo (x): la escalera entera, con sus dos descansos, centrada atrás.
+static func stair_start() -> float:
+	return -(flight_run() + LANDING * 2.0) * 0.5
 
 
 static func _floor_y(index: int) -> float:
@@ -95,15 +107,16 @@ static func surfaces() -> Array[Dictionary]:
 		all.append({"x0": minf(side * HALF, side * outer), "x1": maxf(side * HALF, side * outer), "z0": SIDE_END, "z1": HALF,
 			"ya": ground, "yb": ground})
 	# Por piso: el descanso de abajo, el tramo, el descanso de arriba (los tres en el carril de afuera) y el balcón.
-	var foot := STAIR_START + LANDING
-	var head := foot + FLIGHT
+	var start := stair_start()
+	var foot := start + LANDING
+	var head := foot + flight_run()
 	for index in 2:
 		var low := _floor_y(index)
 		var high := _floor_y(index + 1)
-		all.append(_s(STAIR_START, foot, 1, 1, low, low))
+		all.append(_s(start, foot, 1, 1, low, low))
 		all.append(_s(foot, head, 1, 1, low, high))
 		all.append(_s(head, head + LANDING, 1, 1, high, high))
-		all.append(_s(STAIR_START, head + LANDING, 0, 0, high, high))
+		all.append(_s(start, head + LANDING, 0, 0, high, high))
 	return all
 
 
@@ -139,7 +152,9 @@ static func headroom(all: Array[Dictionary]) -> float:
 
 ## ── EL DIBUJO Y LAS FORMAS ───────────────────────────────────────────────────────────────────────────────────────
 
-## Una superficie: un piso de rejilla, o un tramo (dos zancas y los escalones; se camina como una rampa).
+## Una superficie: un piso de rejilla; un descanso de la escalera (el carril de afuera), que da de costado a la pasarela
+## o al balcón, a su misma altura; o un tramo, con sus dos zancas. Los descansos y los tramos los arma `Stairs`, en sus
+## dos cuerpos (los escalones y la rampa de la cápsula), colgados de `holder`: el marco los copia (ver MechCabin).
 static func _draw(holder: Node3D, solid: PhysicsBody3D, surface: Dictionary) -> void:
 	var x0 := float(surface["x0"])
 	var x1 := float(surface["x1"])
@@ -149,6 +164,10 @@ static func _draw(holder: Node3D, solid: PhysicsBody3D, surface: Dictionary) -> 
 	var yb := float(surface["yb"])
 	var middle := (z0 + z1) * 0.5
 	var width := z1 - z0
+	var on_stair := is_equal_approx(z0, _lane(1).x)
+	if is_equal_approx(ya, yb) and on_stair:
+		Stairs.landing(holder, Vector3((x0 + x1) * 0.5, ya, middle), Vector2(x1 - x0, width), 0.0, GRATE, Vector3.FORWARD)
+		return
 	if is_equal_approx(ya, yb):
 		var size := Vector3(x1 - x0, 0.07, width)
 		var at := Vector3((x0 + x1) * 0.5, ya - 0.035, middle)
@@ -158,12 +177,8 @@ static func _draw(holder: Node3D, solid: PhysicsBody3D, surface: Dictionary) -> 
 	var from := Vector3(x0, ya, middle)
 	var to := Vector3(x1, yb, middle)
 	for edge: float in [-1.0, 1.0]:
-		_bar(holder, from + Vector3(0, 0, edge * width * 0.5), to + Vector3(0, 0, edge * width * 0.5), 0.1)
-	var steps := roundi(absf(yb - ya) / 0.21)
-	for step in range(1, steps):
-		Clay.box(holder, Vector3(0.3, 0.05, width), from.lerp(to, float(step) / steps), GRATE)
-	var slope := MechBody.segment(from, to, Vector3.UP)
-	Clay.shape_box(solid, Vector3(width, 0.1, from.distance_to(to)), slope.origin - slope.basis.y * 0.05, slope.basis)
+		_bar(holder, from + Vector3(0, -0.1, edge * width * 0.5), to + Vector3(0, -0.1, edge * width * 0.5), 0.1)
+	Stairs.flight(holder, from, Vector3.RIGHT, yb - ya, width, GRATE)
 
 
 ## LAS BARANDAS, DONDE HAY CAÍDA: recorre los cuatro bordes de cada superficie de a pedacitos; un pedacito lleva baranda

@@ -28,8 +28,13 @@ pisos o de jugadores (de 1 a 4) sin rehacer nada a mano.
 - **El frente**: una ventana por módulo (antepecho de 19 celdas, vidrio de 36) y **un parante en cada línea entre
   módulos**.
 - **Atrás**: la puerta de cada piso (28 × 52 celdas), en el medio.
-- **El afuera** (la pasarela, los balcones, la escalera) también se mide en celdas. **La escalera queda como estaba**
-  hasta que el módulo Mundo diga cómo tienen que ser las escaleras.
+- **El afuera** (la pasarela, los balcones, la escalera) también se mide en celdas. **La escalera de atrás se arma con
+  `Stairs`** (la regla del usuario para toda escalera, ver [[escaleras]]): escalones de unos 15 cm con pisada de 8
+  celdas (31,5 cm) para los pies y una rampa invisible para la cápsula; 18 escalones por piso, y la escalera, con sus
+  dos descansos, va centrada atrás.
+- **El marco copia también las escaleras** (`MotionFrame.cast_shadow`): la rampa de la cápsula entra en la sombra de
+  siempre y los escalones en una segunda sombra, en la capa Escalones, que ven sólo los pies y el ragdoll. **Falta
+  probar subir y bajar caminando con el personaje.**
 
 ## Lo que pidió el usuario y falta
 - **Los controles principales**, al frente y al centro de lo que ve el que está sentado: moverse, saltar, los

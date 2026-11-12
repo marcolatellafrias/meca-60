@@ -72,6 +72,8 @@ var _accel := Vector3.ZERO
 var _spin_accel := Vector3.ZERO
 var _steps := 0
 var _shadow: AnimatableBody3D = null
+## La sombra de los escalones: lo que adentro ven sólo los pies (ver `cast_shadow`).
+var _shadow_feet: AnimatableBody3D = null
 var _shadow_sources: Array = []
 var _shadow_wait := 0
 ## Cada cuántos pasos se mira si alguna forma de la nave se movió (ver `_place_shadow`): 60 veces por segundo.
@@ -239,22 +241,22 @@ func crash(dv: Vector3) -> void:
 ## dónde está cada forma, así las compuertas y las sillas que giran también valen. Se vuelve a llamar si se agregan
 ## piezas. Lo que cuelga de algo de `leave_out` no entra (las sillas, ver ShipKits.chairs_collide): lo de adentro las
 ## atraviesa, pero siguen estando para el rayo con que se apunta.
+## LAS ESCALERAS (ver Stairs, 13/11/2026): la RAMPA de la cápsula (capa Rampa) entra en la sombra de siempre, que es la
+## que ven la cápsula y su rayo de piso; los ESCALONES (capa Escalones) van a una segunda sombra en la capa Escalones,
+## que ven sólo los rayos de los pies y el ragdoll. Los pies igual ven la de siempre, pero pisan los escalones antes:
+## la rampa pasa por debajo, por sus rincones de abajo.
 func cast_shadow(root: Node3D, leave_out: Array = []) -> void:
-	if is_instance_valid(_shadow):
-		_shadow.queue_free()
+	for old: AnimatableBody3D in [_shadow, _shadow_feet]:
+		if is_instance_valid(old):
+			old.queue_free()
 	_shadow_sources.clear()
-	_shadow = AnimatableBody3D.new()
-	_shadow.name = "sombra"
-	_shadow.sync_to_physics = true
-	_shadow.top_level = true
-	_shadow.collision_layer = LAYER
-	_shadow.collision_mask = 0
-	add_child(_shadow)
-	_shadow.global_transform = global_transform
+	_shadow = _shadow_body("sombra", LAYER)
+	_shadow_feet = _shadow_body("sombra de los escalones", PhysicsLayers.FEET)
+	var seen := 1 | PhysicsLayers.RAMP | PhysicsLayers.FEET
 	for node in root.find_children("*", "CollisionShape3D", true, false):
 		var source := node as CollisionShape3D
 		var owner_body := source.get_parent() as PhysicsBody3D
-		if source.shape == null or owner_body == null or owner_body == _shadow or not owner_body.collision_layer & 1:
+		if source.shape == null or owner_body == null or owner_body == _shadow or owner_body == _shadow_feet 				or not owner_body.collision_layer & seen:
 			continue
 		# Lo suelto que va adentro (una caja, un cuerpo) no es la nave: se mueve solo, y es miembro.
 		if _members.has(owner_body) or owner_body != root and owner_body is RigidBody3D and not owner_body.freeze:
@@ -263,9 +265,22 @@ func cast_shadow(root: Node3D, leave_out: Array = []) -> void:
 			continue
 		var copy := CollisionShape3D.new()
 		copy.shape = source.shape
-		_shadow.add_child(copy)
+		var only_feet := owner_body.collision_layer & PhysicsLayers.FEET and not owner_body.collision_layer & (1 | PhysicsLayers.RAMP)
+		(_shadow_feet if only_feet else _shadow).add_child(copy)
 		_shadow_sources.append([source, copy])
 	_place_shadow(true)
+
+
+func _shadow_body(label: String, layer: int) -> AnimatableBody3D:
+	var body := AnimatableBody3D.new()
+	body.name = label
+	body.sync_to_physics = true
+	body.top_level = true
+	body.collision_layer = layer
+	body.collision_mask = 0
+	add_child(body)
+	body.global_transform = global_transform
+	return body
 
 
 ## LA SOMBRA SIGUE AL MARCO en cada paso (el cuerpo entero, que el motor mueve sabiendo su velocidad), y sus formas a
@@ -274,6 +289,7 @@ func cast_shadow(root: Node3D, leave_out: Array = []) -> void:
 ## el paso de física pasó de 1,8 a 15 ms y la maqueta se arrastraba (lo vio el dios del juego).*
 func _place_shadow(all := false) -> void:
 	_shadow.global_transform = global_transform
+	_shadow_feet.global_transform = global_transform
 	_shadow_wait -= 1
 	if not all and _shadow_wait > 0:
 		return

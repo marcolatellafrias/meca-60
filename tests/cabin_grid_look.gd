@@ -1,7 +1,8 @@
 extends Node3D
 
 ## LA CABINA SOBRE SU GRILLA, PARA MIRAR (unos 10 segundos, sin el sandbox): una meca discreta parada, cortada por el
-## costado izquierdo y sin techo, con las líneas de los módulos dibujadas en cada piso (ver CabinGrid); y de frente.
+## costado izquierdo y sin techo, con las líneas de los módulos dibujadas en cada piso (ver CabinGrid); de frente y de
+## atrás (la escalera).
 ## Imprime las medidas que salen de la grilla.
 ##   tools/godot_ventana.sh res://tests/cabin_grid_look.tscn -- --salida=C:/carpeta
 
@@ -69,7 +70,10 @@ func _ready() -> void:
 	_title.text = "De frente: una ventana por módulo"
 	_look(Vector3(-9.0, 1.0, -22.0), Vector3(0.0, -0.5, 0.0), 38.0)
 	var front := await _grab()
-	_save([side, top, front], "cabina_grilla")
+	_title.text = "De atrás: la escalera, con escalones (Stairs)"
+	_look(Vector3(-7.0, 0.0, 17.0), Vector3(0.0, -1.0, 4.5), 45.0)
+	var back := await _grab()
+	_save([side, top, front, back], "cabina_grilla")
 	get_tree().quit()
 
 

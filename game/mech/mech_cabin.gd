@@ -109,8 +109,8 @@ func _solid(size: Vector3, at: Vector3, color: Color) -> void:
 
 
 ## EL MARCO, con sus volúmenes (la caja, el afuera y el hueco del ascensor), y su sombra: la copia de las formas de
-## `interior`. El marco copia las de un cuerpo de la capa 1; `interior` lo es sólo mientras se copia. Se llama cuando la
-## meca ya tiene todo armado.
+## `interior` y de los escalones y la rampa de la escalera. El marco copia las de un cuerpo de la capa 1; `interior` lo
+## es sólo mientras se copia. Se llama cuando la meca ya tiene todo armado.
 func build_frame() -> void:
 	frame = MotionFrame.new()
 	mech.add_child(frame)
@@ -119,9 +119,14 @@ func build_frame() -> void:
 	frame.add_volume(MechExterior.bounds())
 	frame.add_volume(PelvisLift.shaft())
 	interior.collision_layer = 1
-	frame.cast_shadow(interior)
+	frame.cast_shadow(self)
 	interior.collision_layer = 0
 	interior.collision_mask = 0
+	# LA ESCALERA DE ATRÁS (ver MechExterior, Stairs): sus escalones y su rampa ya están copiados en la sombra; los de
+	# verdad, que van con la meca, dejan de chocar, como `interior`.
+	for body in find_children("*", "StaticBody3D", true, false):
+		if body != interior:
+			(body as StaticBody3D).collision_layer = 0
 
 
 ## LA CAJA DE AFUERA NO CHOCA CON LOS QUE VAN ADENTRO: ellos ya dejaron de mirar al mundo (ver MotionFrame.join), pero
