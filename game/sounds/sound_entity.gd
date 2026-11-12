@@ -9,7 +9,7 @@ extends Node3D
 ##     const SOUNDS := {
 ##         PRESS: &"boton",                                          # un evento, una clave
 ##         &"hit": [&"golpe_paquete", &"golpe_vidrio"],              # CAPAS: suenan juntas
-##         &"line": {"keys": &"telefono_linea", "while": HELD},      # un loop MIENTRAS está en un estado
+##         &"line": {"keys": &"sirena", "while": HELD},      # un loop MIENTRAS está en un estado
 ##         MOVE: {"keys": &"palanca_corre", "resume": true},         # al moverse, CON CONTINUIDAD
 ##         MOVE_UP: {"keys": &"rueda_derecha", "scrub": true},       # para un lado, y el valor recorre el archivo
 ##         &"page": {"keys": &"pagina", "choke": &"hoja"},           # la nueva CORTA a la anterior

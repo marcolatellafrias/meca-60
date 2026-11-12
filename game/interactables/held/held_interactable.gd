@@ -1,10 +1,15 @@
 class_name HeldInteractable
 extends Interactable
 
-## UN OBJETO QUE SE SOSTIENE: el manual, el teléfono (ver docs/conceptual/ship-systems.md e interactables.md).
+## UN OBJETO QUE SE SOSTIENE: el manual. (Vino con el teléfono de la nave de character-parametric; en la meca queda el
+## manual, que va a tener uso.)
+##
+## ⚠ NO ES FINAL (el usuario, 13/11/2026: «el sistema mediante el cual los personajes agarran esas cosas… hay que
+## revisarlo porque la pose la había dejado medio a medias»): LA POSE con que el personaje sostiene la pieza —cómo llegan
+## las manos, dónde queda frente a la cara— quedó sin terminar. Revisarla antes de construir algo encima.
 ##
 ## Vive en un lugar fijo —este nodo es su BASE— y tiene una PIEZA que, con un clic, se va con quien la toma: el
-## libro a las dos manos, el tubo a la oreja. Otro clic la devuelve. Tenerla NO impide moverse, pero más allá del
+## libro a las dos manos. Otro clic la devuelve. Tenerla NO impide moverse, pero más allá del
 ## ALCANCE de quien la tiene, medido desde su base, se le escapa de la mano y vuelve sola a su lugar: eso es lo que la
 ## ata a su tablero, y lo que hace que la información del manual sea de uno solo. Era un metro fijo, y desde la silla
 ## de una consola el libro y el mapa quedaban más lejos que eso: no se podían agarrar (lo decidió el dios del juego,
