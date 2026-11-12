@@ -12,6 +12,7 @@ empieza con su comentario largo).
 - [[pendulo]] — **el modelo de equilibrio de la meca**: el torso es un péndulo y los pies lo siguen.
 - [[brazo]] — los brazos: lo que se les pide (una vez), el físico con músculos y el discreto.
 - [[cubo-con-piernas]] — **la otra variante de equilibrio (la línea)**, guardada: el cubo con pelvis, dos piernas, torso aparte y pasos por radio.
+- [[mapa]] — **el mapa de pelea**: una arena circular de Ø 260 m, libre al medio, con barrios, escaleras y recursos en el borde.
 - [[recursos]] — los recursos de la meca: cubos de 63 cm (batería, componente eléctrico, munición, bomba) y cómo se van a enchufar.
 - [[pixel-art]] — **pintar con píxeles** (experimento): de Blender al sandbox, cara por cara; la densidad, las costuras y cómo se remodela sin repintar.
 - [[poseer]] — la O posee lo que mirás, la T cambia la vista, y un cartel con sus controles.
