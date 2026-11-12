@@ -489,3 +489,38 @@ func body_position() -> Vector3:
 
 func state_name() -> String:
 	return ["parada", "EN EL SUELO", "levantándose"][state]
+
+
+## ── CUÁNTO HAY QUE EMPUJARLA ─────────────────────────────────────────────────────────────────────────────────────
+## Lo que la hace llegar a la inclinación `target` con un golpe de frente, sin contar los pasos: el empuje (N·s) de algo
+## que llega a `speed` m/s y se queda pegado. Sale de las perillas de ahora (ver MechBalanceSettings): con el empuje
+## prendido, la inclinación más alta del resorte por cada unidad de golpe se calcula paso a paso (como la corre
+## `_spring`); apagado, el golpe es la inclinación. Lo usa la bola (ver TestBall) para que sus fuerzas sigan a los
+## umbrales de la meca (lo pidió el usuario el 11/11/2026: «que sean acordes al threshold de la nave»).
+static func push_for_lean(target: float, speed: float) -> float:
+	var settings := MechBalanceSettings.current
+	var per_hit := 1.0
+	if settings.hit_pushes:
+		per_hit = settings.push_rate * _spring_peak(1.0, 1.0 / 240.0)
+	var hit := target / maxf(per_hit, 0.0001)
+	var delta_v := hit * maxf(MASS / REFERENCE_MASS * settings.stability_backward, 0.05) / settings.lean_per_ms
+	# Algo de masa m a `speed` que se queda pegado a la meca: Δv = m·speed / (MASS + m).
+	if delta_v >= speed:
+		return INF
+	return MASS * delta_v * speed / (speed - delta_v)
+
+
+## La inclinación más alta del resorte que arranca quieto con velocidad `kick`, corrido como en `_spring`.
+static func _spring_peak(kick: float, step: float) -> float:
+	var settings := MechBalanceSettings.current
+	var lean_now := 0.0
+	var speed_now := kick
+	var peak := 0.0
+	for i in 2400:
+		speed_now += (-lean_now * settings.stiffness * settings.spring_scale
+			- speed_now * settings.damping * settings.damp_scale) * step
+		lean_now += speed_now * step
+		peak = maxf(peak, lean_now)
+		if speed_now < 0.0:
+			break
+	return peak

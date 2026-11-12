@@ -5,20 +5,25 @@ extends RigidBody3D
 ## (también con las piezas de un muñeco caído, capa 2) y desaparece sola. Si toca algo con `take_hit` (una meca de
 ## pelea), le pega como una bala, con su empuje.
 ##
-## UNA SOLA BOLA, VARIAS FUERZAS (11/11/2026, el usuario: «un solo tamaño de bola y varias cosas de distintas fuerzas»):
-## siempre del mismo tamaño y a la misma velocidad; lo que cambia es su EMPUJE (masa × velocidad, en N·s), en escalones
-## que van de mover a una persona a voltear a la meca. La masa sale del empuje. Lo elegido es uno solo para todas las
-## parcelas (ver `parcel_options`): J tira, K y L bajan y suben la fuerza.
+## UNA SOLA BOLA, TRES FUERZAS (11/11/2026, el usuario: «un solo tamaño de bola y varias cosas de distintas fuerzas»;
+## después: «que sea una sola tecla pasando por las fuerzas… pone 3»): siempre del mismo tamaño y a la misma velocidad;
+## lo que cambia es su EMPUJE (masa × velocidad, en N·s), y la masa sale de él. LAS TRES SALEN DE LOS UMBRALES DE LA MECA
+## DE EQUILIBRIO, los de ahora (el usuario: «que sean acordes al threshold de la nave»; ver MechDummy.push_for_lean): la
+## que la mueve llega a una parte de donde da un paso (`step_at`); la que la hace trastabillar, entre el paso y la caída
+## (`fall_at`); la que la tira, más allá de la caída. Si se tocan las perillas en el panel (F1), las fuerzas las siguen.
+## A una persona, cualquiera de las tres la voltea. Lo elegido es uno solo para todas las parcelas (ver
+## `parcel_options`): J tira, K pasa a la fuerza siguiente.
 
 const RADIUS := 0.6
 const SPEED := 25.0
 const LIFETIME := 12.0
-## Los empujes, en N·s. Como referencia, lo que hace falta para tirarlos de frente: una persona de 100 kg, unos 300; la
-## meca de equilibrio (50 t), unos 140 000.
-const PUSHES := [100.0, 250.0, 600.0, 1500.0, 4000.0, 10000.0, 25000.0, 50000.0, 90000.0, 140000.0, 200000.0, 300000.0]
+const NAMES := ["la mueve", "trastabilla", "la tira"]
+## Dónde apunta cada una: entre 0 y 1 es una parte del umbral del paso; entre 1 y 2, de ahí al umbral de la caída; más
+## de 2, pasada la caída.
+const AIMS := [0.7, 1.5, 2.25]
 
 ## Lo elegido, para todas las parcelas.
-static var level := 5
+static var level := 1
 
 var _age := 0.0
 var _struck := {}
@@ -45,9 +50,21 @@ func _init() -> void:
 	body_entered.connect(_on_body)
 
 
-## El empuje del escalón `force` (N·s).
+## El empuje de la fuerza `force` (N·s), con los umbrales de ahora.
 static func push_of(force: int) -> float:
-	return float(PUSHES[clampi(force, 0, PUSHES.size() - 1)])
+	return MechDummy.push_for_lean(lean_of(force), SPEED)
+
+
+## La inclinación a la que apunta la fuerza `force` (ver `AIMS`).
+static func lean_of(force: int) -> float:
+	var settings := MechBalanceSettings.current
+	var aim := float(AIMS[clampi(force, 0, AIMS.size() - 1)])
+	if aim <= 1.0:
+		return settings.step_at * aim
+	if aim <= 2.0:
+		return lerpf(settings.step_at, settings.fall_at, aim - 1.0)
+	# Pasada la caída, más lo que la salvaría un paso, si da pasos.
+	return settings.fall_at * (aim - 1.0) + (settings.step_catch if settings.steps else 0.0)
 
 
 ## La tira desde la cámara activa, hacia donde mira, con el empuje del escalón `force`.
@@ -67,13 +84,11 @@ static func throw_from_camera(scene: Node, force: int) -> TestBall:
 ## Las teclas de la bola, para cualquier parcela que las quiera.
 static func parcel_options() -> Array[Dictionary]:
 	return [
-		{"key": KEY_J, "label": func() -> String: return "tirar una bola (fuerza %d de %d: %s N·s)" % [level + 1,
-				PUSHES.size(), String.num_int64(roundi(push_of(level)))],
+		{"key": KEY_J, "label": func() -> String: return "tirar una bola (%s: inclinación %d %%, %s N·s)" % [
+				NAMES[level], roundi(lean_of(level) * 100.0), String.num_int64(roundi(push_of(level)))],
 			"apply": func(parcel: SandboxParcel) -> void: TestBall.throw_from_camera(parcel, level)},
-		{"key": KEY_K, "label": "menos fuerza",
-			"apply": func(_parcel: SandboxParcel) -> void: level = maxi(level - 1, 0)},
-		{"key": KEY_L, "label": "más fuerza",
-			"apply": func(_parcel: SandboxParcel) -> void: level = mini(level + 1, PUSHES.size() - 1)},
+		{"key": KEY_K, "label": func() -> String: return "otra fuerza (%d de %d)" % [level + 1, AIMS.size()],
+			"apply": func(_parcel: SandboxParcel) -> void: level = (level + 1) % AIMS.size()},
 	]
 
 

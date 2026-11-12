@@ -1,9 +1,9 @@
 extends Node
 
 ## LA MECA DE EQUILIBRIO, PROBADA POR CÓDIGO: arma el sandbox, se para frente a la meca de equilibrio y le tira bolas de
-## varias fuerzas (ver TestBall), de frente, en los dos modos (como character-parametric, y con el empuje y los pasos
+## las tres fuerzas (ver TestBall), de frente, en los dos modos (como character-parametric, y con el empuje y los pasos
 ## prendidos; ver MechDummy); imprime la inclinación más grande, los pasos, cuánto retrocedió y si se cayó. Después, bolas
-## a las dos personas de al lado. Con ventana, capturas del trastabillar (una por cuarto de segundo) y de la caída.
+## de la más chica a las dos personas de al lado. Con ventana, capturas del trastabillar (una por cuarto de segundo) y de la caída.
 ##   headless:     godot --headless --path . res://tests/balance_check.tscn
 ##   con capturas: tools/godot_ventana.sh res://tests/balance_check.tscn -- --salida=C:/carpeta
 
@@ -58,14 +58,13 @@ func _ready() -> void:
 		MechBalanceSettings.current.hit_pushes = pushes
 		MechBalanceSettings.current.steps = pushes
 		print("── MODO %s" % ("con empuje y pasos" if pushes else "como character-parametric"))
-		for force: int in [6, 7, 8, 9, 10]:
-			await _throw(force, pushes and force == 8)
+		for force: int in [0, 1, 2]:
+			await _throw(force, pushes and force == 1)
 	MechBalanceSettings.current.hit_pushes = true
 	MechBalanceSettings.current.steps = true
 	# LAS PERSONAS: las fuerzas chicas.
 	for person: BoneInstantiator in _parcel.find_children("*", "BoneInstantiator", true, false):
-		for force: int in [0, 2]:
-			await _throw_at_person(person, force)
+		await _throw_at_person(person, 0)
 	get_tree().quit()
 
 

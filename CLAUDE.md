@@ -51,8 +51,9 @@ En el sandbox, la fila **Meca** («Pelea de prueba»):
 
 Al lado, **«Meca de equilibrio»**: una copia de la meca que sólo se tambalea, se cae y se levanta, con el sistema de
 equilibrio de los personajes de character-parametric, con dos personas de allá al lado. **J** tira una bola desde la
-cámara (una sola bola; la fuerza es su empuje, de 100 a 300 000 N·s: de mover a una persona a voltear a la meca);
-**K** y **L** bajan y suben la fuerza. Tiene dos agregados al sistema de allá: **el golpe empuja** (la inclinación toma
+cámara (una sola bola; la fuerza es su empuje); **K** pasa por sus tres fuerzas, que salen de los
+umbrales de la meca de equilibrio (`MechDummy.push_for_lean`): la mueve (debajo del paso), trastabilla (entre el paso
+y la caída) y la tira (pasada la caída). Tiene dos agregados al sistema de allá: **el golpe empuja** (la inclinación toma
 velocidad en vez de saltar) y **los pasos** (pasada cierta inclinación da un paso hacia donde se va y se recupera
 trastabillando). **F1** en la fila Meca abre su panel (`BalancePanel`): todas sus perillas (los agregados, el resorte,
 la firmeza por lado, el cuerpo, la caída), que salen de `MechBalanceSettings`.
