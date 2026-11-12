@@ -69,6 +69,9 @@ var _thrust_armed := false
 ## Los dos brazos (el izquierdo y el derecho) y la postura elegida: cubriéndose, o normal.
 var arms: Array[MuscleArm] = []
 var covering := false
+## PARA LAS MAQUETAS DEL ASCENSOR (ver MechLiftMockup): el radio del recorte redondo de la losa de abajo (0, sin recorte).
+## Se pone antes de agregarla al árbol.
+var floor_cutout := 0.0
 ## EL MARCO: lleva a los que van adentro (ver arriba). `_interior`, las formas de sus losas y paredes (no chocan con
 ## nada: son de donde el marco copia su sombra); `_riders`, los que hoy van adentro y la caja de afuera no ve.
 var frame: MotionFrame = null
@@ -270,6 +273,12 @@ func _build_cabin() -> void:
 	var half := SIZE * 0.5 - WALL * 0.5
 	for index in FLOORS + 1:
 		var y := clampf(floor_y(index), -half, half)
+		if index == 0 and floor_cutout > 0.0:
+			# La losa de abajo, con el recorte redondo del ascensor (sólo se ve: su forma de choque sigue entera).
+			_look.add_child(MechLiftMockup.holed(MechLiftMockup.square(SIZE * 0.5), floor_cutout, y - SLAB * 0.5,
+				y + SLAB * 0.5, metal.darkened(0.12)))
+			Clay.shape_box(_interior, Vector3(SIZE, SLAB, SIZE), Vector3(0, y, 0))
+			continue
 		_solid(Vector3(SIZE, SLAB, SIZE), Vector3(0, y, 0), metal.darkened(0.12))
 	for index in FLOORS:
 		var base := floor_y(index) + SLAB * 0.5

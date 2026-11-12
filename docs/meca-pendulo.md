@@ -49,8 +49,27 @@ piso— se borraron). Todo de barras y rejilla finas, para que se lea como algo 
 puertas se pasa de los balcones a los pisos. Medido: parado en la pasarela, el balcón y el tramo, los pies quedan donde
 van; caminando desde el balcón se entra al piso por la puerta.
 
-Falta: subir desde el suelo (el ascensor de la pelvis, en maquetas). Idea para después: piernas más estiradas y la meca
+Falta: subir desde el suelo (el ascensor de la pelvis, abajo). Idea para después: piernas más estiradas y la meca
 lo bastante lenta como para escalar las piernas o los brazos.
+
+## El ascensor de la pelvis: maquetas para elegir
+`MechLiftMockup` (sólo dibujo; `tests/lift_mockup.tscn` las muestra numeradas, bajado y subido). La propuesta del
+usuario: una base circular con parantes, **la pelvis también circular**, con **un recorte redondo en la base del cubo**
+(así al girar la pelvis sigue coincidiendo), y **una baranda alrededor del recorte con el hueco hacia la puerta del
+primer piso**.
+
+Lo común: la pelvis es un tambor hueco con las caderas a los costados; el recorte de la losa de abajo es del mismo
+hueco; los parantes del ascensor son tan altos como su viaje, así que bajado sus puntas siguen dentro de la pelvis (nada
+se estira) y subido el piso queda al ras y los parantes son su jaula. Bajado, su piso queda a 0,7 m del suelo con la
+meca agachada y a 4,4 m parada.
+
+1. Cuatro parantes y un aro.
+2. Tres parantes y un aro.
+3. Seis parantes finos, sin aro.
+4. Dos parantes anchos y un aro.
+
+Pendiente: que el usuario elija; después, hacerlo de verdad (que suba y baje, con su forma de choque y dentro del marco,
+y la pelvis redonda en el dibujo de siempre).
 
 ## Lo que hace (poseída)
 Lo vertical sale del **largo del palo** del péndulo, como en los personajes sale de su resorte de altura.
