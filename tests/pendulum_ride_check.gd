@@ -51,7 +51,7 @@ func _ready() -> void:
 	var spots := [
 		["la pasarela, al costado", Vector3(half + 0.55, floors[0], 1.5), floors[0]],
 		["la pasarela, atrás", Vector3(0.0, floors[0], half + 0.55), floors[0]],
-		["el medio del primer tramo", Vector3(0.0, (floors[0] + floors[1]) * 0.5, MechExterior.FLIGHT_Z), (floors[0] + floors[1]) * 0.5],
+		["el medio del primer tramo", Vector3(0.0, (floors[0] + floors[1]) * 0.5, (MechExterior.HALF + MechExterior.WALK + MechExterior.LANE * 0.5)), (floors[0] + floors[1]) * 0.5],
 		["el balcón del segundo piso", Vector3(1.2, floors[1], half + 0.55), floors[1]],
 	]
 	for spot: Array in spots:

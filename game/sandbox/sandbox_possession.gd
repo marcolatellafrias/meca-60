@@ -113,8 +113,13 @@ func release() -> void:
 			player.player_camera.make_current()
 
 
-func _can(thing: Node3D) -> bool:
-	return is_instance_valid(thing) and thing.is_inside_tree() and thing.is_in_group(GROUP)
+## Sin tipo a propósito: lo recordado (`target`, `_last`, `_aimed`) puede haber sido liberado (R volvió a armar su
+## parcela), y un objeto liberado no pasa por un parámetro con tipo: daba error antes de llegar a preguntar.
+func _can(thing: Variant) -> bool:
+	if not is_instance_valid(thing):
+		return false
+	var node := thing as Node3D
+	return node != null and node.is_inside_tree() and node.is_in_group(GROUP)
 
 
 ## La vista: libre es la cámara del jugador, donde quedó; las otras, la de poseer.
