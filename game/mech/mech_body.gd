@@ -31,7 +31,7 @@ const THIGH := 4.4
 const SHIN := 4.4
 ## Las piernas, macizas (lo pidió el usuario el 12/11/2026: «más chunky»), y sus ARTICULACIONES —cadera, rodilla,
 ## tobillo—, discos de ese mismo grosor, con el eje de costado.
-const LEG_THICKNESS := 1.7
+const LEG_THICKNESS := 2.1
 const JOINT_RADIUS := LEG_THICKNESS * 0.62
 ## La pelvis, entre los dos discos de las caderas: corta, para darles lugar.
 const PELVIS_SIZE := Vector3(HIP_X * 2.0 - LEG_THICKNESS, 1.8, 3.6)

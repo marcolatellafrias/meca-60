@@ -39,7 +39,7 @@ const NAMES := ["quieto", "directo", "gancho", "uppercut", "desde arriba"]
 const STANCE_NAMES := ["normal", "cubriéndose", "recogido"]
 const UPPER_MASS := 2200.0
 const FOREARM_MASS := 2000.0
-const THICKNESS := 1.5
+const THICKNESS := MechBody.LEG_THICKNESS
 ## DÓNDE DESCANSA EL PUÑO en cada postura, desde el hombro, en el espacio de lo que lo sostiene (`x` hacia afuera del
 ## cuerpo; adentro es negativo).
 const STANCES := {
@@ -104,7 +104,7 @@ func _ready() -> void:
 	var pose := _pose(shoulder, shoulder + base.basis * _local(_rest), base.basis)
 	upper = _piece("Brazo", UPPER_MASS * weight, Vector3(THICKNESS, THICKNESS, MechBody.UPPER_ARM), pose["upper"],
 		Clay.METAL.darkened(0.1))
-	forearm = _piece("Antebrazo", FOREARM_MASS * weight, Vector3(THICKNESS * 0.88, THICKNESS * 0.88, MechBody.FOREARM),
+	forearm = _piece("Antebrazo", FOREARM_MASS * weight, Vector3(THICKNESS, THICKNESS, MechBody.FOREARM),
 		pose["forearm"], Clay.METAL.darkened(0.2))
 	# El hombro y el codo, esferas en la punta de arriba de cada pieza; la mano, en la de abajo del antebrazo, con su
 	# forma de choque (el puño).

@@ -22,7 +22,7 @@ func _init() -> void:
 func _ready() -> void:
 	var thickness := MechBody.LEG_THICKNESS
 	_thigh = Clay.limb(self, thickness * 0.5, MechBody.THIGH, Vector3.ZERO, Clay.METAL.darkened(0.1))
-	_shin = Clay.limb(self, thickness * 0.45, MechBody.SHIN, Vector3.ZERO, Clay.METAL.darkened(0.2))
+	_shin = Clay.limb(self, thickness * 0.5, MechBody.SHIN, Vector3.ZERO, Clay.METAL.darkened(0.2))
 	_foot = Clay.box(self, MechBody.FOOT_SIZE, Vector3.ZERO, MechBody.JOINT_COLOR)
 	# El disco de la cadera, apenas más ancho que la pierna para que no se pisen las caras; la rodilla y el tobillo,
 	# esferas que asoman de la pierna.
