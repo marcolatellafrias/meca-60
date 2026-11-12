@@ -91,8 +91,13 @@ piernas de dibujo (pasos por radio) y el torso que gira aparte. **F1** su panel,
 **Las parcelas tienen paredes invisibles** (`SandboxParcel`): las ve lo que se mueve con física y vive en una parcela;
 el jugador y la bola pasan.
 
-Más filas: **Personajes** (los seis arquetipos de allá, que se caen y se levantan; también con la bola), **Objetos** (los
-paquetes de allá sueltos, para agarrarlos, y una silla), **Multijugador** (la red de allá: **H** abre sesión en esta
+**Recursos** (13/11/2026, `SupplyLook`; ver docs/recursos.md): lo que se trae a la meca, sueltos para agarrarlos. **Todos son
+un cubo de 63 cm** que se agarra igual: la batería, el componente eléctrico, la caja de misiles, la caja de balas y la
+bomba (dinamita); al fondo, fijos, los cubos de la meca que muestran la munición que queda. Todavía no se enchufan en
+nada: la mecánica acordada (el indicador, acomodarse solo, un tipo por hueco, sacar el viejo antes, el gastado se
+desvanece) está en la nota.
+
+Más filas: **Personajes** (los seis arquetipos de allá, que se caen y se levantan; también con la bola), **Multijugador** (la red de allá: **H** abre sesión en esta
 compu y otra instancia se une con **J**, **G** abre por Steam, **K** va al menú de inicio para unirse por código, **L**
 sale) y **Partículas** (cada sistema en su poste; **M** cambia la malla de toda la fila). Por la red van los personajes
 y los objetos de esa parcela; **las mecas todavía no**.
@@ -115,8 +120,10 @@ ordenan y lo que todavía se le critica, en [docs/estructura.md](docs/estructura
 - `game/line_cube/` — **la otra variante de equilibrio, la línea, congelada y aparte**: `HoverCube` (flotar con resorte,
   la línea, tropezar, recuperarse) y `LeggedCube` (pelvis, piernas, torso aparte), con sus perillas, paneles y parcela.
   No comparte nada con la meca salvo `MechBody`, `MechLeg` y `Clay`. No se toca salvo que se vuelva a ella.
+- `game/supplies/` — **los recursos**: `SupplyLook` (el dibujo de cada cubo, lo que se lleva y lo que va en la meca). El
+  cuerpo que se agarra lo arma `PackageArchetype` (`game/objects/`), cuyo catálogo son hoy esos cinco cubos.
 - `game/arena/` — `TestBall` (la bola de la J), `PeopleArchetype` (las personas de allá) con `CharacterGetUp` (que se
-  levanten solas) y `ObjectLotArchetype` (el lote de objetos).
+  levanten solas) y `ObjectLotArchetype` (el lote de recursos).
 - `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas, `_mount_tuners` sus paneles F;
   crea al jugador), poseer (`SandboxPossession`) y la sesión de red del sandbox (`SandboxSession`,
   `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD, espacio, shift, Ctrl, E, R, C, V, B, O, T, F1–F6,
@@ -148,6 +155,8 @@ ordenan y lo que todavía se le critica, en [docs/estructura.md](docs/estructura
 - `tests/mech_hands_look.tscn` (con ventana, unos 10 segundos): las manos de la meca física, en reposo y cubriéndose.
 - `tests/muscle_arm_look.tscn` (con ventana, unos 30 segundos, sin el sandbox): el brazo con músculos; la guardia, las
   cuatro piñas (velocidad de la mano, cuánto corre el bloque), la pared (se traba y vuelve) y un empujón (cede y vuelve).
+- `tests/supplies_look.tscn` (con ventana, unos 5 segundos, sin el sandbox): el lote de recursos; imprime de cada cubo su
+  caja, su peso y sus seis puntos de agarre.
 - `tests/hand_look.tscn` (con ventana, unos 5 segundos): la mano abierta y en puño, de tres lados.
 - `tests/possess_check.tscn` (con ventana, unos 15 segundos): poseer; mirar la meca, la O, las tres vistas con
   la T, soltar y retomar sin mirar; capturas del cartel.

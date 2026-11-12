@@ -11,7 +11,7 @@ columna, se queda). Cómo está armado el código, en [[estructura]].
 | Brazo | `MuscleArmArchetype` | `game/muscle_arm/` entero | `MuscleArmPanel` (F1) | `muscle_arm_look` | `MechArm`, `MechBody.arm`, `MechHand`, `TestBall`, `Mech.SHOULDER` |
 | Cubo con piernas | `LeggedCubeArchetype` | `game/line_cube/` entero | `LeggedCubePanel` (F1), `HoverKnockPanel` (F2) | `legged_check` | `MechBody`, `MechLeg`, `Clay`, `TestBall` |
 | Personajes | `PeopleArchetype` | `CharacterGetUp` | — | — | el personaje |
-| Objetos | `ObjectLotArchetype` | — | — | — | los objetos |
+| Recursos | `ObjectLotArchetype` | `game/supplies/` (`SupplyLook`) | — | `supplies_look` | `PackageArchetype`, el agarre |
 | Multijugador | `MultiplayerArchetype` | `SandboxSession` | — | `net_check` | `game/net/` |
 | Partículas | `ParticleArchetype` | — | — | — | `game/particles/` |
 

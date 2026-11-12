@@ -209,28 +209,18 @@ func _init(p_key := "box", p_name := "Caja", p_cells := Vector3i(4, 4, 4), p_wei
 ## Peso y fragilidad son ejes INDEPENDIENTES, y ahí está la mitad del interés: el liviano es el que hay
 ## que cuidar y el pesadísimo se puede tirar por la escalera.
 static func catalogue() -> Array[SeededArchetype]:
+	# EN LA MECA, LOS PAQUETES SON SUS RECURSOS (13/11/2026): todos UN CUBO DE 63 cm —seis celdas por lado, un módulo:
+	# un punto de agarre en el centro de cada cara— que se agarra siempre igual (el usuario: «no vamos a tener paquetes
+	# dobles ni más largos… una celda de tamaño único»). Su dibujo, en SupplyLook. *Los de arriba —el televisor, el
+	# sillón, la caja fuerte…— eran los de character-parametric; sus bosquejos siguen más abajo, sin uso, hasta la
+	# limpieza del código traído.*
 	var out: Array[SeededArchetype] = []
-	out.append(PackageArchetype.new("television", "Televisor", Vector3i(6, 5, 4), 24.0, 1.0, &"vidrio"))
-	out.append(PackageArchetype.new("couch", "Sillón largo", Vector3i(19, 8, 8), 42.0, 0.25, &"tela"))
-	out.append(PackageArchetype.new("safe", "Caja fuerte", Vector3i(5, 5, 4), 150.0, 0.08, &"metal"))
-	out.append(PackageArchetype.new("wardrobe", "Armario", Vector3i(10, 18, 6), 70.0, 0.30, &"madera"))
-	# 2.0: una caída, y con margen. La caída de referencia la golpea a 7,2 m/s y con 6 ya se rompe, así que el
-	# impulso que reporta el solver en el cuadro del golpe —un 3 % por debajo del m·v ideal— no la pasa a dos.
-	var vase := PackageArchetype.new("vase", "Vasija", Vector3i(5, 7, 5), 18.0, 2.0, &"ceramica")
-	# Los aros asoman de la panza por los costados: sólo se ven (ver `visual`).
-	var vase_size := vase.size_m()
-	var hoop := Vector3(VASE_HOOP, 0.0, VASE_HOOP)
-	vase.visual = AABB(-vase_size * 0.5 - hoop, vase_size + hoop * 2.0)
-	out.append(vase)
-	out.append(PackageArchetype.new("stove", "Horno", Vector3i(8, 10, 6), 110.0, 0.12, &"metal"))
-	# El cuerpo lo arma BottleCrate, el mismo que spawnea el juego (ver `build_body`); acá van sus números
-	# para el panel y el lote. El peso es el cajón MÁS las botellas: son cuerpos aparte, pero apoyan en él
-	# y el agarre los carga. Fragilidad 0: a este no lo rompen los golpes (ver `is_container`).
-	out.append(PackageArchetype.new("crate_bottles", "Cajón de botellas", BottleCrate.CELLS,
-		BottleCrate.CRATE_MASS + BottleCrate.BOTTLE_MASS * BottleCrate.COLS * BottleCrate.ROWS, 0.0, &"vidrio"))
-	# 0.06: un poco más duro que la caja fuerte (26 caídas contra 20), que es lo que pidió el mapa del catálogo
-	# para el común —que golpearlo no preocupe—, sin llegar a 0, que sería no tener daño.
-	out.append(PackageArchetype.new("trunk", "Baúl de viaje", Vector3i(8, 5, 5), 30.0, 0.06, &"madera"))
+	var cube := Vector3i(6, 6, 6)
+	out.append(PackageArchetype.new("battery", "Batería", cube, 45.0, 0.3, &"metal"))
+	out.append(PackageArchetype.new("component", "Componente eléctrico", cube, 30.0, 0.6, &"metal"))
+	out.append(PackageArchetype.new("crate_missiles", "Caja de misiles", cube, 40.0, 0.1, &"madera"))
+	out.append(PackageArchetype.new("crate_bullets", "Caja de balas", cube, 40.0, 0.1, &"madera"))
+	out.append(PackageArchetype.new("bomb", "Bomba", cube, 25.0, 0.2, &"madera"))
 	return out
 
 
@@ -520,6 +510,9 @@ static func set_damage(root: Node, value: float) -> void:
 
 ## EL BOCETO de este paquete, de primitivas: lo que se ve mientras no tenga un modelo (ver `build_body`).
 func _build_sketch(parent: Node3D, size: Vector3) -> void:
+	# Los recursos de la meca los dibuja SupplyLook.
+	if SupplyLook.carried(parent, key):
+		return
 	match key:
 		"television": _build_television(parent, size)
 		"couch":      _build_couch(parent, size)

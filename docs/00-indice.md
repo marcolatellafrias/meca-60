@@ -10,6 +10,7 @@ empieza con su comentario largo).
 - [[pendulo]] — **el modelo de equilibrio de la meca**: el torso es un péndulo y los pies lo siguen.
 - [[brazo]] — los brazos: lo que se les pide (una vez), el físico con músculos y el discreto.
 - [[cubo-con-piernas]] — **la otra variante de equilibrio (la línea)**, guardada: el cubo con pelvis, dos piernas, torso aparte y pasos por radio.
+- [[recursos]] — los recursos de la meca: cubos de 63 cm (batería, componente eléctrico, munición, bomba) y cómo se van a enchufar.
 - [[poseer]] — la O posee lo que mirás, la T cambia la vista, y un cartel con sus controles.
 - [[sandbox]] — las parcelas, sus paredes, los paneles F por fila y la bola.
 - [[personajes-traidos]] — lo traído de character-parametric: el jugador, agarrar, sentarse.

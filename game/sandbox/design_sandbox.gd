@@ -48,7 +48,7 @@ static func categories() -> Array[Dictionary]:
 		{"name": "Meca física", "archetypes": [MechArchetype.new(Mech.Arms.MUSCLE)]},
 		{"name": "Brazo", "archetypes": [MuscleArmArchetype.new()]},
 		{"name": "Personajes", "archetypes": PeopleArchetype.catalogue()},
-		{"name": "Objetos", "archetypes": [ObjectLotArchetype.new()]},
+		{"name": "Recursos", "archetypes": [ObjectLotArchetype.new()]},
 		{"name": "Multijugador", "archetypes": [MultiplayerArchetype.new()]},
 		{"name": "Partículas", "archetypes": ParticleArchetype.catalogue()},
 	]
