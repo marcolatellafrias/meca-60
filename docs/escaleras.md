@@ -1,6 +1,6 @@
 # Las escaleras
 
-`game/stairs/` (`Stairs`) · la usan las escaleras de incendio del [[mapa]] · ver [[personajes-traidos]]
+`game/stairs/` (`Stairs`) · la usan las escaleras de incendio del [[mapa]] y la de atrás de la meca · ver [[personajes-traidos]]
 
 ## La regla: TODA escalera se arma con `Stairs`
 El usuario (13/11/2026): «las escaleras… para que funcionen bien con los personajes actuales… tienen dos zonas, actúa
@@ -49,6 +49,7 @@ Una cápsula de persona que, como la del personaje, pisa el piso y la rampa (no 
 casa de 11 m (4 tramos) y la de una torre de 30 m (10 tramos) hasta el techo. En cada paso, lo que pisarían los pies
 queda **de 0,00 a 0,15 m** sobre el piso de la cápsula. **Falta verlo con el personaje de verdad, jugando.**
 
-## Lo que todavía no cumple la regla
-- **La escalera de atrás de la meca** (`MechExterior`): sus tramos son rampas. La sesión del interior la está pasando a
-  `Stairs`.
+## Quién la usa
+- Las escaleras de incendio del mapa (`Battlefield.stairs`, arriba).
+- La escalera de atrás de la meca (`MechExterior`, desde el commit `3e5abfd`). El marco de la meca (`MotionFrame`) copia
+  la rampa a su sombra de siempre y los escalones a una segunda sombra, en la capa Escalones.
