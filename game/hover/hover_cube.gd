@@ -66,6 +66,7 @@ var _knock := Vector3.ZERO
 var driving := false
 var _camera: Camera3D = null
 var _chase_yaw := 0.0
+var _shape: CollisionShape3D = null
 var _clock := 0.0
 var _nozzles: Array[Dictionary] = []
 var _label: Label3D = null
@@ -87,7 +88,7 @@ func _ready() -> void:
 	_look = Node3D.new()
 	_look.name = "Dibujo"
 	add_child(_look)
-	Clay.shape_box(self, Vector3.ONE * SIZE, Vector3.ZERO)
+	_shape = Clay.shape_box(self, Vector3.ONE * SIZE, Vector3.ZERO)
 	Clay.box(_look, Vector3.ONE * SIZE, Vector3.ZERO, Clay.METAL)
 	# Una franja en el frente, para leer hacia dónde mira y cuánto se inclina.
 	Clay.box(_look, Vector3(SIZE * 0.7, SIZE * 0.12, 0.05), Vector3(0, SIZE * 0.25, -SIZE * 0.5 - 0.03), Clay.YELLOW)
@@ -141,7 +142,7 @@ func _lock(on: bool) -> void:
 
 
 func _physics_process(delta: float) -> void:
-	var knobs := HoverCubeSettings.current
+	var knobs := tuning()
 	for nozzle in _nozzles:
 		nozzle["throttle"] = 0.0
 	gravity_scale = knobs.fall_gravity if state == State.LIMP else 1.0
@@ -383,14 +384,13 @@ func knock(strong: bool) -> void:
 	var side := global_basis.x
 	side.y = 0.0
 	linear_velocity += side.normalized() * HoverCube.delta_v_for_lean(
-		HoverCubeSettings.current.fall_at * (KNOCK_STRONG if strong else KNOCK_SOFT))
+		tuning().fall_at * (KNOCK_STRONG if strong else KNOCK_SOFT), tuning())
 
 
 ## ── CUÁNTO HAY QUE EMPUJARLO ─────────────────────────────────────────────────────────────────────────────────────
 ## El cambio de velocidad (m/s) que lo lleva a la inclinación `target`: el golpe suma a la velocidad de la inclinación,
 ## y la inclinación más alta del resorte por unidad se calcula paso a paso (como la corre `_standing`).
-static func delta_v_for_lean(target: float) -> float:
-	var knobs := HoverCubeSettings.current
+static func delta_v_for_lean(target: float, knobs: HoverCubeSettings) -> float:
 	var step := 1.0 / 240.0
 	var lean_now := 0.0
 	var speed_now := 1.0
@@ -418,8 +418,9 @@ func toggle_drive() -> void:
 	driving = true
 	add_to_group("driving")
 	player.set_active(false)
-	_chase_yaw = global_rotation.y
+	_chase_yaw = _view_yaw()
 	_camera.make_current()
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func _leave_drive() -> void:
@@ -449,13 +450,22 @@ func _exit_tree() -> void:
 func _place_camera(delta: float) -> void:
 	if not driving:
 		return
-	var forward := -global_basis.z
-	forward.y = 0.0
-	if forward.length_squared() > 0.01:
-		_chase_yaw = lerp_angle(_chase_yaw, atan2(-forward.x, -forward.z), 1.0 - exp(-4.0 * delta))
+	_chase_yaw = lerp_angle(_chase_yaw, _view_yaw(), 1.0 - exp(-4.0 * delta))
 	var behind := Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 14.0, 34.0)
 	_camera.global_position = global_position + behind
 	_camera.look_at(global_position + Vector3(0.0, 2.0, 0.0), Vector3.UP)
+
+
+## Hacia dónde mira la cámara de afuera: hacia donde mira el cubo (de costado o dado vuelta, hacia donde miraba).
+func _view_yaw() -> float:
+	var forward := -global_basis.z
+	forward.y = 0.0
+	return atan2(-forward.x, -forward.z) if forward.length_squared() > 0.01 else _chase_yaw
+
+
+## SUS PERILLAS: las de todos los cubos (un cubo distinto, como el de piernas, tiene las suyas).
+func tuning() -> HoverCubeSettings:
+	return HoverCubeSettings.current
 
 
 static func _axis(positive: Key, negative: Key) -> float:

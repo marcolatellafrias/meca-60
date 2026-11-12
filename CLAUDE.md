@@ -81,10 +81,17 @@ línea mirando hacia donde miraba. La parcela es de 60 m. **J/K** cuatro tiros: 
 lo voltea o no. **F1** su panel (`HoverPanel`, perillas en `HoverCubeSettings`); **F2** volcarlo, suave y fuerte
 (`HoverKnockPanel`). *El cubo que se enderezaba con un torque libre se borró: se torcía con cualquier golpe.*
 
+**Cubo con piernas** (12/11/2026, `LeggedCube`, hereda del cubo): el mismo cubo con una **pelvis** debajo y **dos
+piernas** (el cuerpo de la meca, `MechBody`, dibujadas con `MechLeg`), para empezar a ver cómo se mueven. Las piernas
+son dibujo: el peso lo lleva el resorte. **O** lo maneja: W/S y A/D las piernas (la pelvis mira hacia donde caminan), el
+**mouse gira el torso aparte**, como la meca. **Los pasos, por radio** (el sistema de allá de octubre de 2025): cada pie
+queda plantado hasta que su lugar debajo de la cadera, adelantado con la marcha, se aleja más que un radio; ahí da un
+paso, de a un pie. Caído, las piernas quedan duras colgando de la pelvis (todavía no son físicas). **F1** su panel
+(`LeggedCubePanel`: las perillas del cubo en su propia copia y las de los pasos), **F2** volcarlo, **J/K** las bolas.
+
 **Las parcelas tienen paredes invisibles** (como allá, `SandboxParcel` LOS BORDES): las ve lo que se mueve con física y
 vive en una parcela; el jugador y la bola pasan. Las mecas de pelea, que se mueven por código, le preguntan a su parcela
-(`SandboxParcel.holds`): el borde de la arena es el de su parcela. Las piernas, para más adelante, en su propia fila (el
-sistema «por radio» de allá, de octubre de 2025).
+(`SandboxParcel.holds`): el borde de la arena es el de su parcela.
 
 Más filas: **Personajes** (los seis arquetipos de allá, que se caen y se levantan; también con la bola), **Objetos** (los
 paquetes de allá sueltos, para agarrarlos, y una silla) y **Multijugador** (la red de allá: **H** abre sesión en esta
@@ -110,6 +117,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
 - `game/hover/` — **el cubo**: `HoverCube` (flotar, la línea, tropezar, subir y enderezarse con las toberas),
   `HoverCubeSettings` (sus perillas), `HoverPanel` (su F1), `HoverKnockPanel` (su F2: volcarlo) y `HoverCubeArchetype`
   (su parcela y sus tiros).
+- `game/legged_cube/` — **el cubo con piernas**: `LeggedCube` (la pelvis, las piernas, los pasos por radio y el torso
+  aparte), `LeggedCubeSettings`, `LeggedCubePanel` (su F1) y `LeggedCubeArchetype`. Usa `game/hover/` y `MechBody`.
 - `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas, `_mount_tuners` sus paneles F;
   crea al jugador, ver arriba) y la sesión de red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD,
   espacio, shift, Ctrl, E, R, C, V, B, F1–F6, Escape; no repetirlas. Sentado (o manejando desde afuera) sólo valen las
@@ -134,6 +143,9 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   pasos, cuánto retrocedió y si se cayó; con ventana, capturas del trastabillar. Y bolas chicas a las dos personas.
 - `tests/hover_check.tscn` (headless o con ventana): el cubo se asienta, los cuatro tiros, los botones de volcar (para
   qué lado cae y cuánto gira), el rebote, y voltearlo y seguir la recuperación; con ventana, capturas cada medio segundo.
+- `tests/legged_check.tscn` (headless o con ventana): el cubo con piernas camina, gira las piernas con el torso quieto,
+  camina con el torso girado y para atrás, un golpe suave y uno que lo vuelca; cuenta los pasos y lo lejos que queda un
+  pie de su lugar; con ventana, capturas.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,
   caminarla sentado, viajar parado adentro, manejar desde afuera y volver, y agarrar el ropero del lote.
 - `tests/net_check.tscn`: dos instancias sin ventana, una con `--host-local` y otra con `--join-local` (antes del
