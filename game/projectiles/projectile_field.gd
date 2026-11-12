@@ -1,8 +1,8 @@
 class_name ProjectileField
 extends Node3D
 
-## LOS PROYECTILES DE UN LUGAR, POR RED (13/11/2026). Los usan los jefes y, después, las armas de la meca propia (el
-## usuario: «esto después lo vamos a reusar para meca propia y [jefes] enemigos… que soporte sincronización online»).
+## LOS PROYECTILES Y LAS ZONAS QUE PEGAN DE UN LUGAR, POR RED (13/11/2026; las zonas, en AreaStrike). Los usan los jefes
+## y, después, las armas de la meca propia (el usuario: «esto después lo vamos a reusar para meca propia y [jefes] enemigos… que soporte sincronización online»).
 ##
 ## UN PROYECTIL ES UNA TRAYECTORIA CONOCIDA: de dónde sale, adónde va y cuánto tarda (ver Missile). Con eso cada máquina
 ## lo dibuja sola, sin mandar posiciones por la red: se manda UN mensaje por proyectil.
@@ -27,6 +27,29 @@ func launch(kind: Missile.Kind, from: Vector3, to: Vector3, flight: float) -> vo
 		return
 	_next += 1
 	_announce.rpc(_next, kind, from, to, flight)
+
+
+## PIDE UNA ZONA QUE PEGA (ver AreaStrike, y lo que dice su `spec`). Como `launch`: la decide el host y la ven todos.
+func strike(spec: Dictionary) -> void:
+	if ProjectileField.is_client(self):
+		_request_strike.rpc_id(1, spec)
+		return
+	_next += 1
+	_announce_strike.rpc(_next, spec)
+
+
+@rpc("any_peer", "reliable")
+func _request_strike(spec: Dictionary) -> void:
+	if multiplayer.is_server():
+		strike(spec)
+
+
+@rpc("authority", "call_local", "reliable")
+func _announce_strike(id: int, spec: Dictionary) -> void:
+	var zone := AreaStrike.new()
+	zone.name = "Zona %d" % id
+	zone.spec = spec
+	add_child(zone)
 
 
 ## Si esta máquina es un cliente de una sesión (no el host, y no sin red): entonces no decide nada.

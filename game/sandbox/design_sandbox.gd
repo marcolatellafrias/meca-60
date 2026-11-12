@@ -89,6 +89,7 @@ func _mount_tuners() -> void:
 	for row: String in ["Meca discreta", "Meca física", "Arena de esquivar"]:
 		_mount(MechPanel.new(), row, "la meca: el péndulo, correr, agacharse, saltar y el propulsor", KEY_F1)
 		_mount(MechKnockPanel.new(), row, "pegarle arriba, suave o fuerte, y el ascensor", KEY_F2)
+	_mount(AttackPanel.new(), "Arena de esquivar", "la torre: qué ataque tira", KEY_F3)
 	_mount(MuscleArmPanel.new(), "Brazo", "el brazo con músculos: el resorte, el freno y la fuerza", KEY_F1)
 	_mount(PixelPaintPanel.new(), "Píxeles", "pintar con píxeles la cara que mirás", KEY_F1)
 	_mount(LocomotionPanel.new(), "Locomoción", "lo de todos los arquetipos: caerse, llevar, tirar, el aire", KEY_F1)

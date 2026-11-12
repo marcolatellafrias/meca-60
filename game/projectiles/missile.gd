@@ -137,15 +137,8 @@ func blast() -> void:
 	var column := CylinderShape3D.new()
 	column.radius = radius
 	column.height = COLUMN
-	var query := PhysicsShapeQueryParameters3D.new()
-	query.shape = column
-	query.transform = Transform3D(Basis(), to + Vector3.UP * COLUMN * 0.5)
-	var seen := {}
-	for hit: Dictionary in get_world_3d().direct_space_state.intersect_shape(query, 64):
-		var body := hit["collider"] as RigidBody3D
-		if body == null or body.freeze or seen.has(body.get_instance_id()):
-			continue
-		seen[body.get_instance_id()] = true
+	for body in AreaStrike.loose_in(get_world_3d().direct_space_state, column, Transform3D(Basis(),
+			to + Vector3.UP * COLUMN * 0.5)):
 		var away := body.global_position - to
 		away.y = 0.0
 		var near := 1.0 - clampf(away.length() / radius, 0.0, 1.0)
@@ -165,21 +158,21 @@ func _make_mark(radius: float) -> Node3D:
 	ground.bottom_radius = radius
 	ground.height = 0.02
 	ground.radial_segments = 40
-	mark.add_child(Missile._flat(ground, MARK_COLOR, 0.0))
-	_fill = Missile._flat(ground, FILL_COLOR, 0.02)
+	mark.add_child(Missile.flat_part(ground, MARK_COLOR, 0.0))
+	_fill = Missile.flat_part(ground, FILL_COLOR, 0.02)
 	mark.add_child(_fill)
 	var edge := TorusMesh.new()
 	edge.inner_radius = radius - EDGE
 	edge.outer_radius = radius
 	edge.rings = 40
 	edge.ring_segments = 4
-	var ring := Missile._flat(edge, EDGE_COLOR, 0.04)
+	var ring := Missile.flat_part(edge, EDGE_COLOR, 0.04)
 	ring.scale = Vector3(1.0, 0.1, 1.0)
 	mark.add_child(ring)
 	return mark
 
 
-static func _flat(mesh: Mesh, color: Color, lift: float) -> MeshInstance3D:
+static func flat_part(mesh: Mesh, color: Color, lift: float) -> MeshInstance3D:
 	var made := StandardMaterial3D.new()
 	made.albedo_color = color
 	made.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED

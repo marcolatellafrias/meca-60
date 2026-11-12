@@ -8,7 +8,7 @@ extends SeededArchetype
 ##   · EL REDONDEL: una línea en el piso y un muro alrededor, más alto que donde empieza la caja de la meca (lo único que
 ##     choca: un muro bajo le pasaría por abajo).
 ##   · LA MECA DISCRETA, adentro, mirando a la torre. Mirándola, O la posee.
-##   · P prende y apaga la torre; U sube al jugador a la meca.
+##   · F3 elige el ataque de la torre (ver MissileTurret); P la prende y la apaga; U sube al jugador a la meca.
 
 ## El radio del redondel (m), el alto del muro y cuántos tramos tiene.
 const RADIUS := 95.0
@@ -29,8 +29,8 @@ func max_footprint() -> Vector2:
 
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
-		"una torre al medio tira misiles de mortero: el círculo del piso marca dónde caen, y se llena justo al caer",
-		"uno donde está la meca, uno donde va a estar y tres al azar, cada %.1f s" % MissileTurret.EVERY,
+		"TRABAJO EN CURSO: una torre al medio tira ataques de área; la marca del piso se llena justo antes de pegar",
+		"F3 elige el ataque: lluvia, círculo gigante, dona, ondas, lanza, alfombra, pared que cruza, o todos de a uno",
 		"mirando la meca, O la posee · P prende y apaga la torre · U subirse",
 	])
 

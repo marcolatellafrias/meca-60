@@ -52,40 +52,31 @@ func _ready() -> void:
 	add_child(_eye)
 	_eye.make_current()
 	_mech.keys.driving = true
-	# QUIETA: le caen encima.
-	await _seconds(MissileTurret.EVERY + 1.0)
-	_eye.global_position = Vector3(-60.0, 150.0, 140.0)
-	_eye.look_at(Vector3(0.0, 0.0, 30.0))
-	await _shot("1 · Desde arriba: las marcas donde van a caer", "1_arriba")
-	_chase()
-	await _seconds(0.9)
-	_chase()
-	await _shot("2 · Los misiles cayendo sobre la meca", "2_cayendo")
-	while _landed == 0:
-		await get_tree().physics_frame
-	await _seconds(0.12)
-	_chase()
-	await _shot("3 · La explosión", "3_explosion")
-	await _seconds(1.5)
-	print("QUIETA: cayeron %d · la agarraron %d · caídas %d" % [_landed, _caught, _mech.falls])
-	# CORRIENDO EN CÍRCULO: W + Shift y girando de a poco.
-	_landed = 0
-	_caught = 0
-	_press(KEY_W, true)
-	_press(KEY_SHIFT, true)
-	var clock := 0.0
-	var shot := false
-	while clock < 12.0:
-		await get_tree().physics_frame
-		clock += 1.0 / Engine.physics_ticks_per_second
-		_mech.aim_yaw += deg_to_rad(12.0) / Engine.physics_ticks_per_second
-		if not shot and clock > 6.0:
-			shot = true
-			_chase()
-			await _shot("4 · Corriendo: los de adelante, donde va a estar", "4_corriendo")
-	_press(KEY_W, false)
-	_press(KEY_SHIFT, false)
-	print("CORRIENDO: cayeron %d · la agarraron %d · caídas %d" % [_landed, _caught, _mech.falls])
+	var turret := arena.find_children("*", "MissileTurret", true, false)[0] as MissileTurret
+	# CADA ATAQUE, con la meca quieta: el aviso y el golpe, desde arriba.
+	for which in MissileTurret.Attack.ALL:
+		turret.choose(which as MissileTurret.Attack)
+		var falls := _mech.falls
+		var most := 0.0
+		var clock := 0.0
+		var shots := 0
+		var times: Array[float] = [0.7, 2.2, 4.3]
+		while clock < float(MissileTurret.EVERY[which]) - 0.1:
+			await get_tree().physics_frame
+			clock += 1.0 / Engine.physics_ticks_per_second
+			most = maxf(most, _mech.tilt)
+			if shots < times.size() and clock >= times[shots]:
+				_eye.global_position = Vector3(-80.0, 120.0, 150.0)
+				_eye.look_at(Vector3(0.0, 0.0, 25.0))
+				await _shot("%d · %s (%.1f s)" % [which + 1, MissileTurret.NAMES[which], clock],
+					"%d_%d_%s" % [which + 1, shots, MissileTurret.NAMES[which].get_slice(" ", 0)])
+				shots += 1
+		print("%s: inclinación máxima %.0f° · caídas %d · último golpe %.1f m/s" % [MissileTurret.NAMES[which], most,
+			_mech.falls - falls, _mech.last_hit])
+		turret.firing = false
+		await _seconds(4.0)
+		# Si se cayó o se corrió, de vuelta a su lugar mirando a la torre.
+		await _seconds(0.1)
 	get_tree().quit()
 
 
