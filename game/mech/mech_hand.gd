@@ -13,9 +13,12 @@ extends Node3D
 ## con las falanges dobladas sobre la palma y el pulgar encima. Se pide con `fist`; pasa de una a otra en `CLOSE_TIME`,
 ## con easing.
 ##
-## HACIA QUÉ LADO CIERRAN los dedos lo dice quien la arma (`curl_side`, el signo del giro sobre el eje vertical de la
-## mano): depende de cómo viene orientado su antebrazo. *Empezó fijo, al revés: los dedos de la meca péndulo se
-## inclinaban hacia afuera (lo vio el usuario: «tiene las manos invertidas»).*
+## ES UNA MANO IZQUIERDA O UNA DERECHA (`side`, −1 o 1), UNA EL ESPEJO DE LA OTRA. En sus ejes: los dedos hacia −Z, EL
+## PULGAR HACIA +Y, y LA PALMA MIRA HACIA −side·X (para ahí cierran los dedos). Quien la monta la gira para que el pulgar
+## y la palma queden donde van en un cuerpo (ver MuscleArm, LA MANO). *Dos veces estuvo mal (12/11/2026, «tiene las manos
+## invertidas»; «los pulgares, los dos apuntan para el mismo lado… no es la primera vez que pasa»): el lado se elegía a
+## ojo con un signo suelto, el mismo para los dos brazos, y la mano copiaba los ejes del antebrazo, que no son espejo
+## entre un brazo y el otro.*
 
 ## El dedo: su radio, y el largo de cada falange, de la palma a la punta.
 const FINGER_RADIUS := 0.23
@@ -23,30 +26,29 @@ const PHALANGES := [0.62, 0.5, 0.4]
 ## La palma: apenas más gruesa que un dedo, del alto de los cuatro dedos, y su largo.
 const PALM := Vector3(FINGER_RADIUS * 2.0 * 1.3, FINGER_RADIUS * 2.0 * 4.4, 1.5)
 ## Cuánto se cierra cada falange respecto de la anterior (grados): abierta y en puño.
-const OPEN_CURL := 14.0
+const OPEN_CURL := 24.0
 const FIST_CURL := 84.0
 ## El pulgar: cuánto sale hacia arriba (grados) y cuánto cierra cada falange, abierta y en puño.
 const THUMB_RISE := Vector2(40.0, 8.0)
-const THUMB_CURL := Vector2(14.0, 58.0)
+const THUMB_CURL := Vector2(20.0, 58.0)
 ## En cuánto pasa de una postura a la otra (s).
 const CLOSE_TIME := 0.16
 
 ## La postura pedida: el puño, o abierta.
 var fist := false
 
-var _curl_side := 1.0
+var _side := 1.0
 var _closed := 0.0
 var _shown := -1.0
 ## Cada dedo: de dónde sale (`from`), sus falanges (`pieces`, con su largo en `lengths`) y si es el pulgar (`thumb`).
 var _fingers: Array[Dictionary] = []
 
 
-## Arma la mano colgada de `parent` y la devuelve (su origen es la muñeca). `curl_side`: hacia qué lado cierran los
-## dedos (1 o −1, el signo del giro sobre su Y).
-static func build(parent: Node3D, curl_side: float) -> MechHand:
+## Arma la mano colgada de `parent` y la devuelve (su origen es la muñeca). `side`: la izquierda (−1) o la derecha (1).
+static func build(parent: Node3D, side: float) -> MechHand:
 	var hand := MechHand.new()
 	hand.name = "Mano"
-	hand._curl_side = curl_side
+	hand._side = signf(side)
 	parent.add_child(hand)
 	return hand
 
@@ -95,7 +97,8 @@ func _place(share: float) -> void:
 		var lengths: Array = finger["lengths"]
 		var pieces: Array = finger["pieces"]
 		for index in pieces.size():
-			turn = turn * Basis(Vector3.UP, _curl_side * curl)
+			# Girar sobre +Y lleva el −Z hacia −X: la derecha (side 1) cierra hacia −X, su palma.
+			turn = turn * Basis(Vector3.UP, _side * curl)
 			var along := turn * Vector3.FORWARD
 			var length := float(lengths[index])
 			# El cilindro tiene el largo en su Y: se lo acuesta sobre el −Z del dedo.

@@ -110,10 +110,15 @@ func _ready() -> void:
 	# forma de choque (el puño).
 	Clay.sphere(upper, THICKNESS * 0.78, Vector3(0, 0, MechBody.UPPER_ARM * 0.5), MechBody.JOINT_COLOR)
 	Clay.sphere(forearm, THICKNESS * 0.66, Vector3(0, 0, MechBody.FOREARM * 0.5), MechBody.JOINT_COLOR)
-	# Sus dedos cierran para el lado que dobla el codo (el Y del antebrazo es el eje de la bisagra).
-	_hand = MechHand.build(forearm, 1.0)
-	_hand.position = Vector3(0, 0, -MechBody.FOREARM * 0.5)
-	Clay.shape_box(forearm, Vector3(MechHand.PALM.x * 2.2, MechHand.PALM.y, MechHand.length() * 0.8),
+	# LA MANO, POR REGLA Y NO A OJO. Los ejes del antebrazo salen de la pose (ver `_along`): su Y es el eje del codo
+	# (brazo × antebrazo) y su X, la parte del brazo perpendicular al antebrazo; o sea que SU −X SIEMPRE MIRA HACIA DONDE
+	# DOBLA EL CODO (hacia el hombro), en los dos brazos, y su Y mira hacia afuera en el derecho y hacia adentro en el
+	# izquierdo (un producto cruz no se espeja). Como en un cuerpo con el antebrazo sin girar: EL PULGAR, HACIA DONDE
+	# DOBLA EL CODO; LA PALMA, HACIA EL CUERPO. La mano trae el pulgar en +Y y la palma en −side·X (ver MechHand): un
+	# cuarto de vuelta sobre Z lleva su Y al −X del antebrazo y su X al Y, y la palma queda en −side·Y: hacia adentro.
+	_hand = MechHand.build(forearm, side)
+	_hand.transform = Transform3D(Basis(Vector3.BACK, PI * 0.5), Vector3(0, 0, -MechBody.FOREARM * 0.5))
+	Clay.shape_box(forearm, Vector3(MechHand.PALM.y, MechHand.PALM.x * 2.2, MechHand.length() * 0.8),
 		Vector3(0, 0, -MechBody.FOREARM * 0.5 - MechHand.length() * 0.4))
 	# El hombro, una bola; el codo, una bisagra sobre su eje (el Z de la articulación).
 	var ball := PinJoint3D.new()
