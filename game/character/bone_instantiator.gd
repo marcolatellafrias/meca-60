@@ -25,25 +25,8 @@ var intent := CharacterIntent.new()
 ## CharacterLooks.head_form_for). Se escribe ANTES de `initialize_skeleton`, igual que la escala. Lo usan las capturas
 ## y los maniquíes del design sandbox (ver HeadArchetype); en el juego queda en -1.
 @export var head_slot: int = -1
-## LA POSE DE LA BOCA (ver FaceLayout.MOUTHS) y LOS LABIOS (más de 0, con labios), o −1 para lo de siempre: la plana y
-## sin labios. Los ponen los aspectos canónicos (ver CharacterLook).
-@export var mouth: int = -1
-@export var lips: float = -1.0
-## EL COLOR DE LOS LABIOS (ver CharacterLook.lip_color).
-@export var lip_color := FaceLayout.LIP_COLOR
 ## EL COLOR DE LA PIEL; transparente es el crema de siempre (ver CharacterBodyVisual.BODY_COLOR).
 @export var skin := Color(0, 0, 0, 0)
-## LAS CEJAS Y LA BARBA (ver FaceHair), −1 nada, y el color del pelo.
-@export var brows: int = -1
-## Su inclinación, en grados (ver CharacterLook.brow_tilt).
-@export var brow_tilt := 0.0
-## LO DE CADA UNO EN LA CARA: los ojos y las arrugas (ver FaceLayout.features, `look`), y la nariz (ver Noses), −1 sin.
-@export var face_look := {}
-@export var nose: int = -1
-## EL PEINADO (ver Hair), −1 pelado.
-@export var hair: int = -1
-@export var beard: int = -1
-@export var hair_color := FaceHair.DEFAULT_COLOR
 var entity_instantiation: EntityInstantiation
 
 var player_camera: Camera3D

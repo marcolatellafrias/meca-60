@@ -1,266 +1,37 @@
-[gd_resource type="Resource" script_class="CharacterLooks" load_steps=33 format=3]
+[gd_resource type="Resource" script_class="CharacterLooks" load_steps=10 format=3]
 
-[ext_resource type="Script" path="res://game/character/archetypes/bone_shape.gd" id="1_aa7gg"]
 [ext_resource type="Script" path="res://game/character/archetypes/character_look.gd" id="2_vjxlr"]
+
 [ext_resource type="Script" path="res://game/character/archetypes/character_looks.gd" id="3_xbvgy"]
-
-[sub_resource type="Resource" id="Resource_eu8f6"]
-script = ExtResource("1_aa7gg")
-radius_top = 0.43
-radius_bottom = 0.44
-length = 0.6499999999999999
-
-[sub_resource type="Resource" id="Resource_mlyae"]
-script = ExtResource("1_aa7gg")
-radius_top = 1.71
-radius_bottom = 1.6700000000000002
-
-[sub_resource type="Resource" id="Resource_h0csa"]
-script = ExtResource("1_aa7gg")
-radius_top = 1.33
-radius_bottom = 0.8200000000000001
-dome_top = 0.35
-offset_top = -0.29000000000000004
-offset_bottom = 0.30000000000000004
-
-[sub_resource type="Resource" id="Resource_uhwpf"]
-script = ExtResource("1_aa7gg")
-radius_top = 1.28
-radius_bottom = 1.19
-dome_top = 0.74
-offset_top = 0.4
-offset_bottom = 0.4
 
 [sub_resource type="Resource" id="Resource_aa7gg"]
 script = ExtResource("2_vjxlr")
 seed = 9
 head_form = 7
-mouth = 2
-lip_color = Color(0.6953125, 0.22000122, 0.22000122, 1)
-mouth_wear = 1
-belt = 1
-suit = 3
-brows = 2
-beard = 0
-hair_color = Color(0.12, 0.1, 0.09, 1)
-bones = {
-"cuello": SubResource("Resource_eu8f6"),
-"espalda": SubResource("Resource_mlyae"),
-"lumbar": SubResource("Resource_h0csa"),
-"pecho": SubResource("Resource_uhwpf")
-}
-pose_modifiers = PackedStringArray()
 
 [sub_resource type="Resource" id="Resource_5aibg"]
 script = ExtResource("2_vjxlr")
-belt = 0
-suit = 0
-brows = 4
-hair_color = Color(0.45, 0.3, 0.18, 1)
-pose_modifiers = PackedStringArray()
-
-[sub_resource type="Resource" id="Resource_unhnr"]
-script = ExtResource("1_aa7gg")
-radius_top = 0.43
-radius_bottom = 0.44
-length = 0.6499999999999999
-
-[sub_resource type="Resource" id="Resource_hin2j"]
-script = ExtResource("1_aa7gg")
-radius_top = 1.71
-radius_bottom = 1.6700000000000002
-
-[sub_resource type="Resource" id="Resource_yuuup"]
-script = ExtResource("1_aa7gg")
-radius_top = 1.33
-radius_bottom = 0.8200000000000001
-dome_top = 0.35
-offset_top = -0.29000000000000004
-offset_bottom = 0.30000000000000004
-
-[sub_resource type="Resource" id="Resource_wxhr1"]
-script = ExtResource("1_aa7gg")
-radius_top = 1.28
-radius_bottom = 1.19
-dome_top = 0.74
-offset_top = 0.4
-offset_bottom = 0.4
 
 [sub_resource type="Resource" id="Resource_xbvgy"]
 script = ExtResource("2_vjxlr")
 seed = 9
 head_form = 0
-mouth = 2
-lip_color = Color(0.6953125, 0.22000122, 0.22000122, 1)
-mouth_wear = 1
-belt = 1
-suit = 3
-brows = 8
-eye_shape = 1
-eye_tilt = 7.5
-nose = 4
-beard = 0
-hair_color = Color(0.12, 0.1, 0.09, 1)
-bones = {
-"cuello": SubResource("Resource_unhnr"),
-"espalda": SubResource("Resource_hin2j"),
-"lumbar": SubResource("Resource_yuuup"),
-"pecho": SubResource("Resource_wxhr1")
-}
-pose_modifiers = PackedStringArray()
-
-[sub_resource type="Resource" id="Resource_wvekk"]
-script = ExtResource("1_aa7gg")
-radius_top = 0.43
-radius_bottom = 0.44
-length = 0.6499999999999999
-
-[sub_resource type="Resource" id="Resource_6s4if"]
-script = ExtResource("1_aa7gg")
-radius_top = 1.71
-radius_bottom = 1.6700000000000002
-
-[sub_resource type="Resource" id="Resource_23548"]
-script = ExtResource("1_aa7gg")
-radius_top = 1.33
-radius_bottom = 0.8200000000000001
-dome_top = 0.35
-offset_top = -0.29000000000000004
-offset_bottom = 0.30000000000000004
-
-[sub_resource type="Resource" id="Resource_ogkj2"]
-script = ExtResource("1_aa7gg")
-radius_top = 1.28
-radius_bottom = 1.19
-dome_top = 0.74
-offset_top = 0.4
-offset_bottom = 0.4
 
 [sub_resource type="Resource" id="Resource_jvt5p"]
 script = ExtResource("2_vjxlr")
 seed = 9
 head_form = 1
-mouth = 2
-lip_color = Color(0.6953125, 0.22000122, 0.22000122, 1)
-mouth_wear = 1
-belt = 1
-suit = 3
-brows = 5
-brow_tilt = 16.0
-crow_feet = true
-forehead_lines = true
-nose = 4
-hairdo = 0
-hair_color = Color(0.6328125, 0.6003685, 0.5809021, 1)
-bones = {
-"cuello": SubResource("Resource_wvekk"),
-"espalda": SubResource("Resource_6s4if"),
-"lumbar": SubResource("Resource_23548"),
-"pecho": SubResource("Resource_ogkj2")
-}
-pose_modifiers = PackedStringArray()
-
-[sub_resource type="Resource" id="Resource_ux6wo"]
-script = ExtResource("1_aa7gg")
-radius_top = 1.92
-radius_bottom = 2.1599999999999997
-
-[sub_resource type="Resource" id="Resource_2h25a"]
-script = ExtResource("1_aa7gg")
-length = 0.7
-
-[sub_resource type="Resource" id="Resource_0uy6e"]
-script = ExtResource("1_aa7gg")
-radius_top = 2.61
-radius_bottom = 0.97
-dome_top = 1.12
-dome_bottom = 1.67
-offset_bottom = 0.92
-
-[sub_resource type="Resource" id="Resource_wqeuy"]
-script = ExtResource("1_aa7gg")
-radius_top = 1.99
-radius_bottom = 1.9
-offset_top = 0.4
-offset_bottom = 0.4
 
 [sub_resource type="Resource" id="Resource_vjxlr"]
 script = ExtResource("2_vjxlr")
 head_form = 6
-mouth = 2
-eye_wear = 4
-belt = 0
-suit = 3
-brows = 1
-hairdo = 0
-hair_color = Color(0.88, 0.88, 0.86, 1)
-bones = {
-"espalda": SubResource("Resource_ux6wo"),
-"hombro": SubResource("Resource_2h25a"),
-"lumbar": SubResource("Resource_0uy6e"),
-"pecho": SubResource("Resource_wqeuy")
-}
-pose_modifiers = PackedStringArray()
-
-[sub_resource type="Resource" id="Resource_ip30r"]
-script = ExtResource("1_aa7gg")
-radius_top = 0.3
-radius_bottom = 0.61
-offset_bottom = 1.0
-
-[sub_resource type="Resource" id="Resource_r5hpk"]
-script = ExtResource("1_aa7gg")
-radius_top = 0.5800000000000001
-radius_bottom = 0.6699999999999999
-offset_top = 1.0
-offset_bottom = 1.0
-
-[sub_resource type="Resource" id="Resource_1nv4s"]
-script = ExtResource("1_aa7gg")
-offset_top = -0.05000000000000004
-offset_depth = -0.5700000000000001
-
-[sub_resource type="Resource" id="Resource_n817s"]
-script = ExtResource("1_aa7gg")
-radius_top = 0.3
-radius_bottom = 0.63
-dome_top = 1.28
-
-[sub_resource type="Resource" id="Resource_oesfr"]
-script = ExtResource("1_aa7gg")
-radius_top = 0.62
-
-[sub_resource type="Resource" id="Resource_gk2jk"]
-script = ExtResource("1_aa7gg")
-radius_top = 1.38
-radius_bottom = 1.02
-length = 0.8899999999999999
-dome_top = 1.29
-dome_bottom = 2.62
-offset_top = -0.49
-offset_bottom = 1.16
 
 [sub_resource type="Resource" id="Resource_5k3o4"]
 script = ExtResource("2_vjxlr")
-eye_wear = 4
-belt = 0
-brows = 2
-beard = 0
-hair_color = Color(0.36, 0.25, 0.17, 1)
-bones = {
-"antebrazo": SubResource("Resource_ip30r"),
-"brazo": SubResource("Resource_r5hpk"),
-"cabeza": SubResource("Resource_1nv4s"),
-"cuello": SubResource("Resource_n817s"),
-"hombro": SubResource("Resource_oesfr"),
-"lumbar": SubResource("Resource_gk2jk")
-}
-pose_modifiers = PackedStringArray()
 
 [sub_resource type="Resource" id="Resource_tytsu"]
 script = ExtResource("2_vjxlr")
 head_form = 1
-pose_modifiers = PackedStringArray()
 
 [resource]
 script = ExtResource("3_xbvgy")

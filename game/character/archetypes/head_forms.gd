@@ -81,17 +81,15 @@ static func forget(slot: int) -> bool:
 ## DE VEINTICINCO A DIEZ (16/10/2026): el dios del juego las miró en grupos por semejanza y se quedó con éstas —de los
 ## huevos, el del mentón adelante; de los pómulos alineados, más abajo, mentón largo, un poco más larga, y las dos
 ## largas de pómulos bajos y de mentón largo; de las redondas, las de abajo 6 y 4,5 cm y la de abajo 6 con arriba 15;
-## de las peras, la recta—. Las ranuras se renumeraron del 1 al 10, en este orden. `boca` es el ancho de la boca (ver
-## HeadForm.mouth_width): la 1 y la 4 llevan el 0,62 que el genérico y el gordo habían elegido en el F4, cuando el ancho
-## era del personaje.
+## de las peras, la recta—. Las ranuras se renumeraron del 1 al 10, en este orden.
 const CHOSEN := [
-	["huevo con mentón adelante", {"boca": 0.62, "h": 0.10, "b": [0.13, 0.15, 0.012, 0.06],
+	["huevo con mentón adelante", {"h": 0.10, "b": [0.13, 0.15, 0.012, 0.06],
 		"t": [0.17, 0.19, 0.0, 0.08]}],
 	["pómulos alineados, más abajo", {"h": 0.10, "b": [0.13, 0.15, 0.014, 0.05], "t": [0.17, 0.19, 0.0, 0.08],
 		"plano": true, "cuts": [[1, 0.165, 0.18, 0.0]]}],
 	["pómulos alineados, mentón largo", {"h": 0.10, "b": [0.13, 0.15, 0.014, 0.07], "t": [0.17, 0.19, 0.0, 0.08],
 		"plano": true, "cuts": [[2, 0.168, 0.182, 0.0]]}],
-	["pómulos alineados, un poco más larga", {"boca": 0.62, "h": 0.13, "b": [0.13, 0.15, 0.014, 0.05], "t": [0.17, 0.19, 0.0, 0.08],
+	["pómulos alineados, un poco más larga", {"h": 0.13, "b": [0.13, 0.15, 0.014, 0.05], "t": [0.17, 0.19, 0.0, 0.08],
 		"plano": true, "cuts": [[2, 0.168, 0.182, 0.0]]}],
 	["pómulos alineados, larga, pómulos bajos", {"h": 0.16, "b": [0.13, 0.15, 0.014, 0.05],
 		"t": [0.17, 0.19, 0.0, 0.08], "plano": true, "cuts": [[1, 0.166, 0.18, 0.0]]}],
@@ -133,8 +131,6 @@ static func from_spec(new_name: String, spec: Dictionary) -> HeadForm:
 	f.flat_front = spec.get("plano", false)
 	if spec.has("cara"):
 		f.face_flat = spec["cara"]
-	if spec.has("boca"):
-		f.mouth_width = spec["boca"]
 	f.ensure_cuts()
 	for c: Array in spec.get("cuts", []):
 		var cut: HeadCut = f.cuts[int(c[0])]

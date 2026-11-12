@@ -58,8 +58,9 @@ arquetipo (`SkeletonSizesUtil`, de 1.273 a unas 340 líneas, ver [[personajes-tr
 como tabla en `CustomBonesUtil.REST`), `BodyLoop`, `FootCut`, `BlockShape.apply_to` y cinco números de arquetipo que
 sólo usaba la cuenta vieja. Los seis personajes quedaron iguales, medido. **Las cabezas**: sombreado suave sobre las
 mismas pocas caras, más grandes y con el cuello más grueso e inclinado (afinado «así nomás»; el usuario lo va a tunear).
-**Queda**: el código de las caras (`FaceLayout`, `FacePlane`, `FaceFeature`, `FaceStyle`, `FaceHair`, `HeadForm` con
-sus ojos, boca y orejas, lo de `CharacterLook` que las elige): no se dibuja y el usuario las rehace de cero.*
+**Las caras**, borradas el mismo día (`FaceLayout`, `FacePlane`, `FaceFeature`, `FaceStyle`, `FaceHair`, `BoneShape`,
+la boca, los ojos y las orejas de `HeadForm`, y lo de `CharacterLook` que las elegía): no se dibujaban, y el usuario las
+rehace de cero, quizá pintadas con píxeles. De `CharacterLook` quedan la semilla, la forma de cabeza y la piel.*
 
 *13/11/2026, después: **la cabeza es su forma de cabeza low poly** (`HeadForm`): ocho lados, y a lo largo sólo los
 anillos que mandan (las tapas y los cortes prendidos), con caras planas, así cada loop cut es una arista que se ve. **El

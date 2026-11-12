@@ -66,42 +66,6 @@ var face_flat := -1.0
 @export_range(-0.08, 0.08, 0.001, "suffix:m") var top_forward := 0.0
 @export_range(0.0, 0.2, 0.001, "suffix:m") var top_dome := 0.07
 
-@export_group("Cara")
-## CUÁNTO DEBAJO DE LOS OJOS VA LA BOCA, en fracción del alto de la cabeza (ver FaceLayout.mouth_place): en unas formas
-## queda mejor más arriba y en otras más abajo, así que es de cada forma (lo pidió el dios del juego, 16/10/2026; antes
-## era una sola para todas, 0,25). Lo que se apoya en la boca —el bigote, la barba, las orejas— la sigue. Se edita con el
-## F2 de la fila «Formas de cabeza» (ver HeadFaceTuner).
-@export_range(0.05, 0.4, 0.005) var mouth_drop := 0.25
-## EL ANCHO DE LA BOCA, como múltiplo del de su pose (ver FaceLayout.MOUTHS): de la forma, como su altura (lo pidió el
-## dios del juego, 16/10/2026; antes lo elegía el canónico de cada arquetipo en el F4). Se edita con el F2 de la fila.
-@export_range(0.4, 2.5, 0.01) var mouth_width := 1.0
-## CUÁNTO SE SEPARAN LOS OJOS del medio, en fracción del ancho de la cabeza a su altura (ver FaceLayout.eyes): de la forma,
-## como la boca (lo pidió el dios del juego, 20/10/2026). 0,2 era el de todas. Las ojeras y lo que se apoya en los ojos
-## los siguen.
-@export_range(0.05, 0.4, 0.005) var eye_apart := 0.2
-## EL TAMAÑO DE LOS OJOS, como múltiplo del de siempre (ver FaceLayout.EYES): de la forma, como la separación (lo pidió el
-## dios del juego, 20/10/2026). Las ojeras lo siguen; el grueso del borde no (es del panel de Rasgos, ver FaceStyle).
-@export_range(0.3, 2.5, 0.01) var eye_size := 1.0
-## EL ATLAS: a qué altura de la cabeza está el punto de giro, en fracción de su alto desde el fondo del mentón. En la
-## vida real el cuello entra por el atlas, arriba de la mandíbula; con 0 —lo de antes— la cabeza nacía en la punta del
-## cuello y giraba desde abajo del mentón. Con más, el cuello se alarga hasta ahí y la cabeza cuelga de ese punto, sin
-## moverse de donde estaba (ver SkeletonSizesUtil, `head_drop`). Lo pidió el dios del juego (16/10/2026).
-@export_range(0.0, 0.8, 0.01) var atlas := 0.0
-
-@export_group("Orejas")
-## LAS OREJAS DE CADA FORMA (lo pidió el dios del juego, 16/10/2026; ver ProceduralBodyUtil.add_ears): qué modelo
-## —el disco girado de siempre, con las tapas a los costados y un poco al frente, o el disco DE FRENTE, sin inclinación,
-## con una tapa adelante y otra atrás, que asoma por el costado—, a qué altura —entre la boca (0) y los ojos (1)— y
-## cuánto se corren atrás (+) o adelante (−), en fracción del medio fondo de la cabeza. Y el disco DE COSTADO: pegado al
-## costado como el girado, pero sin girar. Su TAMAÑO, el diámetro en fracción del alto de la cabeza, y cuánto ASOMA el de
-## frente: la fracción del diámetro que queda afuera del costado. El defecto es la 2 de las alternativas (receta «orejas»),
-## la que eligió el dios del juego el 16/10/2026: el disco de frente, chico y medio afuera.
-@export_enum("disco girado", "disco de frente", "disco de costado") var ear_model := 1
-@export_range(-0.5, 1.5, 0.01) var ear_height := 0.6
-@export_range(-1.0, 1.0, 0.01) var ear_back := 0.1
-@export_range(0.08, 0.4, 0.005) var ear_size := 0.18
-@export_range(0.1, 1.0, 0.01) var ear_out := 0.5
-
 @export_group("")
 @export var cuts: Array[HeadCut] = []
 
@@ -126,11 +90,17 @@ func ensure_cuts() -> void:
 		cuts.append(cut)
 
 
+## LO GUARDADO DE ANTES que ya no existe se acepta y se ignora: la cara (la boca, los ojos, las orejas) y el atlas,
+## sacados el 13/11/2026.
+func _set(property: StringName, _value: Variant) -> bool:
+	return property in [&"mouth_drop", &"mouth_width", &"eye_apart", &"eye_size", &"atlas", &"ear_model", &"ear_height",
+		&"ear_back", &"ear_size", &"ear_out"]
+
+
 func copy() -> HeadForm:
 	var out := HeadForm.new()
 	for property in ["name", "height", "flat_front", "face_flat", "bottom_width", "bottom_forward", "bottom_dome", "top_width",
-			"top_forward", "top_dome", "mouth_drop", "mouth_width", "eye_apart", "eye_size", "atlas", "ear_model", "ear_height", "ear_back",
-			"ear_size", "ear_out"]:
+			"top_forward", "top_dome"]:
 		out.set(property, get(property))
 	for cut in cuts:
 		out.cuts.append(cut.copy())

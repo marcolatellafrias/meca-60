@@ -1,8 +1,0 @@
-[gd_resource type="Resource" script_class="FaceStyle" load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://game/character/face/face_style.gd" id="1_cv5d8"]
-
-[resource]
-script = ExtResource("1_cv5d8")
-mouth_thick = 0.01
-bag_thick = 0.16
