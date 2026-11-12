@@ -7,6 +7,7 @@ empieza con su comentario largo).
 - [[meca]] — la meca de pelea: el cuerpo, la marcha, el torso, las piñas, los puestos.
 - [[equilibrio]] — la línea de equilibrio (de los personajes de character-parametric) y la meca de equilibrio.
 - [[cubo]] — el cubo: flotar, la línea, tropezar, caer y recuperarse con toberas.
+- [[cubo-fisico]] — el cubo sin línea: física de verdad con el giro en Y trabado, para comparar.
 - [[cubo-con-piernas]] — el cubo con pelvis, dos piernas, torso aparte y pasos por radio.
 - [[sandbox]] — las parcelas, sus paredes, los paneles F por fila y la bola.
 - [[personajes-traidos]] — lo traído de character-parametric: el jugador, agarrar, sentarse.

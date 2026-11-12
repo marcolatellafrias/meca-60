@@ -10,11 +10,13 @@ columna, se queda).
 | Equilibrio | `BalanceTestArchetype` | `MechDummy`, `MechBalanceSettings` | `BalancePanel` (F1) | `balance_check` | `MechBody`, `TestBall`, personas |
 | Cubo | `HoverCubeArchetype` | `game/hover/` entero | `HoverPanel` (F1), `HoverKnockPanel` (F2) | `hover_check` | `TestBall`, `MechBody.tilt`, `Clay` |
 | Cubo con piernas | `LeggedCubeArchetype` | `game/legged_cube/` entero | `LeggedCubePanel` (F1), `HoverKnockPanel` (F2) | `legged_check` | `game/hover/` (hereda del cubo), `MechBody`, `MechLeg` |
+| Cubo físico | `PhysicalCubeArchetype` | `game/physical_cube/` entero | `PhysicalCubePanel` (F1), `HoverKnockPanel` (F2) | `physical_check` | `game/hover/` (hereda del cubo), `TestBall` |
 | Personajes | `PeopleArchetype` | `CharacterGetUp` | — | — | lo traído de character-parametric |
 | Objetos | `ObjectLotArchetype` | — | — | `player_check` (el ropero) | objetos traídos |
 | Multijugador | `MultiplayerArchetype` | `SandboxSession` | — | `net_check` | `game/net/` |
 | Partículas | `ParticleArchetype` | — | — | — | `game/particles/` |
 
-El cubo con piernas hereda del cubo: borrar la fila Cubo obliga a mover `game/hover/` a la de piernas, o borrar las dos.
+El cubo con piernas y el cubo físico heredan del cubo: borrar la fila Cubo obliga a dejar `game/hover/` para ellos, o
+borrarlas también.
 
 Ver [[sandbox]] para cómo se arma una fila.

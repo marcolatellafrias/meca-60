@@ -7,6 +7,7 @@ extends TunerPanel
 const LABELS := {
 	"step_radius": "da un paso al alejarse más de (m)", "step_lead": "cuánto se adelanta el pie (s de marcha)",
 	"step_time": "cuánto dura un paso (s)", "step_height": "cuánto sube el pie (m)",
+	"fold_time": "se recogen al caer en (s)", "unfold_time": "se estiran al enderezarse en (s)",
 }
 
 

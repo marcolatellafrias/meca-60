@@ -59,9 +59,9 @@ func _ready() -> void:
 		_track_start()
 		TestBall.throw_from_camera(_parcel, float(chosen["push"]), float(chosen["speed"]))
 		var watched := await _watch(4.0, true)
-		print("TIRO %s (%s N·s a %d m/s): inclinación pico %.0f° · se cayó %s · %s" % [chosen["name"],
+		print("TIRO %s [%s] (%s N·s a %d m/s): inclinación pico %.0f° · se cayó %s · se corrió %.1f m · %s" % [chosen["name"], _cube.last_hit_kind,
 			String.num_int64(roundi(float(chosen["push"]))), roundi(float(chosen["speed"])), watched.z,
-			_cube.falls > falls, _track_text(start, Vector3.RIGHT)])
+			_cube.falls > falls, (_cube.global_position - start).length(), _track_text(start, Vector3.RIGHT)])
 	# LOS BOTONES DEL PANEL CHICO: volcarlo suave y fuerte; que se caiga, se recupere y no salga de su parcela.
 	for strong: bool in [false, true]:
 		await _wait_hover()

@@ -27,8 +27,18 @@ static var current := HoverCubeSettings.new()
 @export_range(0.5, 40.0, 0.5) var walk_brake := 5.0
 ## Cuánto gira con A/D (grados por segundo).
 @export_range(5.0, 180.0, 5.0) var turn_speed := 45.0
-## El freno del retroceso (m/s²): cuánto lo corre un golpe (poco, lo corre mucho; sin él, queda deslizándose).
-@export_range(0.0, 20.0, 0.1) var knock_brake := 3.0
+## EL RETROCESO: cuánto más lo corre un golpe de algo que se mueve (× lo que le cambió la velocidad: la física de un
+## cubo de 50 t lo corre poco) y cómo frena (m/s²: poco, patina; mucho, seco).
+@export_range(0.0, 6.0, 0.05) var knock_gain := 2.5
+@export_range(0.0, 20.0, 0.1) var knock_brake := 2.5
+
+@export_group("Contra qué choca")
+## Chocar contra algo fijo (una pared, un edificio) inclina esta parte de lo que inclinaría un golpe: lo frena, no lo
+## voltea.
+@export_range(0.0, 1.0, 0.01) var fixed_lean := 0.25
+## Cuánto cuenta la altura del golpe (0: igual en cualquier lado; 1: proporcional a la altura sobre el piso, y a la altura
+## del centro como siempre).
+@export_range(0.0, 1.0, 0.05) var height_weight := 1.0
 
 @export_group("La línea de equilibrio")
 ## Cuánto lo inclina cada m/s de golpe (cualquier golpe en el cuerpo, a cualquier altura: simplificado). El golpe se suma

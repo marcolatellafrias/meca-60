@@ -17,9 +17,15 @@ extends RigidBody3D
 ##     y, al soltar, frena con `walk_brake`, de a poco) y la del RETROCESO (la que le dejan los golpes, que frena
 ##     `knock_brake`). Así un golpe puede correrlo mucho sin que manejarlo se vuelva resbaloso, y al revés (lo pidió el
 ##     usuario el 12/11/2026: «no quiero que al soltar W frenes en seco, pero sí quiero tener dos perillas»).
-##   · LA LÍNEA DE EQUILIBRIO (`lean`): ese mismo golpe —medido como lo que cambió la velocidad sin que él lo pidiera, a
-##     cualquier altura— le suma a la velocidad de la inclinación (`lean_per_ms` × `push_rate`); un resorte la devuelve
-##     (`stiffness`, `damping`). Golpes seguidos se suman. Se ve inclinando el DIBUJO sobre el canto de abajo.
+##   · LA LÍNEA DE EQUILIBRIO (`lean`): ese mismo golpe —medido como lo que cambió la velocidad sin que él lo pidiera—
+##     le suma a la velocidad de la inclinación (`lean_per_ms` × `push_rate`); un resorte la devuelve (`stiffness`,
+##     `damping`). Golpes seguidos se suman. Se ve inclinando el DIBUJO sobre el canto de abajo.
+##   · CONTRA QUÉ Y DÓNDE (el 12/11/2026, el usuario: «es muy distinta la diferencia de velocidad cuando… es un impacto a
+##     cuando… se frenó por una pared… apenas la golpea, se voltea»): el golpe se mide igual, pero mira los CONTACTOS de
+##     la física de ese paso. Contra algo FIJO (una pared, un edificio) sólo frena: inclina por `fixed_lean` y no lo
+##     corre de más. Contra algo QUE SE MUEVE (la bola, otro cuerpo) es un golpe entero: lo corre por `knock_gain` y lo
+##     inclina según la ALTURA del contacto sobre el piso (`height_weight`: arriba vuelca más que abajo; a la altura del
+##     centro, como siempre). Sin contacto (el F2) es un golpe entero en el centro.
 ## AL PASAR `fall_at`, TROPIEZA: el cuerpo toma la inclinación del dibujo (girando sobre ese mismo canto) y queda suelto,
 ## con UN giro de una vez: el justo para que su BASE QUEDE QUIETA en ese instante —como si los pies se trabaran— (ω =
 ## arriba × v / h, por `base_grip`), más lo que se venía inclinando (`tip_carry`). Desde ahí todo es física: cae para el
@@ -56,6 +62,8 @@ var height := 0.0
 var tilt := 0.0
 var lean := Vector2.ZERO
 var last_hit := 0.0
+## Contra qué fue el último golpe: "fijo", "golpe" o "empujón" (sin contacto), para mirar.
+var last_hit_kind := ""
 
 var _lean_speed := Vector2.ZERO
 var _velocity_after := Vector3.ZERO
@@ -80,6 +88,9 @@ func _init() -> void:
 	mass = CUBE_MASS
 	can_sleep = false
 	continuous_cd = true
+	# Para saber contra qué choca (ver `_touch`).
+	contact_monitor = true
+	max_contacts_reported = 8
 	# Un cubo macizo: I = m·L²/6.
 	_inertia = CUBE_MASS * SIZE * SIZE / 6.0
 
@@ -173,8 +184,8 @@ func _physics_process(delta: float) -> void:
 	_fire_nozzles(knobs)
 	_place_camera(delta)
 	_label.global_position = global_position + Vector3(0, SIZE + 2.0, 0)
-	_label.text = "%s · altura %.1f m · inclinación %.0f°\núltimo golpe %.1f m/s · caídas %d" % [
-		["parado", "TIRADO", "sube", "se endereza"][state], height, tilt, last_hit, falls]
+	_label.text = "%s · altura %.1f m · inclinación %.0f°\núltimo golpe %.1f m/s %s · caídas %d" % [
+		["parado", "TIRADO", "sube", "se endereza"][state], height, tilt, last_hit, last_hit_kind, falls]
 
 
 ## ── PARADO ──────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -208,9 +219,43 @@ func _measure_hit(knobs: HoverCubeSettings) -> void:
 	if flat.length() <= HIT_NOISE:
 		return
 	last_hit = flat.length()
-	_knock += rest
+	var touch := _touch()
+	var weight := 1.0
+	# Algo fijo sólo FRENA: si el cambio no va contra cómo se movía (un empujón estando apoyado en una pared), es golpe.
+	var before := Vector3(_velocity_after.x, 0.0, _velocity_after.z)
+	if bool(touch["fixed"]) and flat.dot(before) < 0.0:
+		last_hit_kind = "fijo"
+		weight = knobs.fixed_lean
+		_knock += rest
+	else:
+		last_hit_kind = "golpe" if touch["at"] != null else "empujón"
+		_knock += rest * knobs.knock_gain
+		if touch["at"] != null:
+			var ground := global_position.y - SIZE * 0.5 - height
+			var centre := maxf(global_position.y - ground, 0.1)
+			var above := maxf((touch["at"] as Vector3).y - ground, 0.0)
+			weight = lerpf(1.0, above / centre, knobs.height_weight)
 	var local := global_basis.inverse() * flat
-	_lean_speed += Vector2(local.x, -local.z) * knobs.lean_per_ms * knobs.push_rate
+	_lean_speed += Vector2(local.x, -local.z) * knobs.lean_per_ms * knobs.push_rate * weight
+
+
+## CONTRA QUÉ CHOCÓ en el último paso de la física: `at`, el punto del contacto con algo que se mueve (o null), y
+## `fixed`, si sólo tocó cosas fijas. Fijo es lo estático (una pared, un edificio, el piso) o un cuerpo congelado; lo
+## demás (la bola, un cuerpo suelto, un personaje) se mueve.
+func _touch() -> Dictionary:
+	var physics := PhysicsServer3D.body_get_direct_state(get_rid())
+	var fixed := false
+	if physics == null:
+		return {"fixed": false, "at": null}
+	for i in physics.get_contact_count():
+		var other := physics.get_contact_collider_object(i)
+		var still := (other is StaticBody3D and not other is AnimatableBody3D) \
+			or (other is RigidBody3D and (other as RigidBody3D).freeze)
+		if still:
+			fixed = true
+		else:
+			return {"fixed": false, "at": physics.get_contact_local_position(i)}
+	return {"fixed": fixed, "at": null}
 
 
 ## EL RESORTE VERTICAL: dos rayos desde la cara de abajo; la altura es la del medio de los que tocan. Empuja hacia
@@ -274,7 +319,10 @@ func _trip(knobs: HoverCubeSettings) -> void:
 	_lock(false)
 	global_transform = Transform3D(leaned, base + leaned * Vector3(0.0, SIZE * 0.5, 0.0))
 	_look.transform = Transform3D()
-	var side := Vector3(linear_velocity.x, 0.0, linear_velocity.z)
+	# Cae con su velocidad de la física: el retroceso de más (`knock_gain`) es para verlo correrse parado, no para que
+	# salga despedido al caer.
+	var side := _walk + _knock / maxf(knobs.knock_gain, 1.0)
+	linear_velocity = Vector3(side.x, linear_velocity.y, side.z)
 	angular_velocity = Vector3.UP.cross(side) / (SIZE * 0.5) * knobs.base_grip \
 		+ Vector3.UP.cross(direction) * tipping * knobs.tip_carry
 	lean = Vector2.ZERO

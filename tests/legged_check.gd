@@ -55,7 +55,7 @@ func _ready() -> void:
 	await _seconds(1.5)
 	# UN GOLPE QUE NO LO VOLTEA: los pies lo siguen.
 	var before := _cube.steps_taken
-	_cube.linear_velocity += _cube.global_basis.x * 4.0
+	_cube.linear_velocity += _cube.global_basis.x * 1.5
 	await _watch(2.0, "6_golpe", "Un golpe de costado (no lo voltea)")
 	print("GOLPE SUAVE: pasos %d · estado %d" % [_cube.steps_taken - before, _cube.state])
 	# VOLCARLO Y QUE SE RECUPERE.
@@ -66,14 +66,15 @@ func _ready() -> void:
 	while clock < 20.0 and not (_cube.falls > falls and _cube.state == HoverCube.State.HOVER):
 		await get_tree().physics_frame
 		clock += 1.0 / 240.0
-		if fmod(clock, 0.7) < 1.0 / 240.0 and shots < 6:
+		if fmod(clock, 0.35) < 1.0 / 240.0 and shots < 12:
 			_follow()
 			await _shot("Volcado: %s (%.1f s)" % [["flota", "tirado", "sube", "se endereza"][_cube.state], clock],
-				"7_%d" % shots)
+				"7_%02d" % shots)
 			shots += 1
+	var _tuck_at_stand := _cube._tuck
 	await _seconds(1.0)
-	print("VOLCAR: se cayó %s · de vuelta parado %s a los %.1f s · pies a %.1f m de su lugar" % [_cube.falls > falls,
-		_cube.state == HoverCube.State.HOVER, clock, _foot_error()])
+	print("VOLCAR: se cayó %s · de vuelta parado %s a los %.1f s (piernas recogidas %.0f %% al quedar derecho) · pies a %.1f m de su lugar" % [_cube.falls > falls,
+		_cube.state == HoverCube.State.HOVER, clock, _tuck_at_stand * 100.0, _foot_error()])
 	print("PASOS en total %d · lo más lejos que quedó un pie de su lugar parado: %.1f m" % [_cube.steps_taken, _worst_foot])
 	get_tree().quit()
 

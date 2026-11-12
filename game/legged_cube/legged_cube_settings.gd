@@ -17,3 +17,8 @@ static var shared := LeggedCubeSettings.new()
 ## Cuánto dura un paso (s) y cuánto sube el pie en el medio (m).
 @export_range(0.1, 1.5, 0.05) var step_time := 0.4
 @export_range(0.0, 4.0, 0.1) var step_height := 1.4
+
+@export_group("Las piernas al caer")
+## Cuánto tardan en recogerse al tropezar y en estirarse al enderezarse (s).
+@export_range(0.05, 1.5, 0.05) var fold_time := 0.3
+@export_range(0.05, 1.5, 0.05) var unfold_time := 0.25

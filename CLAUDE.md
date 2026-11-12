@@ -80,14 +80,29 @@ más y se le frena el giro (poco: es física); apenas deja de caer **sube** con 
 línea mirando hacia donde miraba. La parcela es de 60 m. **J/K** cuatro tiros: lenta (30 m/s) o rápida (100 m/s), que
 lo voltea o no. **F1** su panel (`HoverPanel`, perillas en `HoverCubeSettings`); **F2** volcarlo, suave y fuerte
 (`HoverKnockPanel`). *El cubo que se enderezaba con un torque libre se borró: se torcía con cualquier golpe.*
+**Contra qué y dónde** (12/11/2026: con una pared apenas tocada se volteaba): el golpe se mide igual, pero mira los
+contactos de la física de ese paso. Contra algo **fijo** (pared, edificio) sólo frena: inclina ×0,25 (`fixed_lean`) y
+caminando no lo tira. Contra algo **que se mueve** (la bola) es un golpe entero, que inclina según la **altura** del
+contacto (arriba vuelca más) y lo corre **×2,5** (`knock_gain`, el retroceso; al tropezar cae con su velocidad física,
+sin el ×2,5). Es el punto medio: la física dice qué fue el golpe, la línea qué hace el cubo.
 
 **Cubo con piernas** (12/11/2026, `LeggedCube`, hereda del cubo): el mismo cubo con una **pelvis** debajo y **dos
 piernas** (el cuerpo de la meca, `MechBody`, dibujadas con `MechLeg`), para empezar a ver cómo se mueven. Las piernas
 son dibujo: el peso lo lleva el resorte. **O** lo maneja: W/S y A/D las piernas (la pelvis mira hacia donde caminan), el
 **mouse gira el torso aparte**, como la meca. **Los pasos, por radio** (el sistema de allá de octubre de 2025): cada pie
 queda plantado hasta que su lugar debajo de la cadera, adelantado con la marcha, se aleja más que un radio; ahí da un
-paso, de a un pie. Caído, las piernas quedan duras colgando de la pelvis (todavía no son físicas). **F1** su panel
+paso, de a un pie. **Al caer las piernas se pliegan** (no se achican) con easing y, en cuanto empieza a enderezarse,
+se estiran hacia debajo de las caderas: al quedar derecho ya está parado. **F1** su panel
 (`LeggedCubePanel`: las perillas del cubo en su propia copia y las de los pasos), **F2** volcarlo, **J/K** las bolas.
+
+**Cubo físico** (12/11/2026, `PhysicalCube`, hereda del cubo; para comparar con la línea): parado **no tiene línea**,
+su inclinación es la del cuerpo. Gira de costado y de frente con la física, en Y no (trabado). Flota sobre **cuatro
+resortes en las esquinas** de abajo y **los pies** agarran el piso más abajo que el cubo: un golpe corre el cuerpo, los
+pies frenan la base y vuelca, más cuanto más arriba pegó. Lo que pide el que lo maneja lo empuja desde el centro
+(arrancar no lo cabecea). Pasado `fall_tilt` (35°) cae y se recupera como el cubo. Medido: cae con unos 3,5 m/s
+pegando arriba y 4 y pico en el centro; **contra una pared a 8 m/s se cae** (es física: no distingue). **F1** su panel
+(`PhysicalCubePanel`, sin las perillas de la línea), **F2** empujarlo arriba, **J/K** cuatro tiros por cambio de
+velocidad (1 y 5 m/s).
 
 **Las parcelas tienen paredes invisibles** (como allá, `SandboxParcel` LOS BORDES): las ve lo que se mueve con física y
 vive en una parcela; el jugador y la bola pasan. Las mecas de pelea, que se mueven por código, le preguntan a su parcela
@@ -119,6 +134,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   (su parcela y sus tiros).
 - `game/legged_cube/` — **el cubo con piernas**: `LeggedCube` (la pelvis, las piernas, los pasos por radio y el torso
   aparte), `LeggedCubeSettings`, `LeggedCubePanel` (su F1) y `LeggedCubeArchetype`. Usa `game/hover/` y `MechBody`.
+- `game/physical_cube/` — **el cubo físico**: `PhysicalCube` (esquinas, pies, torque, caerse), `PhysicalCubeSettings`,
+  `PhysicalCubePanel` (su F1) y `PhysicalCubeArchetype`. Usa `game/hover/`.
 - `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas, `_mount_tuners` sus paneles F;
   crea al jugador, ver arriba) y la sesión de red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD,
   espacio, shift, Ctrl, E, R, C, V, B, F1–F6, Escape; no repetirlas. Sentado (o manejando desde afuera) sólo valen las
@@ -146,6 +163,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
 - `tests/legged_check.tscn` (headless o con ventana): el cubo con piernas camina, gira las piernas con el torso quieto,
   camina con el torso girado y para atrás, un golpe suave y uno que lo vuelca; cuenta los pasos y lo lejos que queda un
   pie de su lugar; con ventana, capturas.
+- `tests/physical_check.tscn` (headless o con ventana): el cubo físico; una escala de empujones en el centro y arriba
+  (dónde se cae), sus cuatro tiros, el F2, cuánto cabecea al arrancar y frenar, contra la pared y la recuperación.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,
   caminarla sentado, viajar parado adentro, manejar desde afuera y volver, y agarrar el ropero del lote.
 - `tests/net_check.tscn`: dos instancias sin ventana, una con `--host-local` y otra con `--join-local` (antes del

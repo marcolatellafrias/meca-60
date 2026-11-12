@@ -13,10 +13,14 @@ flota a la altura de la cintura.
 - **Los pasos, por radio**: cada pie queda plantado hasta que su lugar debajo de la cadera, adelantado con la marcha
   (*cuánto se adelanta el pie*), se aleja más que *da un paso al alejarse más de*; ahí da un paso por el aire, de a un
   pie. Caminando, girando o corrido por un golpe, los pies lo siguen solos.
-- **Caído**, las piernas quedan duras colgando de la pelvis: todavía no son físicas.
+- **Al caer se pliegan** (*se recogen al caer en*), con easing: muslo adelante, canilla de vuelta y pie debajo de la
+  cadera. Se pliegan, no se achican: las piezas no se estiran. Quedan plegadas tirado y subiendo, y **en cuanto empieza a
+  enderezarse se estiran** (*se estiran al enderezarse en*) hacia debajo de las caderas: al quedar derecho ya está
+  parado.
 
 Perillas: `LeggedCubeSettings` (F1), las del cubo en su propia copia más las de los pasos. Test:
 `tests/legged_check.tscn`.
 
 ## Historia
 - 12/11/2026: nace, con pelvis («el cubo debería tener pelvis, obvio»), torso aparte, dos piernas y pasos por radio.
+- 12/11/2026: las piernas se pliegan al caer y se estiran al enderezarse (antes quedaban duras).

@@ -46,6 +46,7 @@ static func categories() -> Array[Dictionary]:
 		{"name": "Equilibrio", "archetypes": [BalanceTestArchetype.new()]},
 		{"name": "Cubo", "archetypes": [HoverCubeArchetype.new()]},
 		{"name": "Cubo con piernas", "archetypes": [LeggedCubeArchetype.new()]},
+		{"name": "Cubo físico", "archetypes": [PhysicalCubeArchetype.new()]},
 		{"name": "Personajes", "archetypes": PeopleArchetype.catalogue()},
 		{"name": "Objetos", "archetypes": [ObjectLotArchetype.new()]},
 		{"name": "Multijugador", "archetypes": [MultiplayerArchetype.new()]},
@@ -79,6 +80,8 @@ func _mount_tuners() -> void:
 	_mount(HoverKnockPanel.new(), "Cubo", "volcarlo: suave o fuerte", KEY_F2)
 	_mount(LeggedCubePanel.new(), "Cubo con piernas", "el cubo y sus piernas: los pasos por radio", KEY_F1)
 	_mount(HoverKnockPanel.new(), "Cubo con piernas", "volcarlo: suave o fuerte", KEY_F2)
+	_mount(PhysicalCubePanel.new(), "Cubo físico", "el cubo físico: esquinas, pies, torque y caerse", KEY_F1)
+	_mount(HoverKnockPanel.new(), "Cubo físico", "empujarlo arriba: suave o fuerte", KEY_F2)
 	_mount(BalancePanel.new(), "Equilibrio", "la meca de equilibrio: el resorte, la firmeza, el empuje y los pasos", KEY_F1)
 
 

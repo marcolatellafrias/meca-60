@@ -14,8 +14,20 @@ caminata.
   inclinación; un resorte la devuelve. Golpes seguidos se suman. Se dibuja inclinando el dibujo sobre el canto de abajo.
   Ver [[equilibrio]].
 
-Corrimiento e inclinación salen del **mismo golpe medido**, pero se escalan aparte: *freno del retroceso* (cuánto se corre)
-e *inclinación por m/s de golpe* (cuánto se inclina).
+Corrimiento e inclinación salen del **mismo golpe medido**, pero se escalan aparte: *retroceso* (×2,5) y *freno del
+retroceso* (cuánto se corre) e *inclinación por m/s de golpe* (cuánto se inclina).
+
+## Contra qué y dónde
+El golpe se mide igual (el cambio de velocidad), pero el cubo mira los **contactos** de la física de ese paso:
+- Contra algo **fijo** (pared, edificio): sólo frena tu avance e inclina ×0,25 (*chocar contra algo fijo inclina*).
+  Caminando a toda velocidad contra una pared, se tambalea y no cae.
+- Contra algo **que se mueve** (la bola): golpe entero. Inclina según la **altura** del contacto sobre el piso (arriba
+  vuelca más; a la altura del centro, como siempre) y lo corre ×2,5.
+- Sin contacto (el F2): golpe entero en el centro.
+
+Al tropezar cae con su velocidad física, sin el ×2,5: el retroceso de más es para verlo correrse parado.
+
+Es el punto medio entre la línea y la física pura; la física pura está en [[cubo-fisico]].
 
 ## Tropezar y caer
 Al pasar *se cae en*, el cuerpo toma la inclinación del dibujo y queda suelto, con un giro de una vez: el justo para que
@@ -35,3 +47,5 @@ costados. Derecho, se traba y vuelve a la línea mirando hacia donde miraba.
 ## Historia
 - 11/11/2026: nace como cuerpo libre que se endereza con un torque; se bifurca uno con la línea de equilibrio.
 - 12/11/2026: queda uno solo, el de la línea. El del torque se borró: se torcía con cualquier golpe.
+- 12/11/2026: dos frenos (lo propio y el retroceso), manejarlo con la O, y contra qué y dónde (una pared apenas tocada
+  lo volteaba).
