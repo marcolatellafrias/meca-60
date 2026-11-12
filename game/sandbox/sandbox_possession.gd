@@ -17,6 +17,7 @@ extends Node
 ##   possess_controls() -> PackedStringArray           sus controles, una línea por renglón
 ##   possess_begin() / possess_end()                   empieza / deja de leer las teclas
 ##   possess_camera(first: bool, delta) -> Transform3D dónde va la cámara, en primera o en tercera persona
+##   possess_status() -> String                        (si quiere) lo que le pasa ahora: una carga, un combustible
 ## Lo poseído va al grupo `driving` (ver DesignSandbox._busy: las teclas del sandbox son de lo que se maneja).
 
 enum View { FREE, THIRD, FIRST }
@@ -191,6 +192,11 @@ func _show() -> void:
 		lines.append("O soltar (y O otra vez lo retoma) · T cambia la vista")
 		lines.append("")
 		lines.append_array(target.call("possess_controls") as PackedStringArray)
+		if target.has_method("possess_status"):
+			var status := str(target.call("possess_status"))
+			if not status.is_empty():
+				lines.append("")
+				lines.append(status)
 		_card.text = "\n".join(lines)
 		_card.size = Vector2.ZERO
 		var need := _card.get_combined_minimum_size()

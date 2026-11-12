@@ -44,6 +44,8 @@ var steps_taken := 0
 var _support := Vector3.ZERO
 var _support_speed := Vector3.ZERO
 var _grounded := false
+## EN EL AIRE a propósito (un salto: ver PendulumMech): derecho, sin apoyo, hasta que la punta del palo vuelve a tocar.
+var _airborne := false
 var _feet: Array[Vector3] = [Vector3.ZERO, Vector3.ZERO]
 var _feet_yaw: Array[float] = [0.0, 0.0]
 var _step := {}
@@ -90,11 +92,11 @@ func _physics_process(delta: float) -> void:
 
 func _standing(knobs: HoverCubeSettings, delta: float) -> void:
 	var k := knobs as PendulumCubeSettings
-	var rod := SIZE * 0.5 + k.hover_height
-	if not _grounded:
+	var rod := _rod(k)
+	if not _grounded and not _airborne:
 		var floor_point: Variant = _floor_below(global_position, rod)
 		if floor_point == null:
-			_fall_down()
+			_no_floor()
 			return
 		_support = floor_point
 		_support_speed = Vector3.ZERO
@@ -106,14 +108,41 @@ func _standing(knobs: HoverCubeSettings, delta: float) -> void:
 		return
 	_note_hit()
 	_drive(k, delta)
-	# SIN PISO BAJO EL APOYO, NO HAY APOYO: se cae (un borde, un pozo).
-	if not _follow(k, delta, rod):
-		_fall_down()
-		return
-	_hold(k, rod)
+	if _airborne:
+		_in_air(k, rod)
+	else:
+		# SIN PISO BAJO EL APOYO, NO HAY APOYO (un borde, un pozo).
+		if not _follow(k, delta, rod):
+			_no_floor()
+			return
+		_hold(k, rod)
 	_upright(k, rod)
 	_turn(k)
 	_velocity_after = linear_velocity
+
+
+## EL LARGO DEL PALO, del centro del cubo al apoyo: de la altura a la que va el cubo. (Quien se agacha lo acorta.)
+func _rod(k: PendulumCubeSettings) -> float:
+	return SIZE * 0.5 + k.hover_height
+
+
+## Sin piso bajo el apoyo: el cubo se cae. (Quien sabe estar en el aire, queda en el aire.)
+func _no_floor() -> void:
+	_fall_down()
+
+
+## EN EL AIRE: sin apoyo; el punto va debajo, en el piso que haya, y cuando la punta del palo lo toca bajando, ATERRIZA:
+## vuelve el apoyo, que arranca con la velocidad que trae (no hay nada que alcanzar).
+func _in_air(_k: PendulumCubeSettings, rod: float) -> void:
+	var hit := _ray(global_position, global_position + Vector3.DOWN * 400.0)
+	if hit.is_empty():
+		return
+	_support = hit["position"]
+	if global_position.y - rod <= _support.y and linear_velocity.y <= 0.0:
+		_airborne = false
+		_grounded = true
+		_support_speed = Vector3(linear_velocity.x, 0.0, linear_velocity.z)
+		_planted = false
 
 
 ## Para mirar: el último golpe (lo que cambió la velocidad de costado) y contra qué.
@@ -236,6 +265,7 @@ func _fall_down() -> void:
 	state = State.LIMP
 	_clock = 0.0
 	_grounded = false
+	_airborne = false
 	falls += 1
 
 
@@ -303,10 +333,17 @@ func _place_legs(delta: float) -> void:
 	_pelvis.global_transform = MechBody.pelvis(waist)
 	for i in 2:
 		var side := -1.0 if i == 0 else 1.0
-		var ground := _foot_ground(k, i) if standing else (MechBody.foot_rest(root, side) if state == State.RIGHT
-			else _feet[i])
+		# Estiradas: parado, donde pisan; recién caído, donde pisaban; enderezándose o en el aire, debajo de las caderas.
+		var ground := _foot_ground(k, i) if standing else (_feet[i] if state == State.LIMP or state == State.LIFT
+			else MechBody.foot_rest(root, side))
 		var facing := Basis(Vector3.UP, _feet_yaw[i]) if standing else root.basis
-		var open := MechBody.leg(MechBody.hip(waist, side), ground, facing)
+		# EL PIE, NUNCA MÁS LEJOS DE LO QUE LA PIERNA ALCANZA: en el aire cuelga de la cadera (si no, quedaba en el piso).
+		var hip := MechBody.hip(waist, side)
+		var to_ankle := ground + Vector3.UP * MechBody.ANKLE - hip
+		var reach := MechBody.THIGH + MechBody.SHIN - 0.5
+		if to_ankle.length() > reach:
+			ground = hip + to_ankle.normalized() * reach - Vector3.UP * MechBody.ANKLE
+		var open := MechBody.leg(hip, ground, facing)
 		_legs[i].pose(_blend(open, _tucked_leg(waist, side), share) if share > 0.001 else open)
 
 

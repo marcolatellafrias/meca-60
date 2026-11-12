@@ -122,6 +122,13 @@ piernas, IK por radio que siguen al torso, con la pelvis mirando al promedio de 
 costado, mouse), **F1** su panel, **F2** pegarle arriba, **J/K** cuatro tiros (5 y 14 m/s). Las filas Cubo, Cubo con
 piernas y Cubo físico quedan por ahora, para comparar.
 
+**Meca péndulo** (12/11/2026, `PendulumMech`, hereda del cubo péndulo; es donde se sigue puliendo): el mismo equilibrio,
+con **tres pisos** por dentro (vidrio y parantes al frente, la puerta atrás, sin escalera todavía), **brazos** de dibujo
+en guardia (hombro y codo esferas, muñeca un cubo, dedos cilindros, el pulgar en la cara de costado) y, poseída:
+**Shift corre** (una banda sobre la caminata que se gana y se pierde despacio, como allá), **Ctrl se agacha** (acorta
+el palo del péndulo), **espacio** carga y suelta el **salto** (se carga altura) y, en el aire, el **propulsor**. En el
+aire va derecha y sin apoyo; aterriza cuando la punta del palo vuelve a tocar. **F1** su panel, **F2** pegarle arriba.
+
 **Las parcelas tienen paredes invisibles** (como allá, `SandboxParcel` LOS BORDES): las ve lo que se mueve con física y
 vive en una parcela; el jugador y la bola pasan. Las mecas de pelea, que se mueven por código, le preguntan a su parcela
 (`SandboxParcel.holds`): el borde de la arena es el de su parcela.
@@ -156,6 +163,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   `PhysicalCubePanel` (su F1) y `PhysicalCubeArchetype`. Usa `game/hover/`.
 - `game/pendulum_cube/` — **el cubo péndulo**: `PendulumCube` (el péndulo, el apoyo que sigue al torso, el giro, las
   piernas), `PendulumCubeSettings`, `PendulumCubePanel` (su F1) y `PendulumCubeArchetype`. Usa `game/hover/` y `MechBody`.
+- `game/pendulum_mech/` — **la meca péndulo**: `PendulumMech` (los tres pisos, los brazos, correr, agacharse, saltar y el
+  propulsor), `PendulumMechSettings`, `PendulumMechPanel` (su F1) y `PendulumMechArchetype`. Usa `game/pendulum_cube/`.
 - `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas, `_mount_tuners` sus paneles F;
   crea al jugador, ver arriba), poseer (`SandboxPossession`: la O, la T y el cartel) y la sesión de red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD,
   espacio, shift, Ctrl, E, R, C, V, B, O, T, F1–F6, Escape; no repetirlas. Sentado (o manejando desde afuera) sólo valen las
@@ -190,6 +199,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   descentrado, sus tiros, el F2 y la recuperación.
 - `tests/pendulum_look.tscn` (con ventana, unos 10 segundos, sin el sandbox): el cubo péndulo de cerca (las piernas) y
   la caída con la recuperación cuadro a cuadro. Para mirar el aspecto rápido; no mide.
+- `tests/pendulum_mech_look.tscn` (con ventana, unos 25 segundos, sin el sandbox): la meca péndulo de frente, de atrás y
+  desde el asiento; agacharse, el salto (un toque y cargado), el propulsor y correr, con sus números.
 - `tests/possess_check.tscn` (con ventana, unos 15 segundos): poseer; mirar el cubo péndulo, la O, las tres vistas con
   la T, soltar y retomar sin mirar; capturas del cartel.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,

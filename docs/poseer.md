@@ -26,6 +26,7 @@ Lo que está en el grupo `possessable` y contesta, por nombre:
 | `possess_controls()` | sus controles, una línea por renglón |
 | `possess_begin()` / `possess_end()` | empieza y deja de leer las teclas |
 | `possess_camera(first, delta)` | dónde va la cámara, en primera o en tercera persona |
+| `possess_status()` (si quiere) | lo que le pasa ahora: una carga, un combustible |
 
 Hoy: la [[meca]] de pelea y todos los cubos ([[cubo]], [[cubo-con-piernas]], [[cubo-fisico]], [[cubo-pendulo]]).
 Pendiente: los personajes (hay que pasarles el control del jugador).

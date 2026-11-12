@@ -528,11 +528,16 @@ func possess_end() -> void:
 func possess_camera(first: bool, delta: float) -> Transform3D:
 	if first:
 		_chase_yaw = _view_yaw()
-		var eyes := CABIN_SEAT + Vector3(0.0, ShipStyle.current.seat_eye_height, 0.0)
+		var eyes := _seat() + Vector3(0.0, ShipStyle.current.seat_eye_height, 0.0)
 		return _look.global_transform * Transform3D(Basis(Vector3.UP, _head_yaw()) * Basis(Vector3.RIGHT, _head.y), eyes)
 	_chase_yaw = lerp_angle(_chase_yaw, _view_yaw(), 1.0 - exp(-4.0 * delta))
 	var from := global_position + Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 14.0, 34.0)
 	return Transform3D(Basis(), from).looking_at(global_position + Vector3(0.0, 2.0, 0.0), Vector3.UP)
+
+
+## Dónde está el asiento desde el que se mira en primera persona (en el piso de su cabina), en el espacio del cubo.
+func _seat() -> Vector3:
+	return CABIN_SEAT
 
 
 ## EL MOUSE, poseído: arriba y abajo mueve la cabeza; de costado, lo que diga cada cubo (`_mouse_turn`).

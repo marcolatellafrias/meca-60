@@ -12,6 +12,7 @@ columna, se queda).
 | Cubo con piernas | `LeggedCubeArchetype` | `game/legged_cube/` entero | `LeggedCubePanel` (F1), `HoverKnockPanel` (F2) | `legged_check` | `game/hover/` (hereda del cubo), `MechBody`, `MechLeg` |
 | Cubo físico | `PhysicalCubeArchetype` | `game/physical_cube/` entero | `PhysicalCubePanel` (F1), `HoverKnockPanel` (F2) | `physical_check` | `game/hover/` (hereda del cubo), `TestBall` |
 | Cubo péndulo | `PendulumCubeArchetype` | `game/pendulum_cube/` entero | `PendulumCubePanel` (F1), `HoverKnockPanel` (F2) | `pendulum_check` | `game/hover/` (hereda del cubo), `MechBody`, `MechLeg`, `TestBall` |
+| Meca péndulo | `PendulumMechArchetype` | `game/pendulum_mech/` entero | `PendulumMechPanel` (F1), `HoverKnockPanel` (F2) | `pendulum_mech_look` | `game/pendulum_cube/` (hereda del cubo péndulo), `MechBody` |
 | Personajes | `PeopleArchetype` | `CharacterGetUp` | — | — | lo traído de character-parametric |
 | Objetos | `ObjectLotArchetype` | — | — | `player_check` (el ropero) | objetos traídos |
 | Multijugador | `MultiplayerArchetype` | `SandboxSession` | — | `net_check` | `game/net/` |
