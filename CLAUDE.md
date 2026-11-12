@@ -104,6 +104,17 @@ pegando arriba y 4 y pico en el centro; **contra una pared a 8 m/s se cae** (es 
 (`PhysicalCubePanel`, sin las perillas de la línea), **F2** empujarlo arriba, **J/K** cuatro tiros por cambio de
 velocidad (1 y 5 m/s).
 
+**Cubo péndulo** (12/11/2026, `PendulumCube`, hereda del cubo las toberas y la recuperación): **el modelo de
+equilibrio de la meca**, que no es el de los personajes (colisión 1:1, inclinación del cuerpo de verdad). Un solo cuerpo
+físico, el torso, que siempre va adelante; los pies siempre lo siguen. Es un **péndulo invertido** sobre un punto de
+apoyo en el piso: caminar empuja al torso (con inercia), y el apoyo lo sigue —**frenar es instantáneo, alcanzarlo lleva
+tiempo**—. Una piña saca al torso de arriba de los pies: se inclina y, si no lo alcanzan, cae (arriba vuelca más). Una
+pared lo frena y los pies se plantan: **no cae a ninguna velocidad**. Arrancar lo inclina un poco adelante y se nivela
+(la opción B; C y D pendientes, ver docs/cubo-pendulo.md). El giro en Y es un motor con fuerza tope (el mouse); las
+piernas, IK por radio que siguen al torso, con la pelvis mirando al promedio de los pies. **O** lo maneja (W/S, A/D de
+costado, mouse), **F1** su panel, **F2** pegarle arriba, **J/K** cuatro tiros (5 y 14 m/s). Las filas Cubo, Cubo con
+piernas y Cubo físico quedan por ahora, para comparar.
+
 **Las parcelas tienen paredes invisibles** (como allá, `SandboxParcel` LOS BORDES): las ve lo que se mueve con física y
 vive en una parcela; el jugador y la bola pasan. Las mecas de pelea, que se mueven por código, le preguntan a su parcela
 (`SandboxParcel.holds`): el borde de la arena es el de su parcela.
@@ -136,6 +147,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   aparte), `LeggedCubeSettings`, `LeggedCubePanel` (su F1) y `LeggedCubeArchetype`. Usa `game/hover/` y `MechBody`.
 - `game/physical_cube/` — **el cubo físico**: `PhysicalCube` (esquinas, pies, torque, caerse), `PhysicalCubeSettings`,
   `PhysicalCubePanel` (su F1) y `PhysicalCubeArchetype`. Usa `game/hover/`.
+- `game/pendulum_cube/` — **el cubo péndulo**: `PendulumCube` (el péndulo, el apoyo que sigue al torso, el giro, las
+  piernas), `PendulumCubeSettings`, `PendulumCubePanel` (su F1) y `PendulumCubeArchetype`. Usa `game/hover/` y `MechBody`.
 - `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas, `_mount_tuners` sus paneles F;
   crea al jugador, ver arriba) y la sesión de red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD,
   espacio, shift, Ctrl, E, R, C, V, B, F1–F6, Escape; no repetirlas. Sentado (o manejando desde afuera) sólo valen las
@@ -165,6 +178,9 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   pie de su lugar; con ventana, capturas.
 - `tests/physical_check.tscn` (headless o con ventana): el cubo físico; una escala de empujones en el centro y arriba
   (dónde se cae), sus cuatro tiros, el F2, cuánto cabecea al arrancar y frenar, contra la pared y la recuperación.
+- `tests/pendulum_check.tscn` (headless o con ventana, unos 5 minutos): el cubo péndulo; la escala de golpes en el
+  centro y arriba, contra la pared a 8, 14 y 20 m/s (no tiene que caer), arrancar y frenar, el giro, un golpe
+  descentrado, sus tiros, el F2 y la recuperación.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,
   caminarla sentado, viajar parado adentro, manejar desde afuera y volver, y agarrar el ropero del lote.
 - `tests/net_check.tscn`: dos instancias sin ventana, una con `--host-local` y otra con `--join-local` (antes del
