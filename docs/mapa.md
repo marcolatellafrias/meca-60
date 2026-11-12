@@ -29,8 +29,12 @@ Todo lo fijo es `StaticBody3D` (el piso de la meca es sólo lo estático). La di
 no cambia con la R: es UN mapa.
 
 ## Lo que se probó (`battlefield_check`)
-- La meca da una vuelta de seis puntos por el campo libre, caminando y corriendo, con un salto: sin caerse.
-- Contra el muro, corriendo: queda a 126 m del centro (el muro empieza a 130).
+- La meca da una vuelta de seis puntos por el campo libre (a unos 55 m del centro), caminando y corriendo, con un
+  salto: sin caerse y sin trabarse (como mucho 0,2 s quieta).
+- Contra el muro, corriendo por un hueco entre dos barrios: queda a 126 m del centro (el muro empieza a 130).
+- **El centro libre para la meca mide unos 60 m de radio** (Ø ~120–130 m): más allá están los recursos (a 64 m), los
+  autos (~74 m) y las escaleras de las casas de adentro (~78 m). Una primera vuelta con puntos a 76 m se trabó contra un
+  barrio.
 - Una cápsula del tamaño de una persona sube la escalera de una casa de 11 m y la de una torre de 30 m hasta el techo.
 
 ## Cómo se llegó (para no repetir)
