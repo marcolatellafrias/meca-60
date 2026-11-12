@@ -40,9 +40,11 @@ const SILL := 0.75
 const GLASS := 1.4
 ## La puerta de atrás de cada piso.
 const DOOR := Vector2(1.1, 2.05)
-## LOS BRAZOS: el hombro, en el espacio del cubo (`x` del lado derecho), y el puño en guardia, desde el hombro.
-const SHOULDER := Vector3(SIZE * 0.5 + 1.0, 1.9, -0.4)
-const GUARD := Vector3(-1.5, -2.6, -6.2)
+## LOS BRAZOS: el hombro, en el espacio del cubo (`x` del lado derecho), EN EL ÚLTIMO TERCIO DEL COSTADO, hacia atrás (lo
+## pidió el usuario el 12/11/2026: «no a la mitad… en el último tercio de la cara del cubo. Así es más natural la
+## postura»); y el puño en guardia, desde el hombro: adelante del cubo, con el antebrazo pasando por fuera de la esquina.
+const SHOULDER := Vector3(SIZE * 0.5 + 1.0, 1.9, SIZE * 0.275)
+const GUARD := Vector3(-1.0, -2.6, -8.6)
 const ARM_THICKNESS := 1.5
 ## Lo cargado del salto y lo que le queda al propulsor (0 a 1), para mirar.
 var jump_charge := 0.0

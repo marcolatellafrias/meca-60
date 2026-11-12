@@ -3,7 +3,7 @@ extends SeededArchetype
 
 ## LA PARCELA DEL BRAZO CON MÚSCULOS (ver MuscleArm): un torso fijo en el aire, del tamaño del de la meca péndulo, con UN
 ## brazo (el izquierdo, del lado desde donde se llega), para tunearlo solo. Adelante, un BLOQUE suelto sobre un pedestal
-## para pegarle; con N, una PARED fija más cerca, para ver cómo se traba. 1 a 4 tiran las piñas; J/K, una bola liviana o
+## para pegarle; con N, una PARED fija en su lugar, para ver cómo se traba. 1 a 4 tiran las piñas; J/K, una bola liviana o
 ## pesada contra el brazo (cede y vuelve). F1 abre sus perillas (MuscleArmPanel). Mirándolo, O lo posee: a mano.
 
 const FOOTPRINT := 60.0
@@ -49,7 +49,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	arm.shoulder_local = Vector3(arm.side * PendulumMech.SHOULDER.x, PendulumMech.SHOULDER.y, PendulumMech.SHOULDER.z)
 	root.add_child(arm)
 	# Adelante del brazo: el pedestal y el bloque suelto, donde llega el directo.
-	var ahead := Vector3(arm.shoulder_local.x + 1.8, 0.0, -TORSO * 0.5 - 9.2)
+	var ahead := Vector3(arm.shoulder_local.x + 1.8, 0.0, arm.shoulder_local.z - 13.3)
 	var stand := StaticBody3D.new()
 	stand.name = "Pedestal"
 	root.add_child(stand)
@@ -64,17 +64,23 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	var wall := StaticBody3D.new()
 	wall.name = "Pared"
 	root.add_child(wall)
-	Clay.solid(wall, Vector3(10.0, 12.0, 1.0), Vector3(arm.shoulder_local.x, HEIGHT + 4.0, -TORSO * 0.5 - 6.6),
+	Clay.solid(wall, Vector3(10.0, 12.0, 0.6), Vector3(arm.shoulder_local.x, HEIGHT + 4.0, arm.shoulder_local.z - 12.3),
 		Clay.METAL.darkened(0.35))
 	_show_wall(wall, false)
 	return root
 
 
-## La pared, puesta o sacada: se ve y se choca, o ninguna de las dos.
+## La pared, puesta o sacada: se ve y se choca, o ninguna de las dos. Va donde el bloque, que se guarda mientras está.
 static func _show_wall(wall: StaticBody3D, on: bool) -> void:
 	wall.visible = on
 	for shape: CollisionShape3D in wall.find_children("*", "CollisionShape3D", true, false):
 		shape.disabled = not on
+	var block := wall.get_parent().find_child("Bloque", true, false) as RigidBody3D
+	if block != null:
+		block.visible = not on
+		block.freeze = on
+		for shape: CollisionShape3D in block.find_children("*", "CollisionShape3D", true, false):
+			shape.disabled = on
 
 
 static func _arm_of(parcel: SandboxParcel) -> MuscleArm:

@@ -25,7 +25,8 @@ la cabina; en un salto no se mueve; cuando la meca se cae, él se cae adentro y 
 ## Los brazos
 Dibujo: el hombro y el codo son **esferas**; la muñeca, una **palma** apenas más gruesa que un dedo; y los dedos, cuatro
 de tres **falanges** y el pulgar de dos, **cilindros**, todas piezas separadas. El pulgar va en el canto de arriba de la
-palma. Parada van **en guardia**; **al caer se recogen a los costados de la caja** y se estiran al enderezarse, con las
+palma. **Los hombros van en el último tercio del costado, hacia atrás** (no en el medio): los antebrazos pasan por
+fuera de las esquinas y las manos quedan adelante. Parada van **en guardia**; **al caer se recogen a los costados de la caja** y se estiran al enderezarse, con las
 piernas. No pegan ni chocan todavía: los brazos con músculos son el paso que sigue.
 
 ## Lo que hace (poseída)

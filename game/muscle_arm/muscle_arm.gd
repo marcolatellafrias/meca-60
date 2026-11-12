@@ -33,7 +33,7 @@ const FOREARM_MASS := 2000.0
 const THICKNESS := 1.5
 ## EL PUÑO, en guardia, desde el hombro, en el espacio de lo que lo sostiene (`x` hacia afuera del cuerpo; adentro es
 ## negativo).
-const GUARD := Vector3(-1.5, -2.6, -6.2)
+const GUARD := PendulumMech.GUARD
 ## LAS PIÑAS: por dónde se pide que pase el puño (como `GUARD`) y en cuánto llega a cada punto desde el anterior (s).
 const PUNCHES := {
 	Punch.STRAIGHT: [[0.45, Vector3(-0.8, -1.8, -2.6)], [0.26, Vector3(-2.6, -0.6, -10.6)], [0.2, Vector3(-2.6, -0.6, -10.6)],
