@@ -41,6 +41,12 @@ func parcel_options() -> Array[Dictionary]:
 	return []
 
 
+## LAS TRES FUERZAS DE LA BOLA para lo que hay en esta parcela (ver TestBall): el empuje (N·s) que lo mueve, el que lo
+## deja a punto de caerse y el que lo tira, con sus umbrales de ahora. Vacío: sin bola.
+func ball_pushes() -> Array[float]:
+	return []
+
+
 ## Cuando uno entra o sale de la parcela.
 func entered(_parcel: SandboxParcel, _inside: bool) -> void:
 	pass

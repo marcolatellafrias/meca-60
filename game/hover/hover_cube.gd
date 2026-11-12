@@ -256,6 +256,44 @@ func _fire_nozzles(settings: HoverCubeSettings) -> void:
 		apply_force(-(global_basis * (nozzle["out"] as Vector3)) * most * throttle, at)
 
 
+## ── LAS TRES FUERZAS DE LA BOLA (ver TestBall) ──────────────────────────────────────────────────────────────────────
+## Lo que lo inclina el 35 %, el 75 % y el 125 % de donde se deja caer (`max_tilt`), con un golpe de costado en la mitad
+## de arriba (a un cuarto del lado sobre el centro: un golpe en el centro lo empuja sin inclinarlo). El giro que le da
+## sale del empuje por ese brazo sobre su inercia, y lo que se inclina, del resorte que lo endereza (corrido como lo corre
+## la física, ver `_tilt_peak`). La bola no le deja todo su giro (rebota, y parte se va en correrlo): MEDIDO el
+## 11/11/2026, un 60 % (`TRANSFER`); por eso los márgenes entre las tres son anchos.
+const HIT_ARM := SIZE * 0.25
+const TRANSFER := 0.6
+
+
+static func ball_pushes(speed: float) -> Array[float]:
+	var settings := HoverCubeSettings.current
+	var inertia := CUBE_MASS * SIZE * SIZE / 6.0
+	var per_spin := _tilt_peak(1.0, settings.upright_kp, settings.upright_kd)
+	var out: Array[float] = []
+	for share: float in [0.35, 0.75, 1.25]:
+		var spin := deg_to_rad(settings.max_tilt * share) / maxf(per_spin, 0.0001)
+		# El empuje que se queda en el cubo, por su brazo, es su giro: L = I·ω. Y del empuje que llega, se queda esto.
+		var kept := inertia * spin / HIT_ARM / TRANSFER
+		out.append(TestBall.push_for(CUBE_MASS, kept / CUBE_MASS))
+	return out
+
+
+## La inclinación más alta (rad) del cubo que arranca derecho girando a `spin` rad/s, con el torque que lo endereza.
+static func _tilt_peak(spin: float, kp: float, kd: float) -> float:
+	var step := 1.0 / 240.0
+	var angle := 0.0
+	var turning := spin
+	var peak := 0.0
+	for i in 4800:
+		turning += (-angle * kp - turning * kd) * step
+		angle += turning * step
+		peak = maxf(peak, angle)
+		if turning < 0.0:
+			break
+	return peak
+
+
 ## ── LO QUE MIDE ─────────────────────────────────────────────────────────────────────────────────────────────────
 
 ## Cuánto hay de `point` al piso, derecho hacia abajo (o mucho, si no hay piso).

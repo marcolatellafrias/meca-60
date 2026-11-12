@@ -491,6 +491,19 @@ func state_name() -> String:
 	return ["parada", "EN EL SUELO", "levantándose"][state]
 
 
+## LAS TRES FUERZAS DE LA BOLA (ver TestBall): la que la mueve llega a una parte de donde da un paso (`step_at`); la que
+## la deja a punto de caer, entre el paso y la caída (`fall_at`); la que la tira, más allá de la caída y de lo que la
+## salvaría un paso.
+static func ball_pushes(speed: float) -> Array[float]:
+	var settings := MechBalanceSettings.current
+	var leans := [settings.step_at * 0.7, lerpf(settings.step_at, settings.fall_at, 0.5),
+		settings.fall_at * 1.25 + (settings.step_catch if settings.steps else 0.0)]
+	var out: Array[float] = []
+	for lean_wanted: float in leans:
+		out.append(push_for_lean(lean_wanted, speed))
+	return out
+
+
 ## ── CUÁNTO HAY QUE EMPUJARLA ─────────────────────────────────────────────────────────────────────────────────────
 ## Lo que la hace llegar a la inclinación `target` con un golpe de frente, sin contar los pasos: el empuje (N·s) de algo
 ## que llega a `speed` m/s y se queda pegado. Sale de las perillas de ahora (ver MechBalanceSettings): con el empuje

@@ -51,7 +51,21 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 
 
 func parcel_options() -> Array[Dictionary]:
-	return TestBall.parcel_options()
+	return TestBall.parcel_options(self)
+
+
+## LAS TRES FUERZAS PARA ESTA PERSONA, con el equilibrio de character-parametric (CharacterRigidBody3D): un golpe de
+## frente la inclina Δv × `LEAN_PER_MS` / firmeza, la firmeza es su peso sobre 60 kg por su estabilidad de atrás, y se
+## cae en `ragdoll_threshold`. La mueve a la mitad, la deja al 90 % y la tira al 160 % (a una persona liviana la bola le
+## rebota y le deja menos: medido el 11/11/2026, al chico un 75 %; por eso la que tira tiene margen).
+func ball_pushes() -> Array[float]:
+	var arch := EntityArchetype.create(archetype)
+	var firmness := maxf(arch.weight / CharacterRigidBody3D.REFERENCE_WEIGHT * arch.backwards_stability, 0.05)
+	var falls_at := 0.85
+	var out: Array[float] = []
+	for share: float in [0.5, 0.9, 1.6]:
+		out.append(TestBall.push_for(arch.weight, falls_at * share * firmness / CharacterRigidBody3D.LEAN_PER_MS))
+	return out
 
 
 ## UNA PERSONA DE CHARACTER-PARAMETRIC parada en `at` (en el mundo), mirando a `yaw`, colgada de `parent`: como la arma

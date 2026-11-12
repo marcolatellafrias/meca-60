@@ -44,13 +44,13 @@ func _ready() -> void:
 	_side_view()
 	await _shot("El cubo flotando", "1_flotando")
 	# LAS TRES BOLAS, de frente.
-	for force in TestBall.AIMS.size():
+	for force in TestBall.NAMES.size():
 		await _wait_hover()
 		await _seconds(1.5)
 		_aim()
 		await _frames(2)
 		var falls := _cube.falls
-		TestBall.throw_from_camera(_parcel, force)
+		TestBall.throw_from_camera(_parcel, TestBall.push_at(_parcel.archetype, force))
 		var watched := await _watch(4.0, true)
 		print("BOLA %s: altura %.2f a %.2f m · inclinación pico %.0f° · se cayó %s · estado %d" % [TestBall.NAMES[force],
 			watched.x, watched.y, watched.z, _cube.falls > falls, _cube.state])
@@ -121,8 +121,8 @@ func _wait_hover() -> void:
 func _aim() -> void:
 	var at := _cube.global_position
 	# A la parte de arriba: un golpe en el centro lo empuja sin hacerlo cabecear.
-	_eye.global_position = at + Vector3(-28.0, 3.0, 0.0)
-	_eye.look_at(at + Vector3(0.0, 3.0, 0.0))
+	_eye.global_position = at + Vector3(-28.0, HoverCube.HIT_ARM, 0.0)
+	_eye.look_at(at + Vector3(0.0, HoverCube.HIT_ARM, 0.0))
 
 
 func _side_view() -> void:

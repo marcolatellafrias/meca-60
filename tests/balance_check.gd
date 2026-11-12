@@ -64,7 +64,8 @@ func _ready() -> void:
 	MechBalanceSettings.current.steps = true
 	# LAS PERSONAS: las fuerzas chicas.
 	for person: BoneInstantiator in _parcel.find_children("*", "BoneInstantiator", true, false):
-		await _throw_at_person(person, 0)
+		for force in TestBall.NAMES.size():
+			await _throw_at_person(person, force)
 	get_tree().quit()
 
 
@@ -92,7 +93,7 @@ func _throw(force: int, frames: bool) -> void:
 	var start := _dummy.body_position()
 	var falls := _dummy.falls
 	var steps := _dummy.steps_taken
-	TestBall.throw_from_camera(_parcel, force)
+	TestBall.throw_from_camera(_parcel, TestBall.push_at(_parcel.archetype, force))
 	var peak := 0.0
 	var shot := 0
 	for i in 480:
@@ -106,7 +107,7 @@ func _throw(force: int, frames: bool) -> void:
 			await _shot("Fuerza %d: %.2f s después" % [force + 1, i / 240.0], "trastabilla_%d" % shot)
 			shot += 1
 	print("FUERZA %d (%s N·s): golpe %.1f m/s · inclinación pico %d %% · pasos %d · retrocedió %.1f m · se cayó %s" % [
-		force + 1, String.num_int64(roundi(TestBall.push_of(force))), _dummy.last_hit, roundi(peak * 100.0),
+		force + 1, String.num_int64(roundi(TestBall.push_at(_parcel.archetype, force))), _dummy.last_hit, roundi(peak * 100.0),
 		_dummy.steps_taken - steps, start.distance_to(_dummy.body_position()), _dummy.falls > falls])
 	if _dummy.falls > falls and frames:
 		await _shot("La caída", "caida")
@@ -118,7 +119,10 @@ func _throw_at_person(person: BoneInstantiator, force: int) -> void:
 	_eye.global_position = at + Vector3(-6.0, 1.2, 0.0)
 	_eye.look_at(at + Vector3(0, 1.0, 0))
 	await _frames(2)
-	TestBall.throw_from_camera(_parcel, force)
+	# Las fuerzas de esa persona (ver PeopleArchetype.ball_pushes).
+	var kind := PeopleArchetype.new()
+	kind.archetype = EntityArchetype.Archetype.fat_man if person.name == "Fat Man" else EntityArchetype.Archetype.kid
+	TestBall.throw_from_camera(_parcel, TestBall.push_at(kind, force))
 	var fell := false
 	var peak := 0.0
 	for i in 360:
@@ -127,7 +131,7 @@ func _throw_at_person(person: BoneInstantiator, force: int) -> void:
 		if person.ragdoll_util.is_active:
 			fell = true
 	print("PERSONA %s, fuerza %d (%s N·s): inclinación pico %d %% · se cayó %s" % [person.name, force + 1,
-		String.num_int64(roundi(TestBall.push_of(force))), roundi(peak * 100.0), fell])
+		String.num_int64(roundi(TestBall.push_at(kind, force))), roundi(peak * 100.0), fell])
 
 
 func _wait_standing() -> void:

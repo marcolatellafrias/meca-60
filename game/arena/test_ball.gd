@@ -6,21 +6,17 @@ extends RigidBody3D
 ## pelea), le pega como una bala, con su empuje.
 ##
 ## UNA SOLA BOLA, TRES FUERZAS (11/11/2026, el usuario: «un solo tamaño de bola y varias cosas de distintas fuerzas»;
-## después: «que sea una sola tecla pasando por las fuerzas… pone 3»): siempre del mismo tamaño y a la misma velocidad;
-## lo que cambia es su EMPUJE (masa × velocidad, en N·s), y la masa sale de él. LAS TRES SALEN DE LOS UMBRALES DE LA MECA
-## DE EQUILIBRIO, los de ahora (el usuario: «que sean acordes al threshold de la nave»; ver MechDummy.push_for_lean): la
-## que la mueve llega a una parte de donde da un paso (`step_at`); la que la hace trastabillar, entre el paso y la caída
-## (`fall_at`); la que la tira, más allá de la caída. Si se tocan las perillas en el panel (F1), las fuerzas las siguen.
-## A una persona, cualquiera de las tres la voltea. Lo elegido es uno solo para todas las parcelas (ver
-## `parcel_options`): J tira, K pasa a la fuerza siguiente.
+## «que sea una sola tecla pasando por las fuerzas… pone 3»): siempre del mismo tamaño y a la misma velocidad; lo que
+## cambia es su EMPUJE (masa × velocidad, en N·s), y la masa sale de él. LAS TRES LAS DICE CADA FILA para lo que tiene
+## (el usuario: «que sean acordes al threshold de la nave»; después, «por fila»; ver SeededArchetype.ball_pushes): una
+## lo mueve, otra lo deja a punto de caerse (trastabilla, se tambalea) y otra lo tira, con sus umbrales de ahora —si se
+## tocan las perillas de su panel (F1), las fuerzas las siguen—. Lo elegido (cuál de las tres) es uno solo para todas
+## las parcelas: J tira, K pasa a la siguiente.
 
 const RADIUS := 0.6
 const SPEED := 25.0
 const LIFETIME := 12.0
-const NAMES := ["la mueve", "trastabilla", "la tira"]
-## Dónde apunta cada una: entre 0 y 1 es una parte del umbral del paso; entre 1 y 2, de ahí al umbral de la caída; más
-## de 2, pasada la caída.
-const AIMS := [0.7, 1.5, 2.25]
+const NAMES := ["lo mueve", "a punto de caer", "lo tira"]
 
 ## Lo elegido, para todas las parcelas.
 static var level := 1
@@ -32,9 +28,12 @@ var _struck := {}
 func _init() -> void:
 	name = "Bola"
 	continuous_cd = true
-	collision_mask = 1 | 2
-	# Cae poco, como las balas del cañón: así llega derecha.
-	gravity_scale = 0.25
+	# Sólo la capa del mundo y los cuerpos: los huesos de las personas de character-parametric chocan aunque estén
+	# paradas (capa 2), y un golpe ahí no llega a la cápsula, que es la que mide el golpe (el chico casi no se movía).
+	collision_mask = 1
+	# NO CAE: va derecho y pega donde se apunta (con caída, de 25 m le pegaba metro y medio más abajo, y las fuerzas de
+	# cada fila, que cuentan dónde pega, no se cumplían).
+	gravity_scale = 0.0
 	contact_monitor = true
 	max_contacts_reported = 4
 	var material := PhysicsMaterial.new()
@@ -50,30 +49,13 @@ func _init() -> void:
 	body_entered.connect(_on_body)
 
 
-## El empuje de la fuerza `force` (N·s), con los umbrales de ahora.
-static func push_of(force: int) -> float:
-	return MechDummy.push_for_lean(lean_of(force), SPEED)
-
-
-## La inclinación a la que apunta la fuerza `force` (ver `AIMS`).
-static func lean_of(force: int) -> float:
-	var settings := MechBalanceSettings.current
-	var aim := float(AIMS[clampi(force, 0, AIMS.size() - 1)])
-	if aim <= 1.0:
-		return settings.step_at * aim
-	if aim <= 2.0:
-		return lerpf(settings.step_at, settings.fall_at, aim - 1.0)
-	# Pasada la caída, más lo que la salvaría un paso, si da pasos.
-	return settings.fall_at * (aim - 1.0) + (settings.step_catch if settings.steps else 0.0)
-
-
-## La tira desde la cámara activa, hacia donde mira, con el empuje del escalón `force`.
-static func throw_from_camera(scene: Node, force: int) -> TestBall:
+## La tira desde la cámara activa, hacia donde mira, con `push` de empuje (N·s).
+static func throw_from_camera(scene: Node, push: float) -> TestBall:
 	var camera := scene.get_viewport().get_camera_3d()
-	if camera == null:
+	if camera == null or push <= 0.0 or is_inf(push):
 		return null
 	var ball := TestBall.new()
-	ball.mass = push_of(force) / SPEED
+	ball.mass = push / SPEED
 	scene.add_child(ball)
 	var forward := -camera.global_basis.z
 	ball.global_position = camera.global_position + forward * (RADIUS + 1.0)
@@ -81,15 +63,29 @@ static func throw_from_camera(scene: Node, force: int) -> TestBall:
 	return ball
 
 
-## Las teclas de la bola, para cualquier parcela que las quiera.
-static func parcel_options() -> Array[Dictionary]:
+## EL EMPUJE QUE HACE FALTA PARA DARLE `delta_v` (m/s) a algo de `mass` kg, con una bola a `SPEED` que se queda pegada:
+## Δv = m_bola·v / (masa + m_bola), y m_bola = empuje / v. Lo más que puede darle es casi su propia velocidad: más que
+## eso, se queda en lo más (una bola de diez veces la masa del blanco).
+static func push_for(mass: float, delta_v: float) -> float:
+	var reachable := minf(delta_v, SPEED * 10.0 / 11.0)
+	return mass * reachable * SPEED / (SPEED - reachable)
+
+
+## Las teclas de la bola, con las fuerzas de `target` (el arquetipo de la parcela: ver SeededArchetype.ball_pushes).
+static func parcel_options(target: SeededArchetype) -> Array[Dictionary]:
 	return [
-		{"key": KEY_J, "label": func() -> String: return "tirar una bola (%s: inclinación %d %%, %s N·s)" % [
-				NAMES[level], roundi(lean_of(level) * 100.0), String.num_int64(roundi(push_of(level)))],
-			"apply": func(parcel: SandboxParcel) -> void: TestBall.throw_from_camera(parcel, level)},
-		{"key": KEY_K, "label": func() -> String: return "otra fuerza (%d de %d)" % [level + 1, AIMS.size()],
-			"apply": func(_parcel: SandboxParcel) -> void: level = (level + 1) % AIMS.size()},
+		{"key": KEY_J, "label": func() -> String: return "tirar una bola (%s: %s N·s)" % [NAMES[level],
+				String.num_int64(roundi(TestBall.push_at(target, level)))],
+			"apply": func(parcel: SandboxParcel) -> void: TestBall.throw_from_camera(parcel, TestBall.push_at(target, level))},
+		{"key": KEY_K, "label": func() -> String: return "otra fuerza (%d de %d)" % [level + 1, NAMES.size()],
+			"apply": func(_parcel: SandboxParcel) -> void: level = (level + 1) % NAMES.size()},
 	]
+
+
+## La fuerza `force` (0 a 2) de `target`.
+static func push_at(target: SeededArchetype, force: int) -> float:
+	var pushes := target.ball_pushes()
+	return float(pushes[clampi(force, 0, pushes.size() - 1)]) if not pushes.is_empty() else 0.0
 
 
 func _physics_process(delta: float) -> void:

@@ -24,13 +24,13 @@ static var current := HoverCubeSettings.new()
 
 @export_group("Derecho")
 ## El torque que lo endereza: cuánto tira por radián (1/s²) y cuánto frena por rad/s (1/s).
-@export_range(0.0, 40.0, 0.25) var upright_kp := 4.0
-@export_range(0.0, 20.0, 0.1) var upright_kd := 1.6
+@export_range(0.0, 40.0, 0.25) var upright_kp := 3.0
+@export_range(0.0, 20.0, 0.1) var upright_kd := 1.2
 
 @export_group("Dejar de intentar")
 ## Pasado esto se deja caer: inclinado más de `max_tilt` (grados), cayendo más rápido que `max_fall_speed`, o yendo de
 ## costado más rápido que `max_side_speed` (m/s).
-@export_range(5.0, 90.0, 1.0) var max_tilt := 50.0
+@export_range(5.0, 90.0, 1.0) var max_tilt := 45.0
 @export_range(1.0, 40.0, 0.5) var max_fall_speed := 12.0
 @export_range(1.0, 60.0, 0.5) var max_side_speed := 18.0
 ## Cuánto queda tirado antes de recuperarse (s), una vez quieto.

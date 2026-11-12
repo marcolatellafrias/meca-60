@@ -51,9 +51,11 @@ En el sandbox, la fila **Meca** («Pelea de prueba»):
 
 En su propia fila, **Equilibrio**, la **«Meca de equilibrio»**: una copia de la meca que sólo se tambalea, se cae y se levanta, con el sistema de
 equilibrio de los personajes de character-parametric, con dos personas de allá al lado. **J** tira una bola desde la
-cámara (una sola bola; la fuerza es su empuje); **K** pasa por sus tres fuerzas, que salen de los
-umbrales de la meca de equilibrio (`MechDummy.push_for_lean`): la mueve (debajo del paso), trastabilla (entre el paso
-y la caída) y la tira (pasada la caída). Tiene dos agregados al sistema de allá: **el golpe empuja** (la inclinación toma
+cámara (una sola bola, que va derecha y no cae; la fuerza es su empuje); **K** pasa por sus tres fuerzas: lo mueve, a
+punto de caer y lo tira. **Cada fila dice sus tres** para lo que tiene, con sus umbrales de ahora
+(`SeededArchetype.ball_pushes`): la meca de equilibrio con su paso y su caída (`MechDummy.ball_pushes`), el cubo con
+su inclinación de caerse (`HoverCube.ball_pushes`) y cada persona con su peso y su firmeza
+(`PeopleArchetype.ball_pushes`). Tiene dos agregados al sistema de allá: **el golpe empuja** (la inclinación toma
 velocidad en vez de saltar) y **los pasos** (pasada cierta inclinación da un paso hacia donde se va y se recupera
 trastabillando). **F1** en la fila Equilibrio abre su panel (`BalancePanel`): todas sus perillas (los agregados, el resorte,
 la firmeza por lado, el cuerpo, la caída), que salen de `MechBalanceSettings`.
@@ -63,8 +65,8 @@ que flota como el cuerpo de los personajes de character-parametric antes del 13/
 rayos al piso y un torque que lo endereza): rebota y cabecea solo. Pasado un umbral (inclinación, caída, velocidad de
 costado) deja de intentar y cae con física; quieto un rato, **sube** con las toberas de la cara que mira al piso y **se
 endereza en el aire** con las de los costados (cuatro por cara, con el humo de propulsor de allá), y vuelve a flotar.
-**J/K** la bola; **F1** su panel (`HoverPanel`, perillas en `HoverCubeSettings`). Las fuerzas de la bola están medidas
-contra la meca de equilibrio: al cubo, «la tira» no lo tira. Las piernas, para más adelante, en su propia fila (el
+**J/K** la bola (sus fuerzas suponen el golpe en la mitad de arriba: en el centro lo corre sin inclinarlo); **F1** su
+panel (`HoverPanel`, perillas en `HoverCubeSettings`). Las piernas, para más adelante, en su propia fila (el
 sistema «por radio» de allá, de octubre de 2025).
 
 Más filas: **Personajes** (los seis arquetipos de allá, que se caen y se levantan; también con la bola), **Objetos** (los

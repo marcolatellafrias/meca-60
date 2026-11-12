@@ -37,4 +37,8 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 
 
 func parcel_options() -> Array[Dictionary]:
-	return TestBall.parcel_options()
+	return TestBall.parcel_options(self)
+
+
+func ball_pushes() -> Array[float]:
+	return HoverCube.ball_pushes(TestBall.SPEED)
