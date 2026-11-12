@@ -24,11 +24,13 @@ extends Resource
 
 ## Los cortes de plantilla y dónde caen por defecto.
 const CUTS := 7
-## La malla: lados alrededor, anillos del cilindro y anillos de cada domo. Densa a propósito: es una cabeza de cerca,
-## y lo que tiene que leerse es la curva.
-const SEGMENTS := 32
-const BODY_RINGS := 24
-const DOME_RINGS := 10
+## LA MALLA, LOW POLY (13/11/2026, el usuario: «cuando veía… no se veían low poly, se veían como high poly… los edge
+## loops discretos»): ocho lados alrededor, dos anillos en cada domo, y A LO LARGO SÓLO LOS ANILLOS QUE MANDAN —las dos
+## tapas y los cortes prendidos—: cada loop cut es una arista que se ve, y nada se interpola entre ellos. Las caras van
+## planas. *Antes la malla pasaba por una curva suave de 24 anillos (o 4 parejos en el «low poly»), así que los cortes
+## no eran aristas sino una curva, y las normales suaves la redondeaban más.*
+const AROUND := 8
+const DOME_RINGS := 2
 
 @export var name := ""
 ## EL ALTO DEL CILINDRO, entre las dos tapas, en metros. Los domos suman arriba y abajo.
@@ -240,97 +242,84 @@ static func _monotone(xs: PackedFloat32Array, ys: PackedFloat32Array, x: float) 
 		+ (-2.0 * s3 + 3.0 * s2) * ys[seg + 1] + (s3 - s2) * h * tangents[seg + 1]
 
 
-## ── LA MALLA ───────────────────────────────────────────────────────────────────────────────────
-## Del fondo del domo de abajo (y = 0) a la punta del de arriba, con el frente hacia −Z como todo el proyecto. Las
-## normales son suaves, y el bobinado se decide midiendo: si las caras quedaron mirando para adentro, se dan vuelta
-## las dos cosas juntas (ver la nota del proyecto sobre el frente horario de Godot).
-## `density`: otra malla que la de los personajes (la fila Formas de cabeza la alterna, ver HeadFormArchetype.HIGH_POLY).
-func build_mesh(density: BodyDensity = null) -> ArrayMesh:
+## ── LA MALLA ────────────────────────────────────────────────────────────�
+## Del fondo del domo de abajo (y = 0) a la punta del de arriba, con el frente hacia −Z como todo el proyecto, low poly
+## (ver AROUND): los anillos son los de los domos, las dos tapas y los cortes prendidos, y nada más. Las CARAS VAN PLANAS:
+## cada triángulo con su normal. El bobinado se decide midiendo: si las caras quedaron mirando para adentro, se dan vuelta
+## (ver la nota del proyecto sobre el frente horario de Godot).
+func build_mesh() -> ArrayMesh:
 	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, build_arrays(-1, [] as Array[float], density))
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, build_arrays())
 	return mesh
 
 
-## Sin `segments` (−1) ni `rows_in`, los lados y los anillos son los de la densidad del estilo activo (ver BodyDensity:
-## en el actual, `SEGMENTS`, `BODY_RINGS` y `DOME_RINGS` de siempre).
-func build_arrays(segments := -1, rows_in: Array[float] = [], use: BodyDensity = null) -> Array:
-	var density := use if use != null else BodyDensity.current()
-	if segments < 0:
-		segments = density.head_around
-	var dome_rings := density.head_dome_rings
-	var body_rings := density.head_rings
-	var rings: Array = []  # cada uno [y, ancho, fondo, adelante]
-	var rows: Array[float] = rows_in.duplicate()
-	if rows.is_empty():
-		for k in dome_rings:
-			var phi := PI * 0.5 * (1.0 - float(k) / float(dome_rings))
-			rows.append(-sin(phi) * bottom_dome)
-		for k in body_rings + 1:
-			rows.append(height * float(k) / float(body_rings))
-		for k in range(1, dome_rings + 1):
-			var phi := PI * 0.5 * float(k) / float(dome_rings)
-			rows.append(height + sin(phi) * top_dome)
-	for y in rows:
-		var s := section_at_height(y + bottom_dome)
-		rings.append([y + bottom_dome, s.x, s.y, s.z])
+## Las alturas de sus anillos, del fondo del domo de abajo (sin los dos polos): los de los domos, las dos tapas y los
+## cortes prendidos.
+func ring_heights() -> Array[float]:
+	var rows: Array[float] = []
+	for k in range(1, DOME_RINGS):
+		rows.append(bottom_dome * (1.0 - sin(PI * 0.5 * (1.0 - float(k) / DOME_RINGS))))
+	rows.append(bottom_dome)
+	var on := cuts.filter(func(c: HeadCut) -> bool: return c.active and c.at > 0.01 and c.at < 0.99)
+	on.sort_custom(func(a: HeadCut, b: HeadCut) -> bool: return a.at < b.at)
+	for cut: HeadCut in on:
+		rows.append(bottom_dome + cut.at * height)
+	rows.append(bottom_dome + height)
+	for k in range(1, DOME_RINGS):
+		rows.append(bottom_dome + height + top_dome * sin(PI * 0.5 * float(k) / DOME_RINGS))
+	return rows
+
+
+func build_arrays() -> Array:
 	var verts := PackedVector3Array()
-	# El polo de abajo, los anillos y el polo de arriba.
-	var bottom_end := section(0.0)
-	verts.append(Vector3(0.0, 0.0, -bottom_end.z))
-	for ring: Array in rings.slice(1, rings.size() - 1):
-		for j in segments:
-			var a := TAU * float(j) / float(segments)
-			verts.append(ring_point(float(ring[1]), float(ring[2]), float(ring[3]), a, float(ring[0])))
-	var top_end := section(1.0)
-	verts.append(Vector3(0.0, total_height(), -top_end.z))
-	var ring_count := rings.size() - 2
-	var tris := PackedInt32Array()
-	var first := 1
+	verts.append(Vector3(0.0, 0.0, -section(0.0).z))
+	var rows := ring_heights()
+	for y in rows:
+		var s := section_at_height(y)
+		for j in AROUND:
+			verts.append(ring_point(s.x, s.y, s.z, TAU * float(j) / float(AROUND), y))
+	verts.append(Vector3(0.0, total_height(), -section(1.0).z))
 	var last_pole := verts.size() - 1
-	for j in segments:
-		var j1 := (j + 1) % segments
-		# LAS PUNTAS, CON EL MISMO GIRO QUE LOS TRAMOS de abajo (j → j1 y después el anillo de más arriba): al revés, la
-		# medida de abajo las daba vuelta junto con todo y quedaban de espaldas, un agujero en cada punta (lo vio el dios
-		# del juego, 16/10/2026).
-		tris.append_array([0, first + j1, first + j])
-		tris.append_array([last_pole, first + (ring_count - 1) * segments + j, first + (ring_count - 1) * segments + j1])
-	for r in ring_count - 1:
-		for j in segments:
-			var j1 := (j + 1) % segments
-			var a := first + r * segments + j
-			var b := first + r * segments + j1
-			var c := first + (r + 1) * segments + j1
-			var d := first + (r + 1) * segments + j
-			tris.append_array([a, b, c, a, c, d])
-	# EL BOBINADO, MEDIDO: la normal de cada cara contra la dirección hacia afuera del eje. Si en suma miran para
-	# adentro, se invierten las caras; las normales salen después de la misma fórmula, así no pueden discrepar.
+	var tris := PackedInt32Array()
+	for j in AROUND:
+		var j1 := (j + 1) % AROUND
+		# LAS PUNTAS, CON EL MISMO GIRO QUE LOS TRAMOS: al revés, la medida de abajo las daba vuelta y quedaban de
+		# espaldas, un agujero en cada punta (lo vio el dios del juego, 16/10/2026).
+		tris.append_array([0, 1 + j1, 1 + j])
+		var top := 1 + (rows.size() - 1) * AROUND
+		tris.append_array([last_pole, top + j, top + j1])
+	for r in rows.size() - 1:
+		for j in AROUND:
+			var j1 := (j + 1) % AROUND
+			var a := 1 + r * AROUND + j
+			var b := 1 + r * AROUND + j1
+			tris.append_array([a, b, b + AROUND, a, b + AROUND, a + AROUND])
+	# EL BOBINADO, MEDIDO: la normal de cada cara contra la dirección hacia afuera del eje.
 	var outward := 0.0
 	for i in range(0, tris.size(), 3):
 		var p0 := verts[tris[i]]
 		var n := (verts[tris[i + 1]] - p0).cross(verts[tris[i + 2]] - p0)
-		var centre := (p0 + verts[tris[i + 1]] + verts[tris[i + 2]]) / 3.0
-		outward += n.dot(Vector3(centre.x, 0.0, centre.z))
-	# Godot dibuja el frente horario: la cara buena tiene la normal de esa cuenta hacia ADENTRO.
-	if outward > 0.0:
-		for i in range(0, tris.size(), 3):
-			var keep := tris[i + 1]
-			tris[i + 1] = tris[i + 2]
-			tris[i + 2] = keep
+		outward += n.dot(Vector3(p0.x, 0.0, p0.z))
+	var flip := outward > 0.0
+	# LAS CARAS PLANAS: cada triángulo con sus tres puntos y su normal (con el frente horario de Godot, la normal hacia
+	# afuera es la cuenta al revés).
+	var points := PackedVector3Array()
 	var normals := PackedVector3Array()
-	normals.resize(verts.size())
 	for i in range(0, tris.size(), 3):
-		var p0 := verts[tris[i]]
-		# Con el frente horario, la normal hacia afuera es la cuenta al revés.
-		var n := (verts[tris[i + 2]] - p0).cross(verts[tris[i + 1]] - p0)
-		for k in 3:
-			normals[tris[i + k]] += n
-	for i in normals.size():
-		normals[i] = normals[i].normalized()
+		var a := verts[tris[i]]
+		var b := verts[tris[i + 2 if flip else i + 1]]
+		var c := verts[tris[i + 1 if flip else i + 2]]
+		var n := (c - a).cross(b - a).normalized()
+		points.append_array(PackedVector3Array([a, b, c]))
+		normals.append_array(PackedVector3Array([n, n, n]))
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = verts
+	arrays[Mesh.ARRAY_VERTEX] = points
 	arrays[Mesh.ARRAY_NORMAL] = normals
-	arrays[Mesh.ARRAY_INDEX] = tris
+	var order := PackedInt32Array()
+	for i in points.size():
+		order.append(i)
+	arrays[Mesh.ARRAY_INDEX] = order
 	return arrays
 
 

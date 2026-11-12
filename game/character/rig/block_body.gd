@@ -4,7 +4,7 @@ class_name BlockBody
 ## Lo pidió el dios del juego para iterar las poses, las animaciones y las manos sin que el modelo distraiga: «los modelos
 ## actuales, low poly de los personajes, me distraen de las animaciones… todo hecho con cubos estirados y con cápsulas».
 ## Cada pieza va PEGADA RÍGIDA a su hueso (pesa entera a él): cápsulas el brazo, el antebrazo, el muslo, la pierna y el
-## cuello; cajas cada vértebra, la cabeza, los pies, la palma y cada falange. Las medidas son las de la forma de bloques
+## cuello; cajas cada vértebra, los pies, la palma y cada falange; y la cabeza, SU FORMA DE CABEZA low poly (ver HeadForm). Las medidas son las de la forma de bloques
 ## del personaje (ver BlockShape, sus cinco reglas): un ancho por miembro, el hombro y la cadera adentro de sus cajas, el
 ## tobillo adentro del pie, el cuello saliendo del tope del pecho y la cabeza girando en su atlas.
 ##
@@ -26,7 +26,7 @@ static func build(body: ProceduralBodyUtil, sizes: SkeletonSizesUtil, skin: Skin
 	var u := sizes.block_unit
 	var parts := {}
 	_trunk(body, shape, u, parts)
-	_neck_and_head(body, shape, u, parts)
+	_neck_and_head(body, sizes, shape, u, parts)
 	for side in ["left", "right"]:
 		_limb(body, ["%s_upper_arm" % side, "%s_lower_arm" % side], shape.arm_width * 0.5 * u, "%s_arm" % side, parts)
 		_hand(body, sizes, side, parts)
@@ -84,21 +84,20 @@ static func _split_chest(body: ProceduralBodyUtil, parts: Dictionary, placed: Tr
 	return true
 
 
-## ── EL CUELLO, una cápsula; LA CABEZA, una caja ───────────────────────────────────────────────────────────────────
+## ── EL CUELLO, una cápsula; LA CABEZA, su forma ──────────────────────────────────────�
 ## El cuello va de la punta de la columna al atlas: su esfera de abajo queda en el pecho y la de arriba en la cabeza. La
-## cabeza, en su marco bajado por el atlas (ver ProceduralBodyUtil._chain): de su fondo a la coronilla.
-static func _neck_and_head(body: ProceduralBodyUtil, shape: BlockShape, u: float, parts: Dictionary) -> void:
+## cabeza es la forma de su arquetipo (ver SkeletonSizesUtil.head_form, ya de su alto), en su marco bajado por el atlas
+## (ver ProceduralBodyUtil._chain): de su fondo a la coronilla, que es como va la malla de la forma.
+static func _neck_and_head(body: ProceduralBodyUtil, sizes: SkeletonSizesUtil, shape: BlockShape, u: float,
+		parts: Dictionary) -> void:
 	var neck := body._chain(["neck"])
 	if not neck.is_empty():
 		_capsule(parts, "neck", (neck[0] as PackedInt32Array)[0], (neck[2] as Array)[0],
 			(neck[1] as PackedFloat32Array)[0], shape.neck_width * 0.5 * u)
 	var head := body._chain(["head"])
-	if head.is_empty():
+	if head.is_empty() or sizes.head_form == null:
 		return
-	var height := shape.head_height * u
-	_box(parts, "head", (head[0] as PackedInt32Array)[0],
-		(head[2] as Array)[0] * Transform3D(Basis(), Vector3(0.0, height * 0.5, 0.0)),
-		Vector3(shape.head_width * u, height, shape.head_depth * u))
+	_add(parts, "head", (head[0] as PackedInt32Array)[0], (head[2] as Array)[0], sizes.head_form.build_arrays())
 
 
 ## ── UN MIEMBRO, dos cápsulas del mismo radio ──────────────────────────────────────────────────────────────────────

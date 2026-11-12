@@ -60,9 +60,10 @@ extends Resource
 ## Lo que se ve del cuello, del tope del pecho al fondo de la cabeza.
 @export_range(0.0, 0.5, 0.005, "suffix:m") var neck_length := 0.05
 @export_range(0.02, 0.4, 0.005, "suffix:m") var neck_width := 0.1
-@export_range(0.08, 0.8, 0.005, "suffix:m") var head_width := 0.22
+## EL ALTO DE LA CABEZA: todo lo que la forma de bloques dice de ella. El ancho y el fondo son los de su forma de cabeza
+## (ver HeadForm), llevada a este alto (ver SkeletonSizesUtil). *Hasta el 13/11/2026 la cabeza era una caja con su ancho y
+## su fondo; lo guardado de entonces se ignora (ver `_set`).*
 @export_range(0.08, 0.8, 0.005, "suffix:m") var head_height := 0.26
-@export_range(0.08, 0.8, 0.005, "suffix:m") var head_depth := 0.22
 ## A qué altura de la cabeza gira: 0 desde su base, 0,3 desde adentro.
 @export_range(0.0, 0.8, 0.01) var atlas := 0.25
 ## EL CUELLO NACE ADELANTE (02/11/2026, el dios del juego: «que sea un toggle, que la cabeza salga desde ahí, y que lo de
@@ -83,12 +84,17 @@ const LABELS := {
 	"middle_width": "medio, ancho", "middle_depth": "medio, fondo", "chest_width": "pecho, ancho",
 	"chest_depth": "pecho, fondo",
 	"arm_length": "largo", "elbow_at": "codo", "arm_width": "ancho", "arm_open": "apertura",
-	"neck_length": "cuello, largo", "neck_width": "cuello, ancho", "head_width": "cabeza, ancho",
-	"head_height": "cabeza, alto", "head_depth": "cabeza, fondo", "atlas": "atlas",
+	"neck_length": "cuello, largo", "neck_width": "cuello, ancho",
+	"head_height": "cabeza, alto", "atlas": "atlas",
 	"neck_forward": "cuello adelante",
 	"foot_length": "largo",
 }
 const GROUPS := ["Piernas", "Torso", "Brazos", "Cuello y cabeza", "Pies"]
+
+
+## LO GUARDADO DE ANTES que ya no existe se acepta y se ignora (el ancho y el fondo de la cabeza de caja).
+func _set(property: StringName, _value: Variant) -> bool:
+	return property in [&"head_width", &"head_depth"]
 
 
 func copy() -> BlockShape:
@@ -211,33 +217,33 @@ const FACTORY := {
 	# 1,80: el adulto de referencia.
 	"generic": {"legs": 0.88, "knee": 0.5, "leg_w": 0.14, "torso": 0.625, "lower": 0.34, "middle": 0.30, "chest": 0.34,
 		"depth": 0.21, "arm": 0.60, "elbow": 0.56, "arm_w": 0.115, "open": 6, "neck": 0.06, "neck_w": 0.12,
-		"head_w": 0.155, "head_h": 0.235, "head_d": 0.2, "atlas": 0.3, "foot": 0.26},
+		"head_h": 0.235, "atlas": 0.3, "foot": 0.26},
 	# 1,97: largo de piernas y de brazos, angosto y chato.
 	"lanky": {"legs": 1.0, "knee": 0.5, "leg_w": 0.115, "torso": 0.66, "lower": 0.31, "middle": 0.28, "chest": 0.35,
 		"depth": 0.18, "arm": 0.68, "elbow": 0.56, "arm_w": 0.1, "open": 4, "neck": 0.075, "neck_w": 0.1,
-		"head_w": 0.15, "head_h": 0.235, "head_d": 0.195, "atlas": 0.3, "foot": 0.28},
+		"head_h": 0.235, "atlas": 0.3, "foot": 0.28},
 	# 1,87: pecho ancho, cintura que baja, brazos y cuello gruesos.
 	"buff": {"legs": 0.9, "knee": 0.5, "leg_w": 0.17, "torso": 0.68, "lower": 0.35, "middle": 0.34, "chest": 0.44,
 		"depth": 0.26, "arm": 0.62, "elbow": 0.56, "arm_w": 0.16, "open": 12, "neck": 0.05, "neck_w": 0.17,
-		"head_w": 0.165, "head_h": 0.24, "head_d": 0.205, "atlas": 0.3, "foot": 0.28},
+		"head_h": 0.24, "atlas": 0.3, "foot": 0.28},
 	# 1,75: la panza tan ancha como el pecho (más ancha, los brazos le quedan en A), piernas cortas y gruesas, casi sin
 	# cuello.
 	"fat_man": {"legs": 0.8, "knee": 0.5, "leg_w": 0.19, "torso": 0.665, "lower": 0.44, "middle": 0.47, "chest": 0.47,
 		"depth": 0.34, "arm": 0.58, "elbow": 0.56, "arm_w": 0.15, "open": 16, "neck": 0.04, "neck_w": 0.16,
-		"head_w": 0.17, "head_h": 0.245, "head_d": 0.21, "atlas": 0.3, "foot": 0.27},
+		"head_h": 0.245, "atlas": 0.3, "foot": 0.27},
 	# 1,85: el gordo atlético: pesado pero de hombros, el pecho manda.
 	"fat_athletic": {"legs": 0.86, "knee": 0.5, "leg_w": 0.19, "torso": 0.7, "lower": 0.42, "middle": 0.44,
 		"chest": 0.46, "depth": 0.32, "arm": 0.62, "elbow": 0.56, "arm_w": 0.17, "open": 14, "neck": 0.04,
-		"neck_w": 0.18, "head_w": 0.17, "head_h": 0.25, "head_d": 0.21, "atlas": 0.3, "foot": 0.29},
+		"neck_w": 0.18, "head_h": 0.25, "atlas": 0.3, "foot": 0.29},
 	# 1,70: los hombros caídos y angostos, la cintura que se ensancha, flaco de miembros.
 	"old": {"legs": 0.8, "knee": 0.5, "leg_w": 0.12, "torso": 0.62, "lower": 0.33, "middle": 0.32, "chest": 0.33,
 		"depth": 0.22, "arm": 0.58, "elbow": 0.56, "arm_w": 0.1, "open": 7, "neck": 0.05, "neck_w": 0.11,
-		"head_w": 0.15, "head_h": 0.23, "head_d": 0.195, "atlas": 0.3, "foot": 0.26, "neck_fwd": true},
+		"head_h": 0.23, "atlas": 0.3, "foot": 0.26, "neck_fwd": true},
 	# 1,55: un chico de doce años, más grande que uno real para que no contraste tanto con los adultos (02/11/2026, el
 	# dios del juego: «hay demasiado contraste de tamaño»): la cabeza grande, el torso corto, finito.
 	"kid": {"legs": 0.74, "knee": 0.5, "leg_w": 0.11, "torso": 0.53, "lower": 0.30, "middle": 0.28, "chest": 0.31,
 		"depth": 0.18, "arm": 0.52, "elbow": 0.55, "arm_w": 0.095, "open": 6, "neck": 0.045, "neck_w": 0.095,
-		"head_w": 0.16, "head_h": 0.235, "head_d": 0.195, "atlas": 0.3, "foot": 0.23},
+		"head_h": 0.235, "atlas": 0.3, "foot": 0.23},
 }
 
 
@@ -265,9 +271,7 @@ static func factory(archetype: int) -> BlockShape:
 	out.arm_open = row.open
 	out.neck_length = row.neck
 	out.neck_width = row.neck_w
-	out.head_width = row.head_w
 	out.head_height = row.head_h
-	out.head_depth = row.head_d
 	out.atlas = row.atlas
 	out.foot_length = row.foot
 	out.neck_forward = bool(row.get("neck_fwd", false))

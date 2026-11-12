@@ -52,6 +52,14 @@ Unas **14.000 líneas**.
 - **Partículas, sonido** (el sistema: `Sounds`, `SoundEntity`), `PackageDamage`.
 
 ### B · El aspecto del personaje: la decisión grande
+*13/11/2026, después: **la cabeza es su forma de cabeza low poly** (`HeadForm`): ocho lados, y a lo largo sólo los
+anillos que mandan (las tapas y los cortes prendidos), con caras planas, así cada loop cut es una arista que se ve. **El
+alto de la cabeza es un número**, el de la forma de bloques (`BlockShape.head_height`); la forma se lleva a ese alto y
+pone el ancho y el fondo. Se borraron la cuenta vieja del alto (con el atlas, el cuello y la tapa del torso, pisada
+después por la forma de bloques) y `BodyDensity`, que ya no usaba nada. **Lo que queda enchastrado**:
+`SkeletonSizesUtil.create` todavía calcula un cuerpo entero a la manera vieja (el rig, la forma del torso) que la forma
+de bloques pisa al final; es lo primero que tiene que rehacer la sesión de Personajes.*
+
 *Decidido el 13/11/2026: quedan **los seis arquetipos con sus proporciones**, en **la versión simplificada**, sin trajes
 ni sombreros; las caras las rehace el usuario desde cero (quizá las low poly con loop cuts). Lo que se encontró al
 empezar: **el cuerpo que se ve hoy ya es el simple** (`BlockBody`: cajas y cápsulas, con `BlockShape` y la mano de

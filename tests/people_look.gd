@@ -36,8 +36,8 @@ func _ready() -> void:
 	eye.fov = 40.0
 	add_child(eye)
 	eye.make_current()
-	eye.global_position = Vector3(0.0, 1.3, 9.5)
-	eye.look_at(Vector3(0.0, 0.95, 0.0))
+	eye.global_position = Vector3(0.0, 1.4, 6.5)
+	eye.look_at(Vector3(0.0, 1.1, 0.0))
 	await get_tree().create_timer(2.5).timeout
 	for bi in people:
 		var arch := bi.entity_archetype
@@ -46,4 +46,13 @@ func _ready() -> void:
 	if not _folder.is_empty() and DisplayServer.get_name() != "headless":
 		get_viewport().get_texture().get_image().save_png(_folder + "/personas.png")
 		print("CAPTURA ", _folder + "/personas.png")
+		# Y LAS CABEZAS DE CERCA, de tres cuartos: las aristas de sus loop cuts.
+		for index in people.size():
+			var head := people[index].char_rigidbody.global_position + Vector3(0.0, 0.62, 0.0)
+			eye.global_position = head + Vector3(0.35, 0.08, 0.6)
+			eye.look_at(head + Vector3(0.0, 0.05, 0.0))
+			await get_tree().process_frame
+			await get_tree().process_frame
+			get_viewport().get_texture().get_image().save_png(_folder + "/cabeza_%d.png" % (index + 1))
+		print("CAPTURA cabezas")
 	get_tree().quit()

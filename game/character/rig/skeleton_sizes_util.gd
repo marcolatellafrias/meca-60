@@ -808,42 +808,7 @@ static func create(inst: EntityInstantiation, scale: float = 1.0,
 	skelSizes.higher_spine_size.y = rest_pair if lower > third else third
 	skelSizes.chest_size.y = rest_pair if lower > third else third
 
-	# ── Y LA CABEZA: UNA FORMA DE CABEZA ───────────────────────────────────────────────
-	# La que el arquetipo canónico tiene elegida (ver CharacterLooks.head_form_for), o la forzada. La escala de cabeza
-	# del CUERPO (`TorsoShape.head_scale`: cuánto ocupa la cabeza en este arquetipo, 1,3 en el niño) se le aplica a una
-	# copia, así la forma guardada no se toca.
 	skelSizes.archetype = int(inst.archetype_type)
-	var slot := head_slot if head_slot >= 0 else CharacterLooks.head_form_for(skelSizes.archetype)
-	skelSizes.head_form = HeadForms.form_for(slot).scaled(shape.head_scale)
-	# ── EL ATLAS: LA CABEZA GIRA DESDE ADENTRO ──────────────────────────────────────────────────
-	# El cuello se alarga hasta el atlas de la forma (ver HeadForm.atlas) y todo lo de la cabeza baja eso mismo en el
-	# marco de su hueso (`head_drop`, lo leen los dos cuerpos), así que la cabeza queda donde estaba y gira desde adentro.
-	# Sin cuello no hay qué alargar.
-	if entityStats.has_neck:
-		skelSizes.head_drop = skelSizes.head_form.atlas * skelSizes.head_form.total_height()
-		skelSizes.neck_size.y += skelSizes.head_drop
-		# UN LARGO NEGATIVO se come el tramo del atlas, pero el hueso no se da vuelta (ver TorsoShape.neck_length).
-		skelSizes.neck_size.y = maxf(skelSizes.neck_size.y, NECK_MIN)
-	# EL ALTO DE LA CABEZA ES EL LARGO DE SU HUESO, igual que el del torso es el de su cadena: del fondo del domo de
-	# abajo a la punta del de arriba.
-	# ── Y TERMINA DONDE TERMINA LA MALLA (22/10/2026, lo pidió el dios del juego) ─────────────────────────────────────
-	# El hueso nace en el atlas, `head_drop` arriba del fondo de la cabeza (ver arriba), así que con el alto entero se
-	# pasaba de la coronilla eso mismo (con la H se veía salir de la cabeza). Mide del atlas a la coronilla.
-	skelSizes.head_size.y = maxf(skelSizes.head_form.total_height() - skelSizes.head_drop, 0.01)
-	# ⚠ UN CUELLO INCLINADO APORTA MENOS ALTO, y a 90° no aporta nada: lo que sube es su proyección
-	# vertical. Sin el coseno, un personaje encorvado a fondo mediría diez centímetros más de lo que ocupa y
-	# la cápsula le quedaría grande. (Lo que el torso se come del cuello ya está descontado de su largo.)
-	skelSizes.head_height = cos(skelSizes.slouchiness_neck) * skelSizes.neck_size.y \
-		+ skelSizes.head_form.total_height() - skelSizes.head_drop
-	# EL ALTO TOTAL, de la planta a la coronilla: la pierna, el filete de la pelvis —que es cuerpo y está
-	# abajo del nudo de la cadera—, el torso con su domo, y el cuello con la cabeza. El largo del cuello ES
-	# el que se ve (ver TorsoShape.neck_length), así que no hay nada que descontar acá.
-	# ── EL ALTO TOTAL: EL DOMO Y LA CABEZA COMPITEN, NO SE SUMAN ───────────────────────────────
-	# El cuello nace en el tope de la malla y metido para adentro, así que la cabeza y el domo de la tapa
-	# ocupan EL MISMO TRAMO: lo alto es lo que sobresalga más. Sumándolos, un torso con domo de 20 cm daba
-	# un personaje 20 cm más alto de lo que se ve.
-	skelSizes.total_height = shape.leg_length + skelSizes.pelvis_fall + shape.height \
-		+ maxf(dome, skelSizes.head_height)
 	skelSizes.raycast_leg_length = new_leg_height
 
 	# ── Marcha: de la zancada deseada sale la altura de pelvis, y de ahí el alcance ───────────────
@@ -898,15 +863,6 @@ static func create(inst: EntityInstantiation, scale: float = 1.0,
 	skelSizes.spine_bend_lower         = lerp_range(0.0, SPINE_BEND_LOWER_MAX, entityStats.spine_bend)
 	# EL CUELLO NACE EN LA TAPA (ver `neck_anchor`): con el encorvado ya sabido, que es lo que elige el punto. La
 	# cabeza sube lo que el punto sube, así que el alto de la cabeza y el total lo cuentan.
-	var top_cap: BodyLoop = shape.loop_named(TorsoShape.TOP) if shape != null else null
-	if entityStats.has_neck and top_cap != null:
-		skelSizes.neck_anchor = neck_anchor_on(top_cap, skelSizes.slouchiness_neck)
-		var before: float = maxf(skelSizes.torso_dome, skelSizes.head_height)
-		skelSizes.head_height += skelSizes.neck_anchor.y
-		skelSizes.total_height += maxf(skelSizes.torso_dome, skelSizes.head_height) - before
-		# Y SE MIDE DESDE LA PUNTA DEL PECHO, que está a la altura de los hombros y no en el tope de la malla (ver LA
-		# COLUMNA TERMINA A LA ALTURA DE LOS HOMBROS): el cuello nace en el mismo lugar de la tapa. El alto no cambia.
-		skelSizes.neck_anchor.y += skelSizes.arm_sink
 	skelSizes.shoulder_forward         = clampf(entityStats.shoulders_forward, -1.0, 1.0) * SHOULDER_FORWARD_MAX
 	skelSizes.shoulder_drop            = clampf(entityStats.shoulders_drop, -1.0, 1.0) * SHOULDER_DROP_MAX
 
@@ -924,6 +880,10 @@ static func create(inst: EntityInstantiation, scale: float = 1.0,
 		push_error("[SkeletonSizesUtil] El arquetipo %d no tiene cuerpo de bloques (ver BlockShape.FACTORY)." % skelSizes.archetype)
 		blocks = BlockShape.new()
 	blocks.apply_to(skelSizes, inst, baked_scale)
+	# LA CABEZA: la forma de su arquetipo (ver CharacterLooks.head_form_for), o la forzada, del alto que dice la forma de
+	# bloques. El alto de la cabeza es ese número y nada más (ver BlockShape.apply_to); la forma pone el resto.
+	var form := HeadForms.form_for(head_slot if head_slot >= 0 else CharacterLooks.head_form_for(skelSizes.archetype))
+	skelSizes.head_form = form.scaled(blocks.head_height / baked_scale / maxf(form.total_height(), 0.01))
 
 	skelSizes.left_arm_tip_rest_local   = _compute_arm_tip_local(true,  skelSizes)
 	skelSizes.right_arm_tip_rest_local  = _compute_arm_tip_local(false, skelSizes)
