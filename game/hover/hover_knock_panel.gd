@@ -1,7 +1,7 @@
 class_name HoverKnockPanel
 extends TunerPanel
 
-## EL PANEL CHICO DEL CUBO FLOTANTE (F2 en la fila Cubo flotante): dos botones que lo vuelcan sin tirarle bolas, uno
+## EL PANEL CHICO DEL CUBO (F2 en la fila Cubo): dos botones que lo vuelcan sin tirarle bolas, uno
 ## suave y uno fuerte (ver HoverCube.knock). Actúa sobre el cubo de la parcela donde uno está parado.
 
 const PANEL_WIDTH := 260.0

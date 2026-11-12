@@ -1,13 +1,12 @@
 extends Node
 
-## EL CUBO FLOTANTE, PROBADO POR CÓDIGO: arma el sandbox, mira cómo se asienta, le tira las tres bolas de frente (ver
+## EL CUBO, PROBADO POR CÓDIGO: arma el sandbox, mira cómo se asienta, le tira los cuatro tiros de frente (ver
 ## TestBall) y mide cuánto sube y baja, cuánto se inclina y si se cae; después lo voltea con un empujón grande y sigue la
 ## recuperación (tirado, sube, se endereza, flota) con capturas de las toberas.
 ##   headless:     godot --headless --path . res://tests/hover_check.tscn
 ##   con capturas: tools/godot_ventana.sh res://tests/hover_check.tscn -- --salida=C:/carpeta
 
 var _folder := ""
-var _balance := false
 var _cube: HoverCube = null
 var _parcel: SandboxParcel = null
 var _eye: Camera3D = null
@@ -18,9 +17,6 @@ func _ready() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--salida="):
 			_folder = argument.trim_prefix("--salida=")
-		# `--cubo=equilibrio`: el cubo con equilibrio (BalanceCube) en vez del flotante.
-		if argument == "--cubo=equilibrio":
-			_balance = true
 	var layer := CanvasLayer.new()
 	layer.layer = 120
 	add_child(layer)
@@ -34,7 +30,7 @@ func _ready() -> void:
 	add_child(sandbox)
 	await _frames(5)
 	for parcel: SandboxParcel in sandbox.find_children("*", "SandboxParcel", true, false):
-		if (parcel.archetype is BalanceCubeArchetype) if _balance else (parcel.archetype is HoverCubeArchetype):
+		if parcel.archetype is HoverCubeArchetype:
 			_parcel = parcel
 	_cube = _parcel.find_children("*", "HoverCube", true, false)[0] as HoverCube
 	_eye = Camera3D.new()
@@ -183,9 +179,9 @@ func _wait_hover() -> void:
 
 func _aim() -> void:
 	var at := _cube.global_position
-	# A la parte de arriba: un golpe en el centro lo empuja sin hacerlo cabecear.
-	_eye.global_position = at + Vector3(-28.0, HoverCube.HIT_ARM, 0.0)
-	_eye.look_at(at + Vector3(0.0, HoverCube.HIT_ARM, 0.0))
+	# Un poco arriba del centro: la línea cuenta el golpe a cualquier altura.
+	_eye.global_position = at + Vector3(-28.0, 2.0, 0.0)
+	_eye.look_at(at + Vector3(0.0, 2.0, 0.0))
 
 
 func _side_view() -> void:

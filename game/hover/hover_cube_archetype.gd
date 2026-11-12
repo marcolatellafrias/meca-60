@@ -1,16 +1,20 @@
 class_name HoverCubeArchetype
 extends SeededArchetype
 
-## LA PARCELA DEL CUBO FLOTANTE (ver HoverCube): el cubo flotando en el medio, para tirarle bolas (J tira, K pasa por las
-## tres fuerzas, ver TestBall) y mirar cómo rebota, cómo se cae y cómo se recupera con sus propulsores. F1 abre su panel
-## (HoverPanel). R lo vuelve a poner, flotando.
+## LA PARCELA DEL CUBO (ver HoverCube): el cubo flotando en el medio, para tirarle bolas (J tira, K pasa por los cuatro
+## tiros: lenta o rápida, que lo voltea o no) y volcarlo con el panel chico (F2). F1 abre su panel (HoverPanel). R lo
+## vuelve a poner, flotando.
 
-## Grande: el cubo rueda al caerse (el usuario: «aumentar el tamaño de la parcela de la caja»).
+## Grande: el cubo cae y se corre (el usuario: «aumentar el tamaño de la parcela de la caja»).
 const FOOTPRINT := 60.0
+const SLOW := 30.0
+const FAST := 100.0
+## Lo que la bola le deja de su empuje (rebota y sigue un poco): MEDIDO (ver tests/hover_check).
+const TRANSFER := {30.0: 0.9, 100.0: 0.9}
 
 
 func _init() -> void:
-	display_name = "Cubo flotante"
+	display_name = "Cubo"
 
 
 func max_footprint() -> Vector2:
@@ -19,15 +23,15 @@ func max_footprint() -> Vector2:
 
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
-		"flota con un resorte de altura y un torque que lo endereza",
-		"(el cuerpo de character-parametric antes del 13/03/2026)",
-		"se cae con física y se recupera con propulsores",
+		"flota con un resorte vertical; un golpe nunca lo gira",
+		"el golpe lo corre y aparte lo inclina (la línea de equilibrio)",
+		"al pasarla tropieza para el lado del golpe, cae con física y se recupera con propulsores",
 	])
 
 
 func build(_seed_value: int, parent: Node3D) -> Node3D:
 	var root := Node3D.new()
-	root.name = "Cubo flotante"
+	root.name = "Cubo"
 	parent.add_child(root)
 	var cube := HoverCube.new()
 	# Nace donde flota, mirando hacia donde uno llega (−X).
@@ -41,19 +45,19 @@ func parcel_options() -> Array[Dictionary]:
 	return TestBall.parcel_options(self)
 
 
-## LOS CUATRO TIROS DEL CUBO (lo pidió el usuario: «lento que no voltee, lento que voltee, rápido que no voltee y rápido
-## que voltee»; «son demasiado lentas, y no tan secas»): lentas a `SLOW` (empujan), rápidas a `FAST` (golpean secas); las
-## que no lo voltean lo llevan a la mitad de su inclinación de caerse, las que sí, bastante más allá (ver
-## HoverCube.push_for_tilt).
-const SLOW := 30.0
-const FAST := 100.0
-
-
+## LOS CUATRO TIROS (lo pidió el usuario: «lento que no voltee, lento que voltee, rápido que no voltee y rápido que
+## voltee»; «son demasiado lentas, y no tan secas»): lentas a `SLOW`, rápidas a `FAST`; las que no lo voltean lo llevan a
+## la mitad de donde se cae, las que sí, bastante más allá.
 func ball_shots() -> Array[Dictionary]:
+	var fall := HoverCubeSettings.current.fall_at
 	return [
-		TestBall.shot("lenta, no lo voltea", HoverCube.push_for_tilt(0.55, SLOW), SLOW),
-		# La lenta que lo voltea, con más margen: tan pesada como el cubo, lo empuja más de lo que lo gira (medido).
-		TestBall.shot("lenta, lo voltea", HoverCube.push_for_tilt(2.4, SLOW), SLOW),
-		TestBall.shot("rápida, no lo voltea", HoverCube.push_for_tilt(0.55, FAST), FAST),
-		TestBall.shot("rápida, lo voltea", HoverCube.push_for_tilt(1.6, FAST), FAST),
+		TestBall.shot("lenta, no lo voltea", _push(fall * 0.55, SLOW), SLOW),
+		TestBall.shot("lenta, lo voltea", _push(fall * 1.5, SLOW), SLOW),
+		TestBall.shot("rápida, no lo voltea", _push(fall * 0.55, FAST), FAST),
+		TestBall.shot("rápida, lo voltea", _push(fall * 1.5, FAST), FAST),
 	]
+
+
+func _push(lean_wanted: float, speed: float) -> float:
+	var transfer := float(TRANSFER[speed]) if TRANSFER.has(speed) else 0.9
+	return TestBall.push_for(HoverCube.CUBE_MASS, HoverCube.delta_v_for_lean(lean_wanted) / transfer, speed)

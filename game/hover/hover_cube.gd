@@ -1,62 +1,66 @@
 class_name HoverCube
 extends RigidBody3D
 
-## EL CUBO FLOTANTE: un cubo grande (del orden del torso de la meca) que flota sobre el piso como el cuerpo de los
-## personajes de character-parametric antes del 13/03/2026 («replaced hover with normal capsule»): un cuerpo físico
-## LIBRE, sin nada que lo ate a una postura, sostenido por un RESORTE DE ALTURA (dos rayos hacia el piso) y enderezado
-## por un TORQUE. Cualquier golpe lo hunde, lo levanta, lo cabecea y lo hace rebotar solo: el equilibrio no es un número
-## que lo inclina, es lo que hacen las fuerzas. Lo pidió el usuario el 11/11/2026, para probar la caída y la
-## recuperación aparte de la caminata: «un cubo que haga como hover en el piso… a la más mínima fuerza hace que se baje
-## y suba de vuelta, porque es como un resorte libre… cuando se caiga… que lo haga con físicas… y después… mediante unos
-## ciertos propulsores que tienen sus paredes se equilibra y se sube».
+## EL CUBO: un cubo grande (del orden del torso de la meca) para probar el equilibrio, la caída y la recuperación aparte
+## de la caminata. Lo pidió el usuario el 11/11/2026 («un cubo que haga como hover en el piso… cuando se caiga… que lo
+## haga con físicas y… mediante unos ciertos propulsores… se equilibra y se sube»), y el 12/11/2026 quedó en uno solo:
+## el de la línea de equilibrio, con el resorte vertical («no me gusta de que la rotación en el eje Y global se pueda
+## modificar con impactos… lo que sí puede llegar a funcionar es esto de la verticalidad… un poco más como resorte
+## vertical»). *El cubo que se enderezaba con un torque libre se borró ese día: se torcía con cualquier golpe.*
 ##
-## LOS ESTADOS (los del viejo, con la recuperación por propulsores):
-##   FLOTA: el resorte de altura (`height_kp`, `height_kd`, con la gravedad compensada y un tope) y el torque que lo
-##     endereza (`upright_kp`, `upright_kd`). Pasado un umbral —muy inclinado, cayendo muy rápido o yendo de costado muy
-##     rápido— deja de intentar.
-##   TIRADO: nada lo sostiene: cae, rueda y queda donde quede, con física. Quieto `limp_time`, se recupera.
-##   SUBE: las toberas de la cara que mira al piso lo despegan y lo llevan a la altura de flotar (sin dejarlo girar).
-##   SE ENDEREZA: en el aire, las toberas de los costados lo giran hasta quedar derecho (las de abajo lo sostienen).
-##   Derecho y casi sin girar, vuelve a FLOTAR.
-## (El usuario eligió el orden: «sube y se endereza en el aire».)
+## PARADO, FÍSICO DONDE SUMA Y CONTROLADO DONDE IMPORTA:
+##   · FLOTA CON UN RESORTE VERTICAL, el del cuerpo de los personajes de character-parametric antes del 13/03/2026 (dos
+##     rayos al piso, la gravedad compensada, el error y la fuerza con tope): cualquier golpe de arriba o de abajo lo
+##     hunde y rebota solo.
+##   · NO GIRA: sus giros están trabados. Un golpe nunca le cambia hacia dónde mira.
+##   · EL GOLPE LO CORRE: le cambia la velocidad y el cuerpo sale para ese lado (lo frena `slide_brake`).
+##   · LA LÍNEA DE EQUILIBRIO (`lean`): ese mismo golpe —medido como lo que cambió la velocidad sin que él lo pidiera, a
+##     cualquier altura— le suma a la velocidad de la inclinación (`lean_per_ms` × `push_rate`); un resorte la devuelve
+##     (`stiffness`, `damping`). Golpes seguidos se suman. Se ve inclinando el DIBUJO sobre el canto de abajo.
+## AL PASAR `fall_at`, TROPIEZA: el cuerpo toma la inclinación del dibujo (girando sobre ese mismo canto) y queda suelto,
+## con UN giro de una vez: el justo para que su BASE QUEDE QUIETA en ese instante —como si los pies se trabaran— (ω =
+## arriba × v / h, por `base_grip`), más lo que se venía inclinando (`tip_carry`). Desde ahí todo es física: cae para el
+## lado del golpe (y ahí sí puede girar).
+## CAÍDO: un poco más pesado (`fall_gravity`) y con freno de giro (`ground_spin_damp`), poco, para no perder la física.
+## Apenas deja de caer y de rodar rápido, SE RECUPERA con sus toberas (cuatro por cara; cada una empuja hacia adentro de
+## su cara, en su lugar, y echa el humo de propulsor de character-parametric): las de la cara que mira al piso lo SUBEN y,
+## en cuanto puede girar sin tocar el piso (`CLEARANCE`), las de los costados lo ENDEREZAN. Derecho otra vez, se traba y
+## vuelve a la línea, mirando hacia donde miraba.
 ##
-## LAS TOBERAS: cuatro por cara, cerca de las esquinas; cada una empuja hacia adentro de su cara, en su lugar (así,
-## las de una cara a un lado y las de la opuesta al otro hacen girar). Cada una echa el humo de propulsor de
-## character-parametric (ParticleSystems.thruster_smoke) mientras empuja.
-##
-## Las perillas, en HoverCubeSettings (el panel F1 de su fila).
-##
-## RÁPIDO (11/11/2026, el usuario: «que sea rápido, que sea snap y que no rompa tanto con el flujo»): se recupera apenas
-## deja de caer y de rodar rápido (`settle_speed`, `settle_spin`, `limp_time`), sube con resortes firmes y se endereza en
-## cuanto despegó lo bastante para girar sin tocar el piso (`CLEARANCE`), sin esperar a llegar arriba. Caído, un poco
-## más de gravedad (`fall_gravity`) y un poco de freno de giro (`ground_spin_damp`): poco, para no perder la física.
-##
-## PARA QUIEN LO EXTIENDE (BalanceCube): el dibujo cuelga de `_look` (para inclinarlo sin girar el cuerpo), las perillas
-## salen de `tuning()`, cómo se para es `_standing()`, qué pasa al pararse otra vez es `_recovered()` y caerse es
-## `_fall()`.
+## Las perillas, en HoverCubeSettings (el panel F1 de su fila); el F2 lo vuelca (`knock`).
 
 enum State { HOVER, LIMP, LIFT, RIGHT }
 
 const SIZE := 8.0
 const CUBE_MASS := 50000.0
-## Las toberas: cuántas por lado de cada cara, y qué tan cerca de las esquinas (parte de la mitad del lado).
+## Las toberas: qué tan cerca de las esquinas (parte de la mitad del lado).
 const NOZZLE_SPREAD := 0.65
 ## La parte del lado donde salen los rayos de la cara de abajo (a cada costado).
 const RAY_SPREAD := 0.3
 ## A qué altura del centro puede girar sin tocar el piso: media diagonal del cubo, y un poco.
 const CLEARANCE := SIZE * 0.5 * 1.7320508 + 0.5
+## Un cambio de velocidad de costado más chico que esto no es un golpe (m/s).
+const HIT_NOISE := 0.3
+## Volcarlo (el F2): cuánto más allá de su caerse lo lleva el empujón, suave y fuerte.
+const KNOCK_SOFT := 1.2
+const KNOCK_STRONG := 2.5
 
 var state := State.HOVER
 var falls := 0
-## Lo que mide, para mirar: la altura de la cara de abajo (o del centro, recuperándose) y la inclinación.
+## Lo que mide, para mirar: la altura de la cara de abajo (o del centro, recuperándose), la inclinación (grados), la línea
+## (x a la derecha, y adelante, en el espacio del cubo) y el último golpe (m/s).
 var height := 0.0
 var tilt := 0.0
+var lean := Vector2.ZERO
+var last_hit := 0.0
 
+var _lean_speed := Vector2.ZERO
+var _velocity_after := Vector3.ZERO
 var _clock := 0.0
 var _nozzles: Array[Dictionary] = []
 var _label: Label3D = null
 var _inertia := 1.0
-## El dibujo (ver PARA QUIEN LO EXTIENDE).
+## El dibujo: se inclina con la línea sin girar el cuerpo.
 var _look: Node3D = null
 
 
@@ -75,7 +79,7 @@ func _ready() -> void:
 	add_child(_look)
 	Clay.shape_box(self, Vector3.ONE * SIZE, Vector3.ZERO)
 	Clay.box(_look, Vector3.ONE * SIZE, Vector3.ZERO, Clay.METAL)
-	# Una franja en el frente, para leer hacia dónde mira y cuánto gira.
+	# Una franja en el frente, para leer hacia dónde mira y cuánto se inclina.
 	Clay.box(_look, Vector3(SIZE * 0.7, SIZE * 0.12, 0.05), Vector3(0, SIZE * 0.25, -SIZE * 0.5 - 0.03), Clay.YELLOW)
 	_build_nozzles()
 	_label = Label3D.new()
@@ -86,6 +90,7 @@ func _ready() -> void:
 	_label.outline_size = 14
 	_label.modulate = Color(1.0, 0.95, 0.6)
 	add_child(_label)
+	_lock(true)
 
 
 ## CUATRO TOBERAS POR CARA: su lugar en el cubo, hacia dónde echa (afuera de su cara), su malla y su humo.
@@ -113,20 +118,21 @@ func _build_nozzles() -> void:
 			_nozzles.append({"at": at, "out": normal, "smoke": smoke, "glow": glow, "throttle": 0.0})
 
 
-## Sus perillas (ver PARA QUIEN LO EXTIENDE).
-func tuning() -> HoverCubeSettings:
-	return HoverCubeSettings.current
+## Sus giros, trabados (parado) o sueltos (caído y recuperándose).
+func _lock(on: bool) -> void:
+	axis_lock_angular_x = on
+	axis_lock_angular_y = on
+	axis_lock_angular_z = on
 
 
 func _physics_process(delta: float) -> void:
-	var knobs := tuning()
-	var up := global_basis.y.normalized()
-	tilt = rad_to_deg(up.angle_to(Vector3.UP))
+	var knobs := HoverCubeSettings.current
 	for nozzle in _nozzles:
 		nozzle["throttle"] = 0.0
-	# CAÍDO, UN POCO MÁS PESADO Y CON UN POCO DE FRENO DE GIRO (ver RÁPIDO).
 	gravity_scale = knobs.fall_gravity if state == State.LIMP else 1.0
 	angular_damp = knobs.ground_spin_damp if state == State.LIMP else 0.0
+	if state != State.HOVER:
+		tilt = rad_to_deg(global_basis.y.normalized().angle_to(Vector3.UP))
 	match state:
 		State.HOVER:
 			_standing(knobs, delta)
@@ -139,7 +145,7 @@ func _physics_process(delta: float) -> void:
 				_clock = 0.0
 		State.LIFT:
 			_lift(knobs)
-			_hold_spin()
+			_hold_spin(knobs)
 			# Se endereza en cuanto puede girar sin tocar el piso.
 			if height >= CLEARANCE:
 				state = State.RIGHT
@@ -147,51 +153,54 @@ func _physics_process(delta: float) -> void:
 			_lift(knobs)
 			_right(knobs)
 			if tilt <= knobs.upright_done and angular_velocity.length() < 0.4:
-				state = State.HOVER
 				_recovered()
 	_fire_nozzles(knobs)
 	_label.global_position = global_position + Vector3(0, SIZE + 2.0, 0)
-	_label.text = "%s · altura %.1f m · inclinación %.0f°\ncaídas %d" % [["flota", "TIRADO", "sube", "se endereza"][state],
-		height, tilt, falls]
+	_label.text = "%s · altura %.1f m · inclinación %.0f°\núltimo golpe %.1f m/s · caídas %d" % [
+		["parado", "TIRADO", "sube", "se endereza"][state], height, tilt, last_hit, falls]
 
 
-## ── FLOTAR (el viejo de character-parametric) ───────────────────────────────────────────────────────────────────
+## ── PARADO ──────────────────────────────────────────────────────────────────────────────────────────────────────
 
-## PARADO: flota, se endereza con su torque y se deja caer pasado un umbral. Lo pisa quien lo extiende.
-func _standing(knobs: HoverCubeSettings, _delta: float) -> void:
+func _standing(knobs: HoverCubeSettings, delta: float) -> void:
+	_measure_hit(knobs)
 	_hover(knobs)
-	_stand_upright(knobs.upright_kp, knobs.upright_kd)
-	_check_stop(knobs)
+	_lean_speed += (-lean * knobs.stiffness - _lean_speed * knobs.damping) * delta
+	lean += _lean_speed * delta
+	_look.transform = _leaning(knobs)
+	tilt = rad_to_deg(lean.length() * deg_to_rad(knobs.lean_angle))
+	_velocity_after = linear_velocity
+	if lean.length() >= knobs.fall_at:
+		_trip(knobs)
 
 
-## Cuando vuelve a flotar (después de caerse y recuperarse). Lo pisa quien lo extiende.
-func _recovered() -> void:
-	pass
+## EL GOLPE: lo que cambió la velocidad de costado desde el paso anterior sin que él lo pidiera (su freno es muy poco por
+## paso para contar), a la velocidad de la inclinación.
+func _measure_hit(knobs: HoverCubeSettings) -> void:
+	var change := linear_velocity - _velocity_after
+	var flat := Vector3(change.x, 0.0, change.z)
+	if flat.length() <= HIT_NOISE:
+		return
+	last_hit = flat.length()
+	var local := global_basis.inverse() * flat
+	_lean_speed += Vector2(local.x, -local.z) * knobs.lean_per_ms * knobs.push_rate
 
 
-## SE DEJA CAER: nada lo sostiene hasta que se recupere.
-func _fall() -> void:
-	state = State.LIMP
-	_clock = 0.0
-	falls += 1
-
-
-## EL RESORTE DE ALTURA: dos rayos desde la cara de abajo, hacia abajo del cubo; la altura es la del medio de los que
-## tocan. Empuja hacia arriba, en el centro, con la gravedad compensada, el error con tope y la fuerza con tope.
-func _hover(settings: HoverCubeSettings) -> void:
-	var down := -global_basis.y.normalized()
-	var reach := settings.hover_height + settings.max_height_error + 1.0
+## EL RESORTE VERTICAL: dos rayos desde la cara de abajo; la altura es la del medio de los que tocan. Empuja hacia
+## arriba, en el centro, con la gravedad compensada, el error con tope y la fuerza con tope. Y el freno de costado.
+func _hover(knobs: HoverCubeSettings) -> void:
+	var reach := knobs.hover_height + knobs.max_height_error + 1.0
 	var starts: Array[Vector3] = []
 	var grounds: Array[Vector3] = []
 	for side: float in [-1.0, 1.0]:
 		var start := global_transform * Vector3(side * SIZE * RAY_SPREAD, -SIZE * 0.5, 0.0)
-		var hit := _ray(start, start + down * reach)
+		var hit := _ray(start, start + Vector3.DOWN * reach)
 		if not hit.is_empty():
 			starts.append(start)
 			grounds.append(hit["position"])
+	_slide_brake(knobs)
 	if grounds.is_empty():
 		height = reach
-		_slide_brake(settings)
 		return
 	var start_mid := Vector3.ZERO
 	var ground_mid := Vector3.ZERO
@@ -199,64 +208,92 @@ func _hover(settings: HoverCubeSettings) -> void:
 		start_mid += starts[i] / grounds.size()
 		ground_mid += grounds[i] / grounds.size()
 	height = start_mid.y - ground_mid.y
-	var error := clampf(settings.hover_height - height, -settings.max_height_error, settings.max_height_error)
-	var accel := settings.height_kp * error - settings.height_kd * linear_velocity.y + _gravity()
-	apply_central_force(Vector3.UP * CUBE_MASS * clampf(accel, 0.0, settings.max_up))
-	_slide_brake(settings)
+	var error := clampf(knobs.hover_height - height, -knobs.max_height_error, knobs.max_height_error)
+	var accel := knobs.height_kp * error - knobs.height_kd * linear_velocity.y + _gravity()
+	apply_central_force(Vector3.UP * CUBE_MASS * clampf(accel, 0.0, knobs.max_up))
 
 
-func _slide_brake(settings: HoverCubeSettings) -> void:
+func _slide_brake(knobs: HoverCubeSettings) -> void:
 	var side := Vector3(linear_velocity.x, 0.0, linear_velocity.z)
-	var brake := minf(side.length() / maxf(get_physics_process_delta_time(), 0.0001), settings.slide_brake)
+	var brake := minf(side.length() / maxf(get_physics_process_delta_time(), 0.0001), knobs.slide_brake)
 	if side.length() > 0.001:
 		apply_central_force(-side.normalized() * brake * CUBE_MASS)
 
 
-## EL TORQUE QUE LO ENDEREZA: hacia arriba, por lo inclinado, menos lo que gira.
-func _stand_upright(kp: float, kd: float) -> void:
-	var error_axis := global_basis.y.normalized().cross(Vector3.UP)
-	apply_torque((error_axis * kp - angular_velocity * kd) * _inertia)
+## El dibujo inclinado sobre el canto de abajo hacia donde se inclina (ver MechBody.tilt).
+func _leaning(knobs: HoverCubeSettings) -> Transform3D:
+	var pivot := Vector3(0.0, -SIZE * 0.5, 0.0)
+	var turn := MechBody.tilt(lean * deg_to_rad(knobs.lean_angle))
+	return Transform3D(Basis(), pivot) * Transform3D(turn, Vector3.ZERO) * Transform3D(Basis(), -pivot)
 
 
-## DEJAR DE INTENTAR (los umbrales del viejo): muy inclinado, cayendo muy rápido o yendo de costado muy rápido.
-func _check_stop(settings: HoverCubeSettings) -> void:
-	var side := Vector2(linear_velocity.x, linear_velocity.z).length()
-	if tilt > settings.max_tilt or -linear_velocity.y > settings.max_fall_speed or side > settings.max_side_speed:
-		_fall()
+## ── TROPEZAR Y CAER ─────────────────────────────────────────────────────────────────────────────────────────────
+
+## TROPIEZA (ver arriba): el cuerpo toma la inclinación del dibujo, queda suelto y recibe el giro de los pies trabados.
+func _trip(knobs: HoverCubeSettings) -> void:
+	var turn := MechBody.tilt(lean * deg_to_rad(knobs.lean_angle))
+	var base := global_transform * Vector3(0.0, -SIZE * 0.5, 0.0)
+	var leaned := global_basis * turn
+	var direction := global_basis * Vector3(lean.x, 0.0, -lean.y).normalized()
+	var tipping := maxf(_lean_speed.dot(lean.normalized()), 0.0) * deg_to_rad(knobs.lean_angle)
+	_lock(false)
+	global_transform = Transform3D(leaned, base + leaned * Vector3(0.0, SIZE * 0.5, 0.0))
+	_look.transform = Transform3D()
+	var side := Vector3(linear_velocity.x, 0.0, linear_velocity.z)
+	angular_velocity = Vector3.UP.cross(side) / (SIZE * 0.5) * knobs.base_grip \
+		+ Vector3.UP.cross(direction) * tipping * knobs.tip_carry
+	lean = Vector2.ZERO
+	_lean_speed = Vector2.ZERO
+	state = State.LIMP
+	_clock = 0.0
+	falls += 1
 
 
 ## ── RECUPERARSE CON LAS TOBERAS ─────────────────────────────────────────────────────────────────────────────────
 
 ## SUBIR: las toberas que empujan para arriba (las de la cara que mira al piso) llevan el centro a la altura de flotar,
-## con un resorte y la gravedad compensada. Devuelve si ya llegó (cerca y casi quieto).
-func _lift(settings: HoverCubeSettings) -> bool:
-	var target := settings.hover_height * settings.lift_share + SIZE * 0.5
+## con un resorte y la gravedad compensada.
+func _lift(knobs: HoverCubeSettings) -> void:
+	var target := knobs.hover_height * knobs.lift_share + SIZE * 0.5
 	height = _ground_distance(global_position)
-	var accel := settings.lift_kp * (target - height) - settings.lift_kd * linear_velocity.y + _gravity()
-	_push(Vector3.UP * maxf(accel, 0.0) * CUBE_MASS, Vector3.ZERO, settings)
-	return height >= target * 0.9 and absf(linear_velocity.y) < 1.0
+	var accel := knobs.lift_kp * (target - height) - knobs.lift_kd * linear_velocity.y + _gravity()
+	_push(Vector3.UP * maxf(accel, 0.0) * CUBE_MASS, Vector3.ZERO, knobs)
 
 
 ## Que no gire mientras sube.
-func _hold_spin() -> void:
-	_push(Vector3.ZERO, -angular_velocity * 2.0 * _inertia, tuning())
+func _hold_spin(knobs: HoverCubeSettings) -> void:
+	_push(Vector3.ZERO, -angular_velocity * 2.0 * _inertia, knobs)
 
 
-## ENDEREZARSE: las toberas de los costados lo giran hacia arriba, con un resorte más lento que el de flotar.
-func _right(settings: HoverCubeSettings) -> void:
+## ENDEREZARSE: las toberas de los costados lo giran hacia arriba.
+func _right(knobs: HoverCubeSettings) -> void:
 	var error_axis := global_basis.y.normalized().cross(Vector3.UP)
 	var angle := global_basis.y.normalized().angle_to(Vector3.UP)
-	var axis := error_axis.normalized() if error_axis.length() > 0.0001 else global_basis.x
 	# Dado vuelta (el eje se pierde cerca de 180°), gira igual hacia algún lado.
-	var torque := (axis * angle * settings.right_kp - angular_velocity * settings.right_kd) * _inertia
-	_push(Vector3.ZERO, torque, settings)
+	var axis := error_axis.normalized() if error_axis.length() > 0.0001 else global_basis.x
+	var torque := (axis * angle * knobs.right_kp - angular_velocity * knobs.right_kd) * _inertia
+	_push(Vector3.ZERO, torque, knobs)
+
+
+## DERECHO OTRA VEZ: trabado, mirando hacia donde miraba, y la línea en cero.
+func _recovered() -> void:
+	var forward := -global_basis.z
+	forward.y = 0.0
+	var yaw := atan2(-forward.x, -forward.z) if forward.length_squared() > 0.01 else global_rotation.y
+	global_basis = Basis(Vector3.UP, yaw)
+	angular_velocity = Vector3.ZERO
+	_lock(true)
+	lean = Vector2.ZERO
+	_lean_speed = Vector2.ZERO
+	_velocity_after = linear_velocity
+	state = State.HOVER
 
 
 ## REPARTE ENTRE LAS TOBERAS una fuerza (`force`, en el mundo) y un giro (`torque`): para la fuerza, las que empujan
 ## para su lado; para el giro, cada una según cuánto gira para el lado pedido. Las toberas sólo empujan (no tiran) y
 ## tienen tope (`nozzle_push`): lo que no alcanza, no se hace. La fuerza y el giro se suman en el `throttle` de cada una.
-func _push(force: Vector3, torque: Vector3, settings: HoverCubeSettings) -> void:
-	var most := settings.nozzle_push * CUBE_MASS
+func _push(force: Vector3, torque: Vector3, knobs: HoverCubeSettings) -> void:
+	var most := knobs.nozzle_push * CUBE_MASS
 	if force.length() > 0.001:
 		var lifters: Array[Dictionary] = []
 		var share := 0.0
@@ -284,8 +321,8 @@ func _push(force: Vector3, torque: Vector3, settings: HoverCubeSettings) -> void
 
 
 ## Las toberas empujan, en su lugar, y se ven: brillan y echan humo.
-func _fire_nozzles(settings: HoverCubeSettings) -> void:
-	var most := settings.nozzle_push * CUBE_MASS
+func _fire_nozzles(knobs: HoverCubeSettings) -> void:
+	var most := knobs.nozzle_push * CUBE_MASS
 	for nozzle in _nozzles:
 		var throttle := float(nozzle["throttle"])
 		var smoke := nozzle["smoke"] as GPUParticles3D
@@ -299,64 +336,36 @@ func _fire_nozzles(settings: HoverCubeSettings) -> void:
 		apply_force(-(global_basis * (nozzle["out"] as Vector3)) * most * throttle, at)
 
 
-## ── LA BOLA (ver TestBall y HoverCubeArchetype.ball_shots) ────────────────────────────────────────────────────────────
-## EL EMPUJE QUE LO INCLINA `share` de donde se deja caer (`max_tilt`), con una bola a `speed` y un golpe de costado en
-## la mitad de arriba (a un cuarto del lado sobre el centro: un golpe en el centro lo empuja sin inclinarlo). El giro que
-## le da sale del empuje por ese brazo sobre su inercia, y lo que se inclina, del resorte que lo endereza (corrido como lo
-## corre la física, ver `_tilt_peak`). La bola no le deja todo su giro: una lenta EMPUJA (sigue apoyada y lo corre) y
-## una rápida GOLPEA. Lo que le deja, MEDIDO el 11/11/2026 con 400 000 N·s a la altura de `HIT_ARM`: a 30 m/s, el 60 %
-## del giro ideal (empuje × brazo / inercia); a 100 m/s, el 80 % (`TRANSFER`, entre medio se interpola).
-const HIT_ARM := SIZE * 0.25
-const TRANSFER := {30.0: 0.6, 100.0: 0.8}
-
-
-static func push_for_tilt(share: float, speed: float) -> float:
-	var transfer := remap(clampf(speed, 30.0, 100.0), 30.0, 100.0, float(TRANSFER[30.0]), float(TRANSFER[100.0]))
-	# El giro que se queda en el cubo es el empuje por su brazo sobre su inercia: L = I·ω.
-	return spin_for_tilt(share) * CUBE_MASS * SIZE * SIZE / 6.0 / HIT_ARM / transfer
-
-
-## El giro (rad/s) que lo inclina `share` de donde se deja caer.
-static func spin_for_tilt(share: float) -> float:
-	var settings := HoverCubeSettings.current
-	var per_spin := _tilt_peak(1.0, settings.upright_kp, settings.upright_kd)
-	return deg_to_rad(settings.max_tilt * share) / maxf(per_spin, 0.0001)
-
-
-## La inclinación más alta (rad) del cubo que arranca derecho girando a `spin` rad/s, con el torque que lo endereza.
-static func _tilt_peak(spin: float, kp: float, kd: float) -> float:
-	var step := 1.0 / 240.0
-	var angle := 0.0
-	var turning := spin
-	var peak := 0.0
-	for i in 4800:
-		turning += (-angle * kp - turning * kd) * step
-		angle += turning * step
-		peak = maxf(peak, angle)
-		if turning < 0.0:
-			break
-	return peak
-
-
-## ── VOLCARLO (el panel chico, F2; el usuario: «un botón… que la vuelque, una más suavemente otra más fuerte, así no
-## dependo tanto de bolas») ───────────────────────────────────────────────────────────────────────────────────────────
-## Le da de golpe el giro que lo inclina pasado su caerse, de costado: SUAVE, apenas pasado (se va de a poco y se cae);
-## FUERTE, mucho más, con un salto (rueda).
-const KNOCK_SOFT := 1.2
-const KNOCK_STRONG := 2.8
-const KNOCK_HOP := 6.0
-
-
+## ── VOLCARLO (el panel chico, F2; el usuario: «un botón… que la vuelque, una más suavemente otra más fuerte») ─────
+## Un empujón de costado, como un golpe —lo mide la línea—: SUAVE, apenas pasado su caerse; FUERTE, mucho más.
 func knock(strong: bool) -> void:
-	var axis := global_basis.z.normalized()
-	axis.y = 0.0
-	axis = axis.normalized() if axis.length_squared() > 0.01 else Vector3.FORWARD
-	angular_velocity += axis * spin_for_tilt(KNOCK_STRONG if strong else KNOCK_SOFT)
-	if strong:
-		linear_velocity += Vector3.UP * KNOCK_HOP
+	if state != State.HOVER:
+		return
+	var side := global_basis.x
+	side.y = 0.0
+	linear_velocity += side.normalized() * HoverCube.delta_v_for_lean(
+		HoverCubeSettings.current.fall_at * (KNOCK_STRONG if strong else KNOCK_SOFT))
 
 
-## ── LO QUE MIDE ─────────────────────────────────────────────────────────────────────────────────────────────────
+## ── CUÁNTO HAY QUE EMPUJARLO ─────────────────────────────────────────────────────────────────────────────────────
+## El cambio de velocidad (m/s) que lo lleva a la inclinación `target`: el golpe suma a la velocidad de la inclinación,
+## y la inclinación más alta del resorte por unidad se calcula paso a paso (como la corre `_standing`).
+static func delta_v_for_lean(target: float) -> float:
+	var knobs := HoverCubeSettings.current
+	var step := 1.0 / 240.0
+	var lean_now := 0.0
+	var speed_now := 1.0
+	var peak := 0.0
+	for i in 2400:
+		speed_now += (-lean_now * knobs.stiffness - speed_now * knobs.damping) * step
+		lean_now += speed_now * step
+		peak = maxf(peak, lean_now)
+		if speed_now < 0.0:
+			break
+	return target / maxf(peak * knobs.lean_per_ms * knobs.push_rate, 0.0001)
+
+
+## ── LO QUE MIDE ──────────────────────────────────────────────────────────────────────────────────────────────────
 
 ## Cuánto hay de `point` al piso, derecho hacia abajo (o mucho, si no hay piso).
 func _ground_distance(point: Vector3) -> float:

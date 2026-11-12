@@ -11,6 +11,15 @@ Varias piezas vienen de `D:\Godot\taxi` (el sandbox, las opciones, el lanzador d
 la red** (con la pausa y el menú de inicio de allá): el jugador es el personaje de allá. Qué se trajo, qué se adaptó y
 dónde se cortó (la ciudad, el tránsito, la nave), en `game/character_port/LEEME.md`.
 
+## La documentación: `docs/`
+Una bóveda de Obsidian, simple: una nota por sistema y **una nota con cada fila del sandbox y su código**
+([docs/filas.md](docs/filas.md)). Empezar por [docs/00-indice.md](docs/00-indice.md). Un cambio a un sistema actualiza
+su nota.
+
+**Borrar una parcela borra su código**: su arquetipo, lo que sólo ella usa, sus paneles, sus perillas, sus tests y su
+fila en `docs/filas.md` (lo pidió el usuario el 12/11/2026: «me gusta que si borro algo, una parcela, que borra el código
+también»). Nada queda huérfano.
+
 ## Decisiones tomadas
 - **Primero validar la pelea, contra otra meca** (11/11/2026): los jefes quedan suspendidos hasta ver si la idea
   funciona. El rival es una meca igual, sin piloto (`MechBrain`), quieta o agresiva.
@@ -54,31 +63,23 @@ equilibrio de los personajes de character-parametric, con dos personas de allá 
 cámara (una sola bola, que va derecha y no cae; la fuerza es su empuje); **K** pasa por sus tres fuerzas: lo mueve, a
 punto de caer y lo tira. **Cada fila dice sus tres** para lo que tiene, con sus umbrales de ahora
 (`SeededArchetype.ball_pushes`): la meca de equilibrio con su paso y su caída (`MechDummy.ball_pushes`), el cubo con
-su inclinación de caerse (`HoverCube.ball_pushes`) y cada persona con su peso y su firmeza
+sus cuatro tiros (`HoverCubeArchetype.ball_shots`) y cada persona con su peso y su firmeza
 (`PeopleArchetype.ball_pushes`). Tiene dos agregados al sistema de allá: **el golpe empuja** (la inclinación toma
 velocidad en vez de saltar) y **los pasos** (pasada cierta inclinación da un paso hacia donde se va y se recupera
 trastabillando). **F1** en la fila Equilibrio abre su panel (`BalancePanel`): todas sus perillas (los agregados, el resorte,
 la firmeza por lado, el cuerpo, la caída), que salen de `MechBalanceSettings`.
 
-**Cubo flotante** (11/11/2026): la caída y la recuperación, aparte de la caminata. Un cubo grande, cuerpo físico libre,
-que flota como el cuerpo de los personajes de character-parametric antes del 13/03/2026 (un resorte de altura con dos
-rayos al piso y un torque que lo endereza): rebota y cabecea solo. Pasado un umbral (inclinación, caída, velocidad de
-costado) deja de intentar y cae con física; quieto un rato, **sube** con las toberas de la cara que mira al piso y **se
-endereza en el aire** con las de los costados (cuatro por cara, con el humo de propulsor de allá), y vuelve a flotar.
-La parcela es de 60 m. **J/K** la bola, con cuatro tiros propios: lenta (30 m/s, empuja) o rápida (100 m/s, golpea
-seca), que lo voltea o no (suponen el golpe en la mitad de arriba: en el centro lo corre sin inclinarlo; lo que la bola
-le deja de giro está medido por velocidad, `HoverCube.TRANSFER`). **F1** su panel (`HoverPanel`, perillas en
-`HoverCubeSettings`); **F2** un panel chico con dos botones que lo vuelcan, suave y fuerte (`HoverKnockPanel`).
-
-Se recupera rápido (unos 4 s): empieza apenas deja de caer y de rodar rápido, sube con resortes firmes y se endereza en
-cuanto puede girar sin tocar el piso; caído pesa un poco más y se le frena un poco el giro (poco: es física).
-
-**Cubo con equilibrio** (11/11/2026, bifurcado del flotante, `BalanceCube`): el mismo cubo, pero parado no gira. **El
-golpe lo corre** (el cuerpo sale para ese lado) y **aparte lo inclina** con la línea de equilibrio (cualquier golpe en el
-cuerpo, a cualquier altura; se ve inclinando el dibujo sobre el canto de abajo). Al pasarla **tropieza**: el cuerpo toma
-esa inclinación y recibe, una sola vez, el giro justo para que su base quede quieta (como si los pies se trabaran); de
-ahí es física, y cae para el lado del golpe. Se recupera como el flotante (unos 2,5 s). **J/K** cuatro tiros, **F1** su
-panel (la línea, el tropezar, y flotar y recuperarse en su propia copia), **F2** volcarlo.
+**Cubo** (11/11/2026; quedó uno solo el 12/11/2026): la caída y la recuperación, aparte de la caminata. Un cubo grande
+que flota con un **resorte vertical** (el del cuerpo de los personajes de character-parametric antes del 13/03/2026) y
+**parado no gira**: un golpe nunca le cambia hacia dónde mira. **El golpe lo corre** (el freno de costado dice cuánto) y
+**aparte lo inclina** con la línea de equilibrio (cualquier golpe, a cualquier altura; golpes seguidos se suman; se ve
+inclinando el dibujo sobre el canto de abajo). Al pasarla **tropieza**: el cuerpo toma esa inclinación y recibe, una
+sola vez, el giro justo para que su base quede quieta; de ahí es física y cae para el lado del golpe. Caído pesa un poco
+más y se le frena el giro (poco: es física); apenas deja de caer **sube** con las toberas de la cara que mira al piso y
+**se endereza en el aire** con las de los costados (cuatro por cara, con el humo de propulsor de allá), y vuelve a la
+línea mirando hacia donde miraba. La parcela es de 60 m. **J/K** cuatro tiros: lenta (30 m/s) o rápida (100 m/s), que
+lo voltea o no. **F1** su panel (`HoverPanel`, perillas en `HoverCubeSettings`); **F2** volcarlo, suave y fuerte
+(`HoverKnockPanel`). *El cubo que se enderezaba con un torque libre se borró: se torcía con cualquier golpe.*
 
 **Las parcelas tienen paredes invisibles** (como allá, `SandboxParcel` LOS BORDES): las ve lo que se mueve con física y
 vive en una parcela; el jugador y la bola pasan. Las mecas de pelea, que se mueven por código, le preguntan a su parcela
@@ -106,11 +107,9 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   (la bola de la J),
   `PeopleArchetype` (las personas de allá) con `CharacterGetUp` (que se levanten solas) y `ObjectLotArchetype` (el lote
   de objetos).
-- `game/hover/` — **el cubo flotante**: `HoverCube` (flotar, dejarse caer, subir y enderezarse con las toberas),
+- `game/hover/` — **el cubo**: `HoverCube` (flotar, la línea, tropezar, subir y enderezarse con las toberas),
   `HoverCubeSettings` (sus perillas), `HoverPanel` (su F1), `HoverKnockPanel` (su F2: volcarlo) y `HoverCubeArchetype`
   (su parcela y sus tiros).
-  El cubo con equilibrio: `BalanceCube` (hereda del flotante: la línea y el tropezar), `BalanceCubeSettings`,
-  `BalanceCubePanel` (su F1) y `BalanceCubeArchetype`.
 - `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas, `_mount_tuners` sus paneles F;
   crea al jugador, ver arriba) y la sesión de red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD,
   espacio, shift, Ctrl, E, R, C, V, B, F1–F6, Escape; no repetirlas. Sentado (o manejando desde afuera) sólo valen las
@@ -133,9 +132,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
 - `tests/balance_check.tscn` (headless o con ventana): mira que los pies estén planos, le tira bolas de varias
   fuerzas a la meca de equilibrio en los dos modos (como allá, y con empuje y pasos) e imprime la inclinación, los
   pasos, cuánto retrocedió y si se cayó; con ventana, capturas del trastabillar. Y bolas chicas a las dos personas.
-- `tests/hover_check.tscn` (headless o con ventana; `-- --cubo=equilibrio` para el cubo con equilibrio): los tiros, los
-  botones de volcar (y para qué lado cae y cuánto gira), el rebote y la recuperación. Antes: el cubo flotante se asienta, las tres bolas, soltarlo de más arriba
-  (el rebote), y voltearlo y seguir la recuperación; con ventana, capturas cada medio segundo.
+- `tests/hover_check.tscn` (headless o con ventana): el cubo se asienta, los cuatro tiros, los botones de volcar (para
+  qué lado cae y cuánto gira), el rebote, y voltearlo y seguir la recuperación; con ventana, capturas cada medio segundo.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,
   caminarla sentado, viajar parado adentro, manejar desde afuera y volver, y agarrar el ropero del lote.
 - `tests/net_check.tscn`: dos instancias sin ventana, una con `--host-local` y otra con `--join-local` (antes del
