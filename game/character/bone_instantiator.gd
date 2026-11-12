@@ -674,9 +674,6 @@ func set_pose_frozen(on: bool) -> void:
 			rb._prev_velocity = rb.linear_velocity  # seguir no es un golpe
 		_frozen_state = []
 	set_physics_process(not on)
-	for child in get_children():
-		if child is ExhibitOperator:
-			child.process_mode = Node.PROCESS_MODE_DISABLED if on else Node.PROCESS_MODE_INHERIT
 
 
 func _process(_delta: float) -> void:

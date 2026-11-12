@@ -66,7 +66,9 @@ este juego** decide el destino de unas 13.000 líneas.
 
 ### C · Lo que es de otro juego
 Unas **9.000 líneas**, pero enganchado:
-- **`ExhibitOperator`** (1.308): un personaje de exhibición que maneja controles solo, para las vitrinas de la nave. Lo
+- *Borrado el 13/11/2026, junto con la palanca de cambios de auto (`GearShiftComponent`), que sólo él usaba. El
+  «tipo de exhibición» de un personaje (`CharacterKind.is_exhibit`) queda: lo usan las figuras de la fila Personajes.*
+  **`ExhibitOperator`** (1.308): un personaje de exhibición que maneja controles solo, para las vitrinas de la nave. Lo
   nombran `BoneInstantiator`, `ArmsController`, `CharacterIntent`, `CharacterKind` e `InteractionController`.
 - **Las herramientas de esculpir el cuerpo**: el inspector (`CharacterInspectorSource`, 873), `QuadWire`, `BlenderView`,
   `ModelClick`, `SkeletonDebugDraw`, `CharacterDebugView`, `ForceFieldGizmo`, `DebugOrbitCamera`, `ViewTuner`: unas
