@@ -24,17 +24,9 @@ const SCENES := {
 const BOX_VARIANTS := {
 	"box_light_square": {"cells": Vector3i(6, 6, 6), "mass": 4.0,  "color": Color(0.45, 0.7, 1.0),  "label": "liviana ▪"},
 	"box_heavy_square": {"cells": Vector3i(6, 6, 6), "mass": 40.0, "color": Color(0.7, 0.2, 0.2),   "label": "pesada ▪"},
-	"box_light_long":   {"cells": Vector3i(6, 6, 12), "mass": 8.0,  "color": Color(0.5, 0.85, 0.5),  "label": "liviana ▬"},
-	"box_heavy_long":   {"cells": Vector3i(6, 6, 12), "mass": 80.0, "color": Color(0.85, 0.5, 0.2),  "label": "pesada ▬"},
-	# Extra larga = tres cajas comunes en fila. Con GRAB_DENSITY 3 le salen SEIS grab points a lo
-	# largo (2×2×6 en total), así que es la variante para probar el agarre de a tres o más.
-	"box_light_xlong":  {"cells": Vector3i(6, 6, 18), "mass": 12.0,  "color": Color(0.4, 0.9, 0.75), "label": "liviana ▭"},
-	"box_heavy_xlong":  {"cells": Vector3i(6, 6, 18), "mass": 120.0, "color": Color(0.9, 0.35, 0.5), "label": "pesada ▭"},
 }
 
-## Paquetes armados por código con su propio builder (contenido, grabbable y label incluidos).
-const PACKAGES := ["crate_bottles"]
-## Los paquetes del catálogo (ver PackageArchetype) se piden como `package:<clave>` —`package:television`—: el
+## Los paquetes del catálogo (ver PackageArchetype) se piden como `package:<clave>` —`package:battery`—: el
 ## cuerpo real del juego, el mismo de la fila del sandbox. Los crea la jornada para el lote de cada run (ver Jornada).
 const PACKAGE_PREFIX := "package:"
 
@@ -95,7 +87,7 @@ func _alloc_id() -> int:
 
 
 func _known(type_name: String) -> bool:
-	if BOX_VARIANTS.has(type_name) or SCENES.has(type_name) or PACKAGES.has(type_name):
+	if BOX_VARIANTS.has(type_name) or SCENES.has(type_name):
 		return true
 	return type_name.begins_with(PACKAGE_PREFIX) and _archetype(type_name.trim_prefix(PACKAGE_PREFIX)) != null
 
@@ -142,8 +134,6 @@ func _do_spawn(id: int, type_name: String, xform: Transform3D, body_authority: i
 	var inst: Node3D = null
 	if BOX_VARIANTS.has(type_name):
 		inst = _build_box(BOX_VARIANTS[type_name])
-	elif PACKAGES.has(type_name):
-		inst = _build_package(type_name)
 	elif type_name.begins_with(PACKAGE_PREFIX):
 		var archetype := _archetype(type_name.trim_prefix(PACKAGE_PREFIX))
 		if archetype != null:
@@ -253,14 +243,6 @@ func _build_box(cfg: Dictionary) -> RigidBody3D:
 	body.add_child(label)
 	return body
 
-func _build_package(type_name: String) -> RigidBody3D:
-	match type_name:
-		"crate_bottles":
-			return BottleCrate.build()
-	return null
-
-
-## El arquetipo del catálogo con esa clave, o null.
 func _archetype(key: String) -> PackageArchetype:
 	for archetype in PackageArchetype.catalogue():
 		if (archetype as PackageArchetype).key == key:

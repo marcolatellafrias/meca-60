@@ -36,6 +36,7 @@ contraste, estereotipos) y **low poly**.
 - **La bomba** la tira el jugador a pie. Lo que tira la meca son misiles (más adelante, de varios tipos).
 
 ## Lo que quedó de antes
-`PackageArchetype` es el de los paquetes de character-parametric (el televisor, el sillón, la caja fuerte…): hoy su
-catálogo son estos cinco cubos, y sus bosquejos viejos y el cajón de botellas siguen en el código, sin uso, hasta la
-limpieza de lo traído. El sistema de agarre (`GrabbableInteractable`) no se tocó: ya sabía de módulos de 63 cm.
+`PackageArchetype` vino de character-parametric con los paquetes de una ciudad (el televisor, el sillón, la caja
+fuerte, un cajón de botellas…). El 13/11/2026 se borraron sus bosquejos, el cajón y su contenido, las cajas largas de
+prueba y su ida y vuelta a Blender: hoy su catálogo son estos cinco cubos. El sistema de agarre
+(`GrabbableInteractable`) no se tocó: ya sabía de módulos de 63 cm.
