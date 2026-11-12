@@ -3,6 +3,7 @@
 Bóveda de Obsidian, simple: lo básico de cada sistema, para orientarse. El detalle está en el código (cada clase
 empieza con su comentario largo).
 
+- [[modulos]] — **quién es dueño de qué**: las sesiones por módulo, sus carpetas y por dónde se tocan.
 - [[estructura]] — **cómo está armado el código**: la meca y sus piezas, los dos caminos, lo congelado, lo traído.
 - [[filas]] — **cada fila del sandbox y su código** (qué borrar si se borra una parcela).
 - [[cubo]] — la base de la variante de la línea (sin fila): flotar, la línea, tropezar, caer y recuperarse con toberas.

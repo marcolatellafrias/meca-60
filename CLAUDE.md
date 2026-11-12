@@ -103,6 +103,9 @@ sale) y **Partículas** (cada sistema en su poste; **M** cambia la malla de toda
 y los objetos de esa parcela; **las mecas todavía no**.
 
 ## Dónde va cada cosa
+**El proyecto se trabaja en módulos, una sesión por módulo, en la misma carpeta y rama**: qué es de quién y por dónde
+se tocan, en [docs/modulos.md](docs/modulos.md). Tocar sólo lo propio; commitear sólo los archivos propios.
+
 Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`. La tabla completa, con las reglas que la
 ordenan y lo que todavía se le critica, en [docs/estructura.md](docs/estructura.md).
 - `game/balance_body/` — **el cuerpo con equilibrio, la base común de la meca y los jefes** (ver docs/base-comun.md):
