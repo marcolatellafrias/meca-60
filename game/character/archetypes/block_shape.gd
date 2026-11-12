@@ -220,30 +220,30 @@ const FACTORY := {
 		"head_h": 0.235, "atlas": 0.3, "foot": 0.26},
 	# 1,97: largo de piernas y de brazos, angosto y chato.
 	"lanky": {"legs": 1.0, "knee": 0.5, "leg_w": 0.115, "torso": 0.66, "lower": 0.31, "middle": 0.28, "chest": 0.35,
-		"depth": 0.18, "arm": 0.68, "elbow": 0.56, "arm_w": 0.1, "open": 4, "neck": 0.075, "neck_w": 0.1,
-		"head_h": 0.235, "atlas": 0.3, "foot": 0.28},
+		"depth": 0.18, "arm": 0.68, "elbow": 0.56, "arm_w": 0.1, "open": 4, "neck": 0.075, "neck_w": 0.13,
+		"head_h": 0.28, "atlas": 0.3, "foot": 0.28},
 	# 1,87: pecho ancho, cintura que baja, brazos y cuello gruesos.
 	"buff": {"legs": 0.9, "knee": 0.5, "leg_w": 0.17, "torso": 0.68, "lower": 0.35, "middle": 0.34, "chest": 0.44,
-		"depth": 0.26, "arm": 0.62, "elbow": 0.56, "arm_w": 0.16, "open": 12, "neck": 0.05, "neck_w": 0.17,
-		"head_h": 0.24, "atlas": 0.3, "foot": 0.28},
+		"depth": 0.26, "arm": 0.62, "elbow": 0.56, "arm_w": 0.16, "open": 12, "neck": 0.05, "neck_w": 0.19,
+		"head_h": 0.265, "atlas": 0.3, "foot": 0.28},
 	# 1,75: la panza tan ancha como el pecho (más ancha, los brazos le quedan en A), piernas cortas y gruesas, casi sin
 	# cuello.
 	"fat_man": {"legs": 0.8, "knee": 0.5, "leg_w": 0.19, "torso": 0.665, "lower": 0.44, "middle": 0.47, "chest": 0.47,
-		"depth": 0.34, "arm": 0.58, "elbow": 0.56, "arm_w": 0.15, "open": 16, "neck": 0.04, "neck_w": 0.16,
-		"head_h": 0.245, "atlas": 0.3, "foot": 0.27},
+		"depth": 0.34, "arm": 0.58, "elbow": 0.56, "arm_w": 0.15, "open": 16, "neck": 0.04, "neck_w": 0.18,
+		"head_h": 0.27, "atlas": 0.3, "foot": 0.27},
 	# 1,85: el gordo atlético: pesado pero de hombros, el pecho manda.
 	"fat_athletic": {"legs": 0.86, "knee": 0.5, "leg_w": 0.19, "torso": 0.7, "lower": 0.42, "middle": 0.44,
 		"chest": 0.46, "depth": 0.32, "arm": 0.62, "elbow": 0.56, "arm_w": 0.17, "open": 14, "neck": 0.04,
-		"neck_w": 0.18, "head_h": 0.25, "atlas": 0.3, "foot": 0.29},
+		"neck_w": 0.2, "head_h": 0.275, "atlas": 0.3, "foot": 0.29},
 	# 1,70: los hombros caídos y angostos, la cintura que se ensancha, flaco de miembros.
 	"old": {"legs": 0.8, "knee": 0.5, "leg_w": 0.12, "torso": 0.62, "lower": 0.33, "middle": 0.32, "chest": 0.33,
-		"depth": 0.22, "arm": 0.58, "elbow": 0.56, "arm_w": 0.1, "open": 7, "neck": 0.05, "neck_w": 0.11,
-		"head_h": 0.23, "atlas": 0.3, "foot": 0.26, "neck_fwd": true},
+		"depth": 0.22, "arm": 0.58, "elbow": 0.56, "arm_w": 0.1, "open": 7, "neck": 0.05, "neck_w": 0.14,
+		"head_h": 0.28, "atlas": 0.3, "foot": 0.26, "neck_fwd": true},
 	# 1,55: un chico de doce años, más grande que uno real para que no contraste tanto con los adultos (02/11/2026, el
 	# dios del juego: «hay demasiado contraste de tamaño»): la cabeza grande, el torso corto, finito.
 	"kid": {"legs": 0.74, "knee": 0.5, "leg_w": 0.11, "torso": 0.53, "lower": 0.30, "middle": 0.28, "chest": 0.31,
-		"depth": 0.18, "arm": 0.52, "elbow": 0.55, "arm_w": 0.095, "open": 6, "neck": 0.045, "neck_w": 0.095,
-		"head_h": 0.235, "atlas": 0.3, "foot": 0.23},
+		"depth": 0.18, "arm": 0.52, "elbow": 0.55, "arm_w": 0.095, "open": 6, "neck": 0.045, "neck_w": 0.12,
+		"head_h": 0.28, "atlas": 0.3, "foot": 0.23},
 }
 
 

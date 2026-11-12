@@ -6,12 +6,14 @@
 script = ExtResource("1_t2wlx")
 by_archetype = {
 0: {
+"slouch": 0.3,
 "arm_bentness": 0.05,
 "root_bounciness": 0.5,
 "stance_width": 1.8,
 "stride_reach": 0.63
 },
 1: {
+"slouch": 0.3,
 "acceleration": 0.7999999999999999,
 "speed": 0.35,
 "sprint_multiplier": 2.0,
@@ -23,7 +25,7 @@ by_archetype = {
 "shoulders_drop": -0.65,
 "shoulders_forward": 1.0,
 "side_swing": 2.0,
-"slouch": 0.3,
+"slouch": 0.45,
 "sprint_multiplier": 2.0,
 "step_height": 0.6,
 "stride_reach": 0.5,
@@ -57,6 +59,7 @@ by_archetype = {
 "stance_width": 1.05
 },
 6: {
+"slouch": 0.4,
 "acceleration": 0.30000000000000004,
 "arm_swing": 1.04,
 "speed": 0.4,

@@ -26,9 +26,10 @@ extends Resource
 const CUTS := 7
 ## LA MALLA, LOW POLY (13/11/2026, el usuario: «cuando veía… no se veían low poly, se veían como high poly… los edge
 ## loops discretos»): ocho lados alrededor, dos anillos en cada domo, y A LO LARGO SÓLO LOS ANILLOS QUE MANDAN —las dos
-## tapas y los cortes prendidos—: cada loop cut es una arista que se ve, y nada se interpola entre ellos. Las caras van
+## tapas y los cortes prendidos—: cada loop cut es una arista que se ve, y nada se interpola entre ellos. Las caras iban
 ## planas. *Antes la malla pasaba por una curva suave de 24 anillos (o 4 parejos en el «low poly»), así que los cortes
-## no eran aristas sino una curva, y las normales suaves la redondeaban más.*
+## no eran aristas sino una curva, y las normales suaves la redondeaban más.* Desde el 13/11/2026 (después) el
+## sombreado es suave otra vez, sobre esas mismas pocas caras (ver `build_arrays`).
 const AROUND := 8
 const DOME_RINGS := 2
 
@@ -244,8 +245,8 @@ static func _monotone(xs: PackedFloat32Array, ys: PackedFloat32Array, x: float) 
 
 ## ── LA MALLA ────────────────────────────────────────────────────────────�
 ## Del fondo del domo de abajo (y = 0) a la punta del de arriba, con el frente hacia −Z como todo el proyecto, low poly
-## (ver AROUND): los anillos son los de los domos, las dos tapas y los cortes prendidos, y nada más. Las CARAS VAN PLANAS:
-## cada triángulo con su normal. El bobinado se decide midiendo: si las caras quedaron mirando para adentro, se dan vuelta
+## (ver AROUND): los anillos son los de los domos, las dos tapas y los cortes prendidos, y nada más. EL SOMBREADO ES
+## SUAVE: vértices compartidos con la normal promediada. El bobinado se decide midiendo: si las caras quedaron mirando para adentro, se dan vuelta
 ## (ver la nota del proyecto sobre el frente horario de Godot).
 func build_mesh() -> ArrayMesh:
 	var mesh := ArrayMesh.new()
@@ -301,24 +302,26 @@ func build_arrays() -> Array:
 		var n := (verts[tris[i + 1]] - p0).cross(verts[tris[i + 2]] - p0)
 		outward += n.dot(Vector3(p0.x, 0.0, p0.z))
 	var flip := outward > 0.0
-	# LAS CARAS PLANAS: cada triángulo con sus tres puntos y su normal (con el frente horario de Godot, la normal hacia
-	# afuera es la cuenta al revés).
-	var points := PackedVector3Array()
+	# EL SOMBREADO SUAVE (13/11/2026, el usuario: «sombreado suave, nada más eso»): las mismas pocas caras, pero los
+	# vértices compartidos y cada normal el promedio de las caras que lo tocan (pesado por su área), así la luz pasa
+	# redondeada por las aristas. Con el frente horario de Godot, la normal hacia afuera es la cuenta al revés.
+	var order := PackedInt32Array()
 	var normals := PackedVector3Array()
+	normals.resize(verts.size())
 	for i in range(0, tris.size(), 3):
-		var a := verts[tris[i]]
-		var b := verts[tris[i + 2 if flip else i + 1]]
-		var c := verts[tris[i + 1 if flip else i + 2]]
-		var n := (c - a).cross(b - a).normalized()
-		points.append_array(PackedVector3Array([a, b, c]))
-		normals.append_array(PackedVector3Array([n, n, n]))
+		var ia := tris[i]
+		var ib := tris[i + 2 if flip else i + 1]
+		var ic := tris[i + 1 if flip else i + 2]
+		var n := (verts[ic] - verts[ia]).cross(verts[ib] - verts[ia])
+		for k in [ia, ib, ic]:
+			normals[k] += n
+		order.append_array(PackedInt32Array([ia, ib, ic]))
+	for i in normals.size():
+		normals[i] = normals[i].normalized()
 	var arrays := []
 	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = points
+	arrays[Mesh.ARRAY_VERTEX] = verts
 	arrays[Mesh.ARRAY_NORMAL] = normals
-	var order := PackedInt32Array()
-	for i in points.size():
-		order.append(i)
 	arrays[Mesh.ARRAY_INDEX] = order
 	return arrays
 

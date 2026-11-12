@@ -92,8 +92,14 @@ static func _neck_and_head(body: ProceduralBodyUtil, sizes: SkeletonSizesUtil, s
 		parts: Dictionary) -> void:
 	var neck := body._chain(["neck"])
 	if not neck.is_empty():
+		# EL CUELLO NUNCA MÁS ANCHO QUE LA CABEZA DONDE ENTRA (13/11/2026): su esfera de arriba va en el atlas, adentro de
+		# la cabeza, y si es más gruesa que la cabeza a esa altura asoma por delante de la cara como una papada.
+		var radius := shape.neck_width * 0.5 * u
+		if sizes.head_form != null:
+			var at := sizes.head_form.section_at_height(shape.atlas * sizes.head_form.total_height())
+			radius = minf(radius, at.x * 0.5 * 0.85)
 		_capsule(parts, "neck", (neck[0] as PackedInt32Array)[0], (neck[2] as Array)[0],
-			(neck[1] as PackedFloat32Array)[0], shape.neck_width * 0.5 * u)
+			(neck[1] as PackedFloat32Array)[0], radius)
 	var head := body._chain(["head"])
 	if head.is_empty() or sizes.head_form == null:
 		return
