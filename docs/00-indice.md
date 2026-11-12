@@ -13,6 +13,7 @@ empieza con su comentario largo).
 - [[recursos]] — los recursos de la meca: cubos de 63 cm (batería, componente eléctrico, munición, bomba) y cómo se van a enchufar.
 - [[poseer]] — la O posee lo que mirás, la T cambia la vista, y un cartel con sus controles.
 - [[sandbox]] — las parcelas, sus paredes, los paneles F por fila y la bola.
+- [[analisis-personaje]] — **qué de lo traído necesita la meca y qué no** (sólo lectura; para la segunda etapa de limpieza).
 - [[personajes-traidos]] — lo traído de character-parametric: el jugador, agarrar, sentarse.
 - [[red]] — el multijugador.
 
