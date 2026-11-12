@@ -80,12 +80,15 @@ Unas **9.000 líneas**, pero enganchado:
   ciudad, el tránsito, el clima ni la nave. Cada uno es un cable a cortar: al sacar quien lo nombra, se va.
 - **`PlayerController`** (976): mezcla lo del jugador con el panel de debug, los spawns de prueba y restos de ciudad.
 
-### D · Lo suelto (se puede borrar hoy, sin decidir nada)
-Unas **1.050 líneas**:
-- los 6 archivos que nadie nombra: `suit_style`, `suit_styles`, `bone_shape` (su cabecera ya dice «sin uso»),
-  `canonical_body`, `face_feature_mesh`, `face_features` (713);
-- tres clases sin ningún usuario: `ImpactDebug` (203), `Species` (93; su cabecera dice «hoy no lo aplica nadie») y
-  `StabilityHud` (46).
+### D · Lo suelto
+Unas **700 líneas**, y menos sueltas de lo que parecía:
+- 6 archivos que ningún script nombra: `suit_style`, `suit_styles`, `bone_shape` (su cabecera ya dice «sin uso»),
+  `canonical_body`, `face_feature_mesh`, `face_features`. **Pero tres de ellos los nombran recursos guardados**
+  (`character_looks.tres`, `face_features.tres`, `suit_styles.tres`): se van junto con esos recursos, al simplificar el
+  aspecto (grupo B). Hoy sólo se pudo borrar `canonical_body` (18 líneas).
+- *Corrección (13/11/2026): la primera versión de esta nota decía que `ImpactDebug`, `Species` y `StabilityHud` no
+  tenían usuarios. Estaba mal: se buscaron por el nombre del archivo y sus clases se llaman `ImpactDebugHUD`,
+  `EntitySpecie` y `StabilityHUD`; las tres se usan (el controlador del jugador, el HUD y la instanciación).*
 
 ## Los controles: ojo antes de borrarlos
 `ControllableInteractable` (421), `RotatingComponent` (259), `TwoAxisComponent` (69), `GearShiftComponent` (251) y
@@ -102,7 +105,7 @@ cambios de auto, yo los dejaría hasta diseñar las consolas.
 - **`UnitMesh`** vive en `game/city/props/` y lo usan las partículas y `MeshKit`: está en la carpeta equivocada.
 
 ## El orden que propondría
-1. **Lo suelto** (grupo D) y los paquetes de ciudad: unas 2.300 líneas, sin decisiones.
+1. **Los paquetes de ciudad** y lo poco suelto: unas 1.300 líneas, sin decisiones.
 2. **Decidir el personaje** (grupo B). De ahí sale si las herramientas de esculpir se quedan.
 3. **Decidir el operador de exhibición y los controles**, cuando se diseñen las consolas.
 4. **Entallar el núcleo** (grupo A): partir `BoneInstantiator`, limpiar `PlayerController`, renombrar.
