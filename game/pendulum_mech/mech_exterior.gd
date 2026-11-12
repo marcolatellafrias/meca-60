@@ -27,6 +27,8 @@ const NAMES := [
 	"dos tramos paralelos; se vuelve caminando por el balcón",
 	"zigzag de ida y vuelta, cada tramo en su carril",
 	"caja compacta: medio tramo, descanso y medio tramo",
+	"la 2, con el balcón de arriba igual al de abajo",
+	"la 2 corrida a un costado: balcones iguales, de la puerta al descanso",
 ]
 const HALF := HoverCube.SIZE * 0.5
 ## El ancho de un carril (la pasarela, los balcones, los tramos) y el alto de la baranda.
@@ -140,7 +142,26 @@ static func surfaces(which: int) -> Array[Dictionary]:
 				all.append(_s(1.2, 3.2, 2, 2, high, middle))
 				all.append(_s(0.3, 1.2, 1, 2, high, high))
 				all.append(_s(-0.9, 1.4, 0, 0, high, high))
+		4:
+			# LA 2, CON EL BALCÓN DE ARRIBA IGUAL AL DE ABAJO: los dos de punta a punta de la escalera.
+			_parallel(all, -2.9, -2.9)
+		5:
+			# LA 2, CORRIDA A UN COSTADO: la puerta en una punta del balcón y la escalera hacia el otro lado; los dos
+			# balcones iguales, de la puerta al descanso de arriba, y el tramo arranca al borde de la puerta.
+			_parallel(all, -0.9, -0.9)
 	return all
+
+
+## DOS TRAMOS PARALELOS que suben hacia +x, uno arriba del otro, en el carril del medio: el descanso de abajo arranca en
+## `start`; los balcones del segundo y del tercer piso, iguales, van desde `balcony` hasta el descanso de arriba.
+static func _parallel(all: Array[Dictionary], start: float, balcony: float) -> void:
+	for index in 2:
+		var low := _floor_y(index)
+		var high := _floor_y(index + 1)
+		all.append(_s(start, start + 0.9, 1, 1, low, low))
+		all.append(_s(start + 0.9, start + 4.9, 1, 1, low, high))
+		all.append(_s(start + 4.9, start + 5.8, 1, 1, high, high))
+		all.append(_s(balcony, start + 5.8, 0, 0, high, high))
 
 
 ## La altura de `surface` en `x`.

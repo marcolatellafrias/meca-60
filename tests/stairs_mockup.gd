@@ -7,12 +7,16 @@ extends Node3D
 const GAP := 32.0
 
 var _folder := ""
+## Desde qué número se captura (--desde=5).
+var _first := 0
 var _eye: Camera3D = null
 var _title: Label = null
 
 
 func _ready() -> void:
 	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--desde="):
+			_first = int(argument.trim_prefix("--desde=")) - 1
 		if argument.begins_with("--salida="):
 			_folder = argument.trim_prefix("--salida=")
 	var layer := CanvasLayer.new()
@@ -61,7 +65,7 @@ func _ready() -> void:
 	await get_tree().create_timer(1.5).timeout
 	for mech in mechs:
 		mech._label.visible = false
-	for which in mechs.size():
+	for which in range(_first, mechs.size()):
 		var at := mechs[which].global_position
 		for other in mechs.size():
 			mechs[other].visible = other == which
