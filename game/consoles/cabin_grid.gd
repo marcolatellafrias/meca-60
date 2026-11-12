@@ -8,7 +8,8 @@ extends RefCounted
 ##
 ##   · UNA SOLA CELDA PARA TODO (`CELL`): 1/16 del cubo de recurso (3,94 cm), casi la de los tableros de la nave (4 cm,
 ##     del tamaño de la mano), y el cubo de 63 cm es 16 × 16 justas: un hueco de recurso encaja en cualquier tablero.
-##     Toda medida de la cabina es CELDAS ENTERAS.
+##     Toda medida de la cabina es CELDAS ENTERAS. OJO: LA PISADA DE LAS ESCALERAS DE TODO EL JUEGO (Stairs.TREAD, del
+##     módulo Mundo) son 8 de estas celdas; cambiar `CELL` o el nombre de la clase, avisándole.
 ##   · EL MÓDULO: un cuadrado de 3 cubos (48 celdas, 1,89 m). Cada piso es una grilla de `COLUMNS` × `ROWS` módulos,
 ##     entre sus paredes. LA COLUMNA 0 ES LA DE LA IZQUIERDA (−X) y LA FILA 0 LA DEL FRENTE (−Z).
 ##   · LOS PISOS: `FLOORS`, de `FLOOR_CELLS` cada uno, de losa a losa.
