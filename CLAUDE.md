@@ -128,6 +128,9 @@ en guardia (hombro y codo esferas, muñeca un cubo, dedos cilindros, el pulgar e
 **Shift corre** (una banda sobre la caminata que se gana y se pierde despacio, como allá), **Ctrl se agacha** (acorta
 el palo del péndulo), **espacio** carga y suelta el **salto** (se carga altura) y, en el aire, el **propulsor**. En el
 aire va derecha y sin apoyo; aterriza cuando la punta del palo vuelve a tocar. **F1** su panel, **F2** pegarle arriba.
+**Adentro se camina** (**U** sube al piso del medio): es un marco (`MotionFrame`) como el torso de la meca de pelea; sus
+losas y paredes no chocan con el mundo (eso es de la caja 1:1), son de donde el marco copia su sombra, y la caja deja de
+chocar con los que van adentro.
 
 **Las parcelas tienen paredes invisibles** (como allá, `SandboxParcel` LOS BORDES): las ve lo que se mueve con física y
 vive en una parcela; el jugador y la bola pasan. Las mecas de pelea, que se mueven por código, le preguntan a su parcela
@@ -201,6 +204,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   la caída con la recuperación cuadro a cuadro. Para mirar el aspecto rápido; no mide.
 - `tests/pendulum_mech_look.tscn` (con ventana, unos 25 segundos, sin el sandbox): la meca péndulo de frente, de atrás y
   desde el asiento; agacharse, el salto (un toque y cargado), el propulsor y correr, con sus números.
+- `tests/pendulum_ride_check.tscn` (con ventana, unos 30 segundos): ir adentro de la meca péndulo; el jugador con cuerpo
+  sube, y se mira qué le pasa mientras la meca se corre, salta y se cae.
 - `tests/possess_check.tscn` (con ventana, unos 15 segundos): poseer; mirar el cubo péndulo, la O, las tres vistas con
   la T, soltar y retomar sin mirar; capturas del cartel.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,

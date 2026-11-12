@@ -9,6 +9,12 @@ extends PendulumCube
 ## SE ARMA CON PAREDES DE VERDAD, no con una caja pintada (`_build_cabin`): TRES PISOS con la proporción del cubo, cada
 ## uno con su vidrio y sus parantes al frente —un hueco con un vidrio: se ve para adentro y para afuera—, el HUECO DE LA
 ## PUERTA atrás (sin escalera todavía) y su asiento. La primera persona es la del asiento del medio.
+## ADENTRO SE CAMINA (12/11/2026; el usuario: «falta colisiones entre los pisos»; «sí, con el marco»), como en la meca de
+## pelea: es un MARCO (MotionFrame, de character-parametric). Sus losas y paredes tienen forma de choque, pero NO CHOCAN
+## CON EL MUNDO: lo de afuera —el piso, las bolas, las paredes— lo sigue recibiendo la caja de siempre, 1:1. Son las
+## formas de `_interior`, de las que el marco hace su SOMBRA: el que entra al volumen (el cubo) pasa a ir en el marco,
+## que lo lleva con la meca, y adentro choca sólo con esa sombra. Y la caja de afuera deja de chocar con él (`_ride`).
+## Todavía no hay escalera: la U del sandbox lo sube (`board`), o el ente entra volando.
 ## LOS BRAZOS (`_build_arms`), dibujo: el hombro y el codo son ESFERAS, la muñeca una PALMA apenas más gruesa que un
 ## dedo, y los dedos, con sus FALANGES, cilindros; todas piezas separadas; el pulgar va en el canto de arriba de la palma.
 ## Parada van en guardia; AL CAER SE RECOGEN A LOS COSTADOS de la caja, y se estiran al enderezarse, con las piernas
@@ -55,12 +61,18 @@ var _space_was := false
 var _thrust_armed := false
 ## Las piezas de cada brazo (el izquierdo y el derecho): `shoulder`, `upper`, `elbow`, `forearm`, `hand`.
 var _arms: Array[Dictionary] = []
+## EL MARCO: lleva a los que van adentro (ver arriba). `_interior`, las formas de sus losas y paredes (no chocan con
+## nada: son de donde el marco copia su sombra); `_riders`, los que hoy van adentro y la caja de afuera no ve.
+var frame: MotionFrame = null
+var _interior: StaticBody3D = null
+var _riders := {}
 
 
 func _ready() -> void:
 	super()
 	name = "Meca péndulo"
 	_build_arms()
+	_build_frame()
 
 
 func tuning() -> HoverCubeSettings:
@@ -70,6 +82,49 @@ func tuning() -> HoverCubeSettings:
 func _physics_process(delta: float) -> void:
 	super(delta)
 	_place_arms()
+	_ride()
+
+
+## ── ADENTRO: EL MARCO ────────────────────────────────────────────────────────────────────────────────────────────
+
+## El marco, con el cubo de volumen, y su sombra: la copia de las formas de `_interior`. El marco copia las de un
+## cuerpo de la capa 1; `_interior` lo es sólo mientras se copia, y después no choca con nada.
+func _build_frame() -> void:
+	frame = MotionFrame.new()
+	add_child(frame)
+	frame.floor_height = floor_y(0) + SLAB * 0.5
+	frame.add_volume(AABB(Vector3.ONE * -SIZE * 0.5, Vector3.ONE * SIZE))
+	_interior.collision_layer = 1
+	frame.cast_shadow(_interior)
+	_interior.collision_layer = 0
+	_interior.collision_mask = 0
+
+
+## LA CAJA DE AFUERA NO CHOCA CON LOS QUE VAN ADENTRO: ellos ya dejaron de mirar al mundo (ver MotionFrame.join), pero
+## la caja los seguía viendo, y es maciza. Se mira quién va en el marco en cada paso.
+func _ride() -> void:
+	var inside := {}
+	for body: Variant in frame._members.keys():
+		if is_instance_valid(body) and body is PhysicsBody3D:
+			inside[body] = true
+			if not _riders.has(body):
+				add_collision_exception_with(body as PhysicsBody3D)
+	for body: Variant in _riders.keys():
+		if not inside.has(body) and is_instance_valid(body):
+			remove_collision_exception_with(body as PhysicsBody3D)
+	_riders = inside
+
+
+## SUBE AL JUGADOR (la U del sandbox): al piso del medio, detrás del asiento, mirando al frente.
+func board() -> void:
+	var player := DesignSandbox.player_of(get_tree())
+	if player == null:
+		return
+	if driving:
+		SandboxPossession.of(get_tree()).release()
+	if player.is_seated and player.current_seat is SeatInteractable:
+		(player.current_seat as SeatInteractable).release_occupant_in_place()
+	player.place_at(global_transform * (Vector3(0.0, floor_y(1) + SLAB * 0.5 + 0.05, -SIZE * 0.5 + 3.2)), _yaw())
 
 
 ## ── LO QUE HACE ──────────────────────────────────────────────────────────────────────────────────────────────────
@@ -196,11 +251,16 @@ const WALL := 0.2
 ## el antepecho, el HUECO con su vidrio y sus parantes y el dintel, atrás la pared con el HUECO de la puerta, y un
 ## asiento con su consola. Las paredes son lo que se ve de afuera y de adentro: por los huecos se ve del otro lado.
 func _build_cabin() -> void:
+	_interior = StaticBody3D.new()
+	_interior.name = "Interior"
+	_interior.collision_layer = 0
+	_interior.collision_mask = 0
+	add_child(_interior)
 	var metal := Clay.METAL
 	var half := SIZE * 0.5 - WALL * 0.5
 	for index in FLOORS + 1:
 		var y := clampf(floor_y(index), -half, half)
-		Clay.box(_look, Vector3(SIZE, SLAB, SIZE), Vector3(0, y, 0), metal.darkened(0.12))
+		_solid(Vector3(SIZE, SLAB, SIZE), Vector3(0, y, 0), metal.darkened(0.12))
 	for index in FLOORS:
 		var base := floor_y(index) + SLAB * 0.5
 		var wall_h := FLOOR_HEIGHT - SLAB
@@ -208,23 +268,31 @@ func _build_cabin() -> void:
 		var glass_mid := base + SILL + GLASS * 0.5
 		var lintel := wall_h - SILL - GLASS
 		for side: float in [-1.0, 1.0]:
-			Clay.box(_look, Vector3(WALL, wall_h, SIZE - WALL * 2.0), Vector3(side * half, mid, 0), metal)
+			_solid(Vector3(WALL, wall_h, SIZE - WALL * 2.0), Vector3(side * half, mid, 0), metal)
 		# El frente: el antepecho, el dintel, los parantes y UN vidrio en el hueco.
-		Clay.box(_look, Vector3(SIZE, SILL, WALL), Vector3(0, base + SILL * 0.5, -half), metal)
-		Clay.box(_look, Vector3(SIZE, lintel, WALL), Vector3(0, base + wall_h - lintel * 0.5, -half), metal)
+		_solid(Vector3(SIZE, SILL, WALL), Vector3(0, base + SILL * 0.5, -half), metal)
+		_solid(Vector3(SIZE, lintel, WALL), Vector3(0, base + wall_h - lintel * 0.5, -half), metal)
+		# El vidrio no se atraviesa.
+		Clay.shape_box(_interior, Vector3(SIZE, GLASS, WALL * 0.5), Vector3(0, glass_mid, -half))
 		for post_x: float in [-half, -1.6, 1.6, half]:
 			Clay.box(_look, Vector3(WALL, GLASS, WALL), Vector3(post_x, glass_mid, -half), metal.darkened(0.2))
 		Clay.box(_look, Vector3(SIZE - WALL * 2.0, GLASS, 0.04), Vector3(0, glass_mid, -half), Clay.GLASS)
 		# Atrás: la pared a los costados y arriba del hueco de la puerta.
 		var beside := (SIZE - DOOR.x) * 0.5
 		for side: float in [-1.0, 1.0]:
-			Clay.box(_look, Vector3(beside, wall_h, WALL), Vector3(side * (DOOR.x + beside) * 0.5, mid, half), metal)
-		Clay.box(_look, Vector3(DOOR.x, wall_h - DOOR.y, WALL), Vector3(0, base + DOOR.y + (wall_h - DOOR.y) * 0.5, half), metal)
+			_solid(Vector3(beside, wall_h, WALL), Vector3(side * (DOOR.x + beside) * 0.5, mid, half), metal)
+		_solid(Vector3(DOOR.x, wall_h - DOOR.y, WALL), Vector3(0, base + DOOR.y + (wall_h - DOOR.y) * 0.5, half), metal)
 		# El asiento y su consola.
 		var seat := Vector3(0.0, base, -SIZE * 0.5 + 1.6)
 		Clay.box(_look, Vector3(0.6, 0.5, 0.6), seat + Vector3(0, 0.25, 0), Clay.DARK)
 		Clay.box(_look, Vector3(0.6, 0.7, 0.12), seat + Vector3(0, 0.85, 0.3), Clay.DARK)
-		Clay.box(_look, Vector3(1.4, 0.8, 0.5), seat + Vector3(0, 0.4, -0.95), metal.darkened(0.25))
+		_solid(Vector3(1.4, 0.8, 0.5), seat + Vector3(0, 0.4, -0.95), metal.darkened(0.25))
+
+
+## Una pieza de la cabina que se ve y que, adentro, se choca (ver EL MARCO).
+func _solid(size: Vector3, at: Vector3, color: Color) -> void:
+	Clay.box(_look, size, at, color)
+	Clay.shape_box(_interior, size, at)
 
 
 ## ── LOS BRAZOS (dibujo) ──────────────────────────────────────────────────────────────────────────────────────────

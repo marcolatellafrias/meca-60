@@ -8,8 +8,19 @@ con cabina de tres pisos, brazos, y correr, agacharse, saltar y volar. El cubo p
 ## Por dentro y por fuera
 Se arma con **paredes de verdad**, no con una caja pintada: **tres pisos** con la proporción del cubo (2,67 m cada uno),
 cada uno con el hueco del frente con su **vidrio** y sus parantes (se ve para adentro y para afuera), **el hueco de la
-puerta atrás** (sin escalera todavía) y un asiento con su consola. Es dibujo: todavía no se camina adentro. La primera
-persona de [[poseer]] es la del asiento del medio.
+puerta atrás** (sin escalera todavía) y un asiento con su consola. La primera persona de [[poseer]] es la del asiento
+del medio.
+
+## Adentro se camina
+Como en la meca de pelea, es un **marco** (`MotionFrame`, de character-parametric):
+- Las losas y las paredes tienen forma de choque, pero **no chocan con el mundo**: el piso, las bolas y las paredes de
+  afuera los sigue recibiendo la caja 1:1 de siempre.
+- El que entra al volumen (el cubo) pasa a ir **en el marco**: la meca lo lleva con ella, y adentro choca sólo con la
+  copia de esas losas y paredes (la «sombra» del marco). La caja de afuera deja de chocar con él.
+- Todavía no hay escalera: **U** lo sube al piso del medio, o el ente entra volando.
+
+Medido (12/11/2026), con el jugador con cuerpo parado en el piso del medio: la meca se corre 35 m y él se mueve 4 cm en
+la cabina; en un salto no se mueve; cuando la meca se cae, él se cae adentro y queda adentro.
 
 ## Los brazos
 Dibujo: el hombro y el codo son **esferas**; la muñeca, una **palma** apenas más gruesa que un dedo; y los dedos, cuatro

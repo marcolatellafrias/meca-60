@@ -19,10 +19,19 @@ func max_footprint() -> Vector2:
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"el cubo péndulo con tres pisos, puertas y brazos",
-		"mirándola, O la posee (T cambia la vista)",
+		"mirándola, O la posee (T cambia la vista) · U subirse (adentro se camina)",
 		"Shift corre · Ctrl se agacha",
 		"espacio: mantener carga el salto, soltar salta; en el aire, propulsor",
 	])
+
+
+func parcel_options() -> Array[Dictionary]:
+	var options := super()
+	options.append({"key": KEY_U, "label": "subirse a la meca (al piso del medio)",
+		"apply": func(parcel: SandboxParcel) -> void:
+			for mech: PendulumMech in parcel.find_children("*", "PendulumMech", true, false):
+				mech.board()})
+	return options
 
 
 func _make_cube() -> HoverCube:

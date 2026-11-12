@@ -1,0 +1,95 @@
+extends Node
+
+## IR ADENTRO DE LA MECA PÉNDULO, PROBADO POR CÓDIGO (unos 30 segundos): el jugador con cuerpo sube (la U), queda parado
+## en el piso del medio, y se mira qué le pasa mientras la meca se corre, salta y se cae. Con ventana, capturas.
+##   tools/godot_ventana.sh res://tests/pendulum_ride_check.tscn -- --salida=C:/carpeta
+
+var _folder := ""
+var _mech: PendulumMech = null
+var _body: RigidBody3D = null
+
+
+func _ready() -> void:
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--salida="):
+			_folder = argument.trim_prefix("--salida=")
+	var sandbox := (load("res://game/sandbox/sandbox.tscn") as PackedScene).instantiate() as DesignSandbox
+	add_child(sandbox)
+	await _frames(10)
+	_mech = sandbox.find_children("*", "PendulumMech", true, false)[0] as PendulumMech
+	sandbox.toggle_body()
+	await _seconds(0.8)
+	var player := sandbox.local_player
+	_body = player.char_rigidbody
+	await _seconds(1.0)
+	_mech.board()
+	await _seconds(2.0)
+	var floor_at := PendulumMech.floor_y(1) + PendulumMech.SLAB * 0.5
+	print("SUBIÓ: en el marco %s · la caja no lo ve %s · pies a %.2f m del piso del medio · caído %s" % [
+		MotionFrame.frame_of(_body) == _mech.frame, _mech._riders.has(_body), _feet() - floor_at, player.ragdoll_util.is_active])
+	await _shot("1_adentro")
+	# LA MECA SE CORRE (empujada 2,5 s): el de adentro va con ella.
+	var before := _local()
+	var start := _mech.global_position
+	for i in 600:
+		_mech.apply_central_force(-_mech.global_basis.z * HoverCube.CUBE_MASS * 11.0)
+		await get_tree().physics_frame
+	await _seconds(1.5)
+	print("LA MECA SE CORRIÓ %.1f m: el de adentro se movió %.2f m en la cabina · sigue en el marco %s · caído %s" % [
+		start.distance_to(_mech.global_position), before.distance_to(_local()), MotionFrame.frame_of(_body) == _mech.frame,
+		player.ragdoll_util.is_active])
+	await _shot("2_despues_de_correrse")
+	# SALTA.
+	before = _local()
+	_mech.linear_velocity.y = 12.0
+	_mech._airborne = true
+	_mech._grounded = false
+	await _seconds(3.5)
+	print("SALTÓ y aterrizó: el de adentro se movió %.2f m en la cabina · pies a %.2f m del piso · en el marco %s · caído %s" % [
+		before.distance_to(_local()), _feet() - floor_at, MotionFrame.frame_of(_body) == _mech.frame,
+		player.ragdoll_util.is_active])
+	# SE CAE Y SE RECUPERA.
+	_mech.knock(true)
+	var clock := 0.0
+	while clock < 14.0 and not (_mech.falls > 0 and _mech.state == HoverCube.State.HOVER):
+		await get_tree().physics_frame
+		clock += 1.0 / 240.0
+	await _seconds(3.0)
+	var inside := _local()
+	print("SE CAYÓ y se recuperó (%.1f s): el de adentro quedó %s (en la cabina: %.1f, %.1f, %.1f) · en el marco %s · caído %s" % [
+		clock, "ADENTRO" if maxf(absf(inside.x), maxf(absf(inside.y), absf(inside.z))) < HoverCube.SIZE * 0.5 else "AFUERA",
+		inside.x, inside.y, inside.z, MotionFrame.frame_of(_body) == _mech.frame, player.ragdoll_util.is_active])
+	await _shot("3_despues_de_caerse")
+	get_tree().quit()
+
+
+## Dónde está el de adentro, en el espacio de la meca.
+func _local() -> Vector3:
+	return _mech.global_transform.affine_inverse() * _body.global_position
+
+
+## La altura de sus pies, en el espacio de la meca (el centro de su cuerpo menos lo que hay hasta el piso).
+func _feet() -> float:
+	var hit := _body.get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(
+		_body.global_position, _body.global_position + Vector3.DOWN * 6.0, MotionFrame.LAYER))
+	if hit.is_empty():
+		return -99.0
+	return (_mech.global_transform.affine_inverse() * (hit["position"] as Vector3)).y
+
+
+func _frames(count: int) -> void:
+	for i in count:
+		await get_tree().process_frame
+
+
+func _seconds(seconds: float) -> void:
+	await get_tree().create_timer(seconds).timeout
+
+
+func _shot(file_name: String) -> void:
+	if _folder.is_empty() or DisplayServer.get_name() == "headless":
+		return
+	await _frames(2)
+	var path := "%s/%s.png" % [_folder, file_name]
+	get_viewport().get_texture().get_image().save_png(path)
+	print("CAPTURA ", path)
