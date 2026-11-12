@@ -42,6 +42,11 @@ en un canto, 6,9 en una punta) y gira sólo con la altura que le sobra; girar lo
 se regula solo. *Antes subía hasta poder girar entero y recién ahí se enderezaba.* Derecho, se traba y vuelve a la
 línea mirando hacia donde miraba.
 
+## La cabina
+Por dentro tiene un piso como los de la [[meca]]: losa, techo, paredes, y al frente antepecho, vidrio con parantes y
+dintel; un asiento con su consola. Es dibujo, va con el cubo y su inclinación. Es desde donde se mira en primera
+persona al [[poseer]]lo.
+
 ## Cómo se prueba
 - **J** tira la bola, **K** pasa por los cuatro tiros: lenta (30 m/s) o rápida (100 m/s), que lo voltea o no.
 - **F1** las perillas (`HoverCubeSettings`), **F2** volcarlo suave o fuerte.

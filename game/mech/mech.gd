@@ -203,7 +203,7 @@ func possess_name() -> String:
 func possess_controls() -> PackedStringArray:
 	return PackedStringArray([
 		"W/S camina · A/D gira las piernas · Shift se afirma",
-		"mouse gira el torso",
+		"mouse mira y apunta: el torso lo alcanza con su demora",
 		"clic izq. / der.: mantener carga, soltar pega",
 		"el mouse dobla la piña que sale · G cañón",
 	])
@@ -220,13 +220,17 @@ func possess_end() -> void:
 	right_arm.cancel()
 
 
-## La cámara: en primera persona, en el frente del torso; en tercera, atrás del torso, por sobre el hombro, siguiéndolo
-## con un poco de atraso (así se ve cuánto tarda en girar).
+## La cámara. EN PRIMERA PERSONA, LA DEL QUE VA SENTADO EN EL PUESTO DEL MEDIO (lo pidió el usuario el 12/11/2026:
+## «debería ser uno de los asientos… como lo van a ver los jugadores… el vidrio, los parantes»): los ojos sobre esa
+## silla, fijos al torso, y la cabeza mirando adonde apunta el mouse YA (`torso_aim`), mientras el torso la alcanza con
+## su demora. En tercera, atrás del torso, por sobre el hombro, siguiéndolo con un poco de atraso.
 func possess_camera(first: bool, delta: float) -> Transform3D:
 	if first:
 		_chase_yaw = torso_yaw()
-		var eyes := Vector3(0.0, MechTorso.floor_y(1) + 1.6, -MechTorso.DEPTH * 0.5 - 0.6)
-		return torso.global_transform * Transform3D(Basis.from_euler(Vector3(_chase_pitch, 0.0, 0.0)), eyes)
+		var seat := torso.seats[MechSeat.Station.ARMS]
+		var eyes := seat.position + Vector3(0.0, ShipStyle.current.seat_eye_height, 0.0)
+		var head := Basis(Vector3.UP, wrapf(torso_aim - torso_yaw(), -PI, PI)) * Basis(Vector3.RIGHT, _chase_pitch)
+		return torso.global_transform * Transform3D(head, eyes)
 	var centre := global_position + Vector3(0.0, MechBody.WAIST + MechTorso.top_y() * 0.5, 0.0)
 	_chase_yaw = lerp_angle(_chase_yaw, torso_yaw(), 1.0 - exp(-5.0 * delta) if delta > 0.0 else 1.0)
 	var view := Basis.from_euler(Vector3(_chase_pitch, _chase_yaw, 0.0))

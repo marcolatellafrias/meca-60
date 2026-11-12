@@ -100,8 +100,9 @@ func _ready() -> void:
 	# PRIMERA PERSONA (T).
 	await _key(KEY_T)
 	await _seconds(0.3)
-	print("PRIMERA PERSONA: cámara a %.1f m del frente del torso" % get_viewport().get_camera_3d().global_position.distance_to(
-		mech.torso.global_transform * Vector3(0, MechTorso.floor_y(1) + 1.6, -MechTorso.DEPTH * 0.5)))
+	print("PRIMERA PERSONA: cámara a %.1f m de los ojos del puesto del medio" % get_viewport().get_camera_3d().global_position.distance_to(
+		mech.torso.global_transform * (mech.torso.seats[MechSeat.Station.ARMS].position
+			+ Vector3(0, ShipStyle.current.seat_eye_height, 0))))
 	await _shot("Desde afuera, en primera persona", "5_primera_persona")
 	# T dos veces: pasa por la vista libre y vuelve a la tercera persona.
 	await _key(KEY_T)

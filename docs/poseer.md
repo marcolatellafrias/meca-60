@@ -12,7 +12,9 @@ con sus controles físicos). Separa dos cosas: **a quién le llegan las teclas**
 - **T**, poseyendo: pasa por las tres vistas.
   - **Libre**: la cámara del jugador, donde quedó.
   - **Tercera persona**.
-  - **Primera persona**.
+  - **Primera persona**: la del que va **sentado adentro** (en la meca, el puesto del medio; en los cubos, el asiento
+    de su cabina), viendo el vidrio y los parantes como lo van a ver los jugadores. Los ojos van fijos al cuerpo (se
+    inclina y cae con él) y **el mouse mueve la cabeza al instante**; el torso la alcanza con su demora.
 - **El cartel** (abajo a la derecha): qué se posee, la vista y **sus controles**, que los dice lo poseído.
 
 ## Qué se puede poseer
@@ -31,4 +33,6 @@ Pendiente: los personajes (hay que pasarles el control del jugador).
 Test: `tests/possess_check.tscn`.
 
 ## Historia
+- 12/11/2026: la primera persona pasa del frente de la caja al asiento de adentro, con la cabeza libre; los cubos
+  ganan una cabina por dentro (un piso con vidrio y parantes, como los de la meca).
 - 12/11/2026: nace, y reemplaza al «manejar desde afuera» que tenían por separado la meca (O, T, E) y los cubos (O, E).

@@ -260,14 +260,18 @@ func knock(strong: bool) -> void:
 ## EL MOUSE, manejándolo: hacia dónde mirar.
 func possess_controls() -> PackedStringArray:
 	return PackedStringArray(["W/S adelante y atrás (hacia donde mira el torso)", "A/D de costado",
-		"mouse gira el torso"])
+		"mouse mira: la cabeza al instante, el torso la alcanza"])
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	var motion := event as InputEventMouseMotion
-	if driving and motion != null and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and state == State.HOVER:
-		aim_yaw -= motion.relative.x * 0.0025 * GameOptions.mouse_sensitivity
-		get_viewport().set_input_as_handled()
+## El mouse de costado pide hacia dónde mirar: la cabeza del que va sentado mira ahí YA, y el torso la alcanza con su
+## demora (lo pidió el usuario: «que con delay se gire la nave, pero que yo pueda mirar normalmente»).
+func _mouse_turn(amount: float) -> void:
+	if state == State.HOVER:
+		aim_yaw -= amount
+
+
+func _head_yaw() -> float:
+	return wrapf(aim_yaw - _yaw(), -PI, PI) if state == State.HOVER else 0.0
 
 
 ## ── LA PELVIS Y LAS PIERNAS (dibujo) ─────────────────────────────────────────────────────────────────────────────

@@ -187,11 +187,14 @@ func possess_controls() -> PackedStringArray:
 	return PackedStringArray(["W/S adelante y atrás (las piernas)", "A/D gira las piernas", "mouse gira el torso"])
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	var motion := event as InputEventMouseMotion
-	if driving and motion != null and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and state == State.HOVER:
-		torso_yaw -= motion.relative.x * 0.0025 * GameOptions.mouse_sensitivity
-		get_viewport().set_input_as_handled()
+## El mouse de costado gira el torso (el cubo, con su cabina): la cabeza va con él.
+func _mouse_turn(amount: float) -> void:
+	if state == State.HOVER:
+		torso_yaw -= amount
+
+
+func _head_yaw() -> float:
+	return 0.0
 
 
 ## AL TROPEZAR, el giro del torso pasa al cuerpo (con la línea, que se mide en el espacio del cuerpo): cae como se veía.

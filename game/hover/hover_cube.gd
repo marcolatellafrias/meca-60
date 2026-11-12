@@ -81,6 +81,8 @@ var _knock := Vector3.ZERO
 ## POSEÍDO (la O del sandbox, ver SandboxPossession): lee las teclas. W/S adelante y atrás, A/D gira.
 var driving := false
 var _chase_yaw := 0.0
+## Hacia dónde mira la cabeza del que va sentado, sobre la cabina (x el giro, y arriba y abajo; radianes): el mouse.
+var _head := Vector2.ZERO
 var _shape: CollisionShape3D = null
 var _clock := 0.0
 var _nozzles: Array[Dictionary] = []
@@ -111,6 +113,7 @@ func _ready() -> void:
 	# Una franja en el frente, para leer hacia dónde mira y cuánto se inclina.
 	Clay.box(_look, Vector3(SIZE * 0.7, SIZE * 0.12, 0.05), Vector3(0, SIZE * 0.25, -SIZE * 0.5 - 0.03), Clay.YELLOW)
 	_build_nozzles()
+	_build_cabin()
 	_label = Label3D.new()
 	_label.top_level = true
 	_label.font_size = 64
@@ -121,6 +124,46 @@ func _ready() -> void:
 	add_child(_label)
 	add_to_group(SandboxPossession.GROUP)
 	_lock(true)
+
+
+## LA CABINA, por dentro (lo pidió el usuario el 12/11/2026: la primera persona es «uno de los asientos… como si
+## estuvieras sentado… van a ver el vidrio, van a ver los parantes»): un piso en el medio del cubo como los de la meca
+## (MechTorso): la losa, el techo, las paredes, y al frente el antepecho, el vidrio con sus parantes y el dintel; un
+## asiento con su consola. Es dibujo, va con el cubo (y con su inclinación). De afuera la tapa la caja; el vidrio se
+## dibuja también por fuera.
+const CABIN_FLOOR := -1.6
+const CABIN_HEIGHT := 3.05
+const CABIN_SILL := 0.9
+const CABIN_GLASS := 1.9
+## El asiento (en el piso de la cabina) y los ojos del que va sentado, en el espacio del cubo.
+const CABIN_SEAT := Vector3(0.0, CABIN_FLOOR, -SIZE * 0.5 + 1.6)
+
+
+func _build_cabin() -> void:
+	var metal := Clay.METAL.darkened(0.08)
+	var half := SIZE * 0.5 - 0.08
+	var mid := CABIN_FLOOR + CABIN_HEIGHT * 0.5
+	Clay.box(_look, Vector3(SIZE - 0.1, 0.12, SIZE - 0.1), Vector3(0, CABIN_FLOOR - 0.06, 0), metal.darkened(0.15))
+	Clay.box(_look, Vector3(SIZE - 0.1, 0.12, SIZE - 0.1), Vector3(0, CABIN_FLOOR + CABIN_HEIGHT + 0.06, 0), metal.darkened(0.15))
+	for side: float in [-1.0, 1.0]:
+		Clay.box(_look, Vector3(0.1, CABIN_HEIGHT, SIZE - 0.1), Vector3(side * half, mid, 0), metal)
+	Clay.box(_look, Vector3(SIZE - 0.1, CABIN_HEIGHT, 0.1), Vector3(0, mid, half), metal)
+	# El frente: el antepecho, el vidrio con sus parantes y el dintel.
+	var glass_mid := CABIN_FLOOR + CABIN_SILL + CABIN_GLASS * 0.5
+	var lintel := CABIN_HEIGHT - CABIN_SILL - CABIN_GLASS
+	Clay.box(_look, Vector3(SIZE - 0.1, CABIN_SILL, 0.1), Vector3(0, CABIN_FLOOR + CABIN_SILL * 0.5, -half), metal)
+	Clay.box(_look, Vector3(SIZE - 0.1, lintel, 0.1), Vector3(0, CABIN_FLOOR + CABIN_HEIGHT - lintel * 0.5, -half), metal)
+	for post_x: float in [-half + 0.1, -1.6, 1.6, half - 0.1]:
+		Clay.box(_look, Vector3(0.22, CABIN_GLASS, 0.22), Vector3(post_x, glass_mid, -half), metal.darkened(0.2))
+	Clay.box(_look, Vector3(SIZE - 0.4, CABIN_GLASS, 0.04), Vector3(0, glass_mid, -half - 0.04), Clay.GLASS)
+	# Por fuera, el vidrio y los parantes sobre la cara del frente.
+	Clay.box(_look, Vector3(SIZE - 0.4, CABIN_GLASS, 0.04), Vector3(0, glass_mid, -SIZE * 0.5 - 0.03), Clay.GLASS)
+	for post_x: float in [-1.6, 1.6]:
+		Clay.box(_look, Vector3(0.22, CABIN_GLASS, 0.06), Vector3(post_x, glass_mid, -SIZE * 0.5 - 0.05), metal.darkened(0.2))
+	# El asiento y su consola.
+	Clay.box(_look, Vector3(0.6, 0.5, 0.6), CABIN_SEAT + Vector3(0, 0.25, 0), Clay.DARK)
+	Clay.box(_look, Vector3(0.6, 0.7, 0.12), CABIN_SEAT + Vector3(0, 0.85, 0.3), Clay.DARK)
+	Clay.box(_look, Vector3(1.4, 0.9, 0.5), CABIN_SEAT + Vector3(0, 0.45, -0.95), metal.darkened(0.25))
 
 
 ## CUATRO TOBERAS POR CARA: su lugar en el cubo, hacia dónde echa (afuera de su cara), su malla y su humo.
@@ -467,7 +510,7 @@ func possess_name() -> String:
 
 
 func possess_controls() -> PackedStringArray:
-	return PackedStringArray(["W/S adelante y atrás", "A/D gira"])
+	return PackedStringArray(["W/S adelante y atrás", "A/D gira", "mouse mira (la cabeza del que va sentado)"])
 
 
 func possess_begin() -> void:
@@ -479,15 +522,38 @@ func possess_end() -> void:
 	driving = false
 
 
-## La cámara: en primera persona, en el frente del cubo, inclinada como él; en tercera, atrás y arriba, siguiéndolo con
-## un poco de atraso.
+## La cámara. EN PRIMERA PERSONA, LA DEL QUE VA SENTADO en la cabina: los ojos sobre el asiento, fijos al cubo (se
+## inclina y cae con él), y la cabeza mirando con el mouse (`_head`, `_head_yaw`). En tercera, atrás y arriba,
+## siguiéndolo con un poco de atraso.
 func possess_camera(first: bool, delta: float) -> Transform3D:
 	if first:
 		_chase_yaw = _view_yaw()
-		return _look.global_transform * Transform3D(Basis(), Vector3(0.0, 1.0, -SIZE * 0.5 - 0.6))
+		var eyes := CABIN_SEAT + Vector3(0.0, ShipStyle.current.seat_eye_height, 0.0)
+		return _look.global_transform * Transform3D(Basis(Vector3.UP, _head_yaw()) * Basis(Vector3.RIGHT, _head.y), eyes)
 	_chase_yaw = lerp_angle(_chase_yaw, _view_yaw(), 1.0 - exp(-4.0 * delta))
 	var from := global_position + Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 14.0, 34.0)
 	return Transform3D(Basis(), from).looking_at(global_position + Vector3(0.0, 2.0, 0.0), Vector3.UP)
+
+
+## EL MOUSE, poseído: arriba y abajo mueve la cabeza; de costado, lo que diga cada cubo (`_mouse_turn`).
+func _unhandled_input(event: InputEvent) -> void:
+	var motion := event as InputEventMouseMotion
+	if not driving or motion == null or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		return
+	var sensitivity := 0.0025 * GameOptions.mouse_sensitivity
+	_head.y = clampf(_head.y - motion.relative.y * sensitivity, deg_to_rad(-60.0), deg_to_rad(60.0))
+	_mouse_turn(motion.relative.x * sensitivity)
+	get_viewport().set_input_as_handled()
+
+
+## El mouse de costado: en este cubo (que gira con A/D) sólo gira la cabeza del que va sentado.
+func _mouse_turn(amount: float) -> void:
+	_head.x = clampf(_head.x - amount, deg_to_rad(-120.0), deg_to_rad(120.0))
+
+
+## Cuánto está girada la cabeza del que va sentado respecto de la cabina.
+func _head_yaw() -> float:
+	return _head.x
 
 
 ## Hacia dónde mira la cámara de afuera: hacia donde mira el cubo (de costado o dado vuelta, hacia donde miraba).

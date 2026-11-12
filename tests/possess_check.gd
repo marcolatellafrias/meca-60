@@ -51,6 +51,26 @@ func _ready() -> void:
 	await _key(KEY_O)
 	print("O sin mirarlo: posee %s" % _name(possession))
 	await _key(KEY_O)
+	# LA PRIMERA PERSONA ES LA DEL QUE VA SENTADO: en el cubo, y girando la cabeza (el torso la alcanza después).
+	possession.view = SandboxPossession.View.FIRST
+	possession.possess(cube)
+	await _seconds(0.5)
+	await _shot("6_cubo_sentado")
+	cube.aim_yaw -= deg_to_rad(50.0)
+	await _frames(3)
+	print("CUBO, mirando 50° a la derecha: la cabeza va %.0f° por delante de la cabina" % rad_to_deg(absf(cube._head_yaw())))
+	await _shot("7_cubo_mirando")
+	await _seconds(1.5)
+	print("CUBO, 1,5 s después: la cabeza va %.0f° por delante" % rad_to_deg(absf(cube._head_yaw())))
+	# Y EN LA MECA DE PELEA: desde el puesto del medio.
+	var mech := (sandbox.find_children("*", "TestArena", true, false)[0] as TestArena).mech
+	possession.possess(mech)
+	await _seconds(0.5)
+	await _shot("8_meca_sentado")
+	mech.torso_aim -= deg_to_rad(50.0)
+	await _frames(3)
+	await _shot("9_meca_mirando")
+	possession.release()
 	print("SCRIPT sin errores hasta el final · posee %s" % _name(possession))
 	get_tree().quit()
 
