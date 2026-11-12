@@ -36,21 +36,20 @@ Medido (12/11/2026): las ocho piñas inclinan el torso menos de 1° y lo giran e
 brazos quedan hasta 0,2 m atrás de su lugar.
 
 ## El afuera
-`MechExterior`. Se eligió entre cinco maquetas la del **zigzag fino** (las otras —marineras, caracol, una pasarela por
-piso— se borraron). Todo de barras y rejilla finas, para que se lea como algo puesto encima del cubo.
+`MechExterior`. Todo de barras y rejilla finas, para que se lea como algo puesto encima del cubo.
 
 - **La pasarela en U de planta baja**: atrás, de costado a costado, y por los dos costados hasta antes de donde cuelgan
-  los brazos; 1,1 m de ancho, con baranda.
-- Atrás, **un balcón por puerta** de los pisos de arriba y, por fuera, **un tramo liviano** de piso a piso, yendo y
-  viniendo.
-- **Dos tableros** para reparar, uno en cada costado (dibujo, por ahora).
+  los brazos; 1,1 m de ancho. Dos tableros para reparar, uno en cada costado.
+- **La escalera de atrás**: dos tramos paralelos, uno arriba del otro, que suben para el mismo lado por fuera, y **un
+  balcón por piso**, los dos iguales, de punta a punta de la escalera. Del final de un tramo al arranque del otro se
+  vuelve caminando por el balcón. Elegida entre ocho maquetas (las otras se borraron).
+- **Se arma de superficies pisables** (rectángulos en planta con su altura en cada punta), y de ahí salen dos reglas:
+  **la altura libre** sobre cada lugar pisable se mide (2,7 m; hacen falta 2,1), y **las barandas van donde hay
+  caída**. *El primer zigzag tenía los dos tramos en el mismo carril: en el quiebre quedaban 1,1 m.*
+- Se camina (cada piso, tramo y baranda tiene su forma de choque) y es parte del marco de la meca.
 
-**Se camina**: es parte del marco. Cada piso, cada tramo (una rampa) y cada baranda tienen su forma de choque; por las
-puertas se pasa de los balcones a los pisos. Medido: parado en la pasarela, el balcón y el tramo, los pies quedan donde
-van; caminando desde el balcón se entra al piso por la puerta.
-
-Desde el suelo se sube por el ascensor de la pelvis (abajo). Idea para después: piernas más estiradas y la meca
-lo bastante lenta como para escalar las piernas o los brazos.
+Por las puertas se pasa de los balcones a los pisos. Desde el suelo se sube por el ascensor de la pelvis (abajo). Idea
+para después: piernas más estiradas y la meca lo bastante lenta como para escalar las piernas o los brazos.
 
 ## El ascensor de la pelvis
 `PelvisLift`. Por donde se sube desde el suelo. Se eligió entre cuatro maquetas la de **cuatro parantes y un aro**, con

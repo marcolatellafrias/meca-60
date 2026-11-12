@@ -130,7 +130,7 @@ aire va derecha y sin apoyo; aterriza cuando la punta del palo vuelve a tocar. *
 **Sus brazos son físicos**: dos `MuscleArm` (ver Brazo) colgados de los hombros, casi en el medio del costado; **F**
 cambia la postura (normal, a los costados; cubriéndose, los puños cerrados adelante), y las piñas van por brazo: clic
 izquierdo / derecho el directo, Q / E el gancho, Z / C el uppercut, 1 / 3 desde arriba. Caída, se recogen.
-**Afuera** (`MechExterior`): la pasarela en U de planta baja y, atrás, un zigzag fino de balcones y tramos; se camina y
+**Afuera** (`MechExterior`): la pasarela en U de planta baja y, atrás, dos tramos paralelos con un balcón por piso (armado de superficies pisables, con la altura libre medida y las barandas donde hay caída); se camina y
 es parte del marco. **El ascensor de la pelvis** (`PelvisLift`): la pelvis es un tambor redondo, la losa de abajo tiene un
 recorte del mismo hueco con su baranda, y un piso redondo con cuatro parantes baja hasta quedar a un salto del suelo
 con la meca agachada; **G** poseída o el botón del **F2** lo mueven. **El rayo al piso saltea lo que se mueve** (una

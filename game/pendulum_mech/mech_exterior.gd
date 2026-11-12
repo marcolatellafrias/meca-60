@@ -18,20 +18,13 @@ extends RefCounted
 ## choque a `solid`, el cuerpo de las formas de adentro de la meca, del que su marco copia la sombra (ver PendulumMech).
 ## En el espacio del cubo (el centro en el origen).
 ##
-## LO COMÚN: la pasarela en U de planta baja —atrás, de costado a costado, y por los dos costados hasta antes de donde
-## cuelgan los brazos—, y dos tableros para reparar. LAS ESCALERAS DE ATRÁS, a elegir (`variant`, ver NAMES): van en
-## carriles paralelos a la pared de atrás; el primero es el de la pasarela y los balcones.
+## QUÉ HAY: la pasarela en U de planta baja —atrás, de costado a costado, y por los dos costados hasta antes de donde
+## cuelgan los brazos—, dos tableros para reparar y LA ESCALERA DE ATRÁS: DOS TRAMOS PARALELOS, uno arriba del otro, que
+## suben para el mismo lado en el carril de afuera, y un balcón por piso, los dos iguales, de punta a punta de la
+## escalera; del final de un tramo al arranque del otro se vuelve caminando por el balcón. La eligió el usuario entre
+## ocho maquetas (12/11/2026; las otras —zigzags, una caja compacta, corrida a un costado, la pasarela de un solo lado:
+## «queda rara asimétrica»— se borraron).
 
-const NAMES := [
-	"zigzag: el tramo de arriba, pegado a la pared",
-	"dos tramos paralelos; se vuelve caminando por el balcón",
-	"zigzag de ida y vuelta, cada tramo en su carril",
-	"caja compacta: medio tramo, descanso y medio tramo",
-	"la 2, con el balcón de arriba igual al de abajo",
-	"la 2 corrida a un costado, balcones iguales",
-	"la 5, con la pasarela de un solo lado: el del arranque",
-	"la 5, con la pasarela de un solo lado: el de la llegada",
-]
 const HALF := HoverCube.SIZE * 0.5
 ## El ancho de un carril (la pasarela, los balcones, los tramos) y el alto de la baranda.
 const WALK := 1.1
@@ -45,29 +38,31 @@ const CLEAR := 2.1
 const STEEL := Color(0.24, 0.25, 0.28)
 const GRATE := Color(0.36, 0.38, 0.41)
 
-## La escalera de atrás que se arma (ver NAMES).
-static var variant := 0
+## La escalera: dónde arranca el descanso de abajo de cada tramo (x), y el largo de un descanso y de un tramo, en planta.
+const STAIR_START := -2.9
+const LANDING := 0.9
+const FLIGHT := 4.0
 
 
 ## Lo arma colgado de `holder` (el dibujo) y `solid` (sus formas de choque).
 static func build(holder: Node3D, solid: PhysicsBody3D) -> void:
-	var all := surfaces(variant)
+	var all := surfaces()
 	for surface: Dictionary in all:
 		_draw(holder, solid, surface)
 	_rails(holder, solid, all)
-	# Los tableros para reparar, uno en cada costado que tenga pasarela, a su altura.
-	for side: float in _sides(variant):
+	# Dos tableros para reparar, uno en cada costado, a la altura de la pasarela.
+	for side: float in [-1.0, 1.0]:
 		Clay.box(holder, Vector3(0.18, 1.1, 0.9), Vector3(side * (HALF + 0.09), _floor_y(0) + 1.25, 1.2), Clay.RED)
 		Clay.box(holder, Vector3(0.2, 0.2, 0.2), Vector3(side * (HALF + 0.12), _floor_y(0) + 1.25, 1.2), Clay.YELLOW)
 	var free := headroom(all)
 	if free < CLEAR:
-		push_warning("MechExterior: la escalera «%s» deja %.2f m de altura libre (hacen falta %.2f)" % [NAMES[variant], free, CLEAR])
+		push_warning("MechExterior: la escalera deja %.2f m de altura libre (hacen falta %.2f)" % [free, CLEAR])
 
 
 ## Hasta dónde llega todo esto, en el espacio del cubo: para el volumen del marco.
 static func bounds() -> AABB:
 	var outer := HALF + WALK + 0.25
-	var back := _lane(2).y + 0.3
+	var back := _lane(1).y + 0.3
 	return AABB(Vector3(-outer, -HALF - 0.3, SIDE_END - 0.3), Vector3(outer * 2.0, HoverCube.SIZE + 2.4, back - SIDE_END + 0.3))
 
 
@@ -82,17 +77,6 @@ static func _lane(index: int) -> Vector2:
 	return Vector2(HALF + WALK + LANE * (index - 1), HALF + WALK + LANE * index)
 
 
-## Los costados por donde da la vuelta la pasarela de planta baja en la escalera `which` (−1, 1): los dos, salvo en las
-## variantes de un solo lado.
-static func _sides(which: int) -> Array[float]:
-	match which:
-		6:
-			return [-1.0]
-		7:
-			return [1.0]
-	return [-1.0, 1.0]
-
-
 ## ── LAS SUPERFICIES ──────────────────────────────────────────────────────────────────────────────────────────────
 
 ## Una superficie de `x0` a `x1`, del carril `lane0` al `lane1`, con la altura `ya` en `x0` y `yb` en `x1`.
@@ -100,87 +84,25 @@ static func _s(x0: float, x1: float, lane0: int, lane1: int, ya: float, yb: floa
 	return {"x0": x0, "x1": x1, "z0": _lane(lane0).x, "z1": _lane(lane1).y, "ya": ya, "yb": yb}
 
 
-## Todas las superficies pisables de la escalera `which`, con la pasarela.
-static func surfaces(which: int) -> Array[Dictionary]:
+## Todas las superficies pisables: la pasarela y la escalera.
+static func surfaces() -> Array[Dictionary]:
 	var ground := _floor_y(0)
-	var first := _floor_y(1)
-	var second := _floor_y(2)
 	var outer := HALF + WALK
-	# LA PASARELA DE PLANTA BAJA: por atrás y por los costados que toquen (ver `_sides`). Con un solo costado, por atrás
-	# llega hasta la otra punta de la escalera, y no más.
-	var sides := _sides(which)
-	var all: Array[Dictionary] = [_s(-outer if sides.has(-1.0) else -2.9, outer if sides.has(1.0) else 2.9, 0, 0, ground, ground)]
-	for side: float in sides:
+	var all: Array[Dictionary] = [_s(-outer, outer, 0, 0, ground, ground)]
+	for side: float in [-1.0, 1.0]:
 		all.append({"x0": minf(side * HALF, side * outer), "x1": maxf(side * HALF, side * outer), "z0": SIDE_END, "z1": HALF,
 			"ya": ground, "yb": ground})
-	match which:
-		0:
-			# ZIGZAG: el primer tramo, por fuera, hacia un lado; el segundo vuelve PEGADO A LA PARED, del otro lado de la
-			# puerta. El balcón del segundo piso va para un solo lado; el del tercero corre por fuera hasta su puerta.
-			all.append(_s(-2.9, -2.0, 1, 1, ground, ground))
-			all.append(_s(-2.0, 2.0, 1, 1, ground, first))
-			all.append(_s(2.0, 2.9, 1, 1, first, first))
-			all.append(_s(-0.9, 2.9, 0, 0, first, first))
-			all.append(_s(-4.6, -0.9, 0, 0, second, first))
-			all.append(_s(-outer, -4.6, 0, 1, second, second))
-			all.append(_s(-4.6, 0.9, 1, 1, second, second))
-			all.append(_s(-0.9, 0.9, 0, 0, second, second))
-		1:
-			# PARALELOS: los dos tramos suben para el mismo lado, uno arriba del otro; del final del primero al
-			# arranque del segundo se vuelve caminando por el balcón.
-			for index in 2:
-				var low := _floor_y(index)
-				var high := _floor_y(index + 1)
-				all.append(_s(-2.9, -2.0, 1, 1, low, low))
-				all.append(_s(-2.0, 2.0, 1, 1, low, high))
-				all.append(_s(2.0, 2.9, 1, 1, high, high))
-			all.append(_s(-2.9, 2.9, 0, 0, first, first))
-			all.append(_s(-0.9, 2.9, 0, 0, second, second))
-		2:
-			# IDA Y VUELTA EN DOS CARRILES: el primer tramo en el carril del medio, el segundo vuelve en el de afuera.
-			all.append(_s(-2.9, -2.0, 1, 1, ground, ground))
-			all.append(_s(-2.0, 2.0, 1, 1, ground, first))
-			all.append(_s(2.0, 2.9, 1, 2, first, first))
-			all.append(_s(-2.9, 2.9, 0, 0, first, first))
-			all.append(_s(-2.0, 2.0, 2, 2, second, first))
-			all.append(_s(-2.9, -2.0, 1, 2, second, second))
-			all.append(_s(-2.9, 0.9, 0, 0, second, second))
-		3:
-			# CAJA COMPACTA, al costado de las puertas: por piso, medio tramo en el carril del medio, un descanso, y
-			# medio tramo de vuelta en el de afuera. Todos los pisos iguales, uno arriba del otro.
-			all.append(_s(0.3, 1.2, 1, 1, ground, ground))
-			for index in 2:
-				var low := _floor_y(index)
-				var high := _floor_y(index + 1)
-				var middle := (low + high) * 0.5
-				all.append(_s(1.2, 3.2, 1, 1, low, middle))
-				all.append(_s(3.2, 4.1, 1, 2, middle, middle))
-				all.append(_s(1.2, 3.2, 2, 2, high, middle))
-				all.append(_s(0.3, 1.2, 1, 2, high, high))
-				all.append(_s(-0.9, 1.4, 0, 0, high, high))
-		4:
-			# LA 2, CON EL BALCÓN DE ARRIBA IGUAL AL DE ABAJO: los dos de punta a punta de la escalera.
-			_parallel(all, -2.9, -2.9)
-		6, 7:
-			# LA 5, CON LA PASARELA DE UN SOLO LADO (ver `_sides`).
-			_parallel(all, -2.9, -2.9)
-		5:
-			# LA 2, CORRIDA A UN COSTADO: la puerta en una punta del balcón y la escalera hacia el otro lado; los dos
-			# balcones iguales, de la puerta al descanso de arriba, y el tramo arranca al borde de la puerta.
-			_parallel(all, -0.9, -0.9)
-	return all
-
-
-## DOS TRAMOS PARALELOS que suben hacia +x, uno arriba del otro, en el carril del medio: el descanso de abajo arranca en
-## `start`; los balcones del segundo y del tercer piso, iguales, van desde `balcony` hasta el descanso de arriba.
-static func _parallel(all: Array[Dictionary], start: float, balcony: float) -> void:
+	# Por piso: el descanso de abajo, el tramo, el descanso de arriba (los tres en el carril de afuera) y el balcón.
+	var foot := STAIR_START + LANDING
+	var head := foot + FLIGHT
 	for index in 2:
 		var low := _floor_y(index)
 		var high := _floor_y(index + 1)
-		all.append(_s(start, start + 0.9, 1, 1, low, low))
-		all.append(_s(start + 0.9, start + 4.9, 1, 1, low, high))
-		all.append(_s(start + 4.9, start + 5.8, 1, 1, high, high))
-		all.append(_s(balcony, start + 5.8, 0, 0, high, high))
+		all.append(_s(STAIR_START, foot, 1, 1, low, low))
+		all.append(_s(foot, head, 1, 1, low, high))
+		all.append(_s(head, head + LANDING, 1, 1, high, high))
+		all.append(_s(STAIR_START, head + LANDING, 0, 0, high, high))
+	return all
 
 
 ## La altura de `surface` en `x`.

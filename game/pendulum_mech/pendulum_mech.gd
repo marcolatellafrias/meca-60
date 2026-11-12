@@ -14,7 +14,7 @@ extends PendulumCube
 ## CON EL MUNDO: lo de afuera —el piso, las bolas, las paredes— lo sigue recibiendo la caja de siempre, 1:1. Son las
 ## formas de `_interior`, de las que el marco hace su SOMBRA: el que entra al volumen (el cubo) pasa a ir en el marco,
 ## que lo lleva con la meca, y adentro choca sólo con esa sombra. Y la caja de afuera deja de chocar con él (`_ride`).
-## AFUERA TAMBIÉN (MechExterior): la pasarela de planta baja y el zigzag de atrás son parte del marco; por las puertas se
+## AFUERA TAMBIÉN (MechExterior): la pasarela de planta baja y la escalera de atrás son parte del marco; por las puertas se
 ## pasa de los balcones a los pisos. DESDE EL SUELO SE SUBE POR EL ASCENSOR DE LA PELVIS (PelvisLift), con la meca
 ## agachada; la U del sandbox también lo sube (`board`).
 ## LOS BRAZOS SON FÍSICOS (12/11/2026; el usuario: «hacer los brazos físicos en la meca péndulo. Así de paso veo cómo
@@ -309,7 +309,7 @@ func _build_cabin() -> void:
 		Clay.box(_look, Vector3(0.6, 0.5, 0.6), seat + Vector3(0, 0.25, 0), Clay.DARK)
 		Clay.box(_look, Vector3(0.6, 0.7, 0.12), seat + Vector3(0, 0.85, 0.3), Clay.DARK)
 		_solid(Vector3(1.4, 0.8, 0.5), seat + Vector3(0, 0.4, -0.95), metal.darkened(0.25))
-	# EL AFUERA: la pasarela de planta baja y el zigzag de atrás (ver MechExterior).
+	# EL AFUERA: la pasarela de planta baja y la escalera de atrás (ver MechExterior).
 	MechExterior.build(_look, _interior)
 	# EL ASCENSOR, y la pelvis redonda por la que pasa.
 	lift = PelvisLift.new()
