@@ -52,6 +52,13 @@ Unas **14.000 líneas**.
 - **Partículas, sonido** (el sistema: `Sounds`, `SoundEntity`), `PackageDamage`.
 
 ### B · El aspecto del personaje: la decisión grande
+*Decidido el 13/11/2026: quedan **los seis arquetipos con sus proporciones**, en **la versión simplificada**, sin trajes
+ni sombreros; las caras las rehace el usuario desde cero (quizá las low poly con loop cuts). Lo que se encontró al
+empezar: **el cuerpo que se ve hoy ya es el simple** (`BlockBody`: cajas y cápsulas, con `BlockShape` y la mano de
+tubos). El generador de malla viejo, `GridPart` (1.973 líneas), sólo lo nombraban las orejas, que nadie llamaba: se
+borró con ellas y con `FaceFeatureMesh`. Falta cortar los trajes, los sombreros y lo que cuelga de ellos, y ver qué de
+`TorsoShape`, `HeadForm` y las caras todavía decide medidas del cuerpo (lo lee `SkeletonSizesUtil`).*
+
 Unas **10.000 líneas** para generar el cuerpo paramétrico de **seis arquetipos**, con caras, trajes y sombreros de un
 repartidor de Buenos Aires de 1910:
 - la malla: `GridPart` (1.973), `SkeletonSizesUtil` (1.332), `ProceduralBodyUtil` (608), `BodyLoop`, `BodyDensity`,

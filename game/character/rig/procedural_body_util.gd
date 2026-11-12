@@ -76,13 +76,6 @@ const JOINT_RINGS_META := "joint_rings"
 ## porque son la parte de la unión que no es simétrica a nada y la que hay que mirar aparte.
 const BRIDGE_FACES_META := "bridge_faces"
 
-## LAS OREJAS (ver `add_ears`), en fracción del alto de la cabeza: su grueso, cuánto de ese grueso queda adentro de la
-## cabeza y su fondo respecto de su alto; cuánto se gira hacia el frente, en grados —de canto, de frente no se veía nada—.
-const EAR_THICK := 0.06
-const EAR_SINK := 0.4
-const EAR_TURN := 25.0
-const EAR_DEPTH := 0.7
-
 var skeleton: Skeleton3D
 
 ## Paralelos, indexados por hueso del Skeleton3D.
@@ -272,59 +265,6 @@ static func leg_start_half(bottom_width: float, depth: float) -> Vector2:
 	var by_width: float = minf(half_width - stance, stance - CROTCH_GAP_MIN * 0.5)
 	var side: float = maxf(minf(by_depth, by_width), 0.01)
 	return Vector2(side, side)
-
-
-## LAS OREJAS: dos discos bien simples metidos en los costados de la cabeza, como los pidió el dios del juego
-## (11/10/2026). Van EN LA MALLA DE LA CABEZA, como la mano en la del brazo: así se ven donde se ve la cabeza, en el juego
-## y en cada fila que la estudia sola. Su altura sale de los rasgos —entre los ojos y la boca—, así que siguen a la cara;
-## y su tamaño, del alto de la cabeza. Todo pesa a la cabeza. Desde el 16/10/2026 cada forma dice su modelo, su altura y
-## cuánto se corren (ver HeadForm.ear_model, `ear_height`, `ear_back`; los de antes, `EAR_BETWEEN` y `EAR_BACK`, son su
-## defecto).
-static func add_ears(part: GridPart, form: HeadForm, chain: Array) -> void:
-	var eyes := FaceLayout.eyes(form)
-	var mouth := FaceLayout.mouth_place(form)
-	var v: float = lerpf(mouth.at_v, eyes.at_v, form.ear_height)
-	var total := form.total_height()
-	var section := form.section_at_height(v * total)
-	var half := Vector2(section.x, section.y) * 0.5
-	var tall: float = total * form.ear_size
-	var thick: float = total * EAR_THICK
-	var loops: Array[BodyLoop] = [
-		BodyLoop.make(0.0, tall, tall * EAR_DEPTH, BodyLoop.ROUND),
-		BodyLoop.make(thick, tall, tall * EAR_DEPTH, BodyLoop.ROUND)]
-	var rest: Transform3D = (chain[2] as Array)[0]
-	if form.ear_model == 1:
-		_add_front_ears(part, form, chain, v, section, half, tall, thick, rest)
-		return
-	for side in [-1.0, 1.0]:
-		# EL EJE DEL DISCO SALE PARA EL COSTADO: girar −90° sobre Z lleva su Y a +X (y +90°, a −X); y después se lo gira
-		# `EAR_TURN` sobre la vertical para que mire un poco al frente, como una oreja. Arranca adentro de la cabeza
-		# —`EAR_SINK` de su grueso— y asoma el resto.
-		# EL DE COSTADO NO SE GIRA: las tapas miran derecho a los costados (ver HeadForm.ear_model).
-		var yaw := Basis(Vector3.UP, deg_to_rad((EAR_TURN if form.ear_model == 0 else 0.0) * float(side)))
-		var turn := yaw * Basis(Vector3.BACK, deg_to_rad(-90.0 * float(side)))
-		var at := Vector3(float(side) * (half.x - thick * EAR_SINK), v * total, half.y * form.ear_back - section.z)
-		part.build(loops, chain[0], chain[1], [rest * Transform3D(turn, at)] as Array[Transform3D],
-			PackedFloat32Array(), BodyDensity.current().ear_cells())
-
-
-## EL DISCO DE FRENTE (ver HeadForm.ear_model): el mismo disco, redondo y sin inclinación, con su eje adelante-atrás —una
-## tapa mira adelante y la otra atrás—, parado en el costado de la cabeza con `ear_out` de su diámetro afuera.
-static func _add_front_ears(part: GridPart, form: HeadForm, chain: Array, v: float, section: Vector3, half: Vector2,
-		tall: float, thick: float, rest: Transform3D) -> void:
-	var total := form.total_height()
-	var loops: Array[BodyLoop] = [
-		BodyLoop.make(0.0, tall, tall, BodyLoop.ROUND),
-		BodyLoop.make(thick, tall, tall, BodyLoop.ROUND)]
-	# EL EJE DEL DISCO VA DE ADELANTE PARA ATRÁS: girar +90° sobre X lleva su Y a +Z (la nuca), así que arranca medio
-	# grueso adelante del plano de la oreja y termina medio grueso atrás.
-	var turn := Basis(Vector3.RIGHT, deg_to_rad(90.0))
-	var radius := tall * 0.5
-	for side in [-1.0, 1.0]:
-		var at := Vector3(float(side) * (half.x + radius * (form.ear_out * 2.0 - 1.0)), v * total,
-			half.y * form.ear_back - section.z - thick * 0.5)
-		part.build(loops, chain[0], chain[1], [rest * Transform3D(turn, at)] as Array[Transform3D],
-			PackedFloat32Array(), BodyDensity.current().ear_cells())
 
 
 ## ── LOS HUESOS DE LA MANO DE TUBOS (29/10/2026, ver TubeHand.bones) ──────────────────────────────────────────────────
