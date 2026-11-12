@@ -4,8 +4,8 @@ extends Node3D
 ## LA MECA DE EQUILIBRIO: EL CUERPO DE LA MECA (MechBody: pies, piernas, pelvis, torso y brazos en guardia, el mismo de
 ## la meca de pelea) que sólo se tambalea, se cae y se levanta. No camina ni pega. Su equilibrio es EL DE LOS PERSONAJES
 ## DE CHARACTER-PARAMETRIC (`CharacterRigidBody3D` y `RagdollUtil` de allá; ver su docs/technical/characters.md), con dos
-## agregados que se prenden y apagan en el F1 (lo pidió el usuario el 11/11/2026: «nunca es como que le tiro algo y se
-## echa para atrás y como que recobra el equilibrio»):
+## agregados que se prenden y apagan en el panel de la fila (F1 en la fila Meca, ver BalancePanel; lo pidió el usuario
+## el 11/11/2026: «nunca es como que le tiro algo y se echa para atrás y como que recobra el equilibrio»):
 ##
 ##   1. EL CUERPO ES FÍSICO DE VERDAD: un RigidBody3D parado (no gira), sin fricción, que frena solo (`brake`). Lo que lo
 ##      golpea (una bola, ver TestBall) le cambia la velocidad: la meca se corre.
@@ -25,8 +25,8 @@ extends Node3D
 ##   6. LEVANTARSE: en el suelo `down_time`; después cada parte va de donde quedó a la postura parada en `rise_time`.
 ##
 ## Los números de allá son de una persona de 60 kg: acá la firmeza 1 es la de esta meca (`REFERENCE_MASS` = su masa), y
-## el resorte va más lento (`spring_scale`, `damp_scale`). Todos se tocan en el F1 (ver `build_debug_tab`) y valen para
-## todas las mecas de equilibrio.
+## el resorte va más lento (`spring_scale`, `damp_scale`). Todos se tocan en el panel de la fila (MechBalanceSettings) y
+## valen para todas las mecas de equilibrio.
 
 signal fell()
 signal stood_up()
@@ -35,35 +35,10 @@ const MASS := 50000.0
 const REFERENCE_MASS := 50000.0
 const HIT_NOISE := 0.3
 
-## ── LAS PERILLAS (el F1) ─────────────────────────────────────────────────────────────────────────────────────────
-## De character-parametric (CharacterRigidBody3D): cuánto inclina cada m/s, dónde cae, el aviso, el resorte.
-static var lean_per_ms := 0.3
-static var fall_at := 0.85
-static var fall_warning := 0.15
-static var stiffness := 25.0
-static var damping := 6.0
-## Más lento que una persona.
-static var spring_scale := 0.35
-static var damp_scale := 0.6
-## Estabilidad de cada lado (más de 1, cuesta más voltearla por ahí).
-static var stability_forward := 1.0
-static var stability_backward := 0.8
-static var stability_sideways := 0.7
-## Cuánto se inclina el torso con la inclinación en 1 (grados).
-static var lean_angle := 20.0
-## Cuánto frena sola, parada (m/s²): sus pies la sostienen.
-static var brake := 4.0
-static var topple := 1.0
-static var down_time := 4.0
-static var rise_time := 2.5
-## Los agregados (ver arriba).
-static var hit_pushes := true
-static var push_rate := 6.0
-static var steps := true
-static var step_at := 0.4
-static var step_length := 3.5
-static var step_time := 0.5
-static var step_catch := 0.45
+## LAS PERILLAS: las de MechBalanceSettings (una sola copia para todas, la del panel F1 de la fila Meca), por `_k`.
+var _k: MechBalanceSettings:
+	get:
+		return MechBalanceSettings.current
 
 enum State { STANDING, DOWN, RISING }
 
@@ -185,7 +160,7 @@ func _build_parts() -> void:
 func _standing_pose(shown: Vector2) -> Array[Transform3D]:
 	var root := _root_at(_body.global_position if is_instance_valid(_body) and _body.is_inside_tree()
 		else global_position)
-	var waist := MechBody.waist(root, MechBody.WAIST, MechBody.tilt(shown * deg_to_rad(lean_angle)))
+	var waist := MechBody.waist(root, MechBody.WAIST, MechBody.tilt(shown * deg_to_rad(_k.lean_angle)))
 	var torso := MechBody.torso(waist, 0.0)
 	var pose: Array[Transform3D] = []
 	pose.resize(PART_MASS.size())
@@ -242,15 +217,15 @@ func _physics_process(delta: float) -> void:
 					_fall()
 		State.DOWN:
 			_clock += delta
-			if _clock >= down_time:
+			if _clock >= _k.down_time:
 				_start_rising()
 		State.RISING:
 			_clock += delta
-			var share := ease(clampf(_clock / rise_time, 0.0, 1.0), -2.0)
+			var share := ease(clampf(_clock / _k.rise_time, 0.0, 1.0), -2.0)
 			var pose := _standing_pose(Vector2.ZERO)
 			for i in _parts.size():
 				_parts[i].global_transform = _fallen[i].interpolate_with(pose[i], share)
-			if _clock >= rise_time:
+			if _clock >= _k.rise_time:
 				_finish_rising()
 
 
@@ -264,18 +239,18 @@ func _measure_hit() -> void:
 		return
 	last_hit = flat.length()
 	var local := Basis(Vector3.UP, _yaw).inverse() * flat
-	var add := Vector2(local.x, -local.z) * lean_per_ms / _firmness(local)
+	var add := Vector2(local.x, -local.z) * _k.lean_per_ms / _firmness(local)
 	_fall_push = flat
-	if hit_pushes:
-		_lean_speed += add * push_rate
+	if _k.hit_pushes:
+		_lean_speed += add * _k.push_rate
 		return
 	lean = (lean + add).limit_length(1.0)
 	peak_lean = maxf(peak_lean, lean.length())
-	if add.length() >= fall_at:
+	if add.length() >= _k.fall_at:
 		# Un golpe seco que solo ya pasa el umbral: cae en el acto.
 		_fall()
-	elif lean.length() >= fall_at and _fall_in < 0.0:
-		_fall_in = fall_warning
+	elif lean.length() >= _k.fall_at and _fall_in < 0.0:
+		_fall_in = _k.fall_warning
 
 
 ## La firmeza en la dirección del golpe: el peso sobre el de referencia por la estabilidad de ese lado (mezclada entre
@@ -285,21 +260,21 @@ func _firmness(local: Vector3) -> float:
 	var ax := absf(local.x)
 	var az := absf(local.z)
 	var total := ax + az
-	var stability := stability_sideways
+	var stability := _k.stability_sideways
 	if total > 0.001:
 		var side_share := ax / total
-		var along := stability_forward if local.z < 0.0 else stability_backward
-		stability = stability_sideways * side_share + along * (1.0 - side_share)
+		var along := _k.stability_forward if local.z < 0.0 else _k.stability_backward
+		stability = _k.stability_sideways * side_share + along * (1.0 - side_share)
 	return maxf(MASS / REFERENCE_MASS * stability, 0.05)
 
 
 func _spring(delta: float) -> void:
-	var accel := -lean * stiffness * spring_scale - _lean_speed * damping * damp_scale
+	var accel := -lean * _k.stiffness * _k.spring_scale - _lean_speed * _k.damping * _k.damp_scale
 	_lean_speed += accel * delta
 	lean += _lean_speed * delta
 	peak_lean = maxf(peak_lean, lean.length())
-	if lean.length() >= fall_at and _fall_in < 0.0:
-		_fall_in = fall_warning
+	if lean.length() >= _k.fall_at and _fall_in < 0.0:
+		_fall_in = _k.fall_warning
 	if lean.length() < 0.02 and _lean_speed.length() < 0.02 and _step.is_empty():
 		peak_lean = 0.0
 
@@ -320,7 +295,7 @@ func _stepping(delta: float) -> void:
 			if leading:
 				_follow_step()
 		return
-	if steps and lean.length() >= step_at and lean.length() < fall_at:
+	if _k.steps and lean.length() >= _k.step_at and lean.length() < _k.fall_at:
 		_lead_step()
 
 
@@ -329,14 +304,14 @@ func _stepping(delta: float) -> void:
 func _lead_step() -> void:
 	var toward_local := lean.normalized()
 	var toward := Basis(Vector3.UP, _yaw) * Vector3(toward_local.x, 0.0, -toward_local.y)
-	var length := step_length * clampf(lean.length() / fall_at, 0.4, 1.0)
+	var length := _k.step_length * clampf(lean.length() / _k.fall_at, 0.4, 1.0)
 	var foot := 0 if toward_local.x < -0.3 else (1 if toward_local.x > 0.3 else
 		(0 if _feet[0].dot(toward) < _feet[1].dot(toward) else 1))
 	var side := -1.0 if foot == 0 else 1.0
 	var new_root := _root_at(_body.global_position + toward * length)
 	_step = {"foot": foot, "from": _feet[foot], "to": MechBody.foot_rest(new_root, side), "clock": 0.0,
-		"time": step_time, "leading": true, "catch": toward_local * minf(step_catch, lean.length()),
-		"move": toward * length / step_time}
+		"time": _k.step_time, "leading": true, "catch": toward_local * minf(_k.step_catch, lean.length()),
+		"move": toward * length / _k.step_time}
 	steps_taken += 1
 
 
@@ -352,7 +327,7 @@ func _follow_step() -> void:
 	target.y = 0.0
 	if target.distance_to(_feet[foot]) < 0.3:
 		return
-	_step = {"foot": foot, "from": _feet[foot], "to": target, "clock": 0.0, "time": step_time * 0.7,
+	_step = {"foot": foot, "from": _feet[foot], "to": target, "clock": 0.0, "time": _k.step_time * 0.7,
 		"leading": false, "catch": Vector2.ZERO, "move": Vector3.ZERO}
 
 
@@ -362,9 +337,9 @@ func _brake(delta: float) -> void:
 	var velocity := _body.linear_velocity
 	var flat := Vector3(velocity.x, 0.0, velocity.z)
 	if not _step.is_empty() and bool(_step["leading"]):
-		flat = flat.move_toward(_step["move"] as Vector3, brake * 3.0 * delta)
+		flat = flat.move_toward(_step["move"] as Vector3, _k.brake * 3.0 * delta)
 	else:
-		flat = flat.move_toward(Vector3.ZERO, brake * delta)
+		flat = flat.move_toward(Vector3.ZERO, _k.brake * delta)
 	_body.linear_velocity = Vector3(flat.x, velocity.y, flat.z)
 	_velocity_after = _body.linear_velocity
 
@@ -395,7 +370,7 @@ func _fall() -> void:
 		part.collision_mask = 1
 		part.freeze = false
 		var height := clampf((part.global_position.y - ground) / top, 0.0, 1.0)
-		part.linear_velocity = velocity + push * topple * height
+		part.linear_velocity = velocity + push * _k.topple * height
 		part.angular_velocity = Vector3.ZERO
 	var pelvis := _parts[Part.PELVIS]
 	_join(Part.PELVIS, Part.TORSO, pelvis.global_transform * Vector3(0, MechBody.PELVIS_SIZE.y * 0.5, 0), 25.0, 30.0, 25.0)
@@ -514,50 +489,3 @@ func body_position() -> Vector3:
 
 func state_name() -> String:
 	return ["parada", "EN EL SUELO", "levantándose"][state]
-
-
-## ── EL F1 ────────────────────────────────────────────────────────────────────────────────────────────────────────
-
-const DEBUG_TAB := "Meca de equilibrio"
-
-
-## LA PESTAÑA DEL F1: las perillas de arriba, para todas las mecas de equilibrio.
-static func build_debug_tab(panel: DebugPanel) -> void:
-	var tab := DEBUG_TAB
-	panel.add_text(tab, "LOS AGREGADOS")
-	panel.add_toggle(tab, "El golpe empuja (si no, como allá: se suma a la inclinación)", hit_pushes,
-		func(on: bool) -> void: hit_pushes = on)
-	panel.add_slider(tab, "Cuánto empuja: %.1f", 0.5, 15.0, 0.1, push_rate, func(v: float) -> void: push_rate = v)
-	panel.add_toggle(tab, "Pasos para recuperarse", steps, func(on: bool) -> void: steps = on)
-	panel.add_slider(tab, "Da un paso pasada la inclinación: %.2f", 0.1, 0.84, 0.01, step_at,
-		func(v: float) -> void: step_at = v)
-	panel.add_slider(tab, "Largo del paso: %.1f m", 0.5, 8.0, 0.1, step_length, func(v: float) -> void: step_length = v)
-	panel.add_slider(tab, "Lo que dura el paso: %.2f s", 0.15, 1.5, 0.01, step_time, func(v: float) -> void: step_time = v)
-	panel.add_slider(tab, "Inclinación que saca un paso: %.2f", 0.0, 1.0, 0.01, step_catch,
-		func(v: float) -> void: step_catch = v)
-	panel.add_text(tab, "EL RESORTE (character-parametric)")
-	panel.add_slider(tab, "Rigidez: %.1f", 1.0, 80.0, 0.5, stiffness, func(v: float) -> void: stiffness = v)
-	panel.add_slider(tab, "Amortiguación: %.2f", 0.1, 20.0, 0.05, damping, func(v: float) -> void: damping = v)
-	panel.add_slider(tab, "Escala de la rigidez (meca): %.2f", 0.05, 2.0, 0.01, spring_scale,
-		func(v: float) -> void: spring_scale = v)
-	panel.add_slider(tab, "Escala de la amortiguación (meca): %.2f", 0.05, 2.0, 0.01, damp_scale,
-		func(v: float) -> void: damp_scale = v)
-	panel.add_slider(tab, "Inclinación por m/s de golpe: %.2f", 0.02, 1.0, 0.01, lean_per_ms,
-		func(v: float) -> void: lean_per_ms = v)
-	panel.add_slider(tab, "Se cae en: %.2f", 0.2, 1.0, 0.01, fall_at, func(v: float) -> void: fall_at = v)
-	panel.add_slider(tab, "Aviso antes de caer: %.2f s", 0.0, 1.0, 0.01, fall_warning,
-		func(v: float) -> void: fall_warning = v)
-	panel.add_text(tab, "LA FIRMEZA, POR LADO")
-	panel.add_slider(tab, "Golpe de atrás (empuja adelante): %.2f", 0.1, 3.0, 0.05, stability_forward,
-		func(v: float) -> void: stability_forward = v)
-	panel.add_slider(tab, "Golpe de frente (empuja atrás): %.2f", 0.1, 3.0, 0.05, stability_backward,
-		func(v: float) -> void: stability_backward = v)
-	panel.add_slider(tab, "Golpe de costado: %.2f", 0.1, 3.0, 0.05, stability_sideways,
-		func(v: float) -> void: stability_sideways = v)
-	panel.add_text(tab, "EL CUERPO")
-	panel.add_slider(tab, "Inclinación del torso en 1: %.0f°", 2.0, 45.0, 1.0, lean_angle,
-		func(v: float) -> void: lean_angle = v)
-	panel.add_slider(tab, "Freno de los pies: %.1f m/s²", 0.0, 20.0, 0.1, brake, func(v: float) -> void: brake = v)
-	panel.add_slider(tab, "Vuelco al caer: %.2f", 0.0, 3.0, 0.05, topple, func(v: float) -> void: topple = v)
-	panel.add_slider(tab, "En el suelo: %.1f s", 0.5, 10.0, 0.1, down_time, func(v: float) -> void: down_time = v)
-	panel.add_slider(tab, "Levantarse: %.1f s", 0.3, 6.0, 0.1, rise_time, func(v: float) -> void: rise_time = v)

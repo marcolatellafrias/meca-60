@@ -35,10 +35,8 @@ var _session: SandboxSession = null
 var _rows: Array[Dictionary] = []
 var _panel: SandboxPanel = null
 var _current: SandboxParcel = null
-## EL F1 DEL SANDBOX: el panel de depuración de character-parametric (DebugPanel). El del jugador de allá sólo existe
-## con la depuración prendida, que trae teclas (G, F, H) que acá son de la meca; éste es del sandbox, y cada clase de
-## parcela le agrega su pestaña (`SeededArchetype.debug_tab`).
-var _debug_panel: DebugPanel = null
+## LOS PANELES DE LAS FILAS (ver `_mount_tuners`).
+var _tuners: Array[TunerPanel] = []
 
 
 ## EL CATÁLOGO: una entrada por fila, en orden. Una fila nueva se agrega acá.
@@ -58,7 +56,7 @@ func _ready() -> void:
 	_build_rows()
 	_panel = SandboxPanel.new()
 	add_child(_panel)
-	_build_debug_panel()
+	_mount_tuners()
 	add_to_group("character_spawner")
 	# Mirando hacia las parcelas (+X).
 	_spawn(false, PLAYER_START, -PI * 0.5, 0.0)
@@ -68,19 +66,36 @@ func _ready() -> void:
 	add_child(_session)
 
 
-func _build_debug_panel() -> void:
-	_debug_panel = DebugPanel.new()
-	_debug_panel.name = "F1"
-	add_child(_debug_panel)
-	_debug_panel.add_text("Info", "El F1 del sandbox de la meca: cada fila agrega su pestaña.")
-	var done := {}
-	for row in _rows:
-		for parcel: SandboxParcel in row["parcels"]:
-			var kind: Script = parcel.archetype.get_script()
-			if done.has(kind):
-				continue
-			done[kind] = true
-			parcel.archetype.debug_tab(_debug_panel)
+## ── LOS PANELES DE LAS FILAS, como en el sandbox de character-parametric (DesignSandbox._mount_tuners de allá) ──────
+## Cada uno es de UNA FILA (TunerPanel.category): su tecla F abre parado en esa fila y en ninguna otra, cierra con la
+## misma tecla, abre a la izquierda (la derecha es del panel de la parcela, que lo anota con su tecla) y abrir uno cierra
+## los demás. Una fila nueva con panel se monta acá.
+func _mount_tuners() -> void:
+	_mount(BalancePanel.new(), "Meca", "la meca de equilibrio: el resorte, la firmeza, el empuje y los pasos", KEY_F1)
+
+
+func _mount(tuner: TunerPanel, category_name: String, label: String, key: Key) -> void:
+	# UNA TECLA, UN PANEL por fila (como allá): dos con la misma tecla en la misma fila se pisan.
+	for other: TunerPanel in _tuners:
+		if other.menu_key == key and (other.category == category_name or other.category.is_empty()
+				or category_name.is_empty()):
+			push_error("[DesignSandbox] la tecla %s de «%s» ya la usa «%s» (fila «%s»)" % [OS.get_keycode_string(key),
+				label, other.menu_label, other.category])
+	tuner.sandbox = self
+	tuner.category = category_name
+	tuner.menu_label = label
+	tuner.menu_key = key
+	add_child(tuner)
+	tuner.side = TunerPanel.SIDE_LEFT
+	tuner.call("setup_panel")
+	_tuners.append(tuner)
+
+
+## LA FILA DONDE ESTÁ PARADO EL JUGADOR, por nombre: la que abre los paneles (ver TunerPanel.serves).
+func current_category() -> String:
+	if _current == null:
+		return ""
+	return _current.category
 
 
 ## ── ENTE O CUERPO (la B), como en el sandbox de character-parametric (DesignSandbox._spawn y _respawn_as) ────────────
@@ -270,16 +285,17 @@ func _refresh() -> void:
 	if _current == null:
 		_panel.hide_panel()
 		return
-	_panel.show_parcel(_current, _current.archetype.parcel_options())
+	# Las teclas de la parcela y, debajo, los paneles de su fila (sólo para leer: los abre cada panel).
+	var lines := _current.archetype.parcel_options()
+	for tuner in _tuners:
+		if tuner.category == current_category():
+			lines.append({"key": tuner.menu_key, "label": "panel: " + tuner.menu_label})
+	_panel.show_parcel(_current, lines)
 
 
 func _input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if key == null or not key.pressed or key.echo:
-		return
-	if key.keycode == KEY_F1:
-		_debug_panel.toggle()
-		get_viewport().set_input_as_handled()
 		return
 	if not UIState.gameplay_active():
 		return

@@ -35,12 +35,6 @@ func parcel_options() -> Array[Dictionary]:
 	return []
 
 
-## SU PESTAÑA EN EL F1 DEL SANDBOX (ver DesignSandbox, EL F1): se llama una vez por clase de arquetipo al armar el
-## sandbox. Lo que se toca ahí vale para todas las parcelas de esa clase.
-func debug_tab(_panel: DebugPanel) -> void:
-	pass
-
-
 ## Cuando uno entra o sale de la parcela.
 func entered(_parcel: SandboxParcel, _inside: bool) -> void:
 	pass

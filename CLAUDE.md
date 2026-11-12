@@ -32,8 +32,9 @@ dónde se cortó (la ciudad, el tránsito, la nave), en `game/character_port/LEE
 ## Cómo se prueba hoy
 **El jugador es el personaje de character-parametric**: arranca como ente (sin cuerpo, movimiento directo, **V** vuela)
 y la **B** lo vuelve cuerpo (el gordo atlético: se cae, agarra con el clic izquierdo, se sienta con la **E**, empuja con
-la **R**). Sus teclas son las de allá (WASD, espacio, Ctrl, shift, E, R, V, F1 el panel de depuración); Escape la pausa,
-que no frena el mundo.
+la **R**). Sus teclas son las de allá (WASD, espacio, Ctrl, shift, E, R, V); Escape la pausa, que no frena el mundo.
+Las teclas **F** son de los **paneles de fila**, como en el sandbox de allá (TunerPanel): abren parado en su fila, a la
+izquierda, y el panel de la parcela los anota con su tecla.
 
 En el sandbox, la fila **Meca** («Pelea de prueba»):
 - **O** la maneja **desde afuera**: cámara atrás por sobre el hombro (**T** pasa a primera persona en el frente del
@@ -51,12 +52,10 @@ En el sandbox, la fila **Meca** («Pelea de prueba»):
 Al lado, **«Meca de equilibrio»**: una copia de la meca que sólo se tambalea, se cae y se levanta, con el sistema de
 equilibrio de los personajes de character-parametric, con dos personas de allá al lado. **J** tira una bola desde la
 cámara (una sola bola; la fuerza es su empuje, de 100 a 300 000 N·s: de mover a una persona a voltear a la meca);
-**K** y **L** bajan y suben la fuerza. Tiene dos agregados al sistema de allá, que se prenden en el F1: **el golpe
-empuja** (la inclinación toma velocidad en vez de saltar) y **los pasos** (pasada cierta inclinación da un paso hacia
-donde se va y se recupera trastabillando).
-
-**F1** abre el panel de depuración del sandbox (el de allá): cada fila agrega su pestaña; la meca de equilibrio tiene
-todas sus perillas (el resorte, la firmeza por lado, el empuje, los pasos, la caída).
+**K** y **L** bajan y suben la fuerza. Tiene dos agregados al sistema de allá: **el golpe empuja** (la inclinación toma
+velocidad en vez de saltar) y **los pasos** (pasada cierta inclinación da un paso hacia donde se va y se recupera
+trastabillando). **F1** en la fila Meca abre su panel (`BalancePanel`): todas sus perillas (los agregados, el resorte,
+la firmeza por lado, el cuerpo, la caída), que salen de `MechBalanceSettings`.
 
 Más filas: **Personajes** (los seis arquetipos de allá, que se caen y se levantan; también con la bola), **Objetos** (los
 paquetes de allá sueltos, para agarrarlos, y una silla) y **Multijugador** (la red de allá: **H** abre sesión en esta
@@ -71,14 +70,15 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   de allá y la consola con su nivel de equilibrio), `MechLift` (el montacargas), `MechLeg` (una pierna de la meca de pelea, sólo
   dibujo), `MechArm` (un brazo: la piña cargada, el puño que barre y se traba, el cañón encima con su bala `MechShell`),
   `MechHud` (lo de pantalla para probar), `MechDummy` (la meca de equilibrio: el cuerpo físico, el resorte y el
-  muñeco de character-parametric, el empuje y los pasos; sus perillas en el F1) y `Clay` (la arcilla de los bocetos). Todo lo que tiene
+  muñeco de character-parametric, el empuje y los pasos; sus perillas en `MechBalanceSettings`) y `Clay` (la arcilla de los bocetos). Todo lo que tiene
   `take_hit(amount, direction, push)` recibe golpes.
 - `game/arena/` — `TestArena` (el redondel con edificios y las dos mecas, que no se pisan), `MechTestArchetype` (su
-  parcela), `BalanceTestArchetype` (la parcela de la meca de equilibrio), `TestBall` (la bola de la J),
+  parcela), `BalanceTestArchetype` (la parcela de la meca de equilibrio) y `BalancePanel` (su panel, F1), `TestBall`
+  (la bola de la J),
   `PeopleArchetype` (las personas de allá) con `CharacterGetUp` (que se levanten solas) y `ObjectLotArchetype` (el lote
   de objetos).
-- `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas; crea al jugador, ver arriba) y la
-  sesión de red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD,
+- `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas, `_mount_tuners` sus paneles F;
+  crea al jugador, ver arriba) y la sesión de red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD,
   espacio, shift, Ctrl, E, R, C, V, B, F1–F6, Escape; no repetirlas. Sentado (o manejando desde afuera) sólo valen las
   de la meca.
 - `game/ui/` — la pausa (autoload `PauseMenu`, Escape, la de allá), el menú de inicio (`main_menu.tscn`), las Opciones

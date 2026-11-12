@@ -40,14 +40,28 @@ func _ready() -> void:
 	_eye.make_current()
 	await _seconds(1.0)
 	_report_feet()
+	# EL PANEL DE LA FILA (F1 parado en la fila Meca, ver BalancePanel).
+	var world := sandbox as DesignSandbox
+	world.local_player.place_at(_parcel.global_position + Vector3(-20.0, 0.0, 0.0), PI * 0.5)
+	await _seconds(0.5)
+	var panel := sandbox.find_children("*", "BalancePanel", true, false)[0] as BalancePanel
+	await _key(KEY_F1)
+	await _seconds(0.3)
+	print("PANEL F1: fila «%s» · abierto %s" % [world.current_category(), panel.visible])
+	world.local_player.player_camera.make_current()
+	await _shot("F1 en la fila Meca: el panel de la meca de equilibrio", "panel_f1")
+	await _key(KEY_F1)
+	await _seconds(0.3)
+	print("PANEL F1 otra vez: abierto %s" % panel.visible)
+	_eye.make_current()
 	for pushes: bool in [false, true]:
-		MechDummy.hit_pushes = pushes
-		MechDummy.steps = pushes
+		MechBalanceSettings.current.hit_pushes = pushes
+		MechBalanceSettings.current.steps = pushes
 		print("── MODO %s" % ("con empuje y pasos" if pushes else "como character-parametric"))
 		for force: int in [6, 7, 8, 9, 10]:
 			await _throw(force, pushes and force == 8)
-	MechDummy.hit_pushes = true
-	MechDummy.steps = true
+	MechBalanceSettings.current.hit_pushes = true
+	MechBalanceSettings.current.steps = true
 	# LAS PERSONAS: las fuerzas chicas.
 	for person: BoneInstantiator in _parcel.find_children("*", "BoneInstantiator", true, false):
 		for force: int in [0, 2]:
@@ -141,3 +155,13 @@ func _shot(title: String, file_name: String) -> void:
 	var path := "%s/%s.png" % [_folder, file_name]
 	get_viewport().get_texture().get_image().save_png(path)
 	print("CAPTURA ", path)
+
+
+func _key(code: Key) -> void:
+	for pressed in [true, false]:
+		var event := InputEventKey.new()
+		event.physical_keycode = code
+		event.keycode = code
+		event.pressed = pressed
+		Input.parse_input_event(event)
+		await _frames(2)
