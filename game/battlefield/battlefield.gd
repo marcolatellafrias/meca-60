@@ -21,11 +21,12 @@ const WALL_THICK := 4.0
 const LOW := 11.0
 const TALL := 30.0
 const LANDMARK := 44.0
-## LA ESCALERA DE AFUERA: en zigzag (dos carriles pegados a una fachada), tramos que suben como mucho esto, de este largo
-## como mucho, con un descanso de los dos carriles en cada vuelta. Unos 28° de pendiente.
-const FLIGHT_RISE := 7.5
-const FLIGHT_RUN := 14.0
-const LANE := 2.6
+## LA ESCALERA DE INCENDIO: en zigzag (dos carriles pegados a una fachada), UN TRAMO POR PISO de unos `STORY` m, con un
+## descanso de los dos carriles en cada vuelta. Los tramos y los descansos son los de `Stairs` (escalones de 15 cm para
+## los pies, rampa para la cápsula: ver docs/escaleras.md).
+const STORY := 3.0
+const LANE := 1.4
+const LANDING := 1.6
 ## LOS BARRIOS: en qué ángulo del borde (grados) y cuánto abarcan; cuántos edificios de 30 m; y si lleva el hito.
 const BARRIOS := [[20.0, 80.0, 2, false], [115.0, 70.0, 2, false], [200.0, 60.0, 1, false], [285.0, 90.0, 2, true]]
 ## Dónde nace la meca: en el centro libre, mirando al medio.
@@ -154,24 +155,22 @@ static func building(body: StaticBody3D, at: Vector2, facing: Vector2, size: Vec
 	return piece
 
 
-## LA ESCALERA DE AFUERA sobre la fachada +Z de un edificio de `size` centrado en el origen: tramos en zigzag por dos
-## carriles, un descanso en cada vuelta y el último al ras del techo. Las rampas son losas inclinadas.
+## LA ESCALERA DE INCENDIO sobre la fachada +Z de un edificio de `size` centrado en el origen: un tramo por piso, en
+## zigzag por dos carriles, con un descanso en cada vuelta; el último descanso da al techo (la tabla de la cápsula sube
+## hasta él).
 static func stairs(piece: StaticBody3D, size: Vector2, height: float) -> void:
-	var run := minf(FLIGHT_RUN, size.x - 7.0)
-	var flights := ceili(height / FLIGHT_RISE)
+	var flights := maxi(1, roundi(height / STORY))
 	var rise := height / flights
-	var slope := atan2(rise, run)
-	var length := Vector2(run, rise).length()
+	var run := Stairs.run_for(rise)
+	var face := size.y * 0.5
 	for i in flights:
 		var lane := i % 2
 		var direction := 1.0 if lane == 0 else -1.0
-		var z := size.y * 0.5 + LANE * (lane + 0.5)
-		# Sube hacia +X (o −X): la losa inclinada con la cara de arriba pasando por el medio del tramo.
-		var basis := Basis(Vector3.UP, -PI * 0.5 * direction) * Basis(Vector3.RIGHT, slope)
-		var middle := Vector3(0, rise * (i + 0.5), z)
-		Clay.solid(piece, Vector3(LANE - 0.1, 0.6, length), middle - basis.y * 0.3, STAIRS, basis)
-		var landing := Vector3(direction * (run * 0.5 + 1.5), rise * (i + 1) - 0.3, size.y * 0.5 + LANE)
-		Clay.solid(piece, Vector3(3.0, 0.6, LANE * 2.0), landing, STAIRS)
+		var start := Vector3(-direction * run * 0.5, rise * i, face + LANE * (lane + 0.5))
+		Stairs.flight(piece, start, Vector3(direction, 0, 0), rise, LANE - 0.1, STAIRS)
+		var last := i == flights - 1
+		Stairs.landing(piece, Vector3(direction * (run * 0.5 + LANDING * 0.5), rise * (i + 1), face + LANE),
+			Vector2(LANDING, LANE * 2.0), 0.0, STAIRS, Vector3(0, 0, -1) if last else Vector3.ZERO)
 
 
 ## Un auto: la caja y la cabina, girado `yaw`.

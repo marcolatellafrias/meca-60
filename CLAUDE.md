@@ -36,6 +36,9 @@ también»). Nada queda huérfano.
     se traban y ceden.
   Lo que se le pide a un brazo (posturas, piñas, la pose) está una sola vez, en `MechArm`. Los límites de cada camino
   moldean sus features; lo común (consolas, reparación, energía) se hace una vez.
+- **Toda escalera se arma con `Stairs`** (13/11/2026; ver docs/escaleras.md): los escalones de 15 cm los ven sólo los
+  pies (capa Escalones) y la cápsula pisa una rampa invisible por los rincones de abajo (capa Rampa). Nunca una rampa
+  sola ni escalones sólidos para la cápsula.
 - **El cuerpo de la meca se define una sola vez** (`MechBody`: medidas, piernas, brazos). Sin cabeza.
 - Los jefes, cuando lleguen: **pocos arquetipos hechos a mano**, con **las partes por semilla**, **partes que se
   rompen** y **afijos** encima. Nada de piezas del bicho en la meca ni de sistema Némesis por ahora.

@@ -15,8 +15,9 @@ cosas… las cosas no tienen que estar desparramadas tan así al tuntún, pero t
 - **Cuatro barrios** contra el muro, de distinto largo. Casas de **11 m** (tapan a una persona), edificios de **30 m**
   (tapan a la meca) y **un hito de 44 m**; una fila contra el muro y algunas casas más adentro; autos en la calle de
   adelante.
-- **Escaleras de afuera** en zigzag, pegadas a la fachada que mira al centro: tramos de 7,5 m de alto en dos carriles,
-  unos 28°, con un descanso en cada vuelta y el último al ras del techo. Para que la gente **suba a los techos**: un
+- **Escaleras de incendio** en zigzag, pegadas a la fachada que mira al centro: un tramo por piso, en dos carriles, con
+  un descanso en cada vuelta y el último al ras del techo. Hechas con `Stairs`: escalones para los pies, rampa para la
+  cápsula (ver [[escaleras]]). Para que la gente **suba a los techos**: un
   mejor ángulo, subirse más rápido a la meca, tirar la bomba al jefe o esconderse para sabotearlo.
 - **Los recursos** (los cubos de verdad, que se agarran: ver [[recursos]]): tres por lugar, sobre una baldosa ocre con un
   poste y una bandera que se ven de lejos, **frente a cada barrio** y **arriba de algún edificio de 30 m**.
@@ -35,7 +36,8 @@ no cambia con la R: es UN mapa.
 - **El centro libre para la meca mide unos 60 m de radio** (Ø ~120–130 m): más allá están los recursos (a 64 m), los
   autos (~74 m) y las escaleras de las casas de adentro (~78 m). Una primera vuelta con puntos a 76 m se trabó contra un
   barrio.
-- Una cápsula del tamaño de una persona sube la escalera de una casa de 11 m y la de una torre de 30 m hasta el techo.
+- Una cápsula del tamaño de una persona, que pisa la rampa como el personaje, sube la escalera de una casa de 11 m y la
+  de una torre de 30 m hasta el techo, con las pisadas siempre de 0 a 15 cm por encima de ella (ver [[escaleras]]).
 
 ## Cómo se llegó (para no repetir)
 Se maquetaron cuatro tandas en arcilla, que el usuario fue descartando (las capturas, en la conversación; el código, en

@@ -157,9 +157,11 @@ func _press(key: Key, down: bool) -> void:
 	Input.parse_input_event(event)
 
 
-## SUBIR UNA ESCALERA: un edificio suelto de `height` (lejos del mapa) y un muñeco con el tamaño de una persona (una
-## cápsula de 1,8 m) que sigue el zigzag a pie: cada tramo, el descanso, el otro carril, y al final el techo. Imprime a
-## qué altura llegó y si quedó arriba del techo.
+## SUBIR UNA ESCALERA DE INCENDIO: un edificio suelto de `height` (lejos del mapa) y un muñeco con el tamaño de una
+## persona (una cápsula de 1,8 m que, como la del personaje, pisa el piso y la RAMPA, no los escalones) que sigue el
+## zigzag: cada tramo, el descanso, el otro carril, y al final el techo. En cada paso mide LO QUE PISARÍAN LOS PIES (el
+## piso y los escalones) respecto del piso de la cápsula (el piso y la rampa), justo debajo de ella: tiene que quedar
+## entre 0 y un escalón por encima (ver Stairs). Imprime a qué altura llegó y ese rango.
 func _climb(height: float, at: Vector3) -> void:
 	var holder := StaticBody3D.new()
 	add_child(holder)
@@ -173,43 +175,61 @@ func _climb(height: float, at: Vector3) -> void:
 	capsule.height = 1.8
 	shape.shape = capsule
 	walker.add_child(shape)
+	walker.collision_mask = 1 | PhysicsLayers.RAMP
 	walker.floor_max_angle = deg_to_rad(40.0)
-	walker.floor_snap_length = 0.6
+	walker.floor_snap_length = 0.4
 	add_child(walker)
-	var run := minf(Battlefield.FLIGHT_RUN, size.x - 7.0)
-	var flights := ceili(height / Battlefield.FLIGHT_RISE)
+	var flights := maxi(1, roundi(height / Battlefield.STORY))
+	var run := Stairs.run_for(height / flights)
+	var face := size.y * 0.5
 	var path: Array[Vector3] = []
 	for i in flights:
 		var lane := i % 2
 		var direction := 1.0 if lane == 0 else -1.0
-		var z := size.y * 0.5 + Battlefield.LANE * (lane + 0.5)
+		var z := face + Battlefield.LANE * (lane + 0.5)
 		if i == 0:
-			walker.global_position = piece.global_transform * Vector3(-run * 0.5 - 2.0, 1.0, z)
-		path.append(Vector3(direction * (run * 0.5 + 1.5), 0, z))
-		var other := size.y * 0.5 + Battlefield.LANE * ((1 - lane) + 0.5)
-		path.append(Vector3(direction * (run * 0.5 + 1.5), 0, other if i < flights - 1 else size.y * 0.5 - 3.0))
+			walker.global_position = piece.global_transform * Vector3(-run * 0.5 - 1.5, 1.0, z)
+		var turn := direction * (run * 0.5 + Battlefield.LANDING * 0.5)
+		path.append(Vector3(turn, 0, z))
+		var next := face + Battlefield.LANE * ((1 - lane) + 0.5)
+		path.append(Vector3(turn, 0, next if i < flights - 1 else face - 3.0))
 	var reached := 0
+	var lowest := INF
+	var highest := -INF
 	for point in path:
 		var goal := piece.global_transform * point
 		var started := Time.get_ticks_msec()
-		while (Time.get_ticks_msec() - started) / 1000.0 < 10.0:
+		while (Time.get_ticks_msec() - started) / 1000.0 < 12.0:
 			var flat := Vector2(goal.x - walker.global_position.x, goal.z - walker.global_position.z)
-			if flat.length() < 0.4:
+			if flat.length() < 0.3:
 				reached += 1
 				break
-			var step := flat.normalized() * 4.0
+			var step := flat.normalized() * 3.0
 			walker.velocity = Vector3(step.x, walker.velocity.y - 9.8 * get_physics_process_delta_time(), step.y)
 			walker.move_and_slide()
 			await get_tree().physics_frame
+			var feet := _floor_below(walker.global_position, 1 | PhysicsLayers.FEET)
+			var body := _floor_below(walker.global_position, 1 | PhysicsLayers.RAMP)
+			if is_finite(feet) and is_finite(body):
+				lowest = minf(lowest, feet - body)
+				highest = maxf(highest, feet - body)
 	var top := walker.global_position.y - 0.9
-	print("ESCALERA de %.0f m: llegó a %d de %d puntos · los pies a %.1f m · %s" % [height, reached, path.size(), top,
-		"ARRIBA DEL TECHO" if absf(top - height) < 0.3 else "NO LLEGÓ AL TECHO"])
+	print("ESCALERA de %.0f m (%d tramos de %d escalones): llegó a %d de %d puntos · los pies de la cápsula a %.2f m · %s · los pies pisarían de %.2f a %.2f m sobre la cápsula (tiene que ser de 0 a %.2f)" % [
+		height, flights, Stairs.steps_for(height / flights), reached, path.size(), top,
+		"ARRIBA DEL TECHO" if absf(top - height) < 0.2 else "NO LLEGÓ AL TECHO", lowest, highest, Stairs.RISE])
 	if not _folder.is_empty() and DisplayServer.get_name() != "headless" and height == Battlefield.TALL:
-		_eye.global_position = piece.global_transform * Vector3(-30, 12, 40)
-		_eye.look_at(piece.global_transform * Vector3(0, 12, 8))
+		_eye.global_position = piece.global_transform * Vector3(-14, 9, 26)
+		_eye.look_at(piece.global_transform * Vector3(0, 6, 9))
 		await _save("escalera_30m")
 	walker.queue_free()
 	holder.queue_free()
+
+
+## La altura del primer piso que encuentra un rayo hacia abajo desde un poco arriba de `from`, viendo `mask`.
+func _floor_below(from: Vector3, mask: int) -> float:
+	var ray := PhysicsRayQueryParameters3D.create(from + Vector3.UP * 0.5, from + Vector3.DOWN * 3.0, mask)
+	var hit := get_world_3d().direct_space_state.intersect_ray(ray)
+	return INF if hit.is_empty() else (hit["position"] as Vector3).y
 
 
 ## QUÉ TOCA LA CAJA DE LA MECA (un poco agrandada): para saber contra qué se trabó.
