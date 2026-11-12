@@ -1,6 +1,6 @@
 extends Node3D
 
-## MAQUETAS DE LOS RECURSOS DE LA MECA, TERCERA TANDA (numeradas desde el 28; sólo dibujo). Todo es UN CUBO DE 63 cm: lo
+## MAQUETAS DE LOS RECURSOS DE LA MECA, CUARTA TANDA (numeradas desde el 38; sólo dibujo). Todo es UN CUBO DE 63 cm: lo
 ## que se lleva y también el lugar de la meca donde se carga la munición. Lo que pidió el usuario (13/11/2026): que cada
 ## cosa se sienta UNA CAJA, una unidad —ni un armazón de barras ni cosas sueltas sobre una base—, con lo suyo empotrado
 ## o sobresaliendo; colores tranquilos y con poco contraste; estereotipos; y LOW POLY («le da más carácter»): cilindros
@@ -11,7 +11,7 @@ const U := 0.63
 const H := U * 0.5
 const GAP := 6.0
 const TABLE := 0.75
-const FIRST := 28
+const FIRST := 38
 const LEAD := Color(0.46, 0.46, 0.47)
 const OXIDE := Color(0.4, 0.21, 0.17)
 const ENAMEL := Color(0.47, 0.45, 0.4)
@@ -66,7 +66,7 @@ func _ready() -> void:
 		var station := _stations[index]
 		var at: Vector3 = (station["node"] as Node3D).position
 		var wide := float(station["wide"])
-		_eye.global_position = at + Vector3(wide * 0.4, 1.75, 1.3 + wide * 0.8)
+		_eye.global_position = at + (Vector3(wide * 0.4, 1.75, 1.3 + wide * 0.8) if wide < 6.0 else Vector3(0.8, 1.7, 6.8))
 		_eye.look_at(at + Vector3(0.0, 1.0, 0.0))
 		await _shot("%d · %s" % [index + FIRST, station["name"]], "%02d" % (index + FIRST))
 	get_tree().quit()
@@ -75,23 +75,25 @@ func _ready() -> void:
 ## ── LAS ESTACIONES ───────────────────────────────────────────────────────────────────────────────────────────────
 
 func _build() -> void:
-	_row("Batería (la elegida, en low poly): llena, a medias, gastada",
-		func(at: Node3D, state: float) -> void: _battery(at, state))
-	var names := ["A: aisladores arriba, tablerito al frente", "B: llave de cuchilla al frente",
-		"C: tres cartuchos empotrados", "D: aletas a los costados y dos bornes", "E: reloj, luces y borneras"]
-	for design in names.size():
-		var s := _station("Componente eléctrico %s · sano y quemado" % names[design], 2.2)
-		for index in 2:
-			_component(_block(s, (index - 0.5) * 1.0), design, index == 1)
-	var crates := _station("Cajas de munición (se llevan): misiles y balas, de distinto color", 2.2)
-	_crate(_block(crates, -0.5), CRATE_MISSILES, MUSTARD)
-	_crate(_block(crates, 0.5), CRATE, LEAD)
-	_row("Misiles en la meca, nueve: nueve, cinco, ninguno",
-		func(at: Node3D, state: float) -> void: _missiles(at, roundi(state * 9.0 + 0.01)))
-	_row("Balas en la meca, la cinta en cuatro columnas: llena, a medias, vacía",
-		func(at: Node3D, state: float) -> void: _belt(at, roundi(state * 9.0)))
-	var bomb := _station("Bomba: nueve cartuchos parados, con su faja (low poly)", 1.6)
-	_dynamite(_block(bomb, 0.0))
+	var s := _station("Componente eléctrico (el de aletas, más cuadrado): sano y quemado", 2.2)
+	for index in 2:
+		_component(_block(s, (index - 0.5) * 1.0), 3, index == 1)
+	_row("Balas en la meca, finas y apretadas: llena, a medias, vacía",
+		func(at: Node3D, state: float) -> void: _belt(at, roundi(state * BELT_ROWS)))
+	# LA FAMILIA ELEGIDA, junta.
+	var family := _station("La familia elegida", 7.4)
+	family.position.x += 14.0
+	var x := -3.0
+	for index in 7:
+		var cube := _block(family, x + index * 1.0)
+		match index:
+			0: _battery(cube, 0.7)
+			1: _component(cube, 3, false)
+			2: _crate(cube, CRATE_MISSILES, MUSTARD)
+			3: _crate(cube, CRATE, LEAD)
+			4: _missiles(cube, 6)
+			5: _belt(cube, 13)
+			6: _dynamite(cube)
 
 
 ## Una estación con tres cubos: lleno, a medias y gastado.
@@ -215,15 +217,16 @@ func _component(cube: Node3D, design: int, burnt: bool) -> void:
 					Clay.box(cube, Vector3(0.04, 0.09, 0.05), Vector3(side * 0.19, y, H + 0.03), metal)
 			lamp = Vector3(0.0, 0.21, H + 0.012)
 		3:
-			# D · Un transformador: el cuerpo con aletas a los dos costados (hasta el ancho del cubo) y dos bornes arriba.
-			Clay.box(cube, Vector3(0.43, 0.5, U), Vector3(0, -0.065, 0), body)
+			# D · Un transformador, CASI UN CUBO: el cuerpo ocupa casi todo el ancho y las aletas apenas asoman a los
+			# costados, del mismo alto que él; arriba, dos bornes.
+			Clay.box(cube, Vector3(0.55, 0.5, U), Vector3(0, -0.065, 0), body)
 			for side: float in [-1.0, 1.0]:
-				for fin in 6:
-					Clay.box(cube, Vector3(0.1, 0.44, 0.03), Vector3(side * 0.265, -0.07, -0.25 + fin * 0.1), trim)
+				for fin in 8:
+					Clay.box(cube, Vector3(0.04, 0.5, 0.035), Vector3(side * 0.295, -0.065, -0.266 + fin * 0.076), trim)
 				for disc in 2:
-					_cyl(cube, 0.045, 0.07, 0.04, Vector3(side * 0.11, 0.205 + disc * 0.045, 0.0), ceramic)
-				_cyl(cube, 0.02, 0.02, 0.03, Vector3(side * 0.11, 0.3, 0.0), metal, Vector3.ZERO, 6)
-			Clay.box(cube, Vector3(0.3, 0.18, 0.012), Vector3(0, -0.12, H), trim)
+					_cyl(cube, 0.045, 0.07, 0.04, Vector3(side * 0.13, 0.205 + disc * 0.045, 0.0), ceramic)
+				_cyl(cube, 0.02, 0.02, 0.03, Vector3(side * 0.13, 0.3, 0.0), metal, Vector3.ZERO, 6)
+			Clay.box(cube, Vector3(0.34, 0.2, 0.012), Vector3(0, -0.13, H), trim)
 			lamp = Vector3(0.0, 0.08, H + 0.012)
 		4:
 			# E · La caja entera; al frente, un reloj empotrado, dos luces y una bornera; arriba, ranuras de ventilación.
@@ -265,16 +268,20 @@ func _missiles(cube: Node3D, left: int) -> void:
 			_cyl(cube, 0.0, 0.066, 0.11, at + Vector3(0, 0, 0.05), MUSTARD, Vector3(90, 0, 0))
 
 
-## LAS BALAS, EN LA MECA: un cubo con una ventana donde se ve la cinta, en cuatro columnas; baja a medida que se gasta.
+## LAS BALAS, EN LA MECA: un cubo con una ventana donde se ve la cinta, en cuatro columnas apretadas de balas finas y
+## largas; baja a medida que se gasta.
+const BELT_ROWS := 19
+
+
 func _belt(cube: Node3D, rows: int) -> void:
 	Clay.box(cube, Vector3(U, U, U), Vector3.ZERO, STEEL)
-	Clay.box(cube, Vector3(0.52, 0.52, 0.012), Vector3(0, 0, H), SOOT)
+	Clay.box(cube, Vector3(0.55, 0.55, 0.012), Vector3(0, 0, H), SOOT)
 	for column in 4:
-		var x := (column - 1.5) * 0.122
+		var x := (column - 1.5) * 0.132
 		for row in rows:
-			var y := -0.215 + row * 0.054
-			_cyl(cube, 0.019, 0.019, 0.06, Vector3(x - 0.018, y, H + 0.02), LEAD.lightened(0.15), Vector3(0, 0, 90), 6)
-			_cyl(cube, 0.0, 0.019, 0.035, Vector3(x + 0.03, y, H + 0.02), CREAM, Vector3(0, 0, -90), 6)
+			var y := -0.243 + row * 0.027
+			_cyl(cube, 0.0105, 0.0105, 0.08, Vector3(x - 0.02, y, H + 0.014), LEAD.lightened(0.15), Vector3(0, 0, 90), 6)
+			_cyl(cube, 0.0, 0.0105, 0.04, Vector3(x + 0.04, y, H + 0.014), CREAM, Vector3(0, 0, -90), 6)
 
 
 ## LA BOMBA: nueve cartuchos de dinamita parados, con una faja ancha de papel, y la mecha en el del medio.
