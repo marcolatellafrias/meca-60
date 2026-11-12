@@ -147,7 +147,7 @@ var ground_velocity := Vector3.ZERO
 var ground_step := 0.0
 ## Los gizmos de marcha (poles, targets, anillos de alcance y zancada, sondeos del raycast) se
 ## dibujan solo si esto está prendido. Arranca APAGADO: son ayudas de autoría, no del juego.
-## Manda CharacterDebugView, global para todos los personajes.
+## (Los prendía la vista de debug del personaje, borrada el 13/11/2026: hoy nadie los prende.)
 ##
 ## Gatea también la ACTUALIZACIÓN de los indicadores del raycast, no solo su visibilidad: mover tres
 ## mallas por pierna por frame para nada es gasto puro. Quedan viejos mientras están ocultos y se

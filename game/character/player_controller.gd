@@ -58,10 +58,6 @@ var _was_sprinting: bool = false
 
 var _was_ragdoll_active: bool = false
 
-## Tercera persona de debug, con el numpad: ver DebugOrbitCamera. Solo visual — el rayo de interacción
-## sale siempre de `player_camera`.
-var _third_person: bool = false
-var _debug_camera: DebugOrbitCamera = null
 
 var _hud: PlayerHUD = null
 var _impact_debug_hud: ImpactDebugHUD = null
@@ -86,7 +82,6 @@ var _inspector_on := false
 var _inspector_toggle: CheckButton = null
 var _map_overlay: CityMapOverlay = null
 var _weather_tuner: WeatherTuner = null
-var _view_tuner: ViewTuner = null
 
 ## Punto de entrada único cuando el BoneInstantiator (re)construye el esqueleto del jugador
 ## activo — tanto el build inicial como cada respawn. Construye lo persistente una sola vez
@@ -98,7 +93,7 @@ func on_skeleton_built(target: BoneInstantiator, cam: Camera3D) -> void:
 		_construct_persistent(target, cam)
 		is_ready = true
 	rebind(target)
-	_set_third_person(_third_person)
+	_use_own_camera()
 	_build_inspector()
 	if target.debug_enabled:
 		_setup_debug_panel()  # refleja el personaje nuevo (se recrea adentro)
@@ -137,9 +132,6 @@ func _construct_persistent(target: BoneInstantiator, cam: Camera3D) -> void:
 		_crosshair = Crosshair.new()
 		add_child(_crosshair)
 
-	_debug_camera = DebugOrbitCamera.new()
-	_debug_camera.current = false
-	add_child(_debug_camera)
 
 ## Re-vincula el controlador (persistente) al esqueleto target: refs de cápsula/brazos/anim, el
 ## InteractionController, reparenta la cámara y recrea el HUD. Único lugar donde se re-cablea:
@@ -162,7 +154,7 @@ func rebind(target: BoneInstantiator) -> void:
 		target.player_camera   = player_camera
 		player_camera.position = Vector3.ZERO
 		player_camera.rotation = Vector3(camera_pitch, 0.0, 0.0)
-		player_camera.current  = not _third_person
+		player_camera.current  = true
 
 	if is_instance_valid(_hud):
 		_hud.queue_free()
@@ -216,11 +208,6 @@ func _input(event: InputEvent) -> void:
 		_weather_tuner.toggle()
 		return
 
-	# F3, el afinador de vista de la ciudad. Como los otros dos: libera el mouse.
-	if is_instance_valid(_view_tuner) and not _direct() and event is InputEventKey and event.pressed and not event.echo \
-			and event.keycode == KEY_F3:
-		_view_tuner.toggle()
-		return
 
 	# LA TECLA Y EL CLIC DEL INSPECTOR NO ESTÁN ACÁ: son del modo y los maneja él (ver Inspector). Acá
 	# solo se refleja el cambio en la casilla del panel, por su señal.
@@ -318,12 +305,6 @@ func _input(event: InputEvent) -> void:
 					if is_instance_valid(player_camera):
 						DebugRam.fire(get_tree(), player_camera.global_transform)
 
-				# Cámara de debug (numpad): ver DebugOrbitCamera
-				KEY_KP_5 when _debug_keys(): _set_third_person(not _third_person)
-				_:
-					if _debug_keys() and is_instance_valid(_debug_camera) \
-							and _debug_camera.handle_key(event.keycode, camera_yaw):
-						_set_third_person(true)
 
 		else: # released
 			match event.keycode:
@@ -371,7 +352,6 @@ func _physics_process(delta: float) -> void:
 	_was_ragdoll_active = ragdoll_active
 
 	_update_hud(delta)
-	_update_debug_camera(delta)
 	_write_move()
 
 	if ragdoll_active:
@@ -452,34 +432,18 @@ func _update_ragdoll_camera(_delta: float) -> void:
 		char_rigidbody.rotation.y = camera_yaw
 
 
-## true cuando la cámara activa es la del jugador (no una de debug), o sea cuando hay que esconderle
-## la cabeza y el torso. Lo lee BoneInstantiator al final de initialize_skeleton para aplicar el
-## estado correcto en el build/respawn, no solo cuando cambiás de cámara.
+## true cuando la cámara activa es la del jugador, o sea cuando hay que esconderle la cabeza y el torso. Lo lee
+## BoneInstantiator al final de initialize_skeleton. *Hasta el 13/11/2026 había una cámara orbital de debug (el numpad).*
 func is_first_person_view() -> bool:
-	return not _third_person
+	return true
 
-func _set_third_person(on: bool) -> void:
-	_third_person = on
-	if on:
-		_debug_camera.ensure_view(camera_yaw)
-		_debug_camera.set_active(true)
-		player_camera.current = false
-	else:
+## La cámara del jugador, la activa, y su cuerpo escondido en primera persona.
+func _use_own_camera() -> void:
+	if is_instance_valid(player_camera):
 		player_camera.current = true
-		_debug_camera.set_active(false)
 	var bi := _get_bi()
 	if is_instance_valid(bi):
-		bi.set_first_person_visibility(not on)
-
-
-func _update_debug_camera(delta: float) -> void:
-	if not _third_person or not is_instance_valid(_debug_camera):
-		return
-	# Encuadre derivado del personaje, no de constantes en metros: la cámara mira a su CENTRO.
-	var sizes  := _get_bi().skel_sizes_util
-	var ground := char_rigidbody.global_position.y - sizes.standing_pelvis_height
-	var center := Vector3(char_rigidbody.global_position.x, ground + sizes.total_height * 0.5, char_rigidbody.global_position.z)
-	_debug_camera.follow(delta, center, sizes.total_height, interaction_controller.detector.get_aim_point())
+		bi.set_first_person_visibility(true)
 
 
 ## Suelta la barra espaciadora: si estaba cargando, salta (lo hace el cuerpo, ver BoneInstantiator, EL SALTO CARGADO).
@@ -566,7 +530,7 @@ func _switch_to(target: BoneInstantiator) -> void:
 	_drop_jump()
 	char_rigidbody.crouch_speed_factor = 1.0
 
-	_set_third_person(_third_person)
+	_use_own_camera()
 	if is_instance_valid(interaction_controller):
 		interaction_controller.stop_all()
 
@@ -601,9 +565,7 @@ func _cap_seated_look(bi: BoneInstantiator) -> void:
 ## APAGADO O PRENDIDO (ver BoneInstantiator.set_active): sin cámara, sin mira y sin HUD mientras está apagado.
 func set_active(on: bool) -> void:
 	if is_instance_valid(player_camera):
-		player_camera.current = on and not _third_person
-	if is_instance_valid(_debug_camera):
-		_debug_camera.set_active(on and _third_person)
+		player_camera.current = on
 	if is_instance_valid(_crosshair):
 		_crosshair.visible = on
 	if is_instance_valid(_hud):
@@ -778,18 +740,9 @@ func _setup_debug_panel() -> void:
 		func(v: float) -> void: CarBody.thrust = v)
 	_debug_panel.add_slider("Acciones", "Propulsor se apaga en: %.1f s", 0.0, 8.0, 0.1, CarBody.fall_thrust_s,
 		func(v: float) -> void: CarBody.fall_thrust_s = v)
-	# Todos globales: se aplican a TODOS los personajes de la escena, no solo al propio.
-	_debug_panel.add_action("Acciones", "Esconder personajes",       func(): CharacterDebugView.toggle_hide_character(get_tree()))
-	_debug_panel.add_action("Acciones", "Ver cápsula física",        func(): CharacterDebugView.toggle_capsule(get_tree()))
-	_debug_panel.add_action("Acciones", "Ragdoll debug color",       func(): CharacterDebugView.toggle_ragdoll_color(get_tree()))
-	_debug_panel.add_action("Acciones", "Grab cone",                 func(): CharacterDebugView.toggle_grab_cone(get_tree()))
 	if is_instance_valid(_impact_debug_hud):
 		_debug_panel.add_toggle("Acciones", "Ver impactos", _impact_debug_hud.visible,
 			func(on: bool) -> void: _impact_debug_hud.visible = on)
-	_debug_panel.add_action("Acciones", "Ver esqueleto",             func(): CharacterDebugView.toggle_skeleton(get_tree()))
-	_debug_panel.add_action("Acciones", "Ver colisionadores",        func(): CharacterDebugView.toggle_colliders(get_tree()))
-	_debug_panel.add_action("Acciones", "Ver gizmos de marcha",      func(): CharacterDebugView.toggle_gait_gizmos(get_tree()))
-	_debug_panel.add_action("Acciones", "Vista Blender",             func(): CharacterDebugView.toggle_blender_view(get_tree()))
 	_debug_panel.add_action("Acciones", "Indicadores de tráfico",    func(): TrafficDebugDrawer.ENABLED = not TrafficDebugDrawer.ENABLED)
 	# El afinador de vista (F3) tiene todo esto por separado; acá va el atajo al que se usa siempre: la vista debug
 	# pintada POR BARRIO, que es la que hace legibles los distritos desde el aire.
@@ -846,13 +799,6 @@ func _setup_debug_panel() -> void:
 	_weather_tuner = WeatherTuner.new()
 	add_child(_weather_tuner)
 	_weather_tuner.setup_panel()
-
-	# Y el de vista (F3).
-	if is_instance_valid(_view_tuner):
-		_view_tuner.queue_free()
-	_view_tuner = ViewTuner.new()
-	add_child(_view_tuner)
-	_view_tuner.setup_panel()
 
 	# ── Performance ──
 	PerformanceToggles.build_tab(_debug_panel, get_tree())

@@ -538,14 +538,9 @@ func _resolve_player_collisions() -> void:
 			continue  # no me estoy acercando a este
 		_player_contacts.append(other)
 		var mass_frac := other.mass / (mass + other.mass)
-		last_field_push = -normal * v_closing * mass_frac
-		last_field_push_ms = Time.get_ticks_msec()
 		linear_velocity += -normal * v_closing * mass_frac
 		push(-normal * v_closing * mass_frac)  # adentro del marco no se mide: va con nombre (ver EL MARCO)
 
-## El último empujón del campo de fuerza entre personajes (m/s, mundo) y cuándo fue: lo dibuja ForceFieldGizmo.
-var last_field_push := Vector3.ZERO
-var last_field_push_ms := -100000
 
 
 func _physics_process(delta: float) -> void:
@@ -1041,8 +1036,7 @@ static func create(root_size: Vector3, distance_from_ground: float, leg_height: 
 	new_mesh_instance.mesh = capsule_mesh
 	new_mesh_instance.position = Vector3(0.0, y_offset, 0.0)
 	var material := StandardMaterial3D.new()
-	# AMARILLA Y SEMITRANSPARENTE: es la que choca. La roja es la VISIBLE, lo que ocupa el cuerpo que se ve (ver
-	# CharacterDebugView.show_visible_capsule).
+	# AMARILLA Y SEMITRANSPARENTE: es la que choca.
 	material.albedo_color = Color(1.0, 0.85, 0.1, 0.35)
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.flags_transparent = true

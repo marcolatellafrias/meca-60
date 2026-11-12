@@ -468,19 +468,6 @@ func update_seated_visual(occupant: Node, occupant_yaw: float) -> void:
 	var turn := Basis(Vector3.UP, atan2(-facing.x, -facing.z))
 	mesh.global_basis = global_basis.orthonormalized() * turn * Basis.from_scale(mesh.global_basis.get_scale())
 
-## LAS MALLAS DE LA SILLA, la suya y la prestada al que está sentado (ver `_sit`): las que pinta la vista Blender del
-## que se sienta (ver CharacterDebugView.apply_to). Sin las de la vista misma.
-func visual_meshes() -> Array[MeshInstance3D]:
-	var out: Array[MeshInstance3D] = []
-	for root: Node in [_visual_root, _borrowed_mesh]:
-		if not is_instance_valid(root):
-			continue
-		for node in root.find_children("*", "MeshInstance3D", true, false):
-			if String(node.name) != BlenderView.NODE:
-				out.append(node as MeshInstance3D)
-	return out
-
-
 ## Si el asiento lo tenía UNO DE EXHIBICIÓN (ver CharacterKind.is_exhibit) y el que llega es otro, se lo saca: el que se
 ## sienta de verdad tiene prioridad, y con dos ocupantes el asiento queda posado por los dos a la vez. La malla prestada se
 ## va con él —es hija de su cápsula—, así que acá sólo se la suelta antes de devolver el visual a su reposo.
@@ -588,10 +575,6 @@ func _sit(bi: Node) -> void:
 
 	bi.set("is_seated", true)
 	bi.set("current_seat", self)
-	# (Con la vista Blender puesta, también sobre la silla: ver `visual_meshes`. Sólo eso: rearmar todo el estado de
-	# depuración del que se sienta le deshacía la pose sentada.)
-	if bi is BoneInstantiator:
-		CharacterDebugView.apply_seat_view(bi as BoneInstantiator)
 
 	var ic: InteractionController = bi.get("interaction_controller")
 	if is_instance_valid(ic):

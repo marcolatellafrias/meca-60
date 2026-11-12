@@ -6,8 +6,7 @@ class_name DebugArchetype
 ## fabricar la seed que después interpreta `EntityInstantiation.archetype_in_seed`. Por eso es estado
 ## estático sin ninguna consecuencia en red — lo que viaja es la seed, y la seed ya se explica sola.
 ##
-## Es el mismo patrón que `CharacterDebugView`: el estado global vive acá y se consulta al spawnear,
-## así lo que nazca DESPUÉS de elegir también lo hereda.
+## El estado global vive acá y se consulta al spawnear, así lo que nazca DESPUÉS de elegir también lo hereda.
 ##
 ## Reemplaza al viejo `FORCE_GENERIC_ARCHETYPE`, que era un candado de compilación para todos los
 ## personajes a la vez. El candado global sigue existiendo (`EntityInstantiation.FORCE_ARCHETYPE`)

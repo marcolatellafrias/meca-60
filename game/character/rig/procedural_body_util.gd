@@ -534,8 +534,7 @@ func set_first_person(first_person: bool) -> void:
 		return
 	for i in meshes.size():
 		if is_instance_valid(meshes[i]):
-			meshes[i].visible = ((not first_person) or _first_person[i] == 1) \
-				and part_shown(String(meshes[i].name))
+			meshes[i].visible = (not first_person) or _first_person[i] == 1
 
 
 func set_meshes_visible(value: bool) -> void:

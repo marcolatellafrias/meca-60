@@ -57,87 +57,13 @@ static func body_material(color: Color = BODY_COLOR, vertex_color := false, face
 static var _materials: Dictionary = {}
 
 
-## Las mallas que dibujan este cuerpo. Las recorre el wireframe del panel de debug.
+## Las mallas que dibujan este cuerpo.
 var meshes: Array[MeshInstance3D] = []
-
-## ── QUÉ PARTES SE VEN, Y POR QUÉ ES DEL CUERPO ────────────────────────────────────────────────────
-## `studied` es la parte que se está mirando SOLA (la aislada); `_hidden_parts` son las que se escondieron
-## a mano. Los pone el inspector (ver CharacterInspectorSource) y los lee el propio cuerpo.
-##
-## ⚠ TIENE QUE VIVIR ACÁ y no en el inspector, y eso se vio como un bug: cualquier toggle del panel vuelve
-## a pasar por `set_meshes_visible` / `set_first_person` —prender el alambre, mostrar la cápsula, cambiar de
-## cámara— y ahí se decide quién se ve. Con el estado afuera, aislar el torso y prender el alambre le
-## devolvía todas las partes: dos sistemas escribiendo `visible` sin saber uno del otro. Ahora hay UNA
-## regla, `part_shown`, y todo el mundo la consulta.
-## LAS PARTES AISLADAS. Es una LISTA y no una sola: el sujeto de un estudio puede ser más de una malla —la
-## cabeza con la tinta de sus rasgos es UNA cosa que se mira junta (ver FeatureArchetype)— y con un solo
-## nombre la fila de rasgos mostraba una cara sin ojos.
-var studied := PackedStringArray()
-var _hidden_parts: Dictionary = {}
-
-## EL GRUPO EN EL QUE SE ANOTA TODO CUERPO, para poder hablarle a todos a la vez. Hoy lo usa el tilde por
-## malla del panel (ver `set_part_hidden`), que es de todos y no de un personaje.
-const GROUP := "character_body"
-
-## ── LAS PARTES QUE EL PANEL ESCONDE, QUE SON DE TODOS ───────────────────────────────────────────
-## Por NOMBRE DE MALLA y ESTÁTICO: lo pone el panel de formas con un tilde por malla y vale para todos los
-## cuerpos a la vez. Eso es el pedido y es lo que lo hace servir: para modelar se mira el mismo cambio en
-## los seis arquetipos de la fila, y esconder el brazo de uno por uno no alcanza.
-##
-## Es APARTE de `_hidden_parts` —lo que el inspector esconde apuntando, que es de ese personaje— porque son
-## dos herramientas distintas: apagar el brazo de todos no tiene que borrar lo que alguien aisló apuntando,
-## ni al revés. La regla las compone (ver `part_shown`).
-static var hidden_everywhere: Dictionary = {}
-
 
 ## El cuerpo entero apagado (panel) y la primera persona. Viven acá porque las dos implementaciones los
 ## manejaban igual y la regla de visibilidad los compone.
 var _hidden := false
 var _in_first_person := false
-
-
-## TODO CUERPO SE ANOTA EN SU GRUPO, y ninguna de las dos implementaciones define `_ready`, así que esto
-## vale para las dos sin que ninguna tenga que acordarse de llamar a `super`.
-func _ready() -> void:
-	add_to_group(GROUP)
-
-
-## Mirar UNA parte sola. `""` sale del aislamiento.
-func study_part(part_name: String) -> void:
-	study_parts(PackedStringArray() if part_name.is_empty() else PackedStringArray([part_name]))
-
-
-## Mirar UN CONJUNTO de partes y nada más. Una lista vacía sale del aislamiento. Aislar limpia lo escondido
-## a mano: es un estado nuevo, no una capa encima de otro.
-func study_parts(names: PackedStringArray) -> void:
-	studied = names
-	_hidden_parts.clear()
-	refresh_parts()
-
-
-func hide_part(part_name: String) -> void:
-	_hidden_parts[part_name] = true
-	refresh_parts()
-
-
-func show_all_parts() -> void:
-	studied = PackedStringArray()
-	_hidden_parts.clear()
-	refresh_parts()
-
-
-## LA REGLA, en un solo lugar: una parte se ve si no está escondida —ni a mano en este cuerpo ni por el
-## tilde que vale para todos— y, si hay una aislada, es ella.
-func part_shown(part_name: String) -> bool:
-	if _hidden_parts.has(part_name) or hidden_everywhere.has(part_name):
-		return false
-	return studied.is_empty() or studied.has(part_name)
-
-
-## Vuelve a aplicar la regla. Pasa por `set_first_person` porque ese es el único lugar que decide malla por
-## malla en cada implementación.
-func refresh_parts() -> void:
-	set_first_person(_in_first_person)
 
 
 ## Copiar el pose del árbol de CustomBone. Una vez por frame, al final del solve.
@@ -155,7 +81,7 @@ func set_first_person(_first_person: bool) -> void:
 	pass
 
 
-## Mostrar/esconder el cuerpo entero (toggle del panel de debug).
+## Mostrar/esconder el cuerpo entero.
 func set_meshes_visible(value: bool) -> void:
 	for m in meshes:
 		if is_instance_valid(m):

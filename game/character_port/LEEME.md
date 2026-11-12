@@ -19,8 +19,9 @@ tránsito, la nave y sus paneles.
   `WorldSeeds`), `game/ship/working_seat.tscn` (la silla de las consolas), `game/city/props/unit_mesh.gd`.
 - `game/common/`: `debug_util`, `mesh_kit`, `model_box`, `motion_frame` (el marco: lo que se mueve y lleva cosas),
   `physics_layers`.
-- `game/debug/`: la depuración del personaje (`CharacterDebugView`, `SkeletonDebugDraw`, `DebugPanel`,
-  `DebugOrbitCamera`, `ImpactDebugHUD`, `ViewTuner`, `TunerPanel`, `PropertyTuner`, el inspector de piezas…).
+- `game/debug/`: la depuración del personaje (`DebugPanel`, `ImpactDebugHUD`, `TunerPanel`, `PropertyTuner`…). *Las
+  herramientas de esculpir el cuerpo (el inspector, la vista Blender, el alambre de quads, el esqueleto dibujado, la
+  cámara orbital, el F3) se borraron el 13/11/2026.*
 - `game/ui/`: `UIState`, `DevConsole`, `Crosshair`, el HUD del jugador, **la pausa** (la de allá: no frena el mundo, como
   en cooperativo) y `main_menu.tscn`.
 - De `project.godot`: las acciones de teclado (`move_*`, `jump`, `sprint`, `interact`…), los nombres de las capas, la

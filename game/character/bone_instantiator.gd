@@ -57,9 +57,6 @@ var ik_util: IkUtil
 ## los cuerpos del ragdoll.
 ## Ver technical/characters.md.
 var body_visual: CharacterBodyVisual
-## Gizmos de debug del esqueleto (líneas/articulaciones y cápsulas de colisión). Se crea recién
-## cuando alguien prende un visualizador desde el panel. Ver game/debug/skeleton_debug_draw.gd.
-var skeleton_debug: SkeletonDebugDraw
 var locomotion_signals: LocomotionSignals
 var procedural_animator: ProceduralBoneAnimator
 var ragdoll_util: RagdollUtil
@@ -106,16 +103,9 @@ var carry_lean := Vector2.ZERO
 var carry_lean_share := 0.0
 var _reset_feet_after_recovery: bool = false  # plantar los pies el primer frame tras recuperarse
 
-## Debug: esconde el personaje ENTERO (el cuerpo visible, sea cual sea). Gana sobre la
-## primera persona — si no, cambiar de cámara con el numpad lo volvía a mostrar a medias.
+## Esconde el personaje ENTERO (el cuerpo visible, sea cual sea; ver `set_shown`). Gana sobre la
+## primera persona: un cambio de cámara no lo vuelve a mostrar a medias.
 var character_hidden: bool = false
-var grab_cone_mesh: MeshInstance3D = null
-var show_grab_cone: bool = false
-## LAS VISTAS DE DEBUG DE ESTE PERSONAJE, si no son las de todos (ver CharacterDebugView.apply_to): "blender",
-## "capsule", "visible_capsule", "gait_gizmos" → bool. Las pone la fila del sandbox donde vive, así sus teclas tocan sólo
-## a los suyos (lo pidió el dios del juego, 18/10/2026: apretar M recorría todos los personajes del sandbox).
-var debug_view: Dictionary = {}
-var grab_cone_half_angle: float = 120.0
 
 var is_seated:    bool = false
 var current_seat: Node = null
@@ -158,21 +148,7 @@ func _ready() -> void:
 ##
 ## La primera vez no hay nada que recordar: ahí lo ubica quien lo spawnea.
 func initialize_skeleton() -> void:
-	# EL DIBUJO DEL ESQUELETO SOBREVIVE AL REARMADO (07/11/2026, el dios del juego: «cada vez que muevo un slider y estoy
-	# visualizando el esqueleto se me apaga»): sus gizmos cuelgan de los huesos viejos y se van con ellos (ver
-	# `_clear_prior_generations`), así que se anota cómo estaba y se vuelve a armar sobre los nuevos. Vale para todo lo
-	# que rearma a un personaje —los paneles al soltar una perilla, los modificadores—, no para cada uno por su cuenta.
-	var carry := {}
-	if is_instance_valid(skeleton_debug):
-		carry = {"pinned": skeleton_debug.pinned, "bones": skeleton_debug.bones_on(),
-			"colliders": skeleton_debug.colliders_on()}
 	_initialize_skeleton()
-	if carry.is_empty() or not (bool(carry["bones"]) or bool(carry["colliders"])):
-		return
-	var draw := get_skeleton_debug()
-	draw.pinned = bool(carry["pinned"])
-	draw.set_bones(bool(carry["bones"]))
-	draw.set_colliders(bool(carry["colliders"]))
 
 
 func _initialize_skeleton() -> void:
@@ -233,11 +209,6 @@ func _initialize_skeleton() -> void:
 
 
 	if kind.is_touchable():
-		var cone_dist := skel_sizes_util.interaction_reach
-		var cone_radius : float = cone_dist * abs(tan(deg_to_rad(grab_cone_half_angle)))
-		grab_cone_mesh = DebugUtil.create_debug_cone(Color(0.2, 0.8, 1.0, 0.15), cone_dist, cone_radius)
-		grab_cone_mesh.visible = false
-		char_rigidbody.add_child(grab_cone_mesh)
 		_setup_char_grabbable()
 
 	local_targets.add_child(ik_util.left_leg_raycast)
@@ -339,10 +310,6 @@ func _initialize_skeleton() -> void:
 	# `is_instance_valid` antes de tocarlo, así que no tenerlo es un estado que el personaje ya soportaba.
 	if kind.has_ragdoll() and (kind.simulates() or kind.driver == CharacterKind.Driver.NETWORK):
 		_make_ragdoll()
-
-	# Los visualizadores de debug son estado GLOBAL: un personaje que spawnea o respawnea nace con lo
-	# que esté prendido, sin que nadie tenga que volver a tocar el panel.
-	CharacterDebugView.apply_to(self)
 
 	# Primera persona: se aplica ACÁ, al final. PlayerController.rebind (que corre en
 	# on_skeleton_built, bastante más arriba) es quien venía seteando esto, pero el cuerpo visible se
@@ -509,10 +476,6 @@ func _clear_prior_generations() -> void:
 	if is_instance_valid(char_rigidbody):
 		char_rigidbody.queue_free()  # se lleva puesto el body_visual, que cuelga de él
 	body_visual = null
-	if is_instance_valid(skeleton_debug):
-		# Sus gizmos cuelgan de los CustomBone, que se van con la generación anterior.
-		skeleton_debug.queue_free()
-	skeleton_debug = null
 
 	if is_instance_valid(anim_mod):
 		anim_mod.queue_free()
@@ -770,7 +733,6 @@ func _solve_pose(solve_delta: float) -> void:
 
 	_solve_frame(solve_delta)
 
-	_update_grab_cone()
 
 
 func _update_ragdoll_ext_state() -> void:
@@ -1308,7 +1270,7 @@ func refresh_camera_animations() -> void:
 ## ser por malla entera, y esa granularidad se había perdido.
 func set_first_person_visibility(first_person: bool) -> void:
 	if character_hidden:
-		return  # el toggle de debug manda: no lo pisa un cambio de cámara
+		return  # escondido entero (ver `set_shown`): no lo pisa un cambio de cámara
 	if not is_instance_valid(body_visual):
 		return
 	body_visual.set_first_person(first_person)
@@ -1328,18 +1290,6 @@ func _setup_char_grabbable() -> void:
 	grabbable.add_handle_point_local(Vector3(-handle_x, handle_y, 0.0))
 	grabbable.add_handle_point_local(Vector3( handle_x, handle_y, 0.0))
 	grabbable.add_grab_point_local(Vector3(0.0, char_rigidbody._capsule_stand_y_offset, 0.0))
-
-func _update_grab_cone() -> void:
-	if not is_instance_valid(grab_cone_mesh) or not is_instance_valid(player_camera):
-		return
-	grab_cone_mesh.visible = kind.is_local() and show_grab_cone
-	if not grab_cone_mesh.visible:
-		return
-	var chest := custom_bones_util.chest
-	var origin := chest.global_position + chest.global_transform.basis.y * skel_sizes_util.chest_size.y
-	var fwd := -player_camera.global_transform.basis.z
-	grab_cone_mesh.global_position = origin
-	grab_cone_mesh.global_transform.basis = Basis.looking_at(-fwd, Vector3.UP)
 
 func get_interaction_origin() -> Vector3:
 	var sizes       := skel_sizes_util
@@ -1367,14 +1317,6 @@ func get_interaction_origin() -> Vector3:
 		var back := Vector2(sin(carry_lean.x), sin(carry_lean.y)) * rise - carry_lean.normalized() * hips
 		at += char_rigidbody.global_basis.orthonormalized() * Vector3(back.x, 0.0, back.y)
 	return at
-
-## Gizmos de debug, creados recién al primer uso: un personaje normal no paga nada por esto.
-func get_skeleton_debug() -> SkeletonDebugDraw:
-	if not is_instance_valid(skeleton_debug):
-		skeleton_debug = SkeletonDebugDraw.new()
-		skeleton_debug.bi = self
-		add_child(skeleton_debug)
-	return skeleton_debug
 
 ## LO ESCONDE Y LO APAGA (`on` falso), o lo vuelve a mostrar y prender: el personaje entero, sea de la clase que sea. Es
 ## el único apagar: el de exhibición que se aparta cuando un jugador se sienta en su silla, el ente que se guarda.

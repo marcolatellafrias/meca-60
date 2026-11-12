@@ -2,39 +2,6 @@
 class_name DebugUtil
 
 
-static func create_debug_cone(color: Color, length: float, radius: float, segments: int = 32) -> MeshInstance3D:
-	var mesh_instance := MeshInstance3D.new()
-	var st := SurfaceTool.new()
-	st.begin(Mesh.PRIMITIVE_TRIANGLES)
-
-	for i in segments:
-		var a0 := TAU * float(i)     / float(segments)
-		var a1 := TAU * float(i + 1) / float(segments)
-		var p0 := Vector3(cos(a0) * radius, sin(a0) * radius, length)
-		var p1 := Vector3(cos(a1) * radius, sin(a1) * radius, length)
-		st.set_color(color); st.add_vertex(Vector3.ZERO)
-		st.set_color(color); st.add_vertex(p0)
-		st.set_color(color); st.add_vertex(p1)
-
-	var center := Vector3(0, 0, length)
-	for i in segments:
-		var a0 := TAU * float(i)     / float(segments)
-		var a1 := TAU * float(i + 1) / float(segments)
-		var p0 := Vector3(cos(a0) * radius, sin(a0) * radius, length)
-		var p1 := Vector3(cos(a1) * radius, sin(a1) * radius, length)
-		st.set_color(color); st.add_vertex(center)
-		st.set_color(color); st.add_vertex(p1)
-		st.set_color(color); st.add_vertex(p0)
-
-	mesh_instance.mesh = st.commit()
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = color
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.cull_mode    = BaseMaterial3D.CULL_DISABLED
-	mesh_instance.material_override = mat
-	return mesh_instance
-
 static func create_debug_line(color: Color, length: float, on_top: bool = false, to_down: bool = true) -> MeshInstance3D:
 	var mesh_instance := MeshInstance3D.new()
 	var cube := BoxMesh.new()

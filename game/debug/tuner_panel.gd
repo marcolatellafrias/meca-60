@@ -165,20 +165,11 @@ var _ui_key := ""
 var ui_copy := ""
 var _box: VBoxContainer = null
 var _scroll: ScrollContainer = null
-## El color de la sección de un título (ver `show_loop`).
-const SECTION_COLOR := "section_color"
 var _copy_button: Button = null
 var _tabs: TabBar = null
 var _header: VBoxContainer = null
-var _isolate: CheckButton = null
 ## La pestaña elegida, por nombre. Vacío es "la primera".
 var _tab_name := ""
-## ── LAS PESTAÑAS SON LAS PARTES DEL CUERPO (20/10/2026, ver ModelClick) ──────────────────────────
-## Lo pidió el dios del juego: con el panel abierto, hacer click en el modelo —el torso, los brazos, las piernas, el
-## cinturón, la cara— y que se abran SUS opciones; y que las pestañas no digan otra cosa que el click. Así que una sección
-## que dice de qué parte es (`"part"`, ver ModelClick) va en la pestaña de esa parte —sus medidas, sus colores, lo que
-## lleva, todo junto—, y un click en el modelo elige esa pestaña. Lo que no es de una parte —la pose, el andar— queda en
-## su propia pestaña (`"tab"`), después de las partes.
 var _built := false
 
 
@@ -239,17 +230,9 @@ func setup(ui_key: String, title_text: String, extra: Array[Button] = []) -> voi
 	# LA BARRA DE PESTAÑAS va ARRIBA DEL SCROLL y no adentro: es la navegación del panel, así que tiene que
 	# quedarse quieta mientras se scrollea lo que muestra. Nace escondida; la prende `rebuild` si alguna
 	# sección declara pestaña.
-	# AISLAR LA PARTE DE LA PESTAÑA (20/10/2026, lo pidió el dios del juego): esconde el resto del cuerpo (ver
-	# ModelClick.isolated). Sólo en los paneles cuyas pestañas son partes; la prende `rebuild`.
 	# LA CABECERA (ver `header`): arriba de la barra de pestañas, quieta como ella.
 	_header = VBoxContainer.new()
 	column.add_child(_header)
-	_isolate = CheckButton.new()
-	_isolate.text = "aislar la parte de la pestaña (esconde el resto; queda al cerrar)"
-	_isolate.focus_mode = Control.FOCUS_NONE
-	_isolate.visible = false
-	_isolate.toggled.connect(func(_on: bool) -> void: _apply_isolation())
-	column.add_child(_isolate)
 	_tabs = TabBar.new()
 	_tabs.visible = false
 	_tabs.focus_mode = Control.FOCUS_NONE
@@ -300,10 +283,6 @@ func _on_ui_changed() -> void:
 	visible = UIState.is_open(_ui_key)
 	just_closed = _was_visible and not visible
 	_was_visible = visible
-	# EL AISLAMIENTO QUEDA AUNQUE SE CIERRE EL PANEL (lo pidió el dios del juego: para caminarle alrededor y mirarla);
-	# se apaga con el mismo tilde. Al abrirse, el tilde dice si hay una parte aislada.
-	if visible and _isolate != null:
-		_isolate.set_pressed_no_signal(not ModelClick.isolated.is_empty())
 	# Se arma la primera vez que se abre, no al spawnear: los controles nacen con el valor que el mundo
 	# tiene en ese momento, y un panel que casi nunca se abre no cuesta nada.
 	if visible and not _built:
@@ -330,16 +309,11 @@ func rebuild() -> void:
 		_header.add_child(control)
 	var all := sections()
 	var names := PackedStringArray()
-	# Primero las partes del cuerpo, en el orden de ModelClick.PARTS; después las demás, en el orden en que aparecen.
-	for part: String in ModelClick.PARTS:
-		if all.any(func(s: Dictionary) -> bool: return _tab_of(s) == part.to_upper()):
-			names.append(part.to_upper())
 	for section in all:
 		var tab := _tab_of(section)
 		if not tab.is_empty() and not names.has(tab):
 			names.append(tab)
 	_tabs.visible = not names.is_empty()
-	_isolate.visible = has_parts()
 	# La barra se rearma entera y la elegida se busca POR NOMBRE: un arquetipo puede tener otras secciones.
 	var wanted := _tab_name
 	_tabs.set_block_signals(true)
@@ -356,76 +330,12 @@ func rebuild() -> void:
 
 func _on_tab_changed(at: int) -> void:
 	_tab_name = _tabs.get_tab_title(at)
-	_apply_isolation()
 	_fill(sections())
 
 
-## Lo que dice el tilde de aislar, con la pestaña de ahora: su parte, o nada (una pestaña que no es una parte, como la
-## pose, muestra el cuerpo entero).
-func _apply_isolation() -> void:
-	if _isolate == null:
-		return
-	var part := ""
-	if _isolate.button_pressed:
-		for each: String in ModelClick.PARTS:
-			if each.to_upper() == _tab_name:
-				part = each
-	ModelClick.isolated = part
-
-
-## LA PESTAÑA DE UNA SECCIÓN: la de su parte del cuerpo, si dice una; si no, la suya.
+## LA PESTAÑA DE UNA SECCIÓN (`"tab"`), o ninguna.
 static func _tab_of(section: Dictionary) -> String:
-	var part := str(section.get("part", ""))
-	return part.to_upper() if not part.is_empty() else str(section.get("tab", ""))
-
-
-## Si alguna sección dice de qué parte del cuerpo es: entonces un click en el modelo la abre (ver ModelClick).
-func has_parts() -> bool:
-	for section in sections():
-		if not str(section.get("part", "")).is_empty():
-			return true
-	return false
-
-
-## ABRE LA SECCIÓN DE UN LOOP CUT que se clickeó en el modelo (ver ModelClick.mark_under): la pestaña de su parte y, en
-## ella, la sección del color de su cinta, scrolleada hasta arriba. Si este panel no la tiene, no hace nada y devuelve
-## false.
-func show_loop(part: String, color: Color) -> bool:
-	var wanted := ""
-	for section in sections():
-		if _tab_of(section) == part.to_upper() and section.has("color") and _same_color(section["color"], color):
-			wanted = _tab_of(section)
-			break
-	if wanted.is_empty():
-		return false
-	show_part(part)
-	for child in _box.get_children():
-		if child is Label and child.has_meta(SECTION_COLOR) and _same_color(child.get_meta(SECTION_COLOR), color):
-			_scroll_to.call_deferred(child)
-			return true
-	return false
-
-
-## Deja ese título arriba de todo, cuando ya está acomodado (un cuadro después de armar la pestaña).
-func _scroll_to(title: Control) -> void:
-	await get_tree().process_frame
-	if is_instance_valid(title) and is_instance_valid(_scroll):
-		_scroll.scroll_vertical = int(title.position.y)
-
-
-static func _same_color(a: Variant, b: Color) -> bool:
-	if not (a is Color):
-		return false
-	var c: Color = a
-	return absf(c.r - b.r) < 0.02 and absf(c.g - b.g) < 0.02 and absf(c.b - b.b) < 0.02
-
-
-## ABRE LA PESTAÑA DE UNA PARTE del cuerpo: lo que hace un click en el modelo. Si este panel no tiene esa parte, nada.
-func show_part(part: String) -> void:
-	for at in _tabs.tab_count:
-		if _tabs.get_tab_title(at) == part.to_upper():
-			_tabs.current_tab = at
-			return
+	return str(section.get("tab", ""))
 
 
 ## Dibuja las secciones de la pestaña elegida —todas, si no hay pestañas—. Los hijos viejos SALEN DEL ÁRBOL en el
@@ -449,8 +359,6 @@ func _fill(all: Array[Dictionary]) -> void:
 		# Un título largo se parte en renglones en vez de estirar el panel.
 		title.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		if section.has("color"):
-			title.set_meta(SECTION_COLOR, section["color"])
 		_box.add_child(title)
 		# LOS BOTONES DE UNA SECCIÓN: lo que esa sección necesita y no es un número — prender la caminata
 		# para poder mirarla, por ejemplo. Se crean en `sections()` y los libera el panel, así que cada
