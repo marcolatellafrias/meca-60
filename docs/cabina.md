@@ -16,7 +16,8 @@ pisos o de jugadores (de 1 a 4) sin rehacer nada a mano.
   sus paredes. La columna 0 es la de la izquierda y la fila 0, la del frente.
 - **Tres pisos de 68 celdas** (2,68 m de losa a losa; quedan 2,48 m libres), paredes de 6 celdas y losas de 5.
 - **La caja es un cubo**: 204 celdas de ancho, de fondo y de alto, **8,03 m** (`CabinGrid.SIZE`). `cube_ok()` lo
-  comprueba.
+  comprueba. **La caja física de la meca es esa**: `Mech.SIZE` es `CabinGrid.SIZE` (lo aceptó el módulo Meca el
+  13/11/2026).
 
 ## Qué va en cada piso (el caso de 4 jugadores)
 - **La planta baja es de servicio**: no tiene asientos ni controles fijos. Ahí van la munición, las baterías y los
@@ -39,8 +40,6 @@ pisos o de jugadores (de 1 a 4) sin rehacer nada a mano.
 - **Duda abierta**: con 4 módulos de ancho y sólo dos personas por piso, cada una alcanza nada más que su módulo del
   frente, y lo de los costados queda lejos. Hay que ver si el ancho, la cantidad de asientos o los tableros lo
   resuelven. Los jugadores siempre van con vista al frente.
-- **Que el tamaño de la caja de la meca (`Mech.SIZE`, del módulo Meca) salga de `CabinGrid.SIZE`**: se lo pedí a la
-  Meca. Mientras tanto la caja física mide 8,0 m y la cabina 8,03 m.
 
 Test para mirar: `tests/cabin_grid_look.tscn` (unos 10 segundos, sin el sandbox). Muestra la meca cortada de costado
 con las líneas de los módulos, desde arriba y de frente, y escribe las medidas. Caminar adentro y afuera sigue en

@@ -14,7 +14,7 @@ extends BalanceBody
 ## Los brazos que lleva: ninguno (la de práctica, para pegarle), discretos o físicos.
 enum Arms { NONE, POSE, MUSCLE }
 
-const SIZE := 8.0
+const SIZE := CabinGrid.SIZE
 const MASS := 50000.0
 const NAMES := ["Meca de práctica", "Meca discreta", "Meca física"]
 ## LOS BRAZOS: el hombro, en el espacio de la caja (`x` del lado derecho), casi en el medio del costado. *El 12/11/2026
