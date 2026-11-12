@@ -131,7 +131,10 @@ aire va derecha y sin apoyo; aterriza cuando la punta del palo vuelve a tocar. *
 cambia la postura (normal, a los costados; cubriéndose, los puños cerrados adelante), y las piñas van por brazo: clic
 izquierdo / derecho el directo, Q / E el gancho, Z / C el uppercut, 1 / 3 desde arriba. Caída, se recogen.
 **Afuera** (`MechExterior`): la pasarela en U de planta baja y, atrás, un zigzag fino de balcones y tramos; se camina y
-es parte del marco. **Adentro se camina** (**U** sube al piso del medio): es un marco (`MotionFrame`) como el torso de la meca de pelea; sus
+es parte del marco. **El ascensor de la pelvis** (`PelvisLift`): la pelvis es un tambor redondo, la losa de abajo tiene un
+recorte del mismo hueco con su baranda, y un piso redondo con cuatro parantes baja hasta quedar a un salto del suelo
+con la meca agachada; **G** poseída o el botón del **F2** lo mueven. **El rayo al piso saltea lo que se mueve** (una
+persona en el ascensor no es piso). **Adentro se camina** (**U** sube al piso del medio): es un marco (`MotionFrame`) como el torso de la meca de pelea; sus
 losas y paredes no chocan con el mundo (eso es de la caja 1:1), son de donde el marco copia su sombra, y la caja deja de
 chocar con los que van adentro.
 
@@ -224,8 +227,6 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
 - `tests/muscle_arm_look.tscn` (con ventana, unos 30 segundos, sin el sandbox): el brazo con músculos; la guardia, las
   cuatro piñas (velocidad de la mano, cuánto corre el bloque), la pared (se traba y vuelve) y un empujón (cede y vuelve).
 - `tests/hand_look.tscn` (con ventana, unos 5 segundos): la mano abierta y en puño, de tres lados.
-- `tests/lift_mockup.tscn` (con ventana, unos 10 segundos): las maquetas numeradas del ascensor de la pelvis, bajado y
-  subido, para elegir.
 - `tests/possess_check.tscn` (con ventana, unos 15 segundos): poseer; mirar el cubo péndulo, la O, las tres vistas con
   la T, soltar y retomar sin mirar; capturas del cartel.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,

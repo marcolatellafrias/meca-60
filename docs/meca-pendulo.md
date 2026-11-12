@@ -49,27 +49,32 @@ piso— se borraron). Todo de barras y rejilla finas, para que se lea como algo 
 puertas se pasa de los balcones a los pisos. Medido: parado en la pasarela, el balcón y el tramo, los pies quedan donde
 van; caminando desde el balcón se entra al piso por la puerta.
 
-Falta: subir desde el suelo (el ascensor de la pelvis, abajo). Idea para después: piernas más estiradas y la meca
+Desde el suelo se sube por el ascensor de la pelvis (abajo). Idea para después: piernas más estiradas y la meca
 lo bastante lenta como para escalar las piernas o los brazos.
 
-## El ascensor de la pelvis: maquetas para elegir
-`MechLiftMockup` (sólo dibujo; `tests/lift_mockup.tscn` las muestra numeradas, bajado y subido). La propuesta del
-usuario: una base circular con parantes, **la pelvis también circular**, con **un recorte redondo en la base del cubo**
-(así al girar la pelvis sigue coincidiendo), y **una baranda alrededor del recorte con el hueco hacia la puerta del
-primer piso**.
+## El ascensor de la pelvis
+`PelvisLift`. Por donde se sube desde el suelo. Se eligió entre cuatro maquetas la de **cuatro parantes y un aro**, con
+el ascensor casi del radio de la pelvis, para que se lean como una sola forma (las otras se borraron).
 
-Lo común: la pelvis es un tambor hueco con las caderas a los costados; el recorte de la losa de abajo es del mismo
-hueco; los parantes del ascensor son tan altos como su viaje, así que bajado sus puntas siguen dentro de la pelvis (nada
-se estira) y subido el piso queda al ras y los parantes son su jaula. Bajado, su piso queda a 0,7 m del suelo con la
-meca agachada y a 4,4 m parada.
+- **La pelvis es redonda**: un tambor hueco de pared fina, con las caderas a los costados. Gira con los pies y, redonda,
+  siempre coincide con el cubo.
+- **La losa de abajo del cubo tiene un recorte redondo** del mismo hueco, y alrededor, adentro del piso de abajo, **una
+  baranda con el paso abierto hacia la puerta de atrás**.
+- **El ascensor**: un piso redondo que llena el hueco, cuatro parantes y un aro. Los parantes son tan altos como el
+  viaje: bajado, sus puntas siguen dentro de la pelvis (nada se estira); subido, el piso queda al ras del piso de abajo
+  y los parantes son su jaula.
+- Bajado, su piso queda a **0,7 m del suelo con la meca agachada** (un salto) y a 4,4 m parada.
+- **G**, poseída, lo baja y lo sube; el **F2** tiene un botón para lo mismo. Tarda unos 2 s.
 
-1. Cuatro parantes y un aro.
-2. Tres parantes y un aro.
-3. Seis parantes finos, sin aro.
-4. Dos parantes anchos y un aro.
+**Se viaja en él**: su piso es parte del marco. Medido: el jugador parado en su piso baja y sube con él, sin caerse.
 
-Pendiente: que el usuario elija; después, hacerlo de verdad (que suba y baje, con su forma de choque y dentro del marco,
-y la pelvis redonda en el dibujo de siempre).
+Falta probar subirse desde el suelo saltando, con la meca agachada.
+
+## El piso, para la meca, es lo fijo
+El rayo con que la meca (y los cubos) buscan el piso **saltea todo lo que se mueve**: una persona, una bola, un brazo.
+*Con alguien parado en el ascensor, justo debajo del centro, el rayo de apoyo le pegaba a esa persona, la tomaba por
+piso y la meca salía disparada (12/11/2026).* Es la segunda vez que ese rayo falla (la primera, «no hay piso» leído como
+«piso muy abajo»).
 
 ## Lo que hace (poseída)
 Lo vertical sale del **largo del palo** del péndulo, como en los personajes sale de su resorte de altura.

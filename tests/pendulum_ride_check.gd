@@ -28,6 +28,23 @@ func _ready() -> void:
 	print("SUBIÓ: en el marco %s · la caja no lo ve %s · pies a %.2f m del piso del medio · caído %s" % [
 		MotionFrame.frame_of(_body) == _mech.frame, _mech._riders.has(_body), _feet() - floor_at, player.ragdoll_util.is_active])
 	await _shot("1_adentro")
+	# EL ASCENSOR (ver PelvisLift): parado en su piso, baja y sube con él.
+	var lift_top := PelvisLift.raised_y()
+	player.place_at(_mech.global_transform * Vector3(0.0, lift_top + 0.1, 0.0), _mech._yaw())
+	await _seconds(1.2)
+	print("EN EL ASCENSOR, arriba: en el marco %s · pies a %.2f m de su piso · caído %s" % [
+		MotionFrame.frame_of(_body) == _mech.frame, _feet() - lift_top, player.ragdoll_util.is_active])
+	await _shot("1a_ascensor_arriba")
+	_mech.lift.toggle()
+	await _seconds(3.2)
+	print("BAJÓ: el piso del ascensor a %.2f m (bajado es %.2f) · pies a %.2f m de su piso · en el marco %s · caído %s" % [
+		_mech.lift.position.y, PelvisLift.LOWERED, _feet() - _mech.lift.position.y, MotionFrame.frame_of(_body) == _mech.frame,
+		player.ragdoll_util.is_active])
+	await _shot("1a_ascensor_abajo")
+	_mech.lift.toggle()
+	await _seconds(3.2)
+	print("SUBIÓ de vuelta: pies a %.2f m del piso de abajo · en el marco %s · caído %s" % [_feet() - lift_top,
+		MotionFrame.frame_of(_body) == _mech.frame, player.ragdoll_util.is_active])
 	# AFUERA (ver MechExterior): parado en la pasarela, en el balcón y en un tramo; y del balcón al piso por la puerta.
 	var half := HoverCube.SIZE * 0.5
 	var floors := [PendulumMech.floor_y(0) + PendulumMech.SLAB * 0.5, PendulumMech.floor_y(1) + PendulumMech.SLAB * 0.5]

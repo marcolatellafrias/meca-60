@@ -590,11 +590,22 @@ func _ground_distance(point: Vector3) -> float:
 	return point.y - (hit["position"] as Vector3).y if not hit.is_empty() else 200.0
 
 
+## UN RAYO AL PISO. EL PISO ES LO FIJO: lo que se mueve —una persona, una bola, un brazo, otro cuerpo suelto— no es piso,
+## y el rayo lo saltea y sigue. *El 12/11/2026 el rayo de apoyo de la meca péndulo, que sale de su centro hacia abajo, le
+## pegó al jugador parado en el ascensor, justo debajo: tomó su cabeza por piso, el apoyo saltó seis metros y la meca
+## salió disparada. Antes ya había pasado con «no hay piso» leído como «piso muy abajo»: mismo rayo, misma clase.*
 func _ray(from: Vector3, to: Vector3) -> Dictionary:
 	var query := PhysicsRayQueryParameters3D.create(from, to)
-	query.exclude = [get_rid()]
+	var skip: Array[RID] = [get_rid()]
 	query.collision_mask = 1
-	return get_world_3d().direct_space_state.intersect_ray(query)
+	for attempt in 12:
+		query.exclude = skip
+		var hit := get_world_3d().direct_space_state.intersect_ray(query)
+		var other := hit.get("collider") as CollisionObject3D
+		if other == null or other is StaticBody3D:
+			return hit
+		skip.append(other.get_rid())
+	return {}
 
 
 static func _gravity() -> float:

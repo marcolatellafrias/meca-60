@@ -15,8 +15,8 @@ extends PendulumCube
 ## formas de `_interior`, de las que el marco hace su SOMBRA: el que entra al volumen (el cubo) pasa a ir en el marco,
 ## que lo lleva con la meca, y adentro choca sólo con esa sombra. Y la caja de afuera deja de chocar con él (`_ride`).
 ## AFUERA TAMBIÉN (MechExterior): la pasarela de planta baja y el zigzag de atrás son parte del marco; por las puertas se
-## pasa de los balcones a los pisos. Todavía no se sube desde el suelo: la U del sandbox lo sube (`board`), o el ente
-## entra volando.
+## pasa de los balcones a los pisos. DESDE EL SUELO SE SUBE POR EL ASCENSOR DE LA PELVIS (PelvisLift), con la meca
+## agachada; la U del sandbox también lo sube (`board`).
 ## LOS BRAZOS SON FÍSICOS (12/11/2026; el usuario: «hacer los brazos físicos en la meca péndulo. Así de paso veo cómo
 ## reaccionan los brazos cuando giro»): dos brazos con músculos (MuscleArm), colgados de sus hombros. Persiguen su
 ## postura con fuerza tope, así que van atrás cuando la meca gira o se frena, ceden si les pegan, y una piña sacude al
@@ -69,9 +69,8 @@ var _thrust_armed := false
 ## Los dos brazos (el izquierdo y el derecho) y la postura elegida: cubriéndose, o normal.
 var arms: Array[MuscleArm] = []
 var covering := false
-## PARA LAS MAQUETAS DEL ASCENSOR (ver MechLiftMockup): el radio del recorte redondo de la losa de abajo (0, sin recorte).
-## Se pone antes de agregarla al árbol.
-var floor_cutout := 0.0
+## EL ASCENSOR DE LA PELVIS (ver PelvisLift): por donde se sube desde el suelo. La G, poseída, lo baja y lo sube.
+var lift: PelvisLift = null
 ## EL MARCO: lleva a los que van adentro (ver arriba). `_interior`, las formas de sus losas y paredes (no chocan con
 ## nada: son de donde el marco copia su sombra); `_riders`, los que hoy van adentro y la caja de afuera no ve.
 var frame: MotionFrame = null
@@ -82,6 +81,11 @@ var _riders := {}
 func _ready() -> void:
 	super()
 	name = "Meca péndulo"
+	# LA PELVIS, REDONDA: un tambor hueco, por donde pasa el ascensor (ver PelvisLift).
+	var drum := PelvisLift.tube(Clay.METAL.darkened(0.15))
+	_pelvis.mesh = drum.mesh
+	_pelvis.material_override = drum.material_override
+	drum.free()
 	_build_arms()
 	_build_frame()
 
@@ -106,6 +110,7 @@ func _build_frame() -> void:
 	frame.floor_height = floor_y(0) + SLAB * 0.5
 	frame.add_volume(AABB(Vector3.ONE * -SIZE * 0.5, Vector3.ONE * SIZE))
 	frame.add_volume(MechExterior.bounds())
+	frame.add_volume(PelvisLift.shaft())
 	_interior.collision_layer = 1
 	frame.cast_shadow(_interior)
 	_interior.collision_layer = 0
@@ -221,7 +226,7 @@ func possess_controls() -> PackedStringArray:
 		"mouse mira: la cabeza al instante, el torso la alcanza",
 		"Shift corre (yendo hacia adelante) · Ctrl se agacha",
 		"clic izq. / der.: directo · Q / E: gancho · Z / C: uppercut · 1 / 3: desde arriba",
-		"F: postura normal / cubriéndose",
+		"F: postura normal / cubriéndose · G: el ascensor baja / sube",
 		"espacio: mantener carga el salto, soltar salta",
 		"espacio en el aire: propulsor",
 	])
@@ -273,11 +278,9 @@ func _build_cabin() -> void:
 	var half := SIZE * 0.5 - WALL * 0.5
 	for index in FLOORS + 1:
 		var y := clampf(floor_y(index), -half, half)
-		if index == 0 and floor_cutout > 0.0:
-			# La losa de abajo, con el recorte redondo del ascensor (sólo se ve: su forma de choque sigue entera).
-			_look.add_child(MechLiftMockup.holed(MechLiftMockup.square(SIZE * 0.5), floor_cutout, y - SLAB * 0.5,
-				y + SLAB * 0.5, metal.darkened(0.12)))
-			Clay.shape_box(_interior, Vector3(SIZE, SLAB, SIZE), Vector3(0, y, 0))
+		if index == 0:
+			# La losa de abajo, con el recorte redondo del ascensor y su baranda (ver PelvisLift).
+			PelvisLift.build_floor(_look, _interior, y, SLAB, metal.darkened(0.12))
 			continue
 		_solid(Vector3(SIZE, SLAB, SIZE), Vector3(0, y, 0), metal.darkened(0.12))
 	for index in FLOORS:
@@ -308,6 +311,10 @@ func _build_cabin() -> void:
 		_solid(Vector3(1.4, 0.8, 0.5), seat + Vector3(0, 0.4, -0.95), metal.darkened(0.25))
 	# EL AFUERA: la pasarela de planta baja y el zigzag de atrás (ver MechExterior).
 	MechExterior.build(_look, _interior)
+	# EL ASCENSOR, y la pelvis redonda por la que pasa.
+	lift = PelvisLift.new()
+	lift.solid = _interior
+	_look.add_child(lift)
 
 
 ## Una pieza de la cabina que se ve y que, adentro, se choca (ver EL MARCO).
@@ -352,6 +359,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if key.physical_keycode == KEY_F:
 		covering = not covering
+	elif key.physical_keycode == KEY_G:
+		lift.toggle()
 	elif PUNCH_KEYS.has(key.physical_keycode):
 		var pick: Array = PUNCH_KEYS[key.physical_keycode]
 		arms[int(pick[0])].punch(pick[1] as MuscleArm.Punch)
