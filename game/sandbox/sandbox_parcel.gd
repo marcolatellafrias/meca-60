@@ -4,6 +4,14 @@ extends Node3D
 ## UNA PARCELA DEL SANDBOX: un arquetipo, su semilla actual y el individuo armado encima. Alrededor, la zona de
 ## interacción (un marco): estando adentro, el panel muestra la parcela y valen sus teclas. El tamaño sale del
 ## `max_footprint` del arquetipo una sola vez.
+##
+## ── LOS BORDES (como los de character-parametric: SandboxParcel._build_bounds de allá) ──────────────────────────────
+## Cuatro paredes invisibles en el borde de la parcela (no de su zona de interacción), de `BOUND_H` de alto, en su capa
+## (PhysicsLayers.PARCEL_BOUND): las ve sólo lo que se mueve con física y vive en una parcela —el cubo, la meca de
+## equilibrio y sus partes caídas, las personas, los paquetes—, que la suma a lo que choca al aparecer
+## (`_on_node_added`). El jugador no vive en una parcela: pasa; y la bola que se tira desde afuera se la saca (ver
+## TestBall). Lo que se mueve por código (las mecas de pelea) le pregunta a su parcela con `holds`. Lo pidió el usuario
+## el 11/11/2026: «las parcelas deberían tener paredes invisibles que eviten que sus contenidos se escapen».
 
 const PLANE_LIFT := 0.002
 const FRAME_LIFT := 0.01
@@ -11,6 +19,8 @@ const FRAME_WIDTH := 0.08
 const PARCEL_COLOR := Color(0.74, 0.72, 0.68)
 const FRAME_COLOR := Color(0.55, 0.53, 0.5)
 const LABEL_COLOR := Color(0.3, 0.29, 0.27)
+const BOUND_H := 20.0
+const BOUND_THICK := 0.5
 
 var archetype: SeededArchetype = null
 var category := ""
@@ -20,6 +30,8 @@ var size := Vector2.ZERO
 var interact_pad := 0.0
 
 var _root: Node3D = null
+## Cuántas parcelas hay en el árbol: mientras haya alguna, el árbol avisa de cada nodo nuevo (ver `_on_node_added`).
+static var _alive := 0
 
 
 func setup(p_archetype: SeededArchetype, p_category: String, p_size: Vector2, p_pad: float, p_seed: int) -> void:
@@ -29,7 +41,62 @@ func setup(p_archetype: SeededArchetype, p_category: String, p_size: Vector2, p_
 	interact_pad = p_pad
 	name = "%s · %s" % [category, archetype.display_name]
 	_draw()
+	_build_bounds()
 	regenerate(p_seed)
+
+
+func _enter_tree() -> void:
+	_alive += 1
+	if not get_tree().node_added.is_connected(SandboxParcel._on_node_added):
+		get_tree().node_added.connect(SandboxParcel._on_node_added)
+
+
+func _exit_tree() -> void:
+	_alive -= 1
+	if _alive <= 0 and get_tree().node_added.is_connected(SandboxParcel._on_node_added):
+		get_tree().node_added.disconnect(SandboxParcel._on_node_added)
+
+
+## La parcela donde vive `node` (la primera hacia arriba), o null.
+static func owner_of(node: Node) -> SandboxParcel:
+	var up := node
+	while up != null:
+		if up is SandboxParcel:
+			return up as SandboxParcel
+		up = up.get_parent()
+	return null
+
+
+## LO QUE SE MUEVE CON FÍSICA ADENTRO DE UNA PARCELA ve sus bordes (ver LOS BORDES).
+static func _on_node_added(node: Node) -> void:
+	if (node is RigidBody3D or node is CharacterBody3D) and owner_of(node) != null:
+		(node as CollisionObject3D).collision_mask |= PhysicsLayers.PARCEL_BOUND
+
+
+## Si un círculo de `radius` alrededor de `at` (en el mundo) queda adentro de la parcela: para lo que se mueve por código
+## y no choca con los bordes (las mecas de pelea).
+func holds(at: Vector3, radius: float) -> bool:
+	var local := to_local(at)
+	return absf(local.x) <= size.x * 0.5 - radius and absf(local.z) <= size.y * 0.5 - radius
+
+
+func _build_bounds() -> void:
+	var walls := StaticBody3D.new()
+	walls.name = "Bordes"
+	walls.collision_layer = PhysicsLayers.PARCEL_BOUND
+	walls.collision_mask = 0
+	var half := size * 0.5
+	for side: Vector3 in [Vector3(1, 0, 0), Vector3(-1, 0, 0), Vector3(0, 0, 1), Vector3(0, 0, -1)]:
+		var box := BoxShape3D.new()
+		var along := size.y if side.x != 0.0 else size.x
+		box.size = Vector3(BOUND_THICK, BOUND_H, along + BOUND_THICK * 2.0) if side.x != 0.0 \
+			else Vector3(along + BOUND_THICK * 2.0, BOUND_H, BOUND_THICK)
+		var shape := CollisionShape3D.new()
+		shape.shape = box
+		shape.position = Vector3(side.x * (half.x + BOUND_THICK * 0.5), BOUND_H * 0.5 - 1.0,
+			side.z * (half.y + BOUND_THICK * 0.5))
+		walls.add_child(shape)
+	add_child(walls)
 
 
 ## Lo que armó el arquetipo, o null.
@@ -105,7 +172,7 @@ static func _flat(color: Color) -> StandardMaterial3D:
 	return material
 
 
-## Lo que suma a la máscara de choque de quien vive en una parcela (lo piden los personajes de character-parametric, cuyas
-## parcelas tienen bordes que los atajan). Acá las parcelas no tienen bordes: nada.
-static func bound_mask(_node: Node) -> int:
-	return 0
+## Lo que suma a lo que choca quien vive en una parcela: su borde (0 afuera). Para quien rehace su máscara después de
+## aparecer —el cuerpo caído de una persona de character-parametric, que lo pide—.
+static func bound_mask(node: Node) -> int:
+	return PhysicsLayers.PARCEL_BOUND if owner_of(node) != null else 0

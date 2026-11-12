@@ -256,27 +256,28 @@ func _fire_nozzles(settings: HoverCubeSettings) -> void:
 		apply_force(-(global_basis * (nozzle["out"] as Vector3)) * most * throttle, at)
 
 
-## ── LAS TRES FUERZAS DE LA BOLA (ver TestBall) ──────────────────────────────────────────────────────────────────────
-## Lo que lo inclina el 35 %, el 75 % y el 125 % de donde se deja caer (`max_tilt`), con un golpe de costado en la mitad
-## de arriba (a un cuarto del lado sobre el centro: un golpe en el centro lo empuja sin inclinarlo). El giro que le da
-## sale del empuje por ese brazo sobre su inercia, y lo que se inclina, del resorte que lo endereza (corrido como lo corre
-## la física, ver `_tilt_peak`). La bola no le deja todo su giro (rebota, y parte se va en correrlo): MEDIDO el
-## 11/11/2026, un 60 % (`TRANSFER`); por eso los márgenes entre las tres son anchos.
+## ── LA BOLA (ver TestBall y HoverCubeArchetype.ball_shots) ────────────────────────────────────────────────────────────
+## EL EMPUJE QUE LO INCLINA `share` de donde se deja caer (`max_tilt`), con una bola a `speed` y un golpe de costado en
+## la mitad de arriba (a un cuarto del lado sobre el centro: un golpe en el centro lo empuja sin inclinarlo). El giro que
+## le da sale del empuje por ese brazo sobre su inercia, y lo que se inclina, del resorte que lo endereza (corrido como lo
+## corre la física, ver `_tilt_peak`). La bola no le deja todo su giro: una lenta EMPUJA (sigue apoyada y lo corre) y
+## una rápida GOLPEA. Lo que le deja, MEDIDO el 11/11/2026 con 400 000 N·s a la altura de `HIT_ARM`: a 30 m/s, el 60 %
+## del giro ideal (empuje × brazo / inercia); a 100 m/s, el 80 % (`TRANSFER`, entre medio se interpola).
 const HIT_ARM := SIZE * 0.25
-const TRANSFER := 0.6
+const TRANSFER := {30.0: 0.6, 100.0: 0.8}
 
 
-static func ball_pushes(speed: float) -> Array[float]:
+static func push_for_tilt(share: float, speed: float) -> float:
+	var transfer := remap(clampf(speed, 30.0, 100.0), 30.0, 100.0, float(TRANSFER[30.0]), float(TRANSFER[100.0]))
+	# El giro que se queda en el cubo es el empuje por su brazo sobre su inercia: L = I·ω.
+	return spin_for_tilt(share) * CUBE_MASS * SIZE * SIZE / 6.0 / HIT_ARM / transfer
+
+
+## El giro (rad/s) que lo inclina `share` de donde se deja caer.
+static func spin_for_tilt(share: float) -> float:
 	var settings := HoverCubeSettings.current
-	var inertia := CUBE_MASS * SIZE * SIZE / 6.0
 	var per_spin := _tilt_peak(1.0, settings.upright_kp, settings.upright_kd)
-	var out: Array[float] = []
-	for share: float in [0.35, 0.75, 1.25]:
-		var spin := deg_to_rad(settings.max_tilt * share) / maxf(per_spin, 0.0001)
-		# El empuje que se queda en el cubo, por su brazo, es su giro: L = I·ω. Y del empuje que llega, se queda esto.
-		var kept := inertia * spin / HIT_ARM / TRANSFER
-		out.append(TestBall.push_for(CUBE_MASS, kept / CUBE_MASS))
-	return out
+	return deg_to_rad(settings.max_tilt * share) / maxf(per_spin, 0.0001)
 
 
 ## La inclinación más alta (rad) del cubo que arranca derecho girando a `spin` rad/s, con el torque que lo endereza.
@@ -292,6 +293,24 @@ static func _tilt_peak(spin: float, kp: float, kd: float) -> float:
 		if turning < 0.0:
 			break
 	return peak
+
+
+## ── VOLCARLO (el panel chico, F2; el usuario: «un botón… que la vuelque, una más suavemente otra más fuerte, así no
+## dependo tanto de bolas») ───────────────────────────────────────────────────────────────────────────────────────────
+## Le da de golpe el giro que lo inclina pasado su caerse, de costado: SUAVE, apenas pasado (se va de a poco y se cae);
+## FUERTE, mucho más, con un salto (rueda).
+const KNOCK_SOFT := 1.2
+const KNOCK_STRONG := 2.8
+const KNOCK_HOP := 6.0
+
+
+func knock(strong: bool) -> void:
+	var axis := global_basis.z.normalized()
+	axis.y = 0.0
+	axis = axis.normalized() if axis.length_squared() > 0.01 else Vector3.FORWARD
+	angular_velocity += axis * spin_for_tilt(KNOCK_STRONG if strong else KNOCK_SOFT)
+	if strong:
+		linear_velocity += Vector3.UP * KNOCK_HOP
 
 
 ## ── LO QUE MIDE ─────────────────────────────────────────────────────────────────────────────────────────────────

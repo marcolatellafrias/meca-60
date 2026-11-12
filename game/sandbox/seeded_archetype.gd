@@ -47,6 +47,16 @@ func ball_pushes() -> Array[float]:
 	return []
 
 
+## LOS TIROS DE LA BOLA de esta parcela (ver TestBall): `{name, push, speed}`. Por defecto, los tres empujes de
+## `ball_pushes` a la velocidad de siempre; una fila puede tener los suyos (el cubo flotante: lentos y rápidos).
+func ball_shots() -> Array[Dictionary]:
+	var out: Array[Dictionary] = []
+	var pushes := ball_pushes()
+	for i in pushes.size():
+		out.append(TestBall.shot(str(TestBall.NAMES[mini(i, TestBall.NAMES.size() - 1)]), pushes[i]))
+	return out
+
+
 ## Cuando uno entra o sale de la parcela.
 func entered(_parcel: SandboxParcel, _inside: bool) -> void:
 	pass

@@ -89,11 +89,17 @@ func toggle_rival() -> void:
 	rival.brain.mode = MechBrain.Mode.AGGRESSIVE if rival.brain.mode == MechBrain.Mode.STILL else MechBrain.Mode.STILL
 
 
-## Si una meca puede pararse en `at` (en el mundo) con ese radio: adentro del redondel y lejos de los edificios.
+## Si una meca puede pararse en `at` (en el mundo) con ese radio: adentro de su parcela y lejos de los edificios.
+## EL BORDE ES EL DE SU PARCELA (ver SandboxParcel.holds; el usuario, 11/11/2026: «¿no es mejor práctica usar la pared
+## de la parcela?»): el redondel es sólo el dibujo del piso. Fuera del sandbox, el redondel.
 func _free(at: Vector3, radius: float) -> bool:
 	var local := to_local(at)
 	var flat := Vector2(local.x, local.z)
-	if flat.length() > RADIUS - radius:
+	var parcel := SandboxParcel.owner_of(self)
+	if parcel != null:
+		if not parcel.holds(at, radius):
+			return false
+	elif flat.length() > RADIUS - radius:
 		return false
 	for block in _blocks:
 		if block.grow(radius).has_point(flat):

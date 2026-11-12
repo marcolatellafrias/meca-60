@@ -5,7 +5,8 @@ extends SeededArchetype
 ## tres fuerzas, ver TestBall) y mirar cómo rebota, cómo se cae y cómo se recupera con sus propulsores. F1 abre su panel
 ## (HoverPanel). R lo vuelve a poner, flotando.
 
-const FOOTPRINT := 30.0
+## Grande: el cubo rueda al caerse (el usuario: «aumentar el tamaño de la parcela de la caja»).
+const FOOTPRINT := 60.0
 
 
 func _init() -> void:
@@ -40,5 +41,19 @@ func parcel_options() -> Array[Dictionary]:
 	return TestBall.parcel_options(self)
 
 
-func ball_pushes() -> Array[float]:
-	return HoverCube.ball_pushes(TestBall.SPEED)
+## LOS CUATRO TIROS DEL CUBO (lo pidió el usuario: «lento que no voltee, lento que voltee, rápido que no voltee y rápido
+## que voltee»; «son demasiado lentas, y no tan secas»): lentas a `SLOW` (empujan), rápidas a `FAST` (golpean secas); las
+## que no lo voltean lo llevan a la mitad de su inclinación de caerse, las que sí, bastante más allá (ver
+## HoverCube.push_for_tilt).
+const SLOW := 30.0
+const FAST := 100.0
+
+
+func ball_shots() -> Array[Dictionary]:
+	return [
+		TestBall.shot("lenta, no lo voltea", HoverCube.push_for_tilt(0.55, SLOW), SLOW),
+		# La lenta que lo voltea, con más margen: tan pesada como el cubo, lo empuja más de lo que lo gira (medido).
+		TestBall.shot("lenta, lo voltea", HoverCube.push_for_tilt(2.4, SLOW), SLOW),
+		TestBall.shot("rápida, no lo voltea", HoverCube.push_for_tilt(0.55, FAST), FAST),
+		TestBall.shot("rápida, lo voltea", HoverCube.push_for_tilt(1.6, FAST), FAST),
+	]

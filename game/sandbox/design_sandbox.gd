@@ -75,6 +75,7 @@ func _ready() -> void:
 ## los demás. Una fila nueva con panel se monta acá.
 func _mount_tuners() -> void:
 	_mount(HoverPanel.new(), "Cubo flotante", "el cubo flotante: flotar, enderezarse, caerse y los propulsores", KEY_F1)
+	_mount(HoverKnockPanel.new(), "Cubo flotante", "volcarlo: suave o fuerte", KEY_F2)
 	_mount(BalancePanel.new(), "Equilibrio", "la meca de equilibrio: el resorte, la firmeza, el empuje y los pasos", KEY_F1)
 
 
@@ -93,6 +94,11 @@ func _mount(tuner: TunerPanel, category_name: String, label: String, key: Key) -
 	tuner.side = TunerPanel.SIDE_LEFT
 	tuner.call("setup_panel")
 	_tuners.append(tuner)
+
+
+## LA PARCELA DONDE ESTÁ PARADO EL JUGADOR, o null (para los paneles que actúan sobre ella).
+func current_parcel() -> SandboxParcel:
+	return _current
 
 
 ## LA FILA DONDE ESTÁ PARADO EL JUGADOR, por nombre: la que abre los paneles (ver TunerPanel.serves).

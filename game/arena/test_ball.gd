@@ -12,6 +12,11 @@ extends RigidBody3D
 ## lo mueve, otra lo deja a punto de caerse (trastabilla, se tambalea) y otra lo tira, con sus umbrales de ahora —si se
 ## tocan las perillas de su panel (F1), las fuerzas las siguen—. Lo elegido (cuál de las tres) es uno solo para todas
 ## las parcelas: J tira, K pasa a la siguiente.
+##
+## LOS TIROS DE CADA FILA (`SeededArchetype.ball_shots`): nombre, empuje y velocidad. Las filas que sólo dicen sus tres
+## empujes (`ball_pushes`) tiran a `SPEED`; el cubo flotante tiene los suyos, lentos y rápidos (el usuario: «lento que no
+## voltee, lento que voltee, rápido que no voltee y rápido que voltee»). Rápida y liviana PEGA SECO; lenta y pesada
+## EMPUJA. Ninguna rebota: entrega su golpe de una.
 
 const RADIUS := 0.6
 const SPEED := 25.0
@@ -37,7 +42,7 @@ func _init() -> void:
 	contact_monitor = true
 	max_contacts_reported = 4
 	var material := PhysicsMaterial.new()
-	material.bounce = 0.1
+	material.bounce = 0.0
 	material.friction = 0.6
 	physics_material_override = material
 	var shape := CollisionShape3D.new()
@@ -49,43 +54,66 @@ func _init() -> void:
 	body_entered.connect(_on_body)
 
 
-## La tira desde la cámara activa, hacia donde mira, con `push` de empuje (N·s).
-static func throw_from_camera(scene: Node, push: float) -> TestBall:
+## LOS BORDES DE LAS PARCELAS NO LA FRENAN: se la tira desde afuera (ver SandboxParcel, LOS BORDES, que se los suma a
+## todo cuerpo que aparece en una parcela; esto corre después).
+func _ready() -> void:
+	collision_mask &= ~PhysicsLayers.PARCEL_BOUND
+
+
+## La tira desde la cámara activa, hacia donde mira, con `push` de empuje (N·s) a `speed` m/s.
+static func throw_from_camera(scene: Node, push: float, speed := SPEED) -> TestBall:
 	var camera := scene.get_viewport().get_camera_3d()
 	if camera == null or push <= 0.0 or is_inf(push):
 		return null
 	var ball := TestBall.new()
-	ball.mass = push / SPEED
+	ball.mass = push / speed
 	scene.add_child(ball)
 	var forward := -camera.global_basis.z
 	ball.global_position = camera.global_position + forward * (RADIUS + 1.0)
-	ball.linear_velocity = forward * SPEED
+	ball.linear_velocity = forward * speed
 	return ball
 
 
-## EL EMPUJE QUE HACE FALTA PARA DARLE `delta_v` (m/s) a algo de `mass` kg, con una bola a `SPEED` que se queda pegada:
+## Un tiro: `{name, push, speed}` (ver `ball_shots`).
+static func shot(shot_name: String, push: float, speed := SPEED) -> Dictionary:
+	return {"name": shot_name, "push": push, "speed": speed}
+
+
+## EL EMPUJE QUE HACE FALTA PARA DARLE `delta_v` (m/s) a algo de `mass` kg, con una bola a `speed` que se queda pegada:
 ## Δv = m_bola·v / (masa + m_bola), y m_bola = empuje / v. Lo más que puede darle es casi su propia velocidad: más que
 ## eso, se queda en lo más (una bola de diez veces la masa del blanco).
-static func push_for(mass: float, delta_v: float) -> float:
-	var reachable := minf(delta_v, SPEED * 10.0 / 11.0)
-	return mass * reachable * SPEED / (SPEED - reachable)
+static func push_for(mass: float, delta_v: float, speed := SPEED) -> float:
+	var reachable := minf(delta_v, speed * 10.0 / 11.0)
+	return mass * reachable * speed / (speed - reachable)
 
 
-## Las teclas de la bola, con las fuerzas de `target` (el arquetipo de la parcela: ver SeededArchetype.ball_pushes).
+## Las teclas de la bola, con los tiros de `target` (el arquetipo de la parcela: ver SeededArchetype.ball_shots).
 static func parcel_options(target: SeededArchetype) -> Array[Dictionary]:
 	return [
-		{"key": KEY_J, "label": func() -> String: return "tirar una bola (%s: %s N·s)" % [NAMES[level],
-				String.num_int64(roundi(TestBall.push_at(target, level)))],
-			"apply": func(parcel: SandboxParcel) -> void: TestBall.throw_from_camera(parcel, TestBall.push_at(target, level))},
-		{"key": KEY_K, "label": func() -> String: return "otra fuerza (%d de %d)" % [level + 1, NAMES.size()],
-			"apply": func(_parcel: SandboxParcel) -> void: level = (level + 1) % NAMES.size()},
+		{"key": KEY_J, "label": func() -> String:
+				var chosen := TestBall.shot_at(target, level)
+				return "tirar una bola (%s: %s N·s a %d m/s)" % [chosen["name"],
+					String.num_int64(roundi(float(chosen["push"]))), roundi(float(chosen["speed"]))],
+			"apply": func(parcel: SandboxParcel) -> void:
+				var chosen := TestBall.shot_at(target, level)
+				TestBall.throw_from_camera(parcel, float(chosen["push"]), float(chosen["speed"]))},
+		{"key": KEY_K, "label": func() -> String: return "otro tiro (%d de %d)" % [
+				posmod(level, maxi(target.ball_shots().size(), 1)) + 1, target.ball_shots().size()],
+			"apply": func(_parcel: SandboxParcel) -> void: level = posmod(level + 1, maxi(target.ball_shots().size(), 1))},
 	]
 
 
-## La fuerza `force` (0 a 2) de `target`.
-static func push_at(target: SeededArchetype, force: int) -> float:
-	var pushes := target.ball_pushes()
-	return float(pushes[clampi(force, 0, pushes.size() - 1)]) if not pushes.is_empty() else 0.0
+## El tiro `index` de `target` (dando la vuelta, si la fila tiene menos).
+static func shot_at(target: SeededArchetype, index: int) -> Dictionary:
+	var shots := target.ball_shots()
+	if shots.is_empty():
+		return shot("", 0.0)
+	return shots[posmod(index, shots.size())]
+
+
+## El empuje del tiro `index` de `target`.
+static func push_at(target: SeededArchetype, index: int) -> float:
+	return float(shot_at(target, index)["push"])
 
 
 func _physics_process(delta: float) -> void:

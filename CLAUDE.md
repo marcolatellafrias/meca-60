@@ -65,8 +65,14 @@ que flota como el cuerpo de los personajes de character-parametric antes del 13/
 rayos al piso y un torque que lo endereza): rebota y cabecea solo. Pasado un umbral (inclinación, caída, velocidad de
 costado) deja de intentar y cae con física; quieto un rato, **sube** con las toberas de la cara que mira al piso y **se
 endereza en el aire** con las de los costados (cuatro por cara, con el humo de propulsor de allá), y vuelve a flotar.
-**J/K** la bola (sus fuerzas suponen el golpe en la mitad de arriba: en el centro lo corre sin inclinarlo); **F1** su
-panel (`HoverPanel`, perillas en `HoverCubeSettings`). Las piernas, para más adelante, en su propia fila (el
+La parcela es de 60 m. **J/K** la bola, con cuatro tiros propios: lenta (30 m/s, empuja) o rápida (100 m/s, golpea
+seca), que lo voltea o no (suponen el golpe en la mitad de arriba: en el centro lo corre sin inclinarlo; lo que la bola
+le deja de giro está medido por velocidad, `HoverCube.TRANSFER`). **F1** su panel (`HoverPanel`, perillas en
+`HoverCubeSettings`); **F2** un panel chico con dos botones que lo vuelcan, suave y fuerte (`HoverKnockPanel`).
+
+**Las parcelas tienen paredes invisibles** (como allá, `SandboxParcel` LOS BORDES): las ve lo que se mueve con física y
+vive en una parcela; el jugador y la bola pasan. Las mecas de pelea, que se mueven por código, le preguntan a su parcela
+(`SandboxParcel.holds`): el borde de la arena es el de su parcela. Las piernas, para más adelante, en su propia fila (el
 sistema «por radio» de allá, de octubre de 2025).
 
 Más filas: **Personajes** (los seis arquetipos de allá, que se caen y se levantan; también con la bola), **Objetos** (los
@@ -91,7 +97,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   `PeopleArchetype` (las personas de allá) con `CharacterGetUp` (que se levanten solas) y `ObjectLotArchetype` (el lote
   de objetos).
 - `game/hover/` — **el cubo flotante**: `HoverCube` (flotar, dejarse caer, subir y enderezarse con las toberas),
-  `HoverCubeSettings` (sus perillas), `HoverPanel` (su F1) y `HoverCubeArchetype` (su parcela).
+  `HoverCubeSettings` (sus perillas), `HoverPanel` (su F1), `HoverKnockPanel` (su F2: volcarlo) y `HoverCubeArchetype`
+  (su parcela y sus tiros).
 - `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas, `_mount_tuners` sus paneles F;
   crea al jugador, ver arriba) y la sesión de red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD,
   espacio, shift, Ctrl, E, R, C, V, B, F1–F6, Escape; no repetirlas. Sentado (o manejando desde afuera) sólo valen las

@@ -43,17 +43,41 @@ func _ready() -> void:
 		HoverCubeSettings.current.hover_height, _cube.height, _cube.state])
 	_side_view()
 	await _shot("El cubo flotando", "1_flotando")
-	# LAS TRES BOLAS, de frente.
-	for force in TestBall.NAMES.size():
-		await _wait_hover()
-		await _seconds(1.5)
+	# LOS CUATRO TIROS DEL CUBO, de frente (ver HoverCubeArchetype.ball_shots).
+	var ball_shots := _parcel.archetype.ball_shots()
+	for index in ball_shots.size():
+		var chosen: Dictionary = ball_shots[index]
+		# Cada tiro, con el cubo recién armado y quieto (si no, el anterior lo deja deslizándose y se le erra).
+		_parcel.regenerate(_parcel.seed_value)
+		await _frames(2)
+		_cube = _parcel.find_children("*", "HoverCube", true, false)[0] as HoverCube
+		await _seconds(2.0)
 		_aim()
 		await _frames(2)
 		var falls := _cube.falls
-		TestBall.throw_from_camera(_parcel, TestBall.push_at(_parcel.archetype, force))
+		TestBall.throw_from_camera(_parcel, float(chosen["push"]), float(chosen["speed"]))
 		var watched := await _watch(4.0, true)
-		print("BOLA %s: altura %.2f a %.2f m · inclinación pico %.0f° · se cayó %s · estado %d" % [TestBall.NAMES[force],
-			watched.x, watched.y, watched.z, _cube.falls > falls, _cube.state])
+		print("TIRO %s (%s N·s a %d m/s): inclinación pico %.0f° (se cae a %.0f°) · se cayó %s" % [chosen["name"],
+			String.num_int64(roundi(float(chosen["push"]))), roundi(float(chosen["speed"])), watched.z,
+			HoverCubeSettings.current.max_tilt, _cube.falls > falls])
+	# LOS BOTONES DEL PANEL CHICO: volcarlo suave y fuerte; que se caiga, se recupere y no salga de su parcela.
+	for strong: bool in [false, true]:
+		await _wait_hover()
+		await _seconds(1.5)
+		var falls := _cube.falls
+		_cube.knock(strong)
+		var most := 0.0
+		var farthest := 0.0
+		var clock := 0.0
+		while clock < 30.0 and not (_cube.falls > falls and _cube.state == HoverCube.State.HOVER):
+			await get_tree().physics_frame
+			clock += 1.0 / 240.0
+			most = maxf(most, _cube.tilt)
+			var local := _parcel.to_local(_cube.global_position)
+			farthest = maxf(farthest, maxf(absf(local.x), absf(local.z)))
+		print("VOLCAR %s: inclinación pico %.0f° · se cayó %s · de vuelta flotando %s a los %.1f s · lo más lejos del centro %.1f m (borde a %.0f)" % [
+			"fuerte" if strong else "suave", most, _cube.falls > falls, _cube.state == HoverCube.State.HOVER, clock, farthest,
+			_parcel.size.x * 0.5])
 	# EL REBOTE: soltarlo de 4 m más arriba.
 	await _wait_hover()
 	await _seconds(1.0)
