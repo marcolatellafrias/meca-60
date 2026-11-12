@@ -20,14 +20,15 @@ extends Node3D
 ## SE VIAJA EN ÉL: su piso tiene forma de choque en `solid` (las formas de adentro de la meca, de las que su marco copia
 ## la sombra), y se mueve con él. `down` lo manda abajo o arriba; `toggle` lo cambia.
 
-const HALF := Mech.SIZE * 0.5
+const HALF := CabinGrid.HALF
 ## El hueco (el recorte de la losa y el de la pelvis), la pelvis por fuera y el piso del ascensor: sus radios. Casi
-## iguales: se leen como una sola forma.
-const HOLE := 1.78
-const DRUM := 1.86
-const PLATFORM := 1.74
+## iguales: se leen como una sola forma. EN CELDAS (ver CabinGrid): el hueco ocupa los 2 × 2 módulos del medio de la
+## planta baja, tres celdas adentro de sus bordes.
+const HOLE := CabinGrid.MODULE - 3 * CabinGrid.CELL
+const DRUM := HOLE + 2 * CabinGrid.CELL
+const PLATFORM := HOLE - CabinGrid.CELL
 ## El alto de los parantes (y de la jaula), dónde queda el piso bajado (en el espacio del cubo) y a qué velocidad viaja.
-const CAGE := 2.2
+const CAGE := 56 * CabinGrid.CELL
 const LOWERED := -7.05
 const SPEED := 1.6
 const RAIL := 1.05
@@ -64,7 +65,7 @@ func _ready() -> void:
 
 ## Su piso subido: al ras del piso de abajo.
 static func raised_y() -> float:
-	return MechCabin.floor_y(0) + MechCabin.SLAB * 0.5
+	return CabinGrid.ground(0)
 
 
 func toggle() -> void:
@@ -95,7 +96,7 @@ static func build_floor(holder: Node3D, body: PhysicsBody3D, y: float, thickness
 	holder.add_child(holed(square(HALF), HOLE, y - thickness * 0.5, y + thickness * 0.5, color))
 	var beside := HALF - HOLE
 	for way: float in [-1.0, 1.0]:
-		Clay.shape_box(body, Vector3(Mech.SIZE, thickness, beside), Vector3(0, y, way * (HOLE + beside * 0.5)))
+		Clay.shape_box(body, Vector3(CabinGrid.SIZE, thickness, beside), Vector3(0, y, way * (HOLE + beside * 0.5)))
 		Clay.shape_box(body, Vector3(beside, thickness, HOLE * 2.0), Vector3(way * (HOLE + beside * 0.5), y, 0))
 	var top := y + thickness * 0.5
 	var rim := HOLE + 0.16

@@ -25,23 +25,25 @@ extends RefCounted
 ## ocho maquetas (12/11/2026; las otras —zigzags, una caja compacta, corrida a un costado, la pasarela de un solo lado:
 ## «queda rara asimétrica»— se borraron).
 
-const HALF := Mech.SIZE * 0.5
+## LAS MEDIDAS, EN CELDAS DE LA GRILLA (ver CabinGrid).
+const C := CabinGrid.CELL
+const HALF := CabinGrid.HALF
 ## El ancho de un carril (la pasarela, los balcones, los tramos) y el alto de la baranda.
-const WALK := 1.1
-const LANE := 0.9
-const RAIL := 1.05
+const WALK := 28 * C
+const LANE := 23 * C
+const RAIL := 27 * C
 const BAR := 0.07
 ## Hasta dónde llega la pasarela por los costados, hacia el frente (z): antes de donde cuelgan los brazos.
-const SIDE_END := -2.2
+const SIDE_END := -56 * C
 ## Lo que tiene que quedar libre sobre cada lugar pisable (m).
 const CLEAR := 2.1
 const STEEL := Color(0.24, 0.25, 0.28)
 const GRATE := Color(0.36, 0.38, 0.41)
 
 ## La escalera: dónde arranca el descanso de abajo de cada tramo (x), y el largo de un descanso y de un tramo, en planta.
-const STAIR_START := -2.9
-const LANDING := 0.9
-const FLIGHT := 4.0
+const STAIR_START := -74 * C
+const LANDING := 23 * C
+const FLIGHT := 102 * C
 
 
 ## Lo arma colgado de `holder` (el dibujo) y `solid` (sus formas de choque).
@@ -63,11 +65,11 @@ static func build(holder: Node3D, solid: PhysicsBody3D) -> void:
 static func bounds() -> AABB:
 	var outer := HALF + WALK + 0.25
 	var back := _lane(1).y + 0.3
-	return AABB(Vector3(-outer, -HALF - 0.3, SIDE_END - 0.3), Vector3(outer * 2.0, Mech.SIZE + 2.4, back - SIDE_END + 0.3))
+	return AABB(Vector3(-outer, -HALF - 0.3, SIDE_END - 0.3), Vector3(outer * 2.0, CabinGrid.SIZE + 2.4, back - SIDE_END + 0.3))
 
 
 static func _floor_y(index: int) -> float:
-	return MechCabin.floor_y(index) + MechCabin.SLAB * 0.5
+	return CabinGrid.ground(index)
 
 
 ## El carril `index` (0, el de la pasarela y los balcones, pegado a la pared): de dónde a dónde va, en z.

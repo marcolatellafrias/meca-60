@@ -16,10 +16,10 @@ Su equilibrio es [[pendulo]] (el torso es un péndulo sobre su apoyo, los pies l
 pisos, los brazos, y correr, agacharse, saltar y volar. Es una clase con sus piezas aparte: ver [[estructura]].
 
 ## Por dentro y por fuera
-Se arma con **paredes de verdad**, no con una caja pintada: **tres pisos** con la proporción del cubo (2,67 m cada uno),
-cada uno con el hueco del frente con su **vidrio** y sus parantes (se ve para adentro y para afuera), **el hueco de la
-puerta atrás** (sin escalera todavía) y un asiento con su consola. La primera persona de [[poseer]] es la del asiento
-del medio.
+Se arma con **paredes de verdad**, no con una caja pintada: **tres pisos**, cada uno con el frente de **vidrio** y
+sus parantes (se ve para adentro y para afuera) y **la puerta atrás**. Desde el 13/11/2026 **todas las medidas salen de
+una grilla de celdas** (ver [[cabina]]): la planta baja es de servicio, con el ascensor, y los dos pisos de arriba tienen
+dos asientos cada uno. La primera persona de [[poseer]] es la del asiento de la izquierda del piso del medio.
 
 ## Adentro se camina
 Como en la meca de pelea, es un **marco** (`MotionFrame`, de character-parametric):

@@ -8,6 +8,7 @@ empieza con su comentario largo).
 - [[filas]] — **cada fila del sandbox y su código** (qué borrar si se borra una parcela).
 - [[cubo]] — la base de la variante de la línea (sin fila): flotar, la línea, tropezar, caer y recuperarse con toberas.
 - [[meca]] — **donde se sigue puliendo**: la caja con tres pisos, correr, agacharse, saltar y volar, **bifurcada en dos caminos** por sus brazos (discretos o físicos).
+- [[cabina]] — **la cabina sobre su grilla** (módulo Interior): una celda de 1/16 de cubo, módulos de 3 cubos, planta baja de servicio y dos asientos por piso arriba.
 - [[base-comun]] — **lo que van a compartir la meca propia y los jefes** (pendiente): un cuerpo con equilibrio, y el resto en piezas.
 - [[pendulo]] — **el modelo de equilibrio de la meca**: el torso es un péndulo y los pies lo siguen.
 - [[brazo]] — los brazos: lo que se les pide (una vez), el físico con músculos y el discreto.
