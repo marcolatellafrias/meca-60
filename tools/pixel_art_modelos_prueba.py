@@ -71,6 +71,30 @@ def build(name, second):
         export_yup=True)
 
 
+def wedge(name):
+    # UNA CUÑA, para ver los triángulos: 16 × 16 de planta, 12 de alto atrás y una rampa al frente (mide 20 píxeles:
+    # 12, 16 y 20 es un triángulo 3-4-5). Sus dos costados son triángulos.
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    mesh = bpy.data.meshes.new(name)
+    mesh.materials.append(material("caja", (0.47, 0.4, 0.27)))
+    bm = bmesh.new()
+    quad(bm, [(-8, 8, 0), (8, 8, 0), (8, -8, 0), (-8, -8, 0)], 0)
+    quad(bm, [(8, 8, 0), (-8, 8, 0), (-8, 8, 12), (8, 8, 12)], 0)
+    quad(bm, [(-8, -8, 0), (8, -8, 0), (8, 8, 12), (-8, 8, 12)], 0)
+    for x, order in ((8, 1), (-8, -1)):
+        corners = [(x, -8, 0), (x, 8, 0), (x, 8, 12)][::order]
+        face = bm.faces.new([bm.verts.new((a * P, b * P, c * P)) for a, b, c in corners])
+        face.material_index = 0
+    bmesh.ops.remove_doubles(bm, verts=bm.verts, dist=1e-5)
+    bm.to_mesh(mesh)
+    bm.free()
+    item = bpy.data.objects.new(name, mesh)
+    bpy.context.scene.collection.objects.link(item)
+    bpy.ops.export_scene.gltf(filepath="%s/%s.glb" % (FOLDER, name), export_format="GLB", export_apply=True,
+        export_yup=True)
+
+
 FOLDER = sys.argv[sys.argv.index("--") + 1]
 build("caja", False)
 build("caja_v2", True)
+wedge("cuna")

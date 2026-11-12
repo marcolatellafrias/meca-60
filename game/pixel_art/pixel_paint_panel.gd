@@ -19,6 +19,8 @@ var _info: Label = null
 var _model: PixelModel = null
 var _face: PixelFace = null
 var _outline: MeshInstance3D = null
+var _face_mode: Button = null
+var _model_mode: Button = null
 
 
 func setup_panel() -> void:
@@ -27,7 +29,16 @@ func setup_panel() -> void:
 	grid.painted.connect(_on_painted)
 	var fill := TunerPanel.new_button("Rellenar la cara con el color", func() -> void: grid.fill())
 	var undo := TunerPanel.new_button("Deshacer el último trazo", func() -> void: grid.undo())
-	setup("pixeles", "PINTAR CON PÍXELES", [fill, undo] as Array[Button])
+	# LOS DOS MODOS (ver PixelModel): esta cara, o todo el modelo.
+	_face_mode = TunerPanel.new_button("", func() -> void:
+		if _face != null:
+			_show(_model, _model.set_face_stretch(_face, not _face.stretched)))
+	_model_mode = TunerPanel.new_button("", func() -> void:
+		if _model != null:
+			var key := _face.key if _face != null else ""
+			_model.set_stretch_all(not _model.stretch_all)
+			_show(_model, _find(_model, key)))
+	setup("pixeles", "PINTAR CON PÍXELES", [fill, undo, _face_mode, _model_mode] as Array[Button])
 	# La grilla y la paleta se montan una vez, arriba del scroll: lo que devuelve `sections()` se libera en cada rearmado.
 	var editor := VBoxContainer.new()
 	_info = state_label(editor)
@@ -45,6 +56,7 @@ func setup_panel() -> void:
 	column.add_child(editor)
 	column.move_child(editor, _copy_button.get_index() + 1)
 	_copy_button.visible = false
+	_update_info()
 
 
 func _opened() -> void:
@@ -107,9 +119,25 @@ func _on_painted() -> void:
 	_update_info()
 
 
+static func _find(model: PixelModel, key: String) -> PixelFace:
+	for face in model.faces:
+		if face.key == key:
+			return face
+	return null
+
+
 func _update_info() -> void:
 	if _info == null:
 		return
+	_face_mode.visible = _face != null
+	_model_mode.visible = _model != null
+	if _model != null:
+		_model_mode.text = "Todo el modelo: pasarlo a %s" % ("cuadrícula" if _model.stretch_all else "estirado")
+	if _face != null:
+		var mode := "estirada" if _face.stretched else "cuadrícula"
+		if _model.wants_stretch(_face) and not _face.stretched:
+			mode = "cuadrícula (no se puede estirar: no es un quad ni un triángulo)"
+		_face_mode.text = "Esta cara (%s): pasarla a %s" % [mode, "cuadrícula" if _face.stretched else "estirada"]
 	if _face == null:
 		_info.text = "Mirá una cara de un modelo de la fila y apretá F1 (o hacé clic en ella)."
 		return

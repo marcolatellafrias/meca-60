@@ -38,6 +38,18 @@ var atlas: Image = null
 var atlas_side := 32
 var _texture: ImageTexture = null
 var _mesh_instance: MeshInstance3D = null
+var _triangles := PackedVector3Array()
+var _colors := PackedColorArray()
+
+## ── DOS MODOS DE CARA (el usuario, 13/11/2026: «si un chamfer está estirado, sigue siendo un quad… los píxeles se
+## estiran con ese skew… me gustaría controlar si quiero una cosa u otra») ──────────────────────────────────────────
+## CUADRÍCULA: píxeles cuadrados, del mismo tamaño en todo el modelo, apoyados en el plano; una cara que no mide píxeles
+## enteros o no es un rectángulo queda con píxeles cortados. ESTIRADA (sólo quads y triángulos): la grilla se estira
+## entre las esquinas; ningún píxel queda cortado, pero se deforman y cambian de tamaño de una cara a otra.
+## `stretch_all` es el modo del modelo; `face_modes` (clave de la cara → estirada o no) lo pisa en una cara. Los dos se
+## guardan con la pintura.
+var stretch_all := false
+var face_modes: Dictionary = {}
 
 
 ## Un modelo de Blender: junta los triángulos de todas sus mallas, con su color de material.
@@ -121,14 +133,13 @@ func pick(from: Vector3, direction: Vector3) -> Dictionary:
 				face.triangles[index + 1], face.triangles[index + 2])
 			if hit != null and (hit as Vector3).distance_to(local_from) < best:
 				best = (hit as Vector3).distance_to(local_from)
-				var spot := face.local(hit as Vector3, pixel)
-				out = {"face": face, "x": clampi(floori(spot.x), 0, face.width - 1),
-					"y": clampi(floori(spot.y), 0, face.height - 1)}
+				var spot := face.pixel_at(hit as Vector3, pixel)
+				out = {"face": face, "x": spot.x, "y": spot.y}
 	return out
 
 
 func save() -> void:
-	var data := {"pixels_per_cell": pixels_per_cell, "pixels": {}}
+	var data := {"pixels_per_cell": pixels_per_cell, "stretch_all": stretch_all, "face_modes": face_modes, "pixels": {}}
 	var keys := painted.keys()
 	keys.sort()
 	for key: String in keys:
@@ -140,12 +151,15 @@ func save() -> void:
 
 func load_paint() -> void:
 	painted.clear()
+	face_modes.clear()
 	var path := folder + paint_name + ".json"
 	if not FileAccess.file_exists(path):
 		return
 	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
 	if not (data is Dictionary):
 		return
+	stretch_all = bool((data as Dictionary).get("stretch_all", stretch_all))
+	face_modes = (data as Dictionary).get("face_modes", {})
 	var pixels: Dictionary = (data as Dictionary).get("pixels", {})
 	for key: String in pixels:
 		painted[key] = Color.html(str(pixels[key]))
@@ -163,15 +177,72 @@ func clear_paint() -> void:
 func _setup(triangles: PackedVector3Array, colors: PackedColorArray, name_for_paint: String) -> PixelModel:
 	paint_name = name_for_paint
 	pixel = CELL / pixels_per_cell
-	faces = PixelFaces.detect(triangles, colors, pixel)
-	atlas_side = PixelFaces.pack(faces)
+	_triangles = triangles
+	_colors = colors
 	load_paint()
+	_rebuild()
+	return self
+
+
+## Si una cara va estirada: su modo propio o, si no tiene, el del modelo.
+func wants_stretch(face: PixelFace) -> bool:
+	return bool(face_modes.get(face.key, stretch_all))
+
+
+## CAMBIA EL MODO DE UNA CARA y devuelve la cara rearmada (las caras se rearman todas: el atlas cambia). Lo pintado se
+## pasa al otro modo (ver `_switch`).
+func set_face_stretch(face: PixelFace, on: bool) -> PixelFace:
+	var key := face.key
+	_switch(func() -> void: face_modes[key] = on)
+	for each in faces:
+		if each.key == key:
+			return each
+	return null
+
+
+## Cambia el modo de todo el modelo (y borra los modos propios de las caras).
+func set_stretch_all(on: bool) -> void:
+	_switch(func() -> void:
+		stretch_all = on
+		face_modes.clear())
+
+
+## CAMBIAR DE MODO SIN PERDER LO PINTADO: cada píxel de la cara nueva toma lo pintado del píxel de la vieja donde cae
+## su centro. Lo de antes queda guardado igual (volver al otro modo lo recupera tal cual).
+func _switch(change: Callable) -> void:
+	var before := faces.duplicate()
+	change.call()
+	_rebuild()
+	for face in faces:
+		for old: PixelFace in before:
+			if old.key != face.key or old.stretched == face.stretched:
+				continue
+			for y in face.height:
+				for x in face.width:
+					var key := anchor(face, x, y)
+					if painted.has(key):
+						continue
+					var spot := old.pixel_at(face.centre(x, y, pixel), pixel)
+					var old_key := anchor(old, spot.x, spot.y)
+					if painted.has(old_key):
+						painted[key] = painted[old_key]
+	_redraw()
+	save()
+
+
+func _rebuild() -> void:
+	faces = PixelFaces.detect(_triangles, _colors, pixel)
+	for face in faces:
+		if wants_stretch(face):
+			PixelFaces.stretch(face, pixel)
+	atlas_side = PixelFaces.pack(faces)
 	atlas = Image.create(atlas_side, atlas_side, false, Image.FORMAT_RGBA8)
 	atlas.fill(Color(1, 0, 1))
 	_texture = ImageTexture.create_from_image(atlas)
 	_redraw()
+	if is_instance_valid(_mesh_instance):
+		_mesh_instance.free()
 	_build_mesh()
-	return self
 
 
 func _redraw() -> void:
@@ -212,10 +283,23 @@ func _build_mesh() -> void:
 	var tool := SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for face in faces:
-		for point in face.triangles:
-			tool.set_normal(face.normal)
-			tool.set_uv((Vector2(face.at) + face.local(point, pixel)) / atlas_side)
-			tool.add_vertex(point)
+		if not face.stretched:
+			for point in face.triangles:
+				tool.set_normal(face.normal)
+				tool.set_uv((Vector2(face.at) + face.local(point, pixel)) / atlas_side)
+				tool.add_vertex(point)
+			continue
+		# ESTIRADA: un quad chico por píxel, cada uno con las esquinas de su píxel en el atlas. Con un quad entero de dos
+		# triángulos, un trapecio se ve doblado en la diagonal (la textura afín); así el doblez queda dentro de un píxel
+		# de un solo color y no se ve.
+		for y in face.height:
+			for x in face.width:
+				var cell: Array[Vector2i] = [Vector2i(x, y), Vector2i(x + 1, y), Vector2i(x + 1, y + 1), Vector2i(x, y + 1)]
+				for corner: int in [0, 1, 2, 0, 2, 3]:
+					var grid := cell[corner]
+					tool.set_normal(face.normal)
+					tool.set_uv(Vector2(face.at + grid) / atlas_side)
+					tool.add_vertex(face.spot(float(grid.x) / face.width, float(grid.y) / face.height))
 	var material := StandardMaterial3D.new()
 	material.albedo_texture = _texture
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST

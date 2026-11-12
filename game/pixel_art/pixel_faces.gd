@@ -152,7 +152,113 @@ static func _face(members: PackedInt32Array, start: int, triangles: PackedVector
 	face.width = maxi(1, ceili(box.size.x / pixel - 0.02))
 	face.height = maxi(1, ceili(box.size.y / pixel - 0.02))
 	_rasterize(face, pixel)
+	var centroid := Vector3.ZERO
+	for point in face.triangles:
+		centroid += point
+	centroid /= face.triangles.size()
+	var direction := Vector3i((normal * 100.0).round())
+	var middle := Vector3i((centroid / pixel * 2.0).round())
+	face.key = "%d,%d,%d|%d,%d,%d" % [direction.x, direction.y, direction.z, middle.x, middle.y, middle.z]
 	return face
+
+
+## ESTIRA LA GRILLA DE UNA CARA entre sus esquinas (ver PixelFace.stretched), si es un quad o un triángulo: la cuenta de
+## píxeles de cada lado sale del más largo de cada par de lados opuestos (en un trapecio, el lado corto queda con
+## píxeles más angostos). En un triángulo, la punta es un lado de largo cero: las columnas se juntan en ella. Devuelve
+## false (y la deja como estaba) si la cara tiene más esquinas.
+static func stretch(face: PixelFace, pixel: float) -> bool:
+	var loop := _corners(face)
+	if loop.size() < 3 or loop.size() > 4:
+		return false
+	# En el plano (derecha, arriba), arriba a la izquierda → arriba a la derecha → abajo… es el sentido horario.
+	var flat := PackedVector2Array()
+	for point in loop:
+		flat.append(Vector2((point - face.origin).dot(face.right), (point - face.origin).dot(face.up)))
+	var area := 0.0
+	for i in flat.size():
+		area += flat[i].x * flat[(i + 1) % flat.size()].y - flat[(i + 1) % flat.size()].x * flat[i].y
+	if area > 0.0:
+		loop.reverse()
+		flat.reverse()
+	var count := loop.size()
+	var corners := PackedVector3Array()
+	if count == 4:
+		# El lado de arriba: de los que van hacia la derecha, el más alto.
+		var top := 0
+		var best := -INF
+		for i in 4:
+			var j := (i + 1) % 4
+			if flat[j].x - flat[i].x > 1e-6 and (flat[i].y + flat[j].y) * 0.5 > best:
+				best = (flat[i].y + flat[j].y) * 0.5
+				top = i
+		for i in 4:
+			corners.append(loop[(top + i) % 4])
+	else:
+		# La base: el lado más acostado; la punta, del otro lado.
+		var base := 0
+		var flattest := -1.0
+		for i in 3:
+			var along := flat[(i + 1) % 3] - flat[i]
+			var lying := absf(along.x) / maxf(along.length(), 1e-9)
+			if lying > flattest:
+				flattest = lying
+				base = i
+		var tip := (base + 2) % 3
+		if flat[tip].y > (flat[base].y + flat[(base + 1) % 3].y) * 0.5:
+			corners = PackedVector3Array([loop[tip], loop[tip], loop[(tip + 1) % 3], loop[(tip + 2) % 3]])
+		else:
+			corners = PackedVector3Array([loop[base], loop[(base + 1) % 3], loop[tip], loop[tip]])
+	face.stretched = true
+	face.corners = corners
+	var across := maxf(corners[0].distance_to(corners[1]), corners[3].distance_to(corners[2]))
+	var down := maxf(corners[0].distance_to(corners[3]), corners[1].distance_to(corners[2]))
+	face.width = maxi(1, roundi(across / pixel))
+	face.height = maxi(1, roundi(down / pixel))
+	face.mask.resize(face.width * face.height)
+	face.mask.fill(1)
+	face.base.resize(face.width * face.height)
+	var corners_flat := PackedVector2Array()
+	for point in face.triangles:
+		corners_flat.append(face.local(point, pixel))
+	for y in face.height:
+		for x in face.width:
+			var probe := face.local(face.centre(x, y, pixel), pixel)
+			var color := face.colors[0]
+			for tri in face.colors.size():
+				if Geometry2D.point_is_inside_triangle(probe, corners_flat[tri * 3], corners_flat[tri * 3 + 1],
+						corners_flat[tri * 3 + 2]):
+					color = face.colors[tri]
+					break
+			face.base[y * face.width + x] = color
+	return true
+
+
+## Las esquinas de una cara, en orden: el contorno encadenado, sin los puntos que están en medio de un lado.
+static func _corners(face: PixelFace) -> PackedVector3Array:
+	var next := {}
+	for index in range(0, face.outline.size(), 2):
+		next[Vector3i((face.outline[index] / WELD).round())] = face.outline[index + 1]
+	var loop := PackedVector3Array()
+	if face.outline.is_empty():
+		return loop
+	var point := face.outline[0]
+	for step in next.size() + 1:
+		loop.append(point)
+		var key := Vector3i((point / WELD).round())
+		if not next.has(key):
+			return PackedVector3Array()
+		point = next[key]
+		if point.distance_to(loop[0]) < WELD:
+			break
+	if loop.size() != next.size():
+		return PackedVector3Array()
+	var out := PackedVector3Array()
+	for i in loop.size():
+		var before := (loop[i] - loop[(i - 1 + loop.size()) % loop.size()]).normalized()
+		var after := (loop[(i + 1) % loop.size()] - loop[i]).normalized()
+		if before.dot(after) < 0.9999:
+			out.append(loop[i])
+	return out
 
 
 ## Lo que ocupan los puntos sobre dos ejes, medido desde `from`.

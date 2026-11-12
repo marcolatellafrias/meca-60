@@ -23,6 +23,38 @@ los primeros candidatos son las cajas de munición, que se dejaron lisas para es
 con un script, uno mixto (Blender marca sus quads y Godot los respeta) y sin textura (un color por cara). Y entre
 pintar directo en 3D o en un panel plano: **el panel plano**.
 
+## Dos modos de cara: cuadrícula y estirada
+El usuario (13/11/2026): «si un chamfer está estirado, sigue siendo un quad… los píxeles se estiran con ese skew… me
+gustaría controlar si quiero una cosa u otra». Hay dos, y se eligen **por modelo** (`PixelModel.stretch_all`) y **por
+cara** (`face_modes`, que pisa al del modelo); los dos se guardan con la pintura. En el panel F1, dos botones: «esta
+cara» y «todo el modelo».
+
+| | Cuadrícula (por defecto) | Estirada |
+|---|---|---|
+| El píxel | cuadrado, del mismo tamaño en todo el modelo | se deforma con la cara: más angosto en el lado corto de un trapecio |
+| Una cara que no mide píxeles enteros (el chanfle, 2,83) | la última fila queda cortada | se redondea: 3 filas un poco más altas |
+| Los costados en diagonal (las puntas del chanfle, la hipotenusa) | escalera de píxeles cortados | las columnas se inclinan con el lado: ningún píxel cortado |
+| Un triángulo | el rectángulo que lo contiene; lo de afuera, apagado (rayado en el panel) | las filas paralelas a la base y las columnas juntándose en la punta, como un abanico |
+| Más de cuatro esquinas (una L) | igual que siempre | no se puede: queda en cuadrícula |
+| Empalme con la vecina | si las dos miden píxeles enteros, siempre | sólo donde los dos lados opuestos tienen la misma cuenta (ver abajo) |
+| Remodelar | conserva lo que se superpone | si la cara cambia de tamaño, todos sus píxeles se corren: pierde lo suyo |
+
+**Por qué un trapecio no puede empalmar de los dos lados**: el chanfle del frente mide 16 píxeles abajo (donde toca el
+frente) y 12 arriba (donde toca el techo). La grilla estirada tiene la misma cantidad de columnas arriba y abajo: se
+elige **la del lado más largo** (16), que empalma con el frente; arriba quedan 16 columnas angostas contra 12 del techo.
+Es geometría, no un detalle del código: para empalmar con los dos habría que partir el chanfle o usar otra densidad.
+
+**Cambiar de modo no pierde lo pintado**: cada píxel nuevo toma el color del píxel viejo donde cae su centro, y lo de
+antes queda guardado (volver al otro modo lo recupera tal cual).
+
+**Cómo se dibuja la estirada**: un quad chico por píxel, con las esquinas de su píxel en el atlas. Con el quad entero de
+dos triángulos, un trapecio se vería doblado en la diagonal (la textura «afín» de cada triángulo); así el doblez queda
+dentro de un píxel de un solo color y no se ve. Cuesta más triángulos (16 × 3 píxeles = 96): para modelos low poly no
+pesa.
+
+**Tener los dos complica poco**: comparten la detección, el atlas, la memoria, el panel y el guardado. Lo distinto es
+dónde cae cada píxel (`PixelFace.centre`, `pixel_at`), cómo se arma la malla y cuántos píxeles tiene la cara.
+
 ## La densidad: 16 píxeles por cubo de 63 cm
 Unos 25 píxeles por metro: el cubo de un recurso es de 16 × 16 por cara. **Una sola densidad para todo el juego**, así
 un píxel mide lo mismo en una caja, en la meca y en el piso. El test compara 8, 16 y 32 (captura 7): 8 se ve tosco
@@ -55,8 +87,10 @@ chapa nueva conserva 1400 de sus 1408 píxeles (los 8 que se pierden son la mani
 ## Lo que quedó sin resolver
 - **Una cara que se corre pierde lo suyo** (por ejemplo, una pared que se hace un píxel más gruesa). Se podría buscar la
   clave también corrida por la normal, o «llevar» la pintura de una cara vieja a la nueva más parecida.
-- **Lo inclinado y lo curvo**: un chanfle tiene su grilla aparte; un cilindro low poly es una cara por lado. Se pinta,
-  pero no empalma con las vecinas.
+- **Lo inclinado y lo curvo**: en cuadrícula, un chanfle tiene su grilla aparte; en estirada, empalma de un lado solo
+  (ver los dos modos). Un cilindro low poly es una cara por lado.
+- **En estirada, una cara que cambia de tamaño pierde lo suyo**: se podría guardar esa cara por su posición relativa (de
+  0 a 1) en vez de por el lugar de cada píxel.
 - **Los huérfanos se acumulan** en el archivo: falta un botón para limpiarlos cuando una versión se da por buena.
 - **Para el juego** habría que hornear el atlas a un PNG y la malla con sus UVs (hoy se arma al cargar; para pocos
   modelos chicos no pesa).
@@ -74,4 +108,4 @@ chapa nueva conserva 1400 de sus 1408 píxeles (los 8 que se pierden son la mani
 | `pixel_paint_panel.gd` · `PixelPaintPanel` | El panel F1: elegir la cara, la paleta. |
 | `pixel_grid.gd` · `PixelGrid` | La cara aplanada donde se pinta. |
 | `pixel_art_archetype.gd` · `PixelArtArchetype` | La parcela: el cubo de 63 cm y la caja de Blender; **N** cambia a la versión 2. |
-| `models/caja.glb`, `caja_v2.glb` | La caja de prueba; la arma `tools/pixel_art_modelos_prueba.py` en Blender. |
+| `models/caja.glb`, `caja_v2.glb`, `cuna.glb` | La caja de prueba y una cuña con dos caras triangulares; las arma `tools/pixel_art_modelos_prueba.py` en Blender. |

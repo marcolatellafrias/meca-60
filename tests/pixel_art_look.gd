@@ -91,7 +91,85 @@ func _ready() -> void:
 	_eye.global_position = Vector3(0.9, 1.3, 2.4)
 	_eye.look_at(Vector3(0.0, 0.3, 0.0))
 	await _shot("7_resoluciones_8_16_32")
+	# 8 y 9. LOS DOS MODOS lado a lado: a la izquierda en cuadrícula, a la derecha estirado; un damero (un píxel sí, uno
+	# no) para ver la forma de los píxeles, y la franja.
+	for pair: Array in [["caja", "8_caja_cuadricula_vs_estirada"], ["cuna", "9_cuna_cuadricula_vs_estirada"]]:
+		_clear()
+		var shown: Array[PixelModel] = []
+		for index in 2:
+			var model := PixelModel.new()
+			model.folder = SAVE
+			model.stretch_all = index == 1
+			model.from_scene(load(MODELS + str(pair[0]) + ".glb") as PackedScene, "%s_modo_%d" % [pair[0], index])
+			model.position = Vector3((index - 0.5) * 1.0, 0.0, 0.0)
+			# La cuña, de costado: sus triángulos hacia la cámara.
+			if str(pair[0]) == "cuna":
+				model.rotation.y = -PI * 0.5
+			_checker(model)
+			add_child(model)
+			_shown.append(model)
+			shown.append(model)
+		var stretched := 0
+		for face in shown[1].faces:
+			stretched += 1 if face.stretched else 0
+		print("MODOS %s: %d caras, %d estiradas" % [pair[0], shown[1].faces.size(), stretched])
+		_view()
+		if str(pair[0]) == "cuna":
+			_eye.global_position = Vector3(0.0, 0.3, 2.0)
+			_eye.look_at(Vector3(0.0, 0.22, 0.0))
+		await _shot(str(pair[1]))
+	# 10. El chanfle de cerca, en los dos modos.
+	_clear()
+	for index in 2:
+		var model := PixelModel.new()
+		model.folder = SAVE
+		model.stretch_all = index == 1
+		model.from_scene(load(MODELS + "caja.glb") as PackedScene, "chanfle_%d" % index)
+		model.position = Vector3((index - 0.5) * 0.8, 0.0, 0.0)
+		_checker(model)
+		add_child(model)
+		_shown.append(model)
+	_eye.global_position = Vector3(0.0, 1.0, 0.95)
+	_eye.look_at(Vector3(0.0, 0.48, 0.1))
+	await _shot("10_chanfle_de_cerca")
+	# 11. CAMBIAR DE MODO CONSERVA LO PINTADO: la caja pintada en cuadrícula, pasada entera a estirada.
+	_clear()
+	var switched: Array[PixelModel] = []
+	for index in 2:
+		var model := PixelModel.new()
+		model.folder = SAVE
+		model.from_scene(load(MODELS + "caja.glb") as PackedScene, "cambio_%d" % index)
+		model.position = Vector3((index - 0.5) * 1.0, 0.0, 0.0)
+		_pattern(model)
+		add_child(model)
+		_shown.append(model)
+		switched.append(model)
+	switched[1].set_stretch_all(true)
+	_view()
+	await _shot("11_pintada_en_cuadricula_y_pasada_a_estirada")
 	get_tree().quit()
+
+
+## UN DAMERO: un píxel sí, uno no, más claro; el borde de la cara más oscuro y la franja ocre a media altura.
+func _checker(model: PixelModel) -> void:
+	var low := INF
+	var high := -INF
+	for face in model.faces:
+		for point in face.triangles:
+			low = minf(low, point.y)
+			high = maxf(high, point.y)
+	var middle := lerpf(low, high, 0.4)
+	for face in model.faces:
+		for y in face.height:
+			for x in face.width:
+				if not face.inside(x, y):
+					continue
+				var base := face.base[y * face.width + x]
+				var color := base.lightened(0.18) if (x + y) % 2 == 0 else base
+				if absf(face.normal.y) < 0.5 and absf(face.centre(x, y, model.pixel).y - middle) < model.pixel * 1.5:
+					color = SupplyLook.MUSTARD.lightened(0.12) if (x + y) % 2 == 0 else SupplyLook.MUSTARD
+				model.paint(face, x, y, color)
+	model.refresh()
 
 
 func _build(box_file: String) -> Array[PixelModel]:
