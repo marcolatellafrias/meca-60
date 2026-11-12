@@ -28,6 +28,8 @@ de fuerza y su inclinación son huesos; la meca tiene colisión 1:1 con su caja 
   **girar él es débil** (del orden de caminar) y **frenar un giro que le dieron es fuerte**. Si algo lo traba, no gira;
   un golpe descentrado lo gira un poco y vuelve. *Con un solo tope fuerte, girar apoyado en una pared lo despedía: la
   pared devuelve el torque como un empujón, unas cinco veces lo que empuja caminar.*
+- **El pedido del mouse no se acumula**: nunca va más de 110° por delante del torso. Si no, un mouse más rápido que el
+  torso se le adelanta más de media vuelta y el torso gira para el otro lado.
 - **La caja no roza** (fricción 0, parada): lo que la frena son los pies.
 - **Las piernas son dibujo** (IK, `MechBody`): pisan por radio alrededor del apoyo, mirando como el torso; cada pie
   guarda hacia dónde miraba al pisar y **la pelvis**, una sola pieza, mira al promedio de los dos pies. Caído se pliegan;

@@ -34,6 +34,9 @@ extends HoverCube
 ##
 ## Las perillas, en PendulumCubeSettings (el panel F1 de su fila); el F2 le pega arriba.
 
+## Lo más que el pedido del mouse se adelanta a donde mira el torso: bastante menos que media vuelta.
+const AIM_LEAD := deg_to_rad(110.0)
+
 ## Hacia dónde se le pide mirar (el mouse), en el mundo.
 var aim_yaw := 0.0
 var steps_taken := 0
@@ -187,8 +190,14 @@ func _upright(k: PendulumCubeSettings, rod: float) -> void:
 ## (`yaw_hold`). *Con un solo tope fuerte, girar apoyado en una pared lo despedía: la pared devuelve el torque como un
 ## empujón (torque ÷ medio lado), varias veces más que lo que empuja caminar. Un freno sólo se opone a lo que se mueve:
 ## no puede despedirlo.*
+##
+## EL PEDIDO NO SE ACUMULA: nunca va más de `AIM_LEAD` por delante de donde mira (como el torso de la meca de pelea,
+## Mech._turn_torso). *Sin ese tope, un mouse más rápido que el torso se le adelantaba más de media vuelta y el torso
+## giraba «por el camino corto», para el otro lado: según el ángulo, el mouse parecía invertido (lo vio el usuario: «en
+## algunos ángulos está invertido y en otros no»).*
 func _turn(k: PendulumCubeSettings) -> void:
-	var error := wrapf(aim_yaw - _yaw(), -PI, PI)
+	var error := clampf(wrapf(aim_yaw - _yaw(), -PI, PI), -AIM_LEAD, AIM_LEAD)
+	aim_yaw = _yaw() + error
 	var wanted := clampf(error * k.yaw_grip, -deg_to_rad(k.turn_speed), deg_to_rad(k.turn_speed))
 	var spin := angular_velocity.y
 	var push := (wanted - spin) * k.yaw_grip
