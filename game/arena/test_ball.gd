@@ -27,7 +27,6 @@ const NAMES := ["lo mueve", "a punto de caer", "lo tira"]
 static var level := 1
 
 var _age := 0.0
-var _struck := {}
 
 
 func _init() -> void:
@@ -51,7 +50,6 @@ func _init() -> void:
 	shape.shape = sphere
 	add_child(shape)
 	Clay.sphere(self, RADIUS, Vector3.ZERO, Clay.YELLOW.darkened(0.2))
-	body_entered.connect(_on_body)
 
 
 ## LOS BORDES DE LAS PARCELAS NO LA FRENAN: se la tira desde afuera (ver SandboxParcel, LOS BORDES, que se los suma a
@@ -120,14 +118,3 @@ func _physics_process(delta: float) -> void:
 	_age += delta
 	if _age > LIFETIME:
 		queue_free()
-
-
-## A una meca de pelea le pega como un puño de su mismo empuje (ver MechArm.HIT_PUSH, por m/s de un puño de 2,5 t).
-func _on_body(body: Node) -> void:
-	var target := MechArm.hittable(body)
-	if target == null or _struck.has(target.get_instance_id()):
-		return
-	_struck[target.get_instance_id()] = true
-	var speed := linear_velocity.length()
-	var push := linear_velocity.length() * mass / 2500.0 * MechArm.HIT_PUSH
-	target.take_hit(speed, linear_velocity.normalized(), push)

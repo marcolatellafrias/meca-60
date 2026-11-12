@@ -1,307 +1,182 @@
 class_name MechArm
 extends Node3D
 
-## UN BRAZO DE LA MECA, de brazo común: hombro, brazo, codo, antebrazo y puño, colgado de un costado del torso (el nodo
-## está en el hombro y no gira: su espacio es el del torso). Lo que se mueve es el puño; el codo y las medidas son las
-## del cuerpo de la meca (MechBody.arm). Un brazo puede llevar EL CAÑÓN encima del antebrazo (`has_cannon`): el brazo
-## sigue pegando igual.
+## UN BRAZO DE LA MECA: LO QUE SE LE PIDE, escrito una sola vez. Los dos caminos de la meca (el usuario, 13/11/2026:
+## «bifurcar el progreso… un approach más físico o más discreto») comparten esto y difieren en cómo lo cumplen:
+##   · MuscleArm, EL FÍSICO: el brazo y el antebrazo son cuerpos con músculos que persiguen la pose; chocan, se traban,
+##     ceden. Para la arena entre dos grupos.
+##   · PoseArm, EL DISCRETO: el brazo se dibuja en la pose pedida, sin cuerpos; atraviesa lo que haya y, al conectar una
+##     piña, le da un impulso a lo que tocó. Para las peleas contra jefes.
 ##
-## ── LA PIÑA ─────────────────────────────────────────────────────────────────────────────────────────────────────
-## Lo pidió el usuario el 11/11/2026: «un golpe… que se carga con un tiempo y se suelta, y después se mueve la
-## trayectoria, y que el daño de ese golpe dependa también de la velocidad con la que viene el cuerpo».
-##   GUARDIA: el puño espera adelante, a la altura del pecho.
-##   CARGAR (`hold`): el puño se va para atrás, hacia el hombro. Cuanto más se carga, más atrás va y más fuerte acelera.
-##   SOLTAR (`let_go`): el puño sale hacia el punto apuntado ACELERANDO, no a una velocidad fija: la velocidad sale del
-##     recorrido. De muy cerca pega flojo; cargado (más recorrido, más empuje) pega fuerte.
-##   DOBLAR (`bend`): mientras viaja, el mouse lo empuja de costado o hacia arriba. El brazo tiene largo fijo: estirado,
-##     el puño ya no sigue de largo y gira alrededor del hombro, así que doblar a tiempo da un gancho.
-##   LO QUE TOCA: el puño barre su camino y se frena en lo primero que toca. Si eso tiene `take_hit` (otra meca), le
-##     pega con la velocidad del puño EN EL MUNDO, que suma la marcha de la meca y el giro del torso. Un edificio lo traba
-##     y nada más: no hay un empujón inventado (el usuario: sólo si sale solo de las reglas).
-##
-## ── LAS REGLAS DEL PUÑO (11/11/2026) ────────────────────────────────────────────────────────────────────────────
-## *Un puño de la meca roja quedó a 101 m de su hombro, en el origen del mundo, para siempre: la meca se armaba en el
-## origen y se la llevaba a la arena, el puño barrió el mapa entero en su primer paso, chocó con lo que había quedado ahí
-## y se guardó donde chocó.* Ahora:
-##   · EL PUÑO SIEMPRE ESTÁ AL ALCANCE DEL HOMBRO: lo que se guarda pasa siempre por `_within_reach`; un choque acorta el
-##     paso, nunca lo deja lejos.
-##   · SÓLO BARRE LO QUE SE MOVIÓ EN UN PASO: sin un paso anterior (al nacer), o si el hombro saltó (la meca
-##     reapareció), no hay barrido: el puño va donde va.
-##   · CHOCA SÓLO CON EL MUNDO (`HIT_MASK`) y nunca con su propia meca (`exclude`, que pone la meca con todos sus
-##     cuerpos).
+## LO QUE SE PIDE es DÓNDE VA EL PUÑO en cada momento, desde el hombro, en el espacio de lo que lo sostiene (`anchor`):
+##   · LAS POSTURAS (`stance`), donde descansa: NORMAL, el brazo al costado y la mano abierta; CUBRIÉNDOSE, los puños
+##     cerrados adelante y arriba; RECOGIDO, la mano contra el hombro (cuando lo que lo sostiene se cae). Pasa de una a
+##     otra de corrido. Lo pidió el usuario el 12/11/2026 («una cubriendo y otra normal… la cubriendo… con los puños
+##     cerrados»).
+##   · LAS PIÑAS (`punch`): cada una, unos pocos puntos por los que pasa el puño, con sus tiempos: se arma atrás, PEGA,
+##     se queda un instante y vuelve a su postura (ver `stage`).
+## De ahí, LA POSE (`_target`): el codo y la muñeca salen de la IK del cuerpo de la meca (MechBody.arm), y cada pieza va
+## con su −Z a lo largo y su Y sobre EL EJE DEL CODO. Y LA MANO (`_mount_hand`), montada por regla.
 
-signal kicked(direction: Vector3, amount: float)
+enum Punch { NONE, STRAIGHT, HOOK, UPPERCUT, HAMMER }
+enum Stance { NORMAL, COVER, TUCKED }
+## En qué parte de una piña está: armándose, pegando, quieto en la punta, volviendo.
+enum Stage { IDLE, WINDUP, STRIKE, HOLD, RETURN }
 
-enum Phase { GUARD, CHARGE, STRIKE, RECOVER }
+const NAMES := ["quieto", "directo", "gancho", "uppercut", "desde arriba"]
+const STANCE_NAMES := ["normal", "cubriéndose", "recogido"]
+## El grosor de las piezas: el de las piernas (el usuario, 12/11/2026: «más gruesos, y todos del mismo grosor»).
+const THICKNESS := MechBody.LEG_THICKNESS
+## DÓNDE DESCANSA EL PUÑO en cada postura, desde el hombro, en el espacio de lo que lo sostiene (`x` hacia afuera del
+## cuerpo; adentro es negativo).
+const STANCES := {
+	Stance.NORMAL: Vector3(0.4, -6.2, -4.4),
+	Stance.COVER: Vector3(-1.6, -1.5, -6.6),
+	Stance.TUCKED: Vector3(0.3, -1.4, -1.8),
+}
+## A qué velocidad pasa el puño de una postura a otra (m/s) y en cuánto vuelve a su postura después de una piña (s).
+const STANCE_SPEED := 16.0
+const RETURN_TIME := 0.6
+## LAS PIÑAS: por dónde se pide que pase el puño (como `STANCES`) y en cuánto llega a cada punto desde el anterior (s):
+## se arma atrás, pega y se queda un instante. Después vuelve a su postura.
+const PUNCHES := {
+	Punch.STRAIGHT: [[0.45, Vector3(-0.8, -1.8, -2.6)], [0.26, Vector3(-2.6, -0.6, -10.6)], [0.2, Vector3(-2.6, -0.6, -10.6)]],
+	Punch.HOOK: [[0.5, Vector3(3.8, -1.2, -3.2)], [0.3, Vector3(-5.4, -0.8, -7.4)], [0.2, Vector3(-5.4, -0.8, -7.4)]],
+	Punch.UPPERCUT: [[0.5, Vector3(-0.6, -6.8, -3.4)], [0.28, Vector3(-2.0, 3.6, -7.6)], [0.2, Vector3(-2.0, 3.6, -7.6)]],
+	Punch.HAMMER: [[0.55, Vector3(-0.4, 6.6, -2.2)], [0.28, Vector3(-1.6, -5.0, -8.2)], [0.2, Vector3(-1.6, -5.0, -8.2)]],
+}
 
-const REACH := MechBody.UPPER_ARM + MechBody.FOREARM - 0.05
-const CLOSEST := 2.5
-const FIST_RADIUS := 1.2
-## Adónde va el puño al cargar del todo (en el espacio del hombro, del lado derecho: `x` se da vuelta del otro). La
-## guardia es la del cuerpo (MechBody.guard_local).
-const WINDUP := Vector3(0.8, -1.2, -2.0)
-## Con qué choca el puño: el mundo (la capa 1: el piso, los edificios, la otra meca).
-const HIT_MASK := 1
-## Más que esto en un paso no es un puño que se mueve: es la meca que reapareció (m).
-const JUMP := 30.0
-const CHARGE_TIME := 0.8
-## Cuánto acelera el puño al salir, sin carga y con la carga llena (m/s²), y lo más rápido que va.
-const ACCEL_LOW := 90.0
-const ACCEL_HIGH := 190.0
-const TOP_SPEED := 70.0
-const STRIKE_TIME := 0.55
-## A qué velocidad va el puño a la guardia, a cargar y de vuelta (m/s).
-const MOVE_SPEED := 22.0
-## Cuánto dobla la piña cada píxel de mouse (m/s).
-const BEND := 0.35
-## Cuánto empuja el equilibrio del otro cada m/s del puño al pegar.
-const HIT_PUSH := 0.1
-## Cuánto se va el peso de la meca hacia adelante al soltar una piña cargada del todo.
-const LEAN := 0.6
-const CANNON_RELOAD := 0.7
-const CANNON_KICK := 0.8
-const NAMES := {Phase.GUARD: "guardia", Phase.CHARGE: "cargando", Phase.STRIKE: "pegando", Phase.RECOVER: "volviendo"}
+## De qué lado va (−1 izquierdo, 1 derecho), lo que lo sostiene y dónde está el hombro en su espacio. Se ponen antes de
+## agregarlo al árbol.
+var side := 1.0
+var anchor: PhysicsBody3D = null
+var shoulder_local := Vector3.ZERO
+## La postura pedida, y la piña que está tirando.
+var stance := Stance.COVER
+var punching := Punch.NONE
 
-## −1 el izquierdo, 1 el derecho.
-var side := -1.0
-var has_cannon := false
-var glove_color := Clay.RED
-var phase := Phase.GUARD
-var charge := 0.0
-## Los cuerpos propios que el puño atraviesa (el torso, el montacargas) y el torso, para que las balas no lo toquen.
-var exclude: Array[RID] = []
-var own_body: PhysicsBody3D = null
-## La última piña: a qué velocidad pegó (0 si no pegó) y si se trabó contra algo que no se golpea.
-var last_hit_speed := 0.0
-var jammed := false
-
-var _fist := Vector3.ZERO
-var _velocity := Vector3.ZERO
-var _drive := Vector3.FORWARD
 var _clock := 0.0
-var _last_global := Vector3.ZERO
-var _has_last := false
-var _reload := 0.0
-var _sphere := SphereShape3D.new()
-var _upper: MeshInstance3D = null
-var _forearm: MeshInstance3D = null
-var _elbow: MeshInstance3D = null
-var _glove: Node3D = null
-var _cannon: Node3D = null
-var _barrel: Node3D = null
+var _from := Vector3.ZERO
+## Dónde descansa el puño ahora (va hacia el de la postura pedida) y lo que lo corrió quien lo lleva a mano.
+var _rest := Vector3.ZERO
+var _offset := Vector3.ZERO
+var _hand: MechHand = null
+## El eje de la bisagra del codo, en el mundo: sale del brazo y el antebrazo pedidos; con el brazo estirado no se puede
+## calcular y queda el último.
+var _hinge := Vector3.RIGHT
 
 
-func _ready() -> void:
-	_sphere.radius = FIST_RADIUS
-	Clay.sphere(self, 1.3, Vector3.ZERO, Clay.DARK)
-	_upper = Clay.box(self, Vector3(MechBody.ARM_THICKNESS, MechBody.ARM_THICKNESS, MechBody.UPPER_ARM), Vector3.ZERO,
-		Clay.METAL.darkened(0.1))
-	_forearm = Clay.box(self, Vector3(MechBody.FOREARM_THICKNESS, MechBody.FOREARM_THICKNESS, MechBody.FOREARM),
-		Vector3.ZERO, Clay.METAL.darkened(0.25))
-	_elbow = Clay.sphere(self, 0.9, Vector3.ZERO, Clay.DARK)
-	_glove = Node3D.new()
-	_glove.name = "Puño"
-	add_child(_glove)
-	Clay.box(_glove, Vector3(2.0, 2.0, 2.2), Vector3.ZERO, glove_color)
-	Clay.box(_glove, Vector3(2.2, 0.5, 1.2), Vector3(0, 0.6, -0.6), glove_color.darkened(0.3))
-	if has_cannon:
-		_cannon = Node3D.new()
-		_cannon.name = "Cañón"
-		add_child(_cannon)
-		_barrel = Node3D.new()
-		_cannon.add_child(_barrel)
-		Clay.box(_cannon, Vector3(1.4, 1.0, 2.6), Vector3.ZERO, Clay.DARK)
-		Clay.cylinder(_barrel, 0.4, 3.6, Vector3(0, 0, -2.6), Clay.DARK, Vector3(90, 0, 0))
-		Clay.cylinder(_barrel, 0.55, 0.5, Vector3(0, 0, -4.3), Clay.DARK.darkened(0.3), Vector3(90, 0, 0))
-	_fist = MechBody.guard_local(side)
-	_draw()
-
-
-func _guard() -> Vector3:
-	return MechBody.guard_local(side)
-
-
-func _windup() -> Vector3:
-	return Vector3(side * WINDUP.x, WINDUP.y, WINDUP.z)
-
-
-## Empieza a cargar (el clic apretado). Se puede cargar desde la guardia o mientras vuelve.
-func hold() -> void:
-	if phase == Phase.STRIKE or phase == Phase.CHARGE:
-		return
-	phase = Phase.CHARGE
-	charge = 0.0
-
-
-## Suelta la piña hacia `aim` (en el mundo). Sin cargar antes, no hace nada.
-func let_go(aim: Vector3) -> void:
-	if phase != Phase.CHARGE:
-		return
-	phase = Phase.STRIKE
-	_clock = 0.0
-	_velocity = Vector3.ZERO
-	_drive = (to_local(aim) - _fist).normalized()
-	last_hit_speed = 0.0
-	jammed = false
-	kicked.emit(global_basis * _drive, LEAN * charge)
-
-
-## Dobla la piña que va saliendo: `amount` en píxeles de mouse (x a la derecha, y para arriba), visto desde atrás del
-## puño.
-func bend(amount: Vector2) -> void:
-	if phase != Phase.STRIKE:
-		return
-	var right := _drive.cross(Vector3.UP)
-	if right.length_squared() < 0.01:
-		right = Vector3.RIGHT
-	right = right.normalized()
-	var up := right.cross(_drive).normalized()
-	_velocity += (right * amount.x + up * amount.y) * BEND
-
-
-## Corta lo que esté haciendo (la meca se cae).
-func cancel() -> void:
-	if phase == Phase.CHARGE or phase == Phase.STRIKE:
-		phase = Phase.RECOVER
-		_velocity = Vector3.ZERO
-
-
-func is_striking() -> bool:
-	return phase == Phase.STRIKE
-
-
-## Dispara el cañón hacia `aim` (en el mundo), si lo tiene y está cargado. Devuelve si disparó.
-func fire(aim: Vector3) -> bool:
-	if not has_cannon or _reload > 0.0:
+## Tira una piña (si no está en otra). Devuelve si la tiró.
+func punch(kind: Punch) -> bool:
+	if punching != Punch.NONE or kind == Punch.NONE:
 		return false
-	_reload = CANNON_RELOAD
-	var muzzle := _barrel.global_transform * Vector3(0, 0, -4.8)
-	var direction := (aim - muzzle).normalized()
-	var shell := MechShell.new()
-	get_tree().current_scene.add_child(shell)
-	if own_body != null:
-		shell.add_collision_exception_with(own_body)
-	shell.launch(muzzle, direction)
-	_barrel.position.z = 1.2
-	kicked.emit(-direction, CANNON_KICK)
+	_from = _wanted()
+	punching = kind
+	_clock = 0.0
 	return true
 
 
-func cannon_ready() -> bool:
-	return has_cannon and _reload <= 0.0
+## Cuánto más rápidas van las piñas (×): cada camino tiene su perilla.
+func _punch_speed() -> float:
+	return 1.0
 
 
-func _physics_process(delta: float) -> void:
-	_reload = maxf(_reload - delta, 0.0)
-	if _barrel != null:
-		_barrel.position.z = move_toward(_barrel.position.z, 0.0, 3.0 * delta)
-	var wanted := _fist
-	match phase:
-		Phase.GUARD:
-			wanted = _fist.move_toward(_guard(), MOVE_SPEED * delta)
-		Phase.CHARGE:
-			charge = minf(charge + delta / CHARGE_TIME, 1.0)
-			wanted = _fist.move_toward(_guard().lerp(_windup(), charge), MOVE_SPEED * delta)
-		Phase.RECOVER:
-			wanted = _fist.move_toward(_guard(), MOVE_SPEED * 0.7 * delta)
-			if wanted.is_equal_approx(_guard()):
-				phase = Phase.GUARD
-		Phase.STRIKE:
-			_clock += delta
-			if _fist.length() < REACH - 0.1:
-				_velocity += _drive * lerpf(ACCEL_LOW, ACCEL_HIGH, charge) * delta
-			else:
-				_velocity *= exp(-4.0 * delta)
-			_velocity = _velocity.limit_length(TOP_SPEED)
-			wanted = _fist + _velocity * delta
-			if _clock > STRIKE_TIME:
-				phase = Phase.RECOVER
-				_velocity = Vector3.ZERO
-	_move_to(_within_reach(wanted), delta)
-	_draw()
+## AVANZA LO QUE SE PIDE un paso: el reloj de la piña, el descanso hacia su postura, y la mano (el puño, cerrado mientras
+## tira una piña y cubriéndose; abierta en lo demás).
+func _advance(delta: float) -> void:
+	if punching != Punch.NONE:
+		_clock += delta
+		if _clock >= _punch_time():
+			punching = Punch.NONE
+	_rest = _rest.move_toward(STANCES[stance], STANCE_SPEED * delta)
+	if _hand != null:
+		_hand.fist = punching != Punch.NONE or stance == Stance.COVER
 
 
-## El brazo tiene largo fijo: el puño no pasa de `REACH` ni se mete en el hombro. Estirado, lo que iba hacia afuera se
-## pierde y queda lo de costado: así gira.
-func _within_reach(point: Vector3) -> Vector3:
-	var length := point.length()
-	if length > REACH:
-		var radial := point / length
-		if phase == Phase.STRIKE:
-			_velocity -= radial * maxf(_velocity.dot(radial), 0.0)
-		return radial * REACH
-	if length < CLOSEST:
-		return point.normalized() * CLOSEST if length > 0.001 else Vector3(0, 0, -CLOSEST)
-	return point
+## Un punto de las piñas o la guardia, en el espacio de lo que lo sostiene: `x` va hacia afuera de su lado.
+func _local(point: Vector3) -> Vector3:
+	return Vector3(side * point.x, point.y, point.z)
 
 
-## EL PUÑO BARRE SU CAMINO en el mundo, desde donde estaba el paso anterior (así cuenta lo que se movió la meca), y se
-## frena en lo primero que toca.
-func _move_to(wanted: Vector3, delta: float) -> void:
-	var from := _last_global
-	var to := global_transform * wanted
-	var motion := to - from
-	if _has_last and motion.length() > 0.001 and motion.length() < JUMP:
-		var space := get_world_3d().direct_space_state
-		var query := PhysicsShapeQueryParameters3D.new()
-		query.shape = _sphere
-		query.transform = Transform3D(Basis(), from)
-		query.motion = motion
-		query.collision_mask = HIT_MASK
-		query.exclude = exclude
-		var fractions := space.cast_motion(query)
-		var safe := fractions[0]
-		var unsafe := fractions[1]
-		# [0, 0]: ya estaba metido en algo al empezar (la meca se le vino encima); lo deja salir en vez de pegarlo ahí.
-		if unsafe < 1.0 and not (safe == 0.0 and unsafe == 0.0):
-			query.transform = Transform3D(Basis(), from + motion * unsafe)
-			query.motion = Vector3.ZERO
-			var info := space.get_rest_info(query)
-			_touch(info, motion / maxf(delta, 0.0001), from + motion * unsafe)
-			to = from + motion * safe
-			wanted = _within_reach(global_transform.affine_inverse() * to)
-	_fist = wanted
-	_last_global = global_transform * _fist
-	_has_last = true
+## DÓNDE SE PIDE EL PUÑO AHORA, desde el hombro (como `STANCES`): a lo largo de la piña y de vuelta a su postura, o en
+## su postura más lo que lo corrieron a mano.
+func _wanted() -> Vector3:
+	var home := _rest + _offset
+	if punching == Punch.NONE:
+		return home
+	var speed := _punch_speed()
+	var clock := _clock
+	var from := _from
+	for step: Array in PUNCHES[punching]:
+		var time := float(step[0]) / speed
+		if clock <= time:
+			return from.lerp(step[1], smoothstep(0.0, 1.0, clock / time))
+		clock -= time
+		from = step[1]
+	return from.lerp(home, smoothstep(0.0, 1.0, clock / (RETURN_TIME / speed)))
 
 
-## Lo que pasa cuando el puño toca algo: si va pegando y eso se golpea, le pega; si no, se traba. Vuelve a la guardia.
-func _touch(info: Dictionary, world_velocity: Vector3, at: Vector3) -> void:
-	if phase != Phase.STRIKE:
-		return
-	var target: Node = null
-	if not info.is_empty():
-		target = MechArm.hittable(instance_from_id(int(info["collider_id"])))
-	if target != null:
-		var direction := world_velocity.normalized()
-		var speed := world_velocity.length()
-		target.take_hit(speed, direction, speed * HIT_PUSH)
-		last_hit_speed = speed
-		MechShell.flash(get_tree().current_scene, at)
-	else:
-		jammed = true
-	phase = Phase.RECOVER
-	_velocity = Vector3.ZERO
+## En qué parte de la piña está.
+func stage() -> Stage:
+	if punching == Punch.NONE:
+		return Stage.IDLE
+	var clock := _clock * _punch_speed()
+	var steps: Array = PUNCHES[punching]
+	for index in steps.size():
+		clock -= float(steps[index][0])
+		if clock <= 0.0:
+			return (Stage.WINDUP + index) as Stage
+	return Stage.RETURN
 
 
-func _draw() -> void:
-	var arm := MechBody.arm(Vector3.ZERO, _fist, side, Basis())
-	var forearm: Transform3D = arm["forearm"]
-	_upper.transform = arm["upper"]
-	_forearm.transform = forearm
-	_elbow.position = arm["elbow"]
-	_glove.transform = Transform3D(forearm.basis, _fist)
-	if _cannon != null:
-		var elbow: Vector3 = arm["elbow"]
-		var wrist: Vector3 = arm["wrist"]
-		_cannon.transform = Transform3D(forearm.basis, elbow.lerp(wrist, 0.45) + forearm.basis.y * 1.1)
+func _punch_time() -> float:
+	var total := RETURN_TIME
+	for step: Array in PUNCHES[punching]:
+		total += float(step[0])
+	return total / _punch_speed()
 
 
-## Lo que tenga `take_hit` en `collider` o en sus padres.
-static func hittable(collider: Object) -> Node:
-	var node := collider as Node
-	while node != null:
-		if node.has_method("take_hit"):
-			return node
-		node = node.get_parent()
-	return null
+## ── LA POSE ──────────────────────────────────────────────────────────────────────────────────────────────────────
+
+## LA POSE QUE SE PIDE AHORA, en el mundo (ver `_pose`).
+func _target() -> Dictionary:
+	var base := anchor.global_transform
+	var shoulder := base * shoulder_local
+	return _pose(shoulder, shoulder + base.basis * _local(_wanted()), base.basis)
+
+
+## LA POSE con el puño en `fist` (mundo): el codo y la muñeca salen de la IK del cuerpo de la meca (MechBody.arm); las
+## dos piezas, con su −Z a lo largo y su Y sobre EL EJE DEL CODO (el que es perpendicular al brazo y al antebrazo): así
+## el giro del brazo sobre su largo es el que pone al antebrazo donde va, como con una bisagra.
+func _pose(shoulder: Vector3, fist: Vector3, torso: Basis) -> Dictionary:
+	var arm := MechBody.arm(shoulder, fist, side, torso)
+	var elbow: Vector3 = arm["elbow"]
+	var wrist: Vector3 = arm["wrist"]
+	var across := (elbow - shoulder).cross(wrist - elbow)
+	if across.length() > 0.5:
+		_hinge = across.normalized()
+	return {
+		"shoulder": shoulder,
+		"upper": Transform3D(_along(elbow - shoulder), (shoulder + elbow) * 0.5),
+		"forearm": Transform3D(_along(wrist - elbow), (elbow + wrist) * 0.5),
+		"elbow": elbow,
+		"wrist": wrist,
+	}
+
+
+## La orientación de una pieza que va hacia `way`: su −Z para ahí y su Y lo más cerca del eje del codo.
+func _along(way: Vector3) -> Basis:
+	var back := -way.normalized()
+	var up := (_hinge - back * _hinge.dot(back)).normalized()
+	return Basis(up.cross(back), up, back)
+
+
+## LA MANO, en la punta de `forearm` (una pieza con los ejes de `_along`), POR REGLA Y NO A OJO. El Y de la pieza es el
+## eje del codo (brazo × antebrazo) y su X, la parte del brazo perpendicular al antebrazo; o sea que SU −X SIEMPRE MIRA
+## HACIA DONDE DOBLA EL CODO (hacia el hombro), en los dos brazos, y su Y mira hacia afuera en el derecho y hacia adentro
+## en el izquierdo (un producto cruz no se espeja). Como en un cuerpo con el antebrazo sin girar: EL PULGAR, HACIA DONDE
+## DOBLA EL CODO; LA PALMA, HACIA EL CUERPO. La mano trae el pulgar en +Y y la palma en −side·X (ver MechHand): un
+## cuarto de vuelta sobre Z lleva su Y al −X de la pieza y su X al Y, y la palma queda en −side·Y: hacia adentro.
+func _mount_hand(forearm: Node3D) -> void:
+	_hand = MechHand.build(forearm, side)
+	_hand.transform = Transform3D(Basis(Vector3.BACK, PI * 0.5), Vector3(0, 0, -MechBody.FOREARM * 0.5))

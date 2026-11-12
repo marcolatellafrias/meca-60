@@ -2,10 +2,9 @@ class_name MechBody
 extends RefCounted
 
 ## EL CUERPO DE LA MECA, DEFINIDO UNA SOLA VEZ (11/11/2026): sus medidas, sus partes y cómo se arma su postura. Lo usan
-## la meca de pelea (Mech: el torso es su cabina, MechTorso; las piernas las dibuja MechLeg y los brazos MechArm) y la
-## meca de equilibrio (MechDummy: una pieza física por parte, que de pie van adonde dice la postura y caídas son su
-## muñeco). *Antes la meca de equilibrio tenía su propia copia de las piernas y los brazos, armada de memoria: el pie iba
-## pegado a la canilla, sin tobillo, y quedaba inclinado como ella (lo vio el usuario: «no tiene bien los pies
+## los cubos con piernas y la meca (las piernas las dibuja MechLeg; los brazos, MechArm y los suyos). *Nació para que la
+## meca de pelea y la de equilibrio, las dos borradas el 13/11/2026, fueran el mismo cuerpo: la segunda tenía su propia
+## copia de las piernas, armada de memoria, con el pie pegado a la canilla (lo vio el usuario: «no tiene bien los pies
 ## plantados… siendo que supuestamente es el mismo sistema»).*
 ##
 ## LAS PARTES, de abajo para arriba:
@@ -14,8 +13,7 @@ extends RefCounted
 ##   · la PELVIS, donde van las piernas (lo pidió el usuario: «la pelvis… que gira independiente del torso, que es donde
 ##     van conectadas las piernas… ahora… es monolítico»): mira hacia donde caminan las piernas y se inclina con el
 ##     equilibrio, colgada de la CINTURA.
-##   · el TORSO, encima de la cintura: gira aparte sobre la pelvis (`twist`). Su origen es el piso de abajo (como el de
-##     MechTorso).
+##   · el TORSO, encima de la cintura: gira aparte sobre la pelvis (`twist`). Su origen es el piso de abajo.
 ##   · los BRAZOS, del HOMBRO (en el torso) al PUÑO; el CODO sale de los dos largos, hacia afuera y abajo.
 ##
 ## LA POSTURA se arma de afuera hacia adentro: la RAÍZ (la meca en el suelo: su lugar y hacia dónde caminan las piernas),
@@ -45,31 +43,8 @@ const FOOT_AHEAD := 0.4
 const STANCE_X := HIP_X + 0.3
 const UPPER_ARM := 5.5
 const FOREARM := 5.5
-const ARM_THICKNESS := 1.3
-const FOREARM_THICKNESS := 1.1
-## El hombro, en el espacio del torso (`x` del lado derecho; el izquierdo, al revés).
-const SHOULDER := Vector3(MechTorso.WIDTH * 0.5 + 1.3, 0.0, -0.6)
 ## Hacia dónde dobla el codo, en el espacio del torso (`x` del lado derecho): afuera, abajo y un poco atrás.
 const ELBOW_HINT := Vector3(1.0, -0.8, 0.5)
-## El puño en guardia, en el espacio del hombro (`x` del lado derecho: hacia adentro es −x).
-const GUARD := Vector3(-1.8, 0.3, -5.5)
-
-
-## La altura del hombro en el torso (sobre el piso de abajo).
-static func shoulder_height() -> float:
-	return MechTorso.floor_y(1) + 1.6
-
-
-## El hombro de `side` (−1 izquierdo, 1 derecho), en el espacio del torso.
-static func shoulder_local(side: float) -> Vector3:
-	return Vector3(side * SHOULDER.x, shoulder_height(), SHOULDER.z)
-
-
-## La guardia del puño de `side`, en el espacio de su hombro.
-static func guard_local(side: float) -> Vector3:
-	return Vector3(side * GUARD.x, GUARD.y, GUARD.z)
-
-
 ## LA INCLINACIÓN: `lean` es el ángulo (radianes) hacia cada lado, x a la derecha e y adelante, en el espacio de la
 ## raíz. Gira alrededor del eje horizontal que la hace caer para ese lado.
 static func tilt(lean: Vector2) -> Basis:

@@ -133,7 +133,7 @@ func _build_shell() -> void:
 
 ## LA CABINA, por dentro (lo pidió el usuario el 12/11/2026: la primera persona es «uno de los asientos… como si
 ## estuvieras sentado… van a ver el vidrio, van a ver los parantes»): un piso en el medio del cubo como los de la meca
-## (MechTorso): la losa, el techo, las paredes, y al frente el antepecho, el vidrio con sus parantes y el dintel; un
+## (la que tenía la vieja meca de pelea): la losa, el techo, las paredes, y al frente el antepecho, el vidrio con sus parantes y el dintel; un
 ## asiento con su consola. Es dibujo, va con el cubo (y con su inclinación). De afuera la tapa la caja; el vidrio se
 ## dibuja también por fuera.
 const CABIN_FLOOR := -1.6

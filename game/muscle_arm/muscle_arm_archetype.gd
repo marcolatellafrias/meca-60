@@ -93,8 +93,8 @@ func parcel_options() -> Array[Dictionary]:
 	var options := TestBall.parcel_options(self)
 	var keys := [KEY_1, KEY_2, KEY_3, KEY_4]
 	for index in keys.size():
-		var kind := (index + 1) as MuscleArm.Punch
-		options.append({"key": keys[index], "label": "piña: %s" % MuscleArm.NAMES[kind], "seated": true,
+		var kind := (index + 1) as MechArm.Punch
+		options.append({"key": keys[index], "label": "piña: %s" % MechArm.NAMES[kind], "seated": true,
 			"apply": func(parcel: SandboxParcel) -> void:
 				var arm := MuscleArmArchetype._arm_of(parcel)
 				if arm != null:
@@ -103,7 +103,7 @@ func parcel_options() -> Array[Dictionary]:
 		"apply": func(parcel: SandboxParcel) -> void:
 			var arm := MuscleArmArchetype._arm_of(parcel)
 			if arm != null:
-				arm.stance = MuscleArm.Stance.NORMAL if arm.stance == MuscleArm.Stance.COVER else MuscleArm.Stance.COVER})
+				arm.stance = MechArm.Stance.NORMAL if arm.stance == MechArm.Stance.COVER else MechArm.Stance.COVER})
 	options.append({"key": KEY_N, "label": "poner / sacar la pared de adelante", "seated": true,
 		"apply": func(parcel: SandboxParcel) -> void:
 			for wall: StaticBody3D in parcel.find_children("Pared", "StaticBody3D", true, false):

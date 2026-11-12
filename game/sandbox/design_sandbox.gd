@@ -43,13 +43,9 @@ var _tuners: Array[TunerPanel] = []
 ## EL CATÁLOGO: una entrada por fila, en orden. Una fila nueva se agrega acá.
 static func categories() -> Array[Dictionary]:
 	return [
-		{"name": "Meca", "archetypes": [MechTestArchetype.new()]},
-		{"name": "Equilibrio", "archetypes": [BalanceTestArchetype.new()]},
-		{"name": "Cubo", "archetypes": [HoverCubeArchetype.new()]},
 		{"name": "Cubo con piernas", "archetypes": [LeggedCubeArchetype.new()]},
-		{"name": "Cubo físico", "archetypes": [PhysicalCubeArchetype.new()]},
-		{"name": "Cubo péndulo", "archetypes": [PendulumCubeArchetype.new()]},
-		{"name": "Meca péndulo", "archetypes": [PendulumMechArchetype.new()]},
+		{"name": "Meca discreta", "archetypes": [PendulumMechArchetype.new(false)]},
+		{"name": "Meca física", "archetypes": [PendulumMechArchetype.new(true)]},
 		{"name": "Brazo", "archetypes": [MuscleArmArchetype.new()]},
 		{"name": "Personajes", "archetypes": PeopleArchetype.catalogue()},
 		{"name": "Objetos", "archetypes": [ObjectLotArchetype.new()]},
@@ -84,18 +80,12 @@ func _ready() -> void:
 ## misma tecla, abre a la izquierda (la derecha es del panel de la parcela, que lo anota con su tecla) y abrir uno cierra
 ## los demás. Una fila nueva con panel se monta acá.
 func _mount_tuners() -> void:
-	_mount(HoverPanel.new(), "Cubo", "el cubo: flotar, la línea de equilibrio, tropezar, caído y los propulsores", KEY_F1)
-	_mount(HoverKnockPanel.new(), "Cubo", "volcarlo: suave o fuerte", KEY_F2)
 	_mount(LeggedCubePanel.new(), "Cubo con piernas", "el cubo y sus piernas: los pasos por radio", KEY_F1)
 	_mount(HoverKnockPanel.new(), "Cubo con piernas", "volcarlo: suave o fuerte", KEY_F2)
-	_mount(PhysicalCubePanel.new(), "Cubo físico", "el cubo físico: esquinas, pies, torque y caerse", KEY_F1)
-	_mount(HoverKnockPanel.new(), "Cubo físico", "empujarlo arriba: suave o fuerte", KEY_F2)
-	_mount(PendulumCubePanel.new(), "Cubo péndulo", "el cubo péndulo: el apoyo, los pies, el giro y las piernas", KEY_F1)
-	_mount(HoverKnockPanel.new(), "Cubo péndulo", "pegarle arriba: suave o fuerte", KEY_F2)
-	_mount(PendulumMechPanel.new(), "Meca péndulo", "la meca péndulo: el péndulo, correr, agacharse, saltar y el propulsor", KEY_F1)
-	_mount(HoverKnockPanel.new(), "Meca péndulo", "pegarle arriba: suave o fuerte", KEY_F2)
+	for row: String in ["Meca discreta", "Meca física"]:
+		_mount(PendulumMechPanel.new(), row, "la meca péndulo: el péndulo, correr, agacharse, saltar y el propulsor", KEY_F1)
+		_mount(HoverKnockPanel.new(), row, "pegarle arriba: suave o fuerte", KEY_F2)
 	_mount(MuscleArmPanel.new(), "Brazo", "el brazo con músculos: el resorte, el freno y la fuerza", KEY_F1)
-	_mount(BalancePanel.new(), "Equilibrio", "la meca de equilibrio: el resorte, la firmeza, el empuje y los pasos", KEY_F1)
 
 
 func _mount(tuner: TunerPanel, category_name: String, label: String, key: Key) -> void:
@@ -200,7 +190,7 @@ static func player_of(tree: SceneTree) -> BoneInstantiator:
 	return spawner.get("local_player") as BoneInstantiator
 
 
-## SI LAS TECLAS SON DE OTRO: sentado en una silla, o manejando una meca desde afuera (el grupo `driving`, ver Mech).
+## SI LAS TECLAS SON DE OTRO: sentado en una silla, o manejando una meca desde afuera (el grupo `driving`, ver SandboxPossession).
 func _busy() -> bool:
 	var seated := is_instance_valid(local_player) and local_player.is_seated
 	return seated or get_tree().get_first_node_in_group("driving") != null

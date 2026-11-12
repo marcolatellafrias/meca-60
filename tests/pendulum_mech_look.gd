@@ -66,9 +66,9 @@ func _ready() -> void:
 	await _shot("Cubriéndose, desde el asiento", "4d_cubriendose_asiento")
 	_from(Vector3(-17.0, 3.0, -24.0))
 	for index in 2:
-		for kind: int in [MuscleArm.Punch.STRAIGHT, MuscleArm.Punch.HOOK, MuscleArm.Punch.UPPERCUT, MuscleArm.Punch.HAMMER]:
+		for kind: int in [MechArm.Punch.STRAIGHT, MechArm.Punch.HOOK, MechArm.Punch.UPPERCUT, MechArm.Punch.HAMMER]:
 			var yaw_before := _mech._yaw()
-			_mech.arms[index].punch(kind as MuscleArm.Punch)
+			_mech.arms[index].punch(kind as MechArm.Punch)
 			var most_tilt := 0.0
 			var most_turn := 0.0
 			var clock := 0.0
@@ -80,9 +80,9 @@ func _ready() -> void:
 				most_turn = maxf(most_turn, absf(wrapf(_mech._yaw() - yaw_before, -PI, PI)))
 				if not taken and index == 0 and clock >= 0.72:
 					taken = true
-					await _shot("Piña: %s (brazo izquierdo)" % MuscleArm.NAMES[kind], "4e_%d" % kind)
+					await _shot("Piña: %s (brazo izquierdo)" % MechArm.NAMES[kind], "4e_%d" % kind)
 			print("PIÑA %s, brazo %s: la mano a %.0f m/s · el torso se inclina %.1f° y gira %.1f° · caídas %d" % [
-				MuscleArm.NAMES[kind], "izquierdo" if index == 0 else "derecho", _mech.arms[index].top_speed, most_tilt,
+				MechArm.NAMES[kind], "izquierdo" if index == 0 else "derecho", (_mech.arms[index] as MuscleArm).top_speed, most_tilt,
 				rad_to_deg(most_turn), _mech.falls])
 	_mech.aim_yaw += PI * 0.5
 	var far := 0.0

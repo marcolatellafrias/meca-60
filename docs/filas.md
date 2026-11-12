@@ -6,20 +6,29 @@ columna, se queda).
 
 | Fila | Arquetipo | Código propio | Paneles | Tests | Usa (compartido) |
 |---|---|---|---|---|---|
-| Meca | `MechTestArchetype` | `game/mech/` (menos `MechBody`, `MechDummy`, `MechBalanceSettings`), `TestArena` | — | `mech_check`, `player_check` | `MechBody`, `Clay` |
-| Equilibrio | `BalanceTestArchetype` | `MechDummy`, `MechBalanceSettings` | `BalancePanel` (F1) | `balance_check` | `MechBody`, `TestBall`, personas |
-| Cubo | `HoverCubeArchetype` | `game/hover/` entero | `HoverPanel` (F1), `HoverKnockPanel` (F2) | `hover_check` | `TestBall`, `MechBody.tilt`, `Clay` |
+| Meca discreta | `PendulumMechArchetype` (`physical` no) | `game/pose_arm/` | `PendulumMechPanel` (F1), `HoverKnockPanel` (F2) | `mech_fork_look` | la meca (abajo), `MechArm` |
+| Meca física | `PendulumMechArchetype` (`physical` sí) | — (sus brazos son los de la fila Brazo) | `PendulumMechPanel` (F1), `HoverKnockPanel` (F2) | `pendulum_mech_look`, `mech_hands_look` | la meca (abajo), `game/muscle_arm/`, `MechArm` |
+| Brazo | `MuscleArmArchetype` | `game/muscle_arm/` entero | `MuscleArmPanel` (F1) | `muscle_arm_look` | `MechArm`, `MechBody.arm`, `MechHand`, `TestBall`, `PendulumMech.SHOULDER` |
 | Cubo con piernas | `LeggedCubeArchetype` | `game/legged_cube/` entero | `LeggedCubePanel` (F1), `HoverKnockPanel` (F2) | `legged_check` | `game/hover/` (hereda del cubo), `MechBody`, `MechLeg` |
-| Cubo físico | `PhysicalCubeArchetype` | `game/physical_cube/` entero | `PhysicalCubePanel` (F1), `HoverKnockPanel` (F2) | `physical_check` | `game/hover/` (hereda del cubo), `TestBall` |
-| Cubo péndulo | `PendulumCubeArchetype` | `game/pendulum_cube/` entero | `PendulumCubePanel` (F1), `HoverKnockPanel` (F2) | `pendulum_check` | `game/hover/` (hereda del cubo), `MechBody`, `MechLeg`, `TestBall` |
-| Meca péndulo | `PendulumMechArchetype` | `game/pendulum_mech/` entero | `PendulumMechPanel` (F1), `HoverKnockPanel` (F2) | `pendulum_mech_look` | `game/pendulum_cube/` (hereda del cubo péndulo), `MechBody` |
-| Brazo | `MuscleArmArchetype` | `game/muscle_arm/` entero | `MuscleArmPanel` (F1) | `muscle_arm_look` | `MechBody.arm`, `MechHand`, `TestBall`, `PendulumMech.SHOULDER` |
-| Personajes | `PeopleArchetype` | `CharacterGetUp` | — | — | lo traído de character-parametric |
-| Objetos | `ObjectLotArchetype` | — | — | `player_check` (el ropero) | objetos traídos |
+| Personajes | `PeopleArchetype` | `CharacterGetUp` | — | — | el personaje |
+| Objetos | `ObjectLotArchetype` | — | — | — | los objetos |
 | Multijugador | `MultiplayerArchetype` | `SandboxSession` | — | `net_check` | `game/net/` |
 | Partículas | `ParticleArchetype` | — | — | — | `game/particles/` |
 
-El cubo con piernas, el cubo físico y el cubo péndulo heredan del cubo: borrar la fila Cubo obliga a dejar `game/hover/` para ellos, o
-borrarlas también.
+## Lo que comparten las dos mecas (no es de ninguna fila)
+- `game/pendulum_mech/` entero: `PendulumMech`, `MechExterior`, `PelvisLift`, sus perillas, su panel y su parcela.
+  Tests: `pendulum_ride_check`.
+- `game/pendulum_cube/`: `PendulumCube`, **el modelo de equilibrio** (y el cubo al que se le pega en las dos filas), con
+  sus perillas, y el panel y la parcela de los que heredan los de la meca. Tests: `pendulum_check`, `pendulum_look`,
+  `possess_check`.
+- `game/hover/`: `HoverCube`, la base de todos los cubos (flotar, caer, recuperarse, la cabina, poseer), con sus
+  perillas, sus paneles y su parcela.
+- `game/mech/`: `MechBody`, `MechArm`, `MechLeg`, `MechHand`, `Clay`.
+
+**Borrar un camino**: la Meca discreta se lleva `game/pose_arm/`; la Meca física, `game/muscle_arm/` y la fila Brazo.
+En los dos casos `PendulumMech.physical_arms` y el `physical` de su parcela dejan de hacer falta.
+
+**Borrar la fila Cubo con piernas** (la otra variante de equilibrio, la línea) se lleva `game/legged_cube/`; de
+`HoverCube` se podría sacar entonces la línea de equilibrio, que el péndulo no usa.
 
 Ver [[sandbox]] para cómo se arma una fila.

@@ -53,14 +53,14 @@ func _ready() -> void:
 	print("EN GUARDIA: la mano a %.2f m de donde se la pide · a %.1f m/s" % [_arm.off_target, _arm.hand_speed])
 	await _shot("En guardia", "1_guardia")
 	# LAS CUATRO PIÑAS, cada una con el brazo y el bloque recién puestos.
-	for kind: int in [MuscleArm.Punch.STRAIGHT, MuscleArm.Punch.HOOK, MuscleArm.Punch.UPPERCUT, MuscleArm.Punch.HAMMER]:
+	for kind: int in [MechArm.Punch.STRAIGHT, MechArm.Punch.HOOK, MechArm.Punch.UPPERCUT, MechArm.Punch.HAMMER]:
 		await _fresh()
 		await _seconds(1.5)
 		var start := _block.global_position
-		_arm.punch(kind as MuscleArm.Punch)
+		_arm.punch(kind as MechArm.Punch)
 		var worst := 0.0
 		var clock := 0.0
-		var shot_at := float(MuscleArm.PUNCHES[kind][0][0]) + float(MuscleArm.PUNCHES[kind][1][0]) * 0.9
+		var shot_at := float(MechArm.PUNCHES[kind][0][0]) + float(MechArm.PUNCHES[kind][1][0]) * 0.9
 		var taken := false
 		while clock < 4.5:
 			await get_tree().physics_frame
@@ -68,16 +68,16 @@ func _ready() -> void:
 			worst = maxf(worst, _arm.off_target)
 			if not taken and clock >= shot_at:
 				taken = true
-				await _shot("Piña: %s" % MuscleArm.NAMES[kind], "2_%d_%s" % [kind, MuscleArm.NAMES[kind].replace(" ", "_")])
+				await _shot("Piña: %s" % MechArm.NAMES[kind], "2_%d_%s" % [kind, MechArm.NAMES[kind].replace(" ", "_")])
 		print("PIÑA %s: la mano llegó a %.0f m/s · lo más lejos de lo pedido %.1f m · el bloque se corrió %.1f m · vuelve a guardia a %.2f m" % [
-			MuscleArm.NAMES[kind], _arm.top_speed, worst, start.distance_to(_block.global_position), _arm.off_target])
+			MechArm.NAMES[kind], _arm.top_speed, worst, start.distance_to(_block.global_position), _arm.off_target])
 	# LA PARED: el directo contra algo fijo.
 	await _fresh()
 	for wall: StaticBody3D in _stage.find_children("Pared", "StaticBody3D", true, false):
 		MuscleArmArchetype._show_wall(wall, true)
 	await _seconds(1.5)
-	_arm.punch(MuscleArm.Punch.STRAIGHT)
-	await _seconds(float(MuscleArm.PUNCHES[MuscleArm.Punch.STRAIGHT][0][0]) + 0.4)
+	_arm.punch(MechArm.Punch.STRAIGHT)
+	await _seconds(float(MechArm.PUNCHES[MechArm.Punch.STRAIGHT][0][0]) + 0.4)
 	print("CONTRA LA PARED, pegando: la mano a %.1f m de donde se la pide · %.1f m/s" % [_arm.off_target, _arm.hand_speed])
 	await _shot("El directo contra la pared: trabado", "3_pared")
 	await _seconds(2.5)

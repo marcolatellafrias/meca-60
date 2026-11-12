@@ -1,6 +1,16 @@
 # La meca péndulo
 
-`game/pendulum_mech/` · fila **Meca péndulo** · ver [[filas]]
+`game/pendulum_mech/` · filas **Meca discreta** y **Meca física** · ver [[filas]]
+
+## Dos caminos (13/11/2026)
+La meca está **bifurcada**: todo es común —el péndulo, los pisos, el afuera, el ascensor, las piernas— menos los brazos
+(`PendulumMech.physical_arms`). Ver [[brazo]].
+- **Meca discreta** (el camino más probable): peleas contra jefes NPC, zonas que esquivar, proyectiles. Brazos de pose
+  (`PoseArm`): atraviesan y, al conectar, empujan con un impulso.
+- **Meca física**: arena entre dos grupos. Brazos con músculos (`MuscleArm`): chocan, se traban, ceden.
+En los dos la caja es un cuerpo físico 1:1 (se camina por adentro y por afuera): sólo se la mueve con fuerzas e
+impulsos. Los límites de cada camino moldean lo que cada uno puede hacer. Cada fila tiene adelante un cubo péndulo para
+pegarle.
 
 El [[cubo-pendulo]] camino a ser la meca: mismo equilibrio (el torso es un péndulo sobre su apoyo, los pies lo siguen),
 con cabina de tres pisos, brazos, y correr, agacharse, saltar y volar. El cubo péndulo queda como estaba, de referencia.

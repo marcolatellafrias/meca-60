@@ -47,14 +47,14 @@ const DOOR := Vector2(1.1, 2.05)
 ## LOS BRAZOS: el hombro, en el espacio del cubo (`x` del lado derecho), casi en el medio del costado. *El 12/11/2026
 ## se probó en el último tercio, hacia atrás: la postura era más natural, pero el brazo alcanzaba 2,6 m menos hacia
 ## adelante, y el usuario lo volvió («estaban bien los brazos a la mitad, no me gusta el sacrificio en rango»).* Y cuánto
-## pesan, en partes de lo que pesa el brazo solo (ver MuscleArm.weight).
+## pesan los físicos, en partes de lo que pesa el brazo solo (ver MuscleArm.weight).
 const SHOULDER := Vector3(SIZE * 0.5 + 1.0, 1.9, -0.4)
 const ARM_WEIGHT := 0.4
 ## Las teclas de las piñas: para el brazo izquierdo y para el derecho.
 const PUNCH_KEYS := {
-	KEY_Q: [0, MuscleArm.Punch.HOOK], KEY_E: [1, MuscleArm.Punch.HOOK],
-	KEY_Z: [0, MuscleArm.Punch.UPPERCUT], KEY_C: [1, MuscleArm.Punch.UPPERCUT],
-	KEY_1: [0, MuscleArm.Punch.HAMMER], KEY_3: [1, MuscleArm.Punch.HAMMER],
+	KEY_Q: [0, MechArm.Punch.HOOK], KEY_E: [1, MechArm.Punch.HOOK],
+	KEY_Z: [0, MechArm.Punch.UPPERCUT], KEY_C: [1, MechArm.Punch.UPPERCUT],
+	KEY_1: [0, MechArm.Punch.HAMMER], KEY_3: [1, MechArm.Punch.HAMMER],
 }
 
 ## Lo cargado del salto y lo que le queda al propulsor (0 a 1), para mirar.
@@ -67,7 +67,12 @@ var _space_was := false
 ## En el aire, el espacio empuja recién cuando se lo vuelve a apretar (el que soltó para saltar no cuenta).
 var _thrust_armed := false
 ## Los dos brazos (el izquierdo y el derecho) y la postura elegida: cubriéndose, o normal.
-var arms: Array[MuscleArm] = []
+var arms: Array[MechArm] = []
+## LOS DOS CAMINOS (el usuario, 13/11/2026: «bifurcar el progreso… un approach más físico o más discreto»): con brazos
+## físicos, de músculos, que chocan (MuscleArm), o discretos, que se dibujan en su pose y al conectar dan un impulso
+## (PoseArm). Todo lo demás —el péndulo, los pisos, el afuera, el ascensor, las piernas— es lo mismo. Se pone antes de
+## agregarla al árbol.
+var physical_arms := true
 var covering := false
 ## EL ASCENSOR DE LA PELVIS (ver PelvisLift): por donde se sube desde el suelo. La G, poseída, lo baja y lo sube.
 var lift: PelvisLift = null
@@ -80,7 +85,7 @@ var _riders := {}
 
 func _ready() -> void:
 	super()
-	name = "Meca péndulo"
+	name = "Meca física" if physical_arms else "Meca discreta"
 	# LA PELVIS, REDONDA: un tambor hueco, por donde pasa el ascensor (ver PelvisLift).
 	var drum := PelvisLift.tube(Clay.METAL.darkened(0.15))
 	_pelvis.mesh = drum.mesh
@@ -265,7 +270,7 @@ func _build_shell() -> void:
 const SLAB := 0.2
 const WALL := 0.2
 
-## Tres pisos como los de la meca de pelea (MechTorso), con la proporción del cubo: las losas, los costados, al frente
+## Tres pisos como los de la vieja meca de pelea, con la proporción del cubo: las losas, los costados, al frente
 ## el antepecho, el HUECO con su vidrio y sus parantes y el dintel, atrás la pared con el HUECO de la puerta, y un
 ## asiento con su consola. Las paredes son lo que se ve de afuera y de adentro: por los huecos se ve del otro lado.
 func _build_cabin() -> void:
@@ -323,16 +328,21 @@ func _solid(size: Vector3, at: Vector3, color: Color) -> void:
 	Clay.shape_box(_interior, size, at)
 
 
-## ── LOS BRAZOS (físicos: ver MuscleArm) ──────────────────────────────────────────────────────────────────────────
+## ── LOS BRAZOS: físicos (MuscleArm) o discretos (PoseArm), según `physical_arms` ──────────────────────────────────────────────────────────────────────────
 
 func _build_arms() -> void:
 	for side: float in [-1.0, 1.0]:
-		var arm := MuscleArm.new()
+		var arm: MechArm = null
+		if physical_arms:
+			var muscle := MuscleArm.new()
+			muscle.weight = ARM_WEIGHT
+			arm = muscle
+		else:
+			arm = PoseArm.new()
 		arm.side = side
 		arm.anchor = self
 		arm.shoulder_local = Vector3(side * SHOULDER.x, SHOULDER.y, SHOULDER.z)
-		arm.weight = ARM_WEIGHT
-		arm.stance = MuscleArm.Stance.NORMAL
+		arm.stance = MechArm.Stance.NORMAL
 		add_child(arm)
 		arms.append(arm)
 
@@ -341,7 +351,7 @@ func _build_arms() -> void:
 func _pose_arms() -> void:
 	var fallen := state == State.LIMP or state == State.LIFT
 	for arm in arms:
-		arm.stance = MuscleArm.Stance.TUCKED if fallen else (MuscleArm.Stance.COVER if covering else MuscleArm.Stance.NORMAL)
+		arm.stance = MechArm.Stance.TUCKED if fallen else (MechArm.Stance.COVER if covering else MechArm.Stance.NORMAL)
 
 
 ## LAS TECLAS DE LOS BRAZOS, poseída: las piñas de cada uno y la postura.
@@ -351,7 +361,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var click := event as InputEventMouseButton
 	if click != null and click.pressed and click.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
-		arms[0 if click.button_index == MOUSE_BUTTON_LEFT else 1].punch(MuscleArm.Punch.STRAIGHT)
+		arms[0 if click.button_index == MOUSE_BUTTON_LEFT else 1].punch(MechArm.Punch.STRAIGHT)
 		get_viewport().set_input_as_handled()
 		return
 	var key := event as InputEventKey
@@ -363,7 +373,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		lift.toggle()
 	elif PUNCH_KEYS.has(key.physical_keycode):
 		var pick: Array = PUNCH_KEYS[key.physical_keycode]
-		arms[int(pick[0])].punch(pick[1] as MuscleArm.Punch)
+		arms[int(pick[0])].punch(pick[1] as MechArm.Punch)
 	else:
 		return
 	get_viewport().set_input_as_handled()
