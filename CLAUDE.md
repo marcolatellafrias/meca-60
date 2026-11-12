@@ -223,6 +223,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
 - `tests/muscle_arm_look.tscn` (con ventana, unos 30 segundos, sin el sandbox): el brazo con músculos; la guardia, las
   cuatro piñas (velocidad de la mano, cuánto corre el bloque), la pared (se traba y vuelve) y un empujón (cede y vuelve).
 - `tests/hand_look.tscn` (con ventana, unos 5 segundos): la mano abierta y en puño, de tres lados.
+- `tests/exterior_mockup.tscn` (con ventana, unos 10 segundos): las maquetas numeradas del afuera de la meca péndulo
+  (escaleras de atrás, pasarela, ascensor), para elegir.
 - `tests/possess_check.tscn` (con ventana, unos 15 segundos): poseer; mirar el cubo péndulo, la O, las tres vistas con
   la T, soltar y retomar sin mirar; capturas del cartel.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,

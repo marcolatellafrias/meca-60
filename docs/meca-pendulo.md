@@ -35,6 +35,21 @@ sacude al torso. Pesan menos que el brazo del banco (0,4), para que una piña no
 Medido (12/11/2026): las ocho piñas inclinan el torso menos de 1° y lo giran entre 2° y 4°, sin caerse; girando 90° los
 brazos quedan hasta 0,2 m atrás de su lugar.
 
+## El afuera: maquetas para elegir
+`MechExteriorMockup` (sólo dibujo; `tests/exterior_mockup.tscn` las muestra numeradas). Todas llevan lo común: la
+**pasarela en U de planta baja**, de atrás a los dos costados (hasta antes de donde cuelgan los brazos), con baranda;
+dos tableros para reparar en los costados; y el **ascensor**, un cilindro que cuelga de la pelvis, con el piso a 0,7 m
+del suelo con la meca agachada y a 4,4 m parada.
+
+1. Sin nada (la base).
+2. Zigzag fino atrás: un balcón por puerta y, por fuera, un tramo liviano de piso a piso.
+3. Escaleras marineras y balconcitos.
+4. Caracol en una esquina de atrás, con un puentecito a cada puerta.
+5. Una pasarela por piso, unidas por marineras en las esquinas de atrás.
+
+Pendiente: que el usuario elija; lo elegido pasa a la meca con sus formas de choque y entra al marco. Idea para después:
+piernas más estiradas y la meca lo bastante lenta como para escalar las piernas o los brazos.
+
 ## Lo que hace (poseída)
 Lo vertical sale del **largo del palo** del péndulo, como en los personajes sale de su resorte de altura.
 
