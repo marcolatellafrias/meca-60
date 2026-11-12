@@ -50,7 +50,15 @@ puño** (mientras tira una piña), con las falanges dobladas sobre la palma y el
 s, con easing. Hacia qué lado cierran los dedos lo dice quien la arma: acá, hacia donde dobla el codo; en la meca
 péndulo, hacia adentro del cuerpo. Para mirarla: `tests/hand_look.tscn`.
 
+## Las posturas
+Dónde descansa el puño: **normal** (el brazo al costado, la mano abierta), **cubriéndose** (el puño cerrado adelante) y
+**recogido** (la mano contra el hombro, cuando lo que lo sostiene se cae). Pasa de una a otra de corrido; después de una
+piña vuelve a la que tenga. En el banco, **5** cambia entre normal y cubriéndose.
+
+## Montado
+Va solo en su fila o montado en algo que se mueve: la [[meca-pendulo]] lleva dos. Montado, el músculo del hombro empuja
+contra lo que lo sostiene (una piña sacude al torso) y pesa menos.
+
 ## Lo que falta
-- Montarlo en la [[meca-pendulo]] (hoy sus brazos son dibujo): ahí el músculo del hombro empuja al torso.
 - La mano no agarra.
 - Que la mano siga mejor lo pedido en la piña (hoy va atrás y llega con látigo): pedirle también velocidad.

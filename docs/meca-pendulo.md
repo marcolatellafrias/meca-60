@@ -23,11 +23,17 @@ Medido (12/11/2026), con el jugador con cuerpo parado en el piso del medio: la m
 la cabina; en un salto no se mueve; cuando la meca se cae, él se cae adentro y queda adentro.
 
 ## Los brazos
-Dibujo: el hombro y el codo son **esferas**; la muñeca, una **palma** apenas más gruesa que un dedo; y los dedos, cuatro
-de tres **falanges** y el pulgar de dos, **cilindros**, todas piezas separadas. El pulgar va en el canto de arriba de la
-palma. **Los hombros van en el último tercio del costado, hacia atrás** (no en el medio): los antebrazos pasan por
-fuera de las esquinas y las manos quedan adelante. Parada van **en guardia**; **al caer se recogen a los costados de la caja** y se estiran al enderezarse, con las
-piernas. No pegan ni chocan todavía: los brazos con músculos son el paso que sigue.
+**Físicos**: dos [[brazo|brazos con músculos]] colgados de sus hombros, que van **en el último tercio del costado, hacia
+atrás**. Persiguen su postura con fuerza tope: van atrás cuando la meca gira o se frena, ceden si les pegan, y una piña
+sacude al torso. Pesan menos que el brazo del banco (0,4), para que una piña no la dé vuelta.
+
+- **Dos posturas**, con la **F**: **normal** (los brazos a los costados, las manos abiertas) y **cubriéndose** (los
+  puños cerrados adelante de la cabina). Caída, se recogen contra los hombros.
+- **Las piñas**, por brazo (izquierdo / derecho): **clic izquierdo / derecho** el directo, **Q / E** el gancho,
+  **Z / C** el uppercut, **1 / 3** desde arriba.
+
+Medido (12/11/2026): las ocho piñas inclinan el torso menos de 1° y lo giran entre 2° y 4°, sin caerse; girando 90° los
+brazos quedan hasta 0,2 m atrás de su lugar.
 
 ## Lo que hace (poseída)
 Lo vertical sale del **largo del palo** del péndulo, como en los personajes sale de su resorte de altura.

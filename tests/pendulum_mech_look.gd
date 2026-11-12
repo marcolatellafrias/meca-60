@@ -56,6 +56,49 @@ func _ready() -> void:
 	await _shot("La mano: la muñeca, los dedos y el pulgar", "3_mano")
 	_eye.global_transform = _mech.possess_camera(true, 0.0)
 	await _shot("Desde el asiento del medio", "4_asiento")
+	# LOS BRAZOS, FÍSICOS: las dos posturas, las piñas de cada uno (cuánto sacuden al torso) y un giro.
+	_from(Vector3(-17.0, 3.0, -24.0))
+	await _shot("Postura normal: los brazos a los costados", "4b_normal")
+	_mech.covering = true
+	await _seconds(1.3)
+	await _shot("Cubriéndose: los puños cerrados adelante", "4c_cubriendose")
+	_eye.global_transform = _mech.possess_camera(true, 0.0)
+	await _shot("Cubriéndose, desde el asiento", "4d_cubriendose_asiento")
+	_from(Vector3(-17.0, 3.0, -24.0))
+	for index in 2:
+		for kind: int in [MuscleArm.Punch.STRAIGHT, MuscleArm.Punch.HOOK, MuscleArm.Punch.UPPERCUT, MuscleArm.Punch.HAMMER]:
+			var yaw_before := _mech._yaw()
+			_mech.arms[index].punch(kind as MuscleArm.Punch)
+			var most_tilt := 0.0
+			var most_turn := 0.0
+			var clock := 0.0
+			var taken := false
+			while clock < 2.4:
+				await get_tree().physics_frame
+				clock += 1.0 / 240.0
+				most_tilt = maxf(most_tilt, _mech.tilt)
+				most_turn = maxf(most_turn, absf(wrapf(_mech._yaw() - yaw_before, -PI, PI)))
+				if not taken and index == 0 and clock >= 0.72:
+					taken = true
+					await _shot("Piña: %s (brazo izquierdo)" % MuscleArm.NAMES[kind], "4e_%d" % kind)
+			print("PIÑA %s, brazo %s: la mano a %.0f m/s · el torso se inclina %.1f° y gira %.1f° · caídas %d" % [
+				MuscleArm.NAMES[kind], "izquierdo" if index == 0 else "derecho", _mech.arms[index].top_speed, most_tilt,
+				rad_to_deg(most_turn), _mech.falls])
+	_mech.aim_yaw += PI * 0.5
+	var far := 0.0
+	var turning := 0.0
+	while turning < 2.5:
+		await get_tree().physics_frame
+		turning += 1.0 / 240.0
+		far = maxf(far, maxf(_mech.arms[0].off_target, _mech.arms[1].off_target))
+		if absf(turning - 0.6) < 0.003:
+			_from(Vector3(-17.0, 6.0, -24.0))
+			await _shot("Girando 90°: los brazos van atrás", "4f_girando")
+	print("GIRO de 90° cubriéndose: los brazos quedan hasta %.1f m atrás de su lugar · al final a %.2f m · caídas %d" % [far,
+		maxf(_mech.arms[0].off_target, _mech.arms[1].off_target), _mech.falls])
+	_mech.aim_yaw -= PI * 0.5
+	_mech.covering = false
+	await _seconds(2.5)
 	_mech.driving = true
 	# AGACHARSE.
 	var standing := _mech.global_position.y

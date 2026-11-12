@@ -19,31 +19,44 @@ extends Node3D
 ## De ahí sale lo que antes eran reglas a mano en el puño de la meca de pelea: si algo lo traba, se queda ahí empujando
 ## con su fuerza; si le pegan, cede y vuelve; la fuerza de la piña es la velocidad a la que llegó la mano.
 ##
+## LAS POSTURAS (`stance`), donde descansa el puño: NORMAL, el brazo al costado y la mano abierta; CUBRIÉNDOSE, los puños
+## cerrados adelante y arriba; y RECOGIDO, la mano contra el hombro (cuando lo que lo sostiene se cae). Pasa de una a
+## otra de corrido. Lo pidió el usuario el 12/11/2026 («cambiar de postura, una cubriendo y otra normal… la normal
+## estaría más a los costados… la cubriendo… con los puños cerrados»).
 ## LAS PIÑAS (`punch`): cada una, unos pocos puntos por los que se pide que pase el puño, con sus tiempos (se arma atrás,
-## pega, se queda un instante y vuelve a la guardia). A MANO (poseído): el mouse lleva el puño de costado y arriba y
-## abajo, y W/S adelante y atrás.
+## pega, se queda un instante y vuelve a su postura). A MANO (poseído, cuando va solo): el mouse lleva el puño de costado
+## y arriba y abajo, y W/S adelante y atrás.
+##
+## VA SOLO (en su fila, `standalone`) O MONTADO en algo que se mueve (la meca péndulo): el músculo del hombro empuja
+## contra lo que lo sostiene, así que una piña lo sacude.
 ##
 ## Las perillas, en MuscleArmSettings (el panel F1 de su fila).
 
 enum Punch { NONE, STRAIGHT, HOOK, UPPERCUT, HAMMER }
+enum Stance { NORMAL, COVER, TUCKED }
 
-const NAMES := ["en guardia", "directo", "gancho", "uppercut", "desde arriba"]
+const NAMES := ["quieto", "directo", "gancho", "uppercut", "desde arriba"]
+const STANCE_NAMES := ["normal", "cubriéndose", "recogido"]
 const UPPER_MASS := 2200.0
 const FOREARM_MASS := 2000.0
 const THICKNESS := 1.5
-## EL PUÑO, en guardia, desde el hombro, en el espacio de lo que lo sostiene (`x` hacia afuera del cuerpo; adentro es
-## negativo).
-const GUARD := PendulumMech.GUARD
-## LAS PIÑAS: por dónde se pide que pase el puño (como `GUARD`) y en cuánto llega a cada punto desde el anterior (s).
+## DÓNDE DESCANSA EL PUÑO en cada postura, desde el hombro, en el espacio de lo que lo sostiene (`x` hacia afuera del
+## cuerpo; adentro es negativo).
+const STANCES := {
+	Stance.NORMAL: Vector3(0.4, -6.2, -4.4),
+	Stance.COVER: Vector3(-2.4, -1.5, -8.4),
+	Stance.TUCKED: Vector3(0.3, -1.4, -1.8),
+}
+## A qué velocidad pasa el puño de una postura a otra (m/s) y en cuánto vuelve a su postura después de una piña (s).
+const STANCE_SPEED := 16.0
+const RETURN_TIME := 0.6
+## LAS PIÑAS: por dónde se pide que pase el puño (como `STANCES`) y en cuánto llega a cada punto desde el anterior (s):
+## se arma atrás, pega y se queda un instante. Después vuelve a su postura.
 const PUNCHES := {
-	Punch.STRAIGHT: [[0.45, Vector3(-0.8, -1.8, -2.6)], [0.26, Vector3(-2.6, -0.6, -10.6)], [0.2, Vector3(-2.6, -0.6, -10.6)],
-		[0.6, GUARD]],
-	Punch.HOOK: [[0.5, Vector3(3.8, -1.2, -3.2)], [0.3, Vector3(-5.4, -0.8, -7.4)], [0.2, Vector3(-5.4, -0.8, -7.4)],
-		[0.6, GUARD]],
-	Punch.UPPERCUT: [[0.5, Vector3(-0.6, -6.8, -3.4)], [0.28, Vector3(-2.0, 3.6, -7.6)], [0.2, Vector3(-2.0, 3.6, -7.6)],
-		[0.6, GUARD]],
-	Punch.HAMMER: [[0.55, Vector3(-0.4, 6.6, -2.2)], [0.28, Vector3(-1.6, -5.0, -8.2)], [0.2, Vector3(-1.6, -5.0, -8.2)],
-		[0.6, GUARD]],
+	Punch.STRAIGHT: [[0.45, Vector3(-0.8, -1.8, -2.6)], [0.26, Vector3(-2.6, -0.6, -10.6)], [0.2, Vector3(-2.6, -0.6, -10.6)]],
+	Punch.HOOK: [[0.5, Vector3(3.8, -1.2, -3.2)], [0.3, Vector3(-5.4, -0.8, -7.4)], [0.2, Vector3(-5.4, -0.8, -7.4)]],
+	Punch.UPPERCUT: [[0.5, Vector3(-0.6, -6.8, -3.4)], [0.28, Vector3(-2.0, 3.6, -7.6)], [0.2, Vector3(-2.0, 3.6, -7.6)]],
+	Punch.HAMMER: [[0.55, Vector3(-0.4, 6.6, -2.2)], [0.28, Vector3(-1.6, -5.0, -8.2)], [0.2, Vector3(-1.6, -5.0, -8.2)]],
 }
 
 ## De qué lado va (−1 izquierdo, 1 derecho), lo que lo sostiene y dónde está el hombro en su espacio. Se ponen antes de
@@ -51,6 +64,12 @@ const PUNCHES := {
 var side := 1.0
 var anchor: PhysicsBody3D = null
 var shoulder_local := Vector3.ZERO
+## Cuánto pesa, en partes de `UPPER_MASS` y `FOREARM_MASS` (montado en la meca, menos: que una piña no la dé vuelta), y si
+## va solo en su fila (se lo puede poseer y lleva su cartel). También antes de agregarlo.
+var weight := 1.0
+var standalone := false
+## La postura pedida.
+var stance := Stance.COVER
 
 var upper: RigidBody3D = null
 var forearm: RigidBody3D = null
@@ -64,7 +83,9 @@ var off_target := 0.0
 var manual := false
 
 var _clock := 0.0
-var _from := GUARD
+var _from := Vector3.ZERO
+## Dónde descansa el puño ahora: va hacia el de la postura pedida.
+var _rest := Vector3.ZERO
 var _offset := Vector3.ZERO
 var _label: Label3D = null
 var _chase_yaw := 0.0
@@ -75,14 +96,15 @@ var _hinge := Vector3.RIGHT
 
 
 func _ready() -> void:
-	name = "Brazo"
-	add_to_group(SandboxPossession.GROUP)
+	if standalone:
+		add_to_group(SandboxPossession.GROUP)
+	_rest = STANCES[stance]
 	var base := anchor.global_transform
 	var shoulder := base * shoulder_local
-	var pose := _pose(shoulder, shoulder + base.basis * _local(GUARD), base.basis)
-	upper = _piece("Brazo", UPPER_MASS, Vector3(THICKNESS, THICKNESS, MechBody.UPPER_ARM), pose["upper"],
+	var pose := _pose(shoulder, shoulder + base.basis * _local(_rest), base.basis)
+	upper = _piece("Brazo", UPPER_MASS * weight, Vector3(THICKNESS, THICKNESS, MechBody.UPPER_ARM), pose["upper"],
 		Clay.METAL.darkened(0.1))
-	forearm = _piece("Antebrazo", FOREARM_MASS, Vector3(THICKNESS * 0.88, THICKNESS * 0.88, MechBody.FOREARM),
+	forearm = _piece("Antebrazo", FOREARM_MASS * weight, Vector3(THICKNESS * 0.88, THICKNESS * 0.88, MechBody.FOREARM),
 		pose["forearm"], Clay.METAL.darkened(0.2))
 	# El hombro y el codo, esferas en la punta de arriba de cada pieza; la mano, en la de abajo del antebrazo, con su
 	# forma de choque (el puño).
@@ -99,6 +121,8 @@ func _ready() -> void:
 	var hinge := HingeJoint3D.new()
 	_join(hinge, upper, forearm, Transform3D(Basis.looking_at(_hinge, (pose["upper"] as Transform3D).basis.z), pose["elbow"]))
 	forearm.add_collision_exception_with(anchor)
+	if not standalone:
+		return
 	_label = Label3D.new()
 	_label.top_level = true
 	_label.font_size = 56
@@ -182,27 +206,29 @@ func _local(point: Vector3) -> Vector3:
 	return Vector3(side * point.x, point.y, point.z)
 
 
-## DÓNDE SE PIDE EL PUÑO AHORA, desde el hombro (como `GUARD`): a lo largo de la piña, o la guardia más lo que lo corrió
-## el mouse.
+## DÓNDE SE PIDE EL PUÑO AHORA, desde el hombro (como `STANCES`): a lo largo de la piña y de vuelta a su postura, o en
+## su postura más lo que lo corrió el mouse.
 func _wanted() -> Vector3:
+	var home := _rest + _offset
 	if punching == Punch.NONE:
-		return GUARD + _offset
+		return home
+	var speed := MuscleArmSettings.current.punch_speed
 	var clock := _clock
 	var from := _from
 	for step: Array in PUNCHES[punching]:
-		var time := float(step[0]) / MuscleArmSettings.current.punch_speed
+		var time := float(step[0]) / speed
 		if clock <= time:
 			return from.lerp(step[1], smoothstep(0.0, 1.0, clock / time))
 		clock -= time
 		from = step[1]
-	return GUARD + _offset
+	return from.lerp(home, smoothstep(0.0, 1.0, clock / (RETURN_TIME / speed)))
 
 
 func _punch_time() -> float:
-	var total := 0.0
+	var total := RETURN_TIME
 	for step: Array in PUNCHES[punching]:
-		total += float(step[0]) / MuscleArmSettings.current.punch_speed
-	return total
+		total += float(step[0])
+	return total / MuscleArmSettings.current.punch_speed
 
 
 ## ── CADA PASO: LOS MÚSCULOS ──────────────────────────────────────────────────────────────────────────────────────
@@ -216,8 +242,9 @@ func _physics_process(delta: float) -> void:
 		_clock += delta
 		if _clock >= _punch_time():
 			punching = Punch.NONE
-	# EL PUÑO, CERRADO mientras tira una piña (lo discreto); abierta en guardia y a mano.
-	_hand.fist = punching != Punch.NONE
+	_rest = _rest.move_toward(STANCES[stance], STANCE_SPEED * delta)
+	# EL PUÑO, CERRADO mientras tira una piña y cubriéndose; la mano abierta en lo demás.
+	_hand.fist = punching != Punch.NONE or stance == Stance.COVER
 	var base := anchor.global_transform
 	var shoulder := base * shoulder_local
 	var fist := shoulder + base.basis * _local(_wanted())
@@ -227,10 +254,16 @@ func _physics_process(delta: float) -> void:
 	var out := forearm.global_position - shoulder
 	var length_axis := upper.global_basis.z.normalized()
 	var beside := out - length_axis * out.dot(length_axis)
-	var asked := _asked(upper, (pose["upper"] as Transform3D).basis, Vector3.ZERO, k)
+	# Empuja contra lo que lo sostiene: si es un cuerpo suelto (la meca), lo gira para el otro lado.
+	var holder := anchor as RigidBody3D
+	var asked := _asked(upper, (pose["upper"] as Transform3D).basis,
+		holder.angular_velocity if holder != null else Vector3.ZERO, k)
 	var rolling := length_axis * asked.dot(length_axis)
-	upper.apply_torque(rolling * (float(upper.get_meta("along")) + FOREARM_MASS * beside.length_squared())
-		+ (asked - rolling) * (float(upper.get_meta("across")) + FOREARM_MASS * out.length_squared()))
+	var shoulder_torque := rolling * (float(upper.get_meta("along")) + forearm.mass * beside.length_squared()) \
+		+ (asked - rolling) * (float(upper.get_meta("across")) + forearm.mass * out.length_squared())
+	upper.apply_torque(shoulder_torque)
+	if holder != null:
+		holder.apply_torque(-shoulder_torque)
 	# EL CODO sólo dobla: sobre el eje de su bisagra, y empujando al brazo para el otro lado.
 	var hinge_axis := forearm.global_basis.y.normalized()
 	var bend := _asked(forearm, (pose["forearm"] as Transform3D).basis, upper.angular_velocity, k)
@@ -242,9 +275,11 @@ func _physics_process(delta: float) -> void:
 	hand_speed = (forearm.linear_velocity + forearm.angular_velocity.cross(hand - forearm.global_position)).length()
 	top_speed = maxf(top_speed, hand_speed) if punching != Punch.NONE else top_speed
 	off_target = hand.distance_to(pose["wrist"] as Vector3)
+	if _label == null:
+		return
 	_label.global_position = shoulder + Vector3(0, 5.0, 0)
-	_label.text = "%s · la mano a %.0f m/s (la última piña llegó a %.0f)\na %.1f m de donde se la pide%s" % [
-		NAMES[punching], hand_speed, top_speed, off_target, " · TRABADO" if off_target > 1.5 else ""]
+	_label.text = "%s (%s) · la mano a %.0f m/s (la última piña llegó a %.0f)\na %.1f m de donde se la pide%s" % [
+		NAMES[punching], STANCE_NAMES[stance], hand_speed, top_speed, off_target, " · TRABADO" if off_target > 1.5 else ""]
 
 
 ## LO QUE PIDE UN MÚSCULO: la aceleración de giro (rad/s², ejes del mundo) que lleva a `body` hacia `wanted` (la
@@ -270,7 +305,7 @@ func possess_controls() -> PackedStringArray:
 	return PackedStringArray([
 		"mouse: lleva la mano de costado y arriba y abajo",
 		"W/S: la mano adelante y atrás",
-		"1 directo · 2 gancho · 3 uppercut · 4 desde arriba",
+		"1 directo · 2 gancho · 3 uppercut · 4 desde arriba · 5 cambia la postura",
 	])
 
 

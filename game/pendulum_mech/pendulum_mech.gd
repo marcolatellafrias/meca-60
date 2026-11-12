@@ -15,10 +15,12 @@ extends PendulumCube
 ## formas de `_interior`, de las que el marco hace su SOMBRA: el que entra al volumen (el cubo) pasa a ir en el marco,
 ## que lo lleva con la meca, y adentro choca sólo con esa sombra. Y la caja de afuera deja de chocar con él (`_ride`).
 ## Todavía no hay escalera: la U del sandbox lo sube (`board`), o el ente entra volando.
-## LOS BRAZOS (`_build_arms`), dibujo: el hombro y el codo son ESFERAS, la muñeca una PALMA apenas más gruesa que un
-## dedo, y los dedos, con sus FALANGES, cilindros; todas piezas separadas; el pulgar va en el canto de arriba de la palma.
-## Parada van en guardia; AL CAER SE RECOGEN A LOS COSTADOS de la caja, y se estiran al enderezarse, con las piernas
-## (`_place_arms`). No pegan todavía: los brazos con músculos son el paso que sigue.
+## LOS BRAZOS SON FÍSICOS (12/11/2026; el usuario: «hacer los brazos físicos en la meca péndulo. Así de paso veo cómo
+## reaccionan los brazos cuando giro»): dos brazos con músculos (MuscleArm), colgados de sus hombros. Persiguen su
+## postura con fuerza tope, así que van atrás cuando la meca gira o se frena, ceden si les pegan, y una piña sacude al
+## torso. DOS POSTURAS, con la F: NORMAL (los brazos a los costados, las manos abiertas) y CUBRIÉNDOSE (los puños
+## cerrados adelante). Caída, se recogen contra los hombros. LAS PIÑAS, por brazo: clic izquierdo y derecho el directo,
+## Q/E el gancho, Z/C el uppercut, 1/3 desde arriba.
 ##
 ## LO QUE HACE, poseída (lo vertical sale del largo del palo del péndulo, `_rod`, como en los personajes sale de su
 ## resorte de altura):
@@ -42,10 +44,16 @@ const GLASS := 1.4
 const DOOR := Vector2(1.1, 2.05)
 ## LOS BRAZOS: el hombro, en el espacio del cubo (`x` del lado derecho), EN EL ÚLTIMO TERCIO DEL COSTADO, hacia atrás (lo
 ## pidió el usuario el 12/11/2026: «no a la mitad… en el último tercio de la cara del cubo. Así es más natural la
-## postura»); y el puño en guardia, desde el hombro: adelante del cubo, con el antebrazo pasando por fuera de la esquina.
+## postura»). Y cuánto pesan, en partes de lo que pesa el brazo solo (ver MuscleArm.weight).
 const SHOULDER := Vector3(SIZE * 0.5 + 1.0, 1.9, SIZE * 0.275)
-const GUARD := Vector3(-1.0, -2.6, -8.6)
-const ARM_THICKNESS := 1.5
+const ARM_WEIGHT := 0.4
+## Las teclas de las piñas: para el brazo izquierdo y para el derecho.
+const PUNCH_KEYS := {
+	KEY_Q: [0, MuscleArm.Punch.HOOK], KEY_E: [1, MuscleArm.Punch.HOOK],
+	KEY_Z: [0, MuscleArm.Punch.UPPERCUT], KEY_C: [1, MuscleArm.Punch.UPPERCUT],
+	KEY_1: [0, MuscleArm.Punch.HAMMER], KEY_3: [1, MuscleArm.Punch.HAMMER],
+}
+
 ## Lo cargado del salto y lo que le queda al propulsor (0 a 1), para mirar.
 var jump_charge := 0.0
 var fuel := 1.0
@@ -55,8 +63,9 @@ var _rod_scale := 1.0
 var _space_was := false
 ## En el aire, el espacio empuja recién cuando se lo vuelve a apretar (el que soltó para saltar no cuenta).
 var _thrust_armed := false
-## Las piezas de cada brazo (el izquierdo y el derecho): `shoulder`, `upper`, `elbow`, `forearm`, `hand`.
-var _arms: Array[Dictionary] = []
+## Los dos brazos (el izquierdo y el derecho) y la postura elegida: cubriéndose, o normal.
+var arms: Array[MuscleArm] = []
+var covering := false
 ## EL MARCO: lleva a los que van adentro (ver arriba). `_interior`, las formas de sus losas y paredes (no chocan con
 ## nada: son de donde el marco copia su sombra); `_riders`, los que hoy van adentro y la caja de afuera no ve.
 var frame: MotionFrame = null
@@ -77,7 +86,7 @@ func tuning() -> HoverCubeSettings:
 
 func _physics_process(delta: float) -> void:
 	super(delta)
-	_place_arms()
+	_pose_arms()
 	_ride()
 
 
@@ -203,8 +212,9 @@ func possess_controls() -> PackedStringArray:
 	return PackedStringArray([
 		"W/S adelante y atrás · A/D de costado",
 		"mouse mira: la cabeza al instante, el torso la alcanza",
-		"Shift corre (yendo hacia adelante)",
-		"Ctrl se agacha",
+		"Shift corre (yendo hacia adelante) · Ctrl se agacha",
+		"clic izq. / der.: directo · Q / E: gancho · Z / C: uppercut · 1 / 3: desde arriba",
+		"F: postura normal / cubriéndose",
 		"espacio: mantener carga el salto, soltar salta",
 		"espacio en el aire: propulsor",
 	])
@@ -291,63 +301,45 @@ func _solid(size: Vector3, at: Vector3, color: Color) -> void:
 	Clay.shape_box(_interior, size, at)
 
 
-## ── LOS BRAZOS (dibujo) ──────────────────────────────────────────────────────────────────────────────────────────
+## ── LOS BRAZOS (físicos: ver MuscleArm) ──────────────────────────────────────────────────────────────────────────
 
-## Las piezas de cada brazo, sueltas (las ubica `_place_arms`): la esfera del hombro, el brazo, la esfera del codo, el
-## antebrazo y la mano.
 func _build_arms() -> void:
 	for side: float in [-1.0, 1.0]:
-		var upper := Clay.box(_look, Vector3(ARM_THICKNESS, ARM_THICKNESS, MechBody.UPPER_ARM), Vector3.ZERO,
-			Clay.METAL.darkened(0.1))
-		var forearm := Clay.box(_look, Vector3(ARM_THICKNESS * 0.88, ARM_THICKNESS * 0.88, MechBody.FOREARM), Vector3.ZERO,
-			Clay.METAL.darkened(0.2))
-		_arms.append({
-			"shoulder": Clay.sphere(_look, ARM_THICKNESS * 0.78, Vector3.ZERO, MechBody.JOINT_COLOR),
-			"upper": upper,
-			"elbow": Clay.sphere(_look, ARM_THICKNESS * 0.66, Vector3.ZERO, MechBody.JOINT_COLOR),
-			"forearm": forearm,
-			# Sus dedos cierran hacia adentro del cuerpo.
-			"hand": MechHand.build(_look, side),
-		})
-	_place_arms()
+		var arm := MuscleArm.new()
+		arm.side = side
+		arm.anchor = self
+		arm.shoulder_local = Vector3(side * SHOULDER.x, SHOULDER.y, SHOULDER.z)
+		arm.weight = ARM_WEIGHT
+		arm.stance = MuscleArm.Stance.NORMAL
+		add_child(arm)
+		arms.append(arm)
 
 
-## UBICA LOS BRAZOS, en el espacio del cubo: en guardia parada, y RECOGIDOS A LOS COSTADOS caída (con la misma medida
-## que las piernas, `_tuck`: se recogen al caer y se estiran al enderezarse).
-func _place_arms() -> void:
-	var share := smoothstep(0.0, 1.0, _tuck)
-	for index in _arms.size():
-		var side := -1.0 if index == 0 else 1.0
-		var shoulder := Vector3(side * SHOULDER.x, SHOULDER.y, SHOULDER.z)
-		var pose := MechBody.arm(shoulder, shoulder + Vector3(side * GUARD.x, GUARD.y, GUARD.z), side, Basis())
-		if share > 0.001:
-			pose = _blend_arm(pose, _tucked_arm(shoulder), share)
-		var arm := _arms[index]
-		var forearm: Transform3D = pose["forearm"]
-		(arm["shoulder"] as Node3D).position = shoulder
-		(arm["upper"] as Node3D).transform = pose["upper"]
-		(arm["elbow"] as Node3D).position = pose["elbow"]
-		(arm["forearm"] as Node3D).transform = forearm
-		(arm["hand"] as Node3D).transform = Transform3D(forearm.basis, pose["wrist"] as Vector3)
+## LA POSTURA DE LOS BRAZOS: la elegida parada; recogidos caída y subiendo (se estiran al enderezarse, con las piernas).
+func _pose_arms() -> void:
+	var fallen := state == State.LIMP or state == State.LIFT
+	for arm in arms:
+		arm.stance = MuscleArm.Stance.TUCKED if fallen else (MuscleArm.Stance.COVER if covering else MuscleArm.Stance.NORMAL)
 
 
-## EL BRAZO RECOGIDO: pegado al costado de la caja, el brazo derecho hacia abajo y el antebrazo de vuelta hacia arriba,
-## apenas adelante, con la mano a la altura del hombro.
-func _tucked_arm(shoulder: Vector3) -> Dictionary:
-	var elbow := shoulder + Vector3(0.0, -MechBody.UPPER_ARM, 0.4)
-	var wrist := elbow + Vector3(0.0, 0.97, -0.24).normalized() * MechBody.FOREARM
-	return {
-		"upper": MechBody.segment(shoulder, elbow, Vector3.FORWARD),
-		"forearm": MechBody.segment(elbow, wrist, Vector3.FORWARD),
-		"elbow": elbow,
-		"wrist": wrist,
-	}
-
-
-static func _blend_arm(from: Dictionary, to: Dictionary, share: float) -> Dictionary:
-	return {
-		"upper": (from["upper"] as Transform3D).interpolate_with(to["upper"], share),
-		"forearm": (from["forearm"] as Transform3D).interpolate_with(to["forearm"], share),
-		"elbow": (from["elbow"] as Vector3).lerp(to["elbow"], share),
-		"wrist": (from["wrist"] as Vector3).lerp(to["wrist"], share),
-	}
+## LAS TECLAS DE LOS BRAZOS, poseída: las piñas de cada uno y la postura.
+func _unhandled_input(event: InputEvent) -> void:
+	super(event)
+	if not driving or state != State.HOVER or not UIState.gameplay_active():
+		return
+	var click := event as InputEventMouseButton
+	if click != null and click.pressed and click.button_index in [MOUSE_BUTTON_LEFT, MOUSE_BUTTON_RIGHT]:
+		arms[0 if click.button_index == MOUSE_BUTTON_LEFT else 1].punch(MuscleArm.Punch.STRAIGHT)
+		get_viewport().set_input_as_handled()
+		return
+	var key := event as InputEventKey
+	if key == null or not key.pressed or key.echo:
+		return
+	if key.physical_keycode == KEY_F:
+		covering = not covering
+	elif PUNCH_KEYS.has(key.physical_keycode):
+		var pick: Array = PUNCH_KEYS[key.physical_keycode]
+		arms[int(pick[0])].punch(pick[1] as MuscleArm.Punch)
+	else:
+		return
+	get_viewport().set_input_as_handled()

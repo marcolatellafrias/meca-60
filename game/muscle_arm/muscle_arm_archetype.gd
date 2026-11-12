@@ -26,7 +26,7 @@ func max_footprint() -> Vector2:
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"un brazo de piezas físicas; los músculos persiguen la pose que pide la IK",
-		"1 directo · 2 gancho · 3 uppercut · 4 desde arriba",
+		"1 directo · 2 gancho · 3 uppercut · 4 desde arriba · 5 cambia la postura",
 		"N pone y saca una pared adelante (se traba)",
 		"mirándolo, O lo posee: el mouse lleva la mano",
 	])
@@ -45,6 +45,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	Clay.box(root, Vector3(1.2, HEIGHT, 1.2), Vector3(0, HEIGHT * 0.5, 0), Clay.DARK)
 	var arm := MuscleArm.new()
 	arm.side = -1.0
+	arm.standalone = true
 	arm.anchor = torso
 	arm.shoulder_local = Vector3(arm.side * PendulumMech.SHOULDER.x, PendulumMech.SHOULDER.y, PendulumMech.SHOULDER.z)
 	root.add_child(arm)
@@ -98,6 +99,11 @@ func parcel_options() -> Array[Dictionary]:
 				var arm := MuscleArmArchetype._arm_of(parcel)
 				if arm != null:
 					arm.punch(kind)})
+	options.append({"key": KEY_5, "label": "postura: normal / cubriéndose", "seated": true,
+		"apply": func(parcel: SandboxParcel) -> void:
+			var arm := MuscleArmArchetype._arm_of(parcel)
+			if arm != null:
+				arm.stance = MuscleArm.Stance.NORMAL if arm.stance == MuscleArm.Stance.COVER else MuscleArm.Stance.COVER})
 	options.append({"key": KEY_N, "label": "poner / sacar la pared de adelante", "seated": true,
 		"apply": func(parcel: SandboxParcel) -> void:
 			for wall: StaticBody3D in parcel.find_children("Pared", "StaticBody3D", true, false):
