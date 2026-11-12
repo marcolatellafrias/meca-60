@@ -145,7 +145,7 @@ func _build_parts() -> void:
 		Clay.solid(_parts[i], Vector3(thickness * 0.9, thickness * 0.9, MechBody.SHIN), Vector3.ZERO,
 			Clay.METAL.darkened(0.25))
 	for i: int in [Part.FOOT_LEFT, Part.FOOT_RIGHT]:
-		Clay.solid(_parts[i], MechBody.FOOT_SIZE, Vector3.ZERO, Clay.DARK)
+		Clay.solid(_parts[i], MechBody.FOOT_SIZE, Vector3.ZERO, MechBody.JOINT_COLOR)
 	for i: int in [Part.UPPER_LEFT, Part.UPPER_RIGHT]:
 		Clay.solid(_parts[i], Vector3(MechBody.ARM_THICKNESS, MechBody.ARM_THICKNESS, MechBody.UPPER_ARM), Vector3.ZERO,
 			Clay.METAL.darkened(0.1))

@@ -75,8 +75,8 @@ que flota con un **resorte vertical** (el del cuerpo de los personajes de charac
 **aparte lo inclina** con la línea de equilibrio (cualquier golpe, a cualquier altura; golpes seguidos se suman; se ve
 inclinando el dibujo sobre el canto de abajo). Al pasarla **tropieza**: el cuerpo toma esa inclinación y recibe, una
 sola vez, el giro justo para que su base quede quieta; de ahí es física y cae para el lado del golpe. Caído pesa un poco
-más y se le frena el giro (poco: es física); apenas deja de caer **sube** con las toberas de la cara que mira al piso y
-**se endereza en el aire** con las de los costados (cuatro por cara, con el humo de propulsor de allá), y vuelve a la
+más y se le frena el giro (poco: es física); apenas deja de caer **sube y se endereza a la vez** con sus toberas
+(cuatro por cara, con el humo de propulsor de allá): gira tanto como le sobra de altura sobre su punto más bajo, y vuelve a la
 línea mirando hacia donde miraba. La parcela es de 60 m. **J/K** cuatro tiros: lenta (30 m/s) o rápida (100 m/s), que
 lo voltea o no. **F1** su panel (`HoverPanel`, perillas en `HoverCubeSettings`); **F2** volcarlo, suave y fuerte
 (`HoverKnockPanel`). *El cubo que se enderezaba con un torque libre se borró: se torcía con cualquier golpe.*
@@ -181,6 +181,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
 - `tests/pendulum_check.tscn` (headless o con ventana, unos 5 minutos): el cubo péndulo; la escala de golpes en el
   centro y arriba, contra la pared a 8, 14 y 20 m/s (no tiene que caer), arrancar y frenar, el giro, un golpe
   descentrado, sus tiros, el F2 y la recuperación.
+- `tests/pendulum_look.tscn` (con ventana, unos 10 segundos, sin el sandbox): el cubo péndulo de cerca (las piernas) y
+  la caída con la recuperación cuadro a cuadro. Para mirar el aspecto rápido; no mide.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,
   caminarla sentado, viajar parado adentro, manejar desde afuera y volver, y agarrar el ropero del lote.
 - `tests/net_check.tscn`: dos instancias sin ventana, una con `--host-local` y otra con `--join-local` (antes del

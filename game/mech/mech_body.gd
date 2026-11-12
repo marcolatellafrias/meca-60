@@ -24,13 +24,19 @@ extends RefCounted
 
 ## La cintura: dónde se apoya el torso, sobre el suelo, parada.
 const WAIST := 7.4
-const PELVIS_SIZE := Vector3(6.6, 1.8, 3.6)
 ## Las caderas, a los costados de la pelvis y debajo de la cintura.
 const HIP_X := 2.7
 const HIP_DROP := 1.2
 const THIGH := 4.4
 const SHIN := 4.4
-const LEG_THICKNESS := 1.1
+## Las piernas, macizas (lo pidió el usuario el 12/11/2026: «más chunky»), y sus ARTICULACIONES —cadera, rodilla,
+## tobillo—, discos de ese mismo grosor, con el eje de costado.
+const LEG_THICKNESS := 1.7
+const JOINT_RADIUS := LEG_THICKNESS * 0.62
+## La pelvis, entre los dos discos de las caderas: corta, para darles lugar.
+const PELVIS_SIZE := Vector3(HIP_X * 2.0 - LEG_THICKNESS, 1.8, 3.6)
+## El color de las articulaciones y de los pies: un poco más oscuro que la pierna, no negro.
+const JOINT_COLOR := Color(0.36, 0.375, 0.4)
 const ANKLE := 0.6
 const FOOT_SIZE := Vector3(2.2, 0.7, 3.4)
 ## Cuánto va el pie adelante del tobillo.

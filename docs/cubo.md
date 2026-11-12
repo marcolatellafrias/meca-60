@@ -35,9 +35,12 @@ la base quede quieta (como pies trabados) más lo que se venía inclinando. Desd
 golpe. Caído pesa un poco más y se le frena el giro, poco.
 
 ## Recuperarse
-Cuatro toberas por cara, con el humo de propulsor de character-parametric. Apenas deja de caer y de rodar rápido:
-**sube** con las de la cara que mira al piso y, en cuanto puede girar sin tocar el piso, **se endereza** con las de los
-costados. Derecho, se traba y vuelve a la línea mirando hacia donde miraba.
+Cuatro toberas por cara, con el humo de propulsor de character-parametric. Apenas deja de caer y de rodar rápido,
+**sube y se endereza a la vez**: las toberas de la cara que mira al piso lo suben y las de los costados lo enderezan
+**tanto como el lugar le deja**. Mira cuánto baja su punto más bajo tal como está girado (4 m apoyado en una cara, 5,7
+en un canto, 6,9 en una punta) y gira sólo con la altura que le sobra; girar lo lleva a un canto, que baja más, así que
+se regula solo. *Antes subía hasta poder girar entero y recién ahí se enderezaba.* Derecho, se traba y vuelve a la
+línea mirando hacia donde miraba.
 
 ## Cómo se prueba
 - **J** tira la bola, **K** pasa por los cuatro tiros: lenta (30 m/s) o rápida (100 m/s), que lo voltea o no.

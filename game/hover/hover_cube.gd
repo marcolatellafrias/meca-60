@@ -32,9 +32,12 @@ extends RigidBody3D
 ## lado del golpe (y ahí sí puede girar).
 ## CAÍDO: un poco más pesado (`fall_gravity`) y con freno de giro (`ground_spin_damp`), poco, para no perder la física.
 ## Apenas deja de caer y de rodar rápido, SE RECUPERA con sus toberas (cuatro por cara; cada una empuja hacia adentro de
-## su cara, en su lugar, y echa el humo de propulsor de character-parametric): las de la cara que mira al piso lo SUBEN y,
-## en cuanto puede girar sin tocar el piso (`CLEARANCE`), las de los costados lo ENDEREZAN. Derecho otra vez, se traba y
-## vuelve a la línea, mirando hacia donde miraba.
+## su cara, en su lugar, y echa el humo de propulsor de character-parametric), SUBIENDO Y ENDEREZÁNDOSE A LA VEZ: las de
+## la cara que mira al piso lo suben y las de los costados lo enderezan TANTO COMO EL LUGAR LE DEJA —mira cuánto baja su
+## punto más bajo, tal como está girado, y gira sólo con lo que le sobra de altura (ver `_right_as_room_allows`)—. Lo
+## pidió el usuario el 12/11/2026 («primero se levanta y después se endereza… prefiero… algo un poco más continuo»).
+## *Antes subía hasta poder girar entero (la esfera que lo contiene) y recién ahí se enderezaba.* Derecho otra vez, se
+## traba y vuelve a la línea, mirando hacia donde miraba.
 ##
 ## Las perillas, en HoverCubeSettings (el panel F1 de su fila); el F2 lo vuelca (`knock`).
 
@@ -46,8 +49,13 @@ const CUBE_MASS := 50000.0
 const NOZZLE_SPREAD := 0.65
 ## La parte del lado donde salen los rayos de la cara de abajo (a cada costado).
 const RAY_SPREAD := 0.3
-## A qué altura del centro puede girar sin tocar el piso: media diagonal del cubo, y un poco.
-const CLEARANCE := SIZE * 0.5 * 1.7320508 + 0.5
+## ENDEREZARSE SEGÚN EL LUGAR: lo que tiene que sobrar entre su punto más bajo y el piso para empezar a girar (m), y en
+## cuántos metros más gira con todo.
+const RIGHT_ROOM := 0.3
+const RIGHT_BAND := 1.0
+## Con menos inclinación que esto ya es el final de enderezarse (`State.RIGHT`: las piernas, quien las tenga, se
+## estiran).
+const LAST_STRETCH := 45.0
 ## Un cambio de velocidad de costado más chico que esto no es un golpe (m/s).
 const HIT_NOISE := 0.3
 ## Volcarlo (el F2): cuánto más allá de su caerse lo lleva el empujón, suave y fuerte.
@@ -172,13 +180,12 @@ func _physics_process(delta: float) -> void:
 				_clock = 0.0
 		State.LIFT:
 			_lift(knobs)
-			_hold_spin(knobs)
-			# Se endereza en cuanto puede girar sin tocar el piso.
-			if height >= CLEARANCE:
+			_right_as_room_allows(knobs)
+			if tilt <= LAST_STRETCH:
 				state = State.RIGHT
 		State.RIGHT:
 			_lift(knobs)
-			_right(knobs)
+			_right_as_room_allows(knobs)
 			if tilt <= knobs.upright_done and angular_velocity.length() < 0.4:
 				_recovered()
 	_fire_nozzles(knobs)
@@ -345,18 +352,25 @@ func _lift(knobs: HoverCubeSettings) -> void:
 	_push(Vector3.UP * maxf(accel, 0.0) * CUBE_MASS, Vector3.ZERO, knobs)
 
 
-## Que no gire mientras sube.
-func _hold_spin(knobs: HoverCubeSettings) -> void:
-	_push(Vector3.ZERO, -angular_velocity * 2.0 * _inertia, knobs)
+## ENDEREZARSE TANTO COMO EL LUGAR LE DEJA: su punto más bajo está, debajo del centro, a medio lado por la suma de lo
+## que «abajo» tiene de cada eje del cubo (4 m apoyado en una cara, 5,7 en un canto, 6,9 en una punta). Con lo que le
+## sobra de altura sobre eso gira (`RIGHT_ROOM`, `RIGHT_BAND`); con lo que no, frena el giro. Girar lo lleva a un canto
+## o a una punta, que bajan más: se regula solo, y sube y se endereza de corrido.
+func _right_as_room_allows(knobs: HoverCubeSettings) -> void:
+	var down := global_basis.inverse() * Vector3.DOWN
+	var lowest := SIZE * 0.5 * (absf(down.x) + absf(down.y) + absf(down.z))
+	var room := clampf((height - lowest - RIGHT_ROOM) / RIGHT_BAND, 0.0, 1.0)
+	_right(knobs, room)
+	_push(Vector3.ZERO, -angular_velocity * 2.0 * _inertia * (1.0 - room), knobs)
 
 
-## ENDEREZARSE: las toberas de los costados lo giran hacia arriba.
-func _right(knobs: HoverCubeSettings) -> void:
+## ENDEREZARSE: las toberas de los costados lo giran hacia arriba, con `share` de su fuerza.
+func _right(knobs: HoverCubeSettings, share: float) -> void:
 	var error_axis := global_basis.y.normalized().cross(Vector3.UP)
 	var angle := global_basis.y.normalized().angle_to(Vector3.UP)
 	# Dado vuelta (el eje se pierde cerca de 180°), gira igual hacia algún lado.
 	var axis := error_axis.normalized() if error_axis.length() > 0.0001 else global_basis.x
-	var torque := (axis * angle * knobs.right_kp - angular_velocity * knobs.right_kd) * _inertia
+	var torque := (axis * angle * knobs.right_kp - angular_velocity * knobs.right_kd) * _inertia * share
 	_push(Vector3.ZERO, torque, knobs)
 
 
