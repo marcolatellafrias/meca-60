@@ -11,7 +11,7 @@ const LABELS := {
 	"feet_accel": "pies: cuánto aceleran para alcanzarlo (m/s²)", "feet_speed": "pies: velocidad tope (m/s)",
 	"feet_react": "pies: qué tan rápido reaccionan (1/s)",
 	"feet_catch": "pies: cuánto buscan ponerse debajo (1/s)",
-	"yaw_force": "giro: fuerza del motor (rad/s²)", "yaw_grip": "giro: qué tan firme sigue al mouse",
+	"yaw_force": "giro: fuerza para girar (rad/s²)", "yaw_hold": "giro: freno contra que lo giren (rad/s²)", "yaw_grip": "giro: qué tan firme sigue al mouse",
 	"turn_speed": "giro: velocidad tope (°/s)",
 	"step_radius": "da un paso al alejarse más de (m)", "step_lead": "cuánto se adelanta el pie (s de marcha)",
 	"step_time": "cuánto dura un paso (s)", "step_height": "cuánto sube el pie (m)",

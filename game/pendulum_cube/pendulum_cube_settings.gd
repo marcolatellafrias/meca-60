@@ -30,9 +30,11 @@ static var shared := PendulumCubeSettings.new()
 @export_range(0.0, 10.0, 0.1) var feet_catch := 2.0
 
 @export_group("El giro (el mouse)")
-## El torso gira hacia donde se pide con velocidad tope (`turn_speed`, arriba) y un motor con fuerza tope (rad/s²):
-## con mucha, un golpe casi no lo gira; con poca, lo gira y vuelve.
-@export_range(0.5, 60.0, 0.5) var yaw_force := 12.0
+## El torso gira hacia donde se pide con velocidad tope (`turn_speed`, arriba) y un motor con dos topes (rad/s²):
+## GIRAR ÉL, débil —del orden de lo que empuja caminar: apoyado en una pared, si no puede girar no gira, y no lo
+## despide—, y FRENAR un giro que le dieron (un golpe descentrado), fuerte.
+@export_range(0.2, 20.0, 0.1) var yaw_force := 2.0
+@export_range(0.5, 60.0, 0.5) var yaw_hold := 12.0
 @export_range(0.5, 20.0, 0.5) var yaw_grip := 6.0
 
 @export_group("Las piernas (pasos por radio)")

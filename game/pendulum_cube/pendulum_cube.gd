@@ -170,12 +170,20 @@ func _upright(k: PendulumCubeSettings, rod: float) -> void:
 	apply_torque((turn - spin * k.upright_kd) * (_inertia + CUBE_MASS * rod * rod))
 
 
-## EL GIRO: hacia `aim_yaw` con velocidad tope, por un motor con fuerza tope.
+## EL GIRO: hacia `aim_yaw` con velocidad tope, por un motor con fuerza tope. Dos topes, como los pies (plantarse es
+## fuerte, salir es lento): GIRAR ÉL es débil (`yaw_force`, del orden de caminar) y FRENAR un giro que ya trae es fuerte
+## (`yaw_hold`). *Con un solo tope fuerte, girar apoyado en una pared lo despedía: la pared devuelve el torque como un
+## empujón (torque ÷ medio lado), varias veces más que lo que empuja caminar. Un freno sólo se opone a lo que se mueve:
+## no puede despedirlo.*
 func _turn(k: PendulumCubeSettings) -> void:
 	var error := wrapf(aim_yaw - _yaw(), -PI, PI)
 	var wanted := clampf(error * k.yaw_grip, -deg_to_rad(k.turn_speed), deg_to_rad(k.turn_speed))
-	var push := clampf((wanted - angular_velocity.y) * k.yaw_grip, -k.yaw_force, k.yaw_force)
-	apply_torque(Vector3.UP * push * _inertia)
+	var spin := angular_velocity.y
+	var push := (wanted - spin) * k.yaw_grip
+	# Lo que le saca giro (va contra `spin`) es freno; lo que le da, motor.
+	var braking := spin * push < 0.0
+	var most := k.yaw_hold if braking else k.yaw_force
+	apply_torque(Vector3.UP * clampf(push, -most, most) * _inertia)
 
 
 ## Hacia dónde mira, en el piso.
