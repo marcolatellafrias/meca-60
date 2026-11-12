@@ -28,6 +28,12 @@ func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray()
 
 
+## LAS TECLAS DE SU FILA (como allá): las de la primera parcela de la fila valen para toda la fila; `apply(parcels)` recibe
+## sus parcelas. Leen y escriben `options`, que la fila comparte.
+func category_options() -> Array[Dictionary]:
+	return []
+
+
 ## Las teclas propias de esta parcela: `{"key": KEY_X, "label": String o Callable, "apply": Callable(parcel)}`. No
 ## pueden repetir las del sandbox (WASD, espacio, shift, ctrl, R, C, T, Enter, Escape). Con `"seated": true` la tecla
 ## vale también sentado (manejando): sentado, las demás no andan (ver DesignSandbox._input).

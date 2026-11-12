@@ -49,7 +49,7 @@ En el sandbox, la fila **Meca** («Pelea de prueba»):
   - Desde cualquier puesto (para probar de a uno): flechas caminan, B se afirma, Z/X el torso, F/H los brazos, G cañón.
 - **N** el rival quieto o agresivo, **R** otra arena. **V** es el modo creativo del sandbox (volar atravesando).
 
-Al lado, **«Meca de equilibrio»**: una copia de la meca que sólo se tambalea, se cae y se levanta, con el sistema de
+En su propia fila, **Equilibrio**, la **«Meca de equilibrio»**: una copia de la meca que sólo se tambalea, se cae y se levanta, con el sistema de
 equilibrio de los personajes de character-parametric, con dos personas de allá al lado. **J** tira una bola desde la
 cámara (una sola bola; la fuerza es su empuje); **K** pasa por sus tres fuerzas, que salen de los
 umbrales de la meca de equilibrio (`MechDummy.push_for_lean`): la mueve (debajo del paso), trastabilla (entre el paso
@@ -58,10 +58,20 @@ velocidad en vez de saltar) y **los pasos** (pasada cierta inclinación da un pa
 trastabillando). **F1** en la fila Equilibrio abre su panel (`BalancePanel`): todas sus perillas (los agregados, el resorte,
 la firmeza por lado, el cuerpo, la caída), que salen de `MechBalanceSettings`.
 
+**Cubo flotante** (11/11/2026): la caída y la recuperación, aparte de la caminata. Un cubo grande, cuerpo físico libre,
+que flota como el cuerpo de los personajes de character-parametric antes del 13/03/2026 (un resorte de altura con dos
+rayos al piso y un torque que lo endereza): rebota y cabecea solo. Pasado un umbral (inclinación, caída, velocidad de
+costado) deja de intentar y cae con física; quieto un rato, **sube** con las toberas de la cara que mira al piso y **se
+endereza en el aire** con las de los costados (cuatro por cara, con el humo de propulsor de allá), y vuelve a flotar.
+**J/K** la bola; **F1** su panel (`HoverPanel`, perillas en `HoverCubeSettings`). Las fuerzas de la bola están medidas
+contra la meca de equilibrio: al cubo, «la tira» no lo tira. Las piernas, para más adelante, en su propia fila (el
+sistema «por radio» de allá, de octubre de 2025).
+
 Más filas: **Personajes** (los seis arquetipos de allá, que se caen y se levantan; también con la bola), **Objetos** (los
 paquetes de allá sueltos, para agarrarlos, y una silla) y **Multijugador** (la red de allá: **H** abre sesión en esta
 compu y otra instancia se une con **J**, **G** abre por Steam, **K** va al menú de inicio para unirse por código, **L**
-sale). Por la red van los personajes y los objetos de esa parcela; **las mecas todavía no**.
+sale) y **Partículas** (la de allá: cada sistema en su poste; **M** cambia la malla de toda la fila). Por la red van los
+personajes y los objetos de esa parcela; **las mecas todavía no**.
 
 ## Dónde va cada cosa
 Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`.
@@ -78,6 +88,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   (la bola de la J),
   `PeopleArchetype` (las personas de allá) con `CharacterGetUp` (que se levanten solas) y `ObjectLotArchetype` (el lote
   de objetos).
+- `game/hover/` — **el cubo flotante**: `HoverCube` (flotar, dejarse caer, subir y enderezarse con las toberas),
+  `HoverCubeSettings` (sus perillas), `HoverPanel` (su F1) y `HoverCubeArchetype` (su parcela).
 - `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas, `_mount_tuners` sus paneles F;
   crea al jugador, ver arriba) y la sesión de red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD,
   espacio, shift, Ctrl, E, R, C, V, B, F1–F6, Escape; no repetirlas. Sentado (o manejando desde afuera) sólo valen las
@@ -100,6 +112,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
 - `tests/balance_check.tscn` (headless o con ventana): mira que los pies estén planos, le tira bolas de varias
   fuerzas a la meca de equilibrio en los dos modos (como allá, y con empuje y pasos) e imprime la inclinación, los
   pasos, cuánto retrocedió y si se cayó; con ventana, capturas del trastabillar. Y bolas chicas a las dos personas.
+- `tests/hover_check.tscn` (headless o con ventana): el cubo flotante se asienta, las tres bolas, soltarlo de más arriba
+  (el rebote), y voltearlo y seguir la recuperación; con ventana, capturas cada medio segundo.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,
   caminarla sentado, viajar parado adentro, manejar desde afuera y volver, y agarrar el ropero del lote.
 - `tests/net_check.tscn`: dos instancias sin ventana, una con `--host-local` y otra con `--join-local` (antes del

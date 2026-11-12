@@ -37,7 +37,8 @@ func root() -> Node3D:
 	return _root if is_instance_valid(_root) else null
 
 
-func regenerate(p_seed: int) -> void:
+## (`_flash`: el destello de la parcela que se rearma, de allá; acá no hay destello.)
+func regenerate(p_seed: int, _flash := true) -> void:
 	seed_value = p_seed
 	if is_instance_valid(_root):
 		_root.queue_free()

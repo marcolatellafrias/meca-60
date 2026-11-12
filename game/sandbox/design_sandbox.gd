@@ -44,9 +44,11 @@ static func categories() -> Array[Dictionary]:
 	return [
 		{"name": "Meca", "archetypes": [MechTestArchetype.new()]},
 		{"name": "Equilibrio", "archetypes": [BalanceTestArchetype.new()]},
+		{"name": "Cubo flotante", "archetypes": [HoverCubeArchetype.new()]},
 		{"name": "Personajes", "archetypes": PeopleArchetype.catalogue()},
 		{"name": "Objetos", "archetypes": [ObjectLotArchetype.new()]},
 		{"name": "Multijugador", "archetypes": [MultiplayerArchetype.new()]},
+		{"name": "Partículas", "archetypes": ParticleArchetype.catalogue()},
 	]
 
 
@@ -72,6 +74,7 @@ func _ready() -> void:
 ## misma tecla, abre a la izquierda (la derecha es del panel de la parcela, que lo anota con su tecla) y abrir uno cierra
 ## los demás. Una fila nueva con panel se monta acá.
 func _mount_tuners() -> void:
+	_mount(HoverPanel.new(), "Cubo flotante", "el cubo flotante: flotar, enderezarse, caerse y los propulsores", KEY_F1)
 	_mount(BalancePanel.new(), "Equilibrio", "la meca de equilibrio: el resorte, la firmeza, el empuje y los pasos", KEY_F1)
 
 
@@ -227,8 +230,14 @@ func _build_rows() -> void:
 		var category_name: String = category["name"]
 		var archetypes: Array = category["archetypes"]
 		var depth := 0.0
+		# LAS OPCIONES DE LA FILA, una sola para todos sus arquetipos (como allá: ver SeededArchetype.options).
+		var shared_options := {}
 		for archetype: SeededArchetype in archetypes:
 			depth = maxf(depth, archetype.max_footprint().y)
+			for key: Variant in archetype.options:
+				if not shared_options.has(key):
+					shared_options[key] = archetype.options[key]
+			archetype.options = shared_options
 		var centre_z := z + INTERACT_PAD + depth * 0.5
 		var parcels: Array[SandboxParcel] = []
 		var x := 0.0
@@ -245,7 +254,9 @@ func _build_rows() -> void:
 			parcels.append(parcel)
 			x += width + INTERACT_PAD * 2.0
 		_label_row(category_name, centre_z)
-		_rows.append({"name": category_name, "parcels": parcels})
+		var row_keys: Array[Dictionary] = (archetypes[0] as SeededArchetype).category_options() if not archetypes.is_empty() \
+			else ([] as Array[Dictionary])
+		_rows.append({"name": category_name, "parcels": parcels, "options": row_keys})
 		z += depth + INTERACT_PAD * 2.0 + CATEGORY_GAP
 
 
@@ -288,10 +299,19 @@ func _refresh() -> void:
 		return
 	# Las teclas de la parcela y, debajo, los paneles de su fila (sólo para leer: los abre cada panel).
 	var lines := _current.archetype.parcel_options()
+	lines.append_array(_row_of(_current).get("options", []))
 	for tuner in _tuners:
 		if tuner.category == current_category():
 			lines.append({"key": tuner.menu_key, "label": "panel: " + tuner.menu_label})
 	_panel.show_parcel(_current, lines)
+
+
+## La fila de `parcel` (vacía si no es de ninguna).
+func _row_of(parcel: SandboxParcel) -> Dictionary:
+	for row in _rows:
+		if (row["parcels"] as Array).has(parcel):
+			return row
+	return {}
 
 
 func _input(event: InputEvent) -> void:
@@ -329,6 +349,14 @@ func _input(event: InputEvent) -> void:
 					(option["apply"] as Callable).call(_current)
 					used = true
 					break
+			# LAS DE LA FILA (`category_options`): alcanzan a todas sus parcelas.
+			if not used:
+				var row := _row_of(_current)
+				for option: Dictionary in row.get("options", []):
+					if int(option["key"]) == key.keycode:
+						(option["apply"] as Callable).call(row["parcels"])
+						used = true
+						break
 	if not used:
 		return
 	# UNA TECLA DE LA PARCELA SE GASTA ACÁ: si siguiera de largo, lo que ella misma abrió la recibiría —el visor F1 se
