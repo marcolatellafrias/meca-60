@@ -76,10 +76,6 @@ static func spawn(parent: Node3D, archetype_kind: EntityArchetype.Archetype, at:
 	var bi := PLAYER_SCENE.instantiate() as BoneInstantiator
 	bi.master_seed = EntityInstantiation.debug_seed(archetype_kind, look.seed)
 	look.dress(bi)
-	bi.suit = -1
-	bi.hat = -1
-	bi.belt = -1
-	bi.face_wear = PackedInt32Array()
 	bi.hair = -1
 	bi.beard = -1
 	bi.kind = CharacterKind.npc()

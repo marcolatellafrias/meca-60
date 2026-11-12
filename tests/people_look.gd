@@ -1,0 +1,49 @@
+extends Node3D
+
+## LOS SEIS ARQUETIPOS, PARA MIRAR (unos 5 segundos, sin el sandbox): los para en fila sobre un piso, con su aspecto
+## guardado, e imprime de cada uno su peso y su alto. Con ventana, una captura de frente.
+##   tools/godot_ventana.sh res://tests/people_look.tscn -- --salida=C:/carpeta
+
+var _folder := ""
+
+
+func _ready() -> void:
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--salida="):
+			_folder = argument.trim_prefix("--salida=")
+	var ground := StaticBody3D.new()
+	Clay.solid(ground, Vector3(200, 1, 200), Vector3(0, -0.5, 0), Color(0.82, 0.80, 0.76))
+	add_child(ground)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-48.0, -30.0, 0.0)
+	sun.shadow_enabled = true
+	add_child(sun)
+	var world := WorldEnvironment.new()
+	world.environment = Environment.new()
+	world.environment.background_mode = Environment.BG_COLOR
+	world.environment.background_color = Color(0.75, 0.82, 0.9)
+	world.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	world.environment.ambient_light_color = Color(0.82, 0.84, 0.87)
+	world.environment.ambient_light_energy = 0.8
+	add_child(world)
+	var rows := PeopleArchetype.catalogue()
+	var people: Array[BoneInstantiator] = []
+	for index in rows.size():
+		var row := rows[index] as PeopleArchetype
+		# Mirando a la cámara (+Z).
+		people.append(PeopleArchetype.spawn(self, row.archetype, Vector3((index - (rows.size() - 1) * 0.5) * 1.3, 0.0, 0.0), PI))
+	var eye := Camera3D.new()
+	eye.fov = 40.0
+	add_child(eye)
+	eye.make_current()
+	eye.global_position = Vector3(0.0, 1.3, 9.5)
+	eye.look_at(Vector3(0.0, 0.95, 0.0))
+	await get_tree().create_timer(2.5).timeout
+	for bi in people:
+		var arch := bi.entity_archetype
+		print("PERSONA %s: %.0f kg · fuerza %.2f · de pie %s · cabeza a %.2f m" % [bi.name, arch.weight, arch.strength,
+			not bi.ragdoll_util.is_active, bi.char_rigidbody.global_position.y])
+	if not _folder.is_empty() and DisplayServer.get_name() != "headless":
+		get_viewport().get_texture().get_image().save_png(_folder + "/personas.png")
+		print("CAPTURA ", _folder + "/personas.png")
+	get_tree().quit()

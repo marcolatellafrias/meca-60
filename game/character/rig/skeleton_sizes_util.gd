@@ -100,19 +100,6 @@ var block_unit := 1.0
 ## La muñeca de la mano de tubos, en metros (ver TubeHand.REFERENCE_WIDTH).
 var hand_width := 0.1
 
-## QUÉ MANGA LLEVA (ver Suits.Sleeve). La va a decidir el traje; hasta que haya trajes es la larga, y el
-## sandbox la cambia para mostrar las dos (ver BoneInstantiator.sleeve).
-var sleeve: int = Suits.Sleeve.LONG
-
-## QUÉ LLEVA ENCIMA: un sombrero (ver Hats) y un cinturón (ver Belts), o -1 para nada. Los cosméticos de persona son
-## del empleado y se compran (ver people.md); hasta que ese circuito exista nadie lleva nada en el juego, y el sandbox
-## los fuerza para mostrarlos (ver BoneInstantiator.hat).
-var hat: int = -1
-var belt: int = -1
-## Y LO QUE LLEVA EN LA CARA (ver FaceWear), o -1: la pipa, el cigarrillo, los lentes.
-var face_wear := PackedInt32Array()
-## EL TRAJE (ver Suits), o -1: el cuerpo como sale, en crema con las mangas de tela.
-var suit: int = -1
 ## LA POSE DE LA BOCA (ver FaceLayout.MOUTHS), −1 la plana, y LOS LABIOS: más de 0, con labios (ver
 ## BoneInstantiator.mouth).
 var mouth: int = -1
@@ -699,12 +686,6 @@ static func create(inst: EntityInstantiation, scale: float = 1.0,
 	# del arquetipo, traído acá porque ahora es un dato que el panel edita (ver TorsoShape).
 	shape.neck_width = 2.0 * radius_for(neck_radius_of(entityStats)) * 0.68
 	shape.head_scale = 1.0
-	# EL CINTURÓN DE SIEMPRE, como números del cuerpo (ver TorsoShape.belt_at): su banda en fracciones del alto del torso,
-	# y el espesor que le daba su despegue de la sección, en metros.
-	var belt_band: Array = (Belts.DEFS[0] as Dictionary)["band"]
-	shape.belt_at = Belts.line()
-	shape.belt_width = (float(belt_band[1]) - float(belt_band[0])) * shape.height
-	shape.belt_thickness = float(belt_band[2]) * shape.width_of(TorsoShape.BOTTOM) * 0.5
 	shape.leg_length = code_leg_height
 	shape.arm_length = code_arm_length
 	# LA ESTANCIA DE LAS PIERNAS, en metros: lo que daba la fracción de siempre sobre la cadera del arquetipo.

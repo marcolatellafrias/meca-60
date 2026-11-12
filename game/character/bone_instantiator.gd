@@ -25,17 +25,6 @@ var intent := CharacterIntent.new()
 ## CharacterLooks.head_form_for). Se escribe ANTES de `initialize_skeleton`, igual que la escala. Lo usan las capturas
 ## y los maniquíes del design sandbox (ver HeadArchetype); en el juego queda en -1.
 @export var head_slot: int = -1
-## QUÉ MANGA LLEVA (ver Suits.Sleeve), o -1 para la que diga su traje. Hasta que haya trajes, el traje dice
-## larga; el sandbox y las capturas la fuerzan para mostrar las dos.
-@export var sleeve: int = -1
-## QUÉ SOMBRERO Y QUÉ CINTURÓN LLEVA (ver Hats, Belts), o -1 para nada, que es lo que hay en el juego hasta que los
-## cosméticos se compren. El sandbox y las capturas los fuerzan para mostrarlos.
-@export var hat: int = -1
-@export var belt: int = -1
-## Lo mismo con lo que lleva en la cara (ver FaceWear): la pipa, el cigarrillo, los lentes.
-@export var face_wear: PackedInt32Array = PackedInt32Array()
-## EL TRAJE (ver Suits), o -1 para ninguno. Decide la manga, salvo que `sleeve` la fuerce.
-@export var suit: int = -1
 ## LA POSE DE LA BOCA (ver FaceLayout.MOUTHS) y LOS LABIOS (más de 0, con labios), o −1 para lo de siempre: la plana y
 ## sin labios. Los ponen los aspectos canónicos (ver CharacterLook).
 @export var mouth: int = -1
@@ -215,13 +204,6 @@ func _initialize_skeleton() -> void:
 	# EL ESTILO DE CAMINAR, DE CADA UNO (ver WalkStyle.for_archetype): lo de su arquetipo y encima sus modificadores.
 	walk_style = WalkStyle.for_archetype(entity_archetype, _modifiers)
 	skel_sizes_util      = SkeletonSizesUtil.create(entity_instantiation, size_scale, head_slot)
-	if sleeve >= 0:
-		skel_sizes_util.sleeve = sleeve
-	skel_sizes_util.hat = hat
-	# EL TRAJE MANDA SI TRAE CINTURÓN (ver Suits.belt_for): el mameluco lo lleva siempre.
-	skel_sizes_util.belt = Suits.belt_for(suit, belt)
-	skel_sizes_util.face_wear = face_wear
-	skel_sizes_util.suit = suit
 	skel_sizes_util.mouth = mouth
 	skel_sizes_util.lips = lips
 	skel_sizes_util.lip_color = lip_color
@@ -233,12 +215,6 @@ func _initialize_skeleton() -> void:
 	skel_sizes_util.hair = hair
 	skel_sizes_util.beard = beard
 	skel_sizes_util.hair_color = hair_color
-	# LA MANGA, DEL PERSONAJE (22/10/2026, lo pidió el dios del juego: ver TorsoShape.rolled_sleeves), salvo que el que
-	# lo arma fuerce una (las filas de brazos, las capturas).
-	if sleeve < 0:
-		var shape: TorsoShape = skel_sizes_util.torso_shape
-		skel_sizes_util.sleeve = Suits.Sleeve.ROLLED if shape != null and shape.rolled_sleeves \
-			else Suits.Sleeve.LONG
 	custom_bones_util    = CustomBonesUtil.create(skel_sizes_util, entity_instantiation)
 	ik_util              = IkUtil.create(skel_sizes_util, self)
 
