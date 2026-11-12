@@ -68,6 +68,7 @@ var _from := GUARD
 var _offset := Vector3.ZERO
 var _label: Label3D = null
 var _chase_yaw := 0.0
+var _hand: MechHand = null
 ## El eje de la bisagra del codo, en el mundo: sale del brazo y el antebrazo pedidos; con el brazo estirado no se puede
 ## calcular y queda el último.
 var _hinge := Vector3.RIGHT
@@ -87,8 +88,9 @@ func _ready() -> void:
 	# forma de choque (el puño).
 	Clay.sphere(upper, THICKNESS * 0.78, Vector3(0, 0, MechBody.UPPER_ARM * 0.5), MechBody.JOINT_COLOR)
 	Clay.sphere(forearm, THICKNESS * 0.66, Vector3(0, 0, MechBody.FOREARM * 0.5), MechBody.JOINT_COLOR)
-	var hand := MechHand.build(forearm, side)
-	hand.position = Vector3(0, 0, -MechBody.FOREARM * 0.5)
+	# Sus dedos cierran para el lado que dobla el codo (el Y del antebrazo es el eje de la bisagra).
+	_hand = MechHand.build(forearm, 1.0)
+	_hand.position = Vector3(0, 0, -MechBody.FOREARM * 0.5)
 	Clay.shape_box(forearm, Vector3(MechHand.PALM.x * 2.2, MechHand.PALM.y, MechHand.length() * 0.8),
 		Vector3(0, 0, -MechBody.FOREARM * 0.5 - MechHand.length() * 0.4))
 	# El hombro, una bola; el codo, una bisagra sobre su eje (el Z de la articulación).
@@ -214,6 +216,8 @@ func _physics_process(delta: float) -> void:
 		_clock += delta
 		if _clock >= _punch_time():
 			punching = Punch.NONE
+	# EL PUÑO, CERRADO mientras tira una piña (lo discreto); abierta en guardia y a mano.
+	_hand.fist = punching != Punch.NONE
 	var base := anchor.global_transform
 	var shoulder := base * shoulder_local
 	var fist := shoulder + base.basis * _local(_wanted())

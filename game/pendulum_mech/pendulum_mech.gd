@@ -304,6 +304,7 @@ func _build_arms() -> void:
 			"upper": upper,
 			"elbow": Clay.sphere(_look, ARM_THICKNESS * 0.66, Vector3.ZERO, MechBody.JOINT_COLOR),
 			"forearm": forearm,
+			# Sus dedos cierran hacia adentro del cuerpo.
 			"hand": MechHand.build(_look, side),
 		})
 	_place_arms()

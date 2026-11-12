@@ -138,7 +138,8 @@ cuerpos sueltos; **el hombro es una bola y el codo una bisagra**; un músculo po
 fuerza tope (el del hombro gira el brazo, incluido su giro sobre el largo; el del codo sólo dobla y empuja al brazo para
 el otro lado). De ahí sale solo que se trabe contra algo fijo, que ceda si le pegan, y que la piña valga la velocidad de
 la mano. **1–4** las piñas (directo, gancho, uppercut, desde arriba), **N** una pared, **J/K** bolas, **F1** su panel;
-poseído, el mouse lleva la mano. La mano (`MechHand`) es la misma de la meca péndulo.
+poseído, el mouse lleva la mano. La mano (`MechHand`) es la misma de la meca péndulo: abierta, o **el puño** mientras tira
+una piña (pasa de una a otra con easing).
 
 **Las parcelas tienen paredes invisibles** (como allá, `SandboxParcel` LOS BORDES): las ve lo que se mueve con física y
 vive en una parcela; el jugador y la bola pasan. Las mecas de pelea, que se mueven por código, le preguntan a su parcela
@@ -219,6 +220,7 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   sube, y se mira qué le pasa mientras la meca se corre, salta y se cae.
 - `tests/muscle_arm_look.tscn` (con ventana, unos 30 segundos, sin el sandbox): el brazo con músculos; la guardia, las
   cuatro piñas (velocidad de la mano, cuánto corre el bloque), la pared (se traba y vuelve) y un empujón (cede y vuelve).
+- `tests/hand_look.tscn` (con ventana, unos 5 segundos): la mano abierta y en puño, de tres lados.
 - `tests/possess_check.tscn` (con ventana, unos 15 segundos): poseer; mirar el cubo péndulo, la O, las tres vistas con
   la T, soltar y retomar sin mirar; capturas del cartel.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,

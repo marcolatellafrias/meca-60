@@ -44,7 +44,13 @@ brazo. La idea es la de PuppetMaster: **la IK dice la pose; el cuerpo físico la
 - **El codo tiene que ser bisagra.** Con una bola, el músculo del antebrazo hacía girar al brazo sobre sí mismo sin que
   nada lo frenara.
 
+## La mano
+`MechHand` (en `game/mech/`), la misma de la [[meca-pendulo]]. Dos posturas: **abierta** (en guardia y a mano) y **el
+puño** (mientras tira una piña), con las falanges dobladas sobre la palma y el pulgar encima; pasa de una a otra en 0,16
+s, con easing. Hacia qué lado cierran los dedos lo dice quien la arma: acá, hacia donde dobla el codo; en la meca
+péndulo, hacia adentro del cuerpo. Para mirarla: `tests/hand_look.tscn`.
+
 ## Lo que falta
 - Montarlo en la [[meca-pendulo]] (hoy sus brazos son dibujo): ahí el músculo del hombro empuja al torso.
-- La mano no cierra el puño ni agarra.
+- La mano no agarra.
 - Que la mano siga mejor lo pedido en la piña (hoy va atrás y llega con látigo): pedirle también velocidad.
