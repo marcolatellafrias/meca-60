@@ -50,6 +50,7 @@ static func categories() -> Array[Dictionary]:
 		{"name": "Cubo físico", "archetypes": [PhysicalCubeArchetype.new()]},
 		{"name": "Cubo péndulo", "archetypes": [PendulumCubeArchetype.new()]},
 		{"name": "Meca péndulo", "archetypes": [PendulumMechArchetype.new()]},
+		{"name": "Brazo", "archetypes": [MuscleArmArchetype.new()]},
 		{"name": "Personajes", "archetypes": PeopleArchetype.catalogue()},
 		{"name": "Objetos", "archetypes": [ObjectLotArchetype.new()]},
 		{"name": "Multijugador", "archetypes": [MultiplayerArchetype.new()]},
@@ -93,6 +94,7 @@ func _mount_tuners() -> void:
 	_mount(HoverKnockPanel.new(), "Cubo péndulo", "pegarle arriba: suave o fuerte", KEY_F2)
 	_mount(PendulumMechPanel.new(), "Meca péndulo", "la meca péndulo: el péndulo, correr, agacharse, saltar y el propulsor", KEY_F1)
 	_mount(HoverKnockPanel.new(), "Meca péndulo", "pegarle arriba: suave o fuerte", KEY_F2)
+	_mount(MuscleArmPanel.new(), "Brazo", "el brazo con músculos: el resorte, el freno y la fuerza", KEY_F1)
 	_mount(BalancePanel.new(), "Equilibrio", "la meca de equilibrio: el resorte, la firmeza, el empuje y los pasos", KEY_F1)
 
 

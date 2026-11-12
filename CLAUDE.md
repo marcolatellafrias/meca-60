@@ -132,6 +132,14 @@ aire va derecha y sin apoyo; aterriza cuando la punta del palo vuelve a tocar. *
 losas y paredes no chocan con el mundo (eso es de la caja 1:1), son de donde el marco copia su sombra, y la caja deja de
 chocar con los que van adentro.
 
+**Brazo** (12/11/2026, `MuscleArm`): el primer paso de los brazos físicos, solo en su fila. La idea de PuppetMaster: la
+IK (`MechBody.arm`) dice la pose y el cuerpo físico la persigue con músculos. El brazo y el antebrazo (con la mano) son
+cuerpos sueltos; **el hombro es una bola y el codo una bisagra**; un músculo por articulación, con resorte, freno y
+fuerza tope (el del hombro gira el brazo, incluido su giro sobre el largo; el del codo sólo dobla y empuja al brazo para
+el otro lado). De ahí sale solo que se trabe contra algo fijo, que ceda si le pegan, y que la piña valga la velocidad de
+la mano. **1–4** las piñas (directo, gancho, uppercut, desde arriba), **N** una pared, **J/K** bolas, **F1** su panel;
+poseído, el mouse lleva la mano. La mano (`MechHand`) es la misma de la meca péndulo.
+
 **Las parcelas tienen paredes invisibles** (como allá, `SandboxParcel` LOS BORDES): las ve lo que se mueve con física y
 vive en una parcela; el jugador y la bola pasan. Las mecas de pelea, que se mueven por código, le preguntan a su parcela
 (`SandboxParcel.holds`): el borde de la arena es el de su parcela.
@@ -168,6 +176,9 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   piernas), `PendulumCubeSettings`, `PendulumCubePanel` (su F1) y `PendulumCubeArchetype`. Usa `game/hover/` y `MechBody`.
 - `game/pendulum_mech/` — **la meca péndulo**: `PendulumMech` (los tres pisos, los brazos, correr, agacharse, saltar y el
   propulsor), `PendulumMechSettings`, `PendulumMechPanel` (su F1) y `PendulumMechArchetype`. Usa `game/pendulum_cube/`.
+- `game/muscle_arm/` — **el brazo con músculos**: `MuscleArm` (las piezas, las articulaciones, los músculos, las piñas y
+  llevarlo a mano), `MuscleArmSettings`, `MuscleArmPanel` (su F1) y `MuscleArmArchetype` (el torso fijo, el bloque y la
+  pared). Usa `MechBody.arm` y `MechHand` (la mano, en `game/mech/`).
 - `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas, `_mount_tuners` sus paneles F;
   crea al jugador, ver arriba), poseer (`SandboxPossession`: la O, la T y el cartel) y la sesión de red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD,
   espacio, shift, Ctrl, E, R, C, V, B, O, T, F1–F6, Escape; no repetirlas. Sentado (o manejando desde afuera) sólo valen las
@@ -206,6 +217,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   desde el asiento; agacharse, el salto (un toque y cargado), el propulsor y correr, con sus números.
 - `tests/pendulum_ride_check.tscn` (con ventana, unos 30 segundos): ir adentro de la meca péndulo; el jugador con cuerpo
   sube, y se mira qué le pasa mientras la meca se corre, salta y se cae.
+- `tests/muscle_arm_look.tscn` (con ventana, unos 30 segundos, sin el sandbox): el brazo con músculos; la guardia, las
+  cuatro piñas (velocidad de la mano, cuánto corre el bloque), la pared (se traba y vuelve) y un empujón (cede y vuelve).
 - `tests/possess_check.tscn` (con ventana, unos 15 segundos): poseer; mirar el cubo péndulo, la O, las tres vistas con
   la T, soltar y retomar sin mirar; capturas del cartel.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,

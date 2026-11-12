@@ -1,0 +1,108 @@
+class_name MuscleArmArchetype
+extends SeededArchetype
+
+## LA PARCELA DEL BRAZO CON MÚSCULOS (ver MuscleArm): un torso fijo en el aire, del tamaño del de la meca péndulo, con UN
+## brazo (el izquierdo, del lado desde donde se llega), para tunearlo solo. Adelante, un BLOQUE suelto sobre un pedestal
+## para pegarle; con N, una PARED fija más cerca, para ver cómo se traba. 1 a 4 tiran las piñas; J/K, una bola liviana o
+## pesada contra el brazo (cede y vuelve). F1 abre sus perillas (MuscleArmPanel). Mirándolo, O lo posee: a mano.
+
+const FOOTPRINT := 60.0
+const TORSO := 8.0
+## A qué altura va el torso (su cara de abajo), como el de la meca péndulo parada.
+const HEIGHT := 7.4
+const BLOCK := Vector3(5.0, 5.0, 2.4)
+const BLOCK_MASS := 6000.0
+const SLOW := 30.0
+
+
+func _init() -> void:
+	display_name = "Brazo con músculos"
+
+
+func max_footprint() -> Vector2:
+	return Vector2(FOOTPRINT, FOOTPRINT)
+
+
+func describe(_seed_value: int) -> PackedStringArray:
+	return PackedStringArray([
+		"un brazo de piezas físicas; los músculos persiguen la pose que pide la IK",
+		"1 directo · 2 gancho · 3 uppercut · 4 desde arriba",
+		"N pone y saca una pared adelante (se traba)",
+		"mirándolo, O lo posee: el mouse lleva la mano",
+	])
+
+
+func build(_seed_value: int, parent: Node3D) -> Node3D:
+	var root := Node3D.new()
+	root.name = "Brazo con músculos"
+	parent.add_child(root)
+	# El torso, fijo, sobre un poste.
+	var torso := StaticBody3D.new()
+	torso.name = "Torso"
+	torso.position = Vector3(0.0, HEIGHT + TORSO * 0.5, 0.0)
+	root.add_child(torso)
+	Clay.solid(torso, Vector3.ONE * TORSO, Vector3.ZERO, Clay.METAL)
+	Clay.box(root, Vector3(1.2, HEIGHT, 1.2), Vector3(0, HEIGHT * 0.5, 0), Clay.DARK)
+	var arm := MuscleArm.new()
+	arm.side = -1.0
+	arm.anchor = torso
+	arm.shoulder_local = Vector3(arm.side * PendulumMech.SHOULDER.x, PendulumMech.SHOULDER.y, PendulumMech.SHOULDER.z)
+	root.add_child(arm)
+	# Adelante del brazo: el pedestal y el bloque suelto, donde llega el directo.
+	var ahead := Vector3(arm.shoulder_local.x + 1.8, 0.0, -TORSO * 0.5 - 9.2)
+	var stand := StaticBody3D.new()
+	stand.name = "Pedestal"
+	root.add_child(stand)
+	Clay.solid(stand, Vector3(BLOCK.x + 1.0, HEIGHT + 0.6, BLOCK.z + 2.0), ahead + Vector3(0, (HEIGHT + 0.6) * 0.5, 0), Clay.DARK)
+	var block := RigidBody3D.new()
+	block.name = "Bloque"
+	block.mass = BLOCK_MASS
+	block.position = ahead + Vector3(0, HEIGHT + 0.6 + BLOCK.y * 0.5, 0)
+	root.add_child(block)
+	Clay.solid(block, BLOCK, Vector3.ZERO, Clay.RED)
+	# La pared fija, más cerca (apagada hasta la N).
+	var wall := StaticBody3D.new()
+	wall.name = "Pared"
+	root.add_child(wall)
+	Clay.solid(wall, Vector3(10.0, 12.0, 1.0), Vector3(arm.shoulder_local.x, HEIGHT + 4.0, -TORSO * 0.5 - 6.6),
+		Clay.METAL.darkened(0.35))
+	_show_wall(wall, false)
+	return root
+
+
+## La pared, puesta o sacada: se ve y se choca, o ninguna de las dos.
+static func _show_wall(wall: StaticBody3D, on: bool) -> void:
+	wall.visible = on
+	for shape: CollisionShape3D in wall.find_children("*", "CollisionShape3D", true, false):
+		shape.disabled = not on
+
+
+static func _arm_of(parcel: SandboxParcel) -> MuscleArm:
+	var found := parcel.find_children("*", "MuscleArm", true, false)
+	return found[0] as MuscleArm if not found.is_empty() else null
+
+
+func parcel_options() -> Array[Dictionary]:
+	var options := TestBall.parcel_options(self)
+	var keys := [KEY_1, KEY_2, KEY_3, KEY_4]
+	for index in keys.size():
+		var kind := (index + 1) as MuscleArm.Punch
+		options.append({"key": keys[index], "label": "piña: %s" % MuscleArm.NAMES[kind], "seated": true,
+			"apply": func(parcel: SandboxParcel) -> void:
+				var arm := MuscleArmArchetype._arm_of(parcel)
+				if arm != null:
+					arm.punch(kind)})
+	options.append({"key": KEY_N, "label": "poner / sacar la pared de adelante", "seated": true,
+		"apply": func(parcel: SandboxParcel) -> void:
+			for wall: StaticBody3D in parcel.find_children("Pared", "StaticBody3D", true, false):
+				MuscleArmArchetype._show_wall(wall, not wall.visible)})
+	return options
+
+
+## DOS BOLAS para tirarle al brazo: una que lo mueve apenas y una que se lo lleva (cede y vuelve).
+func ball_shots() -> Array[Dictionary]:
+	var arm_mass := MuscleArm.UPPER_MASS + MuscleArm.FOREARM_MASS
+	return [
+		TestBall.shot("liviana", TestBall.push_for(arm_mass, 4.0, SLOW), SLOW),
+		TestBall.shot("pesada", TestBall.push_for(arm_mass, 25.0, SLOW), SLOW),
+	]

@@ -44,12 +44,6 @@ const DOOR := Vector2(1.1, 2.05)
 const SHOULDER := Vector3(SIZE * 0.5 + 1.0, 1.9, -0.4)
 const GUARD := Vector3(-1.5, -2.6, -6.2)
 const ARM_THICKNESS := 1.5
-## LA MANO: el dedo (radio, y el largo de cada falange, de la palma a la punta) y la palma (apenas más gruesa que un
-## dedo, del alto de los cuatro dedos, y su largo).
-const FINGER_RADIUS := 0.23
-const PHALANGES := [0.62, 0.5, 0.4]
-const PALM := Vector3(FINGER_RADIUS * 2.0 * 1.3, FINGER_RADIUS * 2.0 * 4.4, 1.5)
-
 ## Lo cargado del salto y lo que le queda al propulsor (0 a 1), para mirar.
 var jump_charge := 0.0
 var fuel := 1.0
@@ -310,40 +304,9 @@ func _build_arms() -> void:
 			"upper": upper,
 			"elbow": Clay.sphere(_look, ARM_THICKNESS * 0.66, Vector3.ZERO, MechBody.JOINT_COLOR),
 			"forearm": forearm,
-			"hand": _build_hand(side),
+			"hand": MechHand.build(_look, side),
 		})
 	_place_arms()
-
-
-## LA MANO, en la punta del antebrazo (su −Z va hacia los dedos): la PALMA, apenas más gruesa que un dedo; los cuatro
-## DEDOS al frente, uno arriba del otro, cada uno con sus tres FALANGES —cilindros sueltos, cada una un poco más cerrada
-## que la anterior, hacia adentro—; y el PULGAR, de dos falanges, en el canto de arriba de la palma.
-func _build_hand(side: float) -> Node3D:
-	var hand := Node3D.new()
-	_look.add_child(hand)
-	var color := Clay.METAL.darkened(0.15)
-	Clay.box(hand, PALM, Vector3(0.0, 0.0, -PALM.z * 0.5), MechBody.JOINT_COLOR)
-	for finger in 4:
-		var knuckle := Vector3(0.0, (finger - 1.5) * FINGER_RADIUS * 2.2, -PALM.z)
-		_build_finger(hand, knuckle, Basis(), PHALANGES, color, -side)
-	# El pulgar sale del canto de arriba, hacia adelante y un poco hacia arriba.
-	var thumb := Vector3(0.0, PALM.y * 0.5, -PALM.z * 0.35)
-	_build_finger(hand, thumb, Basis(Vector3.RIGHT, deg_to_rad(40.0)), [PHALANGES[0] * 0.9, PHALANGES[1]], color, -side)
-	return hand
-
-
-## UN DEDO: una falange tras otra desde `from`, hacia el −Z de `basis`, cada una girada `CURL` más que la anterior
-## alrededor del eje vertical de la mano, hacia `inward` (el lado de adentro).
-func _build_finger(hand: Node3D, from: Vector3, basis: Basis, lengths: Array, color: Color, inward: float) -> void:
-	var at := from
-	var turn := basis
-	for length: float in lengths:
-		turn = turn * Basis(Vector3.UP, inward * deg_to_rad(14.0))
-		var along := turn * Vector3.FORWARD
-		var piece := Clay.cylinder(hand, FINGER_RADIUS, length - 0.06, Vector3.ZERO, color)
-		# El cilindro tiene el largo en su Y: se lo acuesta sobre el −Z del dedo.
-		piece.transform = Transform3D(turn * Basis(Vector3.RIGHT, -PI * 0.5), at + along * length * 0.5)
-		at += along * length
 
 
 ## UBICA LOS BRAZOS, en el espacio del cubo: en guardia parada, y RECOGIDOS A LOS COSTADOS caída (con la misma medida
