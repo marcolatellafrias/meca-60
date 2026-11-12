@@ -58,11 +58,13 @@ var knobs: BodySettings = null
 
 ## ── LO QUE SE LE PIDE ──
 ## Caminar (x a la derecha, y adelante, de −1 a 1), correr, agacharse, el salto (mantenido carga, soltarlo salta; en el
-## aire, el propulsor) y hacia dónde mirar (en el mundo).
+## aire, el propulsor), el dash (en el aire) y hacia dónde mirar (en el mundo).
 var move := Vector2.ZERO
 var sprint := false
 var crouch := false
 var jump := false
+## El dash (en el aire: ver BodyMoves).
+var dash := false
 var aim_yaw := 0.0
 
 ## ── LO QUE MIDE, para mirar ──
@@ -155,7 +157,7 @@ func _physics_process(delta: float) -> void:
 	var k := knobs
 	_think()
 	nozzles.rest()
-	gravity_scale = k.fall_gravity if state == State.DOWN else 1.0
+	gravity_scale = k.fall_gravity if state == State.DOWN else moves.gravity_share(k)
 	angular_damp = k.ground_spin_damp if state == State.DOWN else 0.0
 	if state != State.STANDING:
 		tilt = rad_to_deg(global_basis.y.normalized().angle_to(Vector3.UP))

@@ -94,15 +94,21 @@ Lo vertical sale del **largo del palo** del péndulo, como en los personajes sal
 | **Ctrl** | **Se agacha**: el palo se acorta, el cuerpo baja y las piernas se doblan solas; camina a la mitad |
 | **Espacio** (mantener y soltar) | **Salta**: mantener carga (el cuerpo baja), soltar salta, del 30 % a todo su salto según lo cargado. Se carga altura, no fuerza |
 | **Espacio en el aire** | **Propulsor**: las toberas de abajo la empujan para arriba mientras le quede; se recarga en el piso |
+| **Shift en el aire** | **Dash** (13/11/2026): un impulso de costado hacia donde apretás (sin dirección, adelante), con las toberas del otro lado; uno por salto, gasta un tercio del propulsor. **Sólo en el aire** (el usuario: «un dash con el sistema de piernas actual se vería raro»): al aterrizar, los pies frenan |
 
-En el aire va derecha y sin apoyo; cuando la punta del palo vuelve a tocar el piso, aterriza. Caminar por un borde la
+**El salto no flota** (13/11/2026; el usuario: «se siente como muy lento… no se siente snappy»): en el aire pesa 2,4
+veces más, y bajando 1,3 veces más todavía (con el propulsor prendido, lo de siempre); la altura es la misma y se carga
+en 0,45 s. En el aire va derecha y sin apoyo; cuando la punta del palo vuelve a tocar el piso, aterriza. Caminar por un borde la
 deja en el aire (no se cae tirada, como el cubo).
 
 El cartel de poseer muestra la carga del salto y lo que le queda al propulsor.
 
 ## Lo medido (12/11/2026)
 - Agachada: el centro baja 3,7 m.
-- Salto: un toque sube 4,7 m; cargado entero, 10 m. Aterriza derecha, sin caerse.
+- Salto: un toque sube 4,7 m; cargado entero, 10 m. Aterriza derecha, sin caerse. *Desde el 13/11/2026 (el salto que no
+  flota): un toque, 5,4 m en 1,3 s de aire; cargado, 10,5 m en 1,9 s (antes, unos 2,9 s).*
+- Dash (13/11/2026): de costado en lo alto la corre 16 m hasta aterrizar; adelante corriendo, 35 m; atrás, 21 m.
+  Aterriza sin inclinarse más de 1°. Test: `tests/mech_jump_look.tscn` (unos 30 s).
 - Propulsor: con el salto entero y todo el combustible llega a unos 42 m.
 - Camina a 8 m/s y corre a 14,4; al soltar Shift tarda unos 3 s en volver a 8.
 

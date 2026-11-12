@@ -34,6 +34,7 @@ func read() -> void:
 	mech.sprint = mine and Input.is_physical_key_pressed(KEY_SHIFT)
 	mech.crouch = mine and Input.is_physical_key_pressed(KEY_CTRL)
 	mech.jump = mine and Input.is_physical_key_pressed(KEY_SPACE)
+	mech.dash = mine and Input.is_physical_key_pressed(KEY_SHIFT)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -87,6 +88,7 @@ func controls() -> PackedStringArray:
 		"F: postura normal / cubriéndose · G: el ascensor baja / sube",
 		"espacio: mantener carga el salto, soltar salta",
 		"espacio en el aire: propulsor",
+		"Shift en el aire: dash hacia donde apretás (uno por salto)",
 	])
 
 

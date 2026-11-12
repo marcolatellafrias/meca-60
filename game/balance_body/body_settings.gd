@@ -84,11 +84,25 @@ static var current := BodySettings.new()
 ## Mantener carga, soltar salta: cuánto sube el salto entero (m), en cuánto se carga (s), cuánto baja al cargar (parte
 ## del largo del palo) y con qué parte del salto sale un toque sin cargar.
 @export_range(1.0, 60.0, 0.5) var jump_height := 14.0
-@export_range(0.1, 3.0, 0.05) var jump_charge_time := 0.9
+@export_range(0.1, 3.0, 0.05) var jump_charge_time := 0.45
 @export_range(0.5, 1.0, 0.01) var jump_squat := 0.78
 @export_range(0.05, 1.0, 0.05) var jump_least := 0.3
 ## En el aire, cuánto puede cambiar su velocidad de costado (m/s²).
 @export_range(0.0, 20.0, 0.5) var air_accel := 2.5
+## UN SALTO QUE NO FLOTE (13/11/2026; el usuario: «se siente como muy lento… no se siente snappy»): en el aire pesa
+## `air_gravity` veces más (sube rápido y baja rápido; la altura sigue siendo la pedida), y bajando, `fall_extra` veces
+## más todavía. Con el propulsor prendido pesa lo de siempre: si no, no la levantaría.
+@export_range(1.0, 5.0, 0.05) var air_gravity := 2.4
+@export_range(1.0, 3.0, 0.05) var fall_extra := 1.3
+
+@export_group("Dash (en el aire)")
+## EL DASH: en el aire, un impulso de costado hacia donde se pide (sin pedir nada, adelante), de las toberas: le suma
+## `dash_speed` (m/s) hacia ahí y, si estaba bajando, la deja subiendo a `dash_lift`. Gasta `dash_cost` del propulsor
+## y hay `dash_count` por salto.
+@export_range(2.0, 40.0, 0.5) var dash_speed := 18.0
+@export_range(0.0, 15.0, 0.5) var dash_lift := 3.0
+@export_range(0.0, 1.0, 0.05) var dash_cost := 0.35
+@export_range(1, 4, 1) var dash_count := 1
 
 @export_group("El propulsor")
 ## Cuánto empuja para arriba (m/s²; la gravedad es 9,8), cuánto dura lleno (s) y en cuánto se recarga en el piso (s).

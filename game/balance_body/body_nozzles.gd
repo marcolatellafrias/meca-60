@@ -49,6 +49,16 @@ func _init(body: BalanceBody, holder: Node3D) -> void:
 			_all.append({"at": at, "out": normal, "smoke": smoke, "glow": glow, "throttle": 0.0})
 
 
+## SE VEN PRENDIDAS, SIN EMPUJAR, `seconds` segundos: las que empujan hacia `way` (mundo). Para lo que empuja con un
+## impulso, como el dash.
+func show(way: Vector3, seconds: float) -> void:
+	var until := Time.get_ticks_msec() + int(seconds * 1000.0)
+	for nozzle in _all:
+		var pushes := -(_body.global_basis * (nozzle["out"] as Vector3))
+		if pushes.dot(way.normalized()) > 0.7:
+			nozzle["shown"] = until
+
+
 ## Al empezar el paso: nadie pidió nada todavía.
 func rest() -> void:
 	for nozzle in _all:
@@ -130,9 +140,10 @@ func fire(k: BodySettings) -> void:
 		var throttle := float(nozzle["throttle"])
 		var smoke := nozzle["smoke"] as GPUParticles3D
 		var glow := nozzle["glow"] as StandardMaterial3D
-		glow.emission_enabled = throttle > 0.02
-		glow.emission_energy_multiplier = throttle * 4.0
-		smoke.emitting = throttle > 0.05
+		var shown := Time.get_ticks_msec() < int(nozzle.get("shown", 0))
+		glow.emission_enabled = throttle > 0.02 or shown
+		glow.emission_energy_multiplier = 4.0 if shown else throttle * 4.0
+		smoke.emitting = throttle > 0.05 or shown
 		if throttle <= 0.0:
 			continue
 		_body.apply_force(-(basis * (nozzle["out"] as Vector3)) * most * throttle, basis * (nozzle["at"] as Vector3))
