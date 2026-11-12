@@ -7,6 +7,7 @@ extends Node
 ##   con capturas: tools/godot_ventana.sh res://tests/hover_check.tscn -- --salida=C:/carpeta
 
 var _folder := ""
+var _balance := false
 var _cube: HoverCube = null
 var _parcel: SandboxParcel = null
 var _eye: Camera3D = null
@@ -17,6 +18,9 @@ func _ready() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--salida="):
 			_folder = argument.trim_prefix("--salida=")
+		# `--cubo=equilibrio`: el cubo con equilibrio (BalanceCube) en vez del flotante.
+		if argument == "--cubo=equilibrio":
+			_balance = true
 	var layer := CanvasLayer.new()
 	layer.layer = 120
 	add_child(layer)
@@ -30,7 +34,7 @@ func _ready() -> void:
 	add_child(sandbox)
 	await _frames(5)
 	for parcel: SandboxParcel in sandbox.find_children("*", "SandboxParcel", true, false):
-		if parcel.archetype is HoverCubeArchetype:
+		if (parcel.archetype is BalanceCubeArchetype) if _balance else (parcel.archetype is HoverCubeArchetype):
 			_parcel = parcel
 	_cube = _parcel.find_children("*", "HoverCube", true, false)[0] as HoverCube
 	_eye = Camera3D.new()
@@ -55,16 +59,22 @@ func _ready() -> void:
 		_aim()
 		await _frames(2)
 		var falls := _cube.falls
+		var start := _cube.global_position
+		_track_start()
 		TestBall.throw_from_camera(_parcel, float(chosen["push"]), float(chosen["speed"]))
 		var watched := await _watch(4.0, true)
-		print("TIRO %s (%s N·s a %d m/s): inclinación pico %.0f° (se cae a %.0f°) · se cayó %s" % [chosen["name"],
+		print("TIRO %s (%s N·s a %d m/s): inclinación pico %.0f° · se cayó %s · %s" % [chosen["name"],
 			String.num_int64(roundi(float(chosen["push"]))), roundi(float(chosen["speed"])), watched.z,
-			HoverCubeSettings.current.max_tilt, _cube.falls > falls])
+			_cube.falls > falls, _track_text(start, Vector3.RIGHT)])
 	# LOS BOTONES DEL PANEL CHICO: volcarlo suave y fuerte; que se caiga, se recupere y no salga de su parcela.
 	for strong: bool in [false, true]:
 		await _wait_hover()
 		await _seconds(1.5)
 		var falls := _cube.falls
+		var start := _cube.global_position
+		var push_side := _cube.global_basis.x
+		push_side.y = 0.0
+		_track_start()
 		_cube.knock(strong)
 		var most := 0.0
 		var farthest := 0.0
@@ -73,11 +83,12 @@ func _ready() -> void:
 			await get_tree().physics_frame
 			clock += 1.0 / 240.0
 			most = maxf(most, _cube.tilt)
+			_track_step()
 			var local := _parcel.to_local(_cube.global_position)
 			farthest = maxf(farthest, maxf(absf(local.x), absf(local.z)))
-		print("VOLCAR %s: inclinación pico %.0f° · se cayó %s · de vuelta flotando %s a los %.1f s · lo más lejos del centro %.1f m (borde a %.0f)" % [
+		print("VOLCAR %s: inclinación pico %.0f° · se cayó %s · de vuelta flotando %s a los %.1f s · lo más lejos del centro %.1f m (borde a %.0f) · %s" % [
 			"fuerte" if strong else "suave", most, _cube.falls > falls, _cube.state == HoverCube.State.HOVER, clock, farthest,
-			_parcel.size.x * 0.5])
+			_parcel.size.x * 0.5, _track_text(start, push_side.normalized())])
 	# EL REBOTE: soltarlo de 4 m más arriba.
 	await _wait_hover()
 	await _seconds(1.0)
@@ -120,6 +131,33 @@ func _ready() -> void:
 	get_tree().quit()
 
 
+## ── PARA QUÉ LADO SE CAE: dónde quedó cuando tocó el piso caído, y cuánto giró sobre sí mismo hasta ahí ──
+var _landed := Vector3.INF
+var _turned := 0.0
+var _last_basis := Basis()
+
+
+func _track_start() -> void:
+	_landed = Vector3.INF
+	_turned = 0.0
+	_last_basis = _cube.global_basis
+
+
+func _track_step() -> void:
+	_turned += rad_to_deg((_last_basis.inverse() * _cube.global_basis).get_rotation_quaternion().get_angle())
+	_last_basis = _cube.global_basis
+	var lying := _cube.state == HoverCube.State.LIMP and _cube.tilt > 60.0 and _cube.linear_velocity.y > -0.5
+	if _landed == Vector3.INF and lying:
+		_landed = _cube.global_position
+
+
+func _track_text(start: Vector3, side: Vector3) -> String:
+	if _landed == Vector3.INF:
+		return "no llegó a caer"
+	return "cayó %.1f m hacia el lado del golpe (%.1f m de costado) · giró %.0f° en total" % [
+		(_landed - start).dot(side), (_landed - start).length(), _turned]
+
+
 ## Mira `seconds`: la altura más baja y más alta, y la inclinación más grande (x, y, z).
 func _watch(seconds: float, _ignore := false) -> Vector3:
 	var low := INF
@@ -129,6 +167,7 @@ func _watch(seconds: float, _ignore := false) -> Vector3:
 	while clock < seconds:
 		await get_tree().physics_frame
 		clock += 1.0 / 240.0
+		_track_step()
 		low = minf(low, _cube.height)
 		high = maxf(high, _cube.height)
 		most = maxf(most, _cube.tilt)

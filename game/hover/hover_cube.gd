@@ -25,6 +25,15 @@ extends RigidBody3D
 ## character-parametric (ParticleSystems.thruster_smoke) mientras empuja.
 ##
 ## Las perillas, en HoverCubeSettings (el panel F1 de su fila).
+##
+## RÁPIDO (11/11/2026, el usuario: «que sea rápido, que sea snap y que no rompa tanto con el flujo»): se recupera apenas
+## deja de caer y de rodar rápido (`settle_speed`, `settle_spin`, `limp_time`), sube con resortes firmes y se endereza en
+## cuanto despegó lo bastante para girar sin tocar el piso (`CLEARANCE`), sin esperar a llegar arriba. Caído, un poco
+## más de gravedad (`fall_gravity`) y un poco de freno de giro (`ground_spin_damp`): poco, para no perder la física.
+##
+## PARA QUIEN LO EXTIENDE (BalanceCube): el dibujo cuelga de `_look` (para inclinarlo sin girar el cuerpo), las perillas
+## salen de `tuning()`, cómo se para es `_standing()`, qué pasa al pararse otra vez es `_recovered()` y caerse es
+## `_fall()`.
 
 enum State { HOVER, LIMP, LIFT, RIGHT }
 
@@ -34,6 +43,8 @@ const CUBE_MASS := 50000.0
 const NOZZLE_SPREAD := 0.65
 ## La parte del lado donde salen los rayos de la cara de abajo (a cada costado).
 const RAY_SPREAD := 0.3
+## A qué altura del centro puede girar sin tocar el piso: media diagonal del cubo, y un poco.
+const CLEARANCE := SIZE * 0.5 * 1.7320508 + 0.5
 
 var state := State.HOVER
 var falls := 0
@@ -45,6 +56,8 @@ var _clock := 0.0
 var _nozzles: Array[Dictionary] = []
 var _label: Label3D = null
 var _inertia := 1.0
+## El dibujo (ver PARA QUIEN LO EXTIENDE).
+var _look: Node3D = null
 
 
 func _init() -> void:
@@ -57,9 +70,13 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	Clay.solid(self, Vector3.ONE * SIZE, Vector3.ZERO, Clay.METAL)
+	_look = Node3D.new()
+	_look.name = "Dibujo"
+	add_child(_look)
+	Clay.shape_box(self, Vector3.ONE * SIZE, Vector3.ZERO)
+	Clay.box(_look, Vector3.ONE * SIZE, Vector3.ZERO, Clay.METAL)
 	# Una franja en el frente, para leer hacia dónde mira y cuánto gira.
-	Clay.box(self, Vector3(SIZE * 0.7, SIZE * 0.12, 0.05), Vector3(0, SIZE * 0.25, -SIZE * 0.5 - 0.03), Clay.YELLOW)
+	Clay.box(_look, Vector3(SIZE * 0.7, SIZE * 0.12, 0.05), Vector3(0, SIZE * 0.25, -SIZE * 0.5 - 0.03), Clay.YELLOW)
 	_build_nozzles()
 	_label = Label3D.new()
 	_label.top_level = true
@@ -82,7 +99,7 @@ func _build_nozzles() -> void:
 			var at := normal * half + (u * corner.x + v * corner.y) * half * NOZZLE_SPREAD
 			var holder := Node3D.new()
 			holder.transform = Transform3D(Basis.looking_at(normal, v), at)
-			add_child(holder)
+			_look.add_child(holder)
 			var mouth := Clay.cylinder(holder, 0.45, 0.6, Vector3(0, 0, -0.2), Clay.DARK, Vector3(90, 0, 0))
 			var glow := StandardMaterial3D.new()
 			glow.albedo_color = Clay.DARK
@@ -96,40 +113,68 @@ func _build_nozzles() -> void:
 			_nozzles.append({"at": at, "out": normal, "smoke": smoke, "glow": glow, "throttle": 0.0})
 
 
+## Sus perillas (ver PARA QUIEN LO EXTIENDE).
+func tuning() -> HoverCubeSettings:
+	return HoverCubeSettings.current
+
+
 func _physics_process(delta: float) -> void:
-	var settings := HoverCubeSettings.current
+	var knobs := tuning()
 	var up := global_basis.y.normalized()
 	tilt = rad_to_deg(up.angle_to(Vector3.UP))
 	for nozzle in _nozzles:
 		nozzle["throttle"] = 0.0
+	# CAÍDO, UN POCO MÁS PESADO Y CON UN POCO DE FRENO DE GIRO (ver RÁPIDO).
+	gravity_scale = knobs.fall_gravity if state == State.LIMP else 1.0
+	angular_damp = knobs.ground_spin_damp if state == State.LIMP else 0.0
 	match state:
 		State.HOVER:
-			_hover(settings)
-			_stand_upright(settings.upright_kp, settings.upright_kd)
-			_check_stop(settings)
+			_standing(knobs, delta)
 		State.LIMP:
-			_clock = _clock + delta if linear_velocity.length() < 0.6 and angular_velocity.length() < 0.3 else 0.0
+			var settled := linear_velocity.length() < knobs.settle_speed and angular_velocity.length() < knobs.settle_spin
+			_clock = _clock + delta if settled else 0.0
 			height = _ground_distance(global_position)
-			if _clock >= settings.limp_time:
+			if _clock >= knobs.limp_time:
 				state = State.LIFT
 				_clock = 0.0
 		State.LIFT:
-			var reached := _lift(settings)
+			_lift(knobs)
 			_hold_spin()
-			if reached:
+			# Se endereza en cuanto puede girar sin tocar el piso.
+			if height >= CLEARANCE:
 				state = State.RIGHT
 		State.RIGHT:
-			_lift(settings)
-			_right(settings)
-			if tilt <= settings.upright_done and angular_velocity.length() < 0.25:
+			_lift(knobs)
+			_right(knobs)
+			if tilt <= knobs.upright_done and angular_velocity.length() < 0.4:
 				state = State.HOVER
-	_fire_nozzles(settings)
+				_recovered()
+	_fire_nozzles(knobs)
 	_label.global_position = global_position + Vector3(0, SIZE + 2.0, 0)
 	_label.text = "%s · altura %.1f m · inclinación %.0f°\ncaídas %d" % [["flota", "TIRADO", "sube", "se endereza"][state],
 		height, tilt, falls]
 
 
 ## ── FLOTAR (el viejo de character-parametric) ───────────────────────────────────────────────────────────────────
+
+## PARADO: flota, se endereza con su torque y se deja caer pasado un umbral. Lo pisa quien lo extiende.
+func _standing(knobs: HoverCubeSettings, _delta: float) -> void:
+	_hover(knobs)
+	_stand_upright(knobs.upright_kp, knobs.upright_kd)
+	_check_stop(knobs)
+
+
+## Cuando vuelve a flotar (después de caerse y recuperarse). Lo pisa quien lo extiende.
+func _recovered() -> void:
+	pass
+
+
+## SE DEJA CAER: nada lo sostiene hasta que se recupere.
+func _fall() -> void:
+	state = State.LIMP
+	_clock = 0.0
+	falls += 1
+
 
 ## EL RESORTE DE ALTURA: dos rayos desde la cara de abajo, hacia abajo del cubo; la altura es la del medio de los que
 ## tocan. Empuja hacia arriba, en el centro, con la gravedad compensada, el error con tope y la fuerza con tope.
@@ -177,9 +222,7 @@ func _stand_upright(kp: float, kd: float) -> void:
 func _check_stop(settings: HoverCubeSettings) -> void:
 	var side := Vector2(linear_velocity.x, linear_velocity.z).length()
 	if tilt > settings.max_tilt or -linear_velocity.y > settings.max_fall_speed or side > settings.max_side_speed:
-		state = State.LIMP
-		_clock = 0.0
-		falls += 1
+		_fall()
 
 
 ## ── RECUPERARSE CON LAS TOBERAS ─────────────────────────────────────────────────────────────────────────────────
@@ -196,7 +239,7 @@ func _lift(settings: HoverCubeSettings) -> bool:
 
 ## Que no gire mientras sube.
 func _hold_spin() -> void:
-	_push(Vector3.ZERO, -angular_velocity * 2.0 * _inertia, HoverCubeSettings.current)
+	_push(Vector3.ZERO, -angular_velocity * 2.0 * _inertia, tuning())
 
 
 ## ENDEREZARSE: las toberas de los costados lo giran hacia arriba, con un resorte más lento que el de flotar.

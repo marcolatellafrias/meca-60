@@ -70,6 +70,16 @@ seca), que lo voltea o no (suponen el golpe en la mitad de arriba: en el centro 
 le deja de giro está medido por velocidad, `HoverCube.TRANSFER`). **F1** su panel (`HoverPanel`, perillas en
 `HoverCubeSettings`); **F2** un panel chico con dos botones que lo vuelcan, suave y fuerte (`HoverKnockPanel`).
 
+Se recupera rápido (unos 4 s): empieza apenas deja de caer y de rodar rápido, sube con resortes firmes y se endereza en
+cuanto puede girar sin tocar el piso; caído pesa un poco más y se le frena un poco el giro (poco: es física).
+
+**Cubo con equilibrio** (11/11/2026, bifurcado del flotante, `BalanceCube`): el mismo cubo, pero parado no gira. **El
+golpe lo corre** (el cuerpo sale para ese lado) y **aparte lo inclina** con la línea de equilibrio (cualquier golpe en el
+cuerpo, a cualquier altura; se ve inclinando el dibujo sobre el canto de abajo). Al pasarla **tropieza**: el cuerpo toma
+esa inclinación y recibe, una sola vez, el giro justo para que su base quede quieta (como si los pies se trabaran); de
+ahí es física, y cae para el lado del golpe. Se recupera como el flotante (unos 2,5 s). **J/K** cuatro tiros, **F1** su
+panel (la línea, el tropezar, y flotar y recuperarse en su propia copia), **F2** volcarlo.
+
 **Las parcelas tienen paredes invisibles** (como allá, `SandboxParcel` LOS BORDES): las ve lo que se mueve con física y
 vive en una parcela; el jugador y la bola pasan. Las mecas de pelea, que se mueven por código, le preguntan a su parcela
 (`SandboxParcel.holds`): el borde de la arena es el de su parcela. Las piernas, para más adelante, en su propia fila (el
@@ -99,6 +109,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
 - `game/hover/` — **el cubo flotante**: `HoverCube` (flotar, dejarse caer, subir y enderezarse con las toberas),
   `HoverCubeSettings` (sus perillas), `HoverPanel` (su F1), `HoverKnockPanel` (su F2: volcarlo) y `HoverCubeArchetype`
   (su parcela y sus tiros).
+  El cubo con equilibrio: `BalanceCube` (hereda del flotante: la línea y el tropezar), `BalanceCubeSettings`,
+  `BalanceCubePanel` (su F1) y `BalanceCubeArchetype`.
 - `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas, `_mount_tuners` sus paneles F;
   crea al jugador, ver arriba) y la sesión de red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD,
   espacio, shift, Ctrl, E, R, C, V, B, F1–F6, Escape; no repetirlas. Sentado (o manejando desde afuera) sólo valen las
@@ -121,7 +133,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
 - `tests/balance_check.tscn` (headless o con ventana): mira que los pies estén planos, le tira bolas de varias
   fuerzas a la meca de equilibrio en los dos modos (como allá, y con empuje y pasos) e imprime la inclinación, los
   pasos, cuánto retrocedió y si se cayó; con ventana, capturas del trastabillar. Y bolas chicas a las dos personas.
-- `tests/hover_check.tscn` (headless o con ventana): el cubo flotante se asienta, las tres bolas, soltarlo de más arriba
+- `tests/hover_check.tscn` (headless o con ventana; `-- --cubo=equilibrio` para el cubo con equilibrio): los tiros, los
+  botones de volcar (y para qué lado cae y cuánto gira), el rebote y la recuperación. Antes: el cubo flotante se asienta, las tres bolas, soltarlo de más arriba
   (el rebote), y voltearlo y seguir la recuperación; con ventana, capturas cada medio segundo.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,
   caminarla sentado, viajar parado adentro, manejar desde afuera y volver, y agarrar el ropero del lote.

@@ -45,6 +45,7 @@ static func categories() -> Array[Dictionary]:
 		{"name": "Meca", "archetypes": [MechTestArchetype.new()]},
 		{"name": "Equilibrio", "archetypes": [BalanceTestArchetype.new()]},
 		{"name": "Cubo flotante", "archetypes": [HoverCubeArchetype.new()]},
+		{"name": "Cubo con equilibrio", "archetypes": [BalanceCubeArchetype.new()]},
 		{"name": "Personajes", "archetypes": PeopleArchetype.catalogue()},
 		{"name": "Objetos", "archetypes": [ObjectLotArchetype.new()]},
 		{"name": "Multijugador", "archetypes": [MultiplayerArchetype.new()]},
@@ -76,6 +77,8 @@ func _ready() -> void:
 func _mount_tuners() -> void:
 	_mount(HoverPanel.new(), "Cubo flotante", "el cubo flotante: flotar, enderezarse, caerse y los propulsores", KEY_F1)
 	_mount(HoverKnockPanel.new(), "Cubo flotante", "volcarlo: suave o fuerte", KEY_F2)
+	_mount(BalanceCubePanel.new(), "Cubo con equilibrio", "la línea de equilibrio, el tropezar, flotar y recuperarse", KEY_F1)
+	_mount(HoverKnockPanel.new(), "Cubo con equilibrio", "volcarlo: suave o fuerte", KEY_F2)
 	_mount(BalancePanel.new(), "Equilibrio", "la meca de equilibrio: el resorte, la firmeza, el empuje y los pasos", KEY_F1)
 
 

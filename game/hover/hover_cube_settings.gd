@@ -33,18 +33,28 @@ static var current := HoverCubeSettings.new()
 @export_range(5.0, 90.0, 1.0) var max_tilt := 45.0
 @export_range(1.0, 40.0, 0.5) var max_fall_speed := 12.0
 @export_range(1.0, 60.0, 0.5) var max_side_speed := 18.0
-## Cuánto queda tirado antes de recuperarse (s), una vez quieto.
-@export_range(0.0, 10.0, 0.1) var limp_time := 2.0
+## Cuánto queda tirado antes de recuperarse (s), una vez que dejó de caer y de rodar rápido (más lento que esto, m/s y
+## rad/s): no espera a quedarse quieto.
+@export_range(0.0, 10.0, 0.05) var limp_time := 0.3
+@export_range(0.1, 10.0, 0.1) var settle_speed := 2.5
+@export_range(0.1, 10.0, 0.1) var settle_spin := 1.5
+
+@export_group("Caído")
+## Cuánto más pesa mientras está caído (1 es la gravedad de siempre): cae más rápido, sin perder la física.
+@export_range(1.0, 4.0, 0.05) var fall_gravity := 1.4
+## Cuánto le frena el giro mientras está caído (1/s): golpea y no se queda rodando.
+@export_range(0.0, 5.0, 0.05) var ground_spin_damp := 0.8
 
 @export_group("Recuperarse (los propulsores)")
 ## Lo que empuja cada tobera, a todo (m/s² del cubo entero). Son cuatro por cara.
-@export_range(1.0, 20.0, 0.1) var nozzle_push := 5.0
-## Primero SUBE: hasta que la cara de abajo quede a esta parte de la altura de flotar, con este resorte.
+@export_range(1.0, 30.0, 0.1) var nozzle_push := 9.0
+## Primero SUBE: hasta que la cara de abajo quede a esta parte de la altura de flotar, con este resorte (firme: rápido).
+## En cuanto despegó lo bastante para girar sin tocar el piso, además SE ENDEREZA.
 @export_range(0.2, 2.0, 0.05) var lift_share := 1.0
-@export_range(0.5, 20.0, 0.1) var lift_kp := 3.0
-@export_range(0.1, 20.0, 0.1) var lift_kd := 2.5
-## Después SE ENDEREZA en el aire, con este resorte (más lento que el de flotar, para que se vea).
-@export_range(0.5, 20.0, 0.1) var right_kp := 2.5
-@export_range(0.1, 20.0, 0.1) var right_kd := 2.2
+@export_range(0.5, 40.0, 0.1) var lift_kp := 9.0
+@export_range(0.1, 20.0, 0.1) var lift_kd := 5.0
+## Cómo se endereza en el aire: el resorte (firme: rápido).
+@export_range(0.5, 40.0, 0.1) var right_kp := 9.0
+@export_range(0.1, 20.0, 0.1) var right_kd := 5.0
 ## Queda derecho (y vuelve a flotar) con menos de esta inclinación (grados) y casi sin girar.
 @export_range(1.0, 30.0, 0.5) var upright_done := 8.0
