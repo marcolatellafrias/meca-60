@@ -1,6 +1,6 @@
 extends Node
 
-## LA PELEA, PROBADA POR CÓDIGO: arma el sandbox, maneja la meca desde afuera (O), camina hacia el rival, gira el torso,
+## LA PELEA, PROBADA POR CÓDIGO (el jugador es el personaje de character-parametric, ver DesignSandbox): arma el sandbox, maneja la meca desde afuera (O), camina hacia el rival, gira el torso,
 ## carga y suelta piñas (sin cargar, cargadas y un gancho doblado con el mouse), tira al rival hasta que se cae y se
 ## levanta, pasa a primera persona (T), pone al rival agresivo y mira si pega, traba un brazo contra un edificio y, al
 ## final, adentro, pega sentado en los brazos. Imprime lo que mide, y con ventana saca capturas.
@@ -9,7 +9,7 @@ extends Node
 
 var _folder := ""
 var _arena: TestArena = null
-var _walker: SandboxWalker = null
+var _sandbox: DesignSandbox = null
 var _title: Label = null
 
 
@@ -32,7 +32,7 @@ func _ready() -> void:
 	for parcel: SandboxParcel in sandbox.find_children("*", "SandboxParcel", true, false):
 		if parcel.archetype is MechTestArchetype:
 			_arena = parcel.root() as TestArena
-	_walker = sandbox.find_children("*", "SandboxWalker", true, false)[0] as SandboxWalker
+	_sandbox = sandbox as DesignSandbox
 	var mech := _arena.mech
 	var rival := _arena.rival
 	# Desde afuera, de costado: las dos mecas y la arena.
@@ -43,7 +43,7 @@ func _ready() -> void:
 	eye.make_current()
 	await _shot("La arena: la meca y el rival", "1_arena")
 	# MANEJAR DESDE AFUERA (la O; el que camina está en la parcela).
-	_walker.global_position = _arena.global_position + Vector3(0, 0.2, 40)
+	_sandbox.local_player.place_at(_arena.global_position + Vector3(0, 0, 40))
 	await _seconds(0.3)
 	await _key(KEY_O)
 	print("DESDE AFUERA: %s · cámara: %s" % [mech.driven_from_outside(), get_viewport().get_camera_3d().name])
@@ -132,13 +132,10 @@ func _ready() -> void:
 	# ADENTRO: subirse, sentarse en los brazos y pegar con el mouse.
 	mech.board()
 	await _seconds(0.5)
-	_walker.global_position = mech.torso.seats[1].global_position + mech.torso.global_basis * Vector3(0, 0.2, 0.6)
-	await _seconds(0.3)
-	await _key(KEY_E)
+	# La silla de los brazos, como la E de allá (ver MechSeat).
+	mech.torso.seats[1].chair.activate(_sandbox.local_player)
+	await _seconds(1.0)
 	print("SENTADO: %s" % (mech._seat.name if mech._seat != null else "no"))
-	var aim_before := mech.torso_aim
-	await _mouse_motion(Vector2(120, 0))
-	print("MOUSE en brazos: el torso pidió %.1f°" % rad_to_deg(mech.torso_aim - aim_before))
 	await _shot("Sentado en el puesto de los brazos", "7_puesto_brazos")
 	await _button(MOUSE_BUTTON_LEFT, true)
 	await _seconds(0.4)

@@ -7,6 +7,9 @@ extends RefCounted
 
 ## Cómo se llama en el panel y en la parcela.
 var display_name := "sin nombre"
+## Las opciones de su fila, compartidas por los arquetipos de una fila (como allá, en character-parametric: los paquetes
+## de allá las usan).
+var options: Dictionary = {}
 
 
 ## Cuánto puede llegar a ocupar en el suelo (ancho, profundidad), con CUALQUIER semilla. La parcela se mide con esto

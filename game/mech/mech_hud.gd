@@ -47,7 +47,8 @@ func show_state(mech: Mech, seat: MechSeat) -> void:
 			MechSeat.Station.LEGS:
 				lines.append("W/S camina · A/D gira las piernas · Shift se afirma")
 			MechSeat.Station.ARMS:
-				lines.append("mouse gira el torso · clics: mantener carga, soltar pega · el mouse dobla la piña · G cañón")
+				lines.append("se apunta mirando · Z/X gira el torso · G cañón")
+				lines.append("clics: mantener carga, soltar pega · el mouse dobla la piña")
 			MechSeat.Station.LOOKOUT:
 				lines.append("mouse gira la cámara de afuera")
 		lines.append("desde cualquier puesto: flechas caminan · B se afirma · Z/X torso · F/H brazos · G cañón")

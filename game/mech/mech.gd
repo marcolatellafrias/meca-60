@@ -13,10 +13,13 @@ extends Node3D
 ## cargar y soltar cada brazo.
 ##
 ## ── LOS QUE LA MANEJAN ──────────────────────────────────────────────────────────────────────────────────────────
-## Desde adentro, sentado en un puesto (E):
-##   Piernas: W/S camina, A/D gira las piernas, Shift se afirma; el mouse mira.
-##   Brazos: el mouse gira el torso (y mira arriba y abajo); clic izquierdo y derecho, mantener carga y soltar pega;
-##     mientras la piña viaja, el mouse la dobla. G el cañón.
+## EL QUE LA TRIPULA ES EL PERSONAJE DE CHARACTER-PARAMETRIC (el jugador local, ver DesignSandbox.player_of): va
+## adentro del torso, que es un marco (MotionFrame), y se sienta en las sillas de los puestos con la E de allá (ver
+## MechSeat). La meca sólo mira en qué silla está sentado; mira con su cabeza.
+## Desde adentro, sentado en un puesto:
+##   Piernas: W/S camina, A/D gira las piernas, Shift se afirma.
+##   Brazos: los brazos apuntan adonde se mira; clic izquierdo y derecho, mantener carga y soltar pega; mientras la piña
+##     viaja, el mouse la dobla. Z/X giran el torso. G el cañón.
 ##   Vigía: una cámara de afuera que gira con el mouse.
 ##   Desde cualquier puesto, para probar de a uno: flechas caminan, B se afirma, Z/X giran el torso, F y H los brazos
 ##   (mantener y soltar), G el cañón.
@@ -100,9 +103,6 @@ var _legs: Array[MechLeg] = []
 var _fall_direction := Vector2.ZERO
 var _fall_clock := 0.0
 var _fall_from := Vector2.ZERO
-var _walker: SandboxWalker = null
-var _walker_inside := false
-var _walker_local := Vector3.ZERO
 var _seat: MechSeat = null
 var _from_outside := false
 var _camera: Camera3D = null
@@ -155,12 +155,9 @@ func _ready() -> void:
 	_place_body.call_deferred(0.0)
 
 
-## EL QUE CAMINA (el del sandbox), buscado una vez.
-func _walker_node() -> SandboxWalker:
-	if _walker == null or not is_instance_valid(_walker):
-		var found := get_tree().root.find_children("*", "SandboxWalker", true, false)
-		_walker = found[0] as SandboxWalker if not found.is_empty() else null
-	return _walker
+## EL JUGADOR LOCAL (el personaje de character-parametric), el que puede tripularla.
+func _player() -> BoneInstantiator:
+	return DesignSandbox.player_of(get_tree())
 
 
 ## Si la maneja un jugador (sentado en un puesto o desde afuera).
@@ -172,73 +169,64 @@ func driven_from_outside() -> bool:
 	return _from_outside
 
 
-## Lleva al que camina al piso de abajo, frente al puesto de las piernas (la U del sandbox).
+## Lleva al jugador al piso de abajo, detrás de la silla de las piernas (la U del sandbox): E y ya está sentado.
 func board() -> void:
-	var walker := _walker_node()
-	if walker == null:
+	var player := _player()
+	if player == null:
 		return
 	if _from_outside:
 		_leave_outside()
-	if _seat != null:
-		_stand_up()
-	walker.set_creative(false)
-	walker.velocity = Vector3.ZERO
-	# Detrás de la silla de las piernas, a un paso: E y ya está sentado.
-	walker.global_position = torso.global_transform * Vector3(0.0, MechTorso.floor_y(0) + 0.2, -MechTorso.DEPTH * 0.5 + 2.6)
-	walker.global_rotation = Vector3(0.0, torso.global_rotation.y, 0.0)
+	if player.is_seated and player.current_seat is SeatInteractable:
+		(player.current_seat as SeatInteractable).release_occupant_in_place()
+	var feet := torso.global_transform * Vector3(0.0, MechTorso.floor_y(0) + 0.05, -MechTorso.DEPTH * 0.5 + 2.8)
+	player.place_at(feet, torso_yaw())
 
 
-## MANEJARLA DESDE AFUERA (la O del sandbox), o volver. El que camina se queda donde está; si estaba adentro de la
-## meca, viaja con ella.
+## MANEJARLA DESDE AFUERA (la O del sandbox), o volver. El jugador se apaga mientras tanto (`set_active`: ni se ve ni
+## lee teclas) y queda donde estaba; si estaba sentado, se levanta antes.
 func toggle_outside() -> void:
 	if _from_outside:
 		_leave_outside()
 		return
-	var walker := _walker_node()
-	if walker == null:
+	var player := _player()
+	if player == null:
 		return
-	if _seat != null:
-		_stand_up()
-	_walker_local = torso.global_transform.affine_inverse() * walker.global_position
-	_walker_inside = absf(_walker_local.x) < MechTorso.WIDTH and absf(_walker_local.z) < MechTorso.DEPTH + 3.0 \
-		and _walker_local.y > -1.0 and _walker_local.y < MechTorso.top_y() + 1.0
+	if player.is_seated and player.current_seat is SeatInteractable:
+		(player.current_seat as SeatInteractable).release_occupant_in_place()
 	_from_outside = true
-	walker.seated = true
-	walker.velocity = Vector3.ZERO
-	walker.collision_layer = 0
-	walker.collision_mask = 0
-	walker.set_physics_process(false)
-	_chase_yaw = torso.global_rotation.y
+	add_to_group("driving")
+	player.set_active(false)
+	_chase_yaw = torso_yaw()
 	_camera.make_current()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
 func _leave_outside() -> void:
 	_from_outside = false
-	_walker_inside = false
+	remove_from_group("driving")
 	left_arm.cancel()
 	right_arm.cancel()
-	var walker := _walker_node()
-	if walker == null:
+	var player := _player()
+	if player == null:
 		return
-	walker.collision_layer = 1
-	walker.collision_mask = 1
-	walker.set_physics_process(true)
-	walker.velocity = Vector3.ZERO
-	walker.seated = false
+	player.set_active(true)
+	if is_instance_valid(player.player_camera):
+		player.player_camera.make_current()
 
 
 ## ── LA ENTRADA ──────────────────────────────────────────────────────────────────────────────────────────────────
 
 func _unhandled_input(event: InputEvent) -> void:
+	if not UIState.gameplay_active():
+		return
 	var key := event as InputEventKey
 	if key != null and not key.echo:
 		if key.pressed and key.physical_keycode == KEY_E:
 			if _from_outside:
 				_leave_outside()
 				get_viewport().set_input_as_handled()
-			elif _interact():
-				get_viewport().set_input_as_handled()
+			else:
+				_toggle_lift()
 			return
 		if not is_crewed():
 			return
@@ -282,88 +270,54 @@ func _arm_key(arm: MechArm, pressed: bool) -> void:
 		arm.let_go(aim_point)
 
 
-## EL MOUSE: desde afuera y en los brazos gira el torso y mira arriba y abajo, salvo que una piña esté saliendo: entonces
-## la dobla. En las piernas mira; en la vigía gira la cámara de afuera.
+## EL MOUSE: desde afuera gira el torso y mira arriba y abajo, salvo que una piña esté saliendo: entonces la dobla. En
+## los brazos sólo dobla la piña (se mira con la cabeza); en la vigía gira la cámara de afuera.
 func _mouse(relative: Vector2) -> void:
 	var sensitivity := 0.0025 * GameOptions.mouse_sensitivity
 	if not _from_outside and _seat.station == MechSeat.Station.LOOKOUT:
 		_orbit_yaw -= relative.x * sensitivity
 		_orbit_pitch = clampf(_orbit_pitch - relative.y * sensitivity, deg_to_rad(-70.0), deg_to_rad(10.0))
 		return
-	if not _from_outside and _seat.station == MechSeat.Station.LEGS:
-		_seat.look(relative)
-		return
-	var bent := false
 	for arm: MechArm in [left_arm, right_arm]:
 		if arm.is_striking():
 			arm.bend(Vector2(relative.x, -relative.y))
-			bent = true
-	if bent:
-		return
-	torso_aim -= relative.x * sensitivity
+			return
 	if _from_outside:
+		torso_aim -= relative.x * sensitivity
 		_chase_pitch = clampf(_chase_pitch - relative.y * sensitivity, CHASE_PITCH_MIN, CHASE_PITCH_MAX)
-	else:
-		_seat.look(Vector2(0.0, relative.y))
 
 
-## E: levantarse, sentarse en el puesto más cercano o mandar el montacargas. Devuelve si hizo algo.
-func _interact() -> bool:
-	var walker := _walker_node()
-	if walker == null:
-		return false
-	if _seat != null:
-		_stand_up()
-		return true
-	var nearest: MechSeat = null
-	var best := 1.8
-	for seat in torso.seats:
-		var distance := seat.global_position.distance_to(walker.global_position)
-		if distance < best:
-			best = distance
-			nearest = seat
-	if nearest != null:
-		_sit(nearest)
-		return true
-	if lift.carries(walker.global_position):
-		lift.toggle()
-		return true
-	return false
-
-
-func _sit(seat: MechSeat) -> void:
-	var walker := _walker_node()
-	_seat = seat
-	walker.seated = true
-	walker.velocity = Vector3.ZERO
-	walker.collision_layer = 0
-	walker.collision_mask = 0
-	walker.set_physics_process(false)
-	seat.reset_look()
-	if seat.station == MechSeat.Station.LOOKOUT:
-		_orbit_yaw = torso.global_rotation.y
-		_camera.make_current()
-	else:
-		seat.camera.fov = GameOptions.field_of_view
-		seat.camera.make_current()
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
-
-
-func _stand_up() -> void:
-	var walker := _walker_node()
-	var seat := _seat
-	_seat = null
-	left_arm.cancel()
-	right_arm.cancel()
-	if walker == null:
+## E parado en el montacargas: lo manda a la otra punta.
+func _toggle_lift() -> void:
+	var player := _player()
+	if player == null or player.is_seated or not is_instance_valid(player.char_rigidbody):
 		return
-	walker.collision_layer = 1
-	walker.collision_mask = 1
-	walker.set_physics_process(true)
-	walker.velocity = Vector3.ZERO
-	walker.global_position = seat.global_transform * Vector3(0.0, 0.15, 0.9)
-	walker.global_rotation = Vector3(0.0, seat.global_rotation.y, 0.0)
-	walker.seated = false
+	if lift.carries(player.char_rigidbody.global_position):
+		lift.toggle()
+
+
+## EN QUÉ PUESTO ESTÁ SENTADO EL JUGADOR (o en ninguno). Al sentarse en la vigía se pasa a la cámara de afuera, y al
+## levantarse de ella vuelve la de su cabeza.
+func _find_seat() -> void:
+	var player := _player()
+	var now: MechSeat = null
+	for seat in torso.seats:
+		if seat.holds(player):
+			now = seat
+	if now == _seat:
+		return
+	var was := _seat
+	_seat = now
+	if now == null:
+		left_arm.cancel()
+		right_arm.cancel()
+	if now != null and now.station == MechSeat.Station.LOOKOUT:
+		_orbit_yaw = torso_yaw()
+		_camera.make_current()
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	elif was != null and was.station == MechSeat.Station.LOOKOUT and is_instance_valid(player) \
+			and is_instance_valid(player.player_camera):
+		player.player_camera.make_current()
 
 
 func _on_kick(direction: Vector3, amount: float) -> void:
@@ -399,6 +353,8 @@ func take_hit(_amount: float, direction: Vector3, push_amount: float) -> void:
 ## ── CADA PASO ───────────────────────────────────────────────────────────────────────────────────────────────────
 
 func _physics_process(delta: float) -> void:
+	if brain == null:
+		_find_seat()
 	if is_crewed():
 		_read_keys(delta)
 	elif brain != null:
@@ -421,7 +377,6 @@ func _physics_process(delta: float) -> void:
 		_aim_from_camera()
 	elif brain == null:
 		aim_point = torso.global_transform * Vector3(0.0, MechTorso.floor_y(1) + 1.6, -60.0)
-	_carry_walker()
 	for seat in torso.seats:
 		seat.show_stability(stability)
 	_hud.show_state(self, _seat)
@@ -432,7 +387,7 @@ func _read_keys(delta: float) -> void:
 	throttle = 0.0
 	steer = 0.0
 	braced = false
-	if get_tree().paused:
+	if not UIState.gameplay_active():
 		return
 	var at_legs := _from_outside or _seat.station == MechSeat.Station.LEGS
 	throttle = _axis(KEY_UP, KEY_DOWN) + (_axis(KEY_W, KEY_S) if at_legs else 0.0)
@@ -599,12 +554,3 @@ func _aim_from_camera() -> void:
 	aim_point = hit["position"] if not hit.is_empty() else to
 
 
-## El que está sentado va con su silla; el que estaba adentro cuando se pasó a manejar desde afuera, con el torso.
-func _carry_walker() -> void:
-	var walker := _walker_node()
-	if walker == null:
-		return
-	if _seat != null:
-		walker.global_position = _seat.global_transform * Vector3(0.0, 0.3, 0.0)
-	elif _from_outside and _walker_inside:
-		walker.global_position = torso.global_transform * _walker_local

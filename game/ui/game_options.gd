@@ -4,7 +4,7 @@ extends RefCounted
 ## LAS OPCIONES DEL JUGADOR: lo que se elige en la pantalla de Opciones (OptionsMenu) y se guarda en esta máquina. Es la
 ## del taxi sin lo de la voz: el volumen general, la sensibilidad del mouse, el campo de visión y la pantalla completa.
 ##
-## Estático, sin autoload. Lo carga el menú de pausa al arrancar (ver PauseMenu) y se guarda en cada cambio.
+## Estático, sin autoload. Lo cargan el sandbox y el menú de inicio al arrancar y se guarda en cada cambio.
 
 const PATH := "user://opciones.cfg"
 const SENSITIVITY_MIN := 0.25

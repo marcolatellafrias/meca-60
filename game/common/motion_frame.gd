@@ -369,8 +369,15 @@ func _carry(velocity_before: Vector3, spin_before: Vector3, before: Transform3D,
 ## UN SALTO (una reaparición): los de adentro van con la nave, con su velocidad girada igual.
 func _carry_jump(step: Transform3D) -> void:
 	for body: Variant in _members.keys():
+		# Lo borrado se va, como en `_carry` (en la meca, 11/11/2026: el ente que se borra al abrir la sesión de red).
+		if not is_instance_valid(body):
+			_members.erase(body)
+			_applied.erase(body)
+			_layers.erase(body)
+			_loose.erase(body)
+			continue
 		var rigid := body as RigidBody3D
-		if not is_instance_valid(rigid):
+		if rigid == null:
 			continue
 		rigid.global_transform = step * rigid.global_transform
 		rigid.linear_velocity = step.basis * rigid.linear_velocity

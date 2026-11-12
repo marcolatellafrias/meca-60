@@ -1,8 +1,10 @@
 class_name MechSeat
 extends Node3D
 
-## UN PUESTO DE LA MECA: la silla, la consola de enfrente con su nivel de equilibrio y la cámara del que se sienta,
-## que mira por la ventana del frente. El puesto dice qué maneja (`station`); las teclas las lee la meca (ver Mech).
+## UN PUESTO DE LA MECA: LA SILLA DE CHARACTER-PARAMETRIC (`SeatInteractable`, la de las consolas de la nave de allá:
+## E se sienta y se levanta, a la altura de ojos de la nave) y la consola de enfrente con su nivel de equilibrio. El
+## puesto dice qué maneja (`station`); las teclas las lee la meca cuando el jugador está sentado en esta silla (ver
+## Mech). Se mira con la cabeza del personaje, por la ventana del frente.
 ##
 ## EL NIVEL: un disco en la consola con una bolita que se corre hacia donde se inclina la meca; si llega al borde
 ## rojo, la meca se cae. Está en todos los puestos, porque el equilibrio es de todos.
@@ -10,17 +12,12 @@ extends Node3D
 enum Station { LEGS, ARMS, LOOKOUT }
 
 const NAMES := {Station.LEGS: "Piernas", Station.ARMS: "Brazos", Station.LOOKOUT: "Vigía"}
-## A qué altura del piso están los ojos del que se sienta, y cuánto puede girar la cabeza.
-const EYE := 1.3
-const LOOK_YAW := deg_to_rad(80.0)
-const LOOK_PITCH := deg_to_rad(55.0)
+const CHAIR_SCENE := "res://game/ship/working_seat.tscn"
 const GAUGE_RADIUS := 0.16
 
 var station := Station.LEGS
-var camera: Camera3D = null
+var chair: SeatInteractable = null
 var _ball: Node3D = null
-var _yaw := 0.0
-var _pitch := 0.0
 
 
 func _init(p_station: Station) -> void:
@@ -29,9 +26,10 @@ func _init(p_station: Station) -> void:
 
 
 func _ready() -> void:
-	# La silla y la consola con el nivel.
-	Clay.box(self, Vector3(0.6, 0.1, 0.6), Vector3(0, 0.45, 0), Clay.DARK)
-	Clay.box(self, Vector3(0.6, 0.7, 0.1), Vector3(0, 0.85, 0.3), Clay.DARK)
+	chair = (load(CHAIR_SCENE) as PackedScene).instantiate() as SeatInteractable
+	chair.name = "Silla"
+	chair.eye_height = ShipStyle.current.seat_eye_height
+	add_child(chair)
 	var console := Clay.box(self, Vector3(1.4, 0.9, 0.5), Vector3(0, 0.45, -0.75), Clay.METAL.darkened(0.2))
 	console.name = "Consola"
 	var label := Label3D.new()
@@ -45,30 +43,14 @@ func _ready() -> void:
 	Clay.cylinder(self, GAUGE_RADIUS + 0.03, 0.02, Vector3(0.4, 0.91, -0.75), Clay.RED)
 	Clay.cylinder(self, GAUGE_RADIUS, 0.03, Vector3(0.4, 0.915, -0.75), Color(0.9, 0.9, 0.85))
 	_ball = Clay.sphere(self, 0.03, Vector3(0.4, 0.94, -0.75), Clay.DARK)
-	camera = Camera3D.new()
-	camera.name = "Ojos"
-	camera.position = Vector3(0, EYE, -0.1)
-	camera.fov = GameOptions.field_of_view
-	camera.near = 0.05
-	camera.far = 2000.0
-	add_child(camera)
+
+
+## Si `player` está sentado en esta silla.
+func holds(player: BoneInstantiator) -> bool:
+	return is_instance_valid(player) and player.is_seated and player.current_seat == chair
 
 
 ## La bolita del nivel: `stability` de −1 a 1 por eje (x a la derecha, y adelante); 1 es el borde.
 func show_stability(stability: Vector2) -> void:
 	var offset := stability.limit_length(1.1) * GAUGE_RADIUS
 	_ball.position = Vector3(0.4 + offset.x, 0.94, -0.75 - offset.y)
-
-
-## Girar la cabeza sentado, con límites.
-func look(relative: Vector2) -> void:
-	var sensitivity := 0.0025 * GameOptions.mouse_sensitivity
-	_yaw = clampf(_yaw - relative.x * sensitivity, -LOOK_YAW, LOOK_YAW)
-	_pitch = clampf(_pitch - relative.y * sensitivity, -LOOK_PITCH, LOOK_PITCH)
-	camera.rotation = Vector3(_pitch, _yaw, 0.0)
-
-
-func reset_look() -> void:
-	_yaw = 0.0
-	_pitch = 0.0
-	camera.rotation = Vector3.ZERO

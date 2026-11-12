@@ -1,0 +1,76 @@
+class_name MultiplayerArchetype
+extends SeededArchetype
+
+## LA FILA MULTIJUGADOR: la red del juego, entera, en una parcela del sandbox (lo pidió el dios del juego, 06/11/2026:
+## «quisiera mantenerla… que se sincronice solamente en esa zona»). Es lo mismo que usaba la partida —SessionManager,
+## CharacterSpawner, CharacterNetSync, NetSpawner, NetBody—, sin copias: esta parcela sólo pone las teclas y el lugar.
+## Quien maneja la sesión es SandboxSession.
+##
+## QUÉ SE COMPARTE: los personajes de todos, en todo el sandbox; y lo de esta parcela —cajas, paquetes y una silla—, que
+## crea el anfitrión (NetSpawner). Lo de las otras filas es de cada uno (las mecas también, todavía).
+##
+## TRAÍDA DE CHARACTER-PARAMETRIC el 11/11/2026, sin la nave ni el tablero de allá.
+
+const SIZE := Vector2(30.0, 34.0)
+## Dónde aparecen los jugadores, en el marco de la parcela.
+const START := Vector3(0.0, 0.5, 12.0)
+## Lo que crea el anfitrión al abrir la sesión: tipo de NetSpawner y lugar en el marco de la parcela.
+const OBJECTS := [
+	["box_light_square", Vector3(-9.0, 0.6, 6.0)],
+	["box_heavy_square", Vector3(-6.0, 0.6, 6.0)],
+	["box_light_xlong", Vector3(-3.0, 0.6, 6.0)],
+	["box_heavy_long", Vector3(0.0, 0.6, 6.0)],
+	["package:television", Vector3(3.0, 0.6, 6.0)],
+	["package:trunk", Vector3(6.5, 0.8, 6.0)],
+	["seat", Vector3(-9.0, 0.0, 11.0)],
+]
+
+
+func _init() -> void:
+	display_name = "Multijugador"
+
+
+func max_footprint() -> Vector2:
+	return SIZE
+
+
+func build(_seed_value: int, parent: Node3D) -> Node3D:
+	var root := Node3D.new()
+	root.name = "Multijugador"
+	parent.add_child(root)
+	var sign := Label3D.new()
+	sign.text = "MULTIJUGADOR\nH: abrir sesión en esta compu (otra instancia se une con J)\nG: abrir sesión por Steam (código)\nL: salir de la sesión"
+	sign.font_size = 64
+	sign.pixel_size = 0.006
+	sign.modulate = Color(0.25, 0.24, 0.22)
+	sign.outline_size = 0
+	sign.billboard = BaseMaterial3D.BILLBOARD_FIXED_Y
+	sign.position = Vector3(0.0, 2.6, 15.5)
+	root.add_child(sign)
+	return root
+
+
+func describe(_seed_value: int) -> PackedStringArray:
+	return PackedStringArray([
+		"la red del juego: personajes, objetos y una silla compartidos",
+		"lo de las otras filas es de cada uno; los personajes se ven en todo el sandbox",
+		SandboxSession.status_line()])
+
+
+func parcel_options() -> Array[Dictionary]:
+	return [
+		{"key": KEY_H, "label": "abrir sesión en esta compu (ENet)", "apply": func(_parcel: Node) -> void:
+			SessionManager.host_local()},
+		{"key": KEY_J, "label": "unirse a la sesión de esta compu", "apply": func(_parcel: Node) -> void:
+			SessionManager.join_local()},
+		{"key": KEY_G, "label": func() -> String:
+			return "abrir sesión por Steam" + (" (código %s)" % SessionManager.lobby_code
+				if not SessionManager.lobby_code.is_empty() else ""),
+			"apply": func(_parcel: Node) -> void: SessionManager.host()},
+		{"key": KEY_K, "label": "ir al menú de inicio (unirse por código de Steam)", "apply": func(_parcel: Node) -> void:
+			SessionManager.return_to_menu()},
+		{"key": KEY_L, "label": "salir de la sesión", "apply": func(_parcel: Node) -> void:
+			var session := SandboxSession.find(_parcel.get_tree())
+			if session != null:
+				session.leave()},
+	]

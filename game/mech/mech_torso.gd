@@ -26,6 +26,9 @@ const BAR := 0.06
 const LIFT_X := Vector2(-WIDTH * 0.5, -2.0)
 
 var seats: Array[MechSeat] = []
+## EL MARCO (ver MotionFrame, de character-parametric): el torso lleva a los que van adentro —parados, en la escalera,
+## sentados—, como la nave de allá. Su volumen es el torso con la escalera de incendio de atrás.
+var frame: MotionFrame = null
 
 
 func _init() -> void:
@@ -35,6 +38,13 @@ func _init() -> void:
 
 func _ready() -> void:
 	_build()
+	frame = MotionFrame.new()
+	add_child(frame)
+	frame.floor_height = floor_y(0)
+	var back := back_face() + DECK + LANE * 2.0 + 0.5
+	frame.add_volume(AABB(Vector3(-WIDTH * 0.5 - 0.5, -0.5, -DEPTH * 0.5 - 0.5),
+		Vector3(WIDTH + 1.0, top_y() + 2.5, back + DEPTH * 0.5 + 0.5)))
+	frame.cast_shadow(self)
 
 
 ## La altura del piso `index` (0 el de abajo), en el espacio del torso.

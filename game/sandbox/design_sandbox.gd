@@ -7,6 +7,12 @@ extends Node3D
 ##
 ## Las filas crecen hacia +Z desde donde uno aparece, y sus parcelas hacia +X. Estando en la zona de una parcela, el
 ## panel de la derecha dice qué es y qué teclas valen.
+##
+## EL QUE CAMINA ES EL PERSONAJE DE CHARACTER-PARAMETRIC (11/11/2026, el usuario: el personaje reemplaza al caminante),
+## como en el sandbox de allá: arranca como ENTE (`CharacterKind.ente`: sin cuerpo a la vista, movimiento directo, V
+## vuela) y la B lo vuelve CUERPO (`CharacterKind.player`: el jugador del juego, que se cae, agarra, se sienta y empuja),
+## del arquetipo `body_archetype`. Contesta quién es el jugador local (`local_player`, el grupo `character_spawner`).
+## Sus teclas las lee él (ver PlayerController): WASD, espacio, Ctrl, E, shift, V, y las F de depuración.
 
 const INTERACT_PAD := 2.0
 const ELEMENT_GAP := 3.0
@@ -17,10 +23,17 @@ const SKY_TOP := Color(0.55, 0.68, 0.85)
 const SKY_HORIZON := Color(0.82, 0.86, 0.9)
 const CATEGORY_LABEL_COLOR := Color(0.25, 0.24, 0.22)
 const PLAYER_START := Vector3(-4.0, 0.0, 3.0)
+const PLAYER_SCENE := preload("res://game/character/player.tscn")
+## El arquetipo del cuerpo (la B). El gordo atlético: el genérico no se muestra.
+static var body_archetype := EntityArchetype.Archetype.fat_athletic
 
+## EL JUGADOR DE ESTA MÁQUINA (ver arriba).
+var local_player: BoneInstantiator = null
+var _body := false
+## LA SESIÓN DE RED (ver SandboxSession): con sesión, el personaje lo pone el spawner del juego y no se cambia con la B.
+var _session: SandboxSession = null
 var _rows: Array[Dictionary] = []
 var _panel: SandboxPanel = null
-var _walker: SandboxWalker = null
 var _current: SandboxParcel = null
 
 
@@ -29,19 +42,104 @@ static func categories() -> Array[Dictionary]:
 	return [
 		{"name": "Meca", "archetypes": [MechTestArchetype.new(), BalanceTestArchetype.new()]},
 		{"name": "Personajes", "archetypes": PeopleArchetype.catalogue()},
+		{"name": "Objetos", "archetypes": [ObjectLotArchetype.new()]},
+		{"name": "Multijugador", "archetypes": [MultiplayerArchetype.new()]},
 	]
 
 
 func _ready() -> void:
+	# Lo elegido en Opciones, guardado en esta máquina: el sandbox es la escena con la que arranca la meca.
+	GameOptions.load_and_apply()
 	_build_world()
 	_build_rows()
 	_panel = SandboxPanel.new()
 	add_child(_panel)
-	_walker = SandboxWalker.new()
-	_walker.position = PLAYER_START
+	add_to_group("character_spawner")
 	# Mirando hacia las parcelas (+X).
-	_walker.rotation.y = -PI * 0.5
-	add_child(_walker)
+	_spawn(false, PLAYER_START, -PI * 0.5, 0.0)
+	_session = SandboxSession.new()
+	_session.name = "SandboxSession"
+	_session.sandbox = self
+	add_child(_session)
+
+
+## ── ENTE O CUERPO (la B), como en el sandbox de character-parametric (DesignSandbox._spawn y _respawn_as) ────────────
+## No se prenden cosas sueltas: se rearma el personaje entero con la otra clase, donde está y mirando a lo mismo.
+func is_body() -> bool:
+	return _body
+
+
+func toggle_body() -> void:
+	if is_instance_valid(_session) and _session.active():
+		return
+	if not is_instance_valid(local_player) or local_player.is_seated:
+		return
+	var feet := _feet()
+	var look := Vector2(local_player.intent.look_yaw, local_player.intent.look_pitch)
+	remove_child(local_player)
+	local_player.queue_free()
+	local_player = null
+	_spawn(not _body, feet, look.x, look.y)
+
+
+## CON SESIÓN (ver SandboxSession, la fila Multijugador): el personaje es el del spawner de la red, un cuerpo; el ente
+## se va. Al salir, el ente vuelve al arranque.
+func net_adopt(player: BoneInstantiator) -> void:
+	local_player = player
+	_body = true
+
+
+func net_release() -> void:
+	if is_instance_valid(local_player) and local_player.get_parent() == self:
+		remove_child(local_player)
+		local_player.queue_free()
+	local_player = null
+
+
+func respawn_ente() -> void:
+	_spawn(false, PLAYER_START, -PI * 0.5, 0.0)
+
+
+## DÓNDE PISA UNO: lo que espera `place_at` (un punto del piso, no el centro de la cápsula).
+func _feet() -> Vector3:
+	if not is_instance_valid(local_player) or not is_instance_valid(local_player.char_rigidbody):
+		return PLAYER_START
+	var sizes := local_player.skel_sizes_util
+	return player_position() - Vector3.UP * (sizes.leg_height - sizes.distance_from_ground)
+
+
+func _spawn(body: bool, feet: Vector3, yaw: float, pitch: float) -> void:
+	_body = body
+	var bi := PLAYER_SCENE.instantiate() as BoneInstantiator
+	bi.name = "cuerpo" if body else "ente"
+	bi.kind = CharacterKind.player() if body else CharacterKind.ente()
+	bi.master_seed = EntityInstantiation.debug_seed(body_archetype if body else EntityArchetype.Archetype.generic, 0)
+	add_child(bi)
+	bi.place_at(feet, yaw)
+	bi.intent.look_yaw = yaw
+	bi.intent.look_pitch = pitch
+	local_player = bi
+
+
+## DÓNDE ESTÁ UNO: para saber en qué parcela se está.
+func player_position() -> Vector3:
+	if is_instance_valid(local_player) and is_instance_valid(local_player.char_rigidbody):
+		return local_player.char_rigidbody.global_position
+	return PLAYER_START
+
+
+## EL JUGADOR LOCAL, para quien no tiene al sandbox a mano (la meca): el del grupo `character_spawner`.
+static func player_of(tree: SceneTree) -> BoneInstantiator:
+	var spawner := tree.get_first_node_in_group("character_spawner")
+	if spawner == null:
+		return null
+	return spawner.get("local_player") as BoneInstantiator
+
+
+## SI LAS TECLAS SON DE OTRO: sentado en una silla, o manejando una meca desde afuera (el grupo `driving`, ver Mech).
+func _busy() -> bool:
+	var seated := is_instance_valid(local_player) and local_player.is_seated
+	return seated or get_tree().get_first_node_in_group("driving") != null
 
 
 func _build_world() -> void:
@@ -128,7 +226,7 @@ func _label_row(category_name: String, centre_z: float) -> void:
 
 
 func _process(_delta: float) -> void:
-	var at := _walker.global_position
+	var at := player_position()
 	var inside: SandboxParcel = null
 	for row in _rows:
 		for parcel: SandboxParcel in row["parcels"]:
@@ -157,11 +255,17 @@ func _refresh() -> void:
 
 func _input(event: InputEvent) -> void:
 	var key := event as InputEventKey
-	if _current == null or key == null or not key.pressed or key.echo or _walker.typing:
+	if key == null or not key.pressed or key.echo or not UIState.gameplay_active():
 		return
-	# SENTADO (en un puesto de la meca, ver SandboxWalker.seated), las teclas son de la meca: de la parcela valen sólo las que se
-	# declaran `"seated": true` (bajarse), y ni R ni C, que regenerarían o copiarían en medio de la pelea.
-	if _walker.seated:
+	if key.keycode == KEY_B and not _busy():
+		toggle_body()
+		get_viewport().set_input_as_handled()
+		return
+	if _current == null:
+		return
+	# SENTADO O MANEJANDO (ver `_busy`), las teclas son de lo que se maneja: de la parcela valen sólo las que se declaran
+	# `"seated": true` (bajarse), y ni R ni C, que regenerarían o copiarían en medio de la pelea.
+	if _busy():
 		for option in _current.archetype.parcel_options():
 			if bool(option.get("seated", false)) and int(option["key"]) == key.keycode:
 				(option["apply"] as Callable).call(_current)
