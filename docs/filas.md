@@ -14,6 +14,7 @@ columna, se queda). Cómo está armado el código, en [[estructura]].
 | Recursos | `ObjectLotArchetype` | `game/supplies/` (`SupplyLook`) | — | `supplies_look` | `PackageArchetype`, el agarre |
 | Multijugador | `MultiplayerArchetype` | `SandboxSession` | — | `net_check` | `game/net/` |
 | Partículas | `ParticleArchetype` | — | — | — | `game/particles/` |
+| Píxeles | `PixelArtArchetype` | `game/pixel_art/` entero, `tools/pixel_art_modelos_prueba.py` | `PixelPaintPanel` (F1) | `pixel_art_look` | `Clay`, `SupplyLook` (colores) |
 
 ## La meca (lo que comparten sus dos filas)
 `game/mech/` entero: `Mech` y sus piezas (`MechCabin`, `MechExterior`, `PelvisLift`, `MechLegs`, `MechLeg`,

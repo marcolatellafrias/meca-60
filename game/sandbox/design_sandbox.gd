@@ -51,6 +51,7 @@ static func categories() -> Array[Dictionary]:
 		{"name": "Recursos", "archetypes": [ObjectLotArchetype.new()]},
 		{"name": "Multijugador", "archetypes": [MultiplayerArchetype.new()]},
 		{"name": "Partículas", "archetypes": ParticleArchetype.catalogue()},
+		{"name": "Píxeles", "archetypes": [PixelArtArchetype.new()]},
 	]
 
 
@@ -86,6 +87,7 @@ func _mount_tuners() -> void:
 		_mount(MechPanel.new(), row, "la meca: el péndulo, correr, agacharse, saltar y el propulsor", KEY_F1)
 		_mount(MechKnockPanel.new(), row, "pegarle arriba, suave o fuerte, y el ascensor", KEY_F2)
 	_mount(MuscleArmPanel.new(), "Brazo", "el brazo con músculos: el resorte, el freno y la fuerza", KEY_F1)
+	_mount(PixelPaintPanel.new(), "Píxeles", "pintar con píxeles la cara que mirás", KEY_F1)
 
 
 func _mount(tuner: TunerPanel, category_name: String, label: String, key: Key) -> void:

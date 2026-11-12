@@ -157,6 +157,9 @@ ordenan y lo que todavía se le critica, en [docs/estructura.md](docs/estructura
   cuatro piñas (velocidad de la mano, cuánto corre el bloque), la pared (se traba y vuelve) y un empujón (cede y vuelve).
 - `tests/supplies_look.tscn` (con ventana, unos 5 segundos, sin el sandbox): el lote de recursos; imprime de cada cubo su
   caja, su peso y sus seis puntos de agarre.
+- `tests/pixel_art_look.tscn` (con ventana, unos 15 segundos, sin el sandbox): pintar con píxeles (ver docs/pixel-art.md);
+  las caras que detecta en el cubo y en la caja de Blender, pintar, releer, la versión 2 con la misma pintura, el panel
+  y tres resoluciones. Guarda en user://.
 - `tests/hand_look.tscn` (con ventana, unos 5 segundos): la mano abierta y en puño, de tres lados.
 - `tests/possess_check.tscn` (con ventana, unos 15 segundos): poseer; mirar la meca, la O, las tres vistas con
   la T, soltar y retomar sin mirar; capturas del cartel.
