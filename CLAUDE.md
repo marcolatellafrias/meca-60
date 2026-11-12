@@ -127,7 +127,7 @@ con **tres pisos** por dentro (vidrio y parantes al frente, la puerta atrás, si
 **Shift corre** (una banda sobre la caminata que se gana y se pierde despacio, como allá), **Ctrl se agacha** (acorta
 el palo del péndulo), **espacio** carga y suelta el **salto** (se carga altura) y, en el aire, el **propulsor**. En el
 aire va derecha y sin apoyo; aterriza cuando la punta del palo vuelve a tocar. **F1** su panel, **F2** pegarle arriba.
-**Sus brazos son físicos**: dos `MuscleArm` (ver Brazo) colgados de los hombros, en el último tercio del costado; **F**
+**Sus brazos son físicos**: dos `MuscleArm` (ver Brazo) colgados de los hombros, casi en el medio del costado; **F**
 cambia la postura (normal, a los costados; cubriéndose, los puños cerrados adelante), y las piñas van por brazo: clic
 izquierdo / derecho el directo, Q / E el gancho, Z / C el uppercut, 1 / 3 desde arriba. Caída, se recogen.
 **Adentro se camina** (**U** sube al piso del medio): es un marco (`MotionFrame`) como el torso de la meca de pelea; sus

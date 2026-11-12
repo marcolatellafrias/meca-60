@@ -44,7 +44,7 @@ const THICKNESS := 1.5
 ## cuerpo; adentro es negativo).
 const STANCES := {
 	Stance.NORMAL: Vector3(0.4, -6.2, -4.4),
-	Stance.COVER: Vector3(-2.4, -1.5, -8.4),
+	Stance.COVER: Vector3(-1.6, -1.5, -6.6),
 	Stance.TUCKED: Vector3(0.3, -1.4, -1.8),
 }
 ## A qué velocidad pasa el puño de una postura a otra (m/s) y en cuánto vuelve a su postura después de una piña (s).

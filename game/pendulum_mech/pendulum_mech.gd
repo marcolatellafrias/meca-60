@@ -42,10 +42,11 @@ const SILL := 0.75
 const GLASS := 1.4
 ## La puerta de atrás de cada piso.
 const DOOR := Vector2(1.1, 2.05)
-## LOS BRAZOS: el hombro, en el espacio del cubo (`x` del lado derecho), EN EL ÚLTIMO TERCIO DEL COSTADO, hacia atrás (lo
-## pidió el usuario el 12/11/2026: «no a la mitad… en el último tercio de la cara del cubo. Así es más natural la
-## postura»). Y cuánto pesan, en partes de lo que pesa el brazo solo (ver MuscleArm.weight).
-const SHOULDER := Vector3(SIZE * 0.5 + 1.0, 1.9, SIZE * 0.275)
+## LOS BRAZOS: el hombro, en el espacio del cubo (`x` del lado derecho), casi en el medio del costado. *El 12/11/2026
+## se probó en el último tercio, hacia atrás: la postura era más natural, pero el brazo alcanzaba 2,6 m menos hacia
+## adelante, y el usuario lo volvió («estaban bien los brazos a la mitad, no me gusta el sacrificio en rango»).* Y cuánto
+## pesan, en partes de lo que pesa el brazo solo (ver MuscleArm.weight).
+const SHOULDER := Vector3(SIZE * 0.5 + 1.0, 1.9, -0.4)
 const ARM_WEIGHT := 0.4
 ## Las teclas de las piñas: para el brazo izquierdo y para el derecho.
 const PUNCH_KEYS := {

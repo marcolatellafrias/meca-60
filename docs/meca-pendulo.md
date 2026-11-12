@@ -23,8 +23,8 @@ Medido (12/11/2026), con el jugador con cuerpo parado en el piso del medio: la m
 la cabina; en un salto no se mueve; cuando la meca se cae, él se cae adentro y queda adentro.
 
 ## Los brazos
-**Físicos**: dos [[brazo|brazos con músculos]] colgados de sus hombros, que van **en el último tercio del costado, hacia
-atrás**. Persiguen su postura con fuerza tope: van atrás cuando la meca gira o se frena, ceden si les pegan, y una piña
+**Físicos**: dos [[brazo|brazos con músculos]] colgados de sus hombros, casi en el medio del costado (se probaron en
+el último tercio, hacia atrás: más natural, pero alcanzaban 2,6 m menos hacia adelante). Persiguen su postura con fuerza tope: van atrás cuando la meca gira o se frena, ceden si les pegan, y una piña
 sacude al torso. Pesan menos que el brazo del banco (0,4), para que una piña no la dé vuelta.
 
 - **Dos posturas**, con la **F**: **normal** (los brazos a los costados, las manos abiertas) y **cubriéndose** (los
