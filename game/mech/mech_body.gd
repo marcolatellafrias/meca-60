@@ -80,20 +80,22 @@ static func foot_rest(root: Transform3D, side: float) -> Vector3:
 
 
 ## UNA PIERNA, de la cadera `hip` al pie apoyado en `ground` (el punto del piso bajo el tobillo, en el mundo; con el pie
-## en el aire, más arriba), con el pie mirando según `facing` (sólo cuenta su giro). Devuelve las partes (`thigh`,
-## `shin`, `foot`: su centro y orientación; los largos van por −Z) y las articulaciones (`knee`, `ankle`).
-static func leg(hip_point: Vector3, ground: Vector3, facing: Basis) -> Dictionary:
+## en el aire, más arriba), con el pie mirando según `facing` (sólo cuenta su giro). La rodilla dobla hacia `knee_way`
+## (por defecto, hacia donde mira el pie). Devuelve las partes (`thigh`, `shin`, `foot`: su centro y orientación; los
+## largos van por −Z) y las articulaciones (`knee`, `ankle`).
+static func leg(hip_point: Vector3, ground: Vector3, facing: Basis, knee_way := Vector3.ZERO) -> Dictionary:
 	var forward := -facing.z
 	forward.y = 0.0
 	forward = forward.normalized() if forward.length_squared() > 0.0001 else Vector3.FORWARD
 	var flat := Basis.looking_at(forward, Vector3.UP)
 	var ankle := ground + Vector3.UP * ANKLE
-	var knee := joint(hip_point, ankle, THIGH, SHIN, forward)
+	var bend := knee_way if knee_way.length_squared() > 0.0001 else forward
+	var knee := joint(hip_point, ankle, THIGH, SHIN, bend)
 	var reach := (ankle - hip_point).limit_length(THIGH + SHIN - 0.01)
 	var end := hip_point + reach
 	return {
-		"thigh": segment(hip_point, knee, forward),
-		"shin": segment(knee, end, forward),
+		"thigh": segment(hip_point, knee, bend),
+		"shin": segment(knee, end, bend),
 		"foot": Transform3D(flat, ground + flat * Vector3(0.0, FOOT_SIZE.y * 0.5, -FOOT_AHEAD)),
 		"knee": knee,
 		"ankle": end,

@@ -47,11 +47,22 @@ static var current := BodySettings.new()
 @export_range(0.5, 60.0, 0.5) var yaw_hold := 12.0
 @export_range(0.5, 20.0, 0.5) var yaw_grip := 6.0
 
-@export_group("Las piernas (pasos por radio)")
-@export_range(0.3, 8.0, 0.1) var step_radius := 2.5
-@export_range(0.0, 1.5, 0.05) var step_lead := 0.35
-@export_range(0.1, 1.5, 0.05) var step_time := 0.4
+@export_group("Las piernas (pasos de largo fijo)")
+## EL PASO TIENE SIEMPRE EL MISMO LARGO: el pie pisa `step_reach` adelante de su lugar (hacia donde va). Más rápido no
+## pisa más lejos: da los pasos más seguido. Cuánto dura un paso es lo que tarda el torso en recorrer el doble de eso,
+## entre `step_fastest` y `step_slowest`.
+@export_range(0.3, 6.0, 0.1) var step_reach := 2.4
+@export_range(0.1, 1.5, 0.05) var step_fastest := 0.3
+@export_range(0.2, 2.0, 0.05) var step_slowest := 0.7
 @export_range(0.0, 4.0, 0.1) var step_height := 1.4
+## Quieta, un pie que quedó más lejos que esto de su lugar (o más girado que `settle_turn`) se acomoda con un paso.
+@export_range(0.1, 3.0, 0.05) var settle_gap := 0.5
+@export_range(2.0, 45.0, 1.0) var settle_turn := 10.0
+## Lo más que un paso gira el pie de lo que mira el otro: girando en el lugar, gira de a pasos.
+@export_range(10.0, 90.0, 1.0) var turn_per_step := 40.0
+## LAS RODILLAS van hacia adelante y un poco hacia afuera; agachada, más hacia afuera (parte de adelante).
+@export_range(0.0, 1.5, 0.05) var knee_out := 0.2
+@export_range(0.0, 2.0, 0.05) var knee_out_crouched := 0.6
 ## Cuánto tardan en recogerse al caer y en estirarse al enderezarse (s).
 @export_range(0.05, 1.5, 0.05) var fold_time := 0.3
 @export_range(0.05, 1.5, 0.05) var unfold_time := 0.25

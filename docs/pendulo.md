@@ -34,9 +34,14 @@ de fuerza y su inclinación son huesos; la meca tiene colisión 1:1 con su caja 
 - **El pedido del mouse no se acumula**: nunca va más de 110° por delante del torso. Si no, un mouse más rápido que el
   torso se le adelanta más de media vuelta y el torso gira para el otro lado.
 - **La caja no roza** (fricción 0, parada): lo que la frena son los pies.
-- **Las piernas son dibujo** (IK, `MechBody`): pisan por radio alrededor del apoyo, mirando como el torso; cada pie
-  guarda hacia dónde miraba al pisar y **la pelvis**, una sola pieza, mira al promedio de los dos pies. Caído se pliegan;
-  al enderezarse, se estiran.
+- **Las piernas son dibujo** (IK, `MechBody`; `BodyLegs`). **El paso tiene siempre el mismo largo** (13/11/2026, antes
+  pisaban por radio): andando, los pies se turnan sin parar y cada uno pisa adelante de su lugar (a lo más
+  `step_reach`); más rápido, **más seguido, no más largo** (medido: 4,8 m por paso caminando a 8 m/s y corriendo a
+  13,6; 1,7 y 2,8 pasos por segundo). Quieta, un pie lejos o girado se acomoda. **Nunca se cruzan** (un pie pisa
+  siempre de su lado del otro) y girando en el lugar giran de a pasos (`turn_per_step`). **Las rodillas** van hacia
+  adelante y un poco afuera; agachada, más afuera. **La caja no sube ni baja con los pasos**: lo absorben las rodillas.
+  **La pelvis**, una sola pieza, mira al promedio de los dos pies. Caído se pliegan; al enderezarse, se estiran. Para
+  mirarlas: `tests/mech_legs_look.tscn` (unos 40 s).
 - Pasado el ángulo, **o sin piso bajo su apoyo** (un borde, un pozo), cae, suelto del todo, y se recupera con las
   toberas del [[cubo]].
 - Poseído ([[poseer]]: mirándolo, **O**): W/S hacia donde mira el torso, A/D de costado, el mouse gira.

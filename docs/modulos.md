@@ -6,7 +6,7 @@ tocan. Cómo está armado el código por dentro, en [[estructura]].
 
 | Módulo | Es dueño de | Qué hace |
 |---|---|---|
-| **Meca** | `game/balance_body/`, `game/mech/` (menos la cabina), `game/pose_arm/`, `game/muscle_arm/` | Cómo pelea la meca propia: su equilibrio, moverse, saltar, los dashes y propulsores, los brazos y sus accesorios (sierra, cañón, ametralladora), la energía, las roturas. **Es dueña de la base común** (ver [[base-comun]]). |
+| **Meca** | `game/balance_body/`, `game/mech/` (menos la cabina), `game/pose_arm/`, `game/muscle_arm/`, `game/projectiles/` (los proyectiles por red, que también usan los jefes), `game/dodge_arena/` | Cómo pelea la meca propia: su equilibrio, moverse, saltar, los dashes y propulsores, los brazos y sus accesorios (sierra, cañón, ametralladora), la energía, las roturas. **Es dueña de la base común** (ver [[base-comun]]). |
 | **Interior** | `game/mech/mech_cabin.gd`, `mech_exterior.gd`, `pelvis_lift.gd`, y lo nuevo de consolas y tableros (`game/consoles/`, por ejemplo) | Cómo la manejan los personajes desde adentro: las consolas, los huecos donde se enchufan los recursos, las reparaciones, los pisos, la escalera, el ascensor. |
 | **Personajes** | `game/character/`, `game/interactables/` (agarrar, sentarse, los controles de mano) | Los seis arquetipos, su cuerpo, caminar, caerse, agarrar, sentarse. |
 | **Jefes** | `game/bosses/` (nueva) | Las mecas enemigas, sobre la base común. *Todavía no arrancó.* |
