@@ -1,11 +1,15 @@
 class_name Mech
 extends Node3D
 
-## LA MECA DEL BOCETO: un torso de tres pisos (MechTorso) sobre dos piernas (MechLeg), con dos brazos comunes que
-## pegan piñas cargadas (MechArm; el derecho lleva el cañón encima del antebrazo) y un montacargas atrás (MechLift).
+## LA MECA DEL BOCETO: el cuerpo de la meca (MechBody: pies, piernas, pelvis, torso y brazos, definido una sola vez)
+## con el torso de tres pisos como cabina (MechTorso), las piernas dibujadas por MechLeg, dos brazos comunes que pegan
+## piñas cargadas (MechArm; el derecho lleva el cañón encima del antebrazo) y un montacargas atrás (MechLift).
 ##
-## LA RAÍZ es la meca en el suelo: su lugar y hacia dónde caminan las piernas (−Z). No se inclina. El torso cuelga de
-## ella a la altura de la cadera, GIRADO APARTE (`torso_aim`, con su velocidad de giro), e inclinado con el equilibrio.
+## LA RAÍZ es la meca en el suelo: su lugar y hacia dónde caminan las piernas (−Z). No se inclina. La PELVIS mira hacia
+## donde ella y se inclina con el equilibrio; el TORSO va encima, GIRADO APARTE (`torso_aim`, con su velocidad de giro).
+##
+## NACE DONDE VIVE: el torso y el montacargas se ubican antes de armarles nada encima, así nada guarda el origen del
+## mundo como su lugar (ver MechArm, LAS REGLAS DEL PUÑO; MechTorso.carry_mounted).
 ##
 ## ── LAS PALANCAS ────────────────────────────────────────────────────────────────────────────────────────────────
 ## Lo que maneja la meca, sea un jugador o el rival sin piloto (MechBrain): la marcha (`throttle`, `steer`), afirmarse
@@ -36,14 +40,13 @@ extends Node3D
 
 signal fell()
 
-const PELVIS := 7.4
-const HIP_X := 2.7
 const WALK_SPEED := 6.0
 const BACK_SPEED := 3.0
 const ACCEL := 3.5
 const TURN_SPEED := 0.75
 const RADIUS := 5.5
 const STRIDE := 5.0
+## Cuánto se levanta un pie al dar el paso.
 const LIFT := 1.4
 ## Cuánto se inclina el torso con el equilibrio a 1, en radianes.
 const TILT := deg_to_rad(13.0)
@@ -100,6 +103,7 @@ var _turn := 0.0
 var _twist := 0.0
 var _phase := 0.0
 var _legs: Array[MechLeg] = []
+var _pelvis: MeshInstance3D = null
 var _fall_direction := Vector2.ZERO
 var _fall_clock := 0.0
 var _fall_from := Vector2.ZERO
@@ -117,24 +121,27 @@ var _hud: MechHud = null
 func _ready() -> void:
 	torso = MechTorso.new()
 	torso.top_level = true
+	torso.transform = MechBody.torso(MechBody.waist(global_transform, MechBody.WAIST, Basis()), 0.0)
 	add_child(torso)
 	lift = MechLift.new()
+	lift.set_range(-MechBody.WAIST + 0.15, MechTorso.floor_y(0))
+	lift.transform = lift.placed(torso.transform, MechTorso.lift_centre())
 	add_child(lift)
-	lift.set_range(-PELVIS + 0.15, MechTorso.floor_y(0))
+	_pelvis = Clay.box(self, MechBody.PELVIS_SIZE, Vector3.ZERO, Clay.METAL.darkened(0.15))
+	_pelvis.name = "Pelvis"
+	_pelvis.top_level = true
 	for side: float in [-1.0, 1.0]:
 		var leg := MechLeg.new()
 		leg.name = "Pierna izquierda" if side < 0.0 else "Pierna derecha"
 		add_child(leg)
 		_legs.append(leg)
-	var shoulder_y := MechTorso.floor_y(1) + 1.6
 	for side: float in [-1.0, 1.0]:
 		var arm := MechArm.new()
 		arm.name = "Brazo izquierdo" if side < 0.0 else "Brazo derecho"
 		arm.side = side
 		arm.has_cannon = side > 0.0
 		arm.glove_color = glove_color
-		arm.position = Vector3(side * (MechTorso.WIDTH * 0.5 + 1.3), shoulder_y, -0.6)
-		arm.exclude = [torso.get_rid(), lift.get_rid()]
+		arm.position = MechBody.shoulder_local(side)
 		arm.own_body = torso
 		torso.add_child(arm)
 		arm.kicked.connect(_on_kick)
@@ -151,8 +158,13 @@ func _ready() -> void:
 	add_child(_hud)
 	torso_aim = global_rotation.y
 	_chase_yaw = torso_aim
+	# EL PUÑO NO CHOCA CON SU PROPIA MECA: con ninguno de sus cuerpos (el torso, el montacargas, las sillas…).
+	var own: Array[RID] = []
+	for node in find_children("*", "CollisionObject3D", true, false):
+		own.append((node as CollisionObject3D).get_rid())
+	for arm: MechArm in [left_arm, right_arm]:
+		arm.exclude = own
 	_place_body(0.0)
-	_place_body.call_deferred(0.0)
 
 
 ## EL JUGADOR LOCAL (el personaje de character-parametric), el que puede tripularla.
@@ -475,20 +487,20 @@ func _fall() -> void:
 ## Cuánto está inclinado el torso ahora (dirección en el plano de la meca y ángulo), y la altura de la cadera.
 func _lean() -> Dictionary:
 	var lean := stability * TILT
-	var pelvis := PELVIS - absf(sin(_phase * TAU)) * 0.35 * clampf(absf(_speed) / WALK_SPEED + absf(_turn), 0.0, 1.0)
+	var pelvis := MechBody.WAIST - absf(sin(_phase * TAU)) * 0.35 * clampf(absf(_speed) / WALK_SPEED + absf(_turn), 0.0, 1.0)
 	match state:
 		State.FALLING:
 			# Se va cayendo cada vez más rápido, como algo pesado.
 			var share := ease(clampf(_fall_clock / FALL_TIME, 0.0, 1.0), 2.4)
 			lean = _fall_direction * lerpf(_fall_from.length() * TILT, FALLEN_ANGLE, share)
-			pelvis = lerpf(PELVIS, 3.2, share)
+			pelvis = lerpf(MechBody.WAIST, 3.2, share)
 		State.DOWN:
 			lean = _fall_direction * FALLEN_ANGLE
 			pelvis = 3.2
 		State.RISING:
 			var share := ease(clampf(_fall_clock / RISE_TIME, 0.0, 1.0), -2.0)
 			lean = _fall_direction * lerpf(FALLEN_ANGLE, 0.0, share)
-			pelvis = lerpf(3.2, PELVIS, share)
+			pelvis = lerpf(3.2, MechBody.WAIST, share)
 	return {"lean": lean, "pelvis": pelvis}
 
 
@@ -497,25 +509,22 @@ func _place_body(delta: float) -> void:
 	var pose := _lean()
 	var lean: Vector2 = pose["lean"]
 	var pelvis: float = pose["pelvis"]
-	var tilt := Basis()
-	if lean.length() > 0.0001:
-		var toward := Vector3(lean.x, 0.0, -lean.y).normalized()
-		tilt = Basis(Vector3.UP.cross(toward).normalized(), lean.length())
-	var hips := global_transform * Transform3D(Basis(), Vector3(0.0, pelvis, 0.0))
-	torso.global_transform = hips * Transform3D(tilt * Basis(Vector3.UP, _twist), Vector3.ZERO)
+	var waist := MechBody.waist(global_transform, pelvis, MechBody.tilt(lean))
+	torso.global_transform = MechBody.torso(waist, _twist)
+	torso.carry_mounted()
+	_pelvis.global_transform = MechBody.pelvis(waist)
 	lift.place(torso.global_transform, MechTorso.lift_centre(), delta)
-	# Las piernas: de la cadera (abajo del torso, inclinada con él) al pie, que va y viene con la marcha.
+	# Las piernas: de la cadera (en la pelvis, inclinada con ella) al pie, que va y viene con la marcha.
 	var moving := clampf(absf(_speed) / WALK_SPEED + absf(_turn) * 1.5, 0.0, 1.0)
 	var direction := -1.0 if _speed < -0.05 else 1.0
 	for i in _legs.size():
 		var side := -1.0 if i == 0 else 1.0
-		var hip := Vector3(0.0, pelvis, 0.0) + tilt * Vector3(side * HIP_X, -0.3, 0.0)
 		var angle := (_phase + 0.5 * i) * TAU
-		var foot := Vector3(side * (HIP_X + 0.3), maxf(0.0, sin(angle)) * LIFT * moving,
-			direction * cos(angle) * STRIDE * 0.5 * moving)
+		var step := Vector3(0.0, maxf(0.0, sin(angle)) * LIFT * moving, direction * cos(angle) * STRIDE * 0.5 * moving)
 		if state != State.STANDING:
-			foot = Vector3(side * (HIP_X + 0.3), 0.0, 0.0)
-		_legs[i].pose(hip, foot, Vector3.FORWARD)
+			step = Vector3.ZERO
+		var ground := MechBody.foot_rest(global_transform, side) + global_basis * step
+		_legs[i].pose(MechBody.leg(MechBody.hip(waist, side), ground, global_basis))
 	_place_camera(delta)
 
 
@@ -523,7 +532,7 @@ func _place_body(delta: float) -> void:
 ## por sobre el hombro, siguiéndolo con un poco de atraso (así se ve cuánto tarda en girar). En la vigía: alrededor
 ## del torso y de lejos.
 func _place_camera(delta: float) -> void:
-	var centre := global_position + Vector3(0.0, PELVIS + MechTorso.top_y() * 0.5, 0.0)
+	var centre := global_position + Vector3(0.0, MechBody.WAIST + MechTorso.top_y() * 0.5, 0.0)
 	if _from_outside and _first_person:
 		var eyes := Vector3(0.0, MechTorso.floor_y(1) + 1.6, -MechTorso.DEPTH * 0.5 - 0.6)
 		_camera.global_transform = torso.global_transform * Transform3D(Basis.from_euler(Vector3(_chase_pitch, 0.0, 0.0)), eyes)

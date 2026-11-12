@@ -2,8 +2,9 @@ class_name MechArm
 extends Node3D
 
 ## UN BRAZO DE LA MECA, de brazo común: hombro, brazo, codo, antebrazo y puño, colgado de un costado del torso (el nodo
-## está en el hombro y no gira: su espacio es el del torso). Lo que se mueve es el puño; el codo sale solo (ver
-## MechLeg.joint). Un brazo puede llevar EL CAÑÓN encima del antebrazo (`has_cannon`): el brazo sigue pegando igual.
+## está en el hombro y no gira: su espacio es el del torso). Lo que se mueve es el puño; el codo y las medidas son las
+## del cuerpo de la meca (MechBody.arm). Un brazo puede llevar EL CAÑÓN encima del antebrazo (`has_cannon`): el brazo
+## sigue pegando igual.
 ##
 ## ── LA PIÑA ─────────────────────────────────────────────────────────────────────────────────────────────────────
 ## Lo pidió el usuario el 11/11/2026: «un golpe… que se carga con un tiempo y se suelta, y después se mueve la
@@ -17,20 +18,32 @@ extends Node3D
 ##   LO QUE TOCA: el puño barre su camino y se frena en lo primero que toca. Si eso tiene `take_hit` (otra meca), le
 ##     pega con la velocidad del puño EN EL MUNDO, que suma la marcha de la meca y el giro del torso. Un edificio lo traba
 ##     y nada más: no hay un empujón inventado (el usuario: sólo si sale solo de las reglas).
+##
+## ── LAS REGLAS DEL PUÑO (11/11/2026) ────────────────────────────────────────────────────────────────────────────
+## *Un puño de la meca roja quedó a 101 m de su hombro, en el origen del mundo, para siempre: la meca se armaba en el
+## origen y se la llevaba a la arena, el puño barrió el mapa entero en su primer paso, chocó con lo que había quedado ahí
+## y se guardó donde chocó.* Ahora:
+##   · EL PUÑO SIEMPRE ESTÁ AL ALCANCE DEL HOMBRO: lo que se guarda pasa siempre por `_within_reach`; un choque acorta el
+##     paso, nunca lo deja lejos.
+##   · SÓLO BARRE LO QUE SE MOVIÓ EN UN PASO: sin un paso anterior (al nacer), o si el hombro saltó (la meca
+##     reapareció), no hay barrido: el puño va donde va.
+##   · CHOCA SÓLO CON EL MUNDO (`HIT_MASK`) y nunca con su propia meca (`exclude`, que pone la meca con todos sus
+##     cuerpos).
 
 signal kicked(direction: Vector3, amount: float)
 
 enum Phase { GUARD, CHARGE, STRIKE, RECOVER }
 
-const UPPER := 5.5
-const FOREARM := 5.5
-const REACH := UPPER + FOREARM - 0.05
+const REACH := MechBody.UPPER_ARM + MechBody.FOREARM - 0.05
 const CLOSEST := 2.5
 const FIST_RADIUS := 1.2
-## Dónde espera el puño y adónde va al cargar del todo (en el espacio del hombro, para el brazo izquierdo: `x` se da
-## vuelta del otro lado).
-const GUARD_POSE := Vector3(1.8, 0.3, -5.5)
-const WINDUP_POSE := Vector3(-0.8, -1.2, -2.0)
+## Adónde va el puño al cargar del todo (en el espacio del hombro, del lado derecho: `x` se da vuelta del otro). La
+## guardia es la del cuerpo (MechBody.guard_local).
+const WINDUP := Vector3(0.8, -1.2, -2.0)
+## Con qué choca el puño: el mundo (la capa 1: el piso, los edificios, la otra meca).
+const HIT_MASK := 1
+## Más que esto en un paso no es un puño que se mueve: es la meca que reapareció (m).
+const JUMP := 30.0
 const CHARGE_TIME := 0.8
 ## Cuánto acelera el puño al salir, sin carga y con la carga llena (m/s²), y lo más rápido que va.
 const ACCEL_LOW := 90.0
@@ -67,6 +80,7 @@ var _velocity := Vector3.ZERO
 var _drive := Vector3.FORWARD
 var _clock := 0.0
 var _last_global := Vector3.ZERO
+var _has_last := false
 var _reload := 0.0
 var _sphere := SphereShape3D.new()
 var _upper: MeshInstance3D = null
@@ -80,8 +94,10 @@ var _barrel: Node3D = null
 func _ready() -> void:
 	_sphere.radius = FIST_RADIUS
 	Clay.sphere(self, 1.3, Vector3.ZERO, Clay.DARK)
-	_upper = Clay.box(self, Vector3.ONE, Vector3.ZERO, Clay.METAL.darkened(0.1))
-	_forearm = Clay.box(self, Vector3.ONE, Vector3.ZERO, Clay.METAL.darkened(0.25))
+	_upper = Clay.box(self, Vector3(MechBody.ARM_THICKNESS, MechBody.ARM_THICKNESS, MechBody.UPPER_ARM), Vector3.ZERO,
+		Clay.METAL.darkened(0.1))
+	_forearm = Clay.box(self, Vector3(MechBody.FOREARM_THICKNESS, MechBody.FOREARM_THICKNESS, MechBody.FOREARM),
+		Vector3.ZERO, Clay.METAL.darkened(0.25))
 	_elbow = Clay.sphere(self, 0.9, Vector3.ZERO, Clay.DARK)
 	_glove = Node3D.new()
 	_glove.name = "Puño"
@@ -97,13 +113,16 @@ func _ready() -> void:
 		Clay.box(_cannon, Vector3(1.4, 1.0, 2.6), Vector3.ZERO, Clay.DARK)
 		Clay.cylinder(_barrel, 0.4, 3.6, Vector3(0, 0, -2.6), Clay.DARK, Vector3(90, 0, 0))
 		Clay.cylinder(_barrel, 0.55, 0.5, Vector3(0, 0, -4.3), Clay.DARK.darkened(0.3), Vector3(90, 0, 0))
-	_fist = _pose(GUARD_POSE)
-	_last_global = global_transform * _fist
+	_fist = MechBody.guard_local(side)
 	_draw()
 
 
-func _pose(pose: Vector3) -> Vector3:
-	return Vector3(pose.x * -side, pose.y, pose.z)
+func _guard() -> Vector3:
+	return MechBody.guard_local(side)
+
+
+func _windup() -> Vector3:
+	return Vector3(side * WINDUP.x, WINDUP.y, WINDUP.z)
 
 
 ## Empieza a cargar (el clic apretado). Se puede cargar desde la guardia o mientras vuelve.
@@ -179,13 +198,13 @@ func _physics_process(delta: float) -> void:
 	var wanted := _fist
 	match phase:
 		Phase.GUARD:
-			wanted = _fist.move_toward(_pose(GUARD_POSE), MOVE_SPEED * delta)
+			wanted = _fist.move_toward(_guard(), MOVE_SPEED * delta)
 		Phase.CHARGE:
 			charge = minf(charge + delta / CHARGE_TIME, 1.0)
-			wanted = _fist.move_toward(_pose(GUARD_POSE).lerp(_pose(WINDUP_POSE), charge), MOVE_SPEED * delta)
+			wanted = _fist.move_toward(_guard().lerp(_windup(), charge), MOVE_SPEED * delta)
 		Phase.RECOVER:
-			wanted = _fist.move_toward(_pose(GUARD_POSE), MOVE_SPEED * 0.7 * delta)
-			if wanted.is_equal_approx(_pose(GUARD_POSE)):
+			wanted = _fist.move_toward(_guard(), MOVE_SPEED * 0.7 * delta)
+			if wanted.is_equal_approx(_guard()):
 				phase = Phase.GUARD
 		Phase.STRIKE:
 			_clock += delta
@@ -222,12 +241,13 @@ func _move_to(wanted: Vector3, delta: float) -> void:
 	var from := _last_global
 	var to := global_transform * wanted
 	var motion := to - from
-	if motion.length() > 0.001:
+	if _has_last and motion.length() > 0.001 and motion.length() < JUMP:
 		var space := get_world_3d().direct_space_state
 		var query := PhysicsShapeQueryParameters3D.new()
 		query.shape = _sphere
 		query.transform = Transform3D(Basis(), from)
 		query.motion = motion
+		query.collision_mask = HIT_MASK
 		query.exclude = exclude
 		var fractions := space.cast_motion(query)
 		var safe := fractions[0]
@@ -239,9 +259,10 @@ func _move_to(wanted: Vector3, delta: float) -> void:
 			var info := space.get_rest_info(query)
 			_touch(info, motion / maxf(delta, 0.0001), from + motion * unsafe)
 			to = from + motion * safe
-			wanted = global_transform.affine_inverse() * to
+			wanted = _within_reach(global_transform.affine_inverse() * to)
 	_fist = wanted
 	_last_global = global_transform * _fist
+	_has_last = true
 
 
 ## Lo que pasa cuando el puño toca algo: si va pegando y eso se golpea, le pega; si no, se traba. Vuelve a la guardia.
@@ -264,16 +285,16 @@ func _touch(info: Dictionary, world_velocity: Vector3, at: Vector3) -> void:
 
 
 func _draw() -> void:
-	var elbow := MechLeg.joint(Vector3.ZERO, _fist, UPPER, FOREARM, Vector3(side, -0.8, 0.5))
-	var wrist := _fist.normalized() * minf(_fist.length(), UPPER + FOREARM - 0.01)
-	Clay.segment(_upper, Vector3.ZERO, elbow, 1.3)
-	Clay.segment(_forearm, elbow, wrist, 1.1)
-	_elbow.position = elbow
-	var along := (wrist - elbow).normalized()
-	var up := Vector3.UP if absf(along.dot(Vector3.UP)) < 0.95 else Vector3.BACK
-	_glove.transform = Transform3D(Basis.looking_at(along, up), _fist)
+	var arm := MechBody.arm(Vector3.ZERO, _fist, side, Basis())
+	var forearm: Transform3D = arm["forearm"]
+	_upper.transform = arm["upper"]
+	_forearm.transform = forearm
+	_elbow.position = arm["elbow"]
+	_glove.transform = Transform3D(forearm.basis, _fist)
 	if _cannon != null:
-		_cannon.transform = Transform3D(Basis.looking_at(along, up), elbow.lerp(wrist, 0.45) + Vector3.UP * 1.1)
+		var elbow: Vector3 = arm["elbow"]
+		var wrist: Vector3 = arm["wrist"]
+		_cannon.transform = Transform3D(forearm.basis, elbow.lerp(wrist, 0.45) + forearm.basis.y * 1.1)
 
 
 ## Lo que tenga `take_hit` en `collider` o en sus padres.

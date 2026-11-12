@@ -35,6 +35,10 @@ var _session: SandboxSession = null
 var _rows: Array[Dictionary] = []
 var _panel: SandboxPanel = null
 var _current: SandboxParcel = null
+## EL F1 DEL SANDBOX: el panel de depuración de character-parametric (DebugPanel). El del jugador de allá sólo existe
+## con la depuración prendida, que trae teclas (G, F, H) que acá son de la meca; éste es del sandbox, y cada clase de
+## parcela le agrega su pestaña (`SeededArchetype.debug_tab`).
+var _debug_panel: DebugPanel = null
 
 
 ## EL CATÁLOGO: una entrada por fila, en orden. Una fila nueva se agrega acá.
@@ -54,6 +58,7 @@ func _ready() -> void:
 	_build_rows()
 	_panel = SandboxPanel.new()
 	add_child(_panel)
+	_build_debug_panel()
 	add_to_group("character_spawner")
 	# Mirando hacia las parcelas (+X).
 	_spawn(false, PLAYER_START, -PI * 0.5, 0.0)
@@ -61,6 +66,21 @@ func _ready() -> void:
 	_session.name = "SandboxSession"
 	_session.sandbox = self
 	add_child(_session)
+
+
+func _build_debug_panel() -> void:
+	_debug_panel = DebugPanel.new()
+	_debug_panel.name = "F1"
+	add_child(_debug_panel)
+	_debug_panel.add_text("Info", "El F1 del sandbox de la meca: cada fila agrega su pestaña.")
+	var done := {}
+	for row in _rows:
+		for parcel: SandboxParcel in row["parcels"]:
+			var kind: Script = parcel.archetype.get_script()
+			if done.has(kind):
+				continue
+			done[kind] = true
+			parcel.archetype.debug_tab(_debug_panel)
 
 
 ## ── ENTE O CUERPO (la B), como en el sandbox de character-parametric (DesignSandbox._spawn y _respawn_as) ────────────
@@ -255,7 +275,13 @@ func _refresh() -> void:
 
 func _input(event: InputEvent) -> void:
 	var key := event as InputEventKey
-	if key == null or not key.pressed or key.echo or not UIState.gameplay_active():
+	if key == null or not key.pressed or key.echo:
+		return
+	if key.keycode == KEY_F1:
+		_debug_panel.toggle()
+		get_viewport().set_input_as_handled()
+		return
+	if not UIState.gameplay_active():
 		return
 	if key.keycode == KEY_B and not _busy():
 		toggle_body()

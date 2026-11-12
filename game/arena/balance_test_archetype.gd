@@ -42,3 +42,8 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 
 func parcel_options() -> Array[Dictionary]:
 	return TestBall.parcel_options()
+
+
+## Las perillas de la meca de equilibrio (ver MechDummy).
+func debug_tab(panel: DebugPanel) -> void:
+	MechDummy.build_debug_tab(panel)

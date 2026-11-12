@@ -1,72 +1,80 @@
 class_name MechDummy
 extends Node3D
 
-## LA MECA DE EQUILIBRIO: una copia de la meca (torso, piernas y brazos en guardia) que sólo se tambalea, se cae y se
-## levanta, con EL MISMO SISTEMA QUE LOS PERSONAJES DE CHARACTER-PARAMETRIC (`CharacterRigidBody3D` y `RagdollUtil` de
-## allá; ver su docs/technical/characters.md). Lo pidió el usuario el 11/11/2026, para comparar con el resorte de la
-## meca de pelea, que se sentía rígido. No camina ni pega.
+## LA MECA DE EQUILIBRIO: EL CUERPO DE LA MECA (MechBody: pies, piernas, pelvis, torso y brazos en guardia, el mismo de
+## la meca de pelea) que sólo se tambalea, se cae y se levanta. No camina ni pega. Su equilibrio es EL DE LOS PERSONAJES
+## DE CHARACTER-PARAMETRIC (`CharacterRigidBody3D` y `RagdollUtil` de allá; ver su docs/technical/characters.md), con dos
+## agregados que se prenden y apagan en el F1 (lo pidió el usuario el 11/11/2026: «nunca es como que le tiro algo y se
+## echa para atrás y como que recobra el equilibrio»):
 ##
-##   1. EL CUERPO ES FÍSICO DE VERDAD: un RigidBody3D parado (no gira), sin fricción, que frena solo (`BRAKE`). Lo que
-##      lo golpea (una bola, ver TestBall) le cambia la velocidad: la meca se corre.
-##   2. EL GOLPE SE MIDE: cada paso, lo que cambió la velocidad sin que ella lo pidiera (lo que no es su freno). Debajo
-##      de `HIT_NOISE` no cuenta.
-##   3. LA INCLINACIÓN: un resorte de dos ejes (`lean`; rigidez y amortiguación) al que cada golpe le SUMA, de una,
-##      Δv × `LEAN_PER_MS` / firmeza. La FIRMEZA es el peso sobre el de referencia por la estabilidad del lado de donde
-##      viene (adelante, atrás, de costado). El torso se inclina con el resorte; las piernas siguen con los pies quietos.
-##   4. LA CAÍDA, al pasar `FALL_AT` (0,85): si un golpe solo ya lo pasa, se cae en el acto; si se fue acumulando, se ve
-##      inclinarse y cae `FALL_WARNING` después. Se cae COMO UN MUÑECO DE VERDAD: cada pieza es un cuerpo, unidas por
-##      articulaciones con resortes (los músculos) y topes, que salen con la velocidad que traía. Además (esto no está
-##      en character-parametric, que es de una persona) cada pieza sale con más velocidad cuanto más alta está
-##      (`TOPPLE`), como si girara sobre los pies: una meca de 17 m que sólo se deslizara no se leería como caída.
-##   5. LEVANTARSE: en el suelo `DOWN_TIME`; después cada pieza va de donde quedó a la postura parada en `RISE_TIME`,
-##      con el cuerpo puesto debajo del torso.
+##   1. EL CUERPO ES FÍSICO DE VERDAD: un RigidBody3D parado (no gira), sin fricción, que frena solo (`brake`). Lo que lo
+##      golpea (una bola, ver TestBall) le cambia la velocidad: la meca se corre.
+##   2. EL GOLPE SE MIDE: cada paso, lo que cambió la velocidad sin que ella lo pidiera. Debajo de `HIT_NOISE` no cuenta.
+##   3. LA INCLINACIÓN: un resorte de dos ejes (`lean`; rigidez y amortiguación). Cada golpe vale Δv × `lean_per_ms` /
+##      firmeza; la FIRMEZA es el peso sobre el de referencia por la estabilidad del lado de donde viene.
+##        · Como allá (`hit_pushes` apagado): el golpe SE SUMA A LA INCLINACIÓN, de una; el resorte la devuelve.
+##        · EMPUJA (`hit_pushes`, el agregado): el golpe se suma a la VELOCIDAD de la inclinación (× `push_rate`): la meca
+##          se va inclinando, llega a su punto y vuelve; se ve el envión.
+##   4. LOS PASOS (`steps`, el agregado): pasada `step_at`, da un paso hacia donde se va (un pie, después el otro): la
+##      base se corre debajo del cuerpo y le saca inclinación (`step_catch` por paso). Mientras alcancen los pasos, se
+##      recupera trastabillando; si no, se cae.
+##   5. LA CAÍDA, al pasar `fall_at`: si un golpe solo ya lo pasa (como allá), en el acto; si se fue acumulando, se ve
+##      inclinarse y cae `fall_warning` después. Se cae COMO UN MUÑECO DE VERDAD: cada parte es un cuerpo, unidas por
+##      articulaciones con resortes (los músculos) y topes, que salen con la velocidad que traía, más (esto no está allá,
+##      que es de una persona) cuanto más altas, como si girara sobre los pies (`topple`).
+##   6. LEVANTARSE: en el suelo `down_time`; después cada parte va de donde quedó a la postura parada en `rise_time`.
 ##
-## Los números de character-parametric son de una persona de 60 kg: acá la firmeza 1 es la de esta meca
-## (`REFERENCE_MASS` = su masa), y el resorte va más lento (`SPRING_SCALE`, `DAMP_SCALE`), que es grande.
+## Los números de allá son de una persona de 60 kg: acá la firmeza 1 es la de esta meca (`REFERENCE_MASS` = su masa), y
+## el resorte va más lento (`spring_scale`, `damp_scale`). Todos se tocan en el F1 (ver `build_debug_tab`) y valen para
+## todas las mecas de equilibrio.
 
 signal fell()
 signal stood_up()
 
 const MASS := 50000.0
 const REFERENCE_MASS := 50000.0
-const PELVIS := 7.4
-const HIP_X := 2.7
-const THIGH := 4.4
-const SHIN := 4.4
-const UPPER_ARM := 5.5
-const FOREARM := 5.5
-const LIMB := 1.2
-## De character-parametric (CharacterRigidBody3D): golpe mínimo (m/s), cuánto inclina cada m/s, dónde cae, el aviso.
 const HIT_NOISE := 0.3
-const LEAN_PER_MS := 0.3
-const FALL_AT := 0.85
-const FALL_WARNING := 0.15
-const STIFFNESS := 25.0
-const DAMPING := 6.0
+
+## ── LAS PERILLAS (el F1) ─────────────────────────────────────────────────────────────────────────────────────────
+## De character-parametric (CharacterRigidBody3D): cuánto inclina cada m/s, dónde cae, el aviso, el resorte.
+static var lean_per_ms := 0.3
+static var fall_at := 0.85
+static var fall_warning := 0.15
+static var stiffness := 25.0
+static var damping := 6.0
 ## Más lento que una persona.
-const SPRING_SCALE := 0.35
-const DAMP_SCALE := 0.6
+static var spring_scale := 0.35
+static var damp_scale := 0.6
 ## Estabilidad de cada lado (más de 1, cuesta más voltearla por ahí).
-const STABILITY_FORWARD := 1.0
-const STABILITY_BACKWARD := 0.8
-const STABILITY_SIDEWAYS := 0.7
-## Cuánto se inclina el torso con la inclinación en 1.
-const LEAN_ANGLE := deg_to_rad(20.0)
+static var stability_forward := 1.0
+static var stability_backward := 0.8
+static var stability_sideways := 0.7
+## Cuánto se inclina el torso con la inclinación en 1 (grados).
+static var lean_angle := 20.0
 ## Cuánto frena sola, parada (m/s²): sus pies la sostienen.
-const BRAKE := 4.0
-const TOPPLE := 1.0
-const DOWN_TIME := 4.0
-const RISE_TIME := 2.5
+static var brake := 4.0
+static var topple := 1.0
+static var down_time := 4.0
+static var rise_time := 2.5
+## Los agregados (ver arriba).
+static var hit_pushes := true
+static var push_rate := 6.0
+static var steps := true
+static var step_at := 0.4
+static var step_length := 3.5
+static var step_time := 0.5
+static var step_catch := 0.45
 
 enum State { STANDING, DOWN, RISING }
 
 var state := State.STANDING
-## La inclinación (x a la derecha, y adelante, en el espacio de la meca), lo que tumba al pasar `FALL_AT`.
+## La inclinación (x a la derecha, y adelante, en el espacio de la meca), lo que tumba al pasar `fall_at`.
 var lean := Vector2.ZERO
-## El último golpe (m/s) y la inclinación más grande desde que estaba quieta, para mirar.
+## El último golpe (m/s), la inclinación más grande desde que estaba quieta y lo que pasó, para mirar.
 var last_hit := 0.0
 var peak_lean := 0.0
 var falls := 0
+var steps_taken := 0
 
 var _body: RigidBody3D = null
 var _yaw := 0.0
@@ -76,14 +84,19 @@ var _velocity_after := Vector3.ZERO
 var _fall_in := -1.0
 var _fall_push := Vector3.ZERO
 var _clock := 0.0
-var _pieces: Array[RigidBody3D] = []
+var _parts: Array[RigidBody3D] = []
 var _fallen: Array[Transform3D] = []
 var _joints: Array[Generic6DOFJoint3D] = []
 var _label: Label3D = null
+## LOS PIES, en el piso del mundo (se quedan donde pisaron), y el paso que se está dando.
+var _feet: Array[Vector3] = [Vector3.ZERO, Vector3.ZERO]
+var _step := {}
 
 
 func _ready() -> void:
 	_yaw = global_rotation.y
+	var root := _root_at(global_position)
+	_feet = [MechBody.foot_rest(root, -1.0), MechBody.foot_rest(root, 1.0)]
 	_body = RigidBody3D.new()
 	_body.name = "Cuerpo"
 	_body.top_level = true
@@ -97,14 +110,14 @@ func _ready() -> void:
 	slick.friction = 0.0
 	slick.bounce = 0.0
 	_body.physics_material_override = slick
-	add_child(_body)
-	_body.global_transform = Transform3D(Basis(Vector3.UP, _yaw), global_position)
+	# Nace donde vive (ver Mech, NACE DONDE VIVE).
+	_body.transform = root
 	var height := MechTorso.top_y()
-	Clay.shape_box(_body, Vector3(MechTorso.WIDTH, height, MechTorso.DEPTH), Vector3(0, PELVIS + height * 0.5, 0))
-	Clay.shape_box(_body, Vector3(HIP_X * 2.0 + 2.0, PELVIS, 3.4), Vector3(0, PELVIS * 0.5, 0))
-	_build_pieces()
-	_place_standing(1.0)
-	# Arriba, lo que pasa: para mirar.
+	Clay.shape_box(_body, Vector3(MechTorso.WIDTH, height, MechTorso.DEPTH), Vector3(0, MechBody.WAIST + height * 0.5, 0))
+	Clay.shape_box(_body, Vector3(MechBody.STANCE_X * 2.0 + 2.0, MechBody.WAIST, 3.4), Vector3(0, MechBody.WAIST * 0.5, 0))
+	add_child(_body)
+	_build_parts()
+	_place_standing()
 	_label = Label3D.new()
 	_label.top_level = true
 	_label.font_size = 64
@@ -115,134 +128,134 @@ func _ready() -> void:
 	add_child(_label)
 
 
-## ── LAS PIEZAS: el dibujo parado y el muñeco caído son los mismos cuerpos ───────────────────────────────────────────
-## Parada, son cinemáticas, no chocan (choca el cuerpo) y van adonde dice la postura. Caída, son cuerpos sueltos que
-## chocan con el mundo y no entre ellas (como el muñeco de character-parametric, capa 2 que mira la 1).
-
-const TORSO := 0
-const THIGH_LEFT := 1
-const SHIN_LEFT := 2
-const THIGH_RIGHT := 3
-const SHIN_RIGHT := 4
-const UPPER_LEFT := 5
-const FOREARM_LEFT := 6
-const UPPER_RIGHT := 7
-const FOREARM_RIGHT := 8
-const PIECE_MASS := [26000.0, 3000.0, 3000.0, 3000.0, 3000.0, 1500.0, 1500.0, 1500.0, 1500.0]
-const PIECE_NAMES := ["torso", "muslo izquierdo", "canilla izquierda", "muslo derecho", "canilla derecha",
-	"brazo izquierdo", "antebrazo izquierdo", "brazo derecho", "antebrazo derecho"]
+func _root_at(ground: Vector3) -> Transform3D:
+	return Transform3D(Basis(Vector3.UP, _yaw), ground)
 
 
-func _build_pieces() -> void:
-	for i in PIECE_MASS.size():
-		var piece := RigidBody3D.new()
-		piece.name = str(PIECE_NAMES[i]).capitalize()
-		piece.top_level = true
-		piece.mass = PIECE_MASS[i]
-		piece.continuous_cd = true
-		piece.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
-		piece.freeze = true
-		piece.collision_layer = 0
-		piece.collision_mask = 0
-		add_child(piece)
-		_pieces.append(piece)
+## ── LAS PARTES: el dibujo parado y el muñeco caído son los mismos cuerpos ───────────────────────────────────────────
+## Parada, son cinemáticas, no chocan (choca el cuerpo) y van adonde dice la postura (MechBody). Caída, son cuerpos sueltos
+## que chocan con el mundo y no entre ellas (como el muñeco de character-parametric: capa 2, que mira la 1).
+
+enum Part { PELVIS, TORSO, THIGH_LEFT, SHIN_LEFT, FOOT_LEFT, THIGH_RIGHT, SHIN_RIGHT, FOOT_RIGHT, UPPER_LEFT,
+	FOREARM_LEFT, UPPER_RIGHT, FOREARM_RIGHT }
+const PART_MASS := [6000.0, 22000.0, 3000.0, 2500.0, 1000.0, 3000.0, 2500.0, 1000.0, 1500.0, 1500.0, 1500.0, 1500.0]
+
+
+func _build_parts() -> void:
+	var pose := _standing_pose(Vector2.ZERO)
+	for i in PART_MASS.size():
+		var part := RigidBody3D.new()
+		part.name = String(Part.keys()[i]).capitalize()
+		part.top_level = true
+		part.mass = PART_MASS[i]
+		part.continuous_cd = true
+		part.freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+		part.freeze = true
+		part.collision_layer = 0
+		part.collision_mask = 0
+		part.transform = pose[i]
+		add_child(part)
+		_parts.append(part)
 	var height := MechTorso.top_y()
-	var torso := _pieces[TORSO]
+	Clay.solid(_parts[Part.PELVIS], MechBody.PELVIS_SIZE, Vector3.ZERO, Clay.METAL.darkened(0.15))
+	var torso := _parts[Part.TORSO]
 	Clay.solid(torso, Vector3(MechTorso.WIDTH, height, MechTorso.DEPTH), Vector3.ZERO, Clay.METAL)
 	for floor_index in MechTorso.FLOORS:
 		var y := MechTorso.floor_y(floor_index) + 0.9 + 0.95 - height * 0.5
 		Clay.box(torso, Vector3(MechTorso.WIDTH - 0.6, 1.9, 0.1), Vector3(0, y, -MechTorso.DEPTH * 0.5 - 0.02), Clay.GLASS)
-	for i in [THIGH_LEFT, THIGH_RIGHT]:
-		Clay.solid(_pieces[i], Vector3(LIMB, LIMB, THIGH), Vector3.ZERO, Clay.METAL.darkened(0.1))
-	for i in [SHIN_LEFT, SHIN_RIGHT]:
-		Clay.solid(_pieces[i], Vector3(LIMB * 0.9, LIMB * 0.9, SHIN), Vector3.ZERO, Clay.METAL.darkened(0.25))
-		# El pie, al final de la canilla, mirando adelante (la canilla tiene su +Y hacia adelante, ver `_segment`).
-		Clay.solid(_pieces[i], Vector3(2.2, 3.4, 0.7), Vector3(0, 0.4, -SHIN * 0.5 - 0.6), Clay.DARK)
-	for i in [UPPER_LEFT, UPPER_RIGHT]:
-		Clay.solid(_pieces[i], Vector3(1.3, 1.3, UPPER_ARM), Vector3.ZERO, Clay.METAL.darkened(0.1))
-	for i in [FOREARM_LEFT, FOREARM_RIGHT]:
-		Clay.solid(_pieces[i], Vector3(1.1, 1.1, FOREARM), Vector3.ZERO, Clay.METAL.darkened(0.25))
-		Clay.solid(_pieces[i], Vector3(2.0, 2.0, 2.2), Vector3(0, 0, -FOREARM * 0.5), Clay.RED)
+	var thickness := MechBody.LEG_THICKNESS
+	for i: int in [Part.THIGH_LEFT, Part.THIGH_RIGHT]:
+		Clay.solid(_parts[i], Vector3(thickness, thickness, MechBody.THIGH), Vector3.ZERO, Clay.METAL.darkened(0.1))
+	for i: int in [Part.SHIN_LEFT, Part.SHIN_RIGHT]:
+		Clay.solid(_parts[i], Vector3(thickness * 0.9, thickness * 0.9, MechBody.SHIN), Vector3.ZERO,
+			Clay.METAL.darkened(0.25))
+	for i: int in [Part.FOOT_LEFT, Part.FOOT_RIGHT]:
+		Clay.solid(_parts[i], MechBody.FOOT_SIZE, Vector3.ZERO, Clay.DARK)
+	for i: int in [Part.UPPER_LEFT, Part.UPPER_RIGHT]:
+		Clay.solid(_parts[i], Vector3(MechBody.ARM_THICKNESS, MechBody.ARM_THICKNESS, MechBody.UPPER_ARM), Vector3.ZERO,
+			Clay.METAL.darkened(0.1))
+	for i: int in [Part.FOREARM_LEFT, Part.FOREARM_RIGHT]:
+		Clay.solid(_parts[i], Vector3(MechBody.FOREARM_THICKNESS, MechBody.FOREARM_THICKNESS, MechBody.FOREARM),
+			Vector3.ZERO, Clay.METAL.darkened(0.25))
+		Clay.solid(_parts[i], Vector3(2.0, 2.0, 2.2), Vector3(0, 0, -MechBody.FOREARM * 0.5), Clay.RED)
 
 
-## LA POSTURA PARADA: dónde va cada pieza, con el torso inclinado por `shown` (la inclinación que se ve).
+## LA POSTURA PARADA (MechBody): dónde va cada parte, con el cuerpo inclinado `shown` (la inclinación que se ve) y los
+## pies donde pisan (`_feet`, y el que da el paso, en el aire).
 func _standing_pose(shown: Vector2) -> Array[Transform3D]:
-	var root := Transform3D(Basis(Vector3.UP, _yaw), Vector3(_body.global_position.x, _body.global_position.y,
-		_body.global_position.z))
-	var angle := shown * LEAN_ANGLE
-	var tilt := Basis()
-	if angle.length() > 0.0001:
-		var toward := Vector3(angle.x, 0.0, -angle.y).normalized()
-		tilt = Basis(Vector3.UP.cross(toward).normalized(), angle.length())
-	var height := MechTorso.top_y()
-	var hips := root * Transform3D(Basis(), Vector3(0, PELVIS, 0))
-	var torso := hips * Transform3D(tilt, Vector3.ZERO)
+	var root := _root_at(_body.global_position if is_instance_valid(_body) and _body.is_inside_tree()
+		else global_position)
+	var waist := MechBody.waist(root, MechBody.WAIST, MechBody.tilt(shown * deg_to_rad(lean_angle)))
+	var torso := MechBody.torso(waist, 0.0)
 	var pose: Array[Transform3D] = []
-	pose.resize(PIECE_MASS.size())
-	pose[TORSO] = torso * Transform3D(Basis(), Vector3(0, height * 0.5, 0))
-	var forward := root.basis * Vector3.FORWARD
+	pose.resize(PART_MASS.size())
+	pose[Part.PELVIS] = MechBody.pelvis(waist)
+	pose[Part.TORSO] = torso * Transform3D(Basis(), Vector3(0, MechTorso.top_y() * 0.5, 0))
 	for side_index in 2:
 		var side := -1.0 if side_index == 0 else 1.0
-		var hip := hips * (tilt * Vector3(side * HIP_X, -0.3, 0.0))
-		var ankle := root * Vector3(side * (HIP_X + 0.3), 0.6, 0.0)
-		var knee := MechLeg.joint(hip, ankle, THIGH, SHIN, forward)
-		pose[THIGH_LEFT if side < 0.0 else THIGH_RIGHT] = _segment(hip, knee, forward)
-		pose[SHIN_LEFT if side < 0.0 else SHIN_RIGHT] = _segment(knee, ankle, forward)
-		var shoulder := torso * Vector3(side * (MechTorso.WIDTH * 0.5 + 1.3), MechTorso.floor_y(1) + 1.6, -0.6)
-		var fist := torso * Vector3(side * (MechTorso.WIDTH * 0.5 + 1.3) - side * 1.8, MechTorso.floor_y(1) + 1.9, -6.1)
-		var elbow := MechLeg.joint(shoulder, fist, UPPER_ARM, FOREARM, torso.basis * Vector3(side, -0.8, 0.5))
-		pose[UPPER_LEFT if side < 0.0 else UPPER_RIGHT] = _segment(shoulder, elbow, Vector3.UP)
-		pose[FOREARM_LEFT if side < 0.0 else FOREARM_RIGHT] = _segment(elbow, fist, Vector3.UP)
+		var leg := MechBody.leg(MechBody.hip(waist, side), _foot_ground(side_index), root.basis)
+		pose[Part.THIGH_LEFT if side < 0.0 else Part.THIGH_RIGHT] = leg["thigh"]
+		pose[Part.SHIN_LEFT if side < 0.0 else Part.SHIN_RIGHT] = leg["shin"]
+		pose[Part.FOOT_LEFT if side < 0.0 else Part.FOOT_RIGHT] = leg["foot"]
+		var shoulder := torso * MechBody.shoulder_local(side)
+		var fist := torso * (MechBody.shoulder_local(side) + MechBody.guard_local(side))
+		var arm := MechBody.arm(shoulder, fist, side, torso.basis)
+		pose[Part.UPPER_LEFT if side < 0.0 else Part.UPPER_RIGHT] = arm["upper"]
+		pose[Part.FOREARM_LEFT if side < 0.0 else Part.FOREARM_RIGHT] = arm["forearm"]
 	return pose
 
 
-## Una pieza larga entre dos puntos: su −Z va de `from` a `to` y su +Y, hacia `up`.
-static func _segment(from: Vector3, to: Vector3, up: Vector3) -> Transform3D:
-	var along := (to - from).normalized()
-	var hint := up if absf(along.dot(up.normalized())) < 0.95 else Vector3.BACK
-	return Transform3D(Basis.looking_at(along, hint), (from + to) * 0.5)
+## Dónde está el pie `index` (0 el izquierdo): donde pisó, o en el aire si es el que da el paso.
+func _foot_ground(index: int) -> Vector3:
+	if _step.is_empty() or int(_step["foot"]) != index:
+		return _feet[index]
+	var share := clampf(float(_step["clock"]) / float(_step["time"]), 0.0, 1.0)
+	var from: Vector3 = _step["from"]
+	var to: Vector3 = _step["to"]
+	return from.lerp(to, share) + Vector3.UP * sin(share * PI) * Mech.LIFT
 
 
-func _place_standing(_weight: float) -> void:
+func _place_standing() -> void:
 	var pose := _standing_pose(_shown_lean)
-	for i in _pieces.size():
-		_pieces[i].global_transform = pose[i]
+	for i in _parts.size():
+		_parts[i].global_transform = pose[i]
 
 
 ## ── CADA PASO ───────────────────────────────────────────────────────────────────────────────────────────────────
 
 func _physics_process(delta: float) -> void:
-	var above := PELVIS + MechTorso.top_y() + 4.0 if state != State.DOWN else 10.0
+	var above := MechBody.WAIST + MechTorso.top_y() + 4.0 if state != State.DOWN else 10.0
 	_label.global_position = body_position() + Vector3(0, above, 0)
-	_label.text = "%s · inclinación %d %% (pico %d %%)\núltimo golpe %.1f m/s · caídas %d" % [state_name(),
-		roundi(lean.length() * 100.0), roundi(peak_lean * 100.0), last_hit, falls]
+	_label.text = "%s · inclinación %d %% (pico %d %%)\núltimo golpe %.1f m/s · pasos %d · caídas %d" % [state_name(),
+		roundi(lean.length() * 100.0), roundi(peak_lean * 100.0), last_hit, steps_taken, falls]
 	match state:
 		State.STANDING:
 			_measure_hit()
 			_spring(delta)
+			_stepping(delta)
 			_brake(delta)
 			_shown_lean = _shown_lean.lerp(lean, 1.0 - exp(-14.0 * delta))
-			_place_standing(1.0)
+			_place_standing()
 			if _fall_in >= 0.0:
 				_fall_in -= delta
 				if _fall_in < 0.0:
 					_fall()
 		State.DOWN:
 			_clock += delta
-			if _clock >= DOWN_TIME:
+			if _clock >= down_time:
 				_start_rising()
 		State.RISING:
 			_clock += delta
-			var share := ease(clampf(_clock / RISE_TIME, 0.0, 1.0), -2.0)
+			var share := ease(clampf(_clock / rise_time, 0.0, 1.0), -2.0)
 			var pose := _standing_pose(Vector2.ZERO)
-			for i in _pieces.size():
-				_pieces[i].global_transform = _fallen[i].interpolate_with(pose[i], share)
-			if _clock >= RISE_TIME:
+			for i in _parts.size():
+				_parts[i].global_transform = _fallen[i].interpolate_with(pose[i], share)
+			if _clock >= rise_time:
 				_finish_rising()
 
 
-## EL GOLPE: lo que cambió la velocidad desde el paso anterior sin que lo pidiera ella (su freno ya está descontado:
-## se mide contra la velocidad que dejó ella misma). La gravedad y el piso son verticales y no cuentan.
+## EL GOLPE: lo que cambió la velocidad desde el paso anterior sin que lo pidiera ella (su freno y sus pasos ya están
+## descontados: se mide contra la velocidad que dejó ella misma). La gravedad y el piso son verticales y no cuentan.
 func _measure_hit() -> void:
 	var now := _body.linear_velocity
 	var change := now - _velocity_after
@@ -251,15 +264,18 @@ func _measure_hit() -> void:
 		return
 	last_hit = flat.length()
 	var local := Basis(Vector3.UP, _yaw).inverse() * flat
-	var add := Vector2(local.x, -local.z) * LEAN_PER_MS / _firmness(local)
-	lean = (lean + add).limit_length(1.0)
+	var add := Vector2(local.x, -local.z) * lean_per_ms / _firmness(local)
 	_fall_push = flat
+	if hit_pushes:
+		_lean_speed += add * push_rate
+		return
+	lean = (lean + add).limit_length(1.0)
 	peak_lean = maxf(peak_lean, lean.length())
-	if add.length() >= FALL_AT:
+	if add.length() >= fall_at:
 		# Un golpe seco que solo ya pasa el umbral: cae en el acto.
 		_fall()
-	elif lean.length() >= FALL_AT and _fall_in < 0.0:
-		_fall_in = FALL_WARNING
+	elif lean.length() >= fall_at and _fall_in < 0.0:
+		_fall_in = fall_warning
 
 
 ## La firmeza en la dirección del golpe: el peso sobre el de referencia por la estabilidad de ese lado (mezclada entre
@@ -269,26 +285,86 @@ func _firmness(local: Vector3) -> float:
 	var ax := absf(local.x)
 	var az := absf(local.z)
 	var total := ax + az
-	var stability := STABILITY_SIDEWAYS
+	var stability := stability_sideways
 	if total > 0.001:
 		var side_share := ax / total
-		var along := STABILITY_FORWARD if local.z < 0.0 else STABILITY_BACKWARD
-		stability = STABILITY_SIDEWAYS * side_share + along * (1.0 - side_share)
+		var along := stability_forward if local.z < 0.0 else stability_backward
+		stability = stability_sideways * side_share + along * (1.0 - side_share)
 	return maxf(MASS / REFERENCE_MASS * stability, 0.05)
 
 
 func _spring(delta: float) -> void:
-	var accel := -lean * STIFFNESS * SPRING_SCALE - _lean_speed * DAMPING * DAMP_SCALE
+	var accel := -lean * stiffness * spring_scale - _lean_speed * damping * damp_scale
 	_lean_speed += accel * delta
 	lean += _lean_speed * delta
-	if lean.length() < 0.02 and _lean_speed.length() < 0.02:
+	peak_lean = maxf(peak_lean, lean.length())
+	if lean.length() >= fall_at and _fall_in < 0.0:
+		_fall_in = fall_warning
+	if lean.length() < 0.02 and _lean_speed.length() < 0.02 and _step.is_empty():
 		peak_lean = 0.0
 
 
-## Parada, sus pies la frenan. Lo que deja es contra lo que se mide el próximo golpe.
+## LOS PASOS (ver arriba): pasada `step_at`, un pie va hacia donde se inclina, la base lo sigue y la inclinación baja; al
+## pisar, el otro pie vuelve a su lugar al lado. Mientras dure el paso el cuerpo lo lleva su paso, no su freno.
+func _stepping(delta: float) -> void:
+	if not _step.is_empty():
+		_step["clock"] = float(_step["clock"]) + delta
+		var share := delta / float(_step["time"])
+		if bool(_step["leading"]):
+			lean -= (_step["catch"] as Vector2) * share
+			_lean_speed *= exp(-3.0 * delta)
+		if float(_step["clock"]) >= float(_step["time"]):
+			_feet[int(_step["foot"])] = _step["to"]
+			var leading := bool(_step["leading"])
+			_step = {}
+			if leading:
+				_follow_step()
+		return
+	if steps and lean.length() >= step_at and lean.length() < fall_at:
+		_lead_step()
+
+
+## EL PASO QUE MANDA: hacia donde se inclina, más largo cuanto más se inclina. Va el pie de ese lado (o, si es derecho
+## adelante o atrás, el que quedó más lejos de ahí).
+func _lead_step() -> void:
+	var toward_local := lean.normalized()
+	var toward := Basis(Vector3.UP, _yaw) * Vector3(toward_local.x, 0.0, -toward_local.y)
+	var length := step_length * clampf(lean.length() / fall_at, 0.4, 1.0)
+	var foot := 0 if toward_local.x < -0.3 else (1 if toward_local.x > 0.3 else
+		(0 if _feet[0].dot(toward) < _feet[1].dot(toward) else 1))
+	var side := -1.0 if foot == 0 else 1.0
+	var new_root := _root_at(_body.global_position + toward * length)
+	_step = {"foot": foot, "from": _feet[foot], "to": MechBody.foot_rest(new_root, side), "clock": 0.0,
+		"time": step_time, "leading": true, "catch": toward_local * minf(step_catch, lean.length()),
+		"move": toward * length / step_time}
+	steps_taken += 1
+
+
+## EL OTRO PIE vuelve al lado, debajo de la base nueva.
+func _follow_step() -> void:
+	var foot := 0 if (_feet[0] - _body.global_position).length() > (_feet[1] - _body.global_position).length() else 1
+	var other := 1 - foot
+	var side := -1.0 if foot == 0 else 1.0
+	var root := _root_at(_body.global_position)
+	var target := MechBody.foot_rest(root, side)
+	# Al lado del que pisó, no debajo del cuerpo: así queda parada sobre los dos.
+	target += _feet[other] - MechBody.foot_rest(root, -side)
+	target.y = 0.0
+	if target.distance_to(_feet[foot]) < 0.3:
+		return
+	_step = {"foot": foot, "from": _feet[foot], "to": target, "clock": 0.0, "time": step_time * 0.7,
+		"leading": false, "catch": Vector2.ZERO, "move": Vector3.ZERO}
+
+
+## Parada, sus pies la frenan; dando el paso que manda, la lleva el paso. Lo que deja es contra lo que se mide el
+## próximo golpe.
 func _brake(delta: float) -> void:
 	var velocity := _body.linear_velocity
-	var flat := Vector3(velocity.x, 0.0, velocity.z).move_toward(Vector3.ZERO, BRAKE * delta)
+	var flat := Vector3(velocity.x, 0.0, velocity.z)
+	if not _step.is_empty() and bool(_step["leading"]):
+		flat = flat.move_toward(_step["move"] as Vector3, brake * 3.0 * delta)
+	else:
+		flat = flat.move_toward(Vector3.ZERO, brake * delta)
 	_body.linear_velocity = Vector3(flat.x, velocity.y, flat.z)
 	_velocity_after = _body.linear_velocity
 
@@ -301,29 +377,39 @@ func _fall() -> void:
 	state = State.DOWN
 	_clock = 0.0
 	_fall_in = -1.0
+	_step = {}
 	falls += 1
 	var velocity := _body.linear_velocity
-	var push := _fall_push.normalized() * maxf(_fall_push.length(), 1.0)
+	var direction := _fall_push.normalized()
+	if direction.length_squared() < 0.01:
+		var toward := lean.normalized()
+		direction = Basis(Vector3.UP, _yaw) * Vector3(toward.x, 0.0, -toward.y)
+	var push := direction * maxf(_fall_push.length(), 1.0)
 	_body.freeze = true
 	_body.collision_layer = 0
 	_body.collision_mask = 0
-	var top := PELVIS + MechTorso.top_y()
+	var top := MechBody.WAIST + MechTorso.top_y()
 	var ground := _body.global_position.y
-	for piece in _pieces:
-		piece.collision_layer = 2
-		piece.collision_mask = 1
-		piece.freeze = false
-		var height := clampf((piece.global_position.y - ground) / top, 0.0, 1.0)
-		piece.linear_velocity = velocity + push * TOPPLE * height
-		piece.angular_velocity = Vector3.ZERO
-	_join(TORSO, THIGH_LEFT, _hip_point(-1.0), 70.0, 25.0, 35.0)
-	_join(TORSO, THIGH_RIGHT, _hip_point(1.0), 70.0, 25.0, 35.0)
-	_join(THIGH_LEFT, SHIN_LEFT, _end(THIGH_LEFT, THIGH), 110.0, 8.0, 8.0)
-	_join(THIGH_RIGHT, SHIN_RIGHT, _end(THIGH_RIGHT, THIGH), 110.0, 8.0, 8.0)
-	_join(TORSO, UPPER_LEFT, _start(UPPER_LEFT, UPPER_ARM), 80.0, 80.0, 80.0)
-	_join(TORSO, UPPER_RIGHT, _start(UPPER_RIGHT, UPPER_ARM), 80.0, 80.0, 80.0)
-	_join(UPPER_LEFT, FOREARM_LEFT, _end(UPPER_LEFT, UPPER_ARM), 120.0, 10.0, 10.0)
-	_join(UPPER_RIGHT, FOREARM_RIGHT, _end(UPPER_RIGHT, UPPER_ARM), 120.0, 10.0, 10.0)
+	for part in _parts:
+		part.collision_layer = 2
+		part.collision_mask = 1
+		part.freeze = false
+		var height := clampf((part.global_position.y - ground) / top, 0.0, 1.0)
+		part.linear_velocity = velocity + push * topple * height
+		part.angular_velocity = Vector3.ZERO
+	var pelvis := _parts[Part.PELVIS]
+	_join(Part.PELVIS, Part.TORSO, pelvis.global_transform * Vector3(0, MechBody.PELVIS_SIZE.y * 0.5, 0), 25.0, 30.0, 25.0)
+	for side_index in 2:
+		var thigh: int = Part.THIGH_LEFT if side_index == 0 else Part.THIGH_RIGHT
+		var shin: int = Part.SHIN_LEFT if side_index == 0 else Part.SHIN_RIGHT
+		var foot: int = Part.FOOT_LEFT if side_index == 0 else Part.FOOT_RIGHT
+		var upper: int = Part.UPPER_LEFT if side_index == 0 else Part.UPPER_RIGHT
+		var forearm: int = Part.FOREARM_LEFT if side_index == 0 else Part.FOREARM_RIGHT
+		_join(Part.PELVIS, thigh, _start(thigh, MechBody.THIGH), 70.0, 25.0, 35.0)
+		_join(thigh, shin, _end(thigh, MechBody.THIGH), 110.0, 8.0, 8.0)
+		_join(shin, foot, _end(shin, MechBody.SHIN), 35.0, 10.0, 20.0)
+		_join(Part.TORSO, upper, _start(upper, MechBody.UPPER_ARM), 80.0, 80.0, 80.0)
+		_join(upper, forearm, _end(upper, MechBody.UPPER_ARM), 120.0, 10.0, 10.0)
 	lean = Vector2.ZERO
 	_lean_speed = Vector2.ZERO
 	_shown_lean = Vector2.ZERO
@@ -331,15 +417,11 @@ func _fall() -> void:
 
 
 func _start(index: int, length: float) -> Vector3:
-	return _pieces[index].global_transform * Vector3(0, 0, length * 0.5)
+	return _parts[index].global_transform * Vector3(0, 0, length * 0.5)
 
 
 func _end(index: int, length: float) -> Vector3:
-	return _pieces[index].global_transform * Vector3(0, 0, -length * 0.5)
-
-
-func _hip_point(side: float) -> Vector3:
-	return _start(THIGH_LEFT if side < 0.0 else THIGH_RIGHT, THIGH)
+	return _parts[index].global_transform * Vector3(0, 0, -length * 0.5)
 
 
 ## UNA ARTICULACIÓN como las del muñeco de character-parametric (`RagdollUtil._create_joint`): sin juego lineal, con
@@ -351,9 +433,9 @@ func _join(a: int, b: int, at: Vector3, swing: float, twist: float, roll: float)
 	joint.top_level = true
 	add_child(joint)
 	joint.global_transform = Transform3D(Basis(Vector3.UP, _yaw), at)
-	joint.node_a = joint.get_path_to(_pieces[a])
-	joint.node_b = joint.get_path_to(_pieces[b])
-	var muscle := 30.0 * (PIECE_MASS[b] as float)
+	joint.node_a = joint.get_path_to(_parts[a])
+	joint.node_b = joint.get_path_to(_parts[b])
+	var muscle := 30.0 * (PART_MASS[b] as float)
 	for axis in 3:
 		var limit := deg_to_rad([swing, twist, roll][axis] as float)
 		_axis_param(joint, axis, Generic6DOFJoint3D.PARAM_LINEAR_LOWER_LIMIT, 0.0)
@@ -397,15 +479,17 @@ func _start_rising() -> void:
 		joint.queue_free()
 	_joints.clear()
 	_fallen.clear()
-	for piece in _pieces:
-		_fallen.append(piece.global_transform)
-		piece.freeze = true
-		piece.collision_layer = 0
-		piece.collision_mask = 0
-	# El cuerpo, debajo de donde quedó el torso, mirando para el mismo lado que antes.
-	var torso := _pieces[TORSO].global_position
-	_body.global_transform = Transform3D(Basis(Vector3.UP, _yaw), Vector3(torso.x, 0.0, torso.z))
+	for part in _parts:
+		_fallen.append(part.global_transform)
+		part.freeze = true
+		part.collision_layer = 0
+		part.collision_mask = 0
+	# El cuerpo, debajo de donde quedó el torso, mirando para el mismo lado que antes; los pies, a su lado.
+	var torso := _parts[Part.TORSO].global_position
+	_body.global_transform = _root_at(Vector3(torso.x, 0.0, torso.z))
 	_body.linear_velocity = Vector3.ZERO
+	var root := _root_at(Vector3(torso.x, 0.0, torso.z))
+	_feet = [MechBody.foot_rest(root, -1.0), MechBody.foot_rest(root, 1.0)]
 
 
 func _finish_rising() -> void:
@@ -419,14 +503,61 @@ func _finish_rising() -> void:
 	lean = Vector2.ZERO
 	_lean_speed = Vector2.ZERO
 	peak_lean = 0.0
-	_place_standing(1.0)
+	_place_standing()
 	stood_up.emit()
 
 
 ## Dónde está ahora (el cuerpo, en el suelo), para la prueba y la cámara.
 func body_position() -> Vector3:
-	return _body.global_position if state != State.DOWN else _pieces[TORSO].global_position
+	return _body.global_position if state != State.DOWN else _parts[Part.TORSO].global_position
 
 
 func state_name() -> String:
 	return ["parada", "EN EL SUELO", "levantándose"][state]
+
+
+## ── EL F1 ────────────────────────────────────────────────────────────────────────────────────────────────────────
+
+const DEBUG_TAB := "Meca de equilibrio"
+
+
+## LA PESTAÑA DEL F1: las perillas de arriba, para todas las mecas de equilibrio.
+static func build_debug_tab(panel: DebugPanel) -> void:
+	var tab := DEBUG_TAB
+	panel.add_text(tab, "LOS AGREGADOS")
+	panel.add_toggle(tab, "El golpe empuja (si no, como allá: se suma a la inclinación)", hit_pushes,
+		func(on: bool) -> void: hit_pushes = on)
+	panel.add_slider(tab, "Cuánto empuja: %.1f", 0.5, 15.0, 0.1, push_rate, func(v: float) -> void: push_rate = v)
+	panel.add_toggle(tab, "Pasos para recuperarse", steps, func(on: bool) -> void: steps = on)
+	panel.add_slider(tab, "Da un paso pasada la inclinación: %.2f", 0.1, 0.84, 0.01, step_at,
+		func(v: float) -> void: step_at = v)
+	panel.add_slider(tab, "Largo del paso: %.1f m", 0.5, 8.0, 0.1, step_length, func(v: float) -> void: step_length = v)
+	panel.add_slider(tab, "Lo que dura el paso: %.2f s", 0.15, 1.5, 0.01, step_time, func(v: float) -> void: step_time = v)
+	panel.add_slider(tab, "Inclinación que saca un paso: %.2f", 0.0, 1.0, 0.01, step_catch,
+		func(v: float) -> void: step_catch = v)
+	panel.add_text(tab, "EL RESORTE (character-parametric)")
+	panel.add_slider(tab, "Rigidez: %.1f", 1.0, 80.0, 0.5, stiffness, func(v: float) -> void: stiffness = v)
+	panel.add_slider(tab, "Amortiguación: %.2f", 0.1, 20.0, 0.05, damping, func(v: float) -> void: damping = v)
+	panel.add_slider(tab, "Escala de la rigidez (meca): %.2f", 0.05, 2.0, 0.01, spring_scale,
+		func(v: float) -> void: spring_scale = v)
+	panel.add_slider(tab, "Escala de la amortiguación (meca): %.2f", 0.05, 2.0, 0.01, damp_scale,
+		func(v: float) -> void: damp_scale = v)
+	panel.add_slider(tab, "Inclinación por m/s de golpe: %.2f", 0.02, 1.0, 0.01, lean_per_ms,
+		func(v: float) -> void: lean_per_ms = v)
+	panel.add_slider(tab, "Se cae en: %.2f", 0.2, 1.0, 0.01, fall_at, func(v: float) -> void: fall_at = v)
+	panel.add_slider(tab, "Aviso antes de caer: %.2f s", 0.0, 1.0, 0.01, fall_warning,
+		func(v: float) -> void: fall_warning = v)
+	panel.add_text(tab, "LA FIRMEZA, POR LADO")
+	panel.add_slider(tab, "Golpe de atrás (empuja adelante): %.2f", 0.1, 3.0, 0.05, stability_forward,
+		func(v: float) -> void: stability_forward = v)
+	panel.add_slider(tab, "Golpe de frente (empuja atrás): %.2f", 0.1, 3.0, 0.05, stability_backward,
+		func(v: float) -> void: stability_backward = v)
+	panel.add_slider(tab, "Golpe de costado: %.2f", 0.1, 3.0, 0.05, stability_sideways,
+		func(v: float) -> void: stability_sideways = v)
+	panel.add_text(tab, "EL CUERPO")
+	panel.add_slider(tab, "Inclinación del torso en 1: %.0f°", 2.0, 45.0, 1.0, lean_angle,
+		func(v: float) -> void: lean_angle = v)
+	panel.add_slider(tab, "Freno de los pies: %.1f m/s²", 0.0, 20.0, 0.1, brake, func(v: float) -> void: brake = v)
+	panel.add_slider(tab, "Vuelco al caer: %.2f", 0.0, 3.0, 0.05, topple, func(v: float) -> void: topple = v)
+	panel.add_slider(tab, "En el suelo: %.1f s", 0.5, 10.0, 0.1, down_time, func(v: float) -> void: down_time = v)
+	panel.add_slider(tab, "Levantarse: %.1f s", 0.3, 6.0, 0.1, rise_time, func(v: float) -> void: rise_time = v)

@@ -1,15 +1,15 @@
 extends Node
 
 ## LA MECA DE EQUILIBRIO, PROBADA POR CÓDIGO: arma el sandbox, se para frente a la meca de equilibrio y le tira bolas de
-## cada fuerza (J, con K y L), de frente y de costado; imprime cuánto se inclinó y si se cayó, espera que se levante, y
-## con ventana saca capturas del tambaleo, la caída y el levantarse.
+## varias fuerzas (ver TestBall), de frente, en los dos modos (como character-parametric, y con el empuje y los pasos
+## prendidos; ver MechDummy); imprime la inclinación más grande, los pasos, cuánto retrocedió y si se cayó. Después, bolas
+## a las dos personas de al lado. Con ventana, capturas del trastabillar (una por cuarto de segundo) y de la caída.
 ##   headless:     godot --headless --path . res://tests/balance_check.tscn
 ##   con capturas: tools/godot_ventana.sh res://tests/balance_check.tscn -- --salida=C:/carpeta
 
 var _folder := ""
 var _dummy: MechDummy = null
 var _parcel: SandboxParcel = null
-var _archetype: BalanceTestArchetype = null
 var _eye: Camera3D = null
 var _title: Label = null
 
@@ -33,38 +33,74 @@ func _ready() -> void:
 	for parcel: SandboxParcel in sandbox.find_children("*", "SandboxParcel", true, false):
 		if parcel.archetype is BalanceTestArchetype:
 			_parcel = parcel
-			_archetype = parcel.archetype as BalanceTestArchetype
 	_dummy = _parcel.find_children("*", "MechDummy", true, false)[0] as MechDummy
 	_eye = Camera3D.new()
 	_eye.far = 2000.0
 	add_child(_eye)
 	_eye.make_current()
 	await _seconds(1.0)
-	# DE FRENTE: cada fuerza, una bola, esperando que se aquiete.
-	for level in TestBall.SPEEDS.size():
-		await _throw(level, Vector3.FORWARD, "de frente")
-	# DE COSTADO: la fuerza del medio.
-	await _throw(2, Vector3.RIGHT, "de costado")
-	await _throw(3, Vector3.RIGHT, "de costado")
-	# DOS SEGUIDAS de frente, de 20 m/s (sola no la tira): ¿se acumula?
-	_aim_from(Vector3.FORWARD)
-	TestBall.level = 1
-	TestBall.throw_from_camera(_parcel, 1)
-	await _seconds(0.5)
-	TestBall.throw_from_camera(_parcel, 1)
-	await _seconds(1.5)
-	print("DOS SEGUIDAS de 20 m/s: pico %d %% · caídas %d" % [roundi(_dummy.peak_lean * 100.0), _dummy.falls])
-	await _wait_standing()
-	# LAS PERSONAS: bolas chicas, de 10 y de 30 m/s, a cada una.
-	TestBall.small = true
+	_report_feet()
+	for pushes: bool in [false, true]:
+		MechDummy.hit_pushes = pushes
+		MechDummy.steps = pushes
+		print("── MODO %s" % ("con empuje y pasos" if pushes else "como character-parametric"))
+		for force: int in [6, 7, 8, 9, 10]:
+			await _throw(force, pushes and force == 8)
+	MechDummy.hit_pushes = true
+	MechDummy.steps = true
+	# LAS PERSONAS: las fuerzas chicas.
 	for person: BoneInstantiator in _parcel.find_children("*", "BoneInstantiator", true, false):
 		for force: int in [0, 2]:
 			await _throw_at_person(person, force)
-	TestBall.small = false
 	get_tree().quit()
 
 
+## Los pies, planos: lo que se vio mal el 11/11/2026 (inclinados como la canilla).
+func _report_feet() -> void:
+	for index: int in [MechDummy.Part.FOOT_LEFT, MechDummy.Part.FOOT_RIGHT]:
+		var foot := _dummy._parts[index]
+		var up := foot.global_basis * Vector3.UP
+		print("PIE %d: inclinado %.1f° · apoyado a %.2f m del piso" % [index, rad_to_deg(up.angle_to(Vector3.UP)),
+			foot.global_position.y - MechBody.FOOT_SIZE.y * 0.5])
+
+
+func _aim() -> void:
+	var at := _dummy.body_position()
+	var basis := Basis(Vector3.UP, _dummy.global_rotation.y)
+	_eye.global_position = at + basis * Vector3(0, 12.0, -25.0)
+	_eye.look_at(at + Vector3(0, 10.0, 0))
+
+
+func _throw(force: int, frames: bool) -> void:
+	await _wait_standing()
+	await _seconds(1.0)
+	_aim()
+	await _frames(2)
+	var start := _dummy.body_position()
+	var falls := _dummy.falls
+	var steps := _dummy.steps_taken
+	TestBall.throw_from_camera(_parcel, force)
+	var peak := 0.0
+	var shot := 0
+	for i in 480:
+		await get_tree().physics_frame
+		peak = maxf(peak, _dummy.lean.length())
+		if frames and i >= 230 and i % 40 == 30 and shot < 6:
+			# Una vista de costado, para que se vea ir para atrás.
+			var at := _dummy.body_position()
+			_eye.global_position = at + Basis(Vector3.UP, _dummy.global_rotation.y) * Vector3(30.0, 10.0, 0.0)
+			_eye.look_at(at + Vector3(0, 9.0, 0))
+			await _shot("Fuerza %d: %.2f s después" % [force + 1, i / 240.0], "trastabilla_%d" % shot)
+			shot += 1
+	print("FUERZA %d (%s N·s): golpe %.1f m/s · inclinación pico %d %% · pasos %d · retrocedió %.1f m · se cayó %s" % [
+		force + 1, String.num_int64(roundi(TestBall.push_of(force))), _dummy.last_hit, roundi(peak * 100.0),
+		_dummy.steps_taken - steps, start.distance_to(_dummy.body_position()), _dummy.falls > falls])
+	if _dummy.falls > falls and frames:
+		await _shot("La caída", "caida")
+
+
 func _throw_at_person(person: BoneInstantiator, force: int) -> void:
+	await _seconds(2.0)
 	var at := person.char_rigidbody.global_position
 	_eye.global_position = at + Vector3(-6.0, 1.2, 0.0)
 	_eye.look_at(at + Vector3(0, 1.0, 0))
@@ -72,73 +108,20 @@ func _throw_at_person(person: BoneInstantiator, force: int) -> void:
 	TestBall.throw_from_camera(_parcel, force)
 	var fell := false
 	var peak := 0.0
-	for i in 90:
+	for i in 360:
 		await get_tree().physics_frame
 		peak = maxf(peak, person.char_rigidbody.impact_xz.length())
 		if person.ragdoll_util.is_active:
 			fell = true
-	if fell:
-		_eye.global_position = at + Vector3(-7.0, 3.0, 4.0)
-		_eye.look_at(at)
-		await _shot("%s, bola chica de %d m/s" % [person.name, roundi(float(TestBall.SPEEDS[force]))],
-			"persona_%s_%d" % [person.name, force])
-	print("PERSONA %s, bola chica de %d m/s: inclinación pico %d %% · se cayó %s" % [person.name,
-		roundi(float(TestBall.SPEEDS[force])), roundi(peak * 100.0), fell])
-	if fell:
-		for i in 900:
-			if not person.ragdoll_util.is_active and not person.ragdoll_util.is_recovering:
-				print("  se levantó")
-				break
-			await _frames(1)
-
-
-## Pone la cámara a 25 m de la meca, del lado `side` (en el espacio de la meca: FORWARD es su frente), mirándola.
-func _aim_from(side: Vector3) -> void:
-	var at := _dummy.body_position()
-	var basis := Basis(Vector3.UP, _dummy.global_rotation.y)
-	_eye.global_position = at + basis * (side * 25.0) + Vector3(0, 12.0, 0)
-	_eye.look_at(at + Vector3(0, 12.0, 0))
-
-
-func _throw(level: int, side: Vector3, label: String) -> void:
-	_aim_from(side)
-	await _frames(2)
-	var falls := _dummy.falls
-	TestBall.throw_from_camera(_parcel, level)
-	var shot := false
-	var peak := 0.0
-	for i in 150:
-		await get_tree().physics_frame
-		peak = maxf(peak, _dummy.lean.length())
-		if not shot and (_dummy.lean.length() > 0.3 or _dummy.falls > falls) and i > 25:
-			shot = true
-			await _shot("Bola de %d m/s %s" % [roundi(float(TestBall.SPEEDS[level])), label],
-				"golpe_%d_%s" % [level, label.replace(" ", "_")])
-	print("BOLA %d m/s %s: golpe medido %.1f m/s · inclinación pico %d %% · se cayó %s" % [
-		roundi(float(TestBall.SPEEDS[level])), label, _dummy.last_hit, roundi(peak * 100.0), _dummy.falls > falls])
-	if _dummy.falls > falls:
-		await _seconds(1.5)
-		_aim_from(side + Vector3(0.6, 0, 0))
-		await _shot("Caída (%d m/s %s)" % [roundi(float(TestBall.SPEEDS[level])), label],
-			"caida_%d_%s" % [level, label.replace(" ", "_")])
-		await _wait_standing()
-	else:
-		await _seconds(1.0)
+	print("PERSONA %s, fuerza %d (%s N·s): inclinación pico %d %% · se cayó %s" % [person.name, force + 1,
+		String.num_int64(roundi(TestBall.push_of(force))), roundi(peak * 100.0), fell])
 
 
 func _wait_standing() -> void:
-	var captured := false
-	for i in 600:
+	for i in 1200:
 		if _dummy.state == MechDummy.State.STANDING:
-			if captured:
-				print("  se levantó")
 			return
-		if _dummy.state == MechDummy.State.RISING and not captured:
-			captured = true
-			await _seconds(1.0)
-			await _shot("Levantándose", "levantandose")
 		await _frames(1)
-	print("  NO se levantó en 10 s (estado %s)" % _dummy.state_name())
 
 
 func _frames(count: int) -> void:
@@ -154,7 +137,7 @@ func _shot(title: String, file_name: String) -> void:
 	if _folder.is_empty() or DisplayServer.get_name() == "headless":
 		return
 	_title.text = title
-	await _frames(3)
+	await _frames(2)
 	var path := "%s/%s.png" % [_folder, file_name]
 	get_viewport().get_texture().get_image().save_png(path)
 	print("CAPTURA ", path)

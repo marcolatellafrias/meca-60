@@ -52,7 +52,12 @@ func toggle() -> void:
 ## Avanza y se pone en su lugar: `torso` es la transformación del torso; `at` el centro en el plano del torso.
 func place(torso: Transform3D, at: Vector2, delta: float) -> void:
 	height = move_toward(height, _target, SPEED * delta)
-	global_transform = torso * Transform3D(Basis(), Vector3(at.x, height, at.y))
+	global_transform = placed(torso, at)
+
+
+## Dónde va, a su altura de ahora (ver `place`): también antes de nacer, para nacer ahí.
+func placed(torso: Transform3D, at: Vector2) -> Transform3D:
+	return torso * Transform3D(Basis(), Vector3(at.x, height, at.y))
 
 
 ## Si `point` (en el mundo) está parado sobre la plataforma.

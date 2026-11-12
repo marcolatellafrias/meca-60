@@ -19,7 +19,9 @@ dónde se cortó (la ciudad, el tránsito, la nave), en `game/character_port/LEE
   la piña que sale. Un golpe de costado o de atrás del torso empuja más. Un brazo que toca un edificio se traba y nada
   más: un efecto extra sólo si sale solo de las reglas.
 - Brazos comunes que siempre pegan; las armas (el cañón) van encima del antebrazo. Las piernas caminan para un lado y
-  el torso gira aparte, a su velocidad (una mejora futura).
+  el torso gira aparte, a su velocidad (una mejora futura), sobre la PELVIS, que va con las piernas.
+- **El cuerpo de la meca se define una sola vez** (`MechBody`): la meca de pelea y la de equilibrio son el mismo cuerpo.
+  Una meca **nace donde vive** (se ubica antes de armarle nada encima), y lo físico montado en ella se mueve con ella.
 - Los jefes, cuando vuelvan: **pocos arquetipos hechos a mano**, con **las partes por semilla**, **partes que se
   rompen** y **afijos** encima. Nada de piezas del bicho en la meca ni de sistema Némesis por ahora.
 - La meca se arma según cuántos jugadores hay (más adelante, también por semilla: ruedas en vez de piernas, otros
@@ -48,8 +50,13 @@ En el sandbox, la fila **Meca** («Pelea de prueba»):
 
 Al lado, **«Meca de equilibrio»**: una copia de la meca que sólo se tambalea, se cae y se levanta, con el sistema de
 equilibrio de los personajes de character-parametric, con dos personas de allá al lado. **J** tira una bola desde la
-cámara; **K** y **L** bajan y suben la fuerza (10 a 60 m/s); **M** la cambia entre la grande (la meca) y la chica (las
-personas).
+cámara (una sola bola; la fuerza es su empuje, de 100 a 300 000 N·s: de mover a una persona a voltear a la meca);
+**K** y **L** bajan y suben la fuerza. Tiene dos agregados al sistema de allá, que se prenden en el F1: **el golpe
+empuja** (la inclinación toma velocidad en vez de saltar) y **los pasos** (pasada cierta inclinación da un paso hacia
+donde se va y se recupera trastabillando).
+
+**F1** abre el panel de depuración del sandbox (el de allá): cada fila agrega su pestaña; la meca de equilibrio tiene
+todas sus perillas (el resorte, la firmeza por lado, el empuje, los pasos, la caída).
 
 Más filas: **Personajes** (los seis arquetipos de allá, que se caen y se levantan; también con la bola), **Objetos** (los
 paquetes de allá sueltos, para agarrarlos, y una silla) y **Multijugador** (la red de allá: **H** abre sesión en esta
@@ -58,13 +65,13 @@ sale). Por la red van los personajes y los objetos de esa parcela; **las mecas t
 
 ## Dónde va cada cosa
 Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`.
-- `game/mech/` — **la meca**: `Mech` (la raíz en el suelo, la marcha, el torso que gira aparte, el equilibrio y la
+- `game/mech/` — **la meca**: `MechBody` (el cuerpo, una sola vez: medidas, partes y postura), `Mech` (la raíz en el suelo, la marcha, el torso que gira aparte, el equilibrio y la
   caída, las palancas, los puestos, el manejo desde afuera y las teclas), `MechBrain` (el rival sin piloto),
   `MechTorso` (el torso de tres pisos con la escalera de incendio atrás; es un marco), `MechSeat` (un puesto: la silla
-  de allá y la consola con su nivel de equilibrio), `MechLift` (el montacargas), `MechLeg` (una pierna, sólo dibujo; `joint` resuelve rodilla y
-  codo), `MechArm` (un brazo: la piña cargada, el puño que barre y se traba, el cañón encima con su bala `MechShell`),
+  de allá y la consola con su nivel de equilibrio), `MechLift` (el montacargas), `MechLeg` (una pierna de la meca de pelea, sólo
+  dibujo), `MechArm` (un brazo: la piña cargada, el puño que barre y se traba, el cañón encima con su bala `MechShell`),
   `MechHud` (lo de pantalla para probar), `MechDummy` (la meca de equilibrio: el cuerpo físico, el resorte y el
-  muñeco de character-parametric) y `Clay` (la arcilla de los bocetos). Todo lo que tiene
+  muñeco de character-parametric, el empuje y los pasos; sus perillas en el F1) y `Clay` (la arcilla de los bocetos). Todo lo que tiene
   `take_hit(amount, direction, push)` recibe golpes.
 - `game/arena/` — `TestArena` (el redondel con edificios y las dos mecas, que no se pisan), `MechTestArchetype` (su
   parcela), `BalanceTestArchetype` (la parcela de la meca de equilibrio), `TestBall` (la bola de la J),
@@ -89,9 +96,9 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   capturado y el giro y las piñas no se miden): maneja desde afuera, gira el torso, pega piñas sin cargar, cargadas y
   un gancho, tira al rival, pasa a primera persona, pone al rival agresivo, traba un brazo contra un edificio y pega
   sentado en los brazos.
-- `tests/balance_check.tscn` (headless o con ventana): le tira bolas de cada fuerza de frente y de costado a la meca
-  de equilibrio y bolas chicas a las dos personas, imprime el golpe medido, la inclinación y si se cayeron, y espera que
-  se levanten.
+- `tests/balance_check.tscn` (headless o con ventana): mira que los pies estén planos, le tira bolas de varias
+  fuerzas a la meca de equilibrio en los dos modos (como allá, y con empuje y pasos) e imprime la inclinación, los
+  pasos, cuánto retrocedió y si se cayó; con ventana, capturas del trastabillar. Y bolas chicas a las dos personas.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,
   caminarla sentado, viajar parado adentro, manejar desde afuera y volver, y agarrar el ropero del lote.
 - `tests/net_check.tscn`: dos instancias sin ventana, una con `--host-local` y otra con `--join-local` (antes del

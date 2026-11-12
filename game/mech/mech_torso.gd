@@ -29,6 +29,8 @@ var seats: Array[MechSeat] = []
 ## EL MARCO (ver MotionFrame, de character-parametric): el torso lleva a los que van adentro —parados, en la escalera,
 ## sentados—, como la nave de allá. Su volumen es el torso con la escalera de incendio de atrás.
 var frame: MotionFrame = null
+## LO FÍSICO MONTADO EN EL TORSO (ver `carry_mounted`): cada cuerpo congelado de adentro, con su lugar en el torso.
+var _mounted: Array = []
 
 
 func _init() -> void:
@@ -45,6 +47,23 @@ func _ready() -> void:
 	frame.add_volume(AABB(Vector3(-WIDTH * 0.5 - 0.5, -0.5, -DEPTH * 0.5 - 0.5),
 		Vector3(WIDTH + 1.0, top_y() + 2.5, back + DEPTH * 0.5 + 0.5)))
 	frame.cast_shadow(self)
+	for node in find_children("*", "RigidBody3D", true, false):
+		var body := node as RigidBody3D
+		if body.freeze:
+			_mounted.append([body, global_transform.affine_inverse() * body.global_transform])
+
+
+## LO FÍSICO MONTADO EN EL TORSO SE MUEVE CON ÉL, en cada paso (lo llama la meca después de moverlo). Un cuerpo físico
+## no sigue a su padre cuando éste se mueve (en Godot su lugar es del motor de física): el de cada silla de los puestos
+## —el que el rayo de la mano encuentra para sentarse— se quedaba donde nació. *Lo vio el usuario el 11/11/2026: los
+## cuerpos de las seis sillas seguían en el origen del mundo con las mecas en la arena.*
+func carry_mounted() -> void:
+	for entry: Array in _mounted:
+		if not is_instance_valid(entry[0]):
+			continue
+		var body := entry[0] as RigidBody3D
+		if body.freeze:
+			body.global_transform = global_transform * (entry[1] as Transform3D)
 
 
 ## La altura del piso `index` (0 el de abajo), en el espacio del torso.
