@@ -17,7 +17,8 @@ extends Node3D
 const INTERACT_PAD := 2.0
 const ELEMENT_GAP := 3.0
 const CATEGORY_GAP := 4.0
-const GROUND_SIZE := 900.0
+## El piso sale de las filas (ver `_build_ground`): lo que ocupan, y esto alrededor.
+const GROUND_MARGIN := 300.0
 const GROUND_COLOR := Color(0.82, 0.80, 0.76)
 const SKY_TOP := Color(0.55, 0.68, 0.85)
 const SKY_HORIZON := Color(0.82, 0.86, 0.9)
@@ -60,6 +61,7 @@ func _ready() -> void:
 	GameOptions.load_and_apply()
 	_build_world()
 	_build_rows()
+	_build_ground()
 	_panel = SandboxPanel.new()
 	add_child(_panel)
 	_mount_tuners()
@@ -196,24 +198,43 @@ func _busy() -> bool:
 	return seated or get_tree().get_first_node_in_group("driving") != null
 
 
-func _build_world() -> void:
+## EL PISO, DEL TAMAÑO DE LAS FILAS: cubre todas las parcelas y `GROUND_MARGIN` alrededor. *Era un cuadrado fijo de
+## 900 m centrado en el origen, y las filas se apilan hacia +Z: al agregar filas (12/11/2026) la del cubo péndulo quedó
+## con el piso terminando a 4 m de su centro y las siguientes, enteras afuera; el cubo, sin piso bajo su apoyo, salía
+## despedido hacia abajo (lo vio el usuario: «me tira hacia abajo, clipeo por el piso… es algo estructural»).* Una fila
+## nueva nunca puede quedar fuera del piso.
+func _build_ground() -> void:
+	var low := Vector2.ZERO
+	var high := Vector2.ZERO
+	for row: Dictionary in _rows:
+		for parcel: SandboxParcel in row["parcels"]:
+			var half := parcel.size * 0.5 + Vector2.ONE * INTERACT_PAD
+			low = low.min(Vector2(parcel.position.x, parcel.position.z) - half)
+			high = high.max(Vector2(parcel.position.x, parcel.position.z) + half)
+	low -= Vector2.ONE * GROUND_MARGIN
+	high += Vector2.ONE * GROUND_MARGIN
+	var extent := high - low
+	var centre := (low + high) * 0.5
 	var ground := StaticBody3D.new()
 	ground.name = "Piso"
+	ground.position = Vector3(centre.x, 0.0, centre.y)
 	var floor_mesh := MeshInstance3D.new()
 	var plane := PlaneMesh.new()
-	plane.size = Vector2(GROUND_SIZE, GROUND_SIZE)
+	plane.size = extent
 	floor_mesh.mesh = plane
 	floor_mesh.material_override = SandboxParcel._flat(GROUND_COLOR)
 	floor_mesh.position.y = -0.01
 	ground.add_child(floor_mesh)
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(GROUND_SIZE, 1.0, GROUND_SIZE)
+	box.size = Vector3(extent.x, 1.0, extent.y)
 	shape.shape = box
 	shape.position.y = -0.5
 	ground.add_child(shape)
 	add_child(ground)
 
+
+func _build_world() -> void:
 	var sun := DirectionalLight3D.new()
 	sun.name = "Sol"
 	sun.rotation_degrees = Vector3(-55.0, 215.0, 0.0)

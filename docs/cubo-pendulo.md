@@ -32,7 +32,8 @@ de fuerza y su inclinación son huesos; la meca tiene colisión 1:1 con su caja 
 - **Las piernas son dibujo** (IK, `MechBody`): pisan por radio alrededor del apoyo, mirando como el torso; cada pie
   guarda hacia dónde miraba al pisar y **la pelvis**, una sola pieza, mira al promedio de los dos pies. Caído se pliegan;
   al enderezarse, se estiran.
-- Pasado el ángulo cae, suelto del todo, y se recupera con las toberas del [[cubo]].
+- Pasado el ángulo, **o sin piso bajo su apoyo** (un borde, un pozo), cae, suelto del todo, y se recupera con las
+  toberas del [[cubo]].
 - **O** lo maneja: W/S hacia donde mira el torso, A/D de costado, el mouse gira.
 
 ## Las dos perillas

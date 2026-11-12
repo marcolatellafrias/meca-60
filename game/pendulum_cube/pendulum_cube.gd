@@ -29,7 +29,8 @@ extends HoverCube
 ## LAS PIERNAS SON DIBUJO (IK, MechBody): pisan por radio alrededor del punto de apoyo, mirando hacia donde mira el
 ## torso; cada pie guarda hacia dónde miraba al pisar y LA PELVIS, una sola pieza, mira al promedio de los dos pies (va
 ## atrás del torso al girar, y lo alcanza). Caído, se pliegan; al enderezarse, se estiran.
-## PASADO `fall_tilt` SE CAE: suelto del todo; después se recupera con las toberas, como el cubo.
+## PASADO `fall_tilt`, O SIN PISO BAJO SU APOYO, SE CAE: suelto del todo; después se recupera con las toberas, como el
+## cubo.
 ##
 ## Las perillas, en PendulumCubeSettings (el panel F1 de su fila); el F2 le pega arriba.
 
@@ -88,7 +89,11 @@ func _standing(knobs: HoverCubeSettings, delta: float) -> void:
 	var k := knobs as PendulumCubeSettings
 	var rod := SIZE * 0.5 + k.hover_height
 	if not _grounded:
-		_support = _ground_under(global_position)
+		var floor_point: Variant = _floor_below(global_position, rod)
+		if floor_point == null:
+			_fall_down()
+			return
+		_support = floor_point
 		_support_speed = Vector3.ZERO
 		_grounded = true
 	tilt = rad_to_deg(global_basis.y.normalized().angle_to(Vector3.UP))
@@ -98,7 +103,10 @@ func _standing(knobs: HoverCubeSettings, delta: float) -> void:
 		return
 	_note_hit()
 	_drive(k, delta)
-	_follow(k, delta)
+	# SIN PISO BAJO EL APOYO, NO HAY APOYO: se cae (un borde, un pozo).
+	if not _follow(k, delta, rod):
+		_fall_down()
+		return
 	_hold(k, rod)
 	_upright(k, rod)
 	_turn(k)
@@ -133,7 +141,7 @@ func _drive(k: PendulumCubeSettings, delta: float) -> void:
 
 ## EL PUNTO DE APOYO SIGUE AL TORSO (ver arriba): quiere ir a su velocidad y ponerse debajo. Frenar es instantáneo;
 ## alcanzarlo, con tope.
-func _follow(k: PendulumCubeSettings, delta: float) -> void:
+func _follow(k: PendulumCubeSettings, delta: float, rod: float) -> bool:
 	var off := Vector3(global_position.x - _support.x, 0.0, global_position.z - _support.z)
 	var wanted := (Vector3(linear_velocity.x, 0.0, linear_velocity.z) + off * k.feet_catch).limit_length(k.feet_speed)
 	# Se planta: nunca va más rápido, en su dirección, que lo que hace falta.
@@ -147,7 +155,11 @@ func _follow(k: PendulumCubeSettings, delta: float) -> void:
 	var gap := (wanted - _support_speed).length()
 	_support_speed = _support_speed.move_toward(wanted, minf(k.feet_accel, gap * k.feet_react) * delta)
 	_support += _support_speed * delta
-	_support.y = _ground_under(Vector3(_support.x, global_position.y, _support.z)).y
+	var floor_point: Variant = _floor_below(Vector3(_support.x, global_position.y, _support.z), rod)
+	if floor_point == null:
+		return false
+	_support.y = (floor_point as Vector3).y
+	return true
 
 
 ## LA PUNTA DEL PALO, AGARRADA AL APOYO: un resorte firme entre la punta (debajo del cubo, a `rod` de su centro) y el
@@ -193,7 +205,17 @@ func _yaw() -> float:
 	return atan2(-forward.x, -forward.z) if forward.length_squared() > 0.01 else aim_yaw
 
 
-## El punto del piso debajo de `point`.
+## EL PISO DEBAJO DE `point`, hasta donde llegan las piernas (el palo y un poco más), o null si no hay. *«No hay piso»
+## se leía como «el piso está 200 m abajo» (el valor que devuelve `_ground_distance` cuando no encuentra): el apoyo se
+## iba ahí y el resorte que agarra el cubo lo despedía hacia abajo.*
+func _floor_below(point: Vector3, rod: float) -> Variant:
+	var hit := _ray(point, point + Vector3.DOWN * (rod + SIZE * 0.5))
+	if hit.is_empty():
+		return null
+	return hit["position"]
+
+
+## El punto del piso debajo de `point` (para el dibujo de las piernas, caído).
 func _ground_under(point: Vector3) -> Vector3:
 	return Vector3(point.x, point.y - _ground_distance(point), point.z)
 
