@@ -22,7 +22,7 @@ extends Resource
 ## Un ancho por miembro: el brazo y el antebrazo miden lo mismo, y el muslo y la pierna también.
 ##
 ## Sin nada guardado, cada arquetipo arranca con su forma de fábrica, de proporciones realistas (ver FACTORY); lo que
-## el F1 guarda (ver BlockShapes) manda.
+## el F1 guarda (ver BlockShapes) manda. Las medidas del personaje salen de acá (ver SkeletonSizesUtil).
 
 @export_group("Piernas")
 @export_range(0.2, 2.0, 0.005, "suffix:m") var leg_length := 0.85
@@ -61,7 +61,7 @@ extends Resource
 @export_range(0.0, 0.5, 0.005, "suffix:m") var neck_length := 0.05
 @export_range(0.02, 0.4, 0.005, "suffix:m") var neck_width := 0.1
 ## EL ALTO DE LA CABEZA: todo lo que la forma de bloques dice de ella. El ancho y el fondo son los de su forma de cabeza
-## (ver HeadForm), llevada a este alto (ver SkeletonSizesUtil). *Hasta el 13/11/2026 la cabeza era una caja con su ancho y
+## (ver HeadForm), llevada a este alto (ver SkeletonSizesUtil._head). *Hasta el 13/11/2026 la cabeza era una caja con su ancho y
 ## su fondo; lo guardado de entonces se ignora (ver `_set`).*
 @export_range(0.08, 0.8, 0.005, "suffix:m") var head_height := 0.26
 ## A qué altura de la cabeza gira: 0 desde su base, 0,3 desde adentro.
@@ -127,82 +127,6 @@ func _touch_angle(chain: float, u: float) -> float:
 		if inside > 0.0:
 			out = maxf(out, asin(clampf(inside / part.y, 0.0, 1.0)))
 	return out
-
-
-## ── LOS HUESOS QUE SALEN DE ESTA FORMA ──────────────────────────────────────────────────────────────────────────
-## Pisa en `s` todo lo que el esqueleto, la marcha y el alcance leen (ver SkeletonSizesUtil.create, que lo llama antes de
-## los reposos del brazo y de escalar). Los números de la forma son metros del personaje sin lupa; los de `s` en ese
-## punto están divididos por la escala horneada del sistema viejo (`baked`), así que se dividen por ella.
-func apply_to(s: SkeletonSizesUtil, inst: EntityInstantiation, baked: float) -> void:
-	var u := 1.0 / maxf(baked, 0.01)
-	var stats := inst.arch_final
-	var r_leg := leg_width * 0.5 * u
-	var r_arm := arm_width * 0.5 * u
-	var legs := leg_length * u
-	var arms := arm_length * u
-	var torso := torso_height * u
-	# LA COLUMNA: del nudo de la cadera (un radio de pierna sobre el fondo, regla 2) a los hombros (un radio de brazo
-	# debajo del tope, regla 1), en tres vértebras iguales.
-	var chain := maxf(torso - r_leg - r_arm, 0.06)
-	s.lower_spine_size.y = chain / 3.0
-	s.higher_spine_size.y = chain / 3.0
-	s.chest_size.y = chain / 3.0
-	s.torso_height = torso
-	s.torso_dome = 0.0
-	s.pelvis_fall = r_leg
-	s.bottom_drop = r_leg
-	s.arm_sink = r_arm
-	s.arm_push = 0.0
-	# LA CADERA, adentro de su caja (regla 2), nunca tan juntas que las piernas se crucen; LOS HOMBROS, un radio de brazo
-	# afuera del costado del pecho, así el brazo lo roza (regla 1; ver `arm_open`).
-	s.hips_width = maxf(lower_width * 0.5 * u - r_leg, r_leg)
-	s.hip_size.y = s.hips_width
-	s.raycast_stance_offset = s.hips_width * stats.stance_width
-	s.shoulders_width = maxf(chest_width * 0.5 * u + (0.0 if LocomotionCommon.base().shoulder_inside else r_arm), 0.02)
-	s.shoulder_width.y = s.shoulders_width
-	# LOS MIEMBROS.
-	s.upper_arm_size.y = arms * elbow_at
-	s.lower_arm_size.y = arms * (1.0 - elbow_at)
-	s.higher_leg_size.y = legs * knee_at
-	s.lower_leg_size.y = legs * (1.0 - knee_at)
-	s.hand_width = arm_width * u
-	# EL CUELLO Y LA CABEZA (reglas 4 y 5): nace en el tope del pecho, un radio de brazo arriba de la punta de la
-	# columna, y llega hasta el atlas.
-	var head := head_height * u
-	if stats.has_neck:
-		s.head_drop = atlas * head
-		# Adelante es −Z del pecho (ver SkeletonSizesUtil.neck_anchor_on).
-		var forward := maxf((chest_depth - neck_width) * 0.5, 0.0) * u if neck_forward else 0.0
-		s.neck_anchor = Vector3(0.0, r_arm, -forward)
-		s.neck_size.y = maxf(neck_length * u + s.head_drop, SkeletonSizesUtil.NECK_MIN)
-	else:
-		s.head_drop = 0.0
-		s.neck_anchor = Vector3.ZERO
-		s.neck_size.y = 0.0
-	s.head_size.y = maxf(head - s.head_drop, 0.01)
-	s.head_height = cos(s.slouchiness_neck) * s.neck_size.y + s.head_size.y + (r_arm if not stats.has_neck else 0.0)
-	# EL PIE (regla 3): el tobillo, a su alto, que nunca es menos que el radio de la pierna.
-	s.ankle_height = r_leg
-	s.leg_height = legs
-	s.total_height = s.ankle_height + legs + torso - r_leg + s.head_height
-	# LA MARCHA Y EL ALCANCE, con las mismas cuentas que el sistema viejo (ver SkeletonSizesUtil.create).
-	var stand := SkeletonSizesUtil.lerp_range(SkeletonSizesUtil.STAND_EXTENSION_STRAIGHT,
-		SkeletonSizesUtil.STAND_EXTENSION_BENT, stats.leg_bentness)
-	s.standing_pelvis_height = s.ankle_height + legs * stand
-	s.distance_from_ground = legs - s.standing_pelvis_height
-	s.set_stride(legs, inst.stride)
-	s.step_height = legs * inst.step_height
-	s.pole_distance = legs
-	s.raycast_start_y_offset = legs * 0.35
-	s.raycast_leg_length = legs
-	var rig := ReferenceRig.get_rig()
-	s.arm_reach = arms
-	s.arm_stretch = minf(minf(stats.arm_stretch, SkeletonSizesUtil.MAX_ARM_STRETCH),
-		rig.arm_chain * ReferenceRig.ARM_MODEL_FACTOR / maxf(arms, 0.001))
-	s.interaction_reach = LocomotionCommon.base().interaction_reach * u
-	s.arm_openness_angle = -((0.0 if LocomotionCommon.base().shoulder_inside else _touch_angle(chain, u)) + deg_to_rad(arm_open))
-	s.block_shape = self
-	s.block_unit = u
 
 
 ## ── LAS DE FÁBRICA: PROPORCIONES REALISTAS (01/11/2026) ────────────────────────────────────────────────────────────

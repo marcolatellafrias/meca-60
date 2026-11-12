@@ -180,17 +180,7 @@ func _initialize_skeleton() -> void:
 	# EL ESTILO DE CAMINAR, DE CADA UNO (ver WalkStyle.for_archetype): lo de su arquetipo y encima sus modificadores.
 	walk_style = WalkStyle.for_archetype(entity_archetype, _modifiers)
 	skel_sizes_util      = SkeletonSizesUtil.create(entity_instantiation, size_scale, head_slot)
-	skel_sizes_util.mouth = mouth
-	skel_sizes_util.lips = lips
-	skel_sizes_util.lip_color = lip_color
 	skel_sizes_util.skin = skin
-	skel_sizes_util.brows = brows
-	skel_sizes_util.brow_tilt = brow_tilt
-	skel_sizes_util.face_look = face_look
-	skel_sizes_util.nose = nose
-	skel_sizes_util.hair = hair
-	skel_sizes_util.beard = beard
-	skel_sizes_util.hair_color = hair_color
 	custom_bones_util    = CustomBonesUtil.create(skel_sizes_util, entity_instantiation)
 	ik_util              = IkUtil.create(skel_sizes_util, self)
 
@@ -310,6 +300,10 @@ func _initialize_skeleton() -> void:
 	# `is_instance_valid` antes de tocarlo, así que no tenerlo es un estado que el personaje ya soportaba.
 	if kind.has_ragdoll() and (kind.simulates() or kind.driver == CharacterKind.Driver.NETWORK):
 		_make_ragdoll()
+
+	# LOS GIZMOS DE MARCHA, APAGADOS (ver IkUtil.gizmos_visible): sus mallas nacen visibles, y los apagaba la vista de
+	# debug del personaje, borrada el 13/11/2026.
+	ik_util.set_gizmos_visible(false)
 
 	# Primera persona: se aplica ACÁ, al final. PlayerController.rebind (que corre en
 	# on_skeleton_built, bastante más arriba) es quien venía seteando esto, pero el cuerpo visible se

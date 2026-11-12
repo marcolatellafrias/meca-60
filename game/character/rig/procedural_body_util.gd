@@ -110,10 +110,7 @@ static func create(bones: CustomBonesUtil, sizes: SkeletonSizesUtil, _arch: Enti
 func _build(bones: CustomBonesUtil, sizes: SkeletonSizesUtil) -> void:
 	_head_drop = sizes.head_drop
 	_skin_color = sizes.skin if sizes.skin.a > 0.0 else CharacterBodyVisual.BODY_COLOR
-	# LA PIEL DEL CUELLO, en tono de la piel del personaje (ver TorsoShape.neck_tone).
 	_neck_color = _skin_color
-	if sizes.torso_shape != null:
-		_neck_color = sizes.torso_shape.tone_color("neck_tone", _skin_color)
 	skeleton = Skeleton3D.new()
 	skeleton.name = "DrawSkeleton"
 	add_child(skeleton)

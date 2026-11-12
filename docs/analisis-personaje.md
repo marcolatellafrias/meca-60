@@ -52,6 +52,15 @@ Unas **14.000 líneas**.
 - **Partículas, sonido** (el sistema: `Sounds`, `SoundEntity`), `PackageDamage`.
 
 ### B · El aspecto del personaje: la decisión grande
+*13/11/2026, la sesión de Personajes: **hecho**. Las medidas salen de cero de la forma de bloques y la postura del
+arquetipo (`SkeletonSizesUtil`, de 1.273 a unas 340 líneas, ver [[personajes-traidos]]); se borraron `TorsoShape`,
+`TorsoShapes` (y sus `.tres`), `ReferenceRig` con el modelo `character.glb` que leía (sus ángulos de reposo quedaron
+como tabla en `CustomBonesUtil.REST`), `BodyLoop`, `FootCut`, `BlockShape.apply_to` y cinco números de arquetipo que
+sólo usaba la cuenta vieja. Los seis personajes quedaron iguales, medido. **Las cabezas**: sombreado suave sobre las
+mismas pocas caras, más grandes y con el cuello más grueso e inclinado (afinado «así nomás»; el usuario lo va a tunear).
+**Queda**: el código de las caras (`FaceLayout`, `FacePlane`, `FaceFeature`, `FaceStyle`, `FaceHair`, `HeadForm` con
+sus ojos, boca y orejas, lo de `CharacterLook` que las elige): no se dibuja y el usuario las rehace de cero.*
+
 *13/11/2026, después: **la cabeza es su forma de cabeza low poly** (`HeadForm`): ocho lados, y a lo largo sólo los
 anillos que mandan (las tapas y los cortes prendidos), con caras planas, así cada loop cut es una arista que se ve. **El
 alto de la cabeza es un número**, el de la forma de bloques (`BlockShape.head_height`); la forma se lleva a ese alto y
@@ -85,9 +94,10 @@ Unas **9.000 líneas**, pero enganchado:
   «tipo de exhibición» de un personaje (`CharacterKind.is_exhibit`) queda: lo usan las figuras de la fila Personajes.*
   **`ExhibitOperator`** (1.308): un personaje de exhibición que maneja controles solo, para las vitrinas de la nave. Lo
   nombran `BoneInstantiator`, `ArmsController`, `CharacterIntent`, `CharacterKind` e `InteractionController`.
-- **Las herramientas de esculpir el cuerpo**: el inspector (`CharacterInspectorSource`, 873), `QuadWire`, `BlenderView`,
-  `ModelClick`, `SkeletonDebugDraw`, `CharacterDebugView`, `ForceFieldGizmo`, `DebugOrbitCamera`, `ViewTuner`: unas
-  3.200 líneas. Sólo sirven si se sigue esculpiendo el cuerpo (grupo B).
+- *Borradas el 13/11/2026 (el usuario: «las herramientas, borrarlas»), con lo que sólo ellas usaban (aislar partes en
+  el panel, el cono de agarre, la cámara orbital del numpad, el F3).* **Las herramientas de esculpir el cuerpo**: el
+  inspector (`CharacterInspectorSource`, 873), `QuadWire`, `BlenderView`, `ModelClick`, `SkeletonDebugDraw`,
+  `CharacterDebugView`, `ForceFieldGizmo`, `DebugOrbitCamera`, `ViewTuner`: unas 3.200 líneas.
 - **Los paquetes de ciudad**: los bosquejos viejos dentro de `PackageArchetype` (unas 600 de sus 921 líneas), el cajón
   de botellas (`BottleCrate`, `PackageContents`: 377) y `ModelBox` (263, el ida y vuelta con Blender).
 - **`HeldInteractable`** (212): el manual y el teléfono de la nave. **El manual se queda** (va a tener uso); el

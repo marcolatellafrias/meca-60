@@ -718,7 +718,7 @@ func _flight_pitch(left: bool, yaw: float) -> float:
 ## EL PIE NIVELADO de un personaje que mira con ese giro (`yaw`): el reposo del hueso con el giro encima (ver
 ## `_level_foot`). Lo usa también el sentado, que no pisa pero tampoco tiene por qué colgar con la tibia.
 static func level_basis(left: bool, yaw: float) -> Basis:
-	var rest: Basis = ReferenceRig.get_rig().bases.get("left_foot" if left else "right_foot", Basis.IDENTITY)
+	var rest := CustomBonesUtil.rest_basis("left_foot" if left else "right_foot")
 	return Basis(Vector3.UP, yaw) * rest
 
 

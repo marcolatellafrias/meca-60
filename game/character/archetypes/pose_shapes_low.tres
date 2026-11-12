@@ -54,7 +54,6 @@ by_archetype = {
 "sprint_multiplier": 2.0
 },
 5: {
-"arm_openness": 0.5,
 "slouch": 0.13,
 "stance_width": 1.05
 },

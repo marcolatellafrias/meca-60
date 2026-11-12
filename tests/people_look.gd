@@ -1,7 +1,9 @@
 extends Node3D
 
-## LOS SEIS ARQUETIPOS, PARA MIRAR (unos 5 segundos, sin el sandbox): los para en fila sobre un piso, con su aspecto
-## guardado, e imprime de cada uno su peso y su alto. Con ventana, una captura de frente.
+## LOS SEIS ARQUETIPOS, PARA MIRAR (unos 12 segundos, sin el sandbox): los para en fila sobre un piso, con su aspecto
+## guardado, e imprime de cada uno su peso y su alto. Con ventana, una captura de frente y las cabezas de cerca. Después
+## los hace caminar 3 segundos y frenar, e imprime cuánto anduvo cada uno y si quedó de pie (con ventana, una captura
+## caminando).
 ##   tools/godot_ventana.sh res://tests/people_look.tscn -- --salida=C:/carpeta
 ## `--cabezas=0.29,0.28,…` prueba otros altos de cabeza (en metros, en el orden de la fila) sin guardarlos.
 
@@ -64,6 +66,24 @@ func _ready() -> void:
 			await get_tree().process_frame
 			get_viewport().get_texture().get_image().save_png(_folder + "/cabeza_%d.png" % (index + 1))
 		print("CAPTURA cabezas")
+		eye.global_position = Vector3(0.0, 1.4, 6.5)
+		eye.look_at(Vector3(0.0, 1.1, 0.0))
+	# A CAMINAR: hacia la cámara, tres segundos, y frenar.
+	var start: Array[Vector3] = []
+	for bi in people:
+		start.append(bi.char_rigidbody.global_position)
+		bi.intent.move = Vector2(0.0, 1.0)
+	await get_tree().create_timer(1.5).timeout
+	if not _folder.is_empty() and DisplayServer.get_name() != "headless":
+		get_viewport().get_texture().get_image().save_png(_folder + "/caminando.png")
+	await get_tree().create_timer(1.5).timeout
+	for bi in people:
+		bi.intent.move = Vector2.ZERO
+	await get_tree().create_timer(2.0).timeout
+	for index in people.size():
+		var bi := people[index]
+		var moved := bi.char_rigidbody.global_position - start[index]
+		print("CAMINÓ %s: %.2f m · de pie %s" % [bi.name, Vector2(moved.x, moved.z).length(), not bi.ragdoll_util.is_active])
 	get_tree().quit()
 
 

@@ -51,7 +51,6 @@ func get_all_bones() -> Array[CustomBone]:
 static func create(sizes: SkeletonSizesUtil, inst: EntityInstantiation) -> CustomBonesUtil:
 	var u := CustomBonesUtil.new()
 	var stats := inst.arch_final
-	var rig := ReferenceRig.get_rig()
 
 	# ── LA LUMBAR NACE EN EL NUDO DE LA CADERA, NO ARRIBA DE LA PELVIS ──────────────────────────
 	# Es la base de todo el cuerpo: las caderas cuelgan de ACÁ, y de la lumbar para arriba va el torso. Mide
@@ -65,15 +64,15 @@ static func create(sizes: SkeletonSizesUtil, inst: EntityInstantiation) -> Custo
 	#
 	# Y NO LLEVA SLOUCH: el encorvado es solo el cuello (ver abajo). Lo que sí puede llevar es la CURVA DE
 	# LA ESPALDA, que es otra variable y va como postura de pose — ver más abajo, con el pecho.
-	u.lower_spine  = _bone(rig, "lower_spine", sizes.lower_spine_size, null, true)
+	u.lower_spine  = _bone("lower_spine", sizes.lower_spine_size, null, true)
 	# LA COLUMNA SON TRES HUESOS. Era cuatro; `middle.spine` se disolvió en Blender cuando el modelo
 	# pasó a low poly — con esa densidad de malla, cuatro articulaciones de torso no tenían geometría
 	# suficiente para deformar y solo agregaban costo.
 	#
 	# NINGUNA DE LAS TRES LLEVA SLOUCH EN EL REPOSO, y es el cambio de criterio: el encorvado pasó a ser un
 	# efecto de CUELLO y nada más (ver SkeletonSizesUtil.slouchiness_neck).
-	u.higher_spine = _bone(rig, "higher_spine", sizes.higher_spine_size, u.lower_spine, true)
-	u.chest        = _bone(rig, "chest", sizes.chest_size, u.higher_spine, true)
+	u.higher_spine = _bone("higher_spine", sizes.higher_spine_size, u.lower_spine, true)
+	u.chest        = _bone("chest", sizes.chest_size, u.higher_spine, true)
 	# LA CURVA DE LA ESPALDA, en cambio, va como POSTURA DE POSE: el pecho adelante y la lumbar atrás de
 	# contrapeso (ver SkeletonSizesUtil.spine_bend_chest). En el reposo movería el hueso y su bind juntos y
 	# no deformaría nada — en la pose, el torso se curva de verdad.
@@ -88,15 +87,15 @@ static func create(sizes: SkeletonSizesUtil, inst: EntityInstantiation) -> Custo
 	# Las caderas cuelgan de la BASE del lower_spine (use_parent_end = false) y SALEN DERECHO DE COSTADO: su
 	# punta es donde nace el muslo, y esa base ya está a la altura donde la malla arranca la pierna (ver
 	# arriba). Horizontal, el largo del hueso ES la estancia — sin hipotenusa que compensar.
-	u.left_hip  = _bone(rig, "left_hip", sizes.hip_size, u.lower_spine, false)
-	u.right_hip = _bone(rig, "right_hip", sizes.hip_size, u.lower_spine, false)
+	u.left_hip  = _bone("left_hip", sizes.hip_size, u.lower_spine, false)
+	u.right_hip = _bone("right_hip", sizes.hip_size, u.lower_spine, false)
 
-	u.left_higher_leg  = _bone(rig, "left_higher_leg", sizes.higher_leg_size, u.left_hip,         true)
-	u.left_lower_leg   = _bone(rig, "left_lower_leg", sizes.lower_leg_size, u.left_higher_leg,  true)
-	u.left_foot        = _bone(rig, "left_foot", sizes.foot_size, u.left_lower_leg,   true)
-	u.right_higher_leg = _bone(rig, "right_higher_leg", sizes.higher_leg_size, u.right_hip,        true)
-	u.right_lower_leg  = _bone(rig, "right_lower_leg", sizes.lower_leg_size, u.right_higher_leg, true)
-	u.right_foot       = _bone(rig, "right_foot", sizes.foot_size, u.right_lower_leg,  true)
+	u.left_higher_leg  = _bone("left_higher_leg", sizes.higher_leg_size, u.left_hip,         true)
+	u.left_lower_leg   = _bone("left_lower_leg", sizes.lower_leg_size, u.left_higher_leg,  true)
+	u.left_foot        = _bone("left_foot", sizes.foot_size, u.left_lower_leg,   true)
+	u.right_higher_leg = _bone("right_higher_leg", sizes.higher_leg_size, u.right_hip,        true)
+	u.right_lower_leg  = _bone("right_lower_leg", sizes.lower_leg_size, u.right_higher_leg, true)
+	u.right_foot       = _bone("right_foot", sizes.foot_size, u.right_lower_leg,  true)
 
 	# ── EL CUELLO NACE EN LA PUNTA DEL PECHO, Y LO ÚNICO SUYO ES EL LARGO Y LA INCLINACIÓN ──────
 	# La punta del pecho es UN SOLO PUNTO del que salen dos cosas: el cuello y los dos hombros. Nada se
@@ -115,8 +114,8 @@ static func create(sizes: SkeletonSizesUtil, inst: EntityInstantiation) -> Custo
 		# desconectan). La cabeza sigue donde estaba —en la tapa (`neck_anchor`, ver SkeletonSizesUtil) y de ahí su largo,
 		# inclinado por el encorvado—, y el cuello va derecho desde la punta del pecho hasta ahí (ver `_neck`). Nacía en la
 		# tapa, corrido de la punta del pecho, y en la vista de esqueleto quedaba un hueco.
-		u.neck = _neck(rig, sizes, u.chest)
-	u.head = _bone(rig, "head", sizes.head_size, u.neck if u.neck else u.chest, true)
+		u.neck = _neck(sizes, u.chest)
+	u.head = _bone("head", sizes.head_size, u.neck if u.neck else u.chest, true)
 	u.head_drop = sizes.head_drop
 	# ── LA CABEZA SE QUEDA MIRANDO AL FRENTE ────────────────────────────────────────────────────
 	# La curva de la espalda es pose, y la pose se hereda: sin esto, curvar la espalda le hacía mirar el
@@ -149,8 +148,8 @@ static func create(sizes: SkeletonSizesUtil, inst: EntityInstantiation) -> Custo
 	# Y LA POSTURA (`shoulder_forward`, `shoulder_drop`) tampoco va en el reposo: es pose, porque tiene que
 	# DEFORMAR el torso (ver CustomBone.set_world_posture). En el reposo movía el hueso y su bind juntos, o
 	# sea movía los brazos y dejaba el torso intacto.
-	u.left_shoulder   = _shoulder(rig, "left_shoulder", true, sizes, u.chest)
-	u.right_shoulder  = _shoulder(rig, "right_shoulder", false, sizes, u.chest)
+	u.left_shoulder   = _shoulder("left_shoulder", true, sizes, u.chest)
+	u.right_shoulder  = _shoulder("right_shoulder", false, sizes, u.chest)
 	# Los dos giros van ESPEJADOS entre lados (ver la nota de arriba: un mismo giro sobre la vertical lleva
 	# un hombro adelante y el otro atrás) y el izquierdo lleva el signo invertido.
 	u.left_shoulder.set_world_posture(shoulder_posture(true, sizes))
@@ -161,10 +160,10 @@ static func create(sizes: SkeletonSizesUtil, inst: EntityInstantiation) -> Custo
 	for bone: CustomBone in [u.lower_spine, u.chest, u.head]:
 		if not bone.posture.is_equal_approx(Basis.IDENTITY):
 			u.postured.append(bone)
-	u.left_upper_arm  = _bone(rig, "left_upper_arm", sizes.upper_arm_size, u.left_shoulder,   true)
-	u.left_lower_arm  = _bone(rig, "left_lower_arm", sizes.lower_arm_size, u.left_upper_arm,  true)
-	u.right_upper_arm = _bone(rig, "right_upper_arm", sizes.upper_arm_size, u.right_shoulder,  true)
-	u.right_lower_arm = _bone(rig, "right_lower_arm", sizes.lower_arm_size, u.right_upper_arm, true)
+	u.left_upper_arm  = _bone("left_upper_arm", sizes.upper_arm_size, u.left_shoulder,   true)
+	u.left_lower_arm  = _bone("left_lower_arm", sizes.lower_arm_size, u.left_upper_arm,  true)
+	u.right_upper_arm = _bone("right_upper_arm", sizes.upper_arm_size, u.right_shoulder,  true)
+	u.right_lower_arm = _bone("right_lower_arm", sizes.lower_arm_size, u.right_upper_arm, true)
 	# ── LOS HUESOS NUNCA SE DESCONECTAN ────────────────────────────────────────────────────────────
 	# El brazo nace en la punta del hombro, siempre, y la punta del hombro es donde el brazo cuelga: el ENCAJE del brazo
 	# (`arm_sink`, `arm_push`, ver TorsoShape) inclina y alarga el hombro (ver `_shoulder`). *Corría el hueso del brazo
@@ -233,8 +232,8 @@ static func shoulder_posture(left: bool, sizes: SkeletonSizesUtil) -> Basis:
 ## corrimiento se le pide en ejes del mundo (ver CustomBone.set_world_offset).
 ## EL HUESO DEL CUELLO, de la punta del pecho hasta donde nace la cabeza: el punto de la tapa (`neck_anchor`) más su
 ## largo inclinado por el encorvado. El del modelo, girado para apuntar ahí y con ese largo.
-static func _neck(rig: ReferenceRig, sizes: SkeletonSizesUtil, parent: CustomBone) -> CustomBone:
-	var basis: Basis = rig.bases.get("neck", Basis.IDENTITY)
+static func _neck(sizes: SkeletonSizesUtil, parent: CustomBone) -> CustomBone:
+	var basis := rest_basis("neck")
 	basis = basis * Basis(Vector3.RIGHT, -sizes.slouchiness_neck)
 	var along := basis.y.normalized()
 	var reach: Vector3 = sizes.neck_anchor + along * sizes.neck_size.y
@@ -249,9 +248,9 @@ static func _neck(rig: ReferenceRig, sizes: SkeletonSizesUtil, parent: CustomBon
 
 ## EL HUESO DEL HOMBRO, del tope del pecho hasta donde cuelga el brazo (ver SkeletonSizesUtil._shoulder_arm_local): el
 ## del modelo, girado para apuntar ahí y con ese largo.
-static func _shoulder(rig: ReferenceRig, field: String, left: bool, sizes: SkeletonSizesUtil,
+static func _shoulder(field: String, left: bool, sizes: SkeletonSizesUtil,
 		parent: CustomBone) -> CustomBone:
-	var basis: Basis = rig.bases.get(field, Basis.IDENTITY)
+	var basis := rest_basis(field)
 	var reach := SkeletonSizesUtil._shoulder_arm_local(left, sizes)
 	var along := basis.y.normalized()
 	if reach.length() > 1e-5 and along.cross(reach.normalized()).length() > 1e-6:
@@ -263,9 +262,9 @@ static func _shoulder(rig: ReferenceRig, field: String, left: bool, sizes: Skele
 	return bone
 
 
-static func _bone(rig: ReferenceRig, field: String, dims: Vector3,
+static func _bone(field: String, dims: Vector3,
 		parent: CustomBone = null, use_parent_end: bool = true, pitch: float = 0.0) -> CustomBone:
-	var basis: Basis = rig.bases.get(field, Basis.IDENTITY)
+	var basis := rest_basis(field)
 	if not is_zero_approx(pitch):
 		basis = basis * Basis(Vector3.RIGHT, pitch)
 	var bone := CustomBone.create(dims, basis.get_euler(), parent, use_parent_end)
@@ -275,3 +274,25 @@ static func _bone(rig: ReferenceRig, field: String, dims: Vector3,
 	# justamente eso al lado de cada línea).
 	bone.name = field
 	return bone
+
+
+## ── EL REPOSO DE CADA HUESO, en ejes del personaje (−Z al frente) ───────────────────────────────────────────────────
+## La columna, el cuello y la cabeza, derechos para arriba; los hombros, los brazos y las caderas, acostados hacia su
+## lado (el izquierdo hacia −X); las piernas, para abajo con un grado de inclinación; el pie, hacia adelante. Son los
+## ángulos de Euler que antes se leían del modelo de Blender (`ReferenceRig`, `character.glb`), copiados el 13/11/2026
+## al borrarlo: con ellos el esqueleto queda igual.
+const REST := {
+	"lower_spine": Vector3.ZERO, "higher_spine": Vector3.ZERO, "chest": Vector3.ZERO, "neck": Vector3.ZERO,
+	"head": Vector3.ZERO,
+	"left_shoulder": Vector3(0.0, 0.0, PI * 0.5), "right_shoulder": Vector3(0.0, 0.0, -PI * 0.5),
+	"left_upper_arm": Vector3(0.0, 0.0, PI * 0.5), "right_upper_arm": Vector3(0.0, 0.0, -PI * 0.5),
+	"left_lower_arm": Vector3(0.0, 0.0, PI * 0.5), "right_lower_arm": Vector3(0.0, 0.0, -PI * 0.5),
+	"left_hip": Vector3(0.0, 0.0, PI * 0.5), "right_hip": Vector3(0.0, 0.0, -PI * 0.5),
+	"left_higher_leg": Vector3(-0.016851, -PI, PI), "right_higher_leg": Vector3(-0.016851, PI, -PI),
+	"left_lower_leg": Vector3(-0.016851, -PI, PI), "right_lower_leg": Vector3(-0.016851, PI, -PI),
+	"left_foot": Vector3(-1.553945, 0.0, 0.0), "right_foot": Vector3(-1.553945, 0.0, 0.0),
+}
+
+
+static func rest_basis(field: String) -> Basis:
+	return Basis.from_euler(REST.get(field, Vector3.ZERO))

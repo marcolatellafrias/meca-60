@@ -128,7 +128,7 @@ func _make_body(bone: CustomBone) -> RigidBody3D:
 
 	var d := bone.capsule_dimensions
 	var caps := CapsuleShape3D.new()
-	caps.radius = min(d.x, d.z) * 0.45
+	caps.radius = min(d.x, d.z) * 0.5  # el ancho de su caja o su miembro (ver SkeletonSizesUtil, LOS HUESOS)
 	caps.height = max(d.y, caps.radius * 2.1)
 
 	var shape := CollisionShape3D.new()
