@@ -114,7 +114,6 @@ var _orbit_yaw := 0.0
 var _orbit_pitch := deg_to_rad(-18.0)
 var _chase_yaw := 0.0
 var _chase_pitch := deg_to_rad(-12.0)
-var _first_person := false
 var _hud: MechHud = null
 
 
@@ -150,12 +149,13 @@ func _ready() -> void:
 		else:
 			right_arm = arm
 	_camera = Camera3D.new()
-	_camera.name = "Cámara de afuera"
+	_camera.name = "Cámara de la vigía"
 	_camera.top_level = true
 	_camera.far = 2000.0
 	add_child(_camera)
 	_hud = MechHud.new()
 	add_child(_hud)
+	add_to_group(SandboxPossession.GROUP)
 	torso_aim = global_rotation.y
 	_chase_yaw = torso_aim
 	# EL PUÑO NO CHOCA CON SU PROPIA MECA: con ninguno de sus cuerpos (el torso, el montacargas, las sillas…).
@@ -187,43 +187,51 @@ func board() -> void:
 	if player == null:
 		return
 	if _from_outside:
-		_leave_outside()
+		SandboxPossession.of(get_tree()).release()
 	if player.is_seated and player.current_seat is SeatInteractable:
 		(player.current_seat as SeatInteractable).release_occupant_in_place()
 	var feet := torso.global_transform * Vector3(0.0, MechTorso.floor_y(0) + 0.05, -MechTorso.DEPTH * 0.5 + 2.8)
 	player.place_at(feet, torso_yaw())
 
 
-## MANEJARLA DESDE AFUERA (la O del sandbox), o volver. El jugador se apaga mientras tanto (`set_active`: ni se ve ni
-## lee teclas) y queda donde estaba; si estaba sentado, se levanta antes.
-func toggle_outside() -> void:
-	if _from_outside:
-		_leave_outside()
-		return
-	var player := _player()
-	if player == null:
-		return
-	if player.is_seated and player.current_seat is SeatInteractable:
-		(player.current_seat as SeatInteractable).release_occupant_in_place()
+## ── POSEERLA (la O del sandbox, ver SandboxPossession): manejarla desde afuera ────────────────────────────────────
+
+func possess_name() -> String:
+	return "Meca"
+
+
+func possess_controls() -> PackedStringArray:
+	return PackedStringArray([
+		"W/S camina · A/D gira las piernas · Shift se afirma",
+		"mouse gira el torso",
+		"clic izq. / der.: mantener carga, soltar pega",
+		"el mouse dobla la piña que sale · G cañón",
+	])
+
+
+func possess_begin() -> void:
 	_from_outside = true
-	add_to_group("driving")
-	player.set_active(false)
 	_chase_yaw = torso_yaw()
-	_camera.make_current()
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
-func _leave_outside() -> void:
+func possess_end() -> void:
 	_from_outside = false
-	remove_from_group("driving")
 	left_arm.cancel()
 	right_arm.cancel()
-	var player := _player()
-	if player == null:
-		return
-	player.set_active(true)
-	if is_instance_valid(player.player_camera):
-		player.player_camera.make_current()
+
+
+## La cámara: en primera persona, en el frente del torso; en tercera, atrás del torso, por sobre el hombro, siguiéndolo
+## con un poco de atraso (así se ve cuánto tarda en girar).
+func possess_camera(first: bool, delta: float) -> Transform3D:
+	if first:
+		_chase_yaw = torso_yaw()
+		var eyes := Vector3(0.0, MechTorso.floor_y(1) + 1.6, -MechTorso.DEPTH * 0.5 - 0.6)
+		return torso.global_transform * Transform3D(Basis.from_euler(Vector3(_chase_pitch, 0.0, 0.0)), eyes)
+	var centre := global_position + Vector3(0.0, MechBody.WAIST + MechTorso.top_y() * 0.5, 0.0)
+	_chase_yaw = lerp_angle(_chase_yaw, torso_yaw(), 1.0 - exp(-5.0 * delta) if delta > 0.0 else 1.0)
+	var view := Basis.from_euler(Vector3(_chase_pitch, _chase_yaw, 0.0))
+	return Transform3D(view, centre + Basis(Vector3.UP, _chase_yaw) * CHASE_SHOULDER
+		+ view * Vector3(0.0, 0.0, CHASE_DISTANCE))
 
 
 ## ── LA ENTRADA ──────────────────────────────────────────────────────────────────────────────────────────────────
@@ -234,10 +242,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	var key := event as InputEventKey
 	if key != null and not key.echo:
 		if key.pressed and key.physical_keycode == KEY_E:
-			if _from_outside:
-				_leave_outside()
-				get_viewport().set_input_as_handled()
-			else:
+			if not _from_outside:
 				_toggle_lift()
 			return
 		if not is_crewed():
@@ -250,9 +255,6 @@ func _unhandled_input(event: InputEvent) -> void:
 			KEY_G:
 				if key.pressed and state == State.STANDING:
 					right_arm.fire(aim_point)
-			KEY_T:
-				if key.pressed and _from_outside:
-					_first_person = not _first_person
 			_:
 				return
 		get_viewport().set_input_as_handled()
@@ -528,23 +530,9 @@ func _place_body(delta: float) -> void:
 	_place_camera(delta)
 
 
-## LA CÁMARA DE AFUERA. Manejando desde afuera: en primera persona (T), en el frente del torso; si no, atrás del torso,
-## por sobre el hombro, siguiéndolo con un poco de atraso (así se ve cuánto tarda en girar). En la vigía: alrededor
-## del torso y de lejos.
-func _place_camera(delta: float) -> void:
+## LA CÁMARA DE LA VIGÍA: alrededor del torso y de lejos. (La de poseerla, en `possess_camera`.)
+func _place_camera(_delta: float) -> void:
 	var centre := global_position + Vector3(0.0, MechBody.WAIST + MechTorso.top_y() * 0.5, 0.0)
-	if _from_outside and _first_person:
-		var eyes := Vector3(0.0, MechTorso.floor_y(1) + 1.6, -MechTorso.DEPTH * 0.5 - 0.6)
-		_camera.global_transform = torso.global_transform * Transform3D(Basis.from_euler(Vector3(_chase_pitch, 0.0, 0.0)), eyes)
-		_chase_yaw = torso_yaw()
-		return
-	if _from_outside:
-		var follow := 1.0 - exp(-5.0 * delta) if delta > 0.0 else 1.0
-		_chase_yaw = lerp_angle(_chase_yaw, torso_yaw(), follow)
-		var view := Basis.from_euler(Vector3(_chase_pitch, _chase_yaw, 0.0))
-		_camera.global_transform = Transform3D(view, centre + Basis(Vector3.UP, _chase_yaw) * CHASE_SHOULDER
-			+ view * Vector3(0.0, 0.0, CHASE_DISTANCE))
-		return
 	var orbit := Basis.from_euler(Vector3(_orbit_pitch, _orbit_yaw, 0.0))
 	_camera.global_position = centre + orbit * Vector3(0.0, 0.0, 42.0)
 	_camera.look_at(centre + Vector3(0, 4.0, 0), Vector3.UP)

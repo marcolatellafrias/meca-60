@@ -78,9 +78,8 @@ var _velocity_after := Vector3.ZERO
 ## La velocidad de costado propia y la del retroceso (ver arriba); parado, la del cuerpo es su suma.
 var _walk := Vector3.ZERO
 var _knock := Vector3.ZERO
-## MANEJARLO DESDE AFUERA (la O de su fila): W/S adelante y atrás, A/D gira; la cámara lo sigue de atrás.
+## POSEÍDO (la O del sandbox, ver SandboxPossession): lee las teclas. W/S adelante y atrás, A/D gira.
 var driving := false
-var _camera: Camera3D = null
 var _chase_yaw := 0.0
 var _shape: CollisionShape3D = null
 var _clock := 0.0
@@ -120,11 +119,7 @@ func _ready() -> void:
 	_label.outline_size = 14
 	_label.modulate = Color(1.0, 0.95, 0.6)
 	add_child(_label)
-	_camera = Camera3D.new()
-	_camera.name = "Cámara de afuera"
-	_camera.top_level = true
-	_camera.far = 2000.0
-	add_child(_camera)
+	add_to_group(SandboxPossession.GROUP)
 	_lock(true)
 
 
@@ -189,7 +184,6 @@ func _physics_process(delta: float) -> void:
 			if tilt <= knobs.upright_done and angular_velocity.length() < 0.4:
 				_recovered()
 	_fire_nozzles(knobs)
-	_place_camera(delta)
 	_label.global_position = global_position + Vector3(0, SIZE + 2.0, 0)
 	_label.text = "%s · altura %.1f m · inclinación %.0f°\núltimo golpe %.1f m/s %s · caídas %d" % [
 		["parado", "TIRADO", "sube", "se endereza"][state], height, tilt, last_hit, last_hit_kind, falls]
@@ -466,56 +460,34 @@ static func delta_v_for_lean(target: float, knobs: HoverCubeSettings) -> float:
 	return target / maxf(peak * knobs.lean_per_ms * knobs.push_rate, 0.0001)
 
 
-## ── MANEJARLO DESDE AFUERA (como la meca, ver Mech.toggle_outside) ─────────────────────────────────────────────
-## El jugador se apaga mientras tanto (ni se ve ni lee teclas) y queda donde estaba. O o E vuelve.
-func toggle_drive() -> void:
-	if driving:
-		_leave_drive()
-		return
-	var player := DesignSandbox.player_of(get_tree())
-	if player == null:
-		return
-	if player.is_seated and player.current_seat is SeatInteractable:
-		(player.current_seat as SeatInteractable).release_occupant_in_place()
+## ── POSEERLO (ver SandboxPossession) ─────────────────────────────────────────────────────────────────────────────
+
+func possess_name() -> String:
+	return String(name)
+
+
+func possess_controls() -> PackedStringArray:
+	return PackedStringArray(["W/S adelante y atrás", "A/D gira"])
+
+
+func possess_begin() -> void:
 	driving = true
-	add_to_group("driving")
-	player.set_active(false)
 	_chase_yaw = _view_yaw()
-	_camera.make_current()
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
-func _leave_drive() -> void:
+func possess_end() -> void:
 	driving = false
-	remove_from_group("driving")
-	var player := DesignSandbox.player_of(get_tree())
-	if player == null:
-		return
-	player.set_active(true)
-	if is_instance_valid(player.player_camera):
-		player.player_camera.make_current()
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	var key := event as InputEventKey
-	if driving and key != null and key.pressed and not key.echo and key.physical_keycode == KEY_E:
-		_leave_drive()
-		get_viewport().set_input_as_handled()
-
-
-func _exit_tree() -> void:
-	if driving:
-		_leave_drive()
-
-
-## La cámara, atrás y arriba, siguiéndolo con un poco de atraso.
-func _place_camera(delta: float) -> void:
-	if not driving:
-		return
+## La cámara: en primera persona, en el frente del cubo, inclinada como él; en tercera, atrás y arriba, siguiéndolo con
+## un poco de atraso.
+func possess_camera(first: bool, delta: float) -> Transform3D:
+	if first:
+		_chase_yaw = _view_yaw()
+		return _look.global_transform * Transform3D(Basis(), Vector3(0.0, 1.0, -SIZE * 0.5 - 0.6))
 	_chase_yaw = lerp_angle(_chase_yaw, _view_yaw(), 1.0 - exp(-4.0 * delta))
-	var behind := Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 14.0, 34.0)
-	_camera.global_position = global_position + behind
-	_camera.look_at(global_position + Vector3(0.0, 2.0, 0.0), Vector3.UP)
+	var from := global_position + Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 14.0, 34.0)
+	return Transform3D(Basis(), from).looking_at(global_position + Vector3(0.0, 2.0, 0.0), Vector3.UP)
 
 
 ## Hacia dónde mira la cámara de afuera: hacia donde mira el cubo (de costado o dado vuelta, hacia donde miraba).

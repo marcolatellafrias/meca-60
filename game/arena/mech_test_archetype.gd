@@ -15,7 +15,7 @@ func max_footprint() -> Vector2:
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"U subirse a la meca (al piso de las piernas)",
-		"O manejarla desde afuera (T primera persona)",
+		"mirándola, O la posee (T cambia la vista)",
 		"E sentarse en un puesto / levantarse / montacargas",
 		"N el rival: quieto o agresivo",
 	])
@@ -33,8 +33,6 @@ func parcel_options() -> Array[Dictionary]:
 	return [
 		{"key": KEY_U, "label": "subirse a la meca",
 			"apply": func(parcel: SandboxParcel) -> void: (parcel.root() as TestArena).mech.board()},
-		{"key": KEY_O, "label": "manejarla desde afuera", "seated": true,
-			"apply": func(parcel: SandboxParcel) -> void: (parcel.root() as TestArena).mech.toggle_outside()},
 		{"key": KEY_N, "label": "rival quieto / agresivo", "seated": true,
 			"apply": func(parcel: SandboxParcel) -> void: (parcel.root() as TestArena).toggle_rival()},
 	]

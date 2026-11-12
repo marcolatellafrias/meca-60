@@ -74,7 +74,7 @@ func _ready() -> void:
 	await _seconds(1.0)
 	# DESDE AFUERA (O) y vuelta.
 	var parcel_of_arena := arena.get_parent() as SandboxParcel
-	await _key(KEY_O)
+	SandboxPossession.of(get_tree()).possess(mech)
 	await _seconds(0.5)
 	print("DESDE AFUERA: %s · jugador apagado %s · cámara %s" % [mech.driven_from_outside(),
 		player.process_mode == Node.PROCESS_MODE_DISABLED, get_viewport().get_camera_3d().name])

@@ -37,11 +37,8 @@ func show_state(mech: Mech, seat: MechSeat) -> void:
 	if not visible:
 		return
 	var lines := PackedStringArray()
-	if outside:
-		lines.append("DESDE AFUERA   (O o E vuelve · T primera / tercera persona)")
-		lines.append("WASD piernas · mouse gira el torso · Shift se afirma")
-		lines.append("clic izq. / der.: mantener carga, soltar pega · el mouse dobla la piña que sale · G cañón")
-	else:
+	# Poseída, sus controles los muestra el cartel de poseer (SandboxPossession).
+	if not outside:
 		lines.append("PUESTO: %s   (E se levanta)" % str(MechSeat.NAMES[seat.station]).to_upper())
 		match seat.station:
 			MechSeat.Station.LEGS:

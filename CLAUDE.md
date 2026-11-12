@@ -45,10 +45,17 @@ la **R**). Sus teclas son las de allá (WASD, espacio, Ctrl, shift, E, R, V); Es
 Las teclas **F** son de los **paneles de fila**, como en el sandbox de allá (TunerPanel): abren parado en su fila, a la
 izquierda, y el panel de la parcela los anota con su tecla.
 
+**Poseer** (12/11/2026, `SandboxPossession`; reemplaza al «manejar desde afuera» que tenía cada cosa): para probar de a
+uno lo que en el juego se maneja desde adentro. **Mirando** una meca o un cubo, la **O** lo posee (las teclas pasan a
+él y el jugador se apaga donde está); **O** otra vez lo suelta, y **se acuerda**: **O** sin mirar nada lo retoma (así
+soltar sirve para moverse a mirar de otro lado y seguir). Poseyendo, la **T** pasa por tres vistas: **libre** (la cámara
+del jugador, donde quedó), **tercera persona** y **primera persona**. Un cartel abajo a la derecha dice qué se posee, la
+vista y **sus controles**. Se puede poseer lo que está en el grupo `possessable` y contesta `possess_name`,
+`possess_controls`, `possess_begin`, `possess_end` y `possess_camera(first, delta)`. Los personajes, todavía no.
+
 En el sandbox, la fila **Meca** («Pelea de prueba»):
-- **O** la maneja **desde afuera**: cámara atrás por sobre el hombro (**T** pasa a primera persona en el frente del
-  torso). WASD las piernas, el mouse gira el torso, clic izquierdo y derecho cargan (mantener) y pegan (soltar), el
-  mouse dobla la piña que sale, Shift se afirma, G el cañón. **O** o **E** vuelve.
+- **Poseída** (mirándola, **O**): WASD las piernas, el mouse gira el torso, clic izquierdo y derecho cargan (mantener)
+  y pegan (soltar), el mouse dobla la piña que sale, Shift se afirma, G el cañón.
 - **U** sube a la meca, al piso de las piernas. Adentro se va parado como en la nave de allá (el torso es un marco,
   `MotionFrame`). Los puestos tienen **la silla de allá**: mirándola, **E** se sienta y se levanta; parado en el
   montacargas, **E** lo manda a la otra punta. Sentado:
@@ -150,8 +157,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
 - `game/pendulum_cube/` — **el cubo péndulo**: `PendulumCube` (el péndulo, el apoyo que sigue al torso, el giro, las
   piernas), `PendulumCubeSettings`, `PendulumCubePanel` (su F1) y `PendulumCubeArchetype`. Usa `game/hover/` y `MechBody`.
 - `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas, `_mount_tuners` sus paneles F;
-  crea al jugador, ver arriba) y la sesión de red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD,
-  espacio, shift, Ctrl, E, R, C, V, B, F1–F6, Escape; no repetirlas. Sentado (o manejando desde afuera) sólo valen las
+  crea al jugador, ver arriba), poseer (`SandboxPossession`: la O, la T y el cartel) y la sesión de red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD,
+  espacio, shift, Ctrl, E, R, C, V, B, O, T, F1–F6, Escape; no repetirlas. Sentado (o manejando desde afuera) sólo valen las
   de la meca.
 - `game/ui/` — la pausa (autoload `PauseMenu`, Escape, la de allá), el menú de inicio (`main_menu.tscn`), las Opciones
   de la meca (`GameOptions`, `user://opciones.cfg`), `UIState` y la consola.
@@ -183,6 +190,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
   descentrado, sus tiros, el F2 y la recuperación.
 - `tests/pendulum_look.tscn` (con ventana, unos 10 segundos, sin el sandbox): el cubo péndulo de cerca (las piernas) y
   la caída con la recuperación cuadro a cuadro. Para mirar el aspecto rápido; no mide.
+- `tests/possess_check.tscn` (con ventana, unos 15 segundos): poseer; mirar el cubo péndulo, la O, las tres vistas con
+  la T, soltar y retomar sin mirar; capturas del cartel.
 - `tests/player_check.tscn` (con ventana): el jugador es el de allá, la B, subir a la meca, sentarse en la silla,
   caminarla sentado, viajar parado adentro, manejar desde afuera y volver, y agarrar el ropero del lote.
 - `tests/net_check.tscn`: dos instancias sin ventana, una con `--host-local` y otra con `--join-local` (antes del

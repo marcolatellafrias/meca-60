@@ -183,8 +183,11 @@ func _view_yaw() -> float:
 	return super() + (twist if state == State.HOVER else 0.0)
 
 
+func possess_controls() -> PackedStringArray:
+	return PackedStringArray(["W/S adelante y atrás (las piernas)", "A/D gira las piernas", "mouse gira el torso"])
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	super(event)
 	var motion := event as InputEventMouseMotion
 	if driving and motion != null and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and state == State.HOVER:
 		torso_yaw -= motion.relative.x * 0.0025 * GameOptions.mouse_sensitivity

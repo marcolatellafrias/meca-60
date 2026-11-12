@@ -258,8 +258,12 @@ func knock(strong: bool) -> void:
 
 
 ## EL MOUSE, manejándolo: hacia dónde mirar.
+func possess_controls() -> PackedStringArray:
+	return PackedStringArray(["W/S adelante y atrás (hacia donde mira el torso)", "A/D de costado",
+		"mouse gira el torso"])
+
+
 func _unhandled_input(event: InputEvent) -> void:
-	super(event)
 	var motion := event as InputEventMouseMotion
 	if driving and motion != null and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED and state == State.HOVER:
 		aim_yaw -= motion.relative.x * 0.0025 * GameOptions.mouse_sensitivity

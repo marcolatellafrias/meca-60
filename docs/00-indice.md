@@ -10,6 +10,7 @@ empieza con su comentario largo).
 - [[cubo-pendulo]] — **el modelo de equilibrio de la meca**: el torso es un péndulo y los pies lo siguen.
 - [[cubo-fisico]] — el cubo sin línea: física de verdad con el giro en Y trabado, para comparar.
 - [[cubo-con-piernas]] — el cubo con pelvis, dos piernas, torso aparte y pasos por radio.
+- [[poseer]] — la O posee lo que mirás, la T cambia la vista, y un cartel con sus controles.
 - [[sandbox]] — las parcelas, sus paredes, los paneles F por fila y la bola.
 - [[personajes-traidos]] — lo traído de character-parametric: el jugador, agarrar, sentarse.
 - [[red]] — el multijugador.

@@ -36,7 +36,7 @@ de fuerza y su inclinación son huesos; la meca tiene colisión 1:1 con su caja 
   al enderezarse, se estiran.
 - Pasado el ángulo, **o sin piso bajo su apoyo** (un borde, un pozo), cae, suelto del todo, y se recupera con las
   toberas del [[cubo]].
-- **O** lo maneja: W/S hacia donde mira el torso, A/D de costado, el mouse gira.
+- Poseído ([[poseer]]: mirándolo, **O**): W/S hacia donde mira el torso, A/D de costado, el mouse gira.
 
 ## Las dos perillas
 - **Los pies** (*cuánto aceleran*, *qué tan rápido reaccionan*): cuánto se inclina con un golpe y cuánto golpe lo tira.

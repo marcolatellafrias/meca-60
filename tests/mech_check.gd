@@ -45,7 +45,8 @@ func _ready() -> void:
 	# MANEJAR DESDE AFUERA (la O; el que camina está en la parcela).
 	_sandbox.local_player.place_at(_arena.global_position + Vector3(0, 0, 40))
 	await _seconds(0.3)
-	await _key(KEY_O)
+	SandboxPossession.of(get_tree()).possess(mech)
+	await _frames(4)
 	print("DESDE AFUERA: %s · cámara: %s" % [mech.driven_from_outside(), get_viewport().get_camera_3d().name])
 	await _shot("Desde afuera: la cámara atrás del torso", "2_desde_afuera")
 	var start := mech.global_position
@@ -99,10 +100,11 @@ func _ready() -> void:
 	# PRIMERA PERSONA (T).
 	await _key(KEY_T)
 	await _seconds(0.3)
-	mech._camera.make_current()
-	print("PRIMERA PERSONA: cámara a %.1f m del frente del torso" % mech._camera.global_position.distance_to(
+	print("PRIMERA PERSONA: cámara a %.1f m del frente del torso" % get_viewport().get_camera_3d().global_position.distance_to(
 		mech.torso.global_transform * Vector3(0, MechTorso.floor_y(1) + 1.6, -MechTorso.DEPTH * 0.5)))
 	await _shot("Desde afuera, en primera persona", "5_primera_persona")
+	# T dos veces: pasa por la vista libre y vuelve a la tercera persona.
+	await _key(KEY_T)
 	await _key(KEY_T)
 	# EL RIVAL AGRESIVO: que pegue.
 	await _key(KEY_N)

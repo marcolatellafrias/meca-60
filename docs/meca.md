@@ -14,7 +14,7 @@
   piña. El puño siempre al alcance, barre contra la capa 1 y se traba contra edificios.
 - **Puestos** adentro con la silla de character-parametric (`MechSeat`), montacargas (`MechLift`); el torso es un
   `MotionFrame`.
-- **O** desde afuera (**T** primera persona), **U** subir. Rival sin piloto: `MechBrain`.
+- Mirándola, **O** la posee ([[poseer]]; **T** cambia la vista), **U** subir. Rival sin piloto: `MechBrain`.
 - Física simplificada, no estadísticas: no hay vida, todo es equilibrio.
 
 Test: `tests/mech_check.tscn` (con ventana).

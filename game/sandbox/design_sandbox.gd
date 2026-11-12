@@ -65,6 +65,9 @@ func _ready() -> void:
 	_panel = SandboxPanel.new()
 	add_child(_panel)
 	_mount_tuners()
+	var possession := SandboxPossession.new()
+	possession.name = "Poseer"
+	add_child(possession)
 	add_to_group("character_spawner")
 	# Mirando hacia las parcelas (+X).
 	_spawn(false, PLAYER_START, -PI * 0.5, 0.0)
