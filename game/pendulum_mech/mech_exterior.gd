@@ -28,7 +28,9 @@ const NAMES := [
 	"zigzag de ida y vuelta, cada tramo en su carril",
 	"caja compacta: medio tramo, descanso y medio tramo",
 	"la 2, con el balcón de arriba igual al de abajo",
-	"la 2 corrida a un costado: balcones iguales, de la puerta al descanso",
+	"la 2 corrida a un costado, balcones iguales",
+	"la 5, con la pasarela de un solo lado: el del arranque",
+	"la 5, con la pasarela de un solo lado: el de la llegada",
 ]
 const HALF := HoverCube.SIZE * 0.5
 ## El ancho de un carril (la pasarela, los balcones, los tramos) y el alto de la baranda.
@@ -53,8 +55,8 @@ static func build(holder: Node3D, solid: PhysicsBody3D) -> void:
 	for surface: Dictionary in all:
 		_draw(holder, solid, surface)
 	_rails(holder, solid, all)
-	# Dos tableros para reparar, uno en cada costado, a la altura de la pasarela.
-	for side: float in [-1.0, 1.0]:
+	# Los tableros para reparar, uno en cada costado que tenga pasarela, a su altura.
+	for side: float in _sides(variant):
 		Clay.box(holder, Vector3(0.18, 1.1, 0.9), Vector3(side * (HALF + 0.09), _floor_y(0) + 1.25, 1.2), Clay.RED)
 		Clay.box(holder, Vector3(0.2, 0.2, 0.2), Vector3(side * (HALF + 0.12), _floor_y(0) + 1.25, 1.2), Clay.YELLOW)
 	var free := headroom(all)
@@ -80,6 +82,17 @@ static func _lane(index: int) -> Vector2:
 	return Vector2(HALF + WALK + LANE * (index - 1), HALF + WALK + LANE * index)
 
 
+## Los costados por donde da la vuelta la pasarela de planta baja en la escalera `which` (−1, 1): los dos, salvo en las
+## variantes de un solo lado.
+static func _sides(which: int) -> Array[float]:
+	match which:
+		6:
+			return [-1.0]
+		7:
+			return [1.0]
+	return [-1.0, 1.0]
+
+
 ## ── LAS SUPERFICIES ──────────────────────────────────────────────────────────────────────────────────────────────
 
 ## Una superficie de `x0` a `x1`, del carril `lane0` al `lane1`, con la altura `ya` en `x0` y `yb` en `x1`.
@@ -93,8 +106,11 @@ static func surfaces(which: int) -> Array[Dictionary]:
 	var first := _floor_y(1)
 	var second := _floor_y(2)
 	var outer := HALF + WALK
-	var all: Array[Dictionary] = [_s(-outer, outer, 0, 0, ground, ground)]
-	for side: float in [-1.0, 1.0]:
+	# LA PASARELA DE PLANTA BAJA: por atrás y por los costados que toquen (ver `_sides`). Con un solo costado, por atrás
+	# llega hasta la otra punta de la escalera, y no más.
+	var sides := _sides(which)
+	var all: Array[Dictionary] = [_s(-outer if sides.has(-1.0) else -2.9, outer if sides.has(1.0) else 2.9, 0, 0, ground, ground)]
+	for side: float in sides:
 		all.append({"x0": minf(side * HALF, side * outer), "x1": maxf(side * HALF, side * outer), "z0": SIDE_END, "z1": HALF,
 			"ya": ground, "yb": ground})
 	match which:
@@ -144,6 +160,9 @@ static func surfaces(which: int) -> Array[Dictionary]:
 				all.append(_s(-0.9, 1.4, 0, 0, high, high))
 		4:
 			# LA 2, CON EL BALCÓN DE ARRIBA IGUAL AL DE ABAJO: los dos de punta a punta de la escalera.
+			_parallel(all, -2.9, -2.9)
+		6, 7:
+			# LA 5, CON LA PASARELA DE UN SOLO LADO (ver `_sides`).
 			_parallel(all, -2.9, -2.9)
 		5:
 			# LA 2, CORRIDA A UN COSTADO: la puerta en una punta del balcón y la escalera hacia el otro lado; los dos

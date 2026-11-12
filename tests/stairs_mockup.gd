@@ -53,7 +53,7 @@ func _ready() -> void:
 		add_child(mech)
 		mechs.append(mech)
 		# Una persona de 1,8 m en la pasarela de atrás, para la escala.
-		Clay.box(mech, Vector3(0.5, 1.8, 0.3), Vector3(-4.3, MechExterior._floor_y(0) + 0.9, MechExterior.HALF + 0.55), Color(0.95, 0.5, 0.1))
+		Clay.box(mech, Vector3(0.5, 1.8, 0.3), Vector3(-2.5, MechExterior._floor_y(0) + 0.9, MechExterior.HALF + 0.55), Color(0.95, 0.5, 0.1))
 		free.append(MechExterior.headroom(MechExterior.surfaces(which)))
 		print("ESCALERA %d · %s: altura libre %.2f m (hacen falta %.2f)" % [which + 1, MechExterior.NAMES[which], free[which],
 			MechExterior.CLEAR])
