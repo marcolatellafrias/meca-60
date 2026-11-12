@@ -15,7 +15,7 @@ func _ready() -> void:
 	add_child(sandbox)
 	await _frames(10)
 	var possession := SandboxPossession.of(get_tree())
-	var cube := sandbox.find_children("*", "PendulumCube", true, false)[0] as PendulumCube
+	var cube := sandbox.find_children("*", "Mech", true, false)[0] as Mech
 	var player := sandbox.local_player
 	# El jugador, a la altura del cubo, mirándolo.
 	player.place_at(cube.global_position + Vector3(0.0, -1.0, 34.0), 0.0)
@@ -58,10 +58,10 @@ func _ready() -> void:
 	await _shot("6_cubo_sentado")
 	cube.aim_yaw -= deg_to_rad(50.0)
 	await _frames(3)
-	print("CUBO, mirando 50° a la derecha: la cabeza va %.0f° por delante de la cabina" % rad_to_deg(absf(cube._head_yaw())))
+	print("CUBO, mirando 50° a la derecha: la cabeza va %.0f° por delante de la cabina" % rad_to_deg(absf(cube.keys.head_yaw())))
 	await _shot("7_cubo_mirando")
 	await _seconds(1.5)
-	print("CUBO, 1,5 s después: la cabeza va %.0f° por delante" % rad_to_deg(absf(cube._head_yaw())))
+	print("CUBO, 1,5 s después: la cabeza va %.0f° por delante" % rad_to_deg(absf(cube.keys.head_yaw())))
 	possession.release()
 	print("SCRIPT sin errores hasta el final · posee %s" % _name(possession))
 	get_tree().quit()

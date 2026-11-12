@@ -1,6 +1,8 @@
 # El cubo con piernas
 
-`game/legged_cube/` · fila **Cubo con piernas** · ver [[filas]]
+`game/line_cube/` · fila **Cubo con piernas** · ver [[filas]]
+
+**La otra variante de equilibrio, la línea**, congelada y aparte de la meca por si se vuelve a ella (ver [[estructura]]).
 
 El [[cubo]] (hereda todo: flotar, moverse, la línea, tropezar, caer, recuperarse) con una **pelvis** debajo y **dos
 piernas**, para empezar a ver cómo se mueven. El cuerpo es el de la [[meca]] (`MechBody`): la cara de abajo del cubo

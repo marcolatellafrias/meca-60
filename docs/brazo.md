@@ -1,6 +1,6 @@
 # Los brazos
 
-Ver [[filas]] y [[meca-pendulo]] (los dos caminos).
+Ver [[filas]] y [[meca]] (los dos caminos).
 
 ## Lo que se le pide a un brazo — `MechArm` (`game/mech/`)
 Escrito una vez, para los dos caminos: **las posturas** (normal, cubriéndose, recogido), **las piñas** (unos pocos puntos
@@ -21,7 +21,7 @@ brazo. La idea es la de PuppetMaster: **la IK dice la pose; el cuerpo físico la
 ## Las dos capas
 - **La pose que se pide**: dónde quiere el puño (en guardia, a lo largo de una piña, o donde lo lleva el mouse) y, de
   ahí, el codo y la muñeca: la IK del cuerpo de la meca (`MechBody.arm`), la misma del dibujo.
-- **El cuerpo físico**: el **brazo** y el **antebrazo** (con la mano en la punta, [[meca-pendulo]] usa la misma) son
+- **El cuerpo físico**: el **brazo** y el **antebrazo** (con la mano en la punta, [[meca]] usa la misma) son
   cuerpos sueltos. **El hombro es una bola** y **el codo una bisagra**, como los de verdad. Un **músculo** por
   articulación, con resorte, freno y **fuerza tope**:
   - el del hombro gira el brazo hacia la orientación pedida, incluido el giro sobre su largo, que es el que lleva el
@@ -58,7 +58,7 @@ brazo. La idea es la de PuppetMaster: **la IK dice la pose; el cuerpo físico la
   nada lo frenara.
 
 ## La mano
-`MechHand` (en `game/mech/`), la misma de la [[meca-pendulo]]. Dos posturas: **abierta** (en guardia y a mano) y **el
+`MechHand` (en `game/mech/`), la misma de la [[meca]]. Dos posturas: **abierta** (en guardia y a mano) y **el
 puño** (mientras tira una piña), con las falanges dobladas sobre la palma y el pulgar encima; pasa de una a otra en 0,16
 s, con easing. Hacia qué lado cierran los dedos lo dice quien la arma: acá, hacia donde dobla el codo; en la meca
 péndulo, hacia adentro del cuerpo. Para mirarla: `tests/hand_look.tscn`.
@@ -69,7 +69,7 @@ Dónde descansa el puño: **normal** (el brazo al costado, la mano abierta), **c
 piña vuelve a la que tenga. En el banco, **5** cambia entre normal y cubriéndose.
 
 ## Montado
-Va solo en su fila o montado en algo que se mueve: la [[meca-pendulo]] lleva dos. Montado, el músculo del hombro empuja
+Va solo en su fila o montado en algo que se mueve: la [[meca]] lleva dos. Montado, el músculo del hombro empuja
 contra lo que lo sostiene (una piña sacude al torso) y pesa menos.
 
 ## Lo que falta

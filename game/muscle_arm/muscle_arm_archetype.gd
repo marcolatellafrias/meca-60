@@ -1,14 +1,14 @@
 class_name MuscleArmArchetype
 extends SeededArchetype
 
-## LA PARCELA DEL BRAZO CON MÚSCULOS (ver MuscleArm): un torso fijo en el aire, del tamaño del de la meca péndulo, con UN
+## LA PARCELA DEL BRAZO CON MÚSCULOS (ver MuscleArm): un torso fijo en el aire, del tamaño del de la meca, con UN
 ## brazo (el izquierdo, del lado desde donde se llega), para tunearlo solo. Adelante, un BLOQUE suelto sobre un pedestal
 ## para pegarle; con N, una PARED fija en su lugar, para ver cómo se traba. 1 a 4 tiran las piñas; J/K, una bola liviana o
 ## pesada contra el brazo (cede y vuelve). F1 abre sus perillas (MuscleArmPanel). Mirándolo, O lo posee: a mano.
 
 const FOOTPRINT := 60.0
 const TORSO := 8.0
-## A qué altura va el torso (su cara de abajo), como el de la meca péndulo parada.
+## A qué altura va el torso (su cara de abajo), como el de la meca parada.
 const HEIGHT := 7.4
 const BLOCK := Vector3(5.0, 5.0, 2.4)
 const BLOCK_MASS := 6000.0
@@ -47,7 +47,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	arm.side = -1.0
 	arm.standalone = true
 	arm.anchor = torso
-	arm.shoulder_local = Vector3(arm.side * PendulumMech.SHOULDER.x, PendulumMech.SHOULDER.y, PendulumMech.SHOULDER.z)
+	arm.shoulder_local = Vector3(arm.side * Mech.SHOULDER.x, Mech.SHOULDER.y, Mech.SHOULDER.z)
 	root.add_child(arm)
 	# Adelante del brazo: el pedestal y el bloque suelto, donde llega el directo.
 	var ahead := Vector3(arm.shoulder_local.x + 1.8, 0.0, arm.shoulder_local.z - 13.3)

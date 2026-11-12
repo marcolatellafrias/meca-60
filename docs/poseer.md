@@ -28,7 +28,7 @@ Lo que está en el grupo `possessable` y contesta, por nombre:
 | `possess_camera(first, delta)` | dónde va la cámara, en primera o en tercera persona |
 | `possess_status()` (si quiere) | lo que le pasa ahora: una carga, un combustible |
 
-Hoy: la [[meca]] de pelea y todos los cubos ([[cubo]], [[cubo-con-piernas]], [[cubo-fisico]], [[cubo-pendulo]]).
+Hoy: la [[meca]] (las dos filas y la de práctica), el [[cubo-con-piernas]] y el [[brazo]] físico.
 Pendiente: los personajes (hay que pasarles el control del jugador).
 
 Test: `tests/possess_check.tscn`.

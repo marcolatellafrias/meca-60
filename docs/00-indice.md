@@ -3,10 +3,11 @@
 Bóveda de Obsidian, simple: lo básico de cada sistema, para orientarse. El detalle está en el código (cada clase
 empieza con su comentario largo).
 
+- [[estructura]] — **cómo está armado el código**: la meca y sus piezas, los dos caminos, lo congelado, lo traído.
 - [[filas]] — **cada fila del sandbox y su código** (qué borrar si se borra una parcela).
-- [[cubo]] — el cubo base (sin fila): flotar, la línea, tropezar, caer y recuperarse con toberas.
-- [[cubo-pendulo]] — **el modelo de equilibrio de la meca**: el torso es un péndulo y los pies lo siguen.
-- [[meca-pendulo]] — **donde se sigue puliendo**: el cubo péndulo con tres pisos, correr, agacharse, saltar y volar, **bifurcada en dos caminos** por sus brazos (discretos o físicos).
+- [[cubo]] — la base de la variante de la línea (sin fila): flotar, la línea, tropezar, caer y recuperarse con toberas.
+- [[meca]] — **donde se sigue puliendo**: la caja con tres pisos, correr, agacharse, saltar y volar, **bifurcada en dos caminos** por sus brazos (discretos o físicos).
+- [[pendulo]] — **el modelo de equilibrio de la meca**: el torso es un péndulo y los pies lo siguen.
 - [[brazo]] — los brazos: lo que se les pide (una vez), el físico con músculos y el discreto.
 - [[cubo-con-piernas]] — **la otra variante de equilibrio (la línea)**, guardada: el cubo con pelvis, dos piernas, torso aparte y pasos por radio.
 - [[poseer]] — la O posee lo que mirás, la T cambia la vista, y un cartel con sus controles.

@@ -1,6 +1,8 @@
 # El cubo
 
-`game/hover/` · fila **Cubo** · ver [[filas]]
+`game/line_cube/` · sin fila propia (es la base de [[cubo-con-piernas]]) · ver [[filas]]
+
+**La otra variante de equilibrio, la línea**, congelada y aparte de la meca por si se vuelve a ella (ver [[estructura]]).
 
 Un cubo de 8 m (del orden del torso de la [[meca]]) para probar el equilibrio, la caída y la recuperación aparte de la
 caminata.

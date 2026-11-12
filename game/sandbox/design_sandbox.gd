@@ -44,8 +44,8 @@ var _tuners: Array[TunerPanel] = []
 static func categories() -> Array[Dictionary]:
 	return [
 		{"name": "Cubo con piernas", "archetypes": [LeggedCubeArchetype.new()]},
-		{"name": "Meca discreta", "archetypes": [PendulumMechArchetype.new(false)]},
-		{"name": "Meca física", "archetypes": [PendulumMechArchetype.new(true)]},
+		{"name": "Meca discreta", "archetypes": [MechArchetype.new(Mech.Arms.POSE)]},
+		{"name": "Meca física", "archetypes": [MechArchetype.new(Mech.Arms.MUSCLE)]},
 		{"name": "Brazo", "archetypes": [MuscleArmArchetype.new()]},
 		{"name": "Personajes", "archetypes": PeopleArchetype.catalogue()},
 		{"name": "Objetos", "archetypes": [ObjectLotArchetype.new()]},
@@ -83,8 +83,8 @@ func _mount_tuners() -> void:
 	_mount(LeggedCubePanel.new(), "Cubo con piernas", "el cubo y sus piernas: los pasos por radio", KEY_F1)
 	_mount(HoverKnockPanel.new(), "Cubo con piernas", "volcarlo: suave o fuerte", KEY_F2)
 	for row: String in ["Meca discreta", "Meca física"]:
-		_mount(PendulumMechPanel.new(), row, "la meca péndulo: el péndulo, correr, agacharse, saltar y el propulsor", KEY_F1)
-		_mount(HoverKnockPanel.new(), row, "pegarle arriba: suave o fuerte", KEY_F2)
+		_mount(MechPanel.new(), row, "la meca: el péndulo, correr, agacharse, saltar y el propulsor", KEY_F1)
+		_mount(MechKnockPanel.new(), row, "pegarle arriba, suave o fuerte, y el ascensor", KEY_F2)
 	_mount(MuscleArmPanel.new(), "Brazo", "el brazo con músculos: el resorte, el freno y la fuerza", KEY_F1)
 
 

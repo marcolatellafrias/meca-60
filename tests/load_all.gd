@@ -1,10 +1,10 @@
 extends Node
 
-## CARGA TODOS LOS SCRIPTS DEL JUEGO, uno por uno: el chequeo de compilación del editor no los compila a todos, y así
+## CARGA TODOS LOS SCRIPTS DEL JUEGO Y DE LOS TESTS, uno por uno: el chequeo de compilación del editor no los compila a todos, y así
 ## los errores salen en la consola.
 
 func _ready() -> void:
-	var count := _walk("res://game")
+	var count := _walk("res://game") + _walk("res://tests")
 	print("SCRIPTS cargados: ", count)
 	get_tree().quit()
 

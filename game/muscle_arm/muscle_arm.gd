@@ -27,7 +27,7 @@ extends MechArm
 ## pega, se queda un instante y vuelve a su postura). A MANO (poseído, cuando va solo): el mouse lleva el puño de costado
 ## y arriba y abajo, y W/S adelante y atrás.
 ##
-## VA SOLO (en su fila, `standalone`) O MONTADO en algo que se mueve (la meca péndulo): el músculo del hombro empuja
+## VA SOLO (en su fila, `standalone`) O MONTADO en algo que se mueve (la meca): el músculo del hombro empuja
 ## contra lo que lo sostiene, así que una piña lo sacude.
 ##
 ## Las perillas, en MuscleArmSettings (el panel F1 de su fila).
@@ -139,7 +139,7 @@ func _punch_speed() -> float:
 func _physics_process(delta: float) -> void:
 	var k := MuscleArmSettings.current
 	if manual and UIState.gameplay_active():
-		_offset.z -= HoverCube._axis(KEY_W, KEY_S) * k.depth_speed * delta
+		_offset.z -= MechKeys.axis(KEY_W, KEY_S) * k.depth_speed * delta
 		_offset = _offset.limit_length(MechBody.UPPER_ARM + MechBody.FOREARM)
 	_advance(delta)
 	var base := anchor.global_transform

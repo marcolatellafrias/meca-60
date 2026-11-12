@@ -24,7 +24,7 @@ también»). Nada queda huérfano.
 - **Todo es equilibrio, no estadísticas**: no hay vida. La caja de la meca es **un cuerpo físico 1:1** (los jugadores
   caminan adentro y por afuera): se mueve sólo con fuerzas e impulsos, nunca por código. Vale para caminar, saltar,
   los propulsores y los dashes.
-- **El equilibrio es un péndulo** (12/11/2026, `PendulumCube`): el torso siempre va adelante y un punto de apoyo en el
+- **El equilibrio es un péndulo** (12/11/2026, en `Mech`): el torso siempre va adelante y un punto de apoyo en el
   piso lo sigue. Una piña saca al torso de arriba de los pies (se inclina y, si no lo alcanzan, cae); una pared lo frena
   y los pies se plantan (no cae a ninguna velocidad). La otra variante, la línea de equilibrio, queda en la fila Cubo
   con piernas por si se vuelve a ella.
@@ -62,9 +62,8 @@ puede poseer lo que está en el grupo `possessable` y contesta `possess_name`, `
 
 Las filas del sandbox (el detalle, en `docs/filas.md`):
 
-**Meca discreta** y **Meca física** (`PendulumMech`, hereda del cubo péndulo; una fila por camino, misma parcela con
-`physical` distinto): el péndulo con **tres pisos** de paredes de verdad (vidrio y parantes al frente, la puerta atrás),
-brazos, y un **cubo péndulo adelante para pegarle**. Poseída: W/S y A/D, el mouse gira el torso; **Shift corre**, **Ctrl
+**Meca discreta** y **Meca física** (`Mech`; una fila por camino, misma parcela con otros brazos, `Mech.Arms`): el péndulo con **tres pisos** de paredes de verdad (vidrio y parantes al frente, la puerta atrás),
+brazos, y una **meca de práctica adelante, sin brazos, para pegarle**. Poseída: W/S y A/D, el mouse gira el torso; **Shift corre**, **Ctrl
 se agacha** (acorta el palo del péndulo), **espacio** carga y suelta el **salto** y, en el aire, el **propulsor**. **F**
 cambia la postura de los brazos (normal, a los costados; cubriéndose, los puños cerrados adelante), y las piñas van por
 brazo: clic izquierdo / derecho el directo, Q / E el gancho, Z / C el uppercut, 1 / 3 desde arriba. Caída, se recogen.
@@ -73,7 +72,7 @@ brazo: clic izquierdo / derecho el directo, Q / E el gancho, Z / C el uppercut, 
 (armado de superficies pisables, con la altura libre medida y las barandas donde hay caída). **El ascensor de la
 pelvis** (`PelvisLift`): la pelvis es un tambor redondo, la losa de abajo tiene un recorte con su baranda, y un piso
 redondo con cuatro parantes baja hasta quedar a un salto del suelo con la meca agachada; **G** poseída o el botón del
-**F2** lo mueven. **Adentro y afuera se camina** (**U** sube al piso del medio): es un marco (`MotionFrame`); sus losas
+**F2** lo mueven. **Adentro y afuera se camina** (**U** sube al piso del medio): es un marco (`MotionFrame`, en `MechCabin`); sus losas
 y paredes no chocan con el mundo (eso es de la caja 1:1), son de donde el marco copia su sombra, y la caja deja de
 chocar con los que van adentro. **El rayo al piso saltea lo que se mueve** (una persona en el ascensor no es piso).
 
@@ -84,7 +83,7 @@ trabe contra algo fijo, que ceda si le pegan, y que la piña valga la velocidad 
 pared, **J/K** bolas, **F1** su panel; poseído, el mouse lleva la mano. La mano (`MechHand`) es izquierda o derecha, una
 el espejo de la otra, montada por regla (el pulgar hacia donde dobla el codo, la palma hacia el cuerpo).
 
-**Cubo con piernas** (`LeggedCube`, hereda del cubo): **la otra variante de equilibrio, la línea** (no el péndulo), que
+**Cubo con piernas** (`LeggedCube`, en `game/line_cube/`, hereda de `HoverCube`): **la otra variante de equilibrio, la línea** (no el péndulo), que
 se guarda por si se vuelve a ella. El cubo flota con un resorte vertical y parado no gira; un golpe lo corre y aparte lo
 inclina con la línea de equilibrio; al pasarla tropieza, cae con física y se recupera con toberas. Con pelvis, dos
 piernas de dibujo (pasos por radio) y el torso que gira aparte. **F1** su panel, **F2** volcarlo, **J/K** las bolas.
@@ -99,24 +98,23 @@ sale) y **Partículas** (cada sistema en su poste; **M** cambia la malla de toda
 y los objetos de esa parcela; **las mecas todavía no**.
 
 ## Dónde va cada cosa
-Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`.
-- `game/mech/` — **las piezas de la meca**: `MechBody` (el cuerpo, una sola vez: medidas, la pierna y el brazo por IK),
-  `MechArm` (lo que se le pide a un brazo: posturas, piñas, la pose y la mano; base de los dos caminos), `MechLeg` (una
-  pierna, sólo dibujo), `MechHand` (la mano) y `Clay` (la arcilla de los bocetos).
+Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`. La tabla completa, con las reglas que la
+ordenan y lo que todavía se le critica, en [docs/estructura.md](docs/estructura.md).
+- `game/mech/` — **la meca, una clase con sus piezas aparte** (aplanada el 13/11/2026; antes eran tres clases apiladas):
+  `Mech` (el cuerpo físico y su equilibrio, el péndulo; llama a sus piezas en orden), `MechCabin` (los pisos, el marco;
+  con `MechExterior` y `PelvisLift`), `MechLegs` (la pelvis y las piernas, con `MechLeg`), `MechNozzles` (las toberas:
+  levantarse y el propulsor), `MechMoves` (caminar, correr, agacharse, saltar: **acá van los dashes**), `MechKeys` (**el
+  único lugar que lee teclas**, y la cámara de poseer), `MechArm` (lo que se le pide a un brazo), `MechHand`,
+  `MechBody` (medidas e IK), `MechSettings` (todas las perillas), `MechPanel` y `MechKnockPanel` (F1 y F2),
+  `MechArchetype` (la parcela de las dos filas) y `Clay` (la arcilla de los bocetos).
+  **Lo que se le pide a la meca son variables** (`move`, `sprint`, `crouch`, `jump`, `aim_yaw`, `covering`, y `punch()`
+  en sus brazos): hoy las escribe `MechKeys`; mañana, las consolas o un jefe. Nada más lee teclas.
 - `game/pose_arm/` — **el brazo discreto**: `PoseArm` (se dibuja en la pose; el puño barre su camino y da un impulso).
 - `game/muscle_arm/` — **el brazo físico**: `MuscleArm` (las piezas, las articulaciones, los músculos y llevarlo a
   mano), `MuscleArmSettings`, `MuscleArmPanel` (su F1) y `MuscleArmArchetype` (el torso fijo, el bloque y la pared).
-- `game/hover/` — **el cubo base**: `HoverCube` (flotar, la línea, tropezar, subir y enderezarse con las toberas, la
-  cabina, poseerlo), `HoverCubeSettings`, `HoverPanel`, `HoverKnockPanel` (el F2: volcarlo y el ascensor) y
-  `HoverCubeArchetype` (la parcela y los tiros). Ya no tiene fila: es la base de los demás.
-- `game/legged_cube/` — **el cubo con piernas** (la línea): `LeggedCube`, `LeggedCubeSettings`, `LeggedCubePanel`,
-  `LeggedCubeArchetype`.
-- `game/pendulum_cube/` — **el péndulo**: `PendulumCube` (el péndulo, el apoyo que sigue al torso, el giro, las
-  piernas), `PendulumCubeSettings`, `PendulumCubePanel` y `PendulumCubeArchetype`. Ya no tiene fila: es la base de la
-  meca y el cubo al que se le pega.
-- `game/pendulum_mech/` — **la meca**: `PendulumMech` (los tres pisos, el marco, los brazos de uno u otro camino,
-  correr, agacharse, saltar y el propulsor), `MechExterior` (pasarela y escalera), `PelvisLift` (el ascensor),
-  `PendulumMechSettings`, `PendulumMechPanel` y `PendulumMechArchetype` (la parcela de las dos filas).
+- `game/line_cube/` — **la otra variante de equilibrio, la línea, congelada y aparte**: `HoverCube` (flotar con resorte,
+  la línea, tropezar, recuperarse) y `LeggedCube` (pelvis, piernas, torso aparte), con sus perillas, paneles y parcela.
+  No comparte nada con la meca salvo `MechBody`, `MechLeg` y `Clay`. No se toca salvo que se vuelva a ella.
 - `game/arena/` — `TestBall` (la bola de la J), `PeopleArchetype` (las personas de allá) con `CharacterGetUp` (que se
   levanten solas) y `ObjectLotArchetype` (el lote de objetos).
 - `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas, `_mount_tuners` sus paneles F;
@@ -138,14 +136,12 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
 - `tests/legged_check.tscn` (headless o con ventana): el cubo con piernas camina, gira las piernas con el torso quieto,
   camina con el torso girado y para atrás, un golpe suave y uno que lo vuelca; cuenta los pasos y lo lejos que queda un
   pie de su lugar; con ventana, capturas.
-- `tests/pendulum_check.tscn` (headless o con ventana, unos 5 minutos): el cubo péndulo; la escala de golpes en el
+- `tests/mech_balance_check.tscn` (headless o con ventana, unos 5 minutos): el equilibrio de la meca, sola en su parcela; la escala de golpes en el
   centro y arriba, contra la pared a 8, 14 y 20 m/s (no tiene que caer), arrancar y frenar, el giro, un golpe
   descentrado, sus tiros, el F2 y la recuperación.
-- `tests/pendulum_look.tscn` (con ventana, unos 10 segundos, sin el sandbox): el cubo péndulo de cerca (las piernas) y
-  la caída con la recuperación cuadro a cuadro. Para mirar el aspecto rápido; no mide.
-- `tests/pendulum_mech_look.tscn` (con ventana, unos 25 segundos, sin el sandbox): la meca péndulo de frente, de atrás y
+- `tests/mech_look.tscn` (con ventana, unos 100 segundos, sin el sandbox): la meca física de frente, de atrás y
   desde el asiento; agacharse, el salto (un toque y cargado), el propulsor y correr, con sus números.
-- `tests/pendulum_ride_check.tscn` (con ventana, unos 30 segundos): ir adentro de la meca péndulo; el jugador con cuerpo
+- `tests/mech_ride_check.tscn` (con ventana, unos 30 segundos): ir adentro y afuera de la meca; el jugador con cuerpo
   sube, y se mira qué le pasa mientras la meca se corre, salta y se cae.
 - `tests/mech_fork_look.tscn` (con ventana, unos 25 segundos, sin el sandbox): las dos filas de la meca lado a lado; la
   discreta le tira un directo y un gancho a su cubo e imprime a cuánto conectó y cuánto lo inclinó.
@@ -153,8 +149,8 @@ Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`
 - `tests/muscle_arm_look.tscn` (con ventana, unos 30 segundos, sin el sandbox): el brazo con músculos; la guardia, las
   cuatro piñas (velocidad de la mano, cuánto corre el bloque), la pared (se traba y vuelve) y un empujón (cede y vuelve).
 - `tests/hand_look.tscn` (con ventana, unos 5 segundos): la mano abierta y en puño, de tres lados.
-- `tests/possess_check.tscn` (con ventana, unos 15 segundos): poseer; mirar el cubo péndulo, la O, las tres vistas con
+- `tests/possess_check.tscn` (con ventana, unos 15 segundos): poseer; mirar la meca, la O, las tres vistas con
   la T, soltar y retomar sin mirar; capturas del cartel.
 - `tests/net_check.tscn`: dos instancias sin ventana, una con `--host-local` y otra con `--join-local` (antes del
   `--`); cada una dice cuántos jugadores, personajes y objetos compartidos ve.
-- `tests/load_all.tscn`: carga todos los scripts uno por uno (el chequeo del editor no los compila a todos).
+- `tests/load_all.tscn`: carga todos los scripts del juego y de los tests uno por uno (el chequeo del editor no los compila a todos).

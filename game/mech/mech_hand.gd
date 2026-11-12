@@ -1,7 +1,7 @@
 class_name MechHand
 extends Node3D
 
-## LA MANO DE LA MECA, dibujo, definida una sola vez (la usan la meca péndulo y el brazo con músculos). Lo pidió el
+## LA MANO DE LA MECA, dibujo, definida una sola vez (la usan la meca y el brazo con músculos). Lo pidió el
 ## usuario el 12/11/2026: «la muñeca… un poquito más que el diámetro de los cilindros… los dedos… cilíndricos, pero todas
 ## piezas separadas… le faltan las falanges… el pulgar… en la cara lateral».
 ## Va en la punta del antebrazo, con su −Z hacia los dedos: la PALMA, apenas más gruesa que un dedo; los cuatro DEDOS al

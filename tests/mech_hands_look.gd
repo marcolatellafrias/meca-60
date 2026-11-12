@@ -1,13 +1,13 @@
 extends Node3D
 
-## LAS MANOS DE LA MECA PÉNDULO, PARA MIRAR: que una sea el espejo de la otra, con los pulgares hacia donde dobla el codo
+## LAS MANOS DE LA MECA (la física), PARA MIRAR: que una sea el espejo de la otra, con los pulgares hacia donde dobla el codo
 ## y las palmas hacia el cuerpo (ver MuscleArm, LA MANO), en reposo y cubriéndose.
 ##   tools/godot_ventana.sh res://tests/mech_hands_look.tscn -- --salida=C:/carpeta
 
 var _folder := ""
 var _eye: Camera3D = null
 var _title: Label = null
-var _mech: PendulumMech = null
+var _mech: Mech = null
 
 
 func _ready() -> void:
@@ -38,15 +38,16 @@ func _ready() -> void:
 	world.environment.ambient_light_color = Color(0.82, 0.84, 0.87)
 	world.environment.ambient_light_energy = 0.8
 	add_child(world)
-	_mech = PendulumMech.new()
-	_mech.position = Vector3(0.0, PendulumMechSettings.tuned.hover_height + HoverCube.SIZE * 0.5, 0.0)
+	_mech = Mech.new()
+	_mech.arms_kind = Mech.Arms.MUSCLE
+	_mech.position = Vector3(0.0, MechSettings.current.hover_height + Mech.SIZE * 0.5, 0.0)
 	add_child(_mech)
 	_eye = Camera3D.new()
 	_eye.far = 2000.0
 	add_child(_eye)
 	_eye.make_current()
 	await get_tree().create_timer(3.0).timeout
-	_mech._label.visible = false
+	_mech.label.visible = false
 	await _round("En reposo")
 	_mech.covering = true
 	await get_tree().create_timer(2.5).timeout
@@ -61,7 +62,7 @@ func _round(what: String) -> void:
 	_eye.look_at(at + Vector3(0.0, -3.0, 0.0))
 	await _shot("%s, de frente" % what, "%s_frente" % what.to_lower().replace(" ", "_"))
 	for index in 2:
-		var arm := _mech.arms[index]
+		var arm := _mech.arms[index] as MuscleArm
 		var hand := arm.forearm.global_transform * Vector3(0, 0, -MechBody.FOREARM * 0.5 - 1.0)
 		_eye.global_position = hand + Vector3(arm.side * 5.0, 2.0, -7.0)
 		_eye.look_at(hand)

@@ -40,17 +40,17 @@ func _ready() -> void:
 	world.environment.ambient_light_color = Color(0.82, 0.84, 0.87)
 	world.environment.ambient_light_energy = 0.8
 	add_child(world)
-	var mechs: Array[PendulumMech] = []
-	var targets: Array[PendulumCube] = []
+	var mechs: Array[Mech] = []
+	var targets: Array[Mech] = []
 	for index in 2:
 		var holder := Node3D.new()
 		holder.position = Vector3(0.0, 0.0, index * APART)
 		add_child(holder)
-		var root := PendulumMechArchetype.new(index == 1).build(0, holder)
-		for cube: PendulumCube in root.find_children("*", "PendulumCube", true, false):
-			cube._label.visible = false
-			if cube is PendulumMech:
-				mechs.append(cube as PendulumMech)
+		var root := MechArchetype.new(Mech.Arms.MUSCLE if index == 1 else Mech.Arms.POSE).build(0, holder)
+		for cube: Mech in root.find_children("*", "Mech", true, false):
+			cube.label.visible = false
+			if cube.arms_kind != Mech.Arms.NONE:
+				mechs.append(cube)
 			else:
 				targets.append(cube)
 	_eye = Camera3D.new()
