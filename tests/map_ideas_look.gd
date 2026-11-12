@@ -3,7 +3,7 @@ extends Node3D
 ## LAS IDEAS DE MAPA, PARA MIRAR (unos 15 segundos, sin el sandbox): arma una por una las seis de BattlefieldIdeas, con
 ## una meca de bulto (15 m) y una persona (1,8 m) para la escala, y de cada una guarda UNA captura con dos vistas: de
 ## arriba y a la altura de la meca. Con `--serie=formas`, las arenas abstractas de ArenaIdeas.
-##   tools/godot_ventana.sh res://tests/map_ideas_look.tscn -- --salida=C:/carpeta [--serie=formas|conceptos]
+##   tools/godot_ventana.sh res://tests/map_ideas_look.tscn -- --salida=C:/carpeta [--serie=formas|conceptos|distribuciones]
 
 const VIEW := Vector2i(1280, 720)
 const MECH := Color(0.86, 0.42, 0.14)
@@ -24,6 +24,9 @@ func _ready() -> void:
 		if argument == "--serie=formas":
 			_ideas = ArenaIdeas
 			_prefix = "arena"
+		if argument == "--serie=distribuciones":
+			_ideas = ArenaLayouts
+			_prefix = "distribucion"
 		if argument == "--serie=conceptos":
 			_ideas = ArenaConcepts
 			_prefix = "concepto"
