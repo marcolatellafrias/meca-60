@@ -1,8 +1,8 @@
 class_name BalancePanel
 extends TunerPanel
 
-## EL PANEL DE LA MECA DE EQUILIBRIO (F1 en la fila Meca), como los paneles de fila del sandbox de character-parametric
-## (TunerPanel): a la izquierda, abre parado en la fila y cierra con la misma tecla. Sus perillas salen de
+## EL PANEL DE LA MECA DE EQUILIBRIO (F1 en la fila Equilibrio), como los paneles de fila del sandbox de
+## character-parametric (TunerPanel): a la izquierda, abre parado en la fila y cierra con la misma tecla. Sus perillas salen de
 ## MechBalanceSettings —lo que el recurso exporta es lo que se ve—, valen para todas las mecas de equilibrio y vuelven a
 ## lo del código con el botón de cada fila. «Copiar todo» deja los valores para pegarlos en el código.
 

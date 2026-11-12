@@ -55,7 +55,7 @@ cámara (una sola bola; la fuerza es su empuje); **K** pasa por sus tres fuerzas
 umbrales de la meca de equilibrio (`MechDummy.push_for_lean`): la mueve (debajo del paso), trastabilla (entre el paso
 y la caída) y la tira (pasada la caída). Tiene dos agregados al sistema de allá: **el golpe empuja** (la inclinación toma
 velocidad en vez de saltar) y **los pasos** (pasada cierta inclinación da un paso hacia donde se va y se recupera
-trastabillando). **F1** en la fila Meca abre su panel (`BalancePanel`): todas sus perillas (los agregados, el resorte,
+trastabillando). **F1** en la fila Equilibrio abre su panel (`BalancePanel`): todas sus perillas (los agregados, el resorte,
 la firmeza por lado, el cuerpo, la caída), que salen de `MechBalanceSettings`.
 
 Más filas: **Personajes** (los seis arquetipos de allá, que se caen y se levantan; también con la bola), **Objetos** (los

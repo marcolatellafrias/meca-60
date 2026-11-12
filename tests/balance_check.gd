@@ -40,16 +40,16 @@ func _ready() -> void:
 	_eye.make_current()
 	await _seconds(1.0)
 	_report_feet()
-	# EL PANEL DE LA FILA (F1 parado en la fila Meca, ver BalancePanel).
+	# EL PANEL DE LA FILA (F1 parado en la fila Equilibrio, ver BalancePanel).
 	var world := sandbox as DesignSandbox
-	world.local_player.place_at(_parcel.global_position + Vector3(-20.0, 0.0, 0.0), PI * 0.5)
+	world.local_player.place_at(_parcel.global_position + Vector3(-12.0, 0.0, 0.0), PI * 0.5)
 	await _seconds(0.5)
 	var panel := sandbox.find_children("*", "BalancePanel", true, false)[0] as BalancePanel
 	await _key(KEY_F1)
 	await _seconds(0.3)
 	print("PANEL F1: fila «%s» · abierto %s" % [world.current_category(), panel.visible])
 	world.local_player.player_camera.make_current()
-	await _shot("F1 en la fila Meca: el panel de la meca de equilibrio", "panel_f1")
+	await _shot("F1 en la fila Equilibrio: el panel de la meca de equilibrio", "panel_f1")
 	await _key(KEY_F1)
 	await _seconds(0.3)
 	print("PANEL F1 otra vez: abierto %s" % panel.visible)

@@ -2,7 +2,8 @@ class_name MechBalanceSettings
 extends Resource
 
 ## LAS PERILLAS DEL EQUILIBRIO DE LA MECA DE EQUILIBRIO (ver MechDummy): una sola copia para todas (`current`), que el
-## panel de su fila (BalancePanel, F1 en la fila Meca) arma leyendo estas propiedades —lo que se ve es lo que se toca—.
+## panel de su fila (BalancePanel, F1 en la fila Equilibrio) arma leyendo estas propiedades —lo que se ve es lo que se
+## toca—.
 ## Los números de arriba son los de los personajes de character-parametric (CharacterRigidBody3D), escalados a la meca;
 ## los de abajo, los dos agregados (el empuje y los pasos).
 

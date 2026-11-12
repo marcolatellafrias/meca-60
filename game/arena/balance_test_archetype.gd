@@ -6,7 +6,8 @@ extends SeededArchetype
 ## escala y para ver que reaccionan con el mismo sistema. J les tira una bola desde la cámara, K y L la fuerza y M la
 ## bola (grande para la meca, chica para las personas; ver TestBall). Lo pidió el usuario el 11/11/2026.
 
-const FOOTPRINT := 70.0
+## Lo que ocupa la meca parada, con lugar para trastabillar (cayéndose sale de la parcela, y está bien: el piso sigue).
+const FOOTPRINT := 30.0
 
 
 func _init() -> void:
@@ -34,9 +35,9 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	dummy.rotation.y = PI * 0.5
 	root.add_child(dummy)
 	# Dos personas al costado, mirando hacia donde uno llega, como la meca.
-	var side := root.global_position + Vector3(-12.0, 0.0, 9.0)
+	var side := root.global_position + Vector3(-9.0, 0.0, 8.0)
 	PeopleArchetype.spawn(root, EntityArchetype.Archetype.fat_man, side, PI * 0.5)
-	PeopleArchetype.spawn(root, EntityArchetype.Archetype.kid, side + Vector3(0.0, 0.0, 3.0), PI * 0.5)
+	PeopleArchetype.spawn(root, EntityArchetype.Archetype.kid, side + Vector3(0.0, 0.0, 2.5), PI * 0.5)
 	return root
 
 

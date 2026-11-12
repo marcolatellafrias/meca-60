@@ -4,7 +4,7 @@ extends Node3D
 ## LA MECA DE EQUILIBRIO: EL CUERPO DE LA MECA (MechBody: pies, piernas, pelvis, torso y brazos en guardia, el mismo de
 ## la meca de pelea) que sólo se tambalea, se cae y se levanta. No camina ni pega. Su equilibrio es EL DE LOS PERSONAJES
 ## DE CHARACTER-PARAMETRIC (`CharacterRigidBody3D` y `RagdollUtil` de allá; ver su docs/technical/characters.md), con dos
-## agregados que se prenden y apagan en el panel de la fila (F1 en la fila Meca, ver BalancePanel; lo pidió el usuario
+## agregados que se prenden y apagan en el panel de la fila (F1 en la fila Equilibrio, ver BalancePanel; lo pidió el usuario
 ## el 11/11/2026: «nunca es como que le tiro algo y se echa para atrás y como que recobra el equilibrio»):
 ##
 ##   1. EL CUERPO ES FÍSICO DE VERDAD: un RigidBody3D parado (no gira), sin fricción, que frena solo (`brake`). Lo que lo
@@ -35,7 +35,7 @@ const MASS := 50000.0
 const REFERENCE_MASS := 50000.0
 const HIT_NOISE := 0.3
 
-## LAS PERILLAS: las de MechBalanceSettings (una sola copia para todas, la del panel F1 de la fila Meca), por `_k`.
+## LAS PERILLAS: las de MechBalanceSettings (una sola copia para todas, la del panel F1 de la fila Equilibrio), por `_k`.
 var _k: MechBalanceSettings:
 	get:
 		return MechBalanceSettings.current

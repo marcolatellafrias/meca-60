@@ -42,7 +42,8 @@ var _tuners: Array[TunerPanel] = []
 ## EL CATÁLOGO: una entrada por fila, en orden. Una fila nueva se agrega acá.
 static func categories() -> Array[Dictionary]:
 	return [
-		{"name": "Meca", "archetypes": [MechTestArchetype.new(), BalanceTestArchetype.new()]},
+		{"name": "Meca", "archetypes": [MechTestArchetype.new()]},
+		{"name": "Equilibrio", "archetypes": [BalanceTestArchetype.new()]},
 		{"name": "Personajes", "archetypes": PeopleArchetype.catalogue()},
 		{"name": "Objetos", "archetypes": [ObjectLotArchetype.new()]},
 		{"name": "Multijugador", "archetypes": [MultiplayerArchetype.new()]},
@@ -71,7 +72,7 @@ func _ready() -> void:
 ## misma tecla, abre a la izquierda (la derecha es del panel de la parcela, que lo anota con su tecla) y abrir uno cierra
 ## los demás. Una fila nueva con panel se monta acá.
 func _mount_tuners() -> void:
-	_mount(BalancePanel.new(), "Meca", "la meca de equilibrio: el resorte, la firmeza, el empuje y los pasos", KEY_F1)
+	_mount(BalancePanel.new(), "Equilibrio", "la meca de equilibrio: el resorte, la firmeza, el empuje y los pasos", KEY_F1)
 
 
 func _mount(tuner: TunerPanel, category_name: String, label: String, key: Key) -> void:
