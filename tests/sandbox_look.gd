@@ -23,10 +23,10 @@ func _ready() -> void:
 	eye.far = 4000.0
 	add_child(eye)
 	eye.make_current()
-	for view: Array in [["sandbox_arriba", Vector3(-45.0, 55.0, 150.0), Vector3(40.0, 0.0, 230.0)],
-			["sandbox_arranque", Vector3(-40.0, 45.0, -30.0), Vector3(40.0, 0.0, 60.0)],
-			["sandbox_bloques", Vector3(-26.0, 10.0, 715.0), Vector3(-4.0, 0.0, 765.0)],
-			["sandbox_archivo", Vector3(-30.0, 40.0, 600.0), Vector3(30.0, 0.0, 680.0)]]:
+	for view: Array in [["sandbox_arranque", Vector3(-70.0, 6.0, -40.0), Vector3(40.0, 4.0, 90.0)],
+			["sandbox_arriba", Vector3(-60.0, 70.0, -40.0), Vector3(60.0, 0.0, 200.0)],
+			["sandbox_personajes", Vector3(-24.0, 3.0, 742.0), Vector3(14.0, 1.0, 792.0)],
+			["sandbox_archivo", Vector3(-30.0, 30.0, 590.0), Vector3(30.0, 0.0, 680.0)]]:
 		eye.global_position = view[1]
 		eye.look_at(view[2])
 		await get_tree().create_timer(0.5).timeout

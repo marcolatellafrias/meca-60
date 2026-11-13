@@ -11,6 +11,13 @@ extends RefCounted
 ##     SandboxRow.archive), con otro piso, donde cada fila archivada es una subcategoría;
 ##   · adentro de una fila, sus parcelas en orden; las de una SUBCATEGORÍA, juntas, sobre un piso del tono de su bloque.
 ##
+## LOS CARTELES (`signpost`): parados y SIEMPRE DE FRENTE a quien mira (billboard), para ubicarse de lejos. Su alto dice la
+## jerarquía: el de la supercategoría es el más grande de su bloque (`SUPER_SIGN` veces su fila más alta) y va donde el
+## bloque empieza —un bloque puede medir cientos de metros, y en el medio quedaba lejos de todo—, el de la fila
+## sale de su fondo (`ROW_SIGN_*`), el de una subcategoría es `GROUP_SIGN` del de su fila, y el de cada parcela sale de
+## su ancho (ver SandboxParcel, EL CARTEL). Como en character-parametric (el usuario, 13/11/2026: «labels que siguen al
+## jugador y que su tamaño refleje la jerarquía»). *Antes iban pintados en el piso.*
+##
 ## LAS CAPAS DEL PISO, de abajo hacia arriba, a milímetros entre sí (a menos se pelean de lejos): el suelo, el de cada
 ## supercategoría, el de cada subcategoría o de los archivados, y el plano de cada parcela (SandboxParcel.PLANE_LIFT).
 ## Lo que baja es sólo el dibujo: el colisionador del suelo sigue en 0.
@@ -29,6 +36,15 @@ const SUPER_SATURATION := 0.1
 const GROUP_SATURATION := 0.24
 const ARCHIVE_COLOR := Color(0.6, 0.63, 0.7)
 const ROW_LABEL_COLOR := Color(0.25, 0.24, 0.22)
+## El alto de la letra del cartel de una fila (m): esta parte de su fondo, entre un mínimo y un máximo.
+const ROW_SIGN_SHARE := 0.1
+const ROW_SIGN_MIN := 0.8
+const ROW_SIGN_MAX := 4.0
+const GROUP_SIGN := 0.7
+const SUPER_SIGN := 1.8
+const SUPER_SIGN_MIN := 2.5
+## La letra de todos los carteles, en píxeles: el alto en metros lo pone `pixel_size`.
+const SIGN_FONT := 128
 const ARCHIVE_NAME := "Archivo"
 const GROUND_DRAW_Y := -0.015
 const SUPER_FLOOR_Y := -0.01
@@ -49,19 +65,23 @@ static func build(parent: Node3D, declared: Array[SandboxRow]) -> Array[Dictiona
 		first_super = false
 		var super_start := z
 		var super_right := 0.0
+		var tallest := 0.0
 		for row in physical:
 			var placed := _place_row(parent, row, z)
 			built.append(placed)
 			z = placed["end_z"]
 			super_right = maxf(super_right, placed["end_x"])
+			tallest = maxf(tallest, placed["sign"])
 			z += ROW_GAP
 		var super_end := z - ROW_GAP
 		_floor(parent, "Supercategoría " + SandboxSuper.name_of(super_id as SandboxSuper.Id),
 			Rect2(-SUPER_LEFT, super_start, super_right + SUPER_LEFT, super_end - super_start),
 			Color.from_hsv(SandboxSuper.hue_of(super_id as SandboxSuper.Id), SUPER_SATURATION, GROUND_COLOR.v),
 			SUPER_FLOOR_Y)
-		_label(parent, SandboxSuper.name_of(super_id as SandboxSuper.Id), 220,
-			Vector3(-SUPER_LEFT + 1.5, 0.01, (super_start + super_end) * 0.5), ROW_LABEL_COLOR)
+		# Afuera del bloque, del lado de la entrada, a dos letras de distancia: de cerca no tapa lo de la primera fila.
+		var super_sign := maxf(tallest * SUPER_SIGN, SUPER_SIGN_MIN)
+		signpost(parent, SandboxSuper.name_of(super_id as SandboxSuper.Id).to_upper(), super_sign,
+			Vector3(-SUPER_LEFT - super_sign * 2.0, 0.0, super_start))
 	_ground(parent, built)
 	return built
 
@@ -131,6 +151,7 @@ static func _place_row(parent: Node3D, row: Dictionary, z: float) -> Dictionary:
 		for other in parcels:
 			if other.row == parcel.row:
 				parcel.siblings_list.append(other)
+	var row_sign := clampf((depth + pad * 2.0) * ROW_SIGN_SHARE, ROW_SIGN_MIN, ROW_SIGN_MAX)
 	var super_hue := SandboxSuper.hue_of(row["super_id"])
 	var archive: bool = row["archive"]
 	if archive:
@@ -140,10 +161,10 @@ static func _place_row(parent: Node3D, row: Dictionary, z: float) -> Dictionary:
 		if not archive:
 			_floor(parent, "Subcategoría " + str(group["name"]), rect,
 				Color.from_hsv(super_hue, GROUP_SATURATION, GROUND_COLOR.v * 0.9), GROUP_FLOOR_Y)
-		_label(parent, str(group["name"]), 90, Vector3(rect.get_center().x, 0.012, rect.end.y - 0.5),
-			ROW_LABEL_COLOR, 0.0)
-	_label(parent, str(row["name"]), 160, Vector3(-1.0, 0.01, centre_z), ROW_LABEL_COLOR)
-	return {"name": row["name"], "archive": archive, "parcels": parcels, "end_z": z + depth + pad * 2.0, "end_x": x}
+		signpost(parent, str(group["name"]).to_upper(), row_sign * GROUP_SIGN, Vector3(rect.get_center().x, 0.0, rect.position.y))
+	signpost(parent, str(row["name"]).to_upper(), row_sign, Vector3(-2.0, 0.0, centre_z))
+	return {"name": row["name"], "archive": archive, "parcels": parcels, "end_z": z + depth + pad * 2.0, "end_x": x,
+		"sign": row_sign}
 
 
 static func _floor(parent: Node3D, floor_name: String, rect: Rect2, color: Color, y: float) -> void:
@@ -157,17 +178,19 @@ static func _floor(parent: Node3D, floor_name: String, rect: Rect2, color: Color
 	parent.add_child(mesh)
 
 
-## Un nombre en el piso. `yaw` en grados: −90 se lee a lo largo de la fila (el de la fila y el del bloque), 0 de frente.
-static func _label(parent: Node3D, text: String, font_size: int, at: Vector3, color: Color, yaw := -90.0) -> void:
+## UN CARTEL (ver LOS CARTELES): `text` con la letra de `height` metros de alto, parado sobre `at` (un punto del piso,
+## en el espacio de `parent`) y siempre de frente a quien mira.
+static func signpost(parent: Node3D, text: String, height: float, at: Vector3, color := ROW_LABEL_COLOR) -> Label3D:
 	var label := Label3D.new()
 	label.text = text
-	label.font_size = font_size
-	label.pixel_size = 0.005
+	label.font_size = SIGN_FONT
+	label.pixel_size = height / float(SIGN_FONT)
 	label.modulate = color
 	label.outline_size = 0
-	label.rotation_degrees = Vector3(-90.0, yaw, 0.0)
-	label.position = at
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	label.position = at + Vector3.UP * height
 	parent.add_child(label)
+	return label
 
 
 ## EL SUELO, DEL TAMAÑO DE LAS FILAS: cubre todas las parcelas y `GROUND_MARGIN` alrededor. *Era un cuadrado fijo de

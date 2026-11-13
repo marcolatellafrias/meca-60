@@ -17,6 +17,13 @@ func max_footprint() -> Vector2:
 	return Vector2(4.0, 4.0)
 
 
+## EL ALTO DE SU CUBO DE LEJOS MIENTRAS NO SE ARMÓ (m; ver SandboxParcel, LO DE LEJOS): por defecto, la mitad de su lado
+## más corto, entre 1 y 12 m. Lo pisa el que sabe cuánto mide. Armada, el cubo se mide de lo que hay.
+func far_height() -> float:
+	var footprint := max_footprint()
+	return clampf(minf(footprint.x, footprint.y) * 0.5, 1.0, 12.0)
+
+
 ## Arma el individuo `seed_value` colgado de `parent`, centrado en su origen y apoyado en y = 0, y devuelve su raíz.
 func build(_seed_value: int, _parent: Node3D) -> Node3D:
 	return null

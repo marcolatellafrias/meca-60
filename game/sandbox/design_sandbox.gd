@@ -265,8 +265,9 @@ func _process(delta: float) -> void:
 	_refresh()
 
 
-## Cada parcela, según lo lejos que está uno de su zona: se arma (las NEAR, la primera vez), se apaga o vuelve. Manejando,
-## nada cambia: lo manejado puede estar lejos del que lo maneja.
+## Cada parcela, según lo lejos que está uno de su zona: se arma (las NEAR, la primera vez), se apaga o vuelve. Una sin
+## armar muestra su cubo apenas deja de estar cerca. Manejando, nada cambia: lo manejado puede estar lejos del que lo
+## maneja.
 func _update_far() -> void:
 	_far_clock = FAR_CHECK_S
 	if _busy():
@@ -280,7 +281,7 @@ func _update_far() -> void:
 			if parcel.build_mode == SandboxRow.Build.NEAR:
 				parcel.build()
 			parcel.set_far(false)
-		elif gap > FAR_M:
+		elif gap > FAR_M or not parcel.built:
 			parcel.set_far(true)
 
 

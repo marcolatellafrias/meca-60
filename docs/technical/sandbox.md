@@ -27,8 +27,16 @@ Un módulo nuevo agrega una línea en `SandboxCatalogue.rows()`.
 - `Build.NEAR`: la primera vez que uno se acerca. Es lo normal.
 - `Build.ON_KEY`: sólo con la **R** parado en ella. Es para lo pesado (una ciudad entera) que no debe armarse por pasar al lado.
 
-De lejos (a más de 90 m), lo armado se esconde y se pausa, y en su lugar va un cubo gris de su medida. Las parcelas no
-dependen entre sí.
+De lejos (a más de 90 m), lo armado se esconde y se pausa, y en su lugar va un cubo gris de su medida. **Una sin armar
+también tiene su cubo** apenas deja de estar cerca: del tamaño de su parcela y del alto que diga su arquetipo
+(`far_height()`, por defecto la mitad de su lado más corto, entre 1 y 12 m). Las parcelas no dependen entre sí.
+
+## Los carteles
+Parados y **siempre de frente** a quien mira (`SandboxLayout.signpost`). El alto de la letra dice la jerarquía:
+- **supercategoría**: 1,8 veces la fila más alta de su bloque, donde el bloque empieza;
+- **fila**: el 10 % de su fondo, entre 0,8 y 4 m;
+- **subcategoría**: 0,7 del de su fila;
+- **parcela**: el 4 % del ancho de su zona, entre 0,25 y 2,5 m, sin pasarse de ese ancho.
 
 ## Zona y bordes
 - **Bordes invisibles** en el borde de la parcela (no en el de la zona): lo físico de adentro no sale.

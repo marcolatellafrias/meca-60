@@ -22,7 +22,14 @@ extends Node3D
 ## ── CUÁNDO SE ARMA Y LO DE LEJOS (ver SandboxRow.Build) ──────────────────────────────────────────────────────────
 ## Nace sin armar: su piso, su marco y su nombre. Se arma la primera vez que uno se acerca (NEAR) o sólo con la R
 ## parado en ella (ON_KEY). De lejos (`set_far`), lo armado se esconde y se pausa —deja de procesar y sale de la física—
-## y en su lugar va un cubo gris de la medida de lo que había; de cerca vuelve igual que estaba.
+## y en su lugar va un cubo gris de la medida de lo que había; de cerca vuelve igual que estaba. UNA SIN ARMAR TAMBIÉN
+## TIENE SU CUBO DE LEJOS (el usuario, 13/11/2026: «las cajas me parecen una buena forma de ubicarme… si está fuera de
+## rango debería verse siempre»): del tamaño de su parcela y del alto que diga su arquetipo (`far_height`); al armarse
+## pasa a la medida de verdad.
+##
+## ── EL CARTEL ────────────────────────────────────────────────────────────────────────────────────────────────────
+## Su nombre, parado en el borde y siempre de frente (ver SandboxLayout.signpost). El alto de la letra sale del ancho de su
+## zona (`SIGN_SHARE`, entre `SIGN_MIN` y `SIGN_MAX`), sin pasarse de ese ancho: una parcela grande se lee de lejos.
 
 const PLANE_LIFT := 0.002
 const FRAME_LIFT := 0.01
@@ -39,6 +46,11 @@ const PAD_MAX := 15.0
 const FAR_COLOR := Color(0.6, 0.6, 0.62)
 ## El cartel de una parcela que se arma con la R y todavía no se armó.
 const ON_KEY_HINT := "R: armarla"
+const SIGN_SHARE := 0.04
+const SIGN_MIN := 0.25
+const SIGN_MAX := 2.5
+## Cuánto del alto de la letra ocupa de ancho cada carácter, para que el cartel no se pase de la zona.
+const SIGN_CHAR_SHARE := 0.55
 
 var archetype: SeededArchetype = null
 var category := ""
@@ -202,20 +214,37 @@ func set_far(far: bool) -> void:
 	if far == _far:
 		return
 	_far = far
-	if not is_instance_valid(_root):
-		return
+	var has_root := is_instance_valid(_root)
 	if far:
-		if _proxy_for != _root:
+		if has_root and _proxy_for != _root:
 			_measure_proxy()
-		_root.visible = false
-		_root.process_mode = Node.PROCESS_MODE_DISABLED
-		if _proxy != null:
-			_proxy.visible = true
-	else:
-		_root.process_mode = Node.PROCESS_MODE_INHERIT
-		_root.visible = true
-		if _proxy != null:
-			_proxy.visible = false
+		elif not has_root and _proxy == null:
+			_rough_proxy()
+	if has_root:
+		_root.visible = not far
+		_root.process_mode = Node.PROCESS_MODE_DISABLED if far else Node.PROCESS_MODE_INHERIT
+	if _proxy != null:
+		_proxy.visible = far
+
+
+## El cubo de una sin armar: su parcela, del alto que diga su arquetipo.
+func _rough_proxy() -> void:
+	var height := archetype.far_height()
+	_set_proxy(Vector3(size.x, height, size.y), Vector3(0.0, height * 0.5, 0.0))
+
+
+func _set_proxy(box: Vector3, centre: Vector3) -> void:
+	if is_instance_valid(_proxy):
+		_proxy.queue_free()
+	_proxy = MeshInstance3D.new()
+	_proxy.name = "De lejos"
+	var cube := BoxMesh.new()
+	cube.size = box.max(Vector3.ONE * 0.1)
+	_proxy.mesh = cube
+	_proxy.material_override = _flat(FAR_COLOR)
+	_proxy.position = centre
+	_proxy.visible = false
+	add_child(_proxy)
 
 
 ## El cubo de lo que armó: la caja de todo lo que se ve, en el espacio de la parcela, sin pasarse de su borde.
@@ -233,22 +262,12 @@ func _measure_proxy() -> void:
 			continue
 		box = bounds if first else box.merge(bounds)
 		first = false
-	if is_instance_valid(_proxy):
-		_proxy.queue_free()
-	_proxy = null
 	if first:
+		_rough_proxy()
 		return
 	var low := Vector3(maxf(box.position.x, -size.x * 0.5), maxf(box.position.y, 0.0), maxf(box.position.z, -size.y * 0.5))
 	var high := Vector3(minf(box.end.x, size.x * 0.5), maxf(box.end.y, 0.1), minf(box.end.z, size.y * 0.5))
-	_proxy = MeshInstance3D.new()
-	_proxy.name = "De lejos"
-	var cube := BoxMesh.new()
-	cube.size = (high - low).max(Vector3.ONE * 0.1)
-	_proxy.mesh = cube
-	_proxy.material_override = _flat(FAR_COLOR)
-	_proxy.position = (low + high) * 0.5
-	_proxy.visible = false
-	add_child(_proxy)
+	_set_proxy(high - low, (low + high) * 0.5)
 
 
 ## La zona de interacción, en el plano XZ del mundo.
@@ -293,26 +312,15 @@ func _draw() -> void:
 			sign_side * outer.y * 0.5 if along_x else 0.0)
 		add_child(strip)
 
-	var label := Label3D.new()
-	label.text = archetype.display_name
-	label.font_size = 64
-	label.pixel_size = 0.004
-	label.modulate = LABEL_COLOR
-	label.outline_size = 0
-	label.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
-	label.position = Vector3(0.0, FRAME_LIFT + 0.01, size.y * 0.5 + interact_pad * 0.5)
-	add_child(label)
-
+	# EL CARTEL (ver arriba): del ancho de su zona, sin pasarse.
+	var height := clampf(outer.x * SIGN_SHARE, SIGN_MIN, SIGN_MAX)
+	var text_width := archetype.display_name.length() * height * SIGN_CHAR_SHARE
+	if text_width > outer.x * 0.95:
+		height = maxf(SIGN_MIN, height * outer.x * 0.95 / text_width)
+	SandboxLayout.signpost(self, archetype.display_name, height, Vector3(0.0, 0.0, size.y * 0.5 + interact_pad * 0.5),
+		LABEL_COLOR)
 	if build_mode == SandboxRow.Build.ON_KEY:
-		_hint_label = Label3D.new()
-		_hint_label.text = ON_KEY_HINT
-		_hint_label.font_size = 96
-		_hint_label.pixel_size = 0.004
-		_hint_label.modulate = LABEL_COLOR
-		_hint_label.outline_size = 0
-		_hint_label.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
-		_hint_label.position = Vector3(0.0, FRAME_LIFT + 0.01, 0.0)
-		add_child(_hint_label)
+		_hint_label = SandboxLayout.signpost(self, ON_KEY_HINT, height, Vector3.ZERO, LABEL_COLOR)
 
 
 static func _flat(color: Color) -> StandardMaterial3D:
