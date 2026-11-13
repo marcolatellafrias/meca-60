@@ -17,6 +17,7 @@ const LABELS := {
 	"floors": "pisos",
 	"floor_cells": "alto de cada piso, de losa a losa (celdas de 3,9 cm)",
 	"glass_out": "el vidrio sobresale (celdas de 3,9 cm)",
+	"structure": "por dónde se anda y se sube",
 	"eye_height": "altura de los ojos que buscan (m)",
 	"seat_gap": "distancia al vidrio (celdas)",
 	"arm_floor": "piso",
@@ -28,7 +29,7 @@ const LABELS := {
 }
 
 ## Las partes del panel: los grupos de CabinShape, en orden.
-const PARTS := ["La caja", "Las sillas", "Los hombros", "Brazos y piernas"]
+const PARTS := ["La caja", "La estructura", "Las sillas", "Los hombros", "Brazos y piernas"]
 
 var _draft := CabinGrid.current()
 var _state: Label = null

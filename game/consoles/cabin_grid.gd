@@ -21,7 +21,8 @@ extends RefCounted
 ##     tableros eléctricos, el ascensor en el medio); los de arriba, DOS ASIENTOS cada uno, a los dos lados del medio
 ##     del frente (el usuario, 13/11/2026: el caso de 4 jugadores, «planta baja de servicio»).
 ##   · EL FRENTE ES UNA CAJA DE VIDRIO QUE SOBRESALE (`GLASS_OUT_CELLS`): vidrio al frente, a los costados, arriba y
-##     abajo, sin parantes; lo único que la corta son las losas del medio. Atrás, la puerta de cada piso, en el medio.
+##     abajo, sin parantes; lo único que la corta son las losas del medio. Atrás, la puerta de cada piso, en el medio
+##     (con la estructura de afuera; ver `STRUCTURE`).
 ##   · LA FORMA SE CAMBIA JUGANDO (`shape`, el panel F2 de las filas de la meca, CabinShapePanel): cuántos módulos por
 ##     lado, cuántos pisos, el alto de cada piso y cuánto sobresale el vidrio. Lo guardado (`SAVED`) es la forma de
 ##     todas las mecas.
@@ -81,6 +82,9 @@ static var SEAT_GAP_CELLS := 26
 ## el de atrás). Ver `shoulder`.
 static var ARM_FLOOR := 1
 static var ARM_ALONG := 1
+## LA ESTRUCTURA (ver CabinShape.structure): por dónde se anda y se sube.
+enum Structure { OUTSIDE, INSIDE }
+static var STRUCTURE := Structure.OUTSIDE
 
 
 static func _static_init() -> void:
@@ -96,6 +100,7 @@ static func apply(saved: CabinShape) -> void:
 	SEAT_GAP_CELLS = saved.seat_gap
 	ARM_FLOOR = saved.arm_floor
 	ARM_ALONG = saved.arm_along
+	STRUCTURE = saved.structure as Structure
 	MechBody.dress(saved.thickness, saved.arm_length, saved.leg_length, saved.leg_stretch)
 
 
@@ -131,6 +136,7 @@ static func current() -> CabinShape:
 	now.seat_gap = SEAT_GAP_CELLS
 	now.arm_floor = ARM_FLOOR
 	now.arm_along = ARM_ALONG
+	now.structure = STRUCTURE
 	now.arm_length = MechBody.arm_size
 	now.leg_length = MechBody.leg_size
 	now.thickness = MechBody.thick_size

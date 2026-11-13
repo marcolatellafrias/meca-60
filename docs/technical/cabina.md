@@ -35,6 +35,18 @@ manteniendo el aspect ratio de cubo por ahora»).
   (con 4 × 4, los 2 × 2 del medio). Su jaula no pasa de un piso.
 - **El afuera sale de reglas**: un tramo de escalera y un balcón por cada piso de arriba; lo largo de un tramo, de la
   altura del piso. Con pisos bajos avisa si queda poca altura libre.
+- **La estructura** (pestaña La estructura, 13/11/2026, hecha por la sesión de la Meca: «es como la estructura», no toca
+  controles): por dónde se anda y se sube. El usuario: «variantes de la base… las escaleras de atrás… estén metidas
+  adentro y que no tengan esas puertas hacia afuera… la primera variante… sin nada y escaleras adentro».
+  - **Afuera** (la de siempre): la pasarela, la escalera de atrás y una puerta atrás en cada piso (`MechExterior`).
+  - **Adentro** (`MechInsideStairs`): nada afuera y sin puertas; se entra por el ascensor. Un tramo por piso contra la
+    pared de atrás, todos subiendo para el mismo lado, uno encima del otro, y un hueco en la losa de arriba de cada uno.
+    Barandas donde hay caída: del lado de adentro de cada tramo y en el borde de cada hueco. **Se baja de costado**: las
+    barandas dejan abierto el final de cada tramo, del ancho del carril (1,1 m). *Con 3 módulos por lado adentro hay
+    5,7 m y un tramo mide 5,67 (la pisada de toda escalera del juego): va de pared a pared y no queda losa en las
+    puntas.* Altura libre sobre los escalones: un piso menos la losa y un escalón (2,33 m con pisos de 68 celdas).
+  - Las otras variantes que el usuario tiene pensadas (las pasarelas de los costados, con puertas a los costados)
+    vienen después.
 - **Los asientos**: dos por piso, a los dos lados del medio del frente, en todos los pisos menos la planta baja (con un
   solo piso, en ése).
 - **Las sillas**: la **altura de los ojos** que buscan (m sobre el piso; cada uno se nivela a ella con el ajuste de su
