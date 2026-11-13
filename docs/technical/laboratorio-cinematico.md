@@ -8,10 +8,25 @@ hacemos que funcione con paquetes y con el giro».
 
 ## Qué hay
 - **El cubo** (`KinematicPillar`): una caja de 6 × 18 × 6 m apoyada en el piso, cinemática y poseíble con la O.
-  - Se mueve con WASD, gira con el mouse (con tope de velocidad y de aceleración), corre con Shift y salta con espacio.
+  - Se mueve con WASD, gira con el mouse (con tope de velocidad y de aceleración), corre con Shift, salta con espacio y
+    hace dash con la Q.
   - Con Ctrl se agacha: su alto baja de a poco hasta el 60 %. No se para si algo que lo frena está encima.
   - Lo fijo siempre lo frena.
   - Las perillas están en el F1 (`PillarSettings`).
+- **La locomoción de la meca futura** se prueba con el cubo (el usuario: «empezar a trabajar en todo lo de locomoción de
+  la meca futura, pero con este cubo»):
+  - **El dash, con la Q**: un impulso hacia donde apretás, el mismo en el piso y en el aire. **Sin dirección no pasa
+    nada.** Tiene su barra, que se llena sola.
+  - **Lo que hace de roce**: el cubo no tiene fricción con el piso. Lo frena el control de caminar, que lleva la
+    velocidad a la pedida. Por eso, durante `dash_hold` (0,25 s) después del dash, caminar no lo frena; si no, en el
+    piso el dash duraba nada.
+  - **El vuelo**: en el aire, espacio otra vez empuja para arriba mientras quede su barra, que se llena apoyado. Las dos
+    barras son separadas, y se ven en el cartel de poseer, abajo a la derecha.
+  - **Las toberas** (`PillarNozzles`), de placeholder: cuatro abajo que echan al volar, y cuatro a los costados que
+    echan un fogonazo del lado contrario al dash.
+  - **El F1 tiene pestañas**: Moverse, Girar, Saltar y volar, Dash, Agacharse y Con lo suelto.
+  - Medido (`kinematic_lab_moves_look`): el dash en el piso lo corre 21,6 m y en lo alto de un salto 29,4 m, hasta
+    frenar. La Q sin dirección no hace nada. Volando con la barra entera sube hasta 34 m en 2 s.
 - **La L elige cómo trata lo suelto:**
   1. **Jolt puro**: masa infinita.
   2. **Topadora con tope**: nada suelto cercano sale hacia afuera más rápido que la caja, más 1,5 m/s.

@@ -8,6 +8,14 @@ extends AnimatableBody3D
 ##
 ## SE MUEVE A MANO: se apoya en el piso, camina, corre, gira (con tope de velocidad y de aceleración), salta y se agacha
 ## (el alto cambia de a poco). Jolt no lo mueve: cada paso se pone donde calculó (el motor sabe su velocidad).
+## LA LOCOMOCIÓN DE LA MECA FUTURA se prueba acá (el usuario, 13/11/2026: «empezar a trabajar en todo lo de locomoción de
+## la meca futura, pero con este cubo»):
+##   · EL DASH (la Q): un impulso hacia donde apretás, EN EL PISO Y EN EL AIRE, el mismo («que sea un solo sistema que
+##     lo puedo usar siempre»). SIN DIRECCIÓN NO PASA NADA. Tiene su barra (`dash_fuel`), que se llena sola. Un rato
+##     (`dash_hold`) caminar no lo frena: frenar es lo que hace de roce, y sin eso en el piso duraba nada.
+##   · EL VUELO (espacio otra vez, en el aire): empuja para arriba mientras le quede su barra (`fly_fuel`), que se llena
+##     apoyado. Las dos barras, separadas («por ahora las vamos a dejar separadas»).
+##   · LAS TOBERAS (PillarNozzles): placeholder, sólo se ven.
 ## LO FIJO (paredes, el piso) SIEMPRE LO FRENA. CON LO SUELTO, cuatro formas (`mode`, la L de la parcela):
 ##   · JOLT: lo que hace el motor solo. Para él la caja tiene masa infinita.
 ##   · TOPADORA CON TOPE: lo mismo, pero nada suelto cerca sale hacia afuera más rápido que la caja en ese punto (más
@@ -29,6 +37,7 @@ var move := Vector2.ZERO
 var sprint := false
 var crouch := false
 var jump := false
+var dash := false
 var aim_yaw := 0.0
 var mode := Mode.JOLT
 
@@ -38,12 +47,19 @@ var grounded := false
 ## Cuánto está agachado (0 a 1) y su alto de ahora.
 var crouched := 0.0
 var height := SIZE.y
+## Las barras (0 a 1): la del dash y la del vuelo.
+var dash_fuel := 1.0
+var fly_fuel := 1.0
 
 ## Dónde está (el medio de su cara de abajo): lo guarda él, no lo lee del nodo (ver `put`).
 var _at := Vector3.ZERO
 var _yaw := 0.0
 var _yaw_speed := 0.0
 var _jump_was := false
+var _dash_was := false
+var _fly_armed := false
+var _dash_clock := 0.0
+var _nozzles: PillarNozzles = null
 var _shape: BoxShape3D = null
 var _holder: CollisionShape3D = null
 var _look: MeshInstance3D = null
@@ -68,6 +84,9 @@ func _ready() -> void:
 	# El frente, para saber hacia dónde mira.
 	var front := Clay.box(_look, Vector3(0.6, 0.08, 0.05), Vector3(0.0, 0.42, -0.51), Clay.YELLOW)
 	front.name = "Frente"
+	_nozzles = PillarNozzles.new()
+	add_child(_nozzles)
+	_nozzles.build(SIZE)
 	_yaw = global_rotation.y
 	_at = global_position
 	aim_yaw = _yaw
@@ -89,17 +108,37 @@ func _physics_process(delta: float) -> void:
 	var walk := k.walk_speed * (k.sprint_multiplier if sprint and move.y > 0.0 else 1.0)
 	var wanted := Basis(Vector3.UP, _yaw) * Vector3(move.x, 0.0, -move.y).limit_length(1.0) * walk
 	var flat := Vector3(velocity.x, 0.0, velocity.z)
-	var most := (k.walk_accel if wanted.length_squared() > 0.01 else k.walk_brake) * (1.0 if grounded else 0.3)
+	var most := (k.walk_accel if wanted.length_squared() > 0.01 else k.walk_brake) * (1.0 if grounded else k.air_control)
+	_dash_clock = maxf(_dash_clock - delta, 0.0)
+	# Recién salido de un dash, caminar sólo suma: no lo frena.
+	if _dash_clock > 0.0 and flat.length() > wanted.length():
+		most = 0.0
 	flat = flat.move_toward(wanted, most * delta)
 	velocity = Vector3(flat.x, velocity.y, flat.z)
-	# SALTAR (al apretar) Y CAER.
+	# EL DASH: al apretar, con una dirección y con barra.
+	dash_fuel = minf(dash_fuel + delta / k.dash_refill, 1.0)
+	if dash and not _dash_was and move.length() > 0.1 and dash_fuel >= k.dash_cost:
+		_dash(k)
+	_dash_was = dash
+	# SALTAR (al apretar) Y CAER; EL VUELO, en el aire, apretando otra vez.
 	var gravity := BalanceBody.gravity()
 	if jump and not _jump_was and grounded:
 		velocity.y = sqrt(2.0 * gravity * k.air_gravity * k.jump_height)
 		grounded = false
+		_fly_armed = false
 	_jump_was = jump
-	if not grounded:
-		velocity.y -= gravity * k.air_gravity * delta
+	if grounded:
+		fly_fuel = minf(fly_fuel + delta / k.thrust_refill, 1.0)
+	else:
+		if not jump:
+			_fly_armed = true
+		var flying := jump and _fly_armed and fly_fuel > 0.0
+		if flying:
+			fly_fuel = maxf(fly_fuel - delta / k.thrust_time, 0.0)
+			velocity.y += k.thrust * delta
+			_nozzles.fly(1.0)
+		# Volando pesa lo de siempre (como la meca: si no, no la levantaría); si no, lo del aire.
+		velocity.y -= gravity * (1.0 if flying else k.air_gravity) * delta
 	# MOVERSE PROBANDO: de costado y, aparte, para arriba o abajo.
 	place = _move(place, Vector3(velocity.x, 0.0, velocity.z) * delta)
 	var up := _move(place, Vector3.UP * velocity.y * delta)
@@ -114,6 +153,8 @@ func _physics_process(delta: float) -> void:
 			grounded = false
 		velocity.y = minf(velocity.y, 0.0)
 	_turn(k, delta, place)
+	_nozzles.fit(height)
+	_nozzles.show_flames(delta)
 	_at = place
 	global_transform = Transform3D(Basis(Vector3.UP, _yaw), place)
 	match mode:
@@ -123,6 +164,21 @@ func _physics_process(delta: float) -> void:
 			_ghost(k)
 		_:
 			_unghost_all()
+
+
+## EL DASH: hacia donde se pide (en el espacio del cubo), suma `dash_speed` a lo que ya iba para allá; en el aire,
+## además, sube a `dash_lift`.
+func _dash(k: PillarSettings) -> void:
+	var stick := Vector3(move.x, 0.0, -move.y).normalized()
+	var way := Basis(Vector3.UP, _yaw) * stick
+	var flat := Vector3(velocity.x, 0.0, velocity.z)
+	var along := maxf(flat.dot(way), 0.0)
+	var sideways := flat - way * flat.dot(way)
+	var now := sideways + way * (along + k.dash_speed)
+	velocity = Vector3(now.x, velocity.y if grounded else maxf(velocity.y, k.dash_lift), now.z)
+	dash_fuel -= k.dash_cost
+	_dash_clock = k.dash_hold
+	_nozzles.dash(stick)
 
 
 ## LO PONE en `where` (el medio de su cara de abajo), quieto. *Con la física sincronizada, poner su posición desde
@@ -315,6 +371,7 @@ func _read() -> void:
 	sprint = Input.is_physical_key_pressed(KEY_SHIFT)
 	crouch = Input.is_physical_key_pressed(KEY_CTRL)
 	jump = Input.is_physical_key_pressed(KEY_SPACE)
+	dash = Input.is_physical_key_pressed(KEY_Q)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -333,12 +390,15 @@ func possess_controls() -> PackedStringArray:
 	return PackedStringArray([
 		"W/S adelante y atrás · A/D de costado · mouse gira (con tope)",
 		"Shift corre · Ctrl se agacha (baja de a poco) · espacio salta",
+		"en el aire, espacio otra vez: vuela (su barra se llena apoyado)",
+		"Q con una dirección: dash, en el piso y en el aire (su barra se llena sola)",
 	])
 
 
 func possess_status() -> String:
-	return "con lo suelto: %s · %.1f m/s · alto %.1f m%s" % [MODE_NAMES[mode],
-		Vector2(velocity.x, velocity.z).length(), height, "" if grounded else " · en el aire"]
+	return "dash %s   vuelo %s\ncon lo suelto: %s · %.1f m/s · alto %.1f m%s" % [BodyMoves._bar(dash_fuel),
+		BodyMoves._bar(fly_fuel), MODE_NAMES[mode], Vector2(velocity.x, velocity.z).length(), height,
+		"" if grounded else " · en el aire"]
 
 
 func possess_begin() -> void:
@@ -352,6 +412,7 @@ func possess_end() -> void:
 	sprint = false
 	crouch = false
 	jump = false
+	dash = false
 
 
 func possess_camera(first: bool, delta: float) -> Transform3D:
