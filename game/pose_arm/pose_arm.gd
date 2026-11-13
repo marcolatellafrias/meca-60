@@ -40,7 +40,7 @@ func _ready() -> void:
 	# Sus piezas van en el mundo: la pose ya viene en el mundo.
 	top_level = true
 	global_transform = Transform3D()
-	_sphere.radius = FIST_RADIUS * MechBody.scale
+	_sphere.radius = FIST_RADIUS * MechBody.thick
 	_rest = stance_at(stance)
 	_upper = Clay.limb(self, MechBody.LEG_THICKNESS * 0.5, MechBody.UPPER_ARM, Vector3.ZERO, Clay.METAL.darkened(0.1))
 	_forearm = Clay.limb(self, MechBody.LEG_THICKNESS * 0.5, MechBody.FOREARM, Vector3.ZERO, Clay.METAL.darkened(0.2))
@@ -75,7 +75,7 @@ func _place(pose: Dictionary) -> void:
 ## EL PUÑO BARRE SU CAMINO en el mundo, desde donde estaba el paso anterior, y le pega a lo suelto que toca.
 func _sweep(pose: Dictionary, delta: float) -> void:
 	var forearm: Transform3D = pose["forearm"]
-	var fist: Vector3 = (pose["wrist"] as Vector3) - forearm.basis.z * MechHand.length() * MechBody.scale * 0.5
+	var fist: Vector3 = (pose["wrist"] as Vector3) - forearm.basis.z * MechHand.length() * MechBody.thick * 0.5
 	var motion := fist - _last_fist
 	if _has_last and stage() == Stage.STRIKE and motion.length() > 0.001 and motion.length() < JUMP:
 		var query := PhysicsShapeQueryParameters3D.new()

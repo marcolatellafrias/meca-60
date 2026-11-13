@@ -20,14 +20,29 @@ extends RefCounted
 ## la altura de la cintura, la inclinación (`tilt`, del equilibrio), el giro del torso y dónde están los pies y los puños.
 ## Todo en el mundo.
 
-## LAS MEDIDAS VAN CON LA CAJA (el usuario, 13/11/2026: «si achico el cubo de 4x4 a 2x2, se achicarían a la mitad los
-## brazos y las piernas»): `scale` es el lado de la caja sobre el de siempre (8,03 m, ver CabinGrid.shape) y cada medida
-## de abajo es la de siempre (`BASE`) por ese número. Las pone `scale_to`.
+## LAS MEDIDAS SE ELIGEN (el usuario, 13/11/2026: «tenga unos ciertos tamaños discretos, chico, mediano, grande… el
+## ancho global y el largo de los brazos como cosas independientes… el ancho va a cambiar… la mano… los hombros, las
+## articulaciones, los pies, y el largo va a cambiar solamente el largo de los conectores»; el ancho, uno para brazos y
+## piernas; los largos, separados). Las pone `dress`: cada medida de abajo es la de siempre (`BASE`) por el factor de
+## su tamaño (`SIZES`). *Del 13/11/2026 a la tarde, todo iba con el lado de la caja; el usuario: «prefiero que no
+## dependa tanto de la caja».*
 const BASE := {
 	"WAIST": 7.4, "HIP_X": 2.7, "HIP_DROP": 1.2, "THIGH": 4.4, "SHIN": 4.4, "LEG_THICKNESS": 2.1, "ANKLE": 0.6,
 	"FOOT_SIZE": Vector3(2.2, 0.7, 3.4), "FOOT_AHEAD": 0.4, "UPPER_ARM": 5.5, "FOREARM": 5.5,
 }
-static var scale := 1.0
+## Chico, mediano (el de siempre) y grande.
+const SIZES: Array[float] = [0.75, 1.0, 1.25]
+## LO QUE SE ELIGIÓ: el tamaño (0, 1, 2) del ancho, del largo de los brazos y del de las piernas, y cuánto se estiran
+## las piernas paradas (de la cadera al tobillo, en partes del largo de la pierna; con 0,64 queda la de siempre).
+static var thick_size := 1
+static var arm_size := 1
+static var leg_size := 1
+static var stretch := 0.64
+## Sus factores: el ancho (`thick`, para las manos, el puño y las articulaciones), el largo de los brazos (`reach`, para
+## las posturas y las piñas) y el de las piernas (`stride`).
+static var thick := 1.0
+static var reach := 1.0
+static var stride := 1.0
 ## La cintura: dónde se apoya el torso, sobre el suelo, parada.
 static var WAIST := 7.4
 ## Las caderas, a los costados de la pelvis y debajo de la cintura.
@@ -55,30 +70,37 @@ static var FOREARM := 5.5
 const ELBOW_HINT := Vector3(1.0, -0.8, 0.5)
 
 
-## PONE LAS MEDIDAS PARA UNA CAJA `k` veces la de siempre. Lo que se armó antes no cambia (ver CabinShapePanel, que
-## rearma las mecas). La altura y los pasos de las perillas (BodySettings) van en la misma proporción.
-static func scale_to(k: float) -> void:
-	if is_equal_approx(k, scale):
-		return
+## PONE LAS MEDIDAS: el ancho (`thickness`), el largo de los brazos y de las piernas (0 chico, 1 mediano, 2 grande) y
+## cuánto se estiran las piernas paradas. LA CINTURA SALE DE AHÍ —el tobillo, la caída de la cadera y lo estirada que
+## está la pierna—, y es la altura de la caja sobre el piso de las perillas (`hover_height`); el paso y lo que sube el
+## pie van con el largo de la pierna. Lo que se armó antes no cambia (ver CabinShapePanel, que rearma las mecas).
+static func dress(thickness: int, arm_length: int, leg_length: int, leg_stretch: float) -> void:
 	var knobs := BodySettings.current
-	var ratio := k / scale
-	for name: String in ["hover_height", "step_reach", "step_height", "settle_gap"]:
-		knobs.set(name, float(knobs.get(name)) * ratio)
-	scale = k
-	WAIST = BASE["WAIST"] * k
-	HIP_X = BASE["HIP_X"] * k
-	HIP_DROP = BASE["HIP_DROP"] * k
-	THIGH = BASE["THIGH"] * k
-	SHIN = BASE["SHIN"] * k
-	LEG_THICKNESS = BASE["LEG_THICKNESS"] * k
+	var old_leg := stride
+	thick_size = clampi(thickness, 0, SIZES.size() - 1)
+	arm_size = clampi(arm_length, 0, SIZES.size() - 1)
+	leg_size = clampi(leg_length, 0, SIZES.size() - 1)
+	stretch = leg_stretch
+	thick = SIZES[thick_size]
+	reach = SIZES[arm_size]
+	stride = SIZES[leg_size]
+	for name: String in ["step_reach", "step_height", "settle_gap"]:
+		knobs.set(name, float(knobs.get(name)) * stride / old_leg)
+	HIP_X = BASE["HIP_X"] * thick
+	HIP_DROP = BASE["HIP_DROP"] * thick
+	LEG_THICKNESS = BASE["LEG_THICKNESS"] * thick
 	JOINT_RADIUS = LEG_THICKNESS * 0.62
-	PELVIS_SIZE = Vector3(HIP_X * 2.0 - LEG_THICKNESS, 1.8 * k, 3.6 * k)
-	ANKLE = BASE["ANKLE"] * k
-	FOOT_SIZE = (BASE["FOOT_SIZE"] as Vector3) * k
-	FOOT_AHEAD = BASE["FOOT_AHEAD"] * k
-	STANCE_X = HIP_X + 0.3 * k
-	UPPER_ARM = BASE["UPPER_ARM"] * k
-	FOREARM = BASE["FOREARM"] * k
+	PELVIS_SIZE = Vector3(HIP_X * 2.0 - LEG_THICKNESS, 1.8 * thick, 3.6 * thick)
+	ANKLE = BASE["ANKLE"] * thick
+	FOOT_SIZE = (BASE["FOOT_SIZE"] as Vector3) * thick
+	FOOT_AHEAD = BASE["FOOT_AHEAD"] * thick
+	STANCE_X = HIP_X + 0.3 * thick
+	THIGH = BASE["THIGH"] * stride
+	SHIN = BASE["SHIN"] * stride
+	UPPER_ARM = BASE["UPPER_ARM"] * reach
+	FOREARM = BASE["FOREARM"] * reach
+	WAIST = ANKLE + HIP_DROP + (THIGH + SHIN) * stretch
+	knobs.hover_height = WAIST
 
 
 ## LA INCLINACIÓN: `lean` es el ángulo (radianes) hacia cada lado, x a la derecha e y adelante, en el espacio de la

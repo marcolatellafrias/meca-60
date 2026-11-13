@@ -16,12 +16,17 @@ enum Arms { NONE, POSE, MUSCLE }
 
 const MASS := 50000.0
 const NAMES := ["Meca de práctica", "Meca discreta", "Meca física"]
-## LOS BRAZOS: el hombro, en el espacio de la caja (`x` del lado derecho), casi en el medio del costado. *El 12/11/2026
-## se probó en el último tercio, hacia atrás: la postura era más natural, pero el brazo alcanzaba 2,6 m menos hacia
-## adelante, y el usuario lo volvió («estaban bien los brazos a la mitad, no me gusta el sacrificio en rango»).* Y cuánto
-## pesan los físicos, en partes de lo que pesa el brazo solo (ver MuscleArm.weight).
+## LOS BRAZOS: el hombro, en el espacio de la caja (`x` del lado derecho): el piso y el módulo del costado que se
+## eligieron (ver CabinGrid.shoulder), `SHOULDER_OUT` afuera del costado, más con brazos más anchos. *El 12/11/2026 se
+## probó en el último tercio, hacia atrás: la postura era más natural, pero el brazo alcanzaba 2,6 m menos hacia
+## adelante, y el usuario lo volvió («estaban bien los brazos a la mitad, no me gusta el sacrificio en rango»). Desde el
+## 13/11/2026 se elige en el panel F2.* Y cuánto pesan los físicos, en partes de lo que pesa el brazo solo (ver
+## MuscleArm.weight).
+const SHOULDER_OUT := 1.0
+
+
 static func shoulder() -> Vector3:
-	return Vector3(CabinGrid.SIZE * 0.5 + 1.0 * MechBody.scale, 1.9 * MechBody.scale, -0.4 * MechBody.scale)
+	return CabinGrid.shoulder() + Vector3(SHOULDER_OUT * MechBody.thick, 0.0, 0.0)
 
 
 const ARM_WEIGHT := 0.4

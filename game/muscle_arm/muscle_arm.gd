@@ -68,8 +68,8 @@ func _ready() -> void:
 	Clay.sphere(upper, MechBody.LEG_THICKNESS * 0.78, Vector3(0, 0, MechBody.UPPER_ARM * 0.5), MechBody.JOINT_COLOR)
 	Clay.sphere(forearm, MechBody.LEG_THICKNESS * 0.66, Vector3(0, 0, MechBody.FOREARM * 0.5), MechBody.JOINT_COLOR)
 	_mount_hand(forearm)
-	Clay.shape_box(forearm, Vector3(MechHand.PALM.y, MechHand.PALM.x * 2.2, MechHand.length() * 0.8) * MechBody.scale,
-		Vector3(0, 0, -MechBody.FOREARM * 0.5 - MechHand.length() * MechBody.scale * 0.4))
+	Clay.shape_box(forearm, Vector3(MechHand.PALM.y, MechHand.PALM.x * 2.2, MechHand.length() * 0.8) * MechBody.thick,
+		Vector3(0, 0, -MechBody.FOREARM * 0.5 - MechHand.length() * MechBody.thick * 0.4))
 	# El hombro, una bola; el codo, una bisagra sobre su eje (el Z de la articulación).
 	var ball := PinJoint3D.new()
 	_join(ball, anchor, upper, Transform3D(Basis(), shoulder))

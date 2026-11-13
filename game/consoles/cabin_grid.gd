@@ -38,10 +38,8 @@ const SLAB_CELLS := 5
 const DESK_CELLS := 19
 ## La puerta de atrás de cada piso: ancho y alto.
 const DOOR_CELLS := Vector2i(28, 52)
-## Dónde va el asiento, desde la pared del frente: lo que ocupaba el tablero de adelante (otra referencia, como
-## `DESK_CELLS`) y lo que queda hasta el centro de la silla.
+## Lo que ocupaba el tablero de adelante (otra referencia, como `DESK_CELLS`).
 const CONSOLE_CELLS := 13
-const SEAT_CELLS := 33
 ## EL ASCENSOR, en celdas sueltas (el usuario: «más en términos de celdas sueltas en vez de módulos»): el radio del hueco
 ## es un cuarto del ancho de adentro, menos `LIFT_MARGIN_CELLS`. Con 4 × 4 módulos, los 2 × 2 del medio.
 const LIFT_MARGIN_CELLS := 3
@@ -76,14 +74,29 @@ static var INNER := 0.0
 static var GLASS_OUT := 0.0
 ## El radio del hueco del ascensor.
 static var LIFT_HOLE := 0.0
+## LAS SILLAS: la altura de los ojos que buscan igualar (m, sobre el piso) y su distancia al vidrio (celdas).
+static var EYE_HEIGHT := 1.15
+static var SEAT_GAP_CELLS := 26
+## LOS HOMBROS: en qué piso y en qué módulo del costado (0 el primero o el de adelante, 1 el del medio, 2 el último o
+## el de atrás). Ver `shoulder`.
+static var ARM_FLOOR := 1
+static var ARM_ALONG := 1
 
 
 static func _static_init() -> void:
 	var saved := load(SAVED) as CabinShape if ResourceLoader.exists(SAVED) else null
-	if saved != null:
-		shape(saved.modules, saved.floors, saved.floor_cells, saved.glass_out)
-	else:
-		shape(COLUMNS, FLOORS, FLOOR_CELLS, GLASS_OUT_CELLS)
+	apply(saved if saved != null else CabinShape.new())
+
+
+## TOMA TODA LA FORMA GUARDADA: la cabina (`shape`), las sillas, los hombros y el cuerpo (MechBody.dress). Las mecas que
+## ya estaban no cambian: hay que rearmarlas (ver CabinShapePanel).
+static func apply(saved: CabinShape) -> void:
+	shape(saved.modules, saved.floors, saved.floor_cells, saved.glass_out)
+	EYE_HEIGHT = saved.eye_height
+	SEAT_GAP_CELLS = saved.seat_gap
+	ARM_FLOOR = saved.arm_floor
+	ARM_ALONG = saved.arm_along
+	MechBody.dress(saved.thickness, saved.arm_length, saved.leg_length, saved.leg_stretch)
 
 
 ## CAMBIA LA FORMA: `modules` por lado, `floors` pisos de `floor_cells` celdas cada uno (de losa a losa) y el vidrio
@@ -105,8 +118,6 @@ static func shape(modules: int, floors: int, floor_cells: int, glass_out: int) -
 	INNER = HALF - WALL
 	GLASS_OUT = GLASS_OUT_CELLS * CELL
 	LIFT_HOLE = (COLUMNS * MODULE_CELLS / 4 - LIFT_MARGIN_CELLS) * CELL
-	# LAS PIERNAS Y LOS BRAZOS, EN PROPORCIÓN A LA CAJA (ver MechBody.scale_to): la de siempre son 4 módulos.
-	MechBody.scale_to(float(WIDTH_CELLS) / float(4 * MODULE_CELLS + WALL_CELLS * 2))
 
 
 ## La forma de hoy, para guardarla.
@@ -116,6 +127,14 @@ static func current() -> CabinShape:
 	now.floors = FLOORS
 	now.floor_cells = FLOOR_CELLS
 	now.glass_out = GLASS_OUT_CELLS
+	now.eye_height = EYE_HEIGHT
+	now.seat_gap = SEAT_GAP_CELLS
+	now.arm_floor = ARM_FLOOR
+	now.arm_along = ARM_ALONG
+	now.arm_length = MechBody.arm_size
+	now.leg_length = MechBody.leg_size
+	now.thickness = MechBody.thick_size
+	now.leg_stretch = MechBody.stretch
 	return now
 
 
@@ -177,6 +196,29 @@ static func seats() -> Array[Vector3]:
 
 
 ## El asiento del piso `index` del lado `side` (−1 el izquierdo, 1 el derecho): medio módulo a ese lado del medio, a
-## `SEAT_CELLS` de la pared del frente.
+## `SEAT_GAP_CELLS` del vidrio del frente. *Hasta el 13/11/2026 iba a 33 celdas de la pared del frente: lo que ocupaba
+## el primer tablero (un bloque bajo, ya sacado) más el lugar hasta la silla; con el vidrio que sobresale quedaba a casi
+## 2 m del vidrio («muy retraídas para atrás»).*
 static func seat(index: int, side: float) -> Vector3:
-	return Vector3(side * MODULE * 0.5, ground(index), -INNER + SEAT_CELLS * CELL)
+	return Vector3(side * MODULE * 0.5, ground(index), -HALF - GLASS_OUT + SEAT_GAP_CELLS * CELL)
+
+
+## EL PISO Y EL MÓDULO DE UNA ELECCIÓN de tres (0 el primero, 1 el del medio, 2 el último) entre `count`: el del medio,
+## si no hay uno justo en el medio, es el primero de los dos del medio.
+static func pick(choice: int, count: int) -> int:
+	match choice:
+		0:
+			return 0
+		2:
+			return count - 1
+	return count / 2 if count % 2 == 1 else count / 2 - 1
+
+
+## EL HOMBRO, en el espacio de la caja, sin lo que lo corre hacia afuera (ver Mech.shoulder): a la mitad del alto de su
+## piso y en el medio de su módulo del costado (el usuario, 13/11/2026: «último piso, primer piso, y… piso del medio y
+## que si no está disponible defalte a piso abajo… al último, al principio, al medio. Y si no se puede al medio, default
+## adelante»).
+static func shoulder() -> Vector3:
+	var level := pick(ARM_FLOOR, FLOORS)
+	var row := pick(ARM_ALONG, ROWS)
+	return Vector3(HALF, ground(level) + clear_height(level) * 0.5, row_z(row) + MODULE * 0.5)

@@ -24,7 +24,7 @@ pisos o de jugadores (de 1 a 4) sin rehacer nada a mano.
 ## La forma se cambia jugando: el panel F2
 En las filas de la meca (Meca discreta, Meca física y la Arena de esquivar), **F2** (`CabinShapePanel`) cambia
 **cuántos módulos por lado** (1 a 6), **cuántos pisos** (1 a 5), **el alto de cada piso** (40 a 120 celdas, de losa a
-losa) y **cuánto sobresale el vidrio** (celdas). Lo pidió
+losa), **cuánto sobresale el vidrio** (celdas), **las sillas** y **el cuerpo** (abajo). Lo pidió
 el usuario el 13/11/2026, para probar configuraciones («tal vez podremos ver una versión de 2x2 o una de 3x3, siempre
 manteniendo el aspect ratio de cubo por ahora»).
 - **El alto es libre**: pisos por alto de cada uno; la planta, cuadrada. *Hasta el 13/11/2026 la caja era siempre un
@@ -37,13 +37,24 @@ manteniendo el aspect ratio de cubo por ahora»).
   altura del piso. Con pisos bajos avisa si queda poca altura libre.
 - **Los asientos**: dos por piso, a los dos lados del medio del frente, en todos los pisos menos la planta baja (con un
   solo piso, en ése).
-- **Las piernas y los brazos van en proporción a la caja** (el usuario: «si achico el cubo de 4x4 a 2x2, se achicarían a
-  la mitad los brazos y las piernas»): un solo factor, el lado de la caja sobre el de siempre (8,03 m), en
-  `MechBody.scale_to`. Escala las medidas del cuerpo (cintura, caderas, muslos, canillas, grosor, pies, brazos), las
-  posturas y las piñas de los brazos, las manos, el puño, el hombro, las toberas, el ascensor bajado y, de las perillas
-  (BodySettings), la altura, el paso y lo que sube el pie. Lo demás (velocidades, salto, fuerzas, la masa) no cambia.
-  Lo pidió el usuario al módulo Interior el 13/11/2026; el código es del módulo Meca. *El botón de cada perilla del F1
-  vuelve al valor del código, que es el de la caja de siempre.*
+- **Las sillas**: la **altura de los ojos** que buscan (m sobre el piso; cada uno se nivela a ella con el ajuste de su
+  arquetipo, como en character-parametric: `SeatInteractable.eye_height`) y su **distancia al vidrio** (celdas). *Hasta
+  el 13/11/2026 iban a 33 celdas de la pared del frente —lo que ocupaba el primer tablero, ya sacado, más el lugar hasta
+  la silla—, y con el vidrio que sobresale quedaban a casi 2 m del vidrio («muy retraídas para atrás»).*
+- **El cuerpo** (`MechBody.dress`), que **ya no depende de la caja** (el usuario: «prefiero que no dependa tanto de la
+  caja… tamaños discretos, chico, mediano, grande»):
+  - **Los hombros**: el **piso** (primero, del medio o último) y el **módulo del costado** (adelante, del medio o
+    atrás), a la mitad del alto de ese piso y en el medio de ese módulo. El del medio, si no hay uno justo en el medio,
+    es el de abajo (pisos) o el de adelante (módulos) de los dos del medio (`CabinGrid.pick`, `CabinGrid.shoulder`).
+  - **El largo de los brazos** y **el de las piernas**, por separado: chico, mediano (el de siempre) o grande (0,75, 1
+    y 1,25). El de los brazos estira también las posturas y las piñas; el de las piernas, el paso.
+  - **El ancho**, uno para brazos y piernas: el grosor de las piezas, las articulaciones, las manos, el puño, los pies,
+    las caderas y la pelvis.
+  - **Cuánto se estiran las piernas paradas** (de 0,45 a 0,9 del largo de la pierna, de la cadera al tobillo; 0,64 es
+    la de siempre): de ahí y de los largos sale la altura de la caja sobre el piso. El tope de arriba deja la rodilla
+    doblada: con la pierna derecha la cuenta de la rodilla no tiene para dónde doblar.
+  - Las toberas tienen su tamaño propio, el de siempre.
+  Test para mirar: `tests/mech_dress_look.tscn` (unos 40 s): cinco combinaciones, de costado y de frente, y las sillas.
 
 ## Qué va en cada piso (el caso de 4 jugadores)
 - **La planta baja es de servicio**: no tiene asientos ni controles fijos. Ahí van la munición, las baterías y los

@@ -53,7 +53,7 @@ func _init(body: BalanceBody, holder: Node3D) -> void:
 		for corner: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
 			var at := normal * half + (u * corner.x + v * corner.y) * half * SPREAD
 			_all.append({"at": at, "out": normal, "throttle": 0.0})
-	var k := MechBody.scale
+	var k := 1.0
 	var corner := half.x - SHOWN_INSET * k
 	for sx: float in [-1.0, 1.0]:
 		for sz: float in [-1.0, 1.0]:
@@ -61,7 +61,7 @@ func _init(body: BalanceBody, holder: Node3D) -> void:
 
 
 ## UNA TOBERA QUE SE VE, en la esquina `at` de abajo: la base ancha y baja pegada a la caja, la rótula que gira con la
-## campana corta y ancha, la llama y el humo. Del tamaño `k` (ver MechBody.scale).
+## campana corta y ancha, la llama y el humo. Del tamaño `k` (por ahora, siempre el mismo).
 func _build_shown(holder: Node3D, at: Vector3, k: float) -> Dictionary:
 	var steel := Color(0.3, 0.31, 0.34)
 	var base := Node3D.new()

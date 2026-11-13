@@ -1,14 +1,15 @@
 class_name CabinShapePanel
 extends TunerPanel
 
-## LA FORMA DE LA CABINA (F2 en las filas de la meca): cuántos módulos por lado, cuántos pisos, el alto de cada piso y
-## cuánto sobresale el vidrio del frente (ver CabinGrid.shape). Lo pidió el usuario el 13/11/2026 («un panel F que podamos usar en
+## LA FORMA DE LA MECA (F2 en sus filas): cuántos módulos por lado, cuántos pisos, el alto de cada piso, cuánto
+## sobresale el vidrio del frente, las sillas (la altura de los ojos y su distancia al vidrio) y el cuerpo (el piso y el
+## módulo de los hombros, el largo de brazos y piernas, el ancho y cuánto se estiran las piernas). Ver CabinGrid.apply. Lo pidió el usuario el 13/11/2026 («un panel F que podamos usar en
 ## cualquiera de las parcelas que tienen la meca… cambiar la cantidad de pisos y el tamaño de cada piso… tiene que tener
 ## botón de guardado, y si guardo algo… se va a actualizar en todas las mecas»).
 ##   · Los números se mueven sin rearmar nada: abajo dicen qué medidas salen.
 ##   · PROBAR rearma todas las mecas con esa forma, sin guardar (al reiniciar, vuelve la guardada).
 ##   · GUARDAR la escribe en `CabinGrid.SAVED` y rearma todas las mecas: es la forma de todas, también al reiniciar.
-## La planta es cuadrada y el alto, libre. Las piernas y los brazos van, por ahora, con el lado de la planta.
+## La planta es cuadrada y el alto, libre. Las piernas y los brazos no dependen de la caja.
 
 const PANEL_WIDTH := 380.0
 const LABELS := {
@@ -16,6 +17,14 @@ const LABELS := {
 	"floors": "pisos",
 	"floor_cells": "alto de cada piso, de losa a losa (celdas de 3,9 cm)",
 	"glass_out": "el vidrio sobresale (celdas de 3,9 cm)",
+	"eye_height": "sillas: altura de los ojos que buscan (m)",
+	"seat_gap": "sillas: distancia al vidrio (celdas)",
+	"arm_floor": "hombros: piso",
+	"arm_along": "hombros: módulo del costado",
+	"arm_length": "brazos: largo",
+	"leg_length": "piernas: largo",
+	"thickness": "brazos y piernas: ancho",
+	"leg_stretch": "piernas: cuánto se estiran paradas",
 }
 
 var _draft := CabinGrid.current()
@@ -24,7 +33,7 @@ var _state: Label = null
 
 func setup_panel() -> void:
 	panel_width = PANEL_WIDTH
-	setup("cabina", "FORMA DE LA CABINA", [
+	setup("cabina", "FORMA DE LA MECA", [
 		new_button("Probar en todas las mecas (sin guardar)", _try),
 		new_button("Guardar (la forma de todas las mecas)", _save),
 		new_button("Volver a lo guardado", _restore),
@@ -51,7 +60,7 @@ func _measure() -> void:
 
 
 func _try() -> void:
-	CabinGrid.shape(_draft.modules, _draft.floors, _draft.floor_cells, _draft.glass_out)
+	CabinGrid.apply(_draft)
 	_rebuild_mechs()
 	_measure()
 
@@ -67,10 +76,9 @@ func _save() -> void:
 
 func _restore() -> void:
 	var saved := load(CabinGrid.SAVED) as CabinShape if ResourceLoader.exists(CabinGrid.SAVED) else CabinShape.new()
-	_draft.modules = saved.modules
-	_draft.floors = saved.floors
-	_draft.floor_cells = saved.floor_cells
-	_draft.glass_out = saved.glass_out
+	for property in _draft.get_property_list():
+		if int(property["usage"]) & PROPERTY_USAGE_SCRIPT_VARIABLE:
+			_draft.set(property["name"], saved.get(property["name"]))
 	rebuild()
 	_try()
 

@@ -121,6 +121,8 @@ func _seats(index: int) -> void:
 		var chair := (load(SEAT_SCENE) as PackedScene).instantiate() as SeatInteractable
 		chair.name = "Asiento %d %s" % [index, "izquierdo" if side < 0.0 else "derecho"]
 		chair.position = CabinGrid.seat(index, side)
+		# La altura de los ojos que busca (ver CabinGrid.EYE_HEIGHT): cada uno se nivela a ella.
+		chair.eye_height = CabinGrid.EYE_HEIGHT
 		add_child(chair)
 		chairs.append(chair)
 
