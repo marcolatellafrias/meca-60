@@ -6,6 +6,10 @@ extends SeededArchetype
 
 const FOOTPRINT := 180.0
 const START := Vector3(0.0, 0.0, 30.0)
+## Las cajas para pegarles: cuántas, su lado (m) y lo que pesan (kg).
+const CRATES := 8
+const CRATE := 3.0
+const CRATE_MASS := 400.0
 
 
 func _init() -> void:
@@ -24,7 +28,7 @@ func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"la bola con su rendija, el cañón que corre por ella y cuatro tentáculos",
 		"más del doble de la meca; contra lo fijo es un cilindro, como el cubo cinemático",
-		"O poseerla · F1 las perillas",
+		"Shift hecha bola: rueda, dobla y pega a lo que toca (las cajas) · O poseerla · F1 las perillas · R las cajas de nuevo",
 		"poseída: WASD, el mouse gira y sube o baja el cañón, Ctrl se agacha, espacio salta (sólo para arriba)",
 		"clic izquierdo el tiro simple, clic derecho misiles del cielo uno tras otro",
 	])
@@ -50,4 +54,14 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	root.add_child(fixed)
 	Clay.solid(fixed, Vector3(20.0, 12.0, 40.0), Vector3(-45.0, 6.0, -10.0), Clay.METAL.lightened(0.2))
 	Clay.solid(fixed, Vector3(2.0, 16.0, 70.0), Vector3(50.0, 8.0, 0.0), Clay.METAL.lightened(0.1))
+	# LO SUELTO: una fila de cajas adelante, para pegarles rodando (la R las vuelve a poner).
+	var crates := Node3D.new()
+	crates.name = "Cajas"
+	root.add_child(crates)
+	for i in CRATES:
+		var crate := RigidBody3D.new()
+		crate.mass = CRATE_MASS
+		crate.position = Vector3((i - (CRATES - 1) * 0.5) * (CRATE + 2.0), CRATE * 0.5, -15.0)
+		crates.add_child(crate)
+		Clay.solid(crate, Vector3.ONE * CRATE, Vector3.ZERO, Clay.YELLOW.darkened(0.2 if i % 2 == 0 else 0.35))
 	return root

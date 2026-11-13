@@ -15,12 +15,15 @@ const LABELS := {
 	"barrage_count": "del cielo: cuántos", "barrage_gap": "del cielo: sale uno cada (s)",
 	"barrage_flight": "del cielo: tarda en caer (s)", "barrage_distance": "del cielo: el primero cae a (m)",
 	"barrage_spacing": "del cielo: cada uno más lejos (m)",
+	"fold_time": "se pliega o se abre en (s)", "roll_speed": "rodando: velocidad tope (m/s)",
+	"roll_accel": "rodando: gana por segundo (m/s²)", "roll_turn": "rodando: giro tope (°/s)",
+	"hit_min_speed": "pega desde (m/s)", "hit_push": "pega: le cambia la velocidad (m/s)",
 	"tentacle_length": "largo de cada tentáculo (m)", "spread": "el pie, a cuánto del centro (m)",
 	"step_radius": "un pie sale a más de (m)", "step_time": "el paso tarda (s)", "step_lift": "el pie sube (m)",
 }
 var _state: Label = null
 
-const TABS: Array[String] = ["Moverse", "Girar", "Saltar", "Agacharse", "Cañón", "Disparos", "Tentáculos"]
+const TABS: Array[String] = ["Moverse", "Girar", "Saltar", "Agacharse", "Cañón", "Disparos", "Bola", "Tentáculos"]
 
 
 func setup_panel() -> void:

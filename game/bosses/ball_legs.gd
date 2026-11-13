@@ -8,6 +8,7 @@ extends Node3D
 ##   · LOS PASOS VAN DE A DOS, EN DIAGONAL: cuando un pie quedó a más de `step_radius` de su lugar, sale con el de la
 ##     diagonal, en arco. El resto queda plantado: no se arrastra.
 ##   · EN EL AIRE cuelgan debajo de la bola; al caer, apoyan donde estén y los pasos los acomodan.
+##   · HECHA BOLA (`fold`, ver BallRoll) se meten adentro: la punta va hacia el centro y el tentáculo se acorta.
 
 ## Dónde salen de la bola: en diagonal (la pata 0 adelante a la derecha, y de ahí a la vuelta) y cuánto debajo del
 ## ecuador (grados).
@@ -43,13 +44,23 @@ static func direction(i: int) -> Vector3:
 
 ## LOS PONE en su lugar, sin pasos: al armarlo y cada vez que a la bola se la pone en otro lado.
 func place_now(k: BallBossSettings, center: Vector3, yaw: float, radius: float) -> void:
+	homes(k, center, yaw)
+	_draw(k, center, yaw, radius)
+
+
+## Cada pie a su lugar en el piso, sin dibujarlos: también al empezar a abrirse, para que salgan hacia ahí.
+func homes(k: BallBossSettings, center: Vector3, yaw: float) -> void:
 	_swinging = -1
 	for i in 4:
 		var foot := _feet[i]
 		foot["at"] = _ground(_home(k, center, yaw, i, Vector3.ZERO), center.y)
 		foot["yaw"] = yaw
 		foot["planted"] = true
-	_draw(k, center, yaw, radius)
+
+
+## PLEGÁNDOSE O ABRIÉNDOSE (`fold`, 0 a 1): los pies quedan donde están y los tentáculos se meten en la bola.
+func folded(k: BallBossSettings, center: Vector3, yaw: float, radius: float, fold: float) -> void:
+	_draw(k, center, yaw, radius, fold)
 
 
 ## UN PASO DE LA FÍSICA: `center` es el centro de la bola, `yaw` hacia dónde mira, `flat` su velocidad de costado.
@@ -125,12 +136,17 @@ func _ground(point: Vector3, from_y: float) -> Vector3:
 	return hit["position"]
 
 
-func _draw(k: BallBossSettings, center: Vector3, yaw: float, radius: float) -> void:
+func _draw(k: BallBossSettings, center: Vector3, yaw: float, radius: float, fold := 0.0) -> void:
 	var lat := deg_to_rad(ROOT_LATITUDE)
+	var eased := smoothstep(0.0, 1.0, fold)
 	for i in 4:
 		var side := Basis(Vector3.UP, yaw) * BallLegs.direction(i)
 		var normal := side * cos(lat) + Vector3.UP * sin(lat)
+		var root := center + normal * radius * 0.92
 		# Sale de la bola hacia afuera y un poco para arriba: así se arquea como una pata, no cuelga.
 		var out := (side + Vector3.UP * 0.5).normalized()
-		tentacles[i].pose(center + normal * radius * 0.92, out, _feet[i]["at"], float(_feet[i]["yaw"]),
-			k.tentacle_length)
+		# Plegándose, la punta va hacia adentro de la bola y el tentáculo se acorta con ella.
+		var tip: Vector3 = (_feet[i]["at"] as Vector3).lerp(center + normal * radius * 0.4, eased)
+		tentacles[i].visible = eased < 0.97
+		tentacles[i].pose(root, out, tip, float(_feet[i]["yaw"]),
+			lerpf(k.tentacle_length, radius * 0.4, eased))

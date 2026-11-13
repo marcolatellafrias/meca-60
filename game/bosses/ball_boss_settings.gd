@@ -46,6 +46,17 @@ static var current := KnobsFile.load_into(BallBossSettings.new(), SAVED) as Ball
 @export_range(10.0, 200.0, 1.0) var barrage_distance := 50.0
 @export_range(2.0, 40.0, 0.5) var barrage_spacing := 12.0
 
+@export_group("Bola")
+## HECHA BOLA (BallRoll): cuánto tarda en plegarse o abrirse (s); rodando, la velocidad tope (m/s), cuánto gana por
+## segundo (m/s²) y el giro tope (°/s).
+@export_range(0.1, 3.0, 0.05) var fold_time := 0.8
+@export_range(2.0, 60.0, 0.5) var roll_speed := 20.0
+@export_range(1.0, 60.0, 0.5) var roll_accel := 10.0
+@export_range(10.0, 360.0, 5.0) var roll_turn := 70.0
+## PEGA AL TOCAR: desde qué velocidad (m/s) y cuánto le cambia la velocidad a lo que toca, yendo a tope (m/s).
+@export_range(0.0, 20.0, 0.5) var hit_min_speed := 4.0
+@export_range(1.0, 60.0, 0.5) var hit_push := 16.0
+
 @export_group("Tentáculos")
 ## El largo de cada tentáculo (m) y a cuánto del centro, de costado, apoya su pie.
 @export_range(10.0, 80.0, 0.5) var tentacle_length := 24.0

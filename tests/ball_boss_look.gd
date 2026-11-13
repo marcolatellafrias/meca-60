@@ -135,6 +135,50 @@ func _ready() -> void:
 	await _wait(4.0)
 	print("del cielo: ", _blasts, " · salieron %d tiros en total" % _boss.cannon.fired)
 	_boss.aim_pitch = 0.0
+	# HECHA BOLA: se pliega, rueda contra las cajas, dobla y se abre.
+	_boss.put(Transform3D(Basis(), Vector3(0.0, 0.0, 40.0)))
+	await _wait(1.0)
+	_boss.curl = true
+	await _wait(0.4)
+	await _shot("plegándose: las patas se meten", _boss.global_position + Vector3(60, 20, 45),
+		_boss.global_position + Vector3.UP * 12)
+	await _wait(1.0)
+	print("hecha bola: centro a %.1f m, plegada %.2f" % [_boss.center_height, _boss.roll.fold])
+	await _shot("hecha bola", _boss.global_position + Vector3(60, 20, 45), _boss.global_position + Vector3.UP * 12)
+	var crates: Array[RigidBody3D] = []
+	for crate in _boss.get_parent().get_node("Cajas").get_children():
+		crates.append(crate as RigidBody3D)
+	_boss.move = Vector2(0, 1)
+	var fastest := 0.0
+	var crate_fastest := 0.0
+	clock = 0.0
+	var rolled_shot := false
+	while clock < 5.0:
+		await get_tree().physics_frame
+		clock += 1.0 / Engine.physics_ticks_per_second
+		fastest = maxf(fastest, Vector2(_boss.velocity.x, _boss.velocity.z).length())
+		for crate in crates:
+			crate_fastest = maxf(crate_fastest, crate.linear_velocity.length())
+		if not rolled_shot and _boss.roll.hits > 0:
+			rolled_shot = true
+			await _shot("rodando contra las cajas: pega al tocar", _boss.global_position + Vector3(70, 25, 10),
+				_boss.global_position + Vector3(0, 8, -15))
+	print("rodando: hasta %.1f m/s, pegó %d veces, la caja más rápida salió a %.1f m/s" % [fastest, _boss.roll.hits,
+		crate_fastest])
+	# Dobla con A/D.
+	var yaw_before := _boss.rotation.y
+	_boss.move = Vector2(1, 1)
+	await _wait(2.5)
+	print("doblando 2,5 s con D: giró %.0f°" % rad_to_deg(wrapf(_boss.rotation.y - yaw_before, -PI, PI)))
+	await _shot("rodando, doblando", _boss.global_position + Vector3(0, 60, 70), _boss.global_position)
+	_boss.move = Vector2.ZERO
+	await _wait(2.5)
+	_boss.curl = false
+	await _wait(0.5)
+	await _shot("abriéndose: las patas salen a su lugar", _boss.global_position + Vector3(60, 25, 50),
+		_boss.global_position + Vector3.UP * 12)
+	await _wait(1.5)
+	print("abierta: centro a %.1f m" % _boss.center_height)
 	# CONTRA LA PARED (en x = 50, de 2 m): camina de costado hacia ella.
 	_boss.put(Transform3D(Basis(), Vector3(20.0, 0.0, 0.0)))
 	await _wait(1.0)

@@ -78,12 +78,32 @@ Van por `ProjectileField` (por red, como los de la arena de esquivar), que es un
 - Medido: el simple, apuntando a −20°, pega en el edificio a 35 m; los del cielo caen a 50, 62, 74, 86 y 98 m.
 - Todavía no hace daño: empujan lo suelto, como los misiles de la arena.
 
+## Paso 4 (13/11/2026): hecha bola
+`BallRoll`. El usuario: las patas «se meten adentro», «puede doblar», Shift lo cambia, y «que haga daño al tocar».
+- **Shift** (`curl`) **se hace bola y otra vez se abre**. En 0,8 s, los tentáculos se acortan hacia adentro de la bola
+  y la bola baja hasta apoyarse; contra lo fijo, el cilindro pasa a ser del ancho de la bola. Al abrirse, los pies
+  salen hacia su lugar en el piso.
+- **Rueda sólo hecha bola del todo**:
+  - W acelera hasta 20 m/s, ganando 10 m/s por segundo;
+  - S frena, y va un poco para atrás;
+  - A/D y el mouse doblan, con su propio tope de giro (70°/s);
+  - la bola se ve girar según lo que avanza.
+  - El cañón rueda con ella y no dispara.
+- **Pega al tocar** (sin vida: todo es equilibrio): lo suelto que toca rodando a más de 4 m/s sale despedido, con un
+  cambio de velocidad de hasta 16 m/s según lo rápido que iba. Es `BalanceBody.hit`, así que a una meca su péndulo
+  decide si cae. A cada cosa le pega una vez por toque.
+- En la parcela hay **una fila de ocho cajas** de 3 m y 400 kg para pegarles; la **R** las vuelve a poner.
+- Todo en la pestaña **Bola** del F1.
+- Medido: plegada, el centro queda a 15 m (el radio); rueda hasta 20 m/s; contra las cajas pegó 10 veces y la más
+  rápida salió a 30 m/s; doblando 2,5 s con D giró 145°; abierta, vuelve a 20 m.
+
 ### Lo que falta o queda abierto
 - Los tentáculos atraviesan lo fijo: el cilindro sólo cubre la bola, y un tentáculo puede cruzar una pared baja para
   apoyar del otro lado.
 - Los pies no tienen choque: no patean ni achatan lo suelto, como hacen los del cubo.
-- Lo próximo, acordado con el usuario: **moverse hecha bola** (que también pegue) y **pegar con las paletas de los
-  tentáculos**.
+- Lo próximo, acordado con el usuario: **pegar con las paletas de los tentáculos**.
+- Hecha bola, el cañón sobresale y rueda con ella: falta ver si se mete.
+- Contra lo fijo sólo choca el cilindro, así que puede salirse de la parcela rodando.
 - Ideas del usuario para más adelante:
   - disparos cargados, rayos;
   - dos cañoncitos al costado.

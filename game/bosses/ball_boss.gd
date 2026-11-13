@@ -13,6 +13,7 @@ extends CharacterBody3D
 ##   · MOVERSE: una velocidad y el tiempo para llegar a ella. En el aire no se mueve de costado.
 ##   · GIRAR: con tope de velocidad y de aceleración.
 ##   · SALTAR (espacio): sólo para arriba.
+##   · HECHA BOLA (Shift, ver BallRoll): mete las patas, baja y rueda; dobla y pega al tocar.
 ##   · AGACHARSE (Ctrl): SÓLO BAJA LA BOLA; los tentáculos se doblan solos (el usuario: «lo único que hace en realidad es
 ##     bajar la bola, porque el IK de los tentáculos es como que actúa solo»).
 ## Es MÁS DEL DOBLE DE LA MECA («quiero que sea más grande que la meca… por lo menos el doble»): la bola mide 30 m y su
@@ -39,6 +40,8 @@ var aim_yaw := 0.0
 var aim_pitch := 0.0
 ## Los tiros (de a un toque): el simple, derecho adonde apunta, y los del cielo, uno tras otro (ver BallCannon).
 var fire := false
+## Hecha bola (ver BallRoll): mete las patas y rueda. Poseída, Shift lo cambia.
+var curl := false
 var barrage := false
 
 ## ── LO QUE MIDE ──
@@ -48,11 +51,14 @@ var crouched := 0.0
 var center_height := 20.0
 var legs: BallLegs = null
 var cannon: BallCannon = null
+var roll := BallRoll.new()
 
 var _yaw := 0.0
 var _yaw_speed := 0.0
 var _jump_was := false
 var _fire_was := false
+var _shift_was := false
+var _was_rolling := false
 var _barrage_was := false
 var _cylinder := CylinderShape3D.new()
 var _holder: CollisionShape3D = null
@@ -123,26 +129,40 @@ func _physics_process(delta: float) -> void:
 	var k := BallBossSettings.current
 	_read()
 	crouched = move_toward(crouched, 1.0 if crouch else 0.0, k.crouch_rate * delta)
-	_fit(k)
 	grounded = is_on_floor()
-	var flat_now := _walk(k, delta)
+	var heading := Basis(Vector3.UP, _yaw) * Vector3.FORWARD
+	var rolled := roll.step(k, delta, curl, move.y, heading)
+	_fit(k)
+	var flat_now := rolled if roll.fold > 0.0 else _walk(k, delta)
 	velocity = Vector3(flat_now.x, _rise(k, delta), flat_now.z)
 	_jump_was = jump
-	_turn(k, delta)
+	if roll.rolling():
+		# Rodando, A/D doblan (y el mouse, como siempre).
+		aim_yaw -= move.x * deg_to_rad(k.roll_turn) * delta
+	_turn(k, delta, k.roll_turn if roll.fold > 0.0 else k.turn_speed)
 	rotation.y = _yaw
 	move_and_slide()
 	grounded = is_on_floor()
 	var flat := get_real_velocity()
 	flat.y = 0.0
+	roll.turn_ball(flat, RADIUS, delta)
 	_ball.global_transform = _ball_place()
+	roll.strike(k, get_world_3d().direct_space_state, _ball_place().origin, RADIUS, flat)
 	cannon.step(k, aim_pitch, delta)
-	if fire and not _fire_was:
+	if fire and not _fire_was and roll.fold <= 0.0:
 		cannon.shoot(k)
-	if barrage and not _barrage_was:
+	if barrage and not _barrage_was and roll.fold <= 0.0:
 		cannon.barrage(k, _barrage_targets(k))
 	_fire_was = fire
 	_barrage_was = barrage
-	legs.step(k, delta, _ball_place().origin, _yaw, flat, grounded, RADIUS)
+	if roll.fold <= 0.0:
+		legs.step(k, delta, _ball_place().origin, _yaw, flat, grounded, RADIUS)
+	else:
+		# Al empezar a abrirse, los pies salen hacia su lugar en el piso.
+		if _was_rolling and not roll.rolling():
+			legs.homes(k, _ball_place().origin, _yaw)
+		legs.folded(k, _ball_place().origin, _yaw, RADIUS, roll.fold)
+	_was_rolling = roll.rolling()
 
 
 func _walk(k: BallBossSettings, delta: float) -> Vector3:
@@ -163,21 +183,25 @@ func _rise(k: BallBossSettings, delta: float) -> float:
 	return velocity.y - 2.0 * k.jump_height / (k.jump_time * k.jump_time) * delta
 
 
-## La altura del centro (parado o agachado) y el cilindro, del piso a lo alto de la bola.
+## La altura del centro (parado, agachado o hecha bola) y el cilindro, del piso a lo alto de la bola: hecha bola, del
+## ancho de la bola.
 func _fit(k: BallBossSettings) -> void:
-	center_height = lerpf(k.stand_height, k.crouch_height, smoothstep(0.0, 1.0, crouched))
+	var standing := lerpf(k.stand_height, k.crouch_height, smoothstep(0.0, 1.0, crouched))
+	var eased := smoothstep(0.0, 1.0, roll.fold)
+	center_height = lerpf(standing, RADIUS, eased)
+	_cylinder.radius = lerpf(REACH, RADIUS, eased)
 	_cylinder.height = center_height + RADIUS
 	_holder.position.y = _cylinder.height * 0.5
 
 
 func _ball_place() -> Transform3D:
-	return Transform3D(Basis(Vector3.UP, _yaw), global_position + Vector3.UP * center_height)
+	return Transform3D(Basis(roll.spin) * Basis(Vector3.UP, _yaw), global_position + Vector3.UP * center_height)
 
 
-func _turn(k: BallBossSettings, delta: float) -> void:
+func _turn(k: BallBossSettings, delta: float, top_speed: float) -> void:
 	var error := clampf(wrapf(aim_yaw - _yaw, -PI, PI), -PI * 0.6, PI * 0.6)
 	aim_yaw = _yaw + error
-	var top := deg_to_rad(k.turn_speed)
+	var top := deg_to_rad(top_speed)
 	_yaw_speed = move_toward(_yaw_speed, clampf(error * 4.0, -top, top), deg_to_rad(k.turn_accel) * delta)
 	_yaw += _yaw_speed * delta
 
@@ -219,6 +243,10 @@ func _read() -> void:
 	move = Vector2(MechKeys.axis(KEY_D, KEY_A), MechKeys.axis(KEY_W, KEY_S))
 	crouch = Input.is_physical_key_pressed(KEY_CTRL)
 	jump = Input.is_physical_key_pressed(KEY_SPACE)
+	var shift := Input.is_physical_key_pressed(KEY_SHIFT)
+	if shift and not _shift_was:
+		curl = not curl
+	_shift_was = shift
 	var aiming := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
 	fire = aiming and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
 	barrage = aiming and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
@@ -243,12 +271,14 @@ func possess_controls() -> PackedStringArray:
 		"mouse arriba y abajo: el cañón corre por la rendija (da la vuelta entera)",
 		"clic izquierdo: el tiro simple, adonde apunta · clic derecho: misiles del cielo, uno tras otro",
 		"Ctrl se agacha (baja la bola) · espacio salta (sólo para arriba)",
+		"Shift: hecha bola (las patas adentro) y otra vez se abre · rodando: W acelera, S frena, A/D y el mouse doblan",
 	])
 
 
 func possess_status() -> String:
-	return "%.1f m/s · centro a %.1f m%s · %d pasos · cañón a %.0f°" % [Vector2(velocity.x, velocity.z).length(),
-		center_height, "" if grounded else " · en el aire", legs.steps, rad_to_deg(cannon.pitch)]
+	return "%.1f m/s · centro a %.1f m%s · %d pasos · cañón a %.0f°%s" % [Vector2(velocity.x, velocity.z).length(),
+		center_height, "" if grounded else " · en el aire", legs.steps, rad_to_deg(cannon.pitch),
+		(" · hecha bola, pegó %d" % roll.hits) if roll.fold > 0.0 else ""]
 
 
 func possess_begin() -> void:
@@ -263,6 +293,7 @@ func possess_end() -> void:
 	jump = false
 	fire = false
 	barrage = false
+	_shift_was = false
 
 
 func possess_camera(first: bool, delta: float) -> Transform3D:
