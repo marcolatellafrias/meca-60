@@ -29,6 +29,7 @@ func _ready() -> void:
 	for i in range(-40, 41):
 		Clay.box(ground, Vector3(600, 0.02, 0.2), Vector3(0, 0.0, i * 5.0), Color(0.7, 0.68, 0.64))
 		Clay.box(ground, Vector3(0.2, 0.02, 600), Vector3(i * 5.0, 0.0, 0), Color(0.7, 0.68, 0.64))
+	PhysicsLayers.mark_fixed(ground)
 	add_child(ground)
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-50.0, 205.0, 0.0)

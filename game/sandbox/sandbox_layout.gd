@@ -224,4 +224,6 @@ static func _ground(parent: Node3D, built: Array[Dictionary]) -> void:
 	shape.shape = box
 	shape.position.y = -0.5
 	ground.add_child(shape)
+	# Lo fijo del mundo (ver PhysicsLayers.FIXED): contra esto frena lo que se mueve con el controlador de personaje.
+	PhysicsLayers.mark_fixed(ground)
 	parent.add_child(ground)

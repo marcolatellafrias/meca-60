@@ -7,46 +7,35 @@ interacción de cinemático con físico… vamos por partes. Primero definimos c
 hacemos que funcione con paquetes y con el giro».
 
 ## Qué hay
-- **El cubo** (`KinematicPillar`): una caja de 6 × 12 × 6 m sobre dos pies (piernas de 6 m), cinemática y poseíble con la O.
-  - Se mueve con WASD, gira con el mouse (con tope de velocidad y de aceleración), salta con espacio y hace dash con
-    Shift. **No corre**: para esquivar está el dash.
-  - **Moverse, lo más simple** (el usuario: «quiero dejar el sistema lo más simple que se pueda… que sea una sola
-    velocidad»): una velocidad y el **tiempo para llegar** a ella, el mismo para arrancar y frenar (0: al instante), y
-    cuánto se controla en el aire.
-  - **Cuatro configuraciones de un toque**, botones arriba del F1: Instantánea (por defecto), Casi instantánea (0,15 s),
-    Pesada (6 m/s, 0,6 s, medio control en el aire) y Sin control en el aire. Cada botón **escribe** las perillas; lo que
-    manda son las perillas.
-  - **Con movimiento instantáneo, el dash dura lo que dura `dash_hold`**: después la velocidad vuelve de golpe a la
-    pedida. Con 0,25 s lo corre 6,9 m, en el piso y en el aire.
-  - Con Ctrl se agacha: su alto baja de a poco hasta el 60 %. No se para si algo que lo frena está encima.
-  - Lo fijo siempre lo frena.
-  - Las perillas están en el F1 (`PillarSettings`).
-- **La locomoción de la meca futura** se prueba con el cubo (el usuario: «empezar a trabajar en todo lo de locomoción de
-  la meca futura, pero con este cubo»):
-  - **El dash, con Shift** (era la Q mientras Shift corría): un impulso hacia donde apretás, el mismo en el piso y en el aire. **Sin dirección no pasa
-    nada.** Tiene su barra, que se llena sola.
-  - **Lo que hace de roce**: el cubo no tiene fricción con el piso. Lo frena moverse, que lleva la velocidad a la
-    pedida. Por eso, durante `dash_hold` (0,25 s) después del dash, moverse no lo frena.
-  - **El vuelo**: en el aire, espacio otra vez empuja para arriba mientras quede su barra, que se llena apoyado. Las dos
-    barras son separadas, y se ven en el cartel de poseer, abajo a la derecha.
-  - **Las toberas** (`PillarNozzles`), de placeholder: cuatro abajo que echan al volar, y cuatro a los costados que
-    echan un fogonazo del lado contrario al dash.
-  - **El F1 tiene pestañas**: Moverse, Girar, Saltar y volar, Dash, Agacharse y Con lo suelto.
-  - Medido (`kinematic_lab_moves_look`), con el movimiento de antes (arrancar y frenar con tope): el dash en el piso
-    lo corría 21,6 m y en lo alto de un salto 29,4 m. Sin dirección no hace nada. Volando con la barra entera sube hasta 34 m en 2 s.
-- **Con qué choca cada cosa** (13/11/2026, lo charlado con el usuario):
+- **El cubo** (`KinematicPillar`): una caja de 6 × 12 × 6 m sobre dos pies (piernas de 6 m), poseíble con la O.
+- **Lo mueve el controlador de personaje del motor** (`CharacterBody3D`, `move_and_slide`): se le da una velocidad, y él
+  frena y se desliza contra paredes y esquinas, sabe si está en el piso y se sale solo si queda metido en algo. El
+  usuario: «un sistema simple, barebones, sólido y que use las cosas del motor, y no reglas inventadas».
+- **Con qué choca cada cosa:**
   - **Contra lo fijo del mundo** (edificios, paredes, el piso), **un cilindro** de 4,6 m de radio, más grande que el
-    cubo, del piso al techo. Girar nunca lo traba y en las esquinas se desliza. Se prueba sólo contra lo fijo: lo
-    suelto no lo frena nunca. En la parcela hay un edificio y una pared larga para probarlo.
-  - **Contra lo suelto, lo que se ve, por el motor y sin reglas extra**: la caja de arriba empuja lo alto, y **los pies**
-    (`PillarFeet`), que tienen choque de verdad, **patean** de costado.
+    cubo, del piso al techo. Es la forma del `CharacterBody3D`, y mira **sólo la capa de lo fijo**
+    (`PhysicsLayers.FIXED`, la 17). A él no lo ve nadie: no es un campo de fuerza para lo suelto ni para la
+    tripulación. En la parcela hay un edificio y una pared larga para probarlo.
+  - **Contra lo suelto, lo que se ve, por el motor y sin reglas extra**: la caja de arriba (un `AnimatableBody3D` que lo
+    sigue) empuja lo alto, y **los pies** (`PillarFeet`), que tienen choque de verdad, **patean** de costado.
   - **Lo que queda debajo de algo suyo que baja se achata** (un pie, o la caja al agacharse o al caer): suena, larga polvo
-    y desaparece. No se aprieta contra el piso: eso era lo que hacía explotar al motor. Para un pie, «debajo» es más
-    abajo que su medio. **Los personajes todavía no se achatan**: falta ver cómo muere uno.
+    y desaparece. Es una regla del juego, no un parche de la física. **Los personajes todavía no se achatan**: falta ver
+    cómo muere uno.
   - **Entre los pies queda libre.**
-  - *Las cuatro reglas a mano que se probaron antes (Jolt puro, topadora con tope, atraviesa y empuja, lo suelto lo
-    frena) se sacaron. La del tope arrastraba las cajas como un imán y las hacía saltar con el cubo: medía la velocidad
-    de la caja respecto del cubo, y un cubo que se aleja es lo mismo que una caja que se aleja.*
+- **El movimiento es discreto, en metros y segundos** (el usuario: «pasar más a como funciona un character normal en un
+  juego… movimiento más discreto y menos físico», para probar jefes; puede que más adelante vuelva algo de física
+  encima):
+  - **Moverse:** una velocidad y el tiempo para llegar a ella (0: al instante). Sin correr. **En el aire no se mueve de
+    costado.** Tres configuraciones de un toque arriba del F1: Instantánea, Casi instantánea y Pesada.
+  - **Girar:** con el mouse, con tope de velocidad y de aceleración.
+  - **Saltar (espacio):** sólo para arriba. Sube tantos metros en tanto tiempo; la gravedad sale de esos dos números.
+  - **Volar (espacio otra vez, en el aire):** sube a una velocidad fija mientras quede su barra, que se llena apoyado.
+  - **Dash (Shift, con una dirección):** tantos metros en tanto tiempo, en línea recta, en el piso y en el aire.
+    Mientras dura no lo afectan ni las teclas ni la gravedad. **Sin dirección no pasa nada.** Su barra se llena sola.
+  - **Agacharse (Ctrl):** las piernas se acortan de a poco.
+  - **Las toberas** (`PillarNozzles`), de placeholder: cuatro abajo al volar y cuatro a los costados en el dash.
+  - Las dos barras se ven en el cartel de poseer. El F1 tiene pestañas: Moverse, Girar, Saltar y volar, Dash,
+    Agacharse y Pies.
 - **La K elige las cajas, una configuración por vez:**
   1. Chicas y livianas sueltas (60 cm, 30 kg).
   2. Una pila alta de medianas (1,6 m, 300 kg).
@@ -54,23 +43,28 @@ hacemos que funcione con paquetes y con el giro».
   4. Una pared de medianas.
 - **La N**: una lluvia de seis cajas de la configuración de ahora, encima del cubo.
 
-## Lo medido (13/11/2026, `kinematic_lab_look`)
+## Lo medido (13/11/2026, `kinematic_lab_look` y `kinematic_lab_moves_look`)
 El cubo camina a 8 m/s entre las cajas, salta, se agacha y se para. Se mide la caja que sale más rápido **de costado**
 (lo que gana cayendo no cuenta).
 
 | Cajas | La más rápida de costado | Achatadas |
 |---|---|---|
-| Chicas y livianas | 9,0 m/s | 13 de 42 |
-| Una pila alta de medianas | 29,7 m/s | 7 de 24 |
+| Chicas y livianas | 9 m/s | 13 de 42 |
+| Una pila alta de medianas | 34 m/s | 3 de 24 |
 | Autos | ninguno se movió de costado | 2 de 6 |
-| Una pared de medianas | 23,0 m/s | 6 de 40 |
+| Una pared de medianas | 36 m/s | 5 de 40 |
 
-- **Las patadas**: lo chico sale más o menos a la velocidad del cubo; las medianas, hasta 30 m/s, casi cuatro veces.
-  Un pie recorre su paso en 0,3 s, así que va bastante más rápido que el cubo.
-- **La lluvia encima**: nada sale de costado a más de 8,2 m/s. No acható ninguna (caen sobre el techo).
-- **Contra lo fijo**: el eje del cubo queda a 4,61 m del edificio y de la pared (el radio del cilindro); pegado al
+- **Las patadas**: lo chico sale más o menos a la velocidad del cubo; las medianas, hasta 36 m/s, más de cuatro veces.
+  Un pie recorre su paso en 0,3 s, así que va bastante más rápido que el cubo. **Falta decidir qué hacer con esto.**
+- **La lluvia encima**: nada sale de costado a más de 9,5 m/s. No acható ninguna (caen sobre el techo).
+- **Contra lo fijo**: el eje del cubo queda a 4,60 m del edificio y de la pared (el radio del cilindro); pegado al
   edificio gira los 180° enteros; yendo en diagonal contra la pared se desliza 17 m a lo largo.
-- El cubo nunca se frena con lo suelto: avanza lo mismo (49 m) con cualquier configuración.
+- **Arrancando 5 cm metido** en el edificio y caminando contra él, el motor lo saca: queda a 4,60 m. Con el «pruebo y
+  deslizo» a mano lo atravesaba entero.
+- **Forcejeando 6 s contra la esquina** del edificio, cambiando de costado y girando: lo más que se mete es 1,7 cm y no
+  pasa. El paso de física más lento, 4,7 ms.
+- **El dash** recorre 12,6 m en el piso y 12,1 m en lo alto de un salto (la perilla dice 12). Sin dirección no hace
+  nada. **Volando** con la barra entera sube hasta 23 m.
 
 ## Lo que encontré armándolo
 Con la física sincronizada, poner la posición del cuerpo desde afuera no alcanza: el cuerpo la pisa con la suya. Por eso
@@ -86,3 +80,7 @@ el cubo guarda dónde está y se lo pone con `put`.
   caja a 500 m/s con el cubo quieto). Las viejas se sacan antes y las chicas van en una grilla.
 - **Saltear lo suelto de a uno con pocas vueltas** hacía que una pila de más cajas que vueltas frenara al cubo como una
   pared.
+- **Un «pruebo y deslizo» escrito a mano pelea con el motor.** El cubo era un `AnimatableBody3D` (va adonde se lo pone y
+  nada lo frena) con su propia prueba de movimiento. La prueba era ciega a lo que ya tenía encimado: en una esquina
+  quedaba 1 cm adentro y de ahí atravesaba el edificio. Y para saltear lo suelto daba hasta 256 vueltas por movimiento,
+  que bajaba los FPS. Con `CharacterBody3D` y la capa de lo fijo, las dos cosas desaparecen.

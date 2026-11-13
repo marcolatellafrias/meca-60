@@ -44,9 +44,10 @@ func max_footprint() -> Vector2:
 
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
-		"EXPERIMENTO: un cubo cinemático sobre dos pies; contra lo fijo es un cilindro, los pies patean y achatan",
+		"EXPERIMENTO: un cubo sobre dos pies, movido por el controlador de personaje del motor",
+		"contra lo fijo es un cilindro; los pies patean y achatan lo suelto",
 		"K las cajas · N lluvia de cajas encima · O poseerlo · F1 las perillas",
-		"poseído: WASD, mouse gira, Shift dash, Ctrl se agacha, espacio salta y, en el aire, vuela",
+		"poseído: WASD, mouse gira, Shift dash, Ctrl se agacha, espacio salta (sólo para arriba) y, en el aire, vuela",
 	])
 
 
@@ -61,6 +62,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	# LO FIJO: un edificio a la izquierda y una pared larga a la derecha.
 	var fixed := StaticBody3D.new()
 	fixed.name = "Fijo"
+	PhysicsLayers.mark_fixed(fixed)
 	root.add_child(fixed)
 	Clay.solid(fixed, Vector3(12.0, 26.0, 12.0), Vector3(-24.0, 13.0, 6.0), Clay.METAL.lightened(0.2))
 	Clay.solid(fixed, Vector3(2.0, 14.0, 40.0), Vector3(24.0, 7.0, 4.0), Clay.METAL.lightened(0.1))

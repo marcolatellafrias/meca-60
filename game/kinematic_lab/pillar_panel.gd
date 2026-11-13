@@ -7,12 +7,11 @@ extends TunerPanel
 const PANEL_WIDTH := 400.0
 const LABELS := {
 	"walk_speed": "velocidad (m/s)", "reach_time": "tiempo para llegar a ella y para frenar (s; 0: al instante)",
-	"air_control": "en el aire, cuánto se controla (parte)",
 	"turn_speed": "velocidad tope (°/s)", "turn_accel": "aceleración tope (°/s²)",
-	"jump_height": "salto (m)", "air_gravity": "en el aire pesa (veces)",
-	"thrust": "vuelo: empuje (m/s²)", "thrust_time": "vuelo: la barra dura (s)",
-	"thrust_refill": "vuelo: se llena apoyado en (s)",
-	"dash_speed": "suma (m/s)", "dash_lift": "en el aire, sube a (m/s)", "dash_hold": "un rato sin frenar (s)",
+	"jump_height": "salto: sube (m)", "jump_time": "salto: tarda en subir (s)",
+	"fly_speed": "vuelo: sube a (m/s)", "fly_time": "vuelo: la barra dura (s)",
+	"fly_refill": "vuelo: se llena apoyado en (s)",
+	"dash_distance": "recorre (m)", "dash_time": "en (s)",
 	"dash_cost": "gasta de la barra (parte)", "dash_refill": "la barra se llena en (s)",
 	"crouch_share": "agachado: pierna que queda (parte)", "crouch_rate": "ritmo (partes por s)",
 	"leg_height": "alto de las piernas (m)", "stance": "separación de los pies, del medio (m)",
@@ -23,13 +22,12 @@ const TABS: Array[String] = ["Moverse", "Girar", "Saltar y volar", "Dash", "Agac
 
 
 ## LAS CONFIGURACIONES DE UN TOQUE (el usuario: «quiero probar varias combinaciones… pero no un millón de opciones…
-## pensá configuraciones posibles»): cada botón ESCRIBE las tres perillas de moverse; lo que manda son las perillas
+## pensá configuraciones posibles»): cada botón ESCRIBE las dos perillas de moverse; lo que manda son las perillas
 ## (después se ajustan a mano).
 const PRESETS := [
-	{"name": "Instantánea", "walk_speed": 8.0, "reach_time": 0.0, "air_control": 1.0},
-	{"name": "Casi instantánea", "walk_speed": 8.0, "reach_time": 0.15, "air_control": 1.0},
-	{"name": "Pesada", "walk_speed": 6.0, "reach_time": 0.6, "air_control": 0.5},
-	{"name": "Sin control en el aire", "walk_speed": 8.0, "reach_time": 0.0, "air_control": 0.0},
+	{"name": "Instantánea", "walk_speed": 8.0, "reach_time": 0.0},
+	{"name": "Casi instantánea", "walk_speed": 8.0, "reach_time": 0.15},
+	{"name": "Pesada", "walk_speed": 6.0, "reach_time": 0.6},
 ]
 
 
@@ -42,7 +40,7 @@ func setup_panel() -> void:
 
 
 func _apply(preset: Dictionary) -> void:
-	for name: String in ["walk_speed", "reach_time", "air_control"]:
+	for name: String in ["walk_speed", "reach_time"]:
 		PillarSettings.current.set(name, preset[name])
 	rebuild()
 

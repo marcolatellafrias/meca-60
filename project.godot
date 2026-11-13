@@ -113,6 +113,7 @@ interact={
 3d_physics/layer_13="Rampa"
 3d_physics/layer_14="Escalones"
 3d_physics/layer_16="Borde de parcela"
+3d_physics/layer_17="Fijo del mundo"
 
 [steam]
 

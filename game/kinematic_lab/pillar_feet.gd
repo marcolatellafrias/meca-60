@@ -68,14 +68,6 @@ func place_now(k: PillarSettings, place: Vector3, yaw: float) -> void:
 		body.sync_to_physics = true
 
 
-## Los cuerpos de los pies (para que el cubo no los cuente como obstáculo).
-func rids() -> Array[RID]:
-	var out: Array[RID] = []
-	for foot in _feet:
-		out.append((foot["body"] as AnimatableBody3D).get_rid())
-	return out
-
-
 ## UN PASO DE LA FÍSICA: `place` es el punto del piso bajo el cubo (o adonde llegaría, en el aire), `yaw` hacia dónde
 ## mira, `flat` su velocidad de costado, `grounded` si está apoyado y `hip` la altura de la cara de abajo del cubo.
 func step(k: PillarSettings, delta: float, place: Vector3, yaw: float, flat: Vector3, grounded: bool, hip: float) -> void:

@@ -23,3 +23,16 @@ const FEET := 1 << 13
 const PARCEL_BOUND := 1 << 15
 
 ## *La 12 era la de lo que llevaba al ente (RIDE) hasta el 03/11/2026: la reemplazó la del Marco (MotionFrame.LAYER).*
+
+## ── LO FIJO DEL MUNDO (13/11/2026, el usuario: «lo de las capas me parece bien… es como los juegos lidian con estos
+## casos usualmente») ────────────────────────────────────────────────────────────────────────────────────────────────
+## FIXED (17, "Fijo del mundo"): el piso, los edificios, las paredes: lo que no se mueve nunca. La mira lo que se mueve
+## con el controlador de personaje del motor y SÓLO tiene que frenar contra el mundo (el cilindro de la meca cinemática,
+## ver KinematicPillar): así no hay que distinguir a mano lo fijo de lo suelto. Lo fijo va ADEMÁS en su capa de siempre
+## (`mark_fixed` le suma ésta): nada de lo que ya lo veía deja de verlo.
+const FIXED := 1 << 16
+
+
+## Marca `body` como fijo del mundo (ver FIXED), además de las capas que ya tenga.
+static func mark_fixed(body: CollisionObject3D) -> void:
+	body.collision_layer |= FIXED

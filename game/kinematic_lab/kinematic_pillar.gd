@@ -1,37 +1,44 @@
 class_name KinematicPillar
-extends AnimatableBody3D
+extends CharacterBody3D
 
-## EL CUBO CINEMÁTICO (13/11/2026) — EXPERIMENTO: una caja sobre dos pies, cinemática, para probar por separado CÓMO SE
-## LLEVA LO CINEMÁTICO CON LO FÍSICO y la locomoción de la meca futura, sin la cabina, el ascensor ni el péndulo. El
-## usuario: «un cubo alargado… y así yo pruebo los distintos approaches de interacción de cinemático con físico… vamos
-## por partes»; «empezar a trabajar en todo lo de locomoción de la meca futura, pero con este cubo».
+## EL CUBO CINEMÁTICO (13/11/2026) — EXPERIMENTO: una caja sobre dos pies, para probar por separado CÓMO SE LLEVA LO
+## CINEMÁTICO CON LO FÍSICO y la locomoción de la meca futura, sin la cabina, el ascensor ni el péndulo. El usuario: «un
+## cubo alargado… y así yo pruebo los distintos approaches de interacción de cinemático con físico… vamos por partes»;
+## «un sistema simple, barebones, sólido y que use las cosas del motor, y no reglas inventadas».
 ##
-## SE MUEVE A MANO: Jolt no lo mueve; cada paso se pone donde calculó (el motor sabe su velocidad).
-##   · MOVERSE: una velocidad y el tiempo para llegar a ella (PillarSettings). Sin correr.
-##   · GIRAR: con tope de velocidad y de aceleración. NADA LO TRABA al girar: contra el mundo es un cilindro.
-##   · EL DASH (Shift): un impulso hacia donde apretás, en el piso y en el aire, el mismo. SIN DIRECCIÓN NO PASA NADA.
-##     Tiene su barra, que se llena sola. Un rato (`dash_hold`) moverse no lo frena.
-##   · SALTAR (espacio) y EL VUELO (espacio otra vez, en el aire): empuja para arriba mientras le quede su barra, que se
-##     llena apoyado.
+## LO MUEVE EL CONTROLADOR DE PERSONAJE DEL MOTOR (CharacterBody3D, `move_and_slide`): se le da una velocidad y él frena
+## y se desliza contra paredes y esquinas, sabe si está en el piso y se sale solo si queda metido en algo. *Hasta el
+## 13/11/2026 era un AnimatableBody3D —que va adonde se lo pone y nada lo frena— con un «pruebo y deslizo» escrito a
+## mano: la prueba era ciega a lo que ya tenía encimado, en una esquina quedaba un centímetro adentro y de ahí en más
+## atravesaba el edificio; y para saltear lo suelto daba hasta 256 vueltas por movimiento (bajaban los FPS). El usuario:
+## «¿estamos peleando con el motor de Godot?». Sí.*
+##
+## CON QUÉ CHOCA CADA COSA (lo charlado con el usuario):
+##   · CONTRA LO FIJO DEL MUNDO (edificios, paredes, el piso), UN CILINDRO más grande que el cubo, del piso al techo:
+##     es la forma de este cuerpo, y mira SÓLO LA CAPA DE LO FIJO (PhysicsLayers.FIXED). «Para los obstáculos del
+##     mundo… va a ser cilíndrica la hitbox. Así evitamos que se trabe con cosas cuando gira». A él no lo ve nadie: no es
+##     un campo de fuerza para lo suelto ni para la tripulación.
+##   · CONTRA LO SUELTO, LO QUE SE VE, por el motor y sin reglas extra: la caja de arriba (un AnimatableBody3D que lo
+##     sigue) empuja lo alto, y LOS PIES (PillarFeet) patean de costado.
+##   · LO QUE QUEDA DEBAJO de algo suyo que baja (un pie, o la caja al agacharse o al caer) SE ACHATA, no se aprieta:
+##     apretar algo suelto contra el piso con algo que pesa infinito era lo que hacía explotar al motor. Es una regla del
+##     juego («si pisan algo, lo rompen y lo achatan»), no un parche de la física.
+##
+## EL MOVIMIENTO ES DISCRETO, EN METROS Y SEGUNDOS (PillarSettings; el usuario: «pasar más a como funciona un character
+## normal en un juego… movimiento más discreto y menos físico», para probar jefes; *puede que más adelante vuelva algo de
+## física encima —inercia—: por eso todo pasa por `velocity`, que es donde se sumaría*):
+##   · MOVERSE: una velocidad y el tiempo para llegar a ella. Sin correr. En el aire no se mueve de costado.
+##   · GIRAR: con tope de velocidad y de aceleración.
+##   · SALTAR (espacio): sólo para arriba; sube tantos metros en tanto tiempo.
+##   · EL VUELO (espacio otra vez, en el aire): sube a una velocidad fija mientras le quede su barra.
+##   · EL DASH (Shift, con una dirección): tantos metros en tanto tiempo, en línea recta, en el piso y en el aire. SIN
+##     DIRECCIÓN NO PASA NADA. Tiene su barra, que se llena sola.
 ##   · AGACHARSE (Ctrl): las piernas se acortan de a poco y el cubo baja.
 ##   · LAS TOBERAS (PillarNozzles): placeholder, sólo se ven.
-##
-## CON QUÉ CHOCA CADA COSA (13/11/2026, lo charlado con el usuario):
-##   · CONTRA LO FIJO DEL MUNDO (edificios, paredes, el piso), UN CILINDRO más grande que el cubo, del piso al techo:
-##     «para los obstáculos del mundo… va a ser cilíndrica la hitbox. Así evitamos que se trabe con cosas cuando gira».
-##     Sólo se prueba contra lo fijo: lo suelto no lo frena nunca.
-##   · CONTRA LO SUELTO, LO QUE SE VE, por el motor y sin reglas extra: la caja de arriba empuja lo alto, y LOS PIES
-##     (PillarFeet) patean de costado y ACHATAN lo que pisan. *Se probaron cuatro reglas a mano (una «topadora con tope»,
-##     entre ellas): la del tope arrastraba las cajas como un imán y las hacía saltar con el cubo —medía la velocidad de
-##     la caja respecto del cubo, y un cubo que se aleja es lo mismo que una caja que se aleja—; se sacaron las cuatro.*
-##   · LO QUE QUEDA DEBAJO de algo suyo que baja (un pie, o la caja al agacharse o al caer) SE ACHATA, no se aprieta:
-##     apretar algo suelto contra el piso con algo que pesa infinito era lo que hacía explotar al motor.
 
 ## La caja de arriba: ancho, alto y fondo (m). Y el radio del cilindro contra lo fijo: la caja entra entera.
 const TORSO := Vector3(6.0, 12.0, 6.0)
 const RADIUS := 4.6
-## El margen con que se prueba el cilindro sobre el piso (m; ver `_move`).
-const SKIN := 0.05
 
 ## ── LO QUE SE LE PIDE ──
 var move := Vector2.ZERO
@@ -41,7 +48,6 @@ var dash := false
 var aim_yaw := 0.0
 
 ## ── LO QUE MIDE ──
-var velocity := Vector3.ZERO
 var grounded := false
 ## Cuánto está agachado (0 a 1), a qué altura va la cara de abajo de la caja y su alto entero.
 var crouched := 0.0
@@ -54,18 +60,18 @@ var feet: PillarFeet = null
 ## Cuántas cosas acható con la caja (las de los pies, en `feet.flattened`).
 var flattened := 0
 
-## Dónde está (el punto del piso debajo de su centro): lo guarda él, no lo lee del nodo (ver `put`).
-var _at := Vector3.ZERO
 var _yaw := 0.0
 var _yaw_speed := 0.0
 var _jump_was := false
 var _dash_was := false
 var _fly_armed := false
-var _dash_clock := 0.0
+## El dash de ahora: cuánto le queda (s) y a qué velocidad va.
+var _dash_left := 0.0
+var _dash_velocity := Vector3.ZERO
 var _nozzles: PillarNozzles = null
-var _holder: CollisionShape3D = null
-var _look: Node3D = null
 var _cylinder := CylinderShape3D.new()
+var _holder: CollisionShape3D = null
+var _torso: AnimatableBody3D = null
 var _below := BoxShape3D.new()
 var _last_hip := 0.0
 var _driving := false
@@ -73,101 +79,118 @@ var _chase_yaw := 0.0
 
 
 func _init() -> void:
-	sync_to_physics = true
+	# A él no lo ve nadie, y él ve sólo lo fijo del mundo.
+	collision_layer = 0
+	collision_mask = PhysicsLayers.FIXED
+	floor_snap_length = 0.2
 
 
 func _ready() -> void:
-	_holder = Clay.shape_box(self, TORSO, Vector3.ZERO)
-	_look = Node3D.new()
-	add_child(_look)
-	Clay.box(_look, TORSO, Vector3.ZERO, Clay.METAL.darkened(0.1))
+	_cylinder.radius = RADIUS
+	_holder = CollisionShape3D.new()
+	_holder.shape = _cylinder
+	add_child(_holder)
+	_yaw = global_rotation.y
+	aim_yaw = _yaw
+	_fit(PillarSettings.current)
+	# LA CAJA DE ARRIBA: la que se ve y la que empuja lo suelto. Nace ya en su lugar (ver PillarFeet).
+	_torso = AnimatableBody3D.new()
+	_torso.name = "Caja"
+	_torso.top_level = true
+	_torso.sync_to_physics = false
+	_torso.transform = _torso_place()
+	add_child(_torso)
+	_torso.sync_to_physics = true
+	Clay.solid(_torso, TORSO, Vector3.ZERO, Clay.METAL.darkened(0.1))
 	# El frente, para saber hacia dónde mira.
-	Clay.box(_look, Vector3(TORSO.x * 0.6, 0.8, 0.3), Vector3(0.0, TORSO.y * 0.4, -TORSO.z * 0.5 - 0.1), Clay.YELLOW)
+	Clay.box(_torso, Vector3(TORSO.x * 0.6, 0.8, 0.3), Vector3(0.0, TORSO.y * 0.4, -TORSO.z * 0.5 - 0.1), Clay.YELLOW)
 	_nozzles = PillarNozzles.new()
-	add_child(_nozzles)
+	_torso.add_child(_nozzles)
 	_nozzles.build(TORSO)
 	_nozzles.fit(TORSO.y)
+	_nozzles.position.y = -TORSO.y * 0.5
 	feet = PillarFeet.new()
 	feet.born_at = Transform3D(Basis(), global_position + Vector3.UP * PillarFeet.FOOT.y * 0.5)
 	add_child(feet)
-	_cylinder.radius = RADIUS
+	feet.place_now(PillarSettings.current, global_position, _yaw)
 	_below.size = Vector3(TORSO.x, 0.6, TORSO.z)
-	_yaw = global_rotation.y
-	_at = global_position
-	aim_yaw = _yaw
-	_fit(PillarSettings.current)
-	_last_hip = _at.y + hip
-	feet.place_now(PillarSettings.current, _at, _yaw)
+	_last_hip = global_position.y + hip
 	add_to_group(SandboxPossession.GROUP)
 
 
 func _physics_process(delta: float) -> void:
 	var k := PillarSettings.current
 	_read()
-	var place := _at
 	# AGACHARSE: las piernas se acortan de a poco.
 	crouched = move_toward(crouched, 1.0 if crouch else 0.0, k.crouch_rate * delta)
 	_fit(k)
-	# MOVERSE (ver PillarSettings): hacia la velocidad pedida, en `reach_time` (0: al instante); en el aire, con su
-	# parte de control.
-	var wanted := Basis(Vector3.UP, _yaw) * Vector3(move.x, 0.0, -move.y).limit_length(1.0) * k.walk_speed
-	var flat := Vector3(velocity.x, 0.0, velocity.z)
-	var control := 1.0 if grounded else k.air_control
-	_dash_clock = maxf(_dash_clock - delta, 0.0)
-	# Recién salido de un dash, moverse no lo frena.
-	if _dash_clock > 0.0 and flat.length() > wanted.length():
-		control = 0.0
-	if control > 0.0:
-		if k.reach_time <= 0.0 and control >= 1.0:
-			flat = wanted
-		else:
-			flat = flat.move_toward(wanted, k.walk_speed / maxf(k.reach_time, 0.05) * control * delta)
-	velocity = Vector3(flat.x, velocity.y, flat.z)
-	# EL DASH: al apretar, con una dirección y con barra.
+	grounded = is_on_floor()
 	dash_fuel = minf(dash_fuel + delta / k.dash_refill, 1.0)
-	if dash and not _dash_was and move.length() > 0.1 and dash_fuel >= k.dash_cost:
-		_dash(k)
-	_dash_was = dash
-	# SALTAR (al apretar) Y CAER; EL VUELO, en el aire, apretando otra vez.
-	var gravity := BalanceBody.gravity()
-	if jump and not _jump_was and grounded:
-		velocity.y = sqrt(2.0 * gravity * k.air_gravity * k.jump_height)
-		grounded = false
-		_fly_armed = false
-	_jump_was = jump
-	if grounded:
-		fly_fuel = minf(fly_fuel + delta / k.thrust_refill, 1.0)
+	if _dash_left > 0.0:
+		# EN UN DASH: derecho, sin teclas ni gravedad.
+		_dash_left -= delta
+		velocity = _dash_velocity
 	else:
-		if not jump:
-			_fly_armed = true
-		var flying := jump and _fly_armed and fly_fuel > 0.0
-		if flying:
-			fly_fuel = maxf(fly_fuel - delta / k.thrust_time, 0.0)
-			velocity.y += k.thrust * delta
-			_nozzles.fly(1.0)
-		# Volando pesa lo de siempre (como la meca: si no, no la levantaría); si no, lo del aire.
-		velocity.y -= gravity * (1.0 if flying else k.air_gravity) * delta
-	# MOVERSE PROBANDO, con el cilindro y sólo contra lo fijo: de costado y, aparte, para arriba o abajo.
-	place = _move(place, Vector3(velocity.x, 0.0, velocity.z) * delta)
-	var moved := _move(place, Vector3.UP * velocity.y * delta)
-	if velocity.y < 0.0 and moved.y > place.y + velocity.y * delta + 0.0001:
-		velocity.y = 0.0
-		grounded = true
-	place = moved
-	if grounded:
-		# Sigue apoyado si abajo, cerca, hay algo fijo; si no, cae.
-		if _move(place, Vector3.DOWN * 0.1).y < place.y - 0.09:
-			grounded = false
-		velocity.y = minf(velocity.y, 0.0)
+		var flat_now := _walk(k, delta)
+		velocity = Vector3(flat_now.x, _rise(k, delta), flat_now.z)
+		if dash and not _dash_was and move.length() > 0.1 and dash_fuel >= k.dash_cost:
+			_dash(k)
+	_dash_was = dash
+	_jump_was = jump
 	_turn(k, delta)
-	_at = place
-	global_transform = Transform3D(Basis(Vector3.UP, _yaw), place + Vector3.UP * (hip + TORSO.y * 0.5))
-	# LO QUE QUEDA DEBAJO DE LA CAJA CUANDO BAJA, se achata (ver arriba).
-	if place.y + hip < _last_hip - 0.0001:
+	rotation.y = _yaw
+	move_and_slide()
+	grounded = is_on_floor()
+	var flat := get_real_velocity()
+	flat.y = 0.0
+	# LA CAJA Y LOS PIES LO SIGUEN.
+	_torso.global_transform = _torso_place()
+	# Lo que queda debajo de la caja cuando baja, se achata (ver arriba).
+	if global_position.y + hip < _last_hip - 0.0001:
 		_squash()
-	_last_hip = place.y + hip
-	feet.step(k, delta, _floor_under(place), _yaw, Vector3(velocity.x, 0.0, velocity.z), grounded, place.y + hip - _floor_under(place).y)
+	_last_hip = global_position.y + hip
+	feet.step(k, delta, global_position, _yaw, flat, grounded, hip)
 	_nozzles.show_flames(delta)
+
+
+## MOVERSE: de costado, hacia la velocidad pedida, en `reach_time` (0: al instante). En el aire, nada.
+func _walk(k: PillarSettings, delta: float) -> Vector3:
+	if not grounded:
+		return Vector3.ZERO
+	var wanted := Basis(Vector3.UP, _yaw) * Vector3(move.x, 0.0, -move.y).limit_length(1.0) * k.walk_speed
+	if k.reach_time <= 0.0:
+		return wanted
+	return Vector3(velocity.x, 0.0, velocity.z).move_toward(wanted, k.walk_speed / k.reach_time * delta)
+
+
+## SUBIR Y BAJAR: el salto (al apretar, apoyado), el vuelo (apretando otra vez en el aire) y la caída. Devuelve la
+## velocidad para arriba.
+func _rise(k: PillarSettings, delta: float) -> float:
+	# De subir `jump_height` en `jump_time`: g = 2·h / t², y sale a v = 2·h / t.
+	var gravity := 2.0 * k.jump_height / (k.jump_time * k.jump_time)
+	if grounded:
+		fly_fuel = minf(fly_fuel + delta / k.fly_refill, 1.0)
+		if jump and not _jump_was:
+			_fly_armed = false
+			return 2.0 * k.jump_height / k.jump_time
+		return 0.0
+	if not jump:
+		_fly_armed = true
+	if jump and _fly_armed and fly_fuel > 0.0:
+		fly_fuel = maxf(fly_fuel - delta / k.fly_time, 0.0)
+		_nozzles.fly(1.0)
+		return k.fly_speed
+	return velocity.y - gravity * delta
+
+
+## EL DASH: hacia donde se pide (en el espacio del cubo), `dash_distance` en `dash_time`.
+func _dash(k: PillarSettings) -> void:
+	var stick := Vector3(move.x, 0.0, -move.y).normalized()
+	_dash_velocity = Basis(Vector3.UP, _yaw) * stick * (k.dash_distance / k.dash_time)
+	_dash_left = k.dash_time
+	velocity = _dash_velocity
+	dash_fuel -= k.dash_cost
+	_nozzles.dash(stick)
 
 
 ## Las medidas de ahora: las piernas (enteras o agachado) y el alto entero; el cilindro, del piso al techo.
@@ -175,51 +198,30 @@ func _fit(k: PillarSettings) -> void:
 	hip = k.leg_height * lerpf(1.0, k.crouch_share, crouched)
 	height = hip + TORSO.y
 	_cylinder.height = height
-	_nozzles.position.y = -TORSO.y * 0.5
+	_holder.position.y = height * 0.5
 
 
-## El punto del piso debajo de `place` (lo fijo), para apoyar los pies; en el aire, colgando a la altura de las piernas.
-func _floor_under(place: Vector3) -> Vector3:
-	if grounded:
-		return place
-	var query := PhysicsRayQueryParameters3D.create(place + Vector3.UP, place + Vector3.DOWN * 2.0)
-	query.exclude = [get_rid()]
-	var hit := get_world_3d().direct_space_state.intersect_ray(query)
-	if not hit.is_empty() and hit["collider"] is StaticBody3D and not hit["collider"] is AnimatableBody3D:
-		return hit["position"]
-	return place
+## Dónde va la caja de arriba: sobre las piernas, mirando como él.
+func _torso_place() -> Transform3D:
+	return Transform3D(Basis(Vector3.UP, _yaw), global_position + Vector3.UP * (hip + TORSO.y * 0.5))
 
 
-## EL DASH: hacia donde se pide (en el espacio del cubo), suma `dash_speed` a lo que ya iba para allá; en el aire,
-## además, sube a `dash_lift`.
-func _dash(k: PillarSettings) -> void:
-	var stick := Vector3(move.x, 0.0, -move.y).normalized()
-	var way := Basis(Vector3.UP, _yaw) * stick
-	var flat := Vector3(velocity.x, 0.0, velocity.z)
-	var along := maxf(flat.dot(way), 0.0)
-	var sideways := flat - way * flat.dot(way)
-	var now := sideways + way * (along + k.dash_speed)
-	velocity = Vector3(now.x, velocity.y if grounded else maxf(velocity.y, k.dash_lift), now.z)
-	dash_fuel -= k.dash_cost
-	_dash_clock = k.dash_hold
-	_nozzles.dash(stick)
-
-
-## LO PONE en `where` (el punto del piso debajo de su centro), quieto. *Con la física sincronizada, poner su posición
-## desde afuera no alcanza: el cuerpo la pisa con la suya (medido: el test lo reiniciaba y seguía donde había quedado).*
+## LO PONE en `where` (el punto del piso debajo de su centro), quieto, sin barrer el camino con la caja ni con los pies
+## (ver PillarFeet.place_now).
 func put(where: Transform3D) -> void:
-	_at = where.origin
+	global_position = where.origin
 	_yaw = where.basis.get_euler().y
+	rotation.y = _yaw
 	aim_yaw = _yaw
 	_yaw_speed = 0.0
 	velocity = Vector3.ZERO
+	_dash_left = 0.0
 	grounded = false
-	_last_hip = _at.y + hip
-	feet.place_now(PillarSettings.current, _at, _yaw)
-	# Él también, sin barrer el camino (ver PillarFeet.place_now).
-	sync_to_physics = false
-	global_transform = Transform3D(Basis(Vector3.UP, _yaw), _at + Vector3.UP * (hip + TORSO.y * 0.5))
-	sync_to_physics = true
+	_last_hip = global_position.y + hip
+	_torso.sync_to_physics = false
+	_torso.global_transform = _torso_place()
+	_torso.sync_to_physics = true
+	feet.place_now(PillarSettings.current, global_position, _yaw)
 
 
 ## EL GIRO: hacia `aim_yaw`, con tope de velocidad y de aceleración. Nada lo traba: contra el mundo es un cilindro.
@@ -231,65 +233,12 @@ func _turn(k: PillarSettings, delta: float) -> void:
 	_yaw += _yaw_speed * delta
 
 
-## ── CONTRA LO FIJO: EL CILINDRO ──────────────────────────────────────────────────────────────────────────────────
-
-## MOVERSE PROBANDO: `motion` desde `from` (el punto del piso). EL CILINDRO SE PRUEBA LEVANTADO `SKIN` del piso: una
-## prueba que arranca tocando algo no lo cuenta como choque, y apoyado justo en el piso lo atravesaba (medido el
-## 13/11/2026: caía sin fin). Bajando, la prueba se alarga ese mismo `SKIN`, así frena justo en el piso.
-func _move(from: Vector3, motion: Vector3) -> Vector3:
-	if motion.length_squared() < 0.00000001:
-		return from
-	if motion.y < 0.0:
-		return _cast(from + Vector3.UP * SKIN, motion + Vector3.DOWN * SKIN)
-	return _cast(from + Vector3.UP * SKIN, motion) - Vector3.UP * SKIN
-
-
-## La prueba: el cilindro con su base en `from`, hasta `motion`. Contra lo fijo se desliza y pierde la velocidad que iba
-## contra eso; lo suelto se saltea. Devuelve dónde queda su base.
-func _cast(from: Vector3, motion: Vector3) -> Vector3:
-	var space := get_world_3d().direct_space_state
-	var query := PhysicsShapeQueryParameters3D.new()
-	query.shape = _cylinder
-	query.collision_mask = 1
-	query.margin = 0.01
-	var skip: Array[RID] = [get_rid()]
-	skip.append_array(feet.rids())
-	# Lo suelto se saltea de a uno: con pocas vueltas, una pila de más cajas que vueltas hacía de pared (medido).
-	for attempt in 256:
-		query.exclude = skip
-		query.transform = Transform3D(Basis(), from + Vector3.UP * height * 0.5)
-		query.motion = motion
-		var reach := space.cast_motion(query)
-		if reach[1] >= 1.0:
-			return from + motion
-		# Qué lo frenó, un poco más allá de hasta donde llegó.
-		query.transform.origin += motion * reach[1]
-		query.motion = Vector3.ZERO
-		var info := space.get_rest_info(query)
-		if info.is_empty():
-			return from + motion * reach[0]
-		var other := instance_from_id(int(info["collider_id"]))
-		if not (other is StaticBody3D and not other is AnimatableBody3D):
-			skip.append(info["rid"])
-			continue
-		var normal: Vector3 = info["normal"]
-		var into := velocity.dot(normal)
-		if into < 0.0 and absf(normal.y) < 0.5:
-			velocity -= normal * into
-		from += motion * reach[0]
-		motion = (motion * (1.0 - reach[0])).slide(normal)
-		if motion.length_squared() < 0.00000001:
-			return from
-	return from
-
-
-## ── CONTRA LO SUELTO ─────────────────────────────────────────────────────────────────────────────────────────────
-
 ## LO QUE QUEDA DEBAJO de la caja cuando baja (agachándose, o cayendo): se achata.
 func _squash() -> void:
-	var under := global_transform * Transform3D(Basis(), Vector3.DOWN * (TORSO.y * 0.5 + 0.2))
+	var place := _torso_place()
+	var under := place * Transform3D(Basis(), Vector3.DOWN * (TORSO.y * 0.5 + 0.2))
 	for body in AreaStrike.loose_in(get_world_3d().direct_space_state, _below, under):
-		if PillarFeet.is_under(body, global_transform, TORSO) and PillarFeet.flatten(body):
+		if PillarFeet.is_under(body, place, TORSO) and PillarFeet.flatten(body):
 			flattened += 1
 
 
@@ -320,7 +269,7 @@ func possess_name() -> String:
 func possess_controls() -> PackedStringArray:
 	return PackedStringArray([
 		"W/S adelante y atrás · A/D de costado · mouse gira (con tope)",
-		"Ctrl se agacha (baja de a poco) · espacio salta",
+		"Ctrl se agacha (baja de a poco) · espacio salta (sólo para arriba)",
 		"en el aire, espacio otra vez: vuela (su barra se llena apoyado)",
 		"Shift con una dirección: dash, en el piso y en el aire (su barra se llena sola)",
 	])
@@ -347,8 +296,8 @@ func possess_end() -> void:
 
 func possess_camera(first: bool, delta: float) -> Transform3D:
 	if first:
-		return Transform3D(Basis(Vector3.UP, _yaw), _at + Vector3.UP * (height + 1.5))
+		return Transform3D(Basis(Vector3.UP, _yaw), global_position + Vector3.UP * (height + 1.5))
 	_chase_yaw = lerp_angle(_chase_yaw, _yaw, 1.0 - exp(-4.0 * delta))
-	var at := _at + Vector3.UP * height * 0.6
+	var at := global_position + Vector3.UP * height * 0.6
 	var from := at + Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 12.0, 30.0)
 	return Transform3D(Basis(), from).looking_at(at, Vector3.UP)

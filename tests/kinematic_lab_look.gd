@@ -31,6 +31,7 @@ func _ready() -> void:
 	var ground := StaticBody3D.new()
 	Clay.shape_box(ground, Vector3(600, 1, 600), Vector3(0, -0.5, 0))
 	Clay.box(ground, Vector3(600, 1, 600), Vector3(0, -0.5, 0), Color(0.82, 0.80, 0.76))
+	PhysicsLayers.mark_fixed(ground)
 	add_child(ground)
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-50.0, 205.0, 0.0)
@@ -58,6 +59,7 @@ func _ready() -> void:
 		await _walk_in(which as KinematicLabArchetype.Boxes)
 	await _rain()
 	await _fixed()
+	await _corner()
 	get_tree().quit()
 
 
@@ -80,7 +82,7 @@ func _flattened() -> int:
 ## ENTRA CAMINANDO: 4 s hacia las cajas, salta, se agacha y se para.
 func _walk_in(which: KinematicLabArchetype.Boxes) -> void:
 	await _reset(which, KinematicLabArchetype.START, 0.0)
-	var start := _pillar._at
+	var start := _pillar.global_position
 	var boxes := _holder.get_child_count()
 	var before := _flattened()
 	_phase = "caminando"
@@ -102,7 +104,7 @@ func _walk_in(which: KinematicLabArchetype.Boxes) -> void:
 	_pillar.crouch = false
 	await _wait(2.5)
 	print("%s: %.1f (%s) · %d de %d · %.1f" % [KinematicLabArchetype.BOX_NAMES[which], _fastest, _fastest_when,
-		_flattened() - before, boxes, (_pillar._at - start).length()])
+		_flattened() - before, boxes, (_pillar.global_position - start).length()])
 
 
 ## LA LLUVIA con las medianas: caen encima; se agacha, se para y salta debajo.
@@ -142,7 +144,7 @@ func _fixed() -> void:
 	_pillar.move = Vector2(0.0, 1.0)
 	await _wait(3.0)
 	_pillar.move = Vector2.ZERO
-	var gap := _pillar._at.x - (-18.0)
+	var gap := _pillar.global_position.x - (-18.0)
 	var yaw := _pillar.global_rotation.y
 	# Media vuelta, de a dos cuartos (el pedido de giro no se adelanta más de 108°).
 	_pillar.aim_yaw += PI * 0.5
@@ -157,12 +159,47 @@ func _fixed() -> void:
 	# De costado y adelante contra la pared de la derecha: se desliza a lo largo.
 	_pillar.put(Transform3D(Basis(), Vector3(14.0, 0.0, 16.0)))
 	await _wait(1.0)
-	var from := _pillar._at
+	var from := _pillar.global_position
 	_pillar.move = Vector2(1.0, 1.0)
 	await _wait(3.0)
 	_pillar.move = Vector2.ZERO
 	print("PARED: yendo en diagonal contra ella avanzó %.1f m a lo largo · su eje quedó a %.2f m de la pared" % [
-		absf(_pillar._at.z - from.z), 23.0 - _pillar._at.x])
+		absf(_pillar.global_position.z - from.z), 23.0 - _pillar.global_position.x])
+
+
+## LO QUE FALLABA con el «pruebo y deslizo» a mano (13/11/2026): arrancar apenas metido en el edificio lo atravesaba, y
+## en la esquina quedaba un centímetro adentro y de ahí pasaba. Y los FPS: el paso de física más lento.
+func _corner() -> void:
+	# Arranca 5 cm metido en la cara del edificio (x = −18) y camina contra él.
+	_pillar.put(Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(-18.0 + KinematicPillar.RADIUS - 0.05, 0.0, 6.0)))
+	await _wait(0.2)
+	_pillar.move = Vector2(0.0, 1.0)
+	await _wait(2.0)
+	_pillar.move = Vector2.ZERO
+	print("METIDO: arrancando 5 cm adentro del edificio y caminando contra él, su eje quedó a %.2f m de la cara (el cilindro mide %.1f)" % [
+		_pillar.global_position.x + 18.0, KinematicPillar.RADIUS])
+	# Contra la esquina (−18, 12), forcejeando: adelante y cambiando de costado cada 0,3 s.
+	_pillar.put(Transform3D(Basis(Vector3.UP, PI * 0.25), Vector3(-9.0, 0.0, 21.0)))
+	await _wait(0.2)
+	var deepest := -100.0
+	var slowest := 0.0
+	for i in 20:
+		_pillar.move = Vector2(1.0 if i % 2 == 0 else -1.0, 1.0)
+		if i % 5 == 4:
+			_pillar.aim_yaw += 0.6
+		var clock := 0.0
+		while clock < 0.3:
+			await get_tree().physics_frame
+			clock += 1.0 / Engine.physics_ticks_per_second
+			var at := _pillar.global_position
+			# Cuánto se mete: el radio menos la distancia del eje al rectángulo del edificio (x de −30 a −18, z de 0 a 12).
+			var dx := maxf(maxf(-30.0 - at.x, at.x + 18.0), 0.0)
+			var dz := maxf(maxf(0.0 - at.z, at.z - 12.0), 0.0)
+			deepest = maxf(deepest, KinematicPillar.RADIUS - Vector2(dx, dz).length())
+			slowest = maxf(slowest, Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS) * 1000.0)
+	_pillar.move = Vector2.ZERO
+	print("ESQUINA: forcejeando 6 s contra la esquina del edificio, lo más que se metió: %.3f m · el paso de física más lento: %.1f ms" % [
+		deepest, slowest])
 
 
 func _wait(seconds: float) -> void:
@@ -182,7 +219,7 @@ func _wait(seconds: float) -> void:
 
 
 func _look(offset: Vector3) -> void:
-	var at := _pillar._at + Vector3.UP * 7.0
+	var at := _pillar.global_position + Vector3.UP * 7.0
 	_eye.global_position = at + offset
 	_eye.look_at(at)
 
