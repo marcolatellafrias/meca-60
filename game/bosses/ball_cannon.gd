@@ -11,11 +11,13 @@ extends Node3D
 ## Exagerado, como de tanque (el usuario: «más exagerado y agregale un cilindro más grande… en la punta así parece más
 ## un cañón de tanque»). El carro que va metido en la rendija (alto y fondo, m; el ancho es el de la rendija), el caño
 ## (radio y largo, m) y, en la punta, la boca más gruesa (radio y largo, m), con el hueco bien a la vista.
-const CARRIAGE := Vector2(8.0, 4.5)
-const BARREL_RADIUS := 2.4
-const BARREL_LENGTH := 15.0
-const MUZZLE_RADIUS := 3.6
-const MUZZLE_LENGTH := 4.0
+## *Después volvió a los anchos de antes, un poco más largo, con la boca más larga: «más larga la parte ensanchada en
+## relación al largo del cañón, y volvamos a los anchos antes de la exageración (solamente un poco más largos)».*
+const CARRIAGE := Vector2(5.0, 3.0)
+const BARREL_RADIUS := 1.6
+const BARREL_LENGTH := 12.0
+const MUZZLE_RADIUS := 2.4
+const MUZZLE_LENGTH := 5.5
 
 ## Hacia dónde apunta ahora (radianes, sobre la rendija; 0 adelante, positivo para arriba).
 var pitch := 0.0

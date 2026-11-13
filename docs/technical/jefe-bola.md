@@ -56,9 +56,9 @@ posee (la **O**). La computadora todavía no.
 | Al lado del edificio de 12 m | dos pies en el techo (a 12,4 m) y dos en el piso |
 
 ## Paso 2 (13/11/2026): el cañón por la rendija
-- **El cañón** (`BallCannon`), exagerado, como de tanque: un carro metido en la rendija, un caño amarillo de 15 m y, en
-  la punta, una boca más gruesa con el hueco oscuro bien a la vista (el usuario: «más exagerado… así parece más un cañón
-  de tanque»). Cuelga del centro de la bola
+- **El cañón** (`BallCannon`), como de tanque: un carro metido en la rendija, un caño amarillo de 12 m y, en la punta,
+  una boca más gruesa y larga (5,5 m) con el hueco oscuro bien a la vista (el usuario: «así parece más un cañón de
+  tanque»; «más larga la parte ensanchada… y volvamos a los anchos antes de la exageración»). Cuelga del centro de la bola
   y gira sobre el eje de la rendija: a 0° mira adelante, a 90° al cielo, a 180° atrás, y **da la vuelta entera**. Todavía
   no dispara; `muzzle()` dice desde dónde y hacia dónde saldría el tiro.
 - **Lo que se le pide**: `aim_pitch`, como `aim_yaw` para girar. El cañón va hacia ahí por el camino más corto, con tope
