@@ -6,6 +6,11 @@ extends SeededArchetype
 
 const FOOTPRINT := 180.0
 const START := Vector3(0.0, 0.0, 30.0)
+## Dónde está el cubo cinemático, el blanco (mira al jefe).
+const CUBE_AT := Vector3(0.0, 0.0, -60.0)
+
+## Si el jefe piensa (la P).
+static var thinking := true
 ## Las cajas para pegarles: cuántas, su lado (m) y lo que pesan (kg).
 const CRATES := 8
 const CRATE := 3.0
@@ -29,10 +34,21 @@ func describe(_seed_value: int) -> PackedStringArray:
 		"la bola con su rendija, el cañón que corre por ella y cuatro tentáculos",
 		"más del doble de la meca; contra lo fijo es un cilindro, como el cubo cinemático",
 		"Shift hecha bola: rueda, dobla y pega a lo que toca (las cajas) · Q el barrido con las paletas",
-		"O poseerla · F1 las perillas · R las cajas de nuevo",
+		"P el jefe piensa o no (lo maneja la computadora: te pelea al cubo) · O poseer el cubo o el jefe",
+		"F1 las perillas · R todo de nuevo",
 		"poseída: WASD, el mouse gira y sube o baja el cañón, Ctrl se agacha, espacio salta (sólo para arriba)",
 		"clic izquierdo el tiro simple, clic derecho misiles del cielo uno tras otro",
 	])
+
+
+func keys() -> Array[SandboxKey]:
+	return [
+		SandboxKey.toggle(KEY_P, SandboxKey.Weight.MAIN, "el jefe piensa", func() -> bool: return thinking,
+			func(parcel: SandboxParcel, on: bool) -> void:
+				thinking = on
+				for brain: BallBrain in parcel.find_children("*", "BallBrain", true, false):
+					brain.awake = on),
+	]
 
 
 func build(_seed_value: int, parent: Node3D) -> Node3D:
@@ -48,6 +64,17 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	root.add_child(field)
 	root.add_child(boss)
 	boss.cannon.field = field
+	# EL BLANCO: el cubo cinemático, enfrente (O lo posee, para pelear). Y la cabeza del jefe, que lo pelea.
+	var cube := KinematicPillar.new()
+	cube.name = "Cubo"
+	cube.position = CUBE_AT
+	cube.rotation.y = PI
+	root.add_child(cube)
+	var brain := BallBrain.new()
+	brain.name = "Cabeza"
+	brain.target = cube
+	brain.awake = thinking
+	boss.add_child(brain)
 	# LO FIJO: un edificio a la izquierda (se puede pisar el techo) y una pared larga a la derecha.
 	var fixed := StaticBody3D.new()
 	fixed.name = "Fijo"

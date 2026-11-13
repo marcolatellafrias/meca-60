@@ -271,6 +271,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 
+## Si alguien la posee (entonces su cabeza, BallBrain, no hace nada).
+func driven() -> bool:
+	return _driving
+
+
 func possess_name() -> String:
 	return "Jefe bola"
 

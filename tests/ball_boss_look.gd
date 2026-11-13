@@ -44,6 +44,8 @@ func _ready() -> void:
 	add_child(world)
 	var parent := Node3D.new()
 	add_child(parent)
+	# Lo maneja el test: la cabeza, apagada.
+	BallBossArchetype.thinking = false
 	var root := BallBossArchetype.new().build(0, parent)
 	_boss = root.get_node("Bola") as BallBoss
 	(root.get_node("Proyectiles") as ProjectileField).exploded.connect(func(at: Vector3, kind: Missile.Kind) -> void:

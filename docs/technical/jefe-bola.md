@@ -1,6 +1,6 @@
 # El jefe bola
 
-`game/bosses/` · fila **Jefe bola** (supercategoría Jefes) · test `ball_boss_look` · ver [[laboratorio-cinematico]],
+`game/bosses/` · fila **Jefe bola** (supercategoría Jefes) · tests `ball_boss_look` y `ball_brain_look` · ver [[laboratorio-cinematico]],
 [[contratos]]
 
 El primer jefe, pensado por el usuario (13/11/2026): «una bola con una rendija en el medio que le da toda la vuelta y
@@ -109,11 +109,49 @@ Van por `ProjectileField` (por red, como los de la arena de esquivar), que es un
 - Todo en la pestaña **Barrido** del F1; con vueltas negativas, gira para el otro lado.
 - Medido: al lado de la fila de cajas, pegó a las 8.
 
+## Paso 6 (13/11/2026): lo maneja la computadora
+`BallBrain`. El usuario: «poné las variantes vos, pensá en bosses del Dark Souls». El blanco es **el cubo cinemático**,
+que está enfrente en la parcela: con la **O** se lo posee y se pelea. La **P** apaga y prende la cabeza. Mientras alguien
+posee al jefe, la cabeza no hace nada.
+- **Cada ataque tiene tres tiempos**: el aviso (se ve venir), el golpe y la recuperación (el hueco para castigarlo).
+  Arriba del jefe, un cartel dice qué hace y en qué tiempo; el aviso, en naranja.
+- **Elige por distancia**, con algo de azar, y **no repite** el mismo ataque tres veces seguidas:
+
+| Distancia | Ataques (peso) |
+|---|---|
+| Cerca (menos de 40 m) | barrido (3), carga (1) |
+| En el medio (40 a 85 m) | ráfaga (2), carga (2), los del cielo (1) |
+| Lejos (más de 85 m) | los del cielo (2), ráfaga (1) |
+
+- **Los ataques**:
+
+| Ataque | Aviso | Golpe | Recuperación |
+|---|---|---|---|
+| Ráfaga | apunta el cañón, 0,8 s | tres tiros derechos, uno cada 0,9 s | 1,2 s |
+| Los del cielo | el cañón sube | cinco: uno donde estás y los otros adonde vas | 1,6 s |
+| Barrido | la bola se hunde, 0,7 s | el barrido entero | 1,3 s |
+| Carga | se pliega | rueda hacia vos hasta 3,5 s, corrigiendo poco | frena, se abre y queda 1,8 s |
+
+  La carga termina antes si se pasa del blanco o si choca con lo fijo.
+- **Entre ataques te rodea**, de 0,8 a 1,8 s: de lejos se acerca, de cerca se aleja un poco y en el medio camina de
+  costado mirándote. **Gira lento**: ponerse atrás es la forma de esquivarlo, salvo del barrido, que da la vuelta entera.
+- **Sin vida**: lo que agarra al blanco se cuenta («te pegó») y se ve en el cartel; a lo suelto lo empuja como siempre.
+  El cubo no se empuja, por eso sólo se cuenta.
+  - Un tiro cuenta si explota en su columna.
+  - El barrido, si una paleta pasa a menos de 8 m de su borde.
+  - La carga, si la bola lo toca rodando; una vez por carga.
+- Medido (`ball_brain_look`, 60 s): con el cubo quieto, la ráfaga le pega los tres tiros y la carga le pega. Con el cubo
+  dando vueltas de costado y haciendo dash, en una corrida eligió la carga 5 veces, el barrido 2 y los del cielo 1, y le
+  pegó 7 veces: la carga y el barrido, nunca los del cielo.
+
 ### Lo que falta o queda abierto
 - Los tentáculos atraviesan lo fijo: el cilindro sólo cubre la bola, y un tentáculo puede cruzar una pared baja para
   apoyar del otro lado.
 - Los pies no tienen choque: no patean ni achatan lo suelto, como hacen los del cubo.
 - Contra lo fijo sólo choca el cilindro, así que puede salirse de la parcela rodando.
+- El jefe y el cubo se atraviesan (los dos miran sólo lo fijo).
+- El cubo no tiene cómo pegarle al jefe todavía.
+- Elige mucho la carga: falta ajustar los pesos jugándolo.
 - Ideas del usuario para más adelante:
   - disparos cargados, rayos;
   - dos cañoncitos al costado.
