@@ -1,8 +1,8 @@
 extends Node3D
 
 ## LA CABINA SOBRE SU GRILLA, PARA MIRAR (unos 10 segundos, sin el sandbox): una meca discreta parada, cortada por el
-## costado izquierdo y sin techo, con las líneas de los módulos dibujadas en cada piso (ver CabinGrid); de frente y de
-## atrás (la escalera).
+## costado izquierdo y sin techo, con las líneas de los módulos dibujadas en cada piso (ver CabinGrid); y de frente y
+## desde un asiento, con y sin los parantes del frente.
 ## Imprime las medidas que salen de la grilla.
 ##   tools/godot_ventana.sh res://tests/cabin_grid_look.tscn -- --salida=C:/carpeta
 
@@ -60,20 +60,22 @@ func _ready() -> void:
 	_lines()
 	_find_cut()
 	_set_cut(true)
-	_title.text = "La cabina sobre su grilla: 4 × 4 módulos, 3 pisos"
+	_title.text = "1. De costado, cortada: el frente todo vidrio"
 	_look(Vector3(-30.0, 0.2, 12.0), Vector3(0.3, -0.5, -0.4), 27.0)
 	var side := await _grab()
-	_title.text = "Desde arriba, sin techo: el piso de arriba y sus módulos"
-	_look(Vector3(-0.01, 34.0, 4.0), Vector3(0.0, 0.0, 0.0), 22.0)
-	var top := await _grab()
 	_set_cut(false)
-	_title.text = "De frente: una ventana por módulo"
-	_look(Vector3(-9.0, 1.0, -22.0), Vector3(0.0, -0.5, 0.0), 38.0)
-	var front := await _grab()
-	_title.text = "De atrás: la escalera, con escalones (Stairs)"
-	_look(Vector3(-7.0, 0.0, 17.0), Vector3(0.0, -1.0, 4.5), 45.0)
-	var back := await _grab()
-	_save([side, top, front, back], "cabina_grilla")
+	var shots: Array = [side]
+	for on: bool in [true, false]:
+		_set_posts(on)
+		var label := "con parantes" if on else "sin parantes"
+		_title.text = "%d. De frente, %s" % [shots.size() + 1, label]
+		_look(Vector3(-9.0, 1.0, -22.0), Vector3(0.0, -0.5, 0.0), 38.0)
+		shots.append(await _grab())
+		_title.text = "%d. Desde el asiento de la izquierda del medio, %s" % [shots.size() + 1, label]
+		var chair := CabinGrid.seat(1, CabinGrid.SEATS[1][0])
+		_look_cabin(chair + Vector3(0.0, 1.25, 0.05), chair + Vector3(0.0, 0.2, -3.0), 75.0)
+		shots.append(await _grab())
+	_save(shots, "cabina_grilla")
 	get_tree().quit()
 
 
@@ -110,6 +112,18 @@ func _find_cut() -> void:
 func _set_cut(on: bool) -> void:
 	for part in _cut:
 		part.visible = not on
+
+
+func _set_posts(on: bool) -> void:
+	for bar in _mech.cabin.posts:
+		bar.visible = on
+
+
+## Como `_look`, en el espacio de la cabina.
+func _look_cabin(from: Vector3, to: Vector3, fov: float) -> void:
+	_eye.fov = fov
+	_eye.global_position = _mech.cabin.global_transform * from
+	_eye.look_at(_mech.cabin.global_transform * to, Vector3.UP)
 
 
 func _look(from: Vector3, to: Vector3, fov: float) -> void:

@@ -18,8 +18,8 @@ extends RefCounted
 ##   · QUÉ VA EN CADA PISO (`SEATS`): la planta baja es DE SERVICIO, sin asientos (la munición, las baterías, los
 ##     tableros eléctricos, el ascensor en los 2 × 2 del medio); los dos de arriba, DOS ASIENTOS cada uno, en los
 ##     módulos del medio del frente (el usuario, 13/11/2026: el caso de 4 jugadores, «planta baja de servicio»).
-##   · LOS HUECOS SON RECTÁNGULOS DE CELDAS, sin marcos: al frente, una ventana por módulo, con un parante en cada línea
-##     entre módulos; atrás, la puerta de cada piso, en el medio.
+##   · LOS HUECOS SON RECTÁNGULOS DE CELDAS, sin marcos: al frente, el vidrio de cada piso de losa a losa (con o sin un
+##     parante en cada línea entre módulos); atrás, la puerta de cada piso, en el medio.
 ##
 ## Ejes: X a la derecha, Y arriba, −Z al frente; el origen en el centro de la caja.
 
@@ -33,16 +33,20 @@ const FLOOR_CELLS := 68
 const WALL_CELLS := 6
 const SLAB_CELLS := 5
 
-## El frente de cada piso: el antepecho, el vidrio (lo que queda arriba es el dintel) y el ancho de un parante.
-const SILL_CELLS := 19
-const GLASS_CELLS := 36
+## EL FRENTE ES TODO VIDRIO (el usuario, 13/11/2026: «toda vidriada por ahora… con las divisiones propias de los
+## pisos»): de losa a losa, sin antepecho ni dintel, para ver bien abajo. Los parantes, uno en cada línea entre
+## módulos, son de quita y pon (`FRONT_POSTS`): todavía no se eligió.
+const FRONT_POSTS := true
 const POST_CELLS := 6
+## LA ALTURA DE REFERENCIA DE LOS TABLEROS: hasta donde llegaba el antepecho (y el primer tablero, un bloque que tapaba
+## la vista para abajo y se sacó). No arma nada: es de donde se empiezan a ubicar los controles.
+const DESK_CELLS := 19
 ## La puerta de atrás de cada piso: ancho y alto.
 const DOOR_CELLS := Vector2i(28, 52)
 ## Los asientos: por piso, las columnas de la fila del frente que llevan uno.
 const SEATS := {1: [1, 2], 2: [1, 2]}
-## Dónde va el asiento, desde la pared del frente: lo que ocupa el tablero de adelante y lo que queda hasta el centro
-## de la silla.
+## Dónde va el asiento, desde la pared del frente: lo que ocupaba el tablero de adelante (otra referencia, como
+## `DESK_CELLS`) y lo que queda hasta el centro de la silla.
 const CONSOLE_CELLS := 13
 const SEAT_CELLS := 33
 

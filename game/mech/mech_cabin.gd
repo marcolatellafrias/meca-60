@@ -3,8 +3,8 @@ extends Node3D
 
 ## LA CABINA DE LA MECA: lo que se ve de la caja y por donde se camina. Este nodo es EL DIBUJO (va con la caja).
 ##   · TRES PISOS de paredes de verdad, no una caja pintada (el usuario, 12/11/2026): las losas, los costados, al frente
-##     el antepecho, el HUECO con su vidrio y sus parantes y el dintel, atrás la pared con el HUECO de la puerta, y los
-##     asientos con su tablero. Por los huecos se ve del otro lado. Las medidas, de la grilla (CabinGrid).
+##     TODO VIDRIO de losa a losa (con o sin parantes, ver CabinGrid.FRONT_POSTS), atrás la pared con el HUECO de la
+##     puerta, y los asientos. Por los huecos se ve del otro lado. Las medidas, de la grilla (CabinGrid).
 ##   · EL AFUERA (MechExterior): la pasarela de planta baja y la escalera de atrás.
 ##   · EL ASCENSOR DE LA PELVIS (PelvisLift): por donde se sube desde el suelo, con la meca agachada.
 ##   · EL MARCO (MotionFrame): ADENTRO Y AFUERA SE CAMINA. Las losas, las paredes, la pasarela y la escalera tienen sus
@@ -18,14 +18,14 @@ const FLOORS := CabinGrid.FLOORS
 const FLOOR_HEIGHT := CabinGrid.FLOOR_HEIGHT
 const SLAB := CabinGrid.SLAB
 const WALL := CabinGrid.WALL
-const SILL := CabinGrid.SILL_CELLS * CabinGrid.CELL
-const GLASS := CabinGrid.GLASS_CELLS * CabinGrid.CELL
 const DOOR := Vector2(CabinGrid.DOOR_CELLS) * CabinGrid.CELL
 
 var mech: Mech = null
 var frame: MotionFrame = null
 var lift: PelvisLift = null
 var interior: StaticBody3D = null
+## Los parantes del frente, para mostrarlos o no (ver CabinGrid.FRONT_POSTS).
+var posts: Array[MeshInstance3D] = []
 
 var _riders := {}
 
@@ -61,45 +61,38 @@ func _ready() -> void:
 		var base := CabinGrid.ground(index)
 		var wall_h := CabinGrid.clear_height(index)
 		var mid := base + wall_h * 0.5
-		var glass_mid := base + SILL + GLASS * 0.5
-		var lintel := wall_h - SILL - GLASS
 		for side: float in [-1.0, 1.0]:
 			_solid(Vector3(WALL, wall_h, size - WALL * 2.0), Vector3(side * half, mid, 0), metal)
-		# El frente: el antepecho, el dintel, UNA VENTANA POR MÓDULO y un parante en cada línea entre módulos.
-		_solid(Vector3(size, SILL, WALL), Vector3(0, base + SILL * 0.5, -half), metal)
-		_solid(Vector3(size, lintel, WALL), Vector3(0, base + wall_h - lintel * 0.5, -half), metal)
-		# El vidrio no se atraviesa.
-		Clay.shape_box(interior, Vector3(size, GLASS, WALL * 0.5), Vector3(0, glass_mid, -half))
+		# EL FRENTE, TODO VIDRIO de losa a losa (que no se atraviesa), y un parante en cada línea entre módulos.
+		Clay.shape_box(interior, Vector3(size, wall_h, WALL * 0.5), Vector3(0, mid, -half))
 		var post := CabinGrid.POST_CELLS * CabinGrid.CELL
 		for line in range(1, CabinGrid.COLUMNS):
-			Clay.box(self, Vector3(post, GLASS, WALL), Vector3(CabinGrid.column_x(line), glass_mid, -half), metal.darkened(0.2))
-		Clay.box(self, Vector3(size - WALL * 2.0, GLASS, 0.04), Vector3(0, glass_mid, -half), Clay.GLASS)
+			var bar := Clay.box(self, Vector3(post, wall_h, WALL), Vector3(CabinGrid.column_x(line), mid, -half),
+				metal.darkened(0.2))
+			bar.visible = CabinGrid.FRONT_POSTS
+			posts.append(bar)
+		Clay.box(self, Vector3(size - WALL * 2.0, wall_h, 0.04), Vector3(0, mid, -half), Clay.GLASS)
 		# Atrás: la pared a los costados y arriba del hueco de la puerta, en el medio.
 		var beside := (size - DOOR.x) * 0.5
 		for side: float in [-1.0, 1.0]:
 			_solid(Vector3(beside, wall_h, WALL), Vector3(side * (DOOR.x + beside) * 0.5, mid, half), metal)
 		_solid(Vector3(DOOR.x, wall_h - DOOR.y, WALL), Vector3(0, base + DOOR.y + (wall_h - DOOR.y) * 0.5, half), metal)
-		_seats(index, metal)
+		_seats(index)
 	MechExterior.build(self, interior)
 	lift = PelvisLift.new()
 	lift.solid = interior
 	add_child(lift)
 
 
-## LOS ASIENTOS DEL PISO `index` (ver CabinGrid.SEATS) y, adelante de cada uno, su tablero: por ahora un bloque bajo
-## hasta el antepecho, que no tapa el vidrio. Los tableros de verdad vienen después.
-func _seats(index: int, metal: Color) -> void:
+## LOS ASIENTOS DEL PISO `index` (ver CabinGrid.SEATS). Sin tablero adelante: el bloque bajo que había tapaba la vista
+## para abajo (el usuario, 13/11/2026). Los controles vienen después.
+func _seats(index: int) -> void:
 	if not CabinGrid.SEATS.has(index):
 		return
-	var cell := CabinGrid.CELL
-	var depth := CabinGrid.CONSOLE_CELLS * cell
 	for column: int in CabinGrid.SEATS[index]:
 		var chair := CabinGrid.seat(index, column)
 		Clay.box(self, Vector3(0.6, 0.5, 0.6), chair + Vector3(0, 0.25, 0), Clay.DARK)
 		Clay.box(self, Vector3(0.6, 0.7, 0.12), chair + Vector3(0, 0.85, 0.3), Clay.DARK)
-		var wide := CabinGrid.MODULE - 8 * cell
-		_solid(Vector3(wide, SILL, depth), Vector3(chair.x, chair.y + SILL * 0.5, -CabinGrid.INNER + depth * 0.5),
-			metal.darkened(0.25))
 
 
 ## Una pieza de la cabina que se ve y que, adentro, se choca.

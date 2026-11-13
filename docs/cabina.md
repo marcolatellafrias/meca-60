@@ -23,10 +23,13 @@ pisos o de jugadores (de 1 a 4) sin rehacer nada a mano.
 - **La planta baja es de servicio**: no tiene asientos ni controles fijos. Ahí van la munición, las baterías y los
   tableros eléctricos (todavía no están), y el **ascensor** ocupa los 2 × 2 módulos del medio: su hueco tiene el radio
   de un módulo menos tres celdas.
-- **Los dos pisos de arriba tienen dos asientos cada uno**, en los dos módulos del medio del frente (`SEATS`). Adelante
-  de cada asiento, su tablero: **por ahora un bloque bajo** que llega sólo hasta el antepecho, para no tapar el vidrio.
-- **El frente**: una ventana por módulo (antepecho de 19 celdas, vidrio de 36) y **un parante en cada línea entre
-  módulos**.
+- **Los dos pisos de arriba tienen dos asientos cada uno**, en los dos módulos del medio del frente (`SEATS`). **No
+  tienen tablero adelante**: el primero, un bloque bajo hasta el antepecho, tapaba la vista para abajo y se sacó (el
+  usuario, 13/11/2026). Su altura y su fondo quedan en la grilla como **referencia** para ubicar los controles
+  (`DESK_CELLS`, `CONSOLE_CELLS`).
+- **El frente es todo vidrio**, de losa a losa: lo único que lo corta son los pisos (el usuario: «toda vidriada por
+  ahora… con las divisiones propias de los pisos»). Los parantes, uno en cada línea entre módulos, son de quita y pon
+  (`FRONT_POSTS`): falta elegir.
 - **Atrás**: la puerta de cada piso (28 × 52 celdas), en el medio.
 - **El afuera** (la pasarela, los balcones, la escalera) también se mide en celdas. **La escalera de atrás se arma con
   `Stairs`** (la regla del usuario para toda escalera, ver [[escaleras]]): escalones de unos 15 cm con pisada de 8
