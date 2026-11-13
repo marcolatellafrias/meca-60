@@ -17,8 +17,7 @@ posee (la **O**). La computadora todavía no.
 - **La rendija va de arriba a abajo**: da toda la vuelta de adelante, por arriba, hacia atrás. Separa dos medias
   esferas, la izquierda y la derecha, y mide 4 m de ancho y se hunde 0,6 m, con el fondo oscuro. El cañón va a subir y bajar por ella:
   disparar adelante o al cielo. **Para apuntar de costado, la bola gira con las patas** (el usuario, 13/11/2026: «la
-  rendija es en la otra dirección, si quiere rotar en y, va a usar las piernas»). Adelante, en la rendija, hay una
-  marca amarilla: ahí va el cañón.
+  rendija es en la otra dirección, si quiere rotar en y, va a usar las piernas»). El cañón va metido en ella (paso 2).
 - **Se mueve como el cubo cinemático**: con el controlador de personaje del motor (`CharacterBody3D`). Contra lo fijo
   del mundo choca con un cilindro de 16 m de radio, que va del piso a lo alto de la bola. Contra lo suelto y los
   personajes choca la bola misma, un `AnimatableBody3D` que la sigue. El movimiento es discreto:
@@ -54,11 +53,19 @@ posee (la **O**). La computadora todavía no.
 | Contra la pared | el centro queda a 16,00 m (el radio del cilindro) |
 | Al lado del edificio de 12 m | dos pies en el techo (a 12,4 m) y dos en el piso |
 
+## Paso 2 (13/11/2026): el cañón por la rendija
+- **El cañón** (`BallCannon`): un carro metido en la rendija y un caño amarillo de 10 m. Cuelga del centro de la bola
+  y gira sobre el eje de la rendija: a 0° mira adelante, a 90° al cielo, a 180° atrás, y **da la vuelta entera**. Todavía
+  no dispara; `muzzle()` dice desde dónde y hacia dónde saldría el tiro.
+- **Lo que se le pide**: `aim_pitch`, como `aim_yaw` para girar. El cañón va hacia ahí por el camino más corto, con tope
+  de velocidad (60°/s; la pestaña Cañón del F1).
+- **Poseída, el mouse arriba y abajo mueve el cañón**; de costado, el mouse gira la bola entera.
+- Medido: pedido a 0°, 45°, 90°, 180° y −45°, llega a cada uno.
+
 ### Lo que falta o queda abierto
 - Los tentáculos atraviesan lo fijo: el cilindro sólo cubre la bola, y un tentáculo puede cruzar una pared baja para
   apoyar del otro lado.
 - Los pies no tienen choque: no patean ni achatan lo suelto, como hacen los del cubo.
-- Lo próximo, cuando el usuario diga: el cañón en la rendija.
 - Ideas del usuario para más adelante:
   - disparar adelante o al cielo, para que caiga una lluvia de misiles;
   - hacerse bola y rodar más rápido, con las patas retraídas;

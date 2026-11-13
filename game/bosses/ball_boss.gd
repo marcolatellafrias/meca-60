@@ -35,6 +35,8 @@ var move := Vector2.ZERO
 var crouch := false
 var jump := false
 var aim_yaw := 0.0
+## Hacia dónde apunta el cañón por la rendija (radianes: 0 adelante, positivo para arriba, da la vuelta entera).
+var aim_pitch := 0.0
 
 ## ── LO QUE MIDE ──
 var grounded := false
@@ -42,6 +44,7 @@ var grounded := false
 var crouched := 0.0
 var center_height := 20.0
 var legs: BallLegs = null
+var cannon: BallCannon = null
 
 var _yaw := 0.0
 var _yaw_speed := 0.0
@@ -78,6 +81,10 @@ func _ready() -> void:
 	add_child(_ball)
 	_ball.sync_to_physics = true
 	_dress(_ball)
+	cannon = BallCannon.new()
+	cannon.name = "Cañón"
+	_ball.add_child(cannon)
+	cannon.build(RADIUS, SLIT, SLIT_DEPTH)
 	legs = BallLegs.new()
 	add_child(legs)
 	legs.place_now(BallBossSettings.current, _ball_place().origin, _yaw, RADIUS)
@@ -85,7 +92,7 @@ func _ready() -> void:
 
 
 ## LA BOLA DE ARCILLA: dos medias esferas, la izquierda y la derecha, separadas por la rendija, que le da toda la vuelta
-## de arriba a abajo, con su fondo oscuro; y en la rendija, adelante, una marca amarilla: ahí va a ir el cañón.
+## de arriba a abajo, con su fondo oscuro. El cañón (BallCannon) va metido en ella.
 static func _dress(ball: AnimatableBody3D) -> void:
 	var shape := CollisionShape3D.new()
 	var sphere := SphereShape3D.new()
@@ -105,7 +112,6 @@ static func _dress(ball: AnimatableBody3D) -> void:
 		part.rotation = Vector3(0.0, 0.0, -PI * 0.5 * side)
 		ball.add_child(part)
 	Clay.cylinder(ball, RADIUS - SLIT_DEPTH, SLIT + 0.2, Vector3.ZERO, Clay.DARK.darkened(0.4), Vector3(0.0, 0.0, 90.0))
-	Clay.box(ball, Vector3(2.4, SLIT * 0.7, 1.0), Vector3(0.0, 0.0, -(RADIUS - SLIT_DEPTH)), Clay.YELLOW)
 
 
 func _physics_process(delta: float) -> void:
@@ -124,6 +130,7 @@ func _physics_process(delta: float) -> void:
 	var flat := get_real_velocity()
 	flat.y = 0.0
 	_ball.global_transform = _ball_place()
+	cannon.follow(aim_pitch, k.pitch_speed, delta)
 	legs.step(k, delta, _ball_place().origin, _yaw, flat, grounded, RADIUS)
 
 
@@ -194,6 +201,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not _driving or motion == null or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		return
 	aim_yaw -= motion.relative.x * 0.0025 * GameOptions.mouse_sensitivity
+	aim_pitch = wrapf(aim_pitch - motion.relative.y * 0.0025 * GameOptions.mouse_sensitivity, -PI, PI)
 	get_viewport().set_input_as_handled()
 
 
@@ -204,13 +212,14 @@ func possess_name() -> String:
 func possess_controls() -> PackedStringArray:
 	return PackedStringArray([
 		"W/S adelante y atrás · A/D de costado · mouse gira (con tope)",
+		"mouse arriba y abajo: el cañón corre por la rendija (da la vuelta entera)",
 		"Ctrl se agacha (baja la bola) · espacio salta (sólo para arriba)",
 	])
 
 
 func possess_status() -> String:
-	return "%.1f m/s · centro a %.1f m%s · %d pasos" % [Vector2(velocity.x, velocity.z).length(), center_height,
-		"" if grounded else " · en el aire", legs.steps]
+	return "%.1f m/s · centro a %.1f m%s · %d pasos · cañón a %.0f°" % [Vector2(velocity.x, velocity.z).length(),
+		center_height, "" if grounded else " · en el aire", legs.steps, rad_to_deg(cannon.pitch)]
 
 
 func possess_begin() -> void:

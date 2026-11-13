@@ -9,11 +9,11 @@ const LABELS := {
 	"turn_speed": "velocidad tope (°/s)", "turn_accel": "aceleración tope (°/s²)",
 	"jump_height": "sube (m)", "jump_time": "tarda en subir (s)",
 	"stand_height": "centro de la bola, parada (m)", "crouch_height": "centro de la bola, agachada (m)",
-	"crouch_rate": "ritmo (partes por s)",
+	"crouch_rate": "ritmo (partes por s)", "pitch_speed": "corre por la rendija a (°/s)",
 	"tentacle_length": "largo de cada tentáculo (m)", "spread": "el pie, a cuánto del centro (m)",
 	"step_radius": "un pie sale a más de (m)", "step_time": "el paso tarda (s)", "step_lift": "el pie sube (m)",
 }
-const TABS: Array[String] = ["Moverse", "Girar", "Saltar", "Agacharse", "Tentáculos"]
+const TABS: Array[String] = ["Moverse", "Girar", "Saltar", "Agacharse", "Cañón", "Tentáculos"]
 
 
 func setup_panel() -> void:

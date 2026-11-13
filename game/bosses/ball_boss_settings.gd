@@ -28,6 +28,10 @@ static var current := BallBossSettings.new()
 @export_range(11.0, 40.0, 0.5) var crouch_height := 15.5
 @export_range(0.1, 3.0, 0.05) var crouch_rate := 0.6
 
+@export_group("Cañón")
+## A qué velocidad corre el cañón por la rendija (grados por segundo).
+@export_range(10.0, 360.0, 5.0) var pitch_speed := 60.0
+
 @export_group("Tentáculos")
 ## El largo de cada tentáculo (m) y a cuánto del centro, de costado, apoya su pie.
 @export_range(10.0, 80.0, 0.5) var tentacle_length := 24.0

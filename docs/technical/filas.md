@@ -20,7 +20,7 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 | Multijugador | `MultiplayerArchetype` | `SandboxSession` | — | `net_check` | `game/net/` |
 | Partículas | `ParticleArchetype` | — | — | — | `game/particles/` |
 | Píxeles | `PixelArtArchetype` | `game/pixel_art/` entero, `tools/pixel_art_modelos_prueba.py` | `PixelPaintPanel` (F1) | `pixel_art_look` | `Clay`, `SupplyLook` (colores) |
-| Jefe bola | `BallBossArchetype` | `game/bosses/` entero (`BallBoss`, `BallLegs`, `Tentacle`, `BallBossSettings`, `BossRows`) | `BallBossPanel` (F1) | `ball_boss_look` | `MechKeys.axis`, `Clay`, `PhysicsLayers.FIXED` |
+| Jefe bola | `BallBossArchetype` | `game/bosses/` entero (`BallBoss`, `BallCannon`, `BallLegs`, `Tentacle`, `BallBossSettings`, `BossRows`) | `BallBossPanel` (F1) | `ball_boss_look` | `MechKeys.axis`, `Clay`, `PhysicsLayers.FIXED` |
 
 ## La meca (lo que comparten sus dos filas)
 `game/balance_body/` entero (el cuerpo con equilibrio, que comparte con los jefes: `BalanceBody`, `BodyLegs`,

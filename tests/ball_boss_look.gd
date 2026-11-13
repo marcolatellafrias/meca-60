@@ -1,7 +1,7 @@
 extends Node
 
-## EL JEFE BOLA, PASO 1 (unos 40 s, sin el sandbox): quieto de frente y de costado, caminando, agachado, en lo alto de un
-## salto, girando en el lugar, contra la pared y al lado del edificio. Imprime el centro, la velocidad y los pasos; con
+## EL JEFE BOLA (unos 60 s, sin el sandbox): quieto de frente y de costado, caminando, agachado, en lo alto de un
+## salto, girando en el lugar, el cañón por la rendija, contra la pared y al lado del edificio. Imprime el centro, la velocidad y los pasos; con
 ## ventana, capturas numeradas.
 ##   tools/godot_ventana.sh res://tests/ball_boss_look.tscn -- --salida=C:/carpeta
 
@@ -53,7 +53,7 @@ func _ready() -> void:
 	_eye.make_current()
 	await _wait(1.5)
 	_report("quieta")
-	await _shot("quieta, de frente (el cubo rojo mide lo que la meca: 18 m)", Vector3(-40, 25, 130), Vector3(0, 18, 30))
+	await _shot("quieta, de frente (el cubo rojo mide lo que la meca: 18 m)", Vector3(-30, 25, -70), Vector3(0, 18, 30))
 	await _shot("quieta, de costado", Vector3(90, 28, 75), Vector3(0, 18, 30))
 	# CAMINAR para adelante.
 	_boss.move = Vector2(0, 1)
@@ -96,6 +96,15 @@ func _ready() -> void:
 	print("giro de 90°: quedó a %.0f°, %d pasos" % [rad_to_deg(_boss.rotation.y), _boss.legs.steps - steps_before])
 	await _shot("giró 90° en el lugar (la marca amarilla es el frente)", _boss.global_position + Vector3(0, 40, 80),
 		_boss.global_position + Vector3.UP * 15)
+	# EL CAÑÓN por la rendija: adelante, a 45°, al cielo, atrás y abajo.
+	_boss.aim_yaw = _boss.rotation.y
+	for angle: float in [0.0, 45.0, 90.0, 180.0, -45.0]:
+		_boss.aim_pitch = deg_to_rad(angle)
+		await _wait(3.5)
+		print("cañón: pedido %.0f°, llegó a %.0f°" % [angle, rad_to_deg(_boss.cannon.pitch)])
+		await _shot("el cañón a %.0f° (0 adelante, 90 al cielo)" % angle, _boss.global_position
+			+ Basis(Vector3.UP, _boss.rotation.y) * Vector3(75, 25, 0), _boss.global_position + Vector3.UP * 20)
+	_boss.aim_pitch = 0.0
 	# CONTRA LA PARED (en x = 50, de 2 m): camina de costado hacia ella.
 	_boss.put(Transform3D(Basis(), Vector3(20.0, 0.0, 0.0)))
 	await _wait(1.0)

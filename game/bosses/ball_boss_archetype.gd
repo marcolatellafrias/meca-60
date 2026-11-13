@@ -22,10 +22,10 @@ func far_height() -> float:
 
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
-		"PASO 1: la bola con su rendija y cuatro tentáculos (sin cañón todavía)",
+		"la bola con su rendija, el cañón que corre por ella (todavía no dispara) y cuatro tentáculos",
 		"más del doble de la meca; contra lo fijo es un cilindro, como el cubo cinemático",
 		"O poseerla · F1 las perillas",
-		"poseída: WASD, mouse gira, Ctrl se agacha (baja la bola), espacio salta (sólo para arriba)",
+		"poseída: WASD, el mouse gira y sube o baja el cañón, Ctrl se agacha, espacio salta (sólo para arriba)",
 	])
 
 

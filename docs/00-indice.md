@@ -34,7 +34,7 @@ El detalle, en [[partida]].
 | [[base-comun]] | Lo que comparten la meca propia y los jefes (`BalanceBody`), y el resto en piezas. |
 | [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto. |
 | [[cabina]] | La cabina sobre su grilla (módulo Interior): celdas, módulos, pisos y asientos. |
-| [[jefe-bola]] | El primer jefe: la bola con su rendija y cuatro tentáculos con su propio IK (paso 1, sin cañón; la rendija va de arriba a abajo). |
+| [[jefe-bola]] | El primer jefe: la bola con su rendija y cuatro tentáculos con su propio IK (la rendija va de arriba a abajo, con el cañón que corre por ella). |
 | [[proyectiles]] | Los proyectiles por red y la arena de esquivar. |
 | [[mapa]] | El mapa de pelea: una arena circular con barrios, escaleras y recursos en el borde. |
 | [[escaleras]] | La regla de toda escalera (`Stairs`). |
