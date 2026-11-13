@@ -14,7 +14,7 @@ extends Node
 ##     o los DEL CIELO.
 ##   · LEJOS (más de `FAR`): los DEL CIELO (uno donde estás y los otros adonde vas) o la ráfaga; si no, se acerca.
 ## SIN VIDA (todo es equilibrio): lo que agarra al blanco se cuenta («te pegó») y se ve arriba del jefe; a lo suelto lo
-## empuja como siempre. *El blanco de hoy es el cubo cinemático, que no se empuja: por eso sólo se cuenta.*
+## empuja como siempre. *El blanco de hoy es la meca simplificada, cinemática, que no se empuja: por eso sólo se cuenta.*
 ## Mientras alguien lo posee, la cabeza no hace nada.
 
 enum Act { STALK, SHOTS, SKY, SWEEP, CHARGE }
@@ -267,14 +267,14 @@ func _begin(next: Act) -> void:
 
 ## Dónde está y a cuánto va (se mide por diferencia: sirve para cualquier cosa).
 func _track(delta: float) -> void:
-	var here := target.global_position
+	var here := _ground()
 	if _target_was != Vector3.ZERO and delta > 0.0:
 		_target_velocity = _target_velocity.lerp((here - _target_was) / delta, 0.2)
 	_target_was = here
 
 
 func _to_target() -> Vector3:
-	var gap := target.global_position - _boss.global_position
+	var gap := _ground() - _boss.global_position
 	gap.y = 0.0
 	return gap
 
@@ -295,7 +295,7 @@ func _face() -> void:
 ## El ángulo del cañón para apuntarle al medio del blanco (desde el centro de la bola, que es donde gira).
 func _pitch_to_target() -> float:
 	var centre := _boss.global_position + Vector3.UP * _boss.center_height
-	var aim := target.global_position + Vector3.UP * _target_height() * 0.5
+	var aim := _ground() + Vector3.UP * _target_height() * 0.5
 	return atan2(aim.y - centre.y, Vector2(aim.x - centre.x, aim.z - centre.z).length())
 
 
@@ -308,7 +308,7 @@ func _sky_targets() -> Array[Vector3]:
 	var space := _boss.get_world_3d().direct_space_state
 	for i in k.barrage_count:
 		var lead := 0.0 if i == 0 else (k.barrage_flight + i * k.barrage_gap) * 0.8
-		var point := target.global_position + flat * lead + Vector3(_random.randf_range(-4.0, 4.0), 0.0,
+		var point := _ground() + flat * lead + Vector3(_random.randf_range(-4.0, 4.0), 0.0,
 			_random.randf_range(-4.0, 4.0)) * float(mini(i, 1))
 		var ray := PhysicsRayQueryParameters3D.create(point + Vector3.UP * 100.0, point + Vector3.DOWN * 100.0,
 			PhysicsLayers.FIXED)
@@ -317,14 +317,28 @@ func _sky_targets() -> Array[Vector3]:
 	return out
 
 
+## EL PUNTO DEL PISO debajo del blanco: de una meca cinemática, el de lo que la mueve (su caja va arriba).
+func _ground() -> Vector3:
+	var body := target as BalanceBody
+	if body != null and body.mover != null:
+		return body.mover.global_position
+	return target.global_position
+
+
+## Su radio (m): de una meca, el de su cilindro (lo que abarca su caja); si no, `TARGET_RADIUS`.
 func _target_radius() -> float:
-	var value: Variant = target.get("RADIUS")
-	return float(value) if value != null else TARGET_RADIUS
+	var body := target as BalanceBody
+	if body != null:
+		return Vector2(body.size.x, body.size.z).length() * 0.5 + 0.1
+	return TARGET_RADIUS
 
 
+## Su alto (m, del piso a lo más alto): de una meca, hasta el techo de su caja; si no, `TARGET_HEIGHT`.
 func _target_height() -> float:
-	var value: Variant = target.get("height")
-	return float(value) if value != null else TARGET_HEIGHT
+	var body := target as BalanceBody
+	if body != null:
+		return body.global_position.y + body.size.y * 0.5 - _ground().y
+	return TARGET_HEIGHT
 
 
 ## ── LO QUE LE PEGA AL BLANCO (se cuenta; ver arriba) ─────────────────────────────────────────────────────────────
@@ -333,15 +347,15 @@ func _on_blast(at: Vector3, kind: Missile.Kind) -> void:
 	if target == null or not is_instance_valid(target):
 		return
 	var reach: float = Missile.KINDS[kind]["radius"]
-	var flat := Vector2(at.x - target.global_position.x, at.z - target.global_position.z).length()
-	var height := at.y - target.global_position.y
+	var flat := Vector2(at.x - _ground().x, at.z - _ground().z).length()
+	var height := at.y - _ground().y
 	if flat < reach + _target_radius() and height > -2.0 and height < _target_height() + 2.0:
 		_hit("el tiro" if kind == Missile.Kind.SHELL else "los del cielo")
 
 
 ## El barrido y la bola rodando: si la paleta o la bola tocan al blanco.
 func _check_touch() -> void:
-	var centre := target.global_position
+	var centre := _ground()
 	var radius := _target_radius()
 	if _boss.legs.sweeping and not _hit_this_act:
 		for tentacle in _boss.legs.tentacles:

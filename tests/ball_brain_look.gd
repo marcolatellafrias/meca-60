@@ -1,7 +1,7 @@
 extends Node
 
-## LA CABEZA DEL JEFE BOLA (unos 60 s, sin el sandbox): el jefe pelea al cubo cinemático. Los primeros 20 s el cubo se
-## queda quieto; después camina en círculo, de costado, y cada tanto hace un dash. Imprime cada ataque que empieza y
+## LA CABEZA DEL JEFE BOLA (unos 60 s, sin el sandbox): el jefe pelea a la meca simplificada. Los primeros 20 s la meca
+## se queda quieta; después camina en círculo, de costado, y cada tanto hace un dash. Imprime cada ataque que empieza y
 ## cada vez que le pega; con ventana, capturas numeradas cada 4 s.
 ##   tools/godot_ventana.sh res://tests/ball_brain_look.tscn -- --salida=C:/carpeta
 
@@ -11,7 +11,7 @@ const MOVING := 40.0
 var _folder := ""
 var _boss: BallBoss = null
 var _brain: BallBrain = null
-var _cube: KinematicPillar = null
+var _mech: Mech = null
 var _eye: Camera3D = null
 var _title: Label = null
 var _shots := 0
@@ -52,7 +52,9 @@ func _ready() -> void:
 	var root := BallBossArchetype.new().build(0, parent)
 	_boss = root.get_node("Bola") as BallBoss
 	_brain = _boss.get_node("Cabeza") as BallBrain
-	_cube = root.get_node("Cubo") as KinematicPillar
+	_mech = root.get_node("Meca simplificada") as Mech
+	# La maneja el test (no lee teclas).
+	_mech.scripted = true
 	_eye = Camera3D.new()
 	_eye.far = 2000.0
 	add_child(_eye)
@@ -67,12 +69,12 @@ func _ready() -> void:
 		clock += 1.0 / Engine.physics_ticks_per_second
 		if clock > STILL:
 			# En círculo, de costado, mirando al jefe; cada 3 s, un dash para atrás.
-			var to_boss := _boss.global_position - _cube.global_position
-			_cube.aim_yaw = atan2(-to_boss.x, -to_boss.z)
-			_cube.move = Vector2(1.0, 0.0)
-			_cube.dash = fmod(clock - STILL, 3.0) < 0.1
+			var to_boss := _boss.global_position - _mech.mover.global_position
+			_mech.aim_yaw = atan2(-to_boss.x, -to_boss.z)
+			_mech.move = Vector2(1.0, 0.0)
+			_mech.dash = fmod(clock - STILL, 3.0) < 0.1
 			if fmod(clock - STILL, 3.0) < 0.1:
-				_cube.move = Vector2(0.4, -1.0)
+				_mech.move = Vector2(0.4, -1.0)
 		if _brain.act != last_act:
 			last_act = _brain.act
 			if last_act != BallBrain.Act.STALK:
@@ -83,10 +85,10 @@ func _ready() -> void:
 			print("%5.1f s · le pegó: %s" % [clock, _brain.last_hit])
 		if clock >= next_shot:
 			next_shot += 4.0
-			var middle := (_boss.global_position + _cube.global_position) * 0.5
-			var side := (_cube.global_position - _boss.global_position).cross(Vector3.UP).normalized()
-			await _shot("%s · %s (cubo %s)" % [_brain.stage, "le pegó %d" % _brain.landed,
-				"quieto" if clock < STILL else "moviéndose"], middle + side * 110.0 + Vector3.UP * 60.0, middle)
+			var middle := (_boss.global_position + _mech.mover.global_position) * 0.5
+			var side := (_mech.mover.global_position - _boss.global_position).cross(Vector3.UP).normalized()
+			await _shot("%s · %s (la meca %s)" % [_brain.stage, "le pegó %d" % _brain.landed,
+				"quieta" if clock < STILL else "moviéndose"], middle + side * 110.0 + Vector3.UP * 60.0, middle)
 	var names := []
 	for act: int in acts:
 		names.append("%s %d" % [BallBrain.ACT_NAMES[act], acts[act]])
@@ -95,7 +97,7 @@ func _ready() -> void:
 
 
 func _gap() -> float:
-	return Vector2(_boss.global_position.x - _cube.global_position.x, _boss.global_position.z - _cube.global_position.z).length()
+	return Vector2(_boss.global_position.x - _mech.mover.global_position.x, _boss.global_position.z - _mech.mover.global_position.z).length()
 
 
 func _shot(title: String, from: Vector3, at: Vector3) -> void:

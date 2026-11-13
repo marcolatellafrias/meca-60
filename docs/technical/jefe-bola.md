@@ -18,7 +18,7 @@ posee (la **O**). La computadora todavía no.
   esferas, la izquierda y la derecha, y mide 4 m de ancho y se hunde 0,6 m, con el fondo oscuro. El cañón va a subir y bajar por ella:
   disparar adelante o al cielo. **Para apuntar de costado, la bola gira con las patas** (el usuario, 13/11/2026: «la
   rendija es en la otra dirección, si quiere rotar en y, va a usar las piernas»). El cañón va metido en ella (paso 2).
-- **Se mueve como el cubo cinemático**: con el controlador de personaje del motor (`CharacterBody3D`). Contra lo fijo
+- **Se mueve como el cubo cinemático** (hoy, la meca simplificada): con el controlador de personaje del motor (`CharacterBody3D`). Contra lo fijo
   del mundo choca con un cilindro de 16 m de radio, que va del piso a lo alto de la bola. Contra lo suelto y los
   personajes choca la bola misma, un `AnimatableBody3D` que la sigue. El movimiento es discreto:
   - caminar: una velocidad y un tiempo para llegar a ella;
@@ -110,8 +110,8 @@ Van por `ProjectileField` (por red, como los de la arena de esquivar), que es un
 - Medido: al lado de la fila de cajas, pegó a las 8.
 
 ## Paso 6 (13/11/2026): lo maneja la computadora
-`BallBrain`. El usuario: «poné las variantes vos, pensá en bosses del Dark Souls». El blanco es **el cubo cinemático**,
-que está enfrente en la parcela: con la **O** se lo posee y se pelea. La **P** apaga y prende la cabeza. Mientras alguien
+`BallBrain`. El usuario: «poné las variantes vos, pensá en bosses del Dark Souls». El blanco es **la meca simplificada**
+(`Mech` sin brazos ni cabina, cinemática), que está enfrente en la parcela: con la **O** se la posee y se pelea. La **P** apaga y prende la cabeza. Mientras alguien
 posee al jefe, la cabeza no hace nada.
 - **Cada ataque tiene tres tiempos**: el aviso (se ve venir), el golpe y la recuperación (el hueco para castigarlo).
   Arriba del jefe, un cartel dice qué hace y en qué tiempo; el aviso, en naranja.
@@ -136,21 +136,21 @@ posee al jefe, la cabeza no hace nada.
 - **Entre ataques te rodea**, de 0,8 a 1,8 s: de lejos se acerca, de cerca se aleja un poco y en el medio camina de
   costado mirándote. **Gira lento**: ponerse atrás es la forma de esquivarlo, salvo del barrido, que da la vuelta entera.
 - **Sin vida**: lo que agarra al blanco se cuenta («te pegó») y se ve en el cartel; a lo suelto lo empuja como siempre.
-  El cubo no se empuja, por eso sólo se cuenta.
+  La meca simplificada no se empuja, por eso sólo se cuenta.
   - Un tiro cuenta si explota en su columna.
   - El barrido, si una paleta pasa a menos de 8 m de su borde.
   - La carga, si la bola lo toca rodando; una vez por carga.
-- Medido (`ball_brain_look`, 60 s): con el cubo quieto, la ráfaga le pega los tres tiros y la carga le pega. Con el cubo
-  dando vueltas de costado y haciendo dash, en una corrida eligió la carga 5 veces, el barrido 2 y los del cielo 1, y le
-  pegó 7 veces: la carga y el barrido, nunca los del cielo.
+- Medido (`ball_brain_look`, 60 s; los primeros 20 s la meca quieta, después dando vueltas de costado y con dash):
+  con la meca quieta, la ráfaga le pega los tres tiros y los del cielo los cinco. Moviéndose, varía de una corrida a
+  otra: en una eligió la ráfaga 3 veces, la carga 2, el barrido 1 y los del cielo 3, y le pegó 10 veces en total.
 
 ### Lo que falta o queda abierto
 - Los tentáculos atraviesan lo fijo: el cilindro sólo cubre la bola, y un tentáculo puede cruzar una pared baja para
   apoyar del otro lado.
 - Los pies no tienen choque: no patean ni achatan lo suelto, como hacen los del cubo.
 - Contra lo fijo sólo choca el cilindro, así que puede salirse de la parcela rodando.
-- El jefe y el cubo se atraviesan (los dos miran sólo lo fijo).
-- El cubo no tiene cómo pegarle al jefe todavía.
+- El jefe y la meca se atraviesan (los dos miran sólo lo fijo).
+- La meca no tiene cómo pegarle al jefe todavía.
 - Elige mucho la carga: falta ajustar los pesos jugándolo.
 - Ideas del usuario para más adelante:
   - disparos cargados, rayos;

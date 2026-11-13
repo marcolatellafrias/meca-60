@@ -7,7 +7,7 @@ extends CharacterBody3D
 ## «vamos a ir agregando cosas de a poco… empezar con la bola y las piernas solamente». Por ahora sin cañón, sin dash ni
 ## vuelo, y lo maneja quien lo posee (la O): la computadora, después.
 ##
-## SE MUEVE COMO EL CUBO CINEMÁTICO (ver KinematicPillar): el controlador de personaje del motor, con un cilindro que mira
+## SE MUEVE COMO LA MECA SIMPLIFICADA (ver KinematicMover): el controlador de personaje del motor, con un cilindro que mira
 ## sólo lo fijo del mundo (PhysicsLayers.FIXED), del piso a lo alto de la bola. Contra lo suelto y los personajes, la
 ## bola (un AnimatableBody3D que lo sigue). Movimiento discreto, en metros y segundos (BallBossSettings).
 ##   · MOVERSE: una velocidad y el tiempo para llegar a ella. En el aire no se mueve de costado.

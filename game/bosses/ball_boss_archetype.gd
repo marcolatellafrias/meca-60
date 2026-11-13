@@ -6,8 +6,8 @@ extends SeededArchetype
 
 const FOOTPRINT := 180.0
 const START := Vector3(0.0, 0.0, 30.0)
-## Dónde está el cubo cinemático, el blanco (mira al jefe).
-const CUBE_AT := Vector3(0.0, 0.0, -60.0)
+## Dónde está la meca simplificada, el blanco (el punto del piso; mira al jefe).
+const TARGET_AT := Vector3(0.0, 0.0, -60.0)
 
 ## Si el jefe piensa (la P).
 static var thinking := true
@@ -32,9 +32,9 @@ func far_height() -> float:
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"la bola con su rendija, el cañón que corre por ella y cuatro tentáculos",
-		"más del doble de la meca; contra lo fijo es un cilindro, como el cubo cinemático",
+		"más del doble de la meca; contra lo fijo es un cilindro, como la meca simplificada",
 		"Shift hecha bola: rueda, dobla y pega a lo que toca (las cajas) · Q el barrido con las paletas",
-		"P el jefe piensa o no (lo maneja la computadora: te pelea al cubo) · O poseer el cubo o el jefe",
+		"P el jefe piensa o no (lo maneja la computadora: pelea a la meca) · O poseer la meca o el jefe",
 		"F1 las perillas · R todo de nuevo",
 		"poseída: WASD, el mouse gira y sube o baja el cañón, Ctrl se agacha, espacio salta (sólo para arriba)",
 		"clic izquierdo el tiro simple, clic derecho misiles del cielo uno tras otro",
@@ -64,15 +64,19 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	root.add_child(field)
 	root.add_child(boss)
 	boss.cannon.field = field
-	# EL BLANCO: el cubo cinemático, enfrente (O lo posee, para pelear). Y la cabeza del jefe, que lo pelea.
-	var cube := KinematicPillar.new()
-	cube.name = "Cubo"
-	cube.position = CUBE_AT
-	cube.rotation.y = PI
-	root.add_child(cube)
+	# EL BLANCO: la meca simplificada (sin brazos ni cabina, cinemática), enfrente: O la posee, para pelear. Y la
+	# cabeza del jefe, que la pelea.
+	var mech := Mech.new()
+	# Se llama sola «Meca simplificada».
+	mech.arms_kind = Mech.Arms.NONE
+	mech.kinematic = true
+	mech.has_cabin = false
+	mech.position = TARGET_AT + Vector3.UP * Mech.standing_height()
+	mech.rotation.y = PI
+	root.add_child(mech)
 	var brain := BallBrain.new()
 	brain.name = "Cabeza"
-	brain.target = cube
+	brain.target = mech
 	brain.awake = thinking
 	boss.add_child(brain)
 	# LO FIJO: un edificio a la izquierda (se puede pisar el techo) y una pared larga a la derecha.

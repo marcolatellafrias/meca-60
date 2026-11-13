@@ -2,7 +2,7 @@ class_name BallBossSettings
 extends Resource
 
 ## LAS PERILLAS DEL JEFE BOLA (ver BallBoss): una sola copia (`current`), la que muestra su panel F1, una pestaña por
-## grupo. Todo en metros y segundos, como el cubo cinemático: cada movimiento se define por lo que hace.
+## grupo. Todo en metros y segundos, como la meca simplificada: cada movimiento se define por lo que hace.
 
 ## Se carga de lo guardado con «Guardar» en el F1 (KnobsFile). El archivo es del usuario: no va al repositorio.
 const SAVED := "res://game/bosses/ball_boss_settings.tres"
