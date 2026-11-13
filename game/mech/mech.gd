@@ -55,6 +55,8 @@ func _build() -> void:
 	add_child(keys)
 	_build_arms()
 	cabin.build_frame()
+	if arms_kind != Arms.NONE:
+		cabin.seat_dummies.call_deferred()
 
 
 func _build_arms() -> void:

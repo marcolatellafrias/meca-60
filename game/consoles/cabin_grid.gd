@@ -36,7 +36,7 @@ const SLAB_CELLS := 5
 ## EL FRENTE ES TODO VIDRIO (el usuario, 13/11/2026: «toda vidriada por ahora… con las divisiones propias de los
 ## pisos»): de losa a losa, sin antepecho ni dintel, para ver bien abajo. Los parantes, uno en cada línea entre
 ## módulos, son de quita y pon (`FRONT_POSTS`): todavía no se eligió.
-const FRONT_POSTS := true
+const FRONT_POSTS := false
 const POST_CELLS := 6
 ## LA ALTURA DE REFERENCIA DE LOS TABLEROS: hasta donde llegaba el antepecho (y el primer tablero, un bloque que tapaba
 ## la vista para abajo y se sacó). No arma nada: es de donde se empiezan a ubicar los controles.

@@ -19,11 +19,17 @@ const FLOOR_HEIGHT := CabinGrid.FLOOR_HEIGHT
 const SLAB := CabinGrid.SLAB
 const WALL := CabinGrid.WALL
 const DOOR := Vector2(CabinGrid.DOOR_CELLS) * CabinGrid.CELL
+const SEAT_SCENE := "res://game/interactables/activatable/working_seat.tscn"
+const DUMMY_SCENE := "res://game/character/player.tscn"
+const DUMMY_BODIES: Array[EntityArchetype.Archetype] = [EntityArchetype.Archetype.fat_athletic,
+	EntityArchetype.Archetype.lanky, EntityArchetype.Archetype.buff, EntityArchetype.Archetype.fat_man]
 
 var mech: Mech = null
 var frame: MotionFrame = null
 var lift: PelvisLift = null
 var interior: StaticBody3D = null
+## Las sillas (ver `_seats`).
+var chairs: Array[SeatInteractable] = []
 ## Los parantes del frente, para mostrarlos o no (ver CabinGrid.FRONT_POSTS).
 var posts: Array[MeshInstance3D] = []
 
@@ -84,15 +90,37 @@ func _ready() -> void:
 	add_child(lift)
 
 
-## LOS ASIENTOS DEL PISO `index` (ver CabinGrid.SEATS). Sin tablero adelante: el bloque bajo que había tapaba la vista
-## para abajo (el usuario, 13/11/2026). Los controles vienen después.
+## LOS ASIENTOS DEL PISO `index` (ver CabinGrid.SEATS): LAS SILLAS DE VERDAD, las de las consolas (`SEAT_SCENE`),
+## mirando al frente. Sin tablero adelante: el bloque bajo que había tapaba la vista para abajo (el usuario,
+## 13/11/2026). Los controles vienen después.
 func _seats(index: int) -> void:
 	if not CabinGrid.SEATS.has(index):
 		return
 	for column: int in CabinGrid.SEATS[index]:
-		var chair := CabinGrid.seat(index, column)
-		Clay.box(self, Vector3(0.6, 0.5, 0.6), chair + Vector3(0, 0.25, 0), Clay.DARK)
-		Clay.box(self, Vector3(0.6, 0.7, 0.12), chair + Vector3(0, 0.85, 0.3), Clay.DARK)
+		var chair := (load(SEAT_SCENE) as PackedScene).instantiate() as SeatInteractable
+		chair.name = "Asiento %d-%d" % [index, column]
+		chair.position = CabinGrid.seat(index, column)
+		add_child(chair)
+		chairs.append(chair)
+
+
+## UN MANIQUÍ SENTADO EN CADA SILLA, para ver la escala de adentro (el usuario, 13/11/2026: «le pondría los asientos
+## reales y dejaría sentados… unos dummies. Así veo cómo se siente la escala de adentro»). Personajes de la calle, de
+## varios cuerpos, que van al lado de la meca en el árbol y los lleva su silla. Los sienta la meca de brazos, no la de
+## práctica.
+func seat_dummies() -> void:
+	var holder := mech.get_parent() as Node3D
+	if holder == null:
+		return
+	for i in chairs.size():
+		var dummy := (load(DUMMY_SCENE) as PackedScene).instantiate() as BoneInstantiator
+		dummy.kind = CharacterKind.npc()
+		dummy.master_seed = EntityInstantiation.debug_seed(DUMMY_BODIES[i % DUMMY_BODIES.size()], i)
+		holder.add_child(dummy)
+		# Aparece adentro de la caja maciza: que no la empuje antes de que el marco lo lleve (ver `ride`).
+		mech.add_collision_exception_with(dummy.char_rigidbody)
+		dummy.place_at(chairs[i].global_position + chairs[i].global_basis.z * 0.8, chairs[i].heading())
+		dummy.intent.seat = chairs[i]
 
 
 ## Una pieza de la cabina que se ve y que, adentro, se choca.
@@ -120,6 +148,10 @@ func build_frame() -> void:
 	for body in find_children("*", "StaticBody3D", true, false):
 		if body != interior:
 			(body as StaticBody3D).collision_layer = 0
+	# LAS SILLAS: su cuerpo (quieto, ver SeatInteractable) también quedó copiado; la caja maciza, que las tiene adentro,
+	# no choca con él (la empujaba y la volteaba).
+	for body in find_children("*", "RigidBody3D", true, false):
+		mech.add_collision_exception_with(body as RigidBody3D)
 
 
 ## LA CAJA DE AFUERA NO CHOCA CON LOS QUE VAN ADENTRO: ellos ya dejaron de mirar al mundo (ver MotionFrame.join), pero

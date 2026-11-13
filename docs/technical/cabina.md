@@ -27,9 +27,12 @@ pisos o de jugadores (de 1 a 4) sin rehacer nada a mano.
   tienen tablero adelante**: el primero, un bloque bajo hasta el antepecho, tapaba la vista para abajo y se sacó (el
   usuario, 13/11/2026). Su altura y su fondo quedan en la grilla como **referencia** para ubicar los controles
   (`DESK_CELLS`, `CONSOLE_CELLS`).
+- **Las sillas son las de verdad** (las de las consolas, `working_seat.tscn`) y en la meca con brazos se sientan
+  **cuatro maniquíes**, para ver la escala de adentro (`MechCabin.seat_dummies`). La caja maciza no choca con el
+  cuerpo de las sillas ni con los maniquíes: los empujaba y se volteaba.
 - **El frente es todo vidrio**, de losa a losa: lo único que lo corta son los pisos (el usuario: «toda vidriada por
   ahora… con las divisiones propias de los pisos»). Los parantes, uno en cada línea entre módulos, son de quita y pon
-  (`FRONT_POSTS`): falta elegir.
+  (`FRONT_POSTS`): **sin parantes** (el usuario, 13/11/2026).
 - **Atrás**: la puerta de cada piso (28 × 52 celdas), en el medio.
 - **El afuera** (la pasarela, los balcones, la escalera) también se mide en celdas. **La escalera de atrás se arma con
   `Stairs`** (la regla del usuario para toda escalera, ver [[escaleras]]): escalones de unos 15 cm con pisada de 8
