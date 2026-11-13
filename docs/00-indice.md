@@ -33,7 +33,6 @@ El detalle, en [[partida]].
 | [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto. |
 | [[cabina]] | La cabina sobre su grilla (módulo Interior): celdas, módulos, pisos y asientos. |
 | [[proyectiles]] | Los proyectiles por red y la arena de esquivar. |
-| [[jefes]] | Las mecas enemigas (trabajo en curso): las piezas sueltas, la vida, cómo se esquiva cada ataque y la Arena del jefe. |
 | [[mapa]] | El mapa de pelea: una arena circular con barrios, escaleras y recursos en el borde. |
 | [[escaleras]] | La regla de toda escalera (`Stairs`). |
 | [[pixel-art]] | Pintar con píxeles (experimento), cara por cara. |

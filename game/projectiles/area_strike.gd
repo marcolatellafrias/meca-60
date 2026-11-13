@@ -15,21 +15,16 @@ extends Node3D
 ##     llenarla justo al cumplirse el aviso (`delay`). Ahí estalla todo lo de adentro a la vez.
 ##   · QUE AVANZAN (WAVE_RING, una onda que se abre desde `at`; WAVE_BAND, una pared que cruza hacia `way`): después del
 ##     aviso salen, a `speed`, y PEGAN SÓLO A LO QUE PISA EL PISO: se saltan. Una meca en el aire pasa por arriba.
-##   · ALTAS (13/11/2026; `low` > 0, una onda o una pared que va a esa altura del piso, como una sierra tirada): pegan
-##     sólo a lo que llega a esa franja; AGACHÁNDOSE se pasa por abajo.
-##   · EL BARRIDO (SWEEP, el láser del ojo de una meca enemiga): una línea al ras del piso que gira alrededor de `at`, de
-##     `yaw_from` a `yaw_to`, a `speed` (radianes por segundo), hasta `reach`. Se salta, como las ondas.
 ##
 ## Lo que dice `spec` (lo que no aplica a su forma, se ignora):
 ##   shape, element · at (el centro, o donde empieza) · radius, inner (la dona: el hueco) · to, width (la franja: de `at`
 ##   a `to`, con su ancho) · way, length (la pared que cruza: hacia dónde y cuán larga es de punta a punta) · reach (hasta
-##   dónde llega lo que avanza) · speed · delay · push (cuánto le cambia la velocidad a lo que agarra, m/s) · low (lo que
-##   avanza, a qué altura va) · yaw_from, yaw_to (el barrido) · team (el bando que no recibe: ver `spares`).
+##   dónde llega lo que avanza) · speed · delay · push (cuánto le cambia la velocidad a lo que agarra, m/s).
 
-enum Shape { CIRCLE, RING, BAND, WAVE_RING, WAVE_BAND, SWEEP }
+enum Shape { CIRCLE, RING, BAND, WAVE_RING, WAVE_BAND }
 enum Element { BLAST, FIRE, ELECTRIC }
 
-const NAMES := ["círculo", "dona", "franja", "onda", "pared que cruza", "barrido"]
+const NAMES := ["círculo", "dona", "franja", "onda", "pared que cruza"]
 ## Los colores de cada elemento: la marca, lo que crece y el borde.
 const COLORS := {
 	Element.BLAST: Color(0.8, 0.32, 0.18),
@@ -82,7 +77,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _moving() -> bool:
-	return shape() == Shape.WAVE_RING or shape() == Shape.WAVE_BAND or shape() == Shape.SWEEP
+	return shape() == Shape.WAVE_RING or shape() == Shape.WAVE_BAND
 
 
 ## ── LAS QUIETAS ─────────────────────────────────────────────────────────────────────────────────────────────────
@@ -181,9 +176,6 @@ func _advance_wave(_delta: float) -> void:
 		_grow_warning(_age / maxf(delay, 0.01))
 		return
 	_mark.visible = false
-	if shape() == Shape.SWEEP:
-		_advance_sweep(_age - delay)
-		return
 	if gone > reach:
 		queue_free()
 		return
@@ -193,44 +185,9 @@ func _advance_wave(_delta: float) -> void:
 		_wave.global_position = at
 	else:
 		var way: Vector3 = spec["way"]
-		_wave.global_position = at + way * gone + Vector3.UP * _low()
+		_wave.global_position = at + way * gone
 	if not ProjectileField.is_client(self):
 		_blast_wave(gone)
-
-
-## EL BARRIDO (ver arriba): la línea, donde va ahora; y en el host, a lo que pisa el piso entre donde estaba y donde está.
-func _advance_sweep(seconds: float) -> void:
-	var from: float = spec.get("yaw_from", 0.0)
-	var to: float = spec.get("yaw_to", 1.0)
-	var total := absf(angle_difference(from, to))
-	var turned := minf(seconds * float(spec.get("speed", 1.0)), total)
-	if turned >= total and seconds > total / float(spec.get("speed", 1.0)) + 0.3:
-		queue_free()
-		return
-	var sign := signf(angle_difference(from, to))
-	var now := from + sign * turned
-	var at: Vector3 = spec["at"]
-	var reach: float = spec.get("reach", 70.0)
-	_wave.global_transform = Transform3D(Basis(Vector3.UP, now), at + Basis(Vector3.UP, now) * Vector3(0.0,
-		WAVE_HEIGHT * 0.5, -reach * 0.5))
-	if ProjectileField.is_client(self):
-		return
-	var before := from + sign * maxf(turned - float(spec.get("speed", 1.0)) * get_physics_process_delta_time(), 0.0)
-	for body in _bodies_near(at, reach):
-		if _struck.has(body.get_instance_id()) or not _on_floor(body):
-			continue
-		var flat := Vector3(body.global_position.x - at.x, 0.0, body.global_position.z - at.z)
-		var far := flat.length()
-		if far > reach + _half_width(body) or far < 0.5:
-			continue
-		var heading := atan2(-flat.x, -flat.z)
-		var room := atan(_half_width(body) / far)
-		var lo := minf(before, now) - room
-		var hi := maxf(before, now) + room
-		var middle := (lo + hi) * 0.5
-		if absf(angle_difference(middle, heading)) <= (hi - lo) * 0.5:
-			_struck[body.get_instance_id()] = true
-			_push(body, Basis(Vector3.UP, now) * Vector3(-sign, 0.0, 0.0), 1.0)
 
 
 ## El aviso de lo que avanza: su línea de salida, cada vez más fuerte.
@@ -266,22 +223,13 @@ func _blast_wave(gone: float) -> void:
 			_push(body, way, 1.0)
 
 
-## SI LA AGARRA LO QUE AVANZA: al ras (`low` 0), una meca apoyada (no en el aire) y lo demás a menos de la altura de la
-## onda; alta, lo que llega a su franja (una meca, por su caja: agachada, pasa por abajo).
+## SI PISA EL PISO: una meca, si está apoyada (no en el aire); lo demás, si está a menos de la altura de la onda.
 func _on_floor(body: RigidBody3D) -> bool:
 	var balance := body as BalanceBody
-	var at: Vector3 = spec["at"]
-	var low := _low()
-	if low > 0.0:
-		var half := balance.size.y * 0.5 if balance != null else 0.5
-		return body.global_position.y + half > at.y + low and body.global_position.y - half < at.y + low + WAVE_HEIGHT
 	if balance != null:
 		return not balance.airborne
+	var at: Vector3 = spec["at"]
 	return body.global_position.y - at.y < WAVE_HEIGHT
-
-
-func _low() -> float:
-	return float(spec.get("low", 0.0))
 
 
 func _half_width(body: RigidBody3D) -> float:
@@ -331,24 +279,13 @@ func _extent() -> float:
 	return float(spec.get("radius", 10.0))
 
 
-## Lo suelto cerca de `centre`, en una columna de `radius` y 30 m de alto, menos los de su bando.
+## Lo suelto cerca de `centre`, en una columna de `radius` y 30 m de alto.
 func _bodies_near(centre: Vector3, radius: float) -> Array[RigidBody3D]:
 	var column := CylinderShape3D.new()
 	column.radius = maxf(radius, 0.5)
 	column.height = Missile.COLUMN
-	var out: Array[RigidBody3D] = []
-	for body in AreaStrike.loose_in(get_world_3d().direct_space_state, column, Transform3D(Basis(),
-			centre + Vector3.UP * Missile.COLUMN * 0.5)):
-		if not AreaStrike.spares(body, str(spec.get("team", ""))):
-			out.append(body)
-	return out
-
-
-## SI LO DE UN BANDO NO LE PEGA A `body`: es de su bando (13/11/2026; el jefe se empujaba solo con la onda de su
-## propio salto, que nace debajo de él). Sin bando, le pega a todo.
-static func spares(body: RigidBody3D, team: String) -> bool:
-	var balance := body as BalanceBody
-	return not team.is_empty() and balance != null and balance.team == team
+	return AreaStrike.loose_in(get_world_3d().direct_space_state, column, Transform3D(Basis(),
+		centre + Vector3.UP * Missile.COLUMN * 0.5))
 
 
 ## TODO LO SUELTO que toca `shape` en `where`, sin tope: una consulta devuelve una cantidad fija de choques y lo fijo
@@ -422,7 +359,7 @@ func _build_mark() -> void:
 			wall.radial_segments = 48
 			wall.cap_top = false
 			wall.cap_bottom = false
-			_wave = _part(wall, color, 0.55, at + Vector3.UP * (WAVE_HEIGHT * 0.5 + _low()))
+			_wave = _part(wall, color, 0.55, at + Vector3.UP * WAVE_HEIGHT * 0.5)
 			add_child(_wave)
 		Shape.WAVE_BAND:
 			var way: Vector3 = spec["way"]
@@ -435,24 +372,8 @@ func _build_mark() -> void:
 			_mark.add_child(_fill)
 			var wall := BoxMesh.new()
 			wall.size = Vector3(length, WAVE_HEIGHT, WAVE_THICK)
-			_wave = _part(wall, color, 0.55, at + Vector3.UP * (WAVE_HEIGHT * 0.5 + _low()))
+			_wave = _part(wall, color, 0.55, at + Vector3.UP * WAVE_HEIGHT * 0.5)
 			_wave.basis = turn
-			add_child(_wave)
-		Shape.SWEEP:
-			var reach: float = spec.get("reach", 70.0)
-			var from: float = spec.get("yaw_from", 0.0)
-			var to: float = spec.get("yaw_to", 1.0)
-			_mark.add_child(_part(AreaStrike._fan(reach, from, to), color, 0.12, at + lift))
-			var line := BoxMesh.new()
-			line.size = Vector3(1.6, 0.02, reach)
-			_fill = _part(line, color, 0.15, at + lift + Basis(Vector3.UP, from) * Vector3(0.0, 0.02, -reach * 0.5))
-			_fill.basis = Basis(Vector3.UP, from)
-			_mark.add_child(_fill)
-			var beam := BoxMesh.new()
-			beam.size = Vector3(1.6, WAVE_HEIGHT, reach)
-			_wave = _part(beam, color, 0.65, at)
-			_wave.transform = Transform3D(Basis(Vector3.UP, from), at + Basis(Vector3.UP, from) * Vector3(0.0,
-				WAVE_HEIGHT * 0.5, -reach * 0.5))
 			add_child(_wave)
 
 
@@ -471,20 +392,6 @@ static func _disc(radius: float) -> Mesh:
 	mesh.height = 0.02
 	mesh.radial_segments = 48
 	return mesh
-
-
-## Un abanico plano, de `from` a `to` (giros, como los de un Basis), hasta `reach`.
-static func _fan(reach: float, from: float, to: float) -> Mesh:
-	var tool := SurfaceTool.new()
-	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var span := angle_difference(from, to)
-	var sides := maxi(int(absf(span) / 0.05), 2)
-	for i in sides:
-		var a := from + span * i / sides
-		var b := from + span * (i + 1) / sides
-		for p: Vector3 in [Vector3.ZERO, Basis(Vector3.UP, a) * Vector3(0, 0, -reach), Basis(Vector3.UP, b) * Vector3(0, 0, -reach)]:
-			tool.add_vertex(p)
-	return tool.commit()
 
 
 ## Un anillo plano, de `inner` a `outer`.

@@ -15,27 +15,16 @@ extends Node3D
 ##     de su radio le cambia la velocidad hacia afuera y un poco hacia arriba, entero en el centro y nada en el borde.
 ##     Es un cambio de velocidad, no una fuerza: le hace lo mismo a lo liviano que a lo pesado. A una meca, su péndulo
 ##     decide si se inclina o se cae.
-##   · LAS DE LAS MECAS ENEMIGAS (13/11/2026; ver BossArm): la BOMBA (alta, lenta y grande), el GUIADO (su punto de
-##     caída persigue a `target` hasta poco antes de caer: se esquiva cambiando de rumbo o con un dash), el OBÚS del
-##     cañón (casi recto y rápido) y la BALA de la ametralladora (recta, chica, sin marca).
-##   · `delay`: sale recién a los tantos segundos (una ráfaga se manda entera de una vez y cada bala sale a su hora).
 
 signal landed
 
-enum Kind { MORTAR, BOMB, GUIDED, SHELL, BULLET }
+enum Kind { MORTAR }
 
 ## LOS DE CADA CLASE: el radio de la explosión y de la marca (m), cuánto le cambia la velocidad a lo que agarra en el
-## centro (m/s), qué parte de eso va hacia arriba, cuán alto sube (m), su tamaño (largo, radio) y si marca el piso.
+## centro (m/s), qué parte de eso va hacia arriba, cuán alto sube (m) y su tamaño (largo, radio).
 const KINDS := {
-	Kind.MORTAR: {"radius": 9.0, "push": 10.0, "up": 0.15, "height": 70.0, "length": 4.0, "thickness": 0.55, "mark": true},
-	Kind.BOMB: {"radius": 16.0, "push": 13.0, "up": 0.2, "height": 90.0, "length": 5.0, "thickness": 1.4, "mark": true},
-	Kind.GUIDED: {"radius": 7.0, "push": 9.0, "up": 0.15, "height": 35.0, "length": 3.5, "thickness": 0.5, "mark": true},
-	Kind.SHELL: {"radius": 6.0, "push": 12.0, "up": 0.2, "height": 3.0, "length": 2.5, "thickness": 0.7, "mark": true},
-	Kind.BULLET: {"radius": 2.5, "push": 1.2, "up": 0.1, "height": 0.0, "length": 1.6, "thickness": 0.18, "mark": false},
+	Kind.MORTAR: {"radius": 9.0, "push": 10.0, "up": 0.15, "height": 70.0, "length": 4.0, "thickness": 0.55},
 }
-## EL GUIADO: a cuánto persigue su punto de caída (m/s; menos que correr con dash) y cuánto antes de caer se fija (s).
-const CHASE := 13.0
-const LOCK := 0.8
 ## La marca: su color (de fondo, el que crece y el borde) y cuán gruesa es la línea del borde (m).
 const MARK_COLOR := Color(0.75, 0.3, 0.18, 0.18)
 const FILL_COLOR := Color(0.8, 0.32, 0.18, 0.4)
@@ -53,10 +42,6 @@ var kind := Kind.MORTAR
 var from := Vector3.ZERO
 var to := Vector3.ZERO
 var flight := 2.5
-## Cuándo sale (s), el guiado a quién persigue, y el bando que no recibe (ver AreaStrike.spares).
-var delay := 0.0
-var target: Node3D = null
-var team := ""
 
 var _age := 0.0
 var _done := false
@@ -81,21 +66,12 @@ func _ready() -> void:
 	_body.add_child(_trail)
 	_trail.emitting = true
 	_mark = _make_mark(shape["radius"])
-	_mark.visible = bool(shape["mark"])
 	add_child(_mark)
-	_age = -delay
-	visible = delay <= 0.0
 	_place()
 
 
 func _physics_process(delta: float) -> void:
 	_age += delta
-	if _age < 0.0:
-		return
-	visible = true
-	if is_instance_valid(target) and _age < flight - LOCK:
-		var ground := Vector3(target.global_position.x, to.y, target.global_position.z)
-		to = to.move_toward(ground, CHASE * delta)
 	if _done:
 		if _age > flight + LINGER:
 			queue_free()
@@ -107,7 +83,7 @@ func _physics_process(delta: float) -> void:
 
 ## DÓNDE VA A LOS `seconds` de salir, y hacia dónde mira: la curva (ver arriba).
 func point(seconds: float) -> Vector3:
-	var share := clampf(maxf(seconds, 0.0) / maxf(flight, 0.01), 0.0, 1.0)
+	var share := clampf(seconds / maxf(flight, 0.01), 0.0, 1.0)
 	var rise: float = KINDS[kind]["height"]
 	var top := maxf(from.y, to.y) + rise
 	var a := from
@@ -144,10 +120,9 @@ func _land() -> void:
 
 
 func _explode() -> void:
-	var size := BLAST_SIZE * clampf(float(KINDS[kind]["radius"]) / 9.0, 0.3, 1.8)
 	for make: Callable in [ParticleSystems.explosion_flash, ParticleSystems.explosion_sparks, ParticleSystems.impact_dust]:
 		var burst: GPUParticles3D = make.call(ParticleMeshes.Kind.LINE if make == ParticleSystems.explosion_sparks
-			else ParticleMeshes.Kind.SPHERE, size)
+			else ParticleMeshes.Kind.SPHERE, BLAST_SIZE)
 		# Echan hacia su −Z: para arriba.
 		burst.transform = Transform3D(Basis(Vector3.RIGHT, PI * 0.5), to + Vector3.UP * 0.5)
 		add_child(burst)
@@ -164,8 +139,6 @@ func blast() -> void:
 	column.height = COLUMN
 	for body in AreaStrike.loose_in(get_world_3d().direct_space_state, column, Transform3D(Basis(),
 			to + Vector3.UP * COLUMN * 0.5)):
-		if AreaStrike.spares(body, team):
-			continue
 		var away := body.global_position - to
 		away.y = 0.0
 		var near := 1.0 - clampf(away.length() / radius, 0.0, 1.0)

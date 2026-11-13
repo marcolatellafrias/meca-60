@@ -109,8 +109,5 @@ func _sweep(pose: Dictionary, delta: float) -> void:
 func _hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> void:
 	_struck[body.get_instance_id()] = true
 	body.apply_impulse(velocity * HIT_MASS, at - body.global_position)
-	# A una meca enemiga, además, le saca vida (la meca propia no tiene: ver BossMech).
-	if body is BossMech:
-		(body as BossMech).hurt(BossMech.punch_damage(velocity.length()))
 	last_hit_speed = velocity.length()
 	last_hit = body

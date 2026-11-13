@@ -20,16 +20,13 @@ signal exploded(at: Vector3, kind: Missile.Kind)
 var _next := 0
 
 
-## PIDE UN PROYECTIL de `kind` que sale de `from` y cae en `to` (mundo) en `flight` segundos, a los `delay` segundos;
-## el guiado persigue a `target`; no le pega a los de `team` (ver Missile).
-func launch(kind: Missile.Kind, from: Vector3, to: Vector3, flight: float, delay := 0.0, target: Node3D = null,
-		team := "") -> void:
-	var path := get_path_to(target) if target != null else NodePath()
+## PIDE UN PROYECTIL de `kind` que sale de `from` y cae en `to` (mundo) en `flight` segundos.
+func launch(kind: Missile.Kind, from: Vector3, to: Vector3, flight: float) -> void:
 	if ProjectileField.is_client(self):
-		_request.rpc_id(1, kind, from, to, flight, delay, path, team)
+		_request.rpc_id(1, kind, from, to, flight)
 		return
 	_next += 1
-	_announce.rpc(_next, kind, from, to, flight, delay, path, team)
+	_announce.rpc(_next, kind, from, to, flight)
 
 
 ## PIDE UNA ZONA QUE PEGA (ver AreaStrike, y lo que dice su `spec`). Como `launch`: la decide el host y la ven todos.
@@ -61,23 +58,19 @@ static func is_client(node: Node) -> bool:
 
 
 @rpc("any_peer", "reliable")
-func _request(kind: int, from: Vector3, to: Vector3, flight: float, delay: float, path: NodePath, team: String) -> void:
+func _request(kind: int, from: Vector3, to: Vector3, flight: float) -> void:
 	if multiplayer.is_server():
-		launch(kind as Missile.Kind, from, to, flight, delay, get_node_or_null(path) as Node3D, team)
+		launch(kind as Missile.Kind, from, to, flight)
 
 
 @rpc("authority", "call_local", "reliable")
-func _announce(id: int, kind: int, from: Vector3, to: Vector3, flight: float, delay: float, path: NodePath,
-		team: String) -> void:
+func _announce(id: int, kind: int, from: Vector3, to: Vector3, flight: float) -> void:
 	var missile := Missile.new()
 	missile.name = "Proyectil %d" % id
 	missile.kind = kind as Missile.Kind
 	missile.from = from
 	missile.to = to
 	missile.flight = flight
-	missile.delay = delay
-	missile.target = get_node_or_null(path) as Node3D if not path.is_empty() else null
-	missile.team = team
 	missile.landed.connect(_landed.bind(missile))
 	add_child(missile)
 

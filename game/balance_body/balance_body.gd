@@ -76,10 +76,6 @@ var height := 0.0
 var tilt := 0.0
 var last_hit := 0.0
 var last_hit_kind := ""
-## ROTA: se cae y no se levanta más (una meca enemiga sin vida).
-var broken := false
-## SU BANDO: lo que tira uno no le pega a los de su bando (ver AreaStrike.spares). Vacío: ninguno.
-var team := ""
 
 ## ── EL APOYO ── (lo leen las piernas y los movimientos)
 var support := Vector3.ZERO
@@ -118,12 +114,12 @@ func _ready() -> void:
 	_slick.friction = 0.0
 	_slick.bounce = 0.0
 	physics_material_override = _slick
-	_make_shape()
+	Clay.shape_box(self, size, Vector3.ZERO)
 	look = Node3D.new()
 	look.name = "Dibujo"
 	add_child(look)
 	nozzles = BodyNozzles.new(self, look)
-	legs = _make_legs()
+	legs = BodyLegs.new()
 	legs.body = self
 	add_child(legs)
 	moves = BodyMoves.new(self)
@@ -143,17 +139,6 @@ func _ready() -> void:
 ## Arma sus piezas propias, con el cuerpo, el dibujo, las toberas, las piernas y los movimientos ya armados.
 func _build() -> void:
 	pass
-
-
-## SU FORMA DE CHOQUE: por defecto, la caja de `size`. Una meca enemiga redonda pone un cilindro.
-func _make_shape() -> void:
-	Clay.shape_box(self, size, Vector3.ZERO)
-
-
-## SU MEDIO DE MOVERSE (el dibujo que sigue al apoyo): por defecto, dos piernas desde una pelvis (BodyLegs). Otro —más
-## patas, orugas, ruedas— es otra pieza que hereda de BodyLegs y redefine `place` y `replant` (ver BossLegs).
-func _make_legs() -> BodyLegs:
-	return BodyLegs.new()
 
 
 ## Al empezar cada paso: escribe lo que se le pide (las teclas, un cerebro).
@@ -184,7 +169,7 @@ func _physics_process(delta: float) -> void:
 			var settled := linear_velocity.length() < k.settle_speed and angular_velocity.length() < k.settle_spin
 			_clock = _clock + delta if settled else 0.0
 			height = ground_distance(global_position)
-			if _clock >= k.limp_time and not broken:
+			if _clock >= k.limp_time:
 				state = State.LIFT
 				_clock = 0.0
 		State.LIFT:
@@ -355,7 +340,6 @@ func _turn(k: BodySettings) -> void:
 
 ## ── CAERSE Y VOLVER ─────────────────────────────────────────────────────────────────────────────────────────────
 
-## SE CAE (pasada `fall_tilt`, o rota).
 func _fall_down() -> void:
 	_slick.friction = 1.0
 	state = State.DOWN

@@ -56,11 +56,3 @@ cinco; un golpe en el centro la inclina unos 7°, y dos juntos la tiran.
 - El misil explota en el piso: si cae sobre la meca, atraviesa la caja el último instante.
 
 Test: `tests/dodge_arena_look.tscn` (unos 25 s, sin el sandbox).
-
-## Lo que sumaron los jefes (13/11/2026; ver [[jefes]])
-- **Clases de proyectil nuevas** (`Missile.Kind`): la bomba (alta, lenta y grande); el guiado, cuyo punto de caída
-  persigue a su blanco a 13 m/s hasta 0,8 s antes de caer; el obús del cañón (casi recto); y la bala, chica y sin marca.
-- **`delay`**: una ráfaga se manda entera de una vez y cada bala sale a su hora.
-- **Las zonas altas** (`low` en el `spec`): pegan sólo a lo que llega a esa franja, y se pasan agachado.
-- **El barrido** (`SWEEP`): una línea al ras que gira alrededor de un punto, y se salta.
-- **El bando** (`team`): lo que tira uno no le pega a los de su bando (`AreaStrike.spares`).
