@@ -14,6 +14,7 @@ extends CharacterBody3D
 ##   · GIRAR: con tope de velocidad y de aceleración.
 ##   · SALTAR (espacio): sólo para arriba.
 ##   · HECHA BOLA (Shift, ver BallRoll): mete las patas, baja y rueda; dobla y pega al tocar.
+##   · EL BARRIDO (Q, ver BallLegs): las paletas giran como hélices y dan la vuelta alrededor; mientras, no camina.
 ##   · AGACHARSE (Ctrl): SÓLO BAJA LA BOLA; los tentáculos se doblan solos (el usuario: «lo único que hace en realidad es
 ##     bajar la bola, porque el IK de los tentáculos es como que actúa solo»).
 ## Es MÁS DEL DOBLE DE LA MECA («quiero que sea más grande que la meca… por lo menos el doble»): la bola mide 30 m y su
@@ -42,6 +43,8 @@ var aim_pitch := 0.0
 var fire := false
 ## Hecha bola (ver BallRoll): mete las patas y rueda. Poseída, Shift lo cambia.
 var curl := false
+## El barrido con las paletas (de a un toque; ver BallLegs). Poseída, la Q.
+var sweep := false
 var barrage := false
 
 ## ── LO QUE MIDE ──
@@ -58,6 +61,7 @@ var _yaw_speed := 0.0
 var _jump_was := false
 var _fire_was := false
 var _shift_was := false
+var _sweep_was := false
 var _was_rolling := false
 var _barrage_was := false
 var _cylinder := CylinderShape3D.new()
@@ -133,7 +137,12 @@ func _physics_process(delta: float) -> void:
 	var heading := Basis(Vector3.UP, _yaw) * Vector3.FORWARD
 	var rolled := roll.step(k, delta, curl, move.y, heading)
 	_fit(k)
+	if sweep and not _sweep_was and roll.fold <= 0.0 and grounded:
+		legs.sweep()
+	_sweep_was = sweep
 	var flat_now := rolled if roll.fold > 0.0 else _walk(k, delta)
+	if legs.sweeping:
+		flat_now = Vector3.ZERO
 	velocity = Vector3(flat_now.x, _rise(k, delta), flat_now.z)
 	_jump_was = jump
 	if roll.rolling():
@@ -148,7 +157,7 @@ func _physics_process(delta: float) -> void:
 	roll.turn_ball(flat, RADIUS, delta)
 	_ball.global_transform = _ball_place()
 	roll.strike(k, get_world_3d().direct_space_state, _ball_place().origin, RADIUS, flat)
-	cannon.step(k, aim_pitch, delta)
+	cannon.step(k, aim_pitch, delta, roll.fold)
 	if fire and not _fire_was and roll.fold <= 0.0:
 		cannon.shoot(k)
 	if barrage and not _barrage_was and roll.fold <= 0.0:
@@ -243,6 +252,7 @@ func _read() -> void:
 	move = Vector2(MechKeys.axis(KEY_D, KEY_A), MechKeys.axis(KEY_W, KEY_S))
 	crouch = Input.is_physical_key_pressed(KEY_CTRL)
 	jump = Input.is_physical_key_pressed(KEY_SPACE)
+	sweep = Input.is_physical_key_pressed(KEY_Q)
 	var shift := Input.is_physical_key_pressed(KEY_SHIFT)
 	if shift and not _shift_was:
 		curl = not curl
@@ -270,6 +280,7 @@ func possess_controls() -> PackedStringArray:
 		"W/S adelante y atrás · A/D de costado · mouse gira (con tope)",
 		"mouse arriba y abajo: el cañón corre por la rendija (da la vuelta entera)",
 		"clic izquierdo: el tiro simple, adonde apunta · clic derecho: misiles del cielo, uno tras otro",
+		"Q: el barrido, las paletas giran y dan la vuelta alrededor",
 		"Ctrl se agacha (baja la bola) · espacio salta (sólo para arriba)",
 		"Shift: hecha bola (las patas adentro) y otra vez se abre · rodando: W acelera, S frena, A/D y el mouse doblan",
 	])
@@ -278,7 +289,8 @@ func possess_controls() -> PackedStringArray:
 func possess_status() -> String:
 	return "%.1f m/s · centro a %.1f m%s · %d pasos · cañón a %.0f°%s" % [Vector2(velocity.x, velocity.z).length(),
 		center_height, "" if grounded else " · en el aire", legs.steps, rad_to_deg(cannon.pitch),
-		(" · hecha bola, pegó %d" % roll.hits) if roll.fold > 0.0 else ""]
+		(" · hecha bola, pegó %d" % roll.hits) if roll.fold > 0.0 else (" · barrido, pegó %d" % legs.sweep_hits
+		if legs.sweeping else "")]
 
 
 func possess_begin() -> void:
@@ -294,6 +306,7 @@ func possess_end() -> void:
 	fire = false
 	barrage = false
 	_shift_was = false
+	sweep = false
 
 
 func possess_camera(first: bool, delta: float) -> Transform3D:

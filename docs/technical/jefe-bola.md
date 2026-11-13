@@ -88,7 +88,8 @@ Van por `ProjectileField` (por red, como los de la arena de esquivar), que es un
   - S frena, y va un poco para atrás;
   - A/D y el mouse doblan, con su propio tope de giro (70°/s);
   - la bola se ve girar según lo que avanza.
-  - El cañón rueda con ella y no dispara.
+  - **El cañón se mete**: corre hacia adentro por su eje hasta quedar dentro de la rendija, y no dispara (el usuario:
+    «el cañón se tiene que meter también»).
 - **Pega al tocar** (sin vida: todo es equilibrio): lo suelto que toca rodando a más de 4 m/s sale despedido, con un
   cambio de velocidad de hasta 16 m/s según lo rápido que iba. Es `BalanceBody.hit`, así que a una meca su péndulo
   decide si cae. A cada cosa le pega una vez por toque.
@@ -97,12 +98,20 @@ Van por `ProjectileField` (por red, como los de la arena de esquivar), que es un
 - Medido: plegada, el centro queda a 15 m (el radio); rueda hasta 20 m/s; contra las cajas pegó 10 veces y la más
   rápida salió a 30 m/s; doblando 2,5 s con D giró 145°; abierta, vuelve a 20 m.
 
+## Paso 5 (13/11/2026): el barrido con las paletas
+`BallLegs`. El usuario: «barrido», con la Q.
+- **Q** (`sweep`): los cuatro pies se levantan, las paletas giran como hélices y dan una vuelta entera alrededor de la
+  bola, a 30 m del centro y a 4 m del piso, en 1,4 s. Después bajan donde quedaron y los pasos los acomodan. Mientras
+  barre, no camina.
+- **Pega**: lo suelto que toca una paleta (a 8 m de su centro) sale despedido de costado, hacia donde va la paleta, con
+  un cambio de velocidad de 18 m/s (`BalanceBody.hit`). A cada cosa, una vez por barrido.
+- Todo en la pestaña **Barrido** del F1; con vueltas negativas, gira para el otro lado.
+- Medido: al lado de la fila de cajas, pegó a las 8.
+
 ### Lo que falta o queda abierto
 - Los tentáculos atraviesan lo fijo: el cilindro sólo cubre la bola, y un tentáculo puede cruzar una pared baja para
   apoyar del otro lado.
 - Los pies no tienen choque: no patean ni achatan lo suelto, como hacen los del cubo.
-- Lo próximo, acordado con el usuario: **pegar con las paletas de los tentáculos**.
-- Hecha bola, el cañón sobresale y rueda con ella: falta ver si se mete.
 - Contra lo fijo sólo choca el cilindro, así que puede salirse de la parcela rodando.
 - Ideas del usuario para más adelante:
   - disparos cargados, rayos;

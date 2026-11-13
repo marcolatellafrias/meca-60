@@ -144,7 +144,8 @@ func _ready() -> void:
 		_boss.global_position + Vector3.UP * 12)
 	await _wait(1.0)
 	print("hecha bola: centro a %.1f m, plegada %.2f" % [_boss.center_height, _boss.roll.fold])
-	await _shot("hecha bola", _boss.global_position + Vector3(60, 20, 45), _boss.global_position + Vector3.UP * 12)
+	await _shot("hecha bola: las patas y el cañón adentro", _boss.global_position + Vector3(-30, 20, -60),
+		_boss.global_position + Vector3.UP * 12)
 	var crates: Array[RigidBody3D] = []
 	for crate in _boss.get_parent().get_node("Cajas").get_children():
 		crates.append(crate as RigidBody3D)
@@ -179,6 +180,26 @@ func _ready() -> void:
 		_boss.global_position + Vector3.UP * 12)
 	await _wait(1.5)
 	print("abierta: centro a %.1f m" % _boss.center_height)
+	# EL BARRIDO, al lado de las cajas (que vuelven a su lugar).
+	var holder := _boss.get_parent().get_node("Cajas")
+	for i in holder.get_child_count():
+		var crate := holder.get_child(i) as RigidBody3D
+		crate.linear_velocity = Vector3.ZERO
+		crate.angular_velocity = Vector3.ZERO
+		crate.global_transform = Transform3D(Basis(), Vector3((i - 3.5) * 5.0, 1.5, -15.0))
+	_boss.put(Transform3D(Basis(), Vector3(0.0, 0.0, 10.0)))
+	await _wait(1.5)
+	_boss.sweep = true
+	await _wait(0.1)
+	_boss.sweep = false
+	await _wait(0.5)
+	await _shot("el barrido: las paletas giran y dan la vuelta", _boss.global_position + Vector3(50, 40, 70),
+		_boss.global_position + Vector3.UP * 6)
+	await _wait(1.5)
+	print("barrido: pegó %d veces, %d pasos después" % [_boss.legs.sweep_hits, _boss.legs.steps])
+	await _wait(1.0)
+	await _shot("después del barrido: las cajas, desparramadas", _boss.global_position + Vector3(50, 40, 70),
+		_boss.global_position + Vector3.UP * 6)
 	# CONTRA LA PARED (en x = 50, de 2 m): camina de costado hacia ella.
 	_boss.put(Transform3D(Basis(), Vector3(20.0, 0.0, 0.0)))
 	await _wait(1.0)

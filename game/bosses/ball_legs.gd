@@ -9,16 +9,31 @@ extends Node3D
 ##     diagonal, en arco. El resto queda plantado: no se arrastra.
 ##   · EN EL AIRE cuelgan debajo de la bola; al caer, apoyan donde estén y los pasos los acomodan.
 ##   · HECHA BOLA (`fold`, ver BallRoll) se meten adentro: la punta va hacia el centro y el tentáculo se acorta.
+##   · EL BARRIDO (`sweep`; el usuario: «barrido», con la Q): los cuatro pies se levantan, las paletas giran como
+##     hélices y dan la vuelta alrededor de la bola, lejos y bajo; lo suelto que tocan sale despedido de costado (sin
+##     vida: todo es equilibrio; ver BalanceBody.hit). Después bajan donde quedaron y los pasos los acomodan.
 
 ## Dónde salen de la bola: en diagonal (la pata 0 adelante a la derecha, y de ahí a la vuelta) y cuánto debajo del
 ## ecuador (grados).
 const ROOT_LATITUDE := -22.0
 ## En el aire, a qué velocidad van las puntas a colgar (m/s).
 const DANGLE := 25.0
+## EL BARRIDO: qué parte del tiempo tarda en levantar y en bajar los pies, a cuánto de un pie pega (m: lo que miden las
+## paletas) y a qué velocidad giran las hélices (vueltas por segundo).
+const SWEEP_LIFT := 0.15
+const SWEEP_TOUCH := 8.0
+const PROPELLER := 4.0
 
 var tentacles: Array[Tentacle] = []
 ## Cuántos pasos dio (para mirar).
 var steps := 0
+## Si está barriendo, y cuántas veces pegó barriendo (para mirar).
+var sweeping := false
+var sweep_hits := 0
+
+var _sweep_clock := 0.0
+var _sweep_from: Array[Vector3] = []
+var _sweep_hit := {}
 
 var _feet: Array[Dictionary] = []
 var _swinging := -1
@@ -63,10 +78,27 @@ func folded(k: BallBossSettings, center: Vector3, yaw: float, radius: float, fol
 	_draw(k, center, yaw, radius, fold)
 
 
+## EMPIEZA EL BARRIDO (si no está barriendo ya). Devuelve si empezó.
+func sweep() -> bool:
+	if sweeping:
+		return false
+	sweeping = true
+	_sweep_clock = 0.0
+	_swinging = -1
+	_sweep_hit.clear()
+	_sweep_from.clear()
+	for foot in _feet:
+		_sweep_from.append(foot["at"])
+	return true
+
+
 ## UN PASO DE LA FÍSICA: `center` es el centro de la bola, `yaw` hacia dónde mira, `flat` su velocidad de costado.
 func step(k: BallBossSettings, delta: float, center: Vector3, yaw: float, flat: Vector3, grounded: bool,
 		radius: float) -> void:
 	_space = get_world_3d().direct_space_state
+	if sweeping:
+		_sweep_step(k, delta, center, yaw, radius)
+		return
 	if not grounded:
 		_swinging = -1
 		for i in 4:
@@ -115,6 +147,52 @@ func step(k: BallBossSettings, delta: float, center: Vector3, yaw: float, flat: 
 			for i in [_swinging, _swinging + 2]:
 				_feet[i]["from"] = _feet[i]["at"]
 	_draw(k, center, yaw, radius)
+
+
+## UN PASO DEL BARRIDO: suben (`SWEEP_LIFT` del tiempo), dan `sweep_turns` vueltas a `sweep_reach` del centro y a
+## `sweep_height` del piso, y bajan donde quedaron. Las hélices giran mientras tanto.
+func _sweep_step(k: BallBossSettings, delta: float, center: Vector3, yaw: float, radius: float) -> void:
+	_sweep_clock += delta
+	var share := clampf(_sweep_clock / maxf(k.sweep_time, 0.1), 0.0, 1.0)
+	var angle := smoothstep(SWEEP_LIFT, 1.0 - SWEEP_LIFT, share) * TAU * k.sweep_turns
+	var up := smoothstep(0.0, SWEEP_LIFT, share)
+	var down := smoothstep(1.0 - SWEEP_LIFT, 1.0, share)
+	var spinning := sin(share * PI)
+	var hitting := share > SWEEP_LIFT * 0.5 and share < 1.0 - SWEEP_LIFT * 0.5
+	for i in 4:
+		var foot := _feet[i]
+		var way := Basis(Vector3.UP, yaw + angle) * BallLegs.direction(i)
+		var circle := center + way * k.sweep_reach
+		circle.y = _sweep_from[i].y + k.sweep_height
+		var at := _sweep_from[i].lerp(circle, up)
+		if down > 0.0:
+			at = circle.lerp(_ground(circle, center.y), down)
+		foot["at"] = at
+		foot["planted"] = false
+		tentacles[i].rotor.rotation.y += TAU * PROPELLER * spinning * delta
+		if hitting:
+			# De costado: hacia donde va la paleta, y un poco hacia afuera.
+			var along := Vector3.UP.cross(way) * signf(k.sweep_turns)
+			_sweep_touch(k, at, (along * 0.7 + way * 0.3).normalized())
+	if share >= 1.0:
+		sweeping = false
+		for foot in _feet:
+			foot["at"] = _ground(foot["at"], center.y)
+			foot["planted"] = true
+	_draw(k, center, yaw, radius)
+
+
+## LO QUE TOCA UNA PALETA en `at`, sale despedido hacia `way`. A cada cosa, una vez por barrido.
+func _sweep_touch(k: BallBossSettings, at: Vector3, way: Vector3) -> void:
+	var sphere := SphereShape3D.new()
+	sphere.radius = SWEEP_TOUCH
+	for body in AreaStrike.loose_in(_space, sphere, Transform3D(Basis(), at)):
+		var id := body.get_instance_id()
+		if _sweep_hit.has(id):
+			continue
+		_sweep_hit[id] = true
+		BalanceBody.hit(body, (way + Vector3.UP * 0.25).normalized() * k.sweep_push * body.mass)
+		sweep_hits += 1
 
 
 ## El lugar del pie `i` (en el piso, todavía sin buscarlo): adelantado por `flat` para que llegue antes que la bola.

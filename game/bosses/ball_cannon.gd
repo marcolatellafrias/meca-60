@@ -13,6 +13,9 @@ extends Node3D
 ##   · LOS DEL CIELO (`barrage`): el cañón sube a 90°, tira UNO TRAS OTRO (es un solo cañón: no es una lluvia, es una
 ##     sucesión; el usuario: «tendría más sentido que no sea una lluvia sino una sucesión de misiles del cielo») y vuelve
 ##     adonde estaba. Cada uno es un mortero (Missile.Kind.MORTAR) que cae de arriba sobre su punto, con su marca.
+##
+## HECHA BOLA SE METE (`tuck`, de 0 a 1): corre hacia adentro por su eje hasta quedar dentro de la rendija (el usuario:
+## «el cañón se tiene que meter también»).
 
 ## Exagerado, como de tanque (el usuario: «más exagerado y agregale un cilindro más grande… en la punta así parece más
 ## un cañón de tanque»). El carro que va metido en la rendija (alto y fondo, m; el ancho es el de la rendija), el caño
@@ -59,13 +62,15 @@ func build(radius: float, slit: float, depth: float) -> void:
 
 ## UN PASO: hacia `aim` (radianes), por el camino más corto, a `pitch_speed` grados por segundo como mucho. Con tiros
 ## del cielo pendientes, apunta al cielo y los va tirando.
-func step(k: BallBossSettings, aim: float, delta: float) -> void:
+func step(k: BallBossSettings, aim: float, delta: float, tuck := 0.0) -> void:
 	_cooldown = maxf(_cooldown - delta, 0.0)
 	var wanted := PI * 0.5 if not _queue.is_empty() else aim
 	var error := wrapf(wanted - pitch, -PI, PI)
 	var most := deg_to_rad(k.pitch_speed) * delta
 	pitch = wrapf(pitch + clampf(error, -most, most), -PI, PI)
 	rotation = Vector3(pitch, 0.0, 0.0)
+	# Metido: hacia adentro por su eje (su +Z), lo que mide el caño y el carro.
+	position = basis.z * (BARREL_LENGTH + CARRIAGE.y) * smoothstep(0.0, 1.0, tuck)
 	if _queue.is_empty() or absf(wrapf(PI * 0.5 - pitch, -PI, PI)) > deg_to_rad(2.0):
 		return
 	_gap -= delta

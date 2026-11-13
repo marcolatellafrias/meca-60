@@ -28,7 +28,8 @@ func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"la bola con su rendija, el cañón que corre por ella y cuatro tentáculos",
 		"más del doble de la meca; contra lo fijo es un cilindro, como el cubo cinemático",
-		"Shift hecha bola: rueda, dobla y pega a lo que toca (las cajas) · O poseerla · F1 las perillas · R las cajas de nuevo",
+		"Shift hecha bola: rueda, dobla y pega a lo que toca (las cajas) · Q el barrido con las paletas",
+		"O poseerla · F1 las perillas · R las cajas de nuevo",
 		"poseída: WASD, el mouse gira y sube o baja el cañón, Ctrl se agacha, espacio salta (sólo para arriba)",
 		"clic izquierdo el tiro simple, clic derecho misiles del cielo uno tras otro",
 	])

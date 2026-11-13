@@ -57,6 +57,15 @@ static var current := KnobsFile.load_into(BallBossSettings.new(), SAVED) as Ball
 @export_range(0.0, 20.0, 0.5) var hit_min_speed := 4.0
 @export_range(1.0, 60.0, 0.5) var hit_push := 16.0
 
+@export_group("Barrido")
+## EL BARRIDO (Q; ver BallLegs): cuánto dura (s), cuántas vueltas dan los pies (negativo, para el otro lado), a cuánto
+## del centro (m) y a cuánto del piso (m) pasan, y cuánto le cambia la velocidad a lo que tocan (m/s).
+@export_range(0.3, 5.0, 0.05) var sweep_time := 1.4
+@export_range(-3.0, 3.0, 0.25) var sweep_turns := 1.0
+@export_range(15.0, 60.0, 0.5) var sweep_reach := 30.0
+@export_range(0.0, 20.0, 0.5) var sweep_height := 4.0
+@export_range(1.0, 60.0, 0.5) var sweep_push := 18.0
+
 @export_group("Tentáculos")
 ## El largo de cada tentáculo (m) y a cuánto del centro, de costado, apoya su pie.
 @export_range(10.0, 80.0, 0.5) var tentacle_length := 24.0
