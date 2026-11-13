@@ -96,6 +96,13 @@ Lo vertical sale del **largo del palo** del péndulo, como en los personajes sal
 | **Espacio en el aire** | **Propulsor**: las toberas de abajo la empujan para arriba mientras le quede; se recarga en el piso |
 | **Shift en el aire** | **Dash** (13/11/2026): un impulso de costado hacia donde apretás (sin dirección, adelante), con las toberas del otro lado; uno por salto, gasta un tercio del propulsor. **Sólo en el aire** (el usuario: «un dash con el sistema de piernas actual se vería raro»): al aterrizar, los pies frenan |
 
+**Las toberas que se ven son cuatro, en las esquinas de abajo** (13/11/2026, `BodyNozzles`): chunky, casi pegadas a la
+caja, y giran juntas en su rótula hacia el lado contrario de lo que empujan (para abajo al volar; inclinadas hasta 40°
+en un dash). Echan su llama (`ThrusterFlame`, cinco estilos para elegir: `tests/thruster_flame_look.tscn`) y el humo
+de propulsor, que nace pasada la punta de la llama. **Lo que empuja no cambió**: las veinticuatro de las caras siguen
+empujando igual, invisibles (el usuario: «nos vamos a quedar con los tobares de estos solamente… son más estéticos»).
+Medido: el salto, el propulsor y los dashes dan lo mismo que antes.
+
 **El salto no flota** (13/11/2026; el usuario: «se siente como muy lento… no se siente snappy»): en el aire pesa 2,4
 veces más, y bajando 1,3 veces más todavía (con el propulsor prendido, lo de siempre); la altura es la misma y se carga
 en 0,45 s. En el aire va derecha y sin apoyo; cuando la punta del palo vuelve a tocar el piso, aterriza. Caminar por un borde la
