@@ -10,6 +10,7 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 | Meca física | `MechArchetype` (`Mech.Arms.MUSCLE`) | — (sus brazos son los de la fila Brazo) | `MechPanel` (F1) | `mech_look`, `mech_hands_look` | la meca (abajo), `game/muscle_arm/` |
 | Arena de esquivar | `DodgeArenaArchetype` | `game/dodge_arena/` entero | `MechPanel` (F1) | `dodge_arena_look` | la meca, `game/projectiles/` |
 | Meca cinemática | `MechArchetype` (`Mech.Arms.POSE`, cinemática) | `BodyKinematic` | `MechPanel` (F1), `CabinShapePanel` (F2) | `mech_kinematic_look` | la meca entera |
+| Laboratorio cinemático | `KinematicLabArchetype` | `game/kinematic_lab/` entero | `PillarPanel` (F1) | `kinematic_lab_look` | `AreaStrike.loose_in`, `MechKeys.axis` |
 | Mapa de pelea | `BattlefieldArchetype` | `game/battlefield/` (`Battlefield`) | — | `battlefield_check` | la meca, `PackageArchetype`, `Clay`, `Stairs` |
 | Brazo | `MuscleArmArchetype` | `game/muscle_arm/` entero | `MuscleArmPanel` (F1) | `muscle_arm_look` | `MechArm`, `MechBody.arm`, `MechHand`, `TestBall`, `Mech.SHOULDER` |
 | Cubo con piernas (archivada) | `LeggedCubeArchetype` | `game/archive/line_cube/` entero | `LeggedCubePanel` (F1) | `legged_check` | `MechBody`, `MechLeg`, `Clay`, `TestBall` |

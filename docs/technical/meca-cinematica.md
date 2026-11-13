@@ -1,6 +1,7 @@
 # La meca cinemática
 
-**Primera versión** (13/11/2026). Es la meca de siempre ([[meca]]): los mismos brazos, la cabina, las sillas, las
+**En pausa** (13/11/2026): primero se define cómo trata lo suelto en el [[laboratorio-cinematico]]. **Primera versión**
+(13/11/2026). Es la meca de siempre ([[meca]]): los mismos brazos, la cabina, las sillas, las
 piernas, la escalera, las toberas y las animaciones. **Lo único que cambia es cómo se mueve**: a mano, en vez de Jolt.
 Fila **Meca cinemática**; test `mech_kinematic_look`. El usuario: «lo único que cambia es que se mueve de forma
 cinemática»; «así puedo hacer dashes, otras cosas con más libertad, sin hacer fuerzas enormes que puedan buguear el
