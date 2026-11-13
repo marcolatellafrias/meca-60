@@ -45,3 +45,8 @@ func pose(leg: Dictionary) -> void:
 	_hip.transform = Transform3D(thigh.basis * sideways, thigh * Vector3(0.0, 0.0, MechBody.THIGH * 0.5))
 	_knee.transform = Transform3D(thigh.basis * sideways, leg["knee"])
 	_ankle.transform = Transform3D(shin.basis * sideways, shin * Vector3(0.0, 0.0, -MechBody.SHIN * 0.5))
+
+
+## Dónde está el pie (mundo).
+func foot() -> Transform3D:
+	return _foot.global_transform

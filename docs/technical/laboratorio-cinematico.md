@@ -1,13 +1,16 @@
 # El laboratorio cinemático
 
 **Experimento** (13/11/2026). `game/kinematic_lab/`. Fila **Laboratorio cinemático**; test `kinematic_lab_look`.
-**La meca cinemática está en pausa** ([[meca-cinematica]]) hasta que este experimento diga cómo tiene que tratar lo
-suelto. El usuario: «un cubo alargado que se mueva con caja en el piso, y así yo pruebo los distintos approaches de
+**Desde el 13/11/2026 el laboratorio usa la meca simplificada** ([[meca-cinematica]]: la cinemática sin brazos ni
+cabina), y lo que se aprendió acá con el cubo es ahora el motor de la meca cinemática: `KinematicMover`, `StompFeet`,
+`KinematicSettings`, F1 `KinematicPanel`, F2 la forma. *El cubo (`KinematicPillar` y los suyos) quedó sólo porque los
+jefes lo usan; está en desuso.* El usuario: «un cubo alargado que se mueva con caja en el piso, y así yo pruebo los distintos approaches de
 interacción de cinemático con físico… vamos por partes. Primero definimos cómo actúa el exterior… después vemos cómo
 hacemos que funcione con paquetes y con el giro».
 
 ## Qué hay
-- **El cubo** (`KinematicPillar`): una caja de 6 × 12 × 6 m sobre dos pies (piernas de 6 m), poseíble con la O.
+- **La meca simplificada**, poseíble con la O. *Antes, el cubo (`KinematicPillar`): una caja de 6 × 12 × 6 m sobre dos
+  pies.*
 - **Lo mueve el controlador de personaje del motor** (`CharacterBody3D`, `move_and_slide`): se le da una velocidad, y él
   frena y se desliza contra paredes y esquinas, sabe si está en el piso y se sale solo si queda metido en algo. El
   usuario: «un sistema simple, barebones, sólido y que use las cosas del motor, y no reglas inventadas».
@@ -33,18 +36,33 @@ hacemos que funcione con paquetes y con el giro».
   - **Dash (Shift, con una dirección):** tantos metros en tanto tiempo, en línea recta, en el piso y en el aire.
     Mientras dura no lo afectan ni las teclas ni la gravedad. **Sin dirección no pasa nada.** Su barra se llena sola.
   - **Agacharse (Ctrl):** las piernas se acortan de a poco.
-  - **Las toberas** (`PillarNozzles`), de placeholder: cuatro abajo al volar y cuatro a los costados en el dash.
-  - Las dos barras se ven en el cartel de poseer. El F1 tiene pestañas: Moverse, Girar, Saltar y volar, Dash,
-    Agacharse y Pies.
+  - **Las toberas** son las de la meca: abajo al volar, a los costados en el dash.
+  - Las dos barras se ven en el cartel de poseer. El F1 tiene pestañas: Moverse, Girar, Saltar y volar, Dash y
+    Agacharse. **Los pasos ya no son perillas propias**: son los de las piernas de la meca (F2).
   - **El F1 se guarda** («Guardar», «Volver a lo guardado»; ver `KnobsFile`), en un archivo del usuario que no se sube.
 - **La K elige las cajas, una configuración por vez:**
   1. Chicas y livianas sueltas (60 cm, 30 kg).
   2. Una pila alta de medianas (1,6 m, 300 kg).
   3. Grandes y pesadas, como autos (2 × 1,6 × 4,2 m, 1500 kg).
   4. Una pared de medianas.
-- **La N**: una lluvia de seis cajas de la configuración de ahora, encima del cubo.
+- **La N**: una lluvia de seis cajas de la configuración de ahora, encima de la meca.
 
-## Lo medido (13/11/2026, `kinematic_lab_look` y `kinematic_lab_moves_look`)
+## Con la meca simplificada (13/11/2026, los mismos tests)
+| Cajas | La más rápida de costado | Achatadas |
+|---|---|---|
+| Chicas y livianas | 20 m/s | 12 de 42 |
+| Una pila alta de medianas | 29 m/s | 4 de 24 |
+| Autos | 18 m/s | 2 de 6 |
+| Una pared de medianas | 29 m/s | 7 de 40 |
+
+- **La lluvia**: nada sale de costado a más de 7,5 m/s.
+- **Contra lo fijo**: el eje queda a 4,44 m del edificio (el radio del cilindro, 4,4); pegada a él gira 180°; en
+  diagonal contra la pared se desliza 17 m; arrancando 5 cm metida, el motor la saca; forcejeando en la esquina se mete
+  1,7 cm como mucho, y el paso de física más lento es 3,6 ms.
+- **El dash** recorre 12,6 m en el piso y 12,1 m en el aire; sin dirección, nada. **Volando** sube hasta 23 m.
+- Las patadas a lo chico son más fuertes que con el cubo (sus pies son los de la meca, más grandes y rápidos).
+
+## Lo medido con el cubo (13/11/2026, `kinematic_lab_look` y `kinematic_lab_moves_look`)
 El cubo camina a 8 m/s entre las cajas, salta, se agacha y se para. Se mide la caja que sale más rápido **de costado**
 (lo que gana cayendo no cuenta).
 

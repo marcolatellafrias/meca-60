@@ -62,9 +62,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if key.physical_keycode == KEY_F:
 		mech.covering = not mech.covering
-	elif key.physical_keycode == KEY_G:
+	elif key.physical_keycode == KEY_G and mech.cabin != null:
 		mech.cabin.lift.up()
-	elif key.physical_keycode == KEY_X:
+	elif key.physical_keycode == KEY_X and mech.cabin != null:
 		mech.cabin.lift.lower()
 	elif PUNCH_KEYS.has(key.physical_keycode):
 		var pick: Array = PUNCH_KEYS[key.physical_keycode]
@@ -82,6 +82,14 @@ func _punch(index: int, kind: MechArm.Punch) -> void:
 ## ── POSEERLA ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
 func controls() -> PackedStringArray:
+	if mech.kinematic:
+		return PackedStringArray([
+			"W/S adelante y atrás · A/D de costado · mouse gira (con tope)",
+			"Ctrl se agacha (baja de a poco) · espacio salta (sólo para arriba)",
+			"en el aire, espacio otra vez: vuela (su barra se llena apoyada)",
+			"Shift con una dirección: dash, en el piso y en el aire (su barra se llena sola)",
+			"clic izq. / der.: directo · Q / E: gancho · Z / C: uppercut · 1 / 3: desde arriba",
+		])
 	return PackedStringArray([
 		"W/S adelante y atrás · A/D de costado",
 		"mouse mira: la cabeza al instante, el torso la alcanza",
@@ -114,7 +122,9 @@ func head_yaw() -> float:
 func camera(first: bool, delta: float) -> Transform3D:
 	if first:
 		_chase_yaw = _view_yaw()
-		var eyes := MechCabin.seat() + Vector3(0.0, SeatInteractable.STATION_EYE_HEIGHT, 0.0)
+		# Sin cabina (la simplificada), arriba de la caja, al frente.
+		var eyes := MechCabin.seat() + Vector3(0.0, SeatInteractable.STATION_EYE_HEIGHT, 0.0) if mech.cabin != null \
+			else Vector3(0.0, mech.size.y * 0.5 + 1.5, -mech.size.z * 0.4)
 		return mech.global_transform * Transform3D(Basis(Vector3.UP, head_yaw()) * Basis(Vector3.RIGHT, _head_pitch), eyes)
 	_chase_yaw = lerp_angle(_chase_yaw, _view_yaw(), 1.0 - exp(-4.0 * delta))
 	var from := mech.global_position + Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 14.0, 34.0)

@@ -1,11 +1,11 @@
 extends Node
 
 ## LA MECA CINEMÁTICA, PARA MIRARLA (unos 40 segundos, sin el sandbox): la meca de siempre —brazos, cabina, sillas con
-## maniquíes, escalera, toberas— movida a mano (BodyKinematic), con DOS CUBOS SUELTOS adentro, una PARED a la derecha y
+## maniquíes, escalera, toberas— movida por el controlador de personaje del motor (KinematicMover), con DOS CUBOS SUELTOS adentro, una PARED a la derecha y
 ## una PILA ALTA adelante. Camina hacia la pila, salta, dash de costado contra la pared, se corre, da media vuelta, corre,
-## frena y le pegan fuerte. Imprime lo que más importa: cuánto se mueven contra la meca los cubos y los maniquíes (la
+## y frena. Imprime lo que más importa: cuánto se mueven contra la meca los cubos y los maniquíes (la
 ## regla: lo de adentro, como si estuviera quieta), si las sillas giran con ella, si la pared la frena, cuánto despide a
-## la pila, y la inclinación y las caídas. Con ventana, capturas numeradas.
+## la pila, y la inclinación y las caídas. *El golpe fuerte se sacó el 13/11/2026: con movimiento discreto, falta decidir qué le hace un golpe.* Con ventana, capturas numeradas.
 ##   tools/godot_ventana.sh res://tests/mech_kinematic_look.tscn -- --salida=C:/carpeta
 
 const CUBE := 0.63
@@ -42,6 +42,8 @@ func _ready() -> void:
 		Clay.box(ground, Vector3(800, 0.02, 0.25), Vector3(0, 0.0, i * 5.0), Color(0.7, 0.68, 0.64))
 	# UNA PARED alta a la derecha, para el dash.
 	Clay.solid(ground, Vector3(2.0, 40.0, 80.0), Vector3(30.0, 20.0, -10.0), Clay.METAL.lightened(0.2))
+	# Lo fijo del mundo: contra esto frena el controlador de la cinemática (ver PhysicsLayers.FIXED).
+	PhysicsLayers.mark_fixed(ground)
 	add_child(ground)
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-50.0, 205.0, 0.0)
@@ -136,23 +138,8 @@ func _ready() -> void:
 	_report("lo de adentro, en la rutina")
 	print("SILLAS: la meca giró 90° y las sillas %.0f°" % turned)
 	print("PARED: la caja se metió en la pared %.2f m (negativo: no la tocó)" % _deepest)
-	print("PILA: salió despedida a %.1f m/s como mucho" % _pushed)
-	# UN GOLPE FUERTE.
-	var falls := _mech.falls
-	_tilt = 0.0
-	_mech.knock(true)
-	var clock := 0.0
-	var shot := false
-	while clock < 7.0:
-		await _watch(0.1)
-		clock += 0.1
-		if not shot and _mech.state == BalanceBody.State.DOWN and clock > 1.0:
-			shot = true
-			_look(Vector3(-26.0, 14.0, 20.0))
-			await _shot("5. golpe fuerte: se cae (escrito) y se levanta", "5_caida")
-	print("GOLPE FUERTE: inclinación %.0f° · caídas %d · ahora %s" % [_tilt, _mech.falls - falls,
-		["parada", "tirada", "subiendo", "enderezándose"][_mech.state]])
-	_report("lo de adentro, contando la caída")
+	print("PILA: salió despedida a %.1f m/s como mucho · achatadas %d de %d" % [_pushed, _mech.mover.flattened +
+		(_mech.stomp.flattened if _mech.stomp != null else 0), _pile.size()])
 	get_tree().quit()
 
 
@@ -215,7 +202,8 @@ func _measure() -> void:
 			var now := inverse * thing.global_transform
 			_moved[thing] = maxf(float(_moved[thing]), now.origin.distance_to((_rest[thing] as Transform3D).origin))
 	for cube in _pile:
-		_pushed = maxf(_pushed, cube.linear_velocity.length())
+		if is_instance_valid(cube):
+			_pushed = maxf(_pushed, cube.linear_velocity.length())
 	_deepest = maxf(_deepest, _mech.global_position.x + CabinGrid.HALF - 29.0)
 
 

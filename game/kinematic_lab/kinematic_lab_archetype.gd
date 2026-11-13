@@ -1,14 +1,15 @@
 class_name KinematicLabArchetype
 extends SeededArchetype
 
-## EL LABORATORIO CINEMÁTICO (13/11/2026) — EXPERIMENTO: el cubo cinemático (KinematicPillar) y cajas sueltas, para
+## EL LABORATORIO CINEMÁTICO (13/11/2026) — EXPERIMENTO: la meca simplificada (la cinemática sin brazos ni cabina; era
+## el cubo, KinematicPillar, hasta el 13/11/2026) y cajas sueltas, para
 ## probar cómo se lleva lo cinemático con lo físico (ver la nota docs/technical/laboratorio-cinematico.md).
 ##   · LAS CAJAS, UNA CONFIGURACIÓN POR VEZ (la K las cambia): chicas y livianas sueltas, una pila alta de medianas,
 ##     grandes y pesadas como autos, o una pared de medianas. El usuario: «no las quiero mezcladas, pero sí un toggle con
 ##     varias configuraciones».
 ##   · DOS OBSTÁCULOS FIJOS, a los costados: un edificio y una pared larga, para girar y deslizarse contra ellos (el
-##     cubo choca con lo fijo con un cilindro; ver KinematicPillar).
-##   · LA LLUVIA (la N): cajas de la configuración de ahora caen encima del cubo, donde esté. El usuario: «así vemos como
+##     la meca choca con lo fijo con un cilindro; ver KinematicMover).
+##   · LA LLUVIA (la N): cajas de la configuración de ahora caen encima de la meca, donde esté. El usuario: «así vemos como
 ##     es cuando saltas y te das cosas encima o cuando te agachas y te desagachas».
 ## Mirándolo, O lo posee.
 
@@ -24,7 +25,7 @@ const BOX_KINDS := {
 	Boxes.WALL: {"size": Vector3(1.6, 1.6, 1.6), "mass": 300.0},
 }
 const FOOTPRINT := 110.0
-## Dónde nace el cubo y dónde van las cajas (adelante de él).
+## Dónde nace la meca y dónde van las cajas (adelante de ella).
 const START := Vector3(0.0, 0.0, 22.0)
 const BOXES_AT := Vector3(0.0, 0.0, -4.0)
 ## La lluvia: cuántas caen y desde cuán alto sobre el cubo (m).
@@ -44,9 +45,9 @@ func max_footprint() -> Vector2:
 
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
-		"EXPERIMENTO: un cubo sobre dos pies, movido por el controlador de personaje del motor",
-		"contra lo fijo es un cilindro; los pies patean y achatan lo suelto",
-		"K las cajas · N lluvia de cajas encima · O poseerlo · F1 las perillas",
+		"EXPERIMENTO: la meca simplificada (la cinemática sin brazos ni cabina), contra cajas sueltas",
+		"contra lo fijo es un cilindro; sus pies patean y achatan lo suelto",
+		"K las cajas · N lluvia de cajas encima · O poseerla · F1 moverse · F2 la forma (las piernas)",
 		"poseído: WASD, mouse gira, Shift dash, Ctrl se agacha, espacio salta (sólo para arriba) y, en el aire, vuela",
 	])
 
@@ -55,10 +56,13 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	var root := Node3D.new()
 	root.name = "Laboratorio"
 	parent.add_child(root)
-	var pillar := KinematicPillar.new()
-	pillar.name = "Cubo"
-	pillar.position = START
-	root.add_child(pillar)
+	var mech := Mech.new()
+	mech.name = "Meca"
+	mech.arms_kind = Mech.Arms.NONE
+	mech.kinematic = true
+	mech.has_cabin = false
+	mech.position = START + Vector3.UP * Mech.standing_height()
+	root.add_child(mech)
 	# LO FIJO: un edificio a la izquierda y una pared larga a la derecha.
 	var fixed := StaticBody3D.new()
 	fixed.name = "Fijo"
@@ -119,11 +123,11 @@ static func box(holder: Node3D, at: Vector3, which: Boxes, yaw: float) -> RigidB
 	return made
 
 
-## LA LLUVIA: cajas de la configuración de ahora, arriba del cubo.
-static func rain(holder: Node3D, pillar: KinematicPillar, which: Boxes) -> void:
+## LA LLUVIA: cajas de la configuración de ahora, arriba de la meca.
+static func rain(holder: Node3D, mech: Mech, which: Boxes) -> void:
 	var random := RandomNumberGenerator.new()
 	random.randomize()
-	var top := pillar.global_position + Vector3.UP * (pillar.height + RAIN_HEIGHT)
+	var top := mech.global_position + Vector3.UP * (mech.size.y * 0.5 + RAIN_HEIGHT)
 	for i in RAIN:
 		var at := top + Vector3(random.randf_range(-2.5, 2.5), i * 2.5, random.randf_range(-2.5, 2.5))
 		KinematicLabArchetype.box(holder, holder.global_transform.affine_inverse() * at, which, random.randf() * TAU)
@@ -136,11 +140,11 @@ func keys() -> Array[SandboxKey]:
 				boxes = index as Boxes
 				for holder in _holders(parcel):
 					KinematicLabArchetype.lay_out(holder, boxes)),
-		SandboxKey.action(KEY_N, SandboxKey.Weight.MAIN, "lluvia de cajas encima del cubo",
+		SandboxKey.action(KEY_N, SandboxKey.Weight.MAIN, "lluvia de cajas encima de la meca",
 			func(parcel: SandboxParcel) -> void:
-				for pillar: KinematicPillar in parcel.find_children("*", "KinematicPillar", true, false):
+				for mech: Mech in parcel.find_children("*", "Mech", true, false):
 					for holder in _holders(parcel):
-						KinematicLabArchetype.rain(holder, pillar, boxes)),
+						KinematicLabArchetype.rain(holder, mech, boxes)),
 	]
 
 

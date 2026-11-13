@@ -55,10 +55,14 @@ const AIM_LEAD := deg_to_rad(110.0)
 ## LA CAJA: su tamaño (m) y sus perillas. Se ponen antes de agregarlo al árbol (la masa es la de RigidBody3D).
 var size := Vector3.ONE * 8.0
 var knobs: BodySettings = null
-## CINEMÁTICA (13/11/2026, ver BodyKinematic): el mismo cuerpo, con todo lo suyo, pero lo mueve a mano en vez de Jolt.
-## Se pone antes de agregarlo al árbol.
+## CINEMÁTICA (13/11/2026, ver KinematicMover): el mismo cuerpo, con todo lo suyo, pero lo mueve el controlador de
+## personaje del motor, con movimiento discreto, en vez de Jolt; y sus pies tienen choque (StompFeet). Se pone antes de
+## agregarlo al árbol.
 var kinematic := false
-var kin: BodyKinematic = null
+var mover: KinematicMover = null
+var stomp: StompFeet = null
+## Lo que sobresale de la caja hacia adelante (m; el vidrio de la meca): el cilindro de la cinemática lo envuelve.
+var outline_extra := 0.0
 ## A QUÉ ALTURA DEL PISO VA LA CARA DE ABAJO DE LA CAJA, parada (m): de ahí sale el largo del palo del péndulo. NO ES UNA
 ## PERILLA: la da el cuerpo (la meca propia, el de sus piernas: MechBody.WAIST, del F2). Se pone antes de agregarla.
 var hover := 7.4
@@ -133,8 +137,12 @@ func _ready() -> void:
 	if kinematic:
 		freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
 		freeze = true
-		kin = BodyKinematic.new(self)
+		mover = KinematicMover.new()
+		mover.name = "Motor"
+		mover.body = self
 	_build()
+	if mover != null:
+		add_child(mover)
 	label = Label3D.new()
 	label.top_level = true
 	label.font_size = 64
@@ -169,10 +177,7 @@ func _physics_process(delta: float) -> void:
 	_think()
 	nozzles.rest()
 	if kinematic:
-		kin.step(k, delta)
-		legs.place(k, delta)
-		_after_step(k, delta)
-		_show_label()
+		_kinematic_step(k, delta)
 		return
 	gravity_scale = k.fall_gravity if state == State.DOWN else moves.gravity_share(k)
 	angular_damp = k.ground_spin_damp if state == State.DOWN else 0.0
@@ -201,6 +206,39 @@ func _physics_process(delta: float) -> void:
 	legs.place(k, delta)
 	_after_step(k, delta)
 	_show_label()
+
+
+## UN PASO CINEMÁTICO: el motor la mueve, la caja va donde él dice, las piernas lo siguen y los pies con choque van
+## donde pisan (los arma la primera vez, ya en su lugar: ver StompFeet.build).
+func _kinematic_step(k: BodySettings, delta: float) -> void:
+	mover.step(delta)
+	global_transform = mover.body_place()
+	legs.place(k, delta)
+	var places := legs.foot_transforms()
+	if stomp == null:
+		stomp = StompFeet.new()
+		stomp.name = "Pies con choque"
+		add_child(stomp)
+		stomp.build(MechBody.FOOT_SIZE, places)
+	else:
+		stomp.follow(places)
+	nozzles.fire(k)
+	_after_step(k, delta)
+	_show_label()
+
+
+## LA PONE en `where` (el punto del piso debajo de su centro), quieta, sin barrer el camino. Sólo la cinemática: la
+## física se pone con su transformación.
+func put(where: Transform3D) -> void:
+	if mover == null:
+		return
+	mover.put(where)
+	freeze = true
+	global_transform = mover.body_place()
+	if stomp != null:
+		legs.replant()
+		legs.place(knobs, 0.0)
+		stomp.place_now(legs.foot_transforms())
 
 
 func _show_label() -> void:
@@ -392,17 +430,17 @@ func knock(strong: bool) -> void:
 
 
 ## ── EMPUJARLA Y LEER SU VELOCIDAD: UNA SOLA PUERTA PARA LOS DOS MODOS ────────────────────────────────────────────
-## Física, va a Jolt; cinemática, a la velocidad que mueve BodyKinematic. Todo lo que la empuja (caminar, saltar, el
+## Física, va a Jolt; cinemática, a la velocidad que mueve KinematicMover. Todo lo que la empuja (caminar, saltar, el
 ## dash, el propulsor, las piñas, los misiles, las zonas) pasa por acá.
 
 ## Su velocidad (m/s, mundo).
 func velocity() -> Vector3:
-	return kin.velocity if kinematic else linear_velocity
+	return mover.velocity if kinematic else linear_velocity
 
 
 func set_velocity(value: Vector3) -> void:
 	if kinematic:
-		kin.velocity = value
+		mover.velocity = value
 	else:
 		linear_velocity = value
 
@@ -410,18 +448,16 @@ func set_velocity(value: Vector3) -> void:
 ## UNA FUERZA (N) en este paso, en el punto `at` (desde su centro, en el mundo). Cinemática, sólo cuenta lo que mueve el
 ## centro (el giro lo hace el péndulo).
 func push_force(force: Vector3, at := Vector3.ZERO) -> void:
-	if kinematic:
-		kin.force += force
-	else:
+	# Cinemática, nada: la mueve su motor (las toberas sólo se ven).
+	if not kinematic:
 		apply_force(force, at)
 
 
 ## UN IMPULSO (N·s) en `at` (desde su centro, en el mundo). Cinemática: un cambio de velocidad del torso, sólo parada.
 func push_impulse(impulse: Vector3, at := Vector3.ZERO) -> void:
+	# Cinemática, todavía nada: con movimiento discreto, falta decidir qué le hace un golpe (ver KinematicMover).
 	if not kinematic:
 		apply_impulse(impulse, at)
-	elif state == State.STANDING:
-		kin.velocity += Vector3(impulse.x, impulse.y if airborne else 0.0, impulse.z) / mass
 
 
 ## LE PEGA A CUALQUIER CUERPO: a uno con equilibrio, por su puerta (física o cinemática); a lo demás, de siempre.

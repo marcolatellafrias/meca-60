@@ -1,12 +1,12 @@
 extends Node
 
-## LA LOCOMOCIÓN DEL CUBO CINEMÁTICO, MEDIDA (unos 25 segundos, sin cajas): un dash de costado en el piso, Q sin
+## LA LOCOMOCIÓN DE LA MECA CINEMÁTICA (la simplificada), MEDIDA (unos 25 segundos, sin cajas): un dash de costado en el piso, Q sin
 ## dirección (no tiene que pasar nada), un dash de costado en lo alto de un salto y el vuelo. Imprime cuánto lo corre
 ## cada dash, cuánto sube volando y las barras. Con ventana, capturas de las toberas.
 ##   tools/godot_ventana.sh res://tests/kinematic_lab_moves_look.tscn -- --salida=C:/carpeta
 
 var _folder := ""
-var _pillar: KinematicPillar = null
+var _pillar: Mech = null
 var _eye: Camera3D = null
 var _title: Label = null
 
@@ -43,7 +43,12 @@ func _ready() -> void:
 	world.environment.ambient_light_color = Color(0.8, 0.82, 0.85)
 	world.environment.ambient_light_energy = 0.6
 	add_child(world)
-	_pillar = KinematicPillar.new()
+	_pillar = Mech.new()
+	_pillar.arms_kind = Mech.Arms.NONE
+	_pillar.kinematic = true
+	_pillar.has_cabin = false
+	_pillar.scripted = true
+	_pillar.position = Vector3.UP * Mech.standing_height()
 	add_child(_pillar)
 	_eye = Camera3D.new()
 	_eye.far = 2000.0
@@ -51,31 +56,31 @@ func _ready() -> void:
 	_eye.make_current()
 	await _wait(1.0)
 	# DASH EN EL PISO, de costado.
-	var from := _pillar.global_position
+	var from := _pillar.mover.global_position
 	await _dash(Vector2(1.0, 0.0), "1. dash en el piso, a la derecha: las toberas de la izquierda", "1_dash_piso")
 	await _wait(2.5)
-	print("DASH EN EL PISO: lo corrió %.1f m · barra del dash %d %%" % [_flat(_pillar.global_position - from),
-		roundi(_pillar.dash_fuel * 100.0)])
+	print("DASH EN EL PISO: lo corrió %.1f m · barra del dash %d %%" % [_flat(_pillar.mover.global_position - from),
+		roundi(_pillar.mover.dash_fuel * 100.0)])
 	# Q SIN DIRECCIÓN.
-	from = _pillar.global_position
-	var fuel := _pillar.dash_fuel
+	from = _pillar.mover.global_position
+	var fuel := _pillar.mover.dash_fuel
 	await _dash(Vector2.ZERO, "", "")
 	await _wait(1.5)
-	print("Q SIN DIRECCIÓN: lo corrió %.2f m · gastó barra %s" % [_flat(_pillar.global_position - from),
-		_pillar.dash_fuel < fuel - 0.01])
+	print("Q SIN DIRECCIÓN: lo corrió %.2f m · gastó barra %s" % [_flat(_pillar.mover.global_position - from),
+		_pillar.mover.dash_fuel < fuel - 0.01])
 	await _wait(2.0)
 	# DASH EN EL AIRE, en lo alto.
 	_pillar.jump = true
 	await _wait(0.1)
 	_pillar.jump = false
-	while _pillar.velocity.y > 0.0:
+	while _pillar.mover.velocity.y > 0.0:
 		await _wait(1.0 / Engine.physics_ticks_per_second)
-	from = _pillar.global_position
+	from = _pillar.mover.global_position
 	await _dash(Vector2(-1.0, 0.0), "2. dash en el aire, a la izquierda", "2_dash_aire")
 	while not _pillar.grounded:
 		await _wait(1.0 / Engine.physics_ticks_per_second)
 	await _wait(2.0)
-	print("DASH EN EL AIRE: lo corrió %.1f m hasta frenar" % _flat(_pillar.global_position - from))
+	print("DASH EN EL AIRE: lo corrió %.1f m hasta frenar" % _flat(_pillar.mover.global_position - from))
 	# EL VUELO: salta, suelta y vuelve a apretar.
 	_pillar.jump = true
 	await _wait(0.1)
@@ -85,10 +90,10 @@ func _ready() -> void:
 	var top := 0.0
 	var clock := 0.0
 	var shot := false
-	while _pillar.fly_fuel > 0.0 and clock < 6.0:
+	while _pillar.mover.fly_fuel > 0.0 and clock < 6.0:
 		await _wait(1.0 / Engine.physics_ticks_per_second)
 		clock += 1.0 / Engine.physics_ticks_per_second
-		top = maxf(top, _pillar.global_position.y)
+		top = maxf(top, _pillar.mover.global_position.y)
 		if not shot and clock > 1.0:
 			shot = true
 			_look(Vector3(-26.0, -4.0, 18.0))
@@ -96,7 +101,7 @@ func _ready() -> void:
 	_pillar.jump = false
 	print("VUELO: subió hasta %.1f m en %.1f s, hasta vaciar la barra" % [top, clock])
 	await _wait(4.0)
-	print("VUELO: la barra, después de 4 s apoyado: %d %%" % roundi(_pillar.fly_fuel * 100.0))
+	print("VUELO: la barra, después de 4 s apoyado: %d %%" % roundi(_pillar.mover.fly_fuel * 100.0))
 	get_tree().quit()
 
 
@@ -125,7 +130,7 @@ func _wait(seconds: float) -> void:
 
 
 func _look(offset: Vector3) -> void:
-	var at := _pillar.global_position + Vector3.UP * 8.0
+	var at := _pillar.mover.global_position + Vector3.UP * 8.0
 	_eye.global_position = at + offset
 	_eye.look_at(at)
 

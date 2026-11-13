@@ -39,6 +39,11 @@ var covering := false
 var cabin: MechCabin = null
 var keys: MechKeys = null
 var arms: Array[MechArm] = []
+## CON CABINA (la de siempre) o SIN (LA SIMPLIFICADA: sin cabina, sin escaleras ni ascensor, sin maniquíes; con
+## `arms_kind` NONE, sin brazos: la del Laboratorio cinemático). Se pone antes de agregarla.
+var has_cabin := true
+## La maneja algo que no son sus teclas (un test, un cerebro): no las lee.
+var scripted := false
 
 
 func _init() -> void:
@@ -49,18 +54,26 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	name = NAMES[arms_kind]
+	name = NAMES[arms_kind] if has_cabin else "Meca simplificada"
+	# El cilindro de la cinemática envuelve también el vidrio de adelante.
+	outline_extra = CabinGrid.GLASS_OUT if has_cabin else 0.0
 	super()
 	add_to_group(SandboxPossession.GROUP)
 
 
 func _build() -> void:
-	cabin = MechCabin.new()
-	cabin.mech = self
-	add_child(cabin)
 	keys = MechKeys.new()
 	keys.mech = self
 	add_child(keys)
+	if not has_cabin:
+		# LA SIMPLIFICADA: la caja lisa, y una franja al frente para saber hacia dónde mira.
+		Clay.box(look, size, Vector3.ZERO, Clay.METAL.darkened(0.1))
+		Clay.box(look, Vector3(size.x * 0.6, 0.5, 0.2), Vector3(0.0, size.y * 0.3, -size.z * 0.5 - 0.1), Clay.YELLOW)
+		_build_arms()
+		return
+	cabin = MechCabin.new()
+	cabin.mech = self
+	add_child(cabin)
 	_build_arms()
 	cabin.build_frame()
 	if arms_kind != Arms.NONE:
@@ -88,7 +101,8 @@ func _build_arms() -> void:
 
 
 func _think() -> void:
-	keys.read()
+	if not scripted:
+		keys.read()
 
 
 ## LA POSTURA DE LOS BRAZOS: la elegida parada; recogidos caída y subiendo (se estiran al enderezarse, con las piernas).
@@ -97,7 +111,8 @@ func _after_step(_k: BodySettings, _delta: float) -> void:
 	var fallen := state == State.DOWN or state == State.LIFT
 	for arm in arms:
 		arm.stance = MechArm.Stance.TUCKED if fallen else (MechArm.Stance.COVER if covering else MechArm.Stance.NORMAL)
-	cabin.ride()
+	if cabin != null:
+		cabin.ride()
 
 
 ## ── POSEERLA (ver SandboxPossession): lo atiende su teclado ──────────────────────────────────────────────────────
@@ -111,6 +126,9 @@ func possess_controls() -> PackedStringArray:
 
 
 func possess_status() -> String:
+	if kinematic:
+		return "dash %s   vuelo %s\n%.1f m/s%s · acható %d" % [BodyMoves._bar(mover.dash_fuel), BodyMoves._bar(mover.fly_fuel),
+			mover.speed(), "" if grounded else " · en el aire", mover.flattened + (stomp.flattened if stomp != null else 0)]
 	return moves.status()
 
 
@@ -143,10 +161,12 @@ static func rebuild_all(tree: SceneTree) -> void:
 		var fresh := Mech.new()
 		fresh.arms_kind = old.arms_kind
 		fresh.kinematic = old.kinematic
+		fresh.has_cabin = old.has_cabin
 		# Parada sobre el piso de su parcela (la altura 0 de lo que la tiene, como la arman sus arquetipos).
 		fresh.transform = Transform3D(Basis(Vector3.UP, old.yaw()), Vector3(old.position.x, Mech.standing_height(),
 			old.position.z))
-		old.cabin.free_dummies()
+		if old.cabin != null:
+			old.cabin.free_dummies()
 		holder.remove_child(old)
 		old.queue_free()
 		holder.add_child(fresh)

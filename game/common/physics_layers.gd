@@ -28,7 +28,7 @@ const PARCEL_BOUND := 1 << 15
 ## casos usualmente») ────────────────────────────────────────────────────────────────────────────────────────────────
 ## FIXED (17, "Fijo del mundo"): el piso, los edificios, las paredes: lo que no se mueve nunca. La mira lo que se mueve
 ## con el controlador de personaje del motor y SÓLO tiene que frenar contra el mundo (el cilindro de la meca cinemática,
-## ver KinematicPillar): así no hay que distinguir a mano lo fijo de lo suelto. Lo fijo va ADEMÁS en su capa de siempre
+## ver KinematicMover): así no hay que distinguir a mano lo fijo de lo suelto. Lo fijo va ADEMÁS en su capa de siempre
 ## (`mark_fixed` le suma ésta): nada de lo que ya lo veía deja de verlo.
 const FIXED := 1 << 16
 

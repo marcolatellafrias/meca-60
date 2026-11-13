@@ -17,7 +17,7 @@ const FAST := 100.0
 const SMALL := 5.0
 const BIG := 14.0
 
-## El camino: qué brazos lleva. Y si se mueve cinemática (ver BodyKinematic).
+## El camino: qué brazos lleva. Y si se mueve cinemática (ver KinematicMover).
 var arms := Mech.Arms.POSE
 var kinematic := false
 
@@ -33,6 +33,12 @@ func max_footprint() -> Vector2:
 
 
 func describe(_seed_value: int) -> PackedStringArray:
+	if kinematic:
+		return PackedStringArray([
+			"la mueve el controlador de personaje del motor: contra lo fijo, un cilindro; sus pies patean y achatan",
+			"movimiento discreto: Shift dash (con dirección) · espacio salta (y en el aire vuela) · Ctrl se agacha",
+			"mirándola, O la posee (T cambia la vista) · U subirse",
+		])
 	return PackedStringArray([
 		"una caja física que es un péndulo sobre su apoyo: una piña la saca de arriba de los pies, una pared no",
 		"brazos %s" % ("físicos: chocan y se traban" if arms == Mech.Arms.MUSCLE else "discretos: atraviesan, y al conectar empujan"),
@@ -66,7 +72,7 @@ func keys() -> Array[SandboxKey]:
 	out.append(SandboxKey.action(KEY_U, SandboxKey.Weight.MAIN, "subirse a la meca (al piso del medio)",
 		func(parcel: SandboxParcel) -> void:
 			for mech: Mech in parcel.find_children("*", "Mech", true, false):
-				if mech.arms_kind != Mech.Arms.NONE:
+				if mech.arms_kind != Mech.Arms.NONE and mech.cabin != null:
 					mech.cabin.board()))
 	out.append_array(MechArchetype.knock_keys())
 	return out
@@ -80,9 +86,9 @@ static func knock_keys() -> Array[SandboxKey]:
 		SandboxKey.action(KEY_M, SandboxKey.Weight.NORMAL, "pegarle fuerte",
 			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: mech.knock(true))),
 		SandboxKey.action(KEY_Y, SandboxKey.Weight.NORMAL, "ascensor: subir una parada",
-			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: mech.cabin.lift.up())),
+			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: if mech.cabin != null: mech.cabin.lift.up())),
 		SandboxKey.action(KEY_H, SandboxKey.Weight.NORMAL, "ascensor: bajar una parada",
-			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: mech.cabin.lift.lower())),
+			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: if mech.cabin != null: mech.cabin.lift.lower())),
 	]
 
 

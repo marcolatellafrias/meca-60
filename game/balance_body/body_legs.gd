@@ -219,3 +219,11 @@ func _lift(k: BodySettings) -> float:
 
 func _settle(k: BodySettings) -> float:
 	return k.settle_gap * MechBody.stride
+
+
+## DÓNDE ESTÁN LOS PIES (mundo), como se dibujaron en el último paso: los siguen los pies con choque (StompFeet).
+func foot_transforms() -> Array[Transform3D]:
+	var out: Array[Transform3D] = []
+	for leg in _legs:
+		out.append(leg.foot())
+	return out

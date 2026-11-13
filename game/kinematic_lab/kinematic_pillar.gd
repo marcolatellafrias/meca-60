@@ -1,6 +1,10 @@
 class_name KinematicPillar
 extends CharacterBody3D
 
+## *VIEJO (13/11/2026): el Laboratorio cinemático ya usa la meca simplificada (Mech sin brazos ni cabina, que se mueve
+## con KinematicMover y pisa con StompFeet). Este cubo queda sólo porque lo usa el módulo Jefes como blanco del jefe
+## bola; cuando pasen a la meca, se borra con sus piezas (PillarFeet, PillarNozzles, PillarSettings, PillarPanel).*
+##
 ## EL CUBO CINEMÁTICO (13/11/2026) — EXPERIMENTO: una caja sobre dos pies, para probar por separado CÓMO SE LLEVA LO
 ## CINEMÁTICO CON LO FÍSICO y la locomoción de la meca futura, sin la cabina, el ascensor ni el péndulo. El usuario: «un
 ## cubo alargado… y así yo pruebo los distintos approaches de interacción de cinemático con físico… vamos por partes»;
