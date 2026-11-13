@@ -12,7 +12,7 @@ const IMPACT_LEAN := 1.35
 ## LA COLUMNA QUE GIRA, EN 1 (ver `twist`): cuánto gira cada vértebra y cuánto acompaña la cadera, por unidad de paso.
 const TWIST_SPINE := -0.2
 const TWIST_HIPS := 0.1
-## ── EL BRAZO SE ABRE DEL CUERPO, APARTE DEL BRACEO (07/11/2026, el dios del juego: «separar el braceo en dos perillas:
+## ── EL BRAZO SE ABRE DEL CUERPO, APARTE DEL BRACEO (07/11/2026, el usuario: «separar el braceo en dos perillas:
 ## adelante y atrás, y se abre del cuerpo») ───────────────────────────────────────────────────────────────────────────
 ## Cuánto gira el brazo hacia afuera, en radianes, por el cuadrado de en qué punto del paso está y qué tan rápido va
 ## (`foot_spread_unified.y × speed_norm`): cero con los pies juntos, lo más en los extremos del paso, y más corriendo. La
@@ -64,7 +64,7 @@ func register_all() -> void:
 	# pies — la idea correcta, pero desacoplada de la geometría: podía pelearse con lo que la pierna
 	# necesitaba y despegar el pie del piso. Ahora la pelvis baja lo que la pierna pide
 	# (BoneInstantiator._update_pelvis_drop) y `root_bounciness` es el MULTIPLICADOR que exagera esa
-	# bajada. Misma variable, mismo look, pero imposible de romper. Ver technical/character-animation.md.
+	# bajada. Misma variable, mismo look, pero imposible de romper. Ver character-parametric:docs/technical/character-animation.md.
 
 	# La inclinación de costado de lower_spine por el ancho de los pies; su perilla, `spine_roll` (ver WalkStyle).
 	pa.register_formula(lower_spine, PA.Axis.ROT_Z,
@@ -111,7 +111,7 @@ func register_all() -> void:
 
 	# ─── SHOULDERS ───────────────────────────────────────────────────────────────
 
-	# ── EL GIRO ADELANTE Y ATRÁS DEL HOMBRO VA AL BRAZO; EL CAMBIO DE ÁNGULO SE QUEDA (04/11/2026, el dios del juego: «lo
+	# ── EL GIRO ADELANTE Y ATRÁS DEL HOMBRO VA AL BRAZO; EL CAMBIO DE ÁNGULO SE QUEDA (04/11/2026, el usuario: «lo
 	# que me molesta es esa rotación en ese sentido, pero me gusta el movimiento del hombro, el cambio de ángulo») ──────
 	# Desde que el pecho está partido en dos —cada mitad pegada a su hombro, ver BlockBody._split_chest—, el balanceo
 	# alternado del hombro (ROT_Y, −0,95 por `shoulder_swing`) giraba la mitad del pecho adelante y atrás, y con
@@ -139,7 +139,7 @@ func register_all() -> void:
 	var arm_weight := func() -> float: return arm_swing * arm_total
 	var ik         := bi.ik_util
 
-	# ── EL BRACEO GIRA EN EL HOMBRO, Y EL CODO LO ACOMPAÑA (07/11/2026, el dios del juego: «cuando tengo personajes con
+	# ── EL BRACEO GIRA EN EL HOMBRO, Y EL CODO LO ACOMPAÑA (07/11/2026, el usuario: «cuando tengo personajes con
 	# brazos muy largos… en algunas partes se vuelve como más recto, en otras se dobla más»; eligió «b y c») ──────────
 	# La mano no se corre por partes —adelante, arriba, afuera— sino que GIRA ALREDEDOR DEL HOMBRO a la distancia que
 	# tiene en reposo: no se acerca ni se aleja de él, así que el codo guarda su doblez todo el braceo. El punto hacia
@@ -247,7 +247,7 @@ func _register_camera_pitch_animations() -> void:
 	pa.register_formula(lower_spine,  PA.Axis.POS_Y, down_callable, -look_down_extra * 0.6)
 	pa.register_formula(lower_spine,  PA.Axis.POS_Z, down_callable,  look_down_extra * 0.4)
 
-	# ─── SENTADO, AL MIRAR ARRIBA SE RECUESTA (28/10/2026, lo pidió el dios del juego) ───────
+	# ─── SENTADO, AL MIRAR ARRIBA SE RECUESTA (28/10/2026, lo pidió el usuario) ───────
 	# «Que tengan la espalda apoyada en el respaldar y que se doble cuando miran para arriba»: el tronco se va para atrás
 	# desde la pelvis, que es donde gira el respaldo (al pie del almohadón), así la espalda no se le despega.
 	var seated_up := func() -> float: return maxf(0.0, pitch_callable.call()) if bi.is_seated else 0.0

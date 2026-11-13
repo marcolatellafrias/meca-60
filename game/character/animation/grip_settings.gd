@@ -2,12 +2,12 @@ class_name GripSettings
 extends Resource
 
 ## ── LO GUARDADO DEL F1 DE LA FILA AGARRE (29/10/2026, sesión de siluetas de los personajes) ───────────────────────────
-## Lo pidió el dios del juego: «el panel ese para cambiar las cosas, el volante y eso, ¿tienen opción de guardado?…
+## Lo pidió el usuario: «el panel ese para cambiar las cosas, el volante y eso, ¿tienen opción de guardado?…
 ## agrégasela». Cómo se aprieta (TubeHand.press_with) y cómo vuelven a agarrar el volante y la válvula (GripStyle), en
 ## `PATH`. Lo escribe el botón Guardar del panel (ver PressPanel); lo leen TubeHand y GripStyle al arrancar. Sin
 ## archivo, lo del código.
 ##
-## ⚠ El archivo es del dios del juego (lo escribe el panel cuando él guarda): no se commitea a mano.
+## ⚠ El archivo es del usuario (lo escribe el panel cuando él guarda): no se commitea a mano.
 
 const PATH := "res://game/character/animation/grip_settings.tres"
 

@@ -1,7 +1,7 @@
 class_name PossessionCamera
 extends Camera3D
 
-## ── POSEER A UN PERSONAJE: MIRAR POR SUS OJOS (03/11/2026, lo pidió el dios del juego) ───────────────────────────────
+## ── POSEER A UN PERSONAJE: MIRAR POR SUS OJOS (03/11/2026, lo pidió el usuario) ───────────────────────────────
 ## «La capacidad de poseer a los personajes para ver a través de su primera persona. Poseer hace de que no puedas
 ## controlar al personaje, pero puedas verlo en primera persona. Con todo lo de un personaje normal, solamente que se
 ## controla por guión.» Una cámara que va a los ojos de `target` con la MISMA regla que la del jugador (ver
@@ -80,7 +80,7 @@ func _init() -> void:
 	process_priority = 1  # después de la pose de los personajes (ver PlayerController._init)
 
 
-## ── A QUIÉN SE ESTÁ MIRANDO (04/11/2026, el dios del juego: «que me aparezca qué arquetipo estoy poseyendo… algo bien
+## ── A QUIÉN SE ESTÁ MIRANDO (04/11/2026, el usuario: «que me aparezca qué arquetipo estoy poseyendo… algo bien
 ## rudimentario»): un rótulo arriba a la izquierda con su arquetipo; se va con la cámara.
 func _show_whom() -> void:
 	var layer := CanvasLayer.new()

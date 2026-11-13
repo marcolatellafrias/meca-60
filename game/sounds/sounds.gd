@@ -2,7 +2,7 @@ class_name Sounds
 
 ## EL REGISTRO DE SONIDOS POR CLAVE: cada sonido del juego se pide por su clave (ver SoundCatalog) y suena el archivo
 ## que tenga —`assets/audio/<categoría>/<clave>.ogg` o `.wav`— o, si no hay, el sonido de prueba (ver TestSounds). Cada
-## clave va por su bus. Ver docs/technical/audio.md.
+## clave va por su bus. Ver character-parametric:docs/technical/audio.md.
 ##
 ##     Sounds.play(&"palanca", self)          # un golpe, donde está `self`, y se borra solo
 ##     var hum := Sounds.player(&"ventilador")  # un reproductor, para prender y apagar

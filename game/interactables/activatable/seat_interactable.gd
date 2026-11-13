@@ -15,22 +15,25 @@ extends ActivatableInteractable
 ## arriba del asiento va su pelvis y cuánto adelante de la cara del respaldo. Eran a mano por arquetipo (29/10/2026),
 ## puestos mirando la malla de costado; con el cuerpo de cajas salen de su forma (BlockShape.seat_fit): la pelvis, un
 ## radio de pierna arriba —el fondo de la caja de la cadera apoya—, y la columna, media caja de torso adelante —la
-## espalda apoya—. Así no se desajustan cuando cambian las proporciones (02/11/2026, el dios del juego: «cambiamos los
+## espalda apoya—. Así no se desajustan cuando cambian las proporciones (02/11/2026, el usuario: «cambiamos los
 ## personajes y sus siluetas… pero no ajustamos la distancia… para que encajen bien los arquetipos con su espalda en el
 ## respaldar»). Si las rodillas se pasan del borde, los pies se meten (ver knees_past_edge).
 ##
 ## ── EL RESPALDO SE RECLINA CON LA ESPALDA ──────────────────────────────────────────────────────────────────────────
 ## Sentado, el tronco se recuesta desde la pelvis: al mirar para arriba (BoneAnimations.SEATED_LOOK_UP_LEAN), con la
-## inercia de la nave o con un golpe. El respaldo gira lo mismo —lo mide en el hueso (ver `_recline`)—, pero sobre SU
-## ESQUINA, donde se junta con el asiento (29/10/2026, lo pidió el dios del juego: girando sobre la pelvis se descolocaba
+## inercia de la meca o con un golpe. El respaldo gira lo mismo —lo mide en el hueso (ver `_recline`)—, pero sobre SU
+## ESQUINA, donde se junta con el asiento (29/10/2026, lo pidió el usuario: girando sobre la pelvis se descolocaba
 ## de la silla). Como los dos giran sobre puntos distintos, reclinada la espalda se separa un poco del respaldo: más cuanto
 ## más alto y adelante de la esquina va la pelvis (ver CÓMO SE SIENTA).
 
 ## Altura de la pelvis sobre la base con la silla a su altura de modelo. Es la referencia de la silla
 ## para estirar el pie, no la altura de la silla vacía.
 @export var rest_height:       float       = 0.42
-## A qué altura sobre la base tiene que quedar la mira del que se sienta. Las sillas de las estaciones —la nave y el
-## sandbox— ponen la de la nave (ver StationSeat.make, ShipStyle.seat_eye_height); este default es para asientos sueltos.
+## LA MIRA DEL QUE SE SIENTA EN UNA CONSOLA, sobre la base de la silla (la cabina de la meca, la silla suelta del lote
+## de recursos). Era la altura de ojos sentado de la nave de character-parametric.
+const STATION_EYE_HEIGHT := 1.7
+## A qué altura sobre la base tiene que quedar la mira del que se sienta. Las sillas de las consolas ponen
+## `STATION_EYE_HEIGHT`; este default es para asientos sueltos.
 @export var eye_height:        float       = 1.15
 @export var seat_area:         Vector3     = Vector3(0.6, 0.5, 0.6)
 @export var stand_up_location: Vector2     = Vector2(0.0, 1.2)
@@ -86,8 +89,8 @@ var _claim:         ExclusiveClaim = null
 ## Sentarse es una FOTO: `_sit` pone la cápsula en el asiento una vez y la deja inerte (collider
 ## apagado, Y bloqueada). La pose del esqueleto sí sigue al asiento cada frame, y
 ## `BoneInstantiator._pose_root` además fija la cápsula en X y Z — pero nada movía su ALTURA ni su
-## rumbo. En un asiento fijo da igual; en la nave, al despegar el piloto quedaba colgando donde se
-## sentó —y la cámara, que es hija de la cápsula, con él—, y al girar la nave seguía mirando al mismo
+## rumbo. En un asiento fijo da igual; en la meca, al despegar el piloto quedaba colgando donde se
+## sentó —y la cámara, que es hija de la cápsula, con él—, y al girar la meca seguía mirando al mismo
 ## punto del mundo mientras la cabina rotaba alrededor.
 ##
 ## Mover la cápsula acá es seguro justamente porque está inerte: con el collider apagado no tiene
@@ -258,8 +261,8 @@ func release_occupant_in_place() -> void:
 		return
 	# PRIMERO SE SUELTA ACÁ, DESPUÉS EL HOST: sin red el claim avisa en el acto (`_on_claim_released`), y con el
 	# ocupante todavía puesto lo paraba con teleport, diferido al final del cuadro —al lugar de pararse de la silla—,
-	# después de que quien lo soltaba ya lo había ubicado. Medido por la nave: el ente que bajaba de la nave de la
-	# maqueta aparecía donde estaba la nave, a 1160 m, cayendo.
+	# después de que quien lo soltaba ya lo había ubicado. Medido por la meca: el ente que bajaba de la meca de la
+	# maqueta aparecía donde estaba la meca, a 1160 m, cayendo.
 	_release_occupant(false, true)  # revert local ya, sin teleport pero avisando a los proxies
 	if is_instance_valid(_claim):
 		_claim.release()          # que el host libere la ocupación (async, no importa el orden)
@@ -337,7 +340,7 @@ func pelvis_back_of_centre() -> float:
 func knees_past_edge(femur: float) -> float:
 	return femur - pelvis_back_of_centre() - (ProceduralSeat.FRONT + CALF_BEHIND_KNEE) * _scale()
 
-## Hasta dónde llegan las rodillas de un arquetipo medio, desde el eje de la columna: con eso la nave planea el lugar para
+## Hasta dónde llegan las rodillas de un arquetipo medio, desde el eje de la columna: con eso la meca planea el lugar para
 ## las rodillas bajo la consola (ver StationSeat.from_hinge).
 func typical_knee_reach() -> float:
 	return (TYPICAL_FEMUR - ProceduralSeat.BACK_FACE + DEFAULT_FIT.y) * _scale()
@@ -346,7 +349,7 @@ func _scale() -> float:
 	return maxf(display_scale, 0.01)
 
 ## EL RUMBO DE LA SILLA EN EL MUNDO: hacia dónde mira su frente, sobre el plano horizontal. Es lo que necesita quien
-## sigue derecho en el mundo —la cápsula del jugador y su cámara—, y no `global_rotation.y`: con la nave cabeceando o
+## sigue derecho en el mundo —la cápsula del jugador y su cámara—, y no `global_rotation.y`: con la meca cabeceando o
 ## rolando, ese ángulo de Euler mezcla los tres giros y deja de ser el rumbo.
 func heading() -> float:
 	var front := -global_basis.z
@@ -373,7 +376,7 @@ func _fit_visual(visual: Node3D) -> void:
 
 ## LO QUE SE RECUESTA EL TRONCO del que está sentado, en este cuadro, MEDIDO EN SU HUESO: el giro hacia atrás de la base
 ## de la columna respecto de su reposo, sea por qué sea —mirar para arriba, la inercia de la nave, un golpe— (02/11/2026,
-## el dios del juego: «no quiero agregar una regla más a ese sistema, sino que quiero hacerlo más robusto»). Hacia
+## el usuario: «no quiero agregar una regla más a ese sistema, sino que quiero hacerlo más robusto»). Hacia
 ## adelante no: el respaldo se queda y la espalda se despega.
 func _recline() -> float:
 	if not is_instance_valid(_visual_occupant):
@@ -388,9 +391,9 @@ func _recline() -> float:
 
 ## Lleva al ocupante con el asiento. Ver ASIENTO SOBRE ALGO QUE SE MUEVE.
 ##
-## AL QUE SE SIMULA (el jugador), la altura, SOBRE EL ARRIBA DEL ASIENTO —no la vertical del mundo: con la nave cabeceando
+## AL QUE SE SIMULA (el jugador), la altura, SOBRE EL ARRIBA DEL ASIENTO —no la vertical del mundo: con la meca cabeceando
 ## o ladeada, la altura del mundo lo corría de la silla (ver BoneInstantiator, LOS EJES DE LA SILLA)—. Su rumbo lo lleva
-## su mirada, que va en los ejes del marco y viaja sola con la nave (ver CharacterIntent).
+## su mirada, que va en los ejes del marco y viaja sola con la meca (ver CharacterIntent).
 ##
 ## AL QUE NO SE SIMULA NI LLEGA POR RED (uno de exhibición, una figura), EL TRANSFORM ENTERO, derivado del asiento:
 ## "la altura del asiento en el mundo" sólo es donde está el asiento MIENTRAS LA NAVE ESTÁ DERECHA; volcada, la
@@ -445,7 +448,7 @@ func _restore_rest_visual() -> void:
 ## ⚠ SÓLO SE REGISTRA EL QUE ESTÁ SENTADO ACÁ, y eso no es una guarda de más. A un maniquí de escala al que
 ## el asiento acaba de echar le queda vivo el resto del cuadro —se va con un `queue_free`— y su pose sigue
 ## corriendo, así que VOLVÍA A ANOTARSE acá después de que el asiento lo había soltado; al final del cuadro
-## se liberaba y `_visual_occupant` quedaba apuntando a un nodo muerto. Medido: sentarse en una nave con la
+## se liberaba y `_visual_occupant` quedaba apuntando a un nodo muerto. Medido: sentarse en una meca con la
 ## tripulación de escala puesta y antes de que se congele (ver StationSeat.CREW_SETTLE_FRAMES) deja al asiento
 ## tirando un error por cuadro en `_physics_process` y termina en segfault. La regla que lo hace imposible no
 ## es revisar ese caso: es que el único que puede registrarse sea el ocupante.
@@ -457,9 +460,9 @@ func update_seated_visual(occupant: Node, occupant_yaw: float) -> void:
 	if not is_instance_valid(mesh):
 		return
 	mesh.global_position = _visual_root.global_position
-	# ALREDEDOR DEL ARRIBA DE LA SILLA, NO DEL MUNDO (2/11/2026, lo pidió el dios del juego: «cada vez que se inclina la
+	# ALREDEDOR DEL ARRIBA DE LA SILLA, NO DEL MUNDO (2/11/2026, lo pidió el usuario: «cada vez que se inclina la
 	# nave, las sillas como que no se inclinan»): a bordo todo se mide desde lo que lo lleva. El rumbo del ocupante se
-	# pasa a los ejes de la silla y se gira ahí, así que con la nave cabeceando o rolando la silla va con el piso. El
+	# pasa a los ejes de la silla y se gira ahí, así que con la meca cabeceando o rolando la silla va con el piso. El
 	# frente sale de la cápsula misma y no de `occupant_yaw`: la de un maniquí viaja inclinada con la silla, y ahí el
 	# ángulo de Euler ya no es su rumbo. La del jugador va derecha, y las dos cuentas dan lo mismo.
 	var capsule := occupant.get("char_rigidbody") as Node3D
@@ -473,7 +476,7 @@ func update_seated_visual(occupant: Node, occupant_yaw: float) -> void:
 ## va con él —es hija de su cápsula—, así que acá sólo se la suelta antes de devolver el visual a su reposo.
 ##
 ## NO SE BORRA: se para, SE APAGA Y SE ESCONDE (BoneInstantiator.set_active), y cuando el que llegó se levanta, vuelve y
-## se sienta de nuevo (el dios del juego: «si me siento en una silla desaparecen y se desactivan»).
+## se sienta de nuevo (el usuario: «si me siento en una silla desaparecen y se desactivan»).
 func _evict_display_occupant(incoming: Node) -> void:
 	if not is_instance_valid(_seated_bi) or _seated_bi == incoming:
 		return
@@ -511,7 +514,7 @@ func sounds() -> Dictionary:
 
 
 ## EL PUESTO AL QUE SIRVE ESTA SILLA: la consola de adelante. La pone quien arma las dos —DashboardShapeArchetype en el
-## sandbox; en la nave, la cabina—, porque la silla no cuelga de su consola. Cuando alguien se sienta, lo que hay en el
+## sandbox; en la meca, la cabina—, porque la silla no cuelga de su consola. Cuando alguien se sienta, lo que hay en el
 ## puesto se le acomoda (ControllableInteractable.fit_to_seat: el volante se inclina hacia él), y al levantarse vuelve.
 var station: Node3D = null
 
@@ -664,7 +667,7 @@ func _release_occupant(teleport: bool, broadcast: bool) -> void:
 		return
 	char_rb.axis_lock_linear_y = false
 	char_rb.collider.disabled  = false
-	char_rb.set_seated(false)  # vuelve al marco con la velocidad de la nave en su punto
+	char_rb.set_seated(false)  # vuelve al marco con la velocidad de la meca en su punto
 	if char_rb.kind.simulates():
 		char_rb.angular_velocity   = Vector3.ZERO
 	char_rb.reset_impact_state()

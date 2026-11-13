@@ -8,7 +8,7 @@ extends RigidBody3D
 ## UNA SOLA BOLA, TRES FUERZAS (11/11/2026, el usuario: «un solo tamaño de bola y varias cosas de distintas fuerzas»;
 ## «que sea una sola tecla pasando por las fuerzas… pone 3»): siempre del mismo tamaño y a la misma velocidad; lo que
 ## cambia es su EMPUJE (masa × velocidad, en N·s), y la masa sale de él. LAS TRES LAS DICE CADA FILA para lo que tiene
-## (el usuario: «que sean acordes al threshold de la nave»; después, «por fila»; ver SeededArchetype.ball_pushes): una
+## (el usuario: «que sean acordes al threshold de la meca»; después, «por fila»; ver SeededArchetype.ball_pushes): una
 ## lo mueve, otra lo deja a punto de caerse (trastabilla, se tambalea) y otra lo tira, con sus umbrales de ahora —si se
 ## tocan las perillas de su panel (F1), las fuerzas las siguen—. Lo elegido (cuál de las tres) es uno solo para todas
 ## las parcelas: J tira, K pasa a la siguiente.

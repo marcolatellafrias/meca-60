@@ -9,7 +9,7 @@ hoy es un **boceto para probar la idea**, de a uno.
 Varias piezas vienen de `D:\Godot\taxi` (el sandbox, las opciones, el lanzador de ventana), que a su vez las trajo de
 `D:\Godot\character-parametric`. Y de character-parametric directo, el 11/11/2026, **el personaje, agarrar, sentarse y
 la red** (con la pausa y el menú de inicio de allá): el jugador es el personaje de allá. Qué se trajo, qué se adaptó y
-dónde se cortó (la ciudad, el tránsito, la nave), en `game/character_port/LEEME.md`.
+dónde se cortó (la ciudad, el tránsito, la nave), en `docs/technical/personajes-traidos.md`.
 
 ## La documentación: `docs/`
 Una bóveda de Obsidian, separada en **conceptual** (`docs/conceptual/`: el diseño del juego —el loop, la tripulación, la
@@ -143,7 +143,7 @@ ordenan y lo que todavía se le critica, en [docs/technical/estructura.md](docs/
 - `game/ui/` — la pausa (autoload `PauseMenu`, Escape), el menú de inicio (`main_menu.tscn`), las Opciones
   (`GameOptions`, `user://opciones.cfg`), `UIState` y la consola.
 - Lo traído de character-parametric: `game/character/`, `game/interactables/`, `game/net/`,
-  `game/common/`, `game/debug/`… y la frontera en `game/character_port/` (ver su LEEME.md). **Ya es código de la meca**
+  `game/common/`, `game/debug/`… (ver `docs/technical/personajes-traidos.md`). **Ya es código de la meca**
   (el usuario, 12/11/2026: «debería ser su propio código además, mejorado, simplificado, tailoreado para nuestro
   caso»): se edita cuando hace falta, y lo que no se usa acá se puede ir sacando.
 

@@ -5,36 +5,28 @@ extends Node
 ##   - El jugador local (CharacterKind.player) se spawnea al fijarse su id (session_ready).
 ##   - Cada peer remoto spawnea un proxy (CharacterKind.proxy) cuando se conoce su
 ##     identidad; el CharacterNetSync maneja su cápsula. Todos se llaman char_<peer_id> para que
-##     el RPC rutee. Ver docs/conceptual/multiplayer.md (milestones 2-3).
+##     el RPC rutee. Ver character-parametric:docs/conceptual/multiplayer.md (milestones 2-3).
 
-## Punto de inicio de respaldo, para cuando todavía no hay ciudad generada. Ver `spawn_point()`.
+## Punto de inicio de respaldo, sin mundo que lo diga. Ver `spawn_point()`.
 const FALLBACK_SPAWN := Vector3(0.0, 3.0, 0.0)
 const PLAYER_SCENE := preload("res://game/character/player.tscn")
 
 ## Nodo bajo el que se cuelgan los personajes.
 @export var characters_root: Node3D
-## AreaInstantiator del tráfico, al que le inyectamos la cámara del jugador.
-@export var area_instantiator: AreaInstantiator
-## Si el jugador local lleva el panel de depuración (F1). En el sandbox, no (ver SandboxSession).
+## Si el jugador local lleva el panel de depuración (F9). En el sandbox, no (ver SandboxSession).
 @export var debug_local := true
 
 var local_player: BoneInstantiator
 ## peer_id -> BoneInstantiator (proxies puppet).
 var remote_players: Dictionary = {}
 
-## DÓNDE APARECE UN PERSONAJE: un cruce de calles en el centro de la ciudad, que lo elige ella
-## (`City.start_point`). Se pregunta en el momento de usarlo y no al cargar, porque la ciudad se genera en
-## su `_ready` y no hay garantía de que ya haya corrido. Sin ciudad, el punto de respaldo.
+## DÓNDE APARECE UN PERSONAJE: lo dice el mundo de la red (el grupo `net_world`; en el sandbox, la parcela
+## Multijugador). Sin él, el punto de respaldo.
 static func spawn_point(tree: SceneTree) -> Vector3:
 	# En el sandbox, la parcela Multijugador (ver SandboxSession).
 	var net_world := tree.get_first_node_in_group("net_world")
 	if net_world != null:
 		return net_world.call("start_point")
-	for node in tree.get_nodes_in_group("city_generator"):
-		if node.has_method("start_point"):
-			var point: Vector3 = node.call("start_point")
-			if point != Vector3.ZERO:
-				return point
 	return FALLBACK_SPAWN
 
 
@@ -74,9 +66,6 @@ func _on_local_identity_changed(new_peer_id: int) -> void:
 func _spawn_local(local_peer_id: int) -> void:
 	local_player = _instantiate_character(CharacterKind.player(), _seed_for(SessionManager.local_identity()), "char_%d" % local_peer_id)
 	_attach_net_sync(local_player, local_peer_id)
-	# La cámara se recrea en cada respawn (reseed con P): reengancharla al AreaInstantiator.
-	local_player.active_camera_changed.connect(_apply_local_camera)
-	_apply_local_camera(local_player.player_camera)
 	# Ya estamos en la escena del mundo: pedirle al host los objetos ya spawneados (permanencia).
 	NetSpawner.request_world_snapshot()
 
@@ -167,9 +156,3 @@ func _attach_name_tag(proxy: BoneInstantiator, peer_id: int) -> void:
 	tag.position = Vector3(0.0, rb._capsule_stand_y_offset + rb._capsule_stand_height * 0.5 + 0.3, 0.0)
 	rb.add_child(tag)
 
-func _apply_local_camera(camera: Camera3D) -> void:
-	if not is_instance_valid(area_instantiator) or not is_instance_valid(camera):
-		return
-	var cams: Array[Camera3D] = [camera]
-	# Deferred: en el primer spawn el AreaInstantiator puede no haber corrido su _ready todavía.
-	area_instantiator.set_cameras.call_deferred(cams)

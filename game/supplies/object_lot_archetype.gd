@@ -52,7 +52,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 		else:
 			SupplyLook.belt(cube, 11)
 	var chair := (load(CHAIR_SCENE) as PackedScene).instantiate() as SeatInteractable
-	chair.eye_height = ShipStyle.current.seat_eye_height
+	chair.eye_height = SeatInteractable.STATION_EYE_HEIGHT
 	chair.position = Vector3(0.0, 0.0, FOOTPRINT.y * 0.5 - 1.0)
 	chair.rotation.y = PI
 	root.add_child(chair)

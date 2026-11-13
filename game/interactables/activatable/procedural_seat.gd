@@ -2,7 +2,7 @@
 class_name ProceduralSeat
 extends Node3D
 
-## LA SILLA DE LAS ESTACIONES, sin una sola malla de Blender (29/10/2026, lo pidió el dios del juego: «dos cubos estirados
+## LA SILLA DE LAS ESTACIONES, sin una sola malla de Blender (29/10/2026, lo pidió el usuario: «dos cubos estirados
 ## y el pie… el asiento déjalo bien simple, así yo después lo modelo en Blender»):
 ##
 ##   • el PIE: un disco atornillado al piso, con sus bulones a la vista, y una columna que sube o baja hasta dejar al que
@@ -14,11 +14,8 @@ extends Node3D
 ##
 ## Low poly y mate. El frente de la silla mira a −Z: el respaldo queda hacia +Z. Todo en metros de la silla sin agrandar.
 ##
-## ── CADA SECCIÓN SE MODELA EN BLENDER (2/11/2026, lo pidió el dios del juego: «la opción para abrir en Blender cada
-## sección de la silla en otro menú F»): el pie, el asiento y el respaldo son cada uno un modelo de tamaño fijo con su
-## caja (ver ModelBox, `SECTIONS`). Si está su .glb se dibuja ese; si no, la caja de código de siempre. Se abren y se
-## traen desde su panel (ver SeatPanel). LA COLUMNA NO: es lo único que cambia de largo, y una pieza modelada no se
-## estira; queda de código, al largo justo.
+## *Hasta el 13/11/2026 cada sección se podía modelar en Blender (ModelBox, de character-parametric); acá no había
+## ningún modelo y se sacó: el pie, el asiento y el respaldo son el boceto de código.*
 
 ## ── EL PIE ──────────────────────────────────────────────────────────────────────────────────────
 const DISC_RADIUS := 0.25
@@ -35,7 +32,7 @@ const SIDES := 8
 
 ## ── EL ASIENTO Y EL RESPALDO ────────────────────────────────────────────────────────────────────
 ## VISTOS DESDE ARRIBA, ASIENTO Y RESPALDO SON UN CUADRADO de este lado, con la columna en el centro (29/10/2026, lo
-## pidió el dios del juego: «así cuando gira el asiento no sobresale más de un lado que del otro»).
+## pidió el usuario: «así cuando gira el asiento no sobresale más de un lado que del otro»).
 const SIDE := 0.5
 const SEAT_THICKNESS := 0.1
 const BACK_THICKNESS := 0.1
@@ -54,9 +51,7 @@ const FOOT_HEIGHT := DISC_HEIGHT + SCREW_HEIGHT
 
 ## ── LAS SECCIONES MODELADAS ─────────────────────────────────────────────────────────────────────
 ## Dónde viven: `art-source/silla/<sección>` (la caja y el .blend) y `assets/models/silla/<sección>.glb`.
-const MODEL_AREA := "silla"
 const SECTIONS := ["pie", "asiento", "respaldo"]
-const SECTION_TITLES := {"pie": "el pie", "asiento": "el asiento", "respaldo": "el respaldo"}
 ## Todas las sillas armadas, para rearmarlas cuando llega un modelo nuevo (ver `reload_all`).
 const GROUP := "procedural_seats"
 
@@ -129,18 +124,7 @@ func _fill(holder: Node3D, section: String) -> void:
 	for child in holder.get_children():
 		holder.remove_child(child)
 		child.queue_free()
-	var loaded := ModelBox.load_into(holder, MODEL_AREA, section, section_box(section),
-		func(color: Color) -> Material: return MeshKit.material(color, 0.9, 0.0))
-	if loaded.is_empty():
-		_sketch(section, holder)
-
-
-## REARMA TODAS LAS SILLAS con los modelos de hoy: lo llama el panel después de traer uno de Blender.
-static func reload_all(tree: SceneTree) -> void:
-	for node in tree.get_nodes_in_group(GROUP):
-		var seat := node as ProceduralSeat
-		if seat != null and seat._foot != null:
-			seat._fill_all()
+	_sketch(section, holder)
 
 
 ## LA CAJA DE UNA SECCIÓN, en metros y centrada en el origen: lo que ocupa su boceto, y adentro de lo que se modela.
@@ -174,17 +158,6 @@ static func _sketch(section: String, parent: Node3D) -> void:
 		_:
 			var box := _piece(_box(section_box(section)), cloth, parent)
 			box.name = section
-
-
-## ESCRIBE LA CAJA de una sección para modelarla en Blender (ver ModelBox.write_box), con su boceto de referencia.
-## Devuelve la ruta del .json, o "" si no se pudo.
-static func write_box(section: String) -> String:
-	var reference := Node3D.new()
-	_sketch(section, reference)
-	var path := ModelBox.write_box(MODEL_AREA, section, "Silla: %s" % SECTION_TITLES[section], section_box(section),
-		0.0, {}, reference)
-	reference.free()
-	return path
 
 
 static func _piece(mesh: Mesh, material: Material, parent: Node) -> MeshInstance3D:

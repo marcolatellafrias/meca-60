@@ -18,7 +18,7 @@ const FORCE_HUMAN_SPECIE := true
 ## la ciudad vuelve a variar.
 ##
 ## Para mirar UN arquetipo sin tocar código está el panel de debug — ver DEBUG_SEED_BASE.
-## Ver technical/character-history.md.
+## Ver character-parametric:docs/technical/character-history.md.
 const FORCE_ARCHETYPE: int = EntityArchetype.Archetype.generic
 
 ## ── SEEDS DE DEBUG: EL ARQUETIPO VA CODIFICADO EN LA SEED ─────────────────────────────────────────
@@ -52,7 +52,7 @@ var age: int
 
 # Parámetros de animación resueltos: arquetipo (ya blendeado) × multiplicador de specie. No hay
 # sorteo por seed acá — la variación entre personajes viene del arquetipo, del blend de dos
-# arquetipos y de la specie. Ver technical/character-animation.md.
+# arquetipos y de la specie. Ver character-parametric:docs/technical/character-animation.md.
 var shoulder_swing: float
 var root_bounciness: float
 var step_height: float

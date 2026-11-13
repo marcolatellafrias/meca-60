@@ -81,7 +81,7 @@ const COLOR_ROW := "color_row"
 const NUMBER_FIELD := "number_field"
 
 
-## ── UNA VUELTA QUE NO MANDA SE PLIEGA (22/10/2026, lo pidió el dios del juego) ─────────────────────────────────────────
+## ── UNA VUELTA QUE NO MANDA SE PLIEGA (22/10/2026, lo pidió el usuario) ─────────────────────────────────────────
 ## Si el objeto tiene el interruptor `active` (una vuelta, un loop cut, ver BodyLoop.active) y está apagado, se muestra
 ## sólo el interruptor: sus números no hacen nada y ocupaban lugar. Prenderlo o apagarlo rearma su sección en el lugar.
 const ACTIVE := "active"
@@ -185,7 +185,7 @@ static func _build_rows(box: VBoxContainer, spec: Dictionary, fold := false) -> 
 		_tint(label, spec, prop)
 		control.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		var revert := _revert_button(row_spec, prop, control, label)
-		# ── UN SLIDER VA EN SU PROPIO RENGLÓN, A TODO EL ANCHO (lo pidió el dios del juego, 20/10/2026: al lado del nombre
+		# ── UN SLIDER VA EN SU PROPIO RENGLÓN, A TODO EL ANCHO (lo pidió el usuario, 20/10/2026: al lado del nombre
 		# quedaban muy angostos para manejarlos): arriba el nombre y el botón de volver, abajo el slider y su número.
 		if control is HSlider:
 			label.custom_minimum_size = Vector2.ZERO
@@ -299,7 +299,7 @@ static func _control(spec: Dictionary, prop: Dictionary, label: Label) -> Contro
 		check.toggled.connect(func(on: bool) -> void: _write(target, prop_name, on, on_change))
 		return check
 	if type == TYPE_COLOR:
-		# EL SELECTOR Y UN CAMPO PARA PEGAR EL COLOR (lo pidió el dios del juego, 16/10/2026): «#c8a080», «c8a080» o
+		# EL SELECTOR Y UN CAMPO PARA PEGAR EL COLOR (lo pidió el usuario, 16/10/2026): «#c8a080», «c8a080» o
 		# «200, 160, 128» (o de 0 a 1). Mover el selector escribe el hex en el campo.
 		var row := HBoxContainer.new()
 		row.set_meta(COLOR_ROW, true)
@@ -391,7 +391,7 @@ static func _bounded(spec: Dictionary, prop_name: String, value: float) -> float
 
 
 ## ── EL NÚMERO, ESCRITO A MANO ────────────────────────────────────────────────────────────────────
-## Lo pidió el dios del juego (20/10/2026): al lado de cada slider, un campo con su número para escribirlo, copiarlo y
+## Lo pidió el usuario (20/10/2026): al lado de cada slider, un campo con su número para escribirlo, copiarlo y
 ## pegarlo (Ctrl+C, Ctrl+V). Al dar Enter o salir del campo se escribe EXACTO —como el botón de volver, ver `_restore`—,
 ## dentro del rango del slider y de sus topes; uno que no se lee como número vuelve a lo que había.
 static func _number_field(spec: Dictionary, prop: Dictionary, slider: HSlider, label: Label,
@@ -442,7 +442,7 @@ static func _number_text(spec: Dictionary, prop: Dictionary, value: float) -> St
 static func _value_text(spec: Dictionary, prop: Dictionary, value: float) -> String:
 	var prop_name := str(prop["name"])
 	var shown := str(spec.get("labels", {}).get(prop_name, prop_name))
-	# LO QUE SIGNIFICA EL NÚMERO, al lado (lo pidió el dios del juego, 07/11/2026: «altura de piso en celdas debería tener una
+	# LO QUE SIGNIFICA EL NÚMERO, al lado (lo pidió el usuario, 07/11/2026: «altura de piso en celdas debería tener una
 	# label de cuánto sería eso en metros»): `readouts` del spec, {propiedad: Callable(valor) -> String}. Se reescribe con el
 	# número, mientras se arrastra.
 	var readout: Callable = (spec.get("readouts", {}) as Dictionary).get(prop_name, Callable())

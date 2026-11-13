@@ -1,7 +1,7 @@
 class_name BlockBody
 
 ## ── EL CUERPO DE CAJAS Y CÁPSULAS (31/10/2026, sesión de siluetas de los personajes) ──────────────────────────────────
-## Lo pidió el dios del juego para iterar las poses, las animaciones y las manos sin que el modelo distraiga: «los modelos
+## Lo pidió el usuario para iterar las poses, las animaciones y las manos sin que el modelo distraiga: «los modelos
 ## actuales, low poly de los personajes, me distraen de las animaciones… todo hecho con cubos estirados y con cápsulas».
 ## Cada pieza va PEGADA RÍGIDA a su hueso (pesa entera a él): cápsulas el brazo, el antebrazo, el muslo, la pierna y el
 ## cuello; cajas cada vértebra, los pies, la palma y cada falange; y la cabeza, SU FORMA DE CABEZA low poly (ver HeadForm). Las medidas son las de la forma de bloques
@@ -63,7 +63,7 @@ static func _trunk(body: ProceduralBodyUtil, shape: BlockShape, u: float, parts:
 		from += lengths[i]
 
 
-## ── EL PECHO PARTIDO EN DOS (04/11/2026, lo pidió el dios del juego: «cuando agarran algo y sus hombros se van hacia
+## ── EL PECHO PARTIDO EN DOS (04/11/2026, lo pidió el usuario: «cuando agarran algo y sus hombros se van hacia
 ## adelante, se descolocan totalmente los brazos… que el hueso del pecho esté dividido en dos, así se puede doblar junto
 ## con los hombros»; «yo decía dos cajas») ─────────────────────────────────────────────────────────────────────────
 ## La caja del pecho, en DOS MITADES, cada una pesando a SU HOMBRO: cuando el hombro se va adelante o se levanta, su mitad

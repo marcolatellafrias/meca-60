@@ -134,6 +134,11 @@ cambios de auto, yo los dejaría hasta diseñar las consolas.
 - **Los nombres**: «exhibit», «ship», «nave», «sucursal» aparecen unas 350 veces en lo traído.
 - **`UnitMesh`** vivía en `game/city/props/` y lo usan las partículas y `MeshKit`: el 13/11/2026 pasó a `game/common/`.
 
+## Hecho el 13/11/2026: la tanda sin decisiones
+Los paquetes de ciudad, `ModelBox`, `WorldSeeds`, `WorldSettings`, los sonidos de otro juego, `game/character_port/` entero
+con los cables que lo llamaban (sobre todo en `PlayerController`), y los nombres en los comentarios. Ver
+[[personajes-traidos]]. Lo traído quedó en unas 24.600 líneas.
+
 ## El orden que propondría
 1. **Los paquetes de ciudad** y lo poco suelto: unas 1.300 líneas, sin decisiones.
 2. **Decidir el personaje** (grupo B). De ahí sale si las herramientas de esculpir se quedan.

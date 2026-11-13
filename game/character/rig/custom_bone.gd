@@ -5,7 +5,7 @@ extends Node3D
 ##
 ## Lo visible es el cuerpo que sigue a estos huesos (ver CharacterBodyVisual: las cápsulas o las partes
 ## generadas). Antes cada hueso instanciaba su propio `bone.glb` deformado por blend shapes —
-## veinte mallas por personaje que hoy estarían siempre ocultas. Ver technical/character-history.md.
+## veinte mallas por personaje que hoy estarían siempre ocultas. Ver character-parametric:docs/technical/character-history.md.
 ##
 ## `capsule_dimensions` sobrevive con x/z = radio, y = largo: el largo lo lee todo el sistema de
 ## animación, y los radios ya solo dan forma a las cápsulas de colisión del ragdoll.

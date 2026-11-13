@@ -4,7 +4,7 @@ extends Interactable
 ## todas las manos que lo sostienen y se resuelve una sola vez, en vez de que cada agarrador aplique
 ## su propia fuerza por su cuenta.
 ##
-## El modelo prioriza ESTABILIDAD sobre realismo (ver conceptual/multiplayer.md, "Grab rework"), y
+## El modelo prioriza ESTABILIDAD sobre realismo (ver character-parametric:docs/conceptual/multiplayer.md, "Grab rework"), y
 ## son dos sistemas de segundo orden DESACOPLADOS, ambos críticamente amortiguados:
 ##
 ## - **Posición**: la fuerza va siempre al centro del cuerpo (`apply_central_force`), nunca al grab
@@ -23,7 +23,7 @@ extends Interactable
 ## Por eso dos agarradores dejan de ser un problema: sobre la posición son dos resortes tirando de
 ## UN punto, y un punto no tiene orientación que sobre-determinar.
 ##
-## ── LA CAJA SE AGARRA POR UNA CARA, Y QUEDA DERECHA (03/11/2026, lo pidió el dios del juego) ─────────────────────
+## ── LA CAJA SE AGARRA POR UNA CARA, Y QUEDA DERECHA (03/11/2026, lo pidió el usuario) ─────────────────────
 ## «Siempre las agarran como en un ángulo… no de una forma satisfactoria, como en la vida real, con las dos manos, desde
 ## sus dos costados». Los puntos de agarre estaban ADENTRO de la caja (uno por octavo en la grande), y con una mano lo que
 ## apuntaba al pecho era la línea del centro a ese punto: una diagonal, así que la caja mostraba una esquina. Ahora, en lo
@@ -33,7 +33,7 @@ extends Interactable
 ## de frente y derecha; con dos, el eje entre las manos como siempre, y el giro alrededor de él, derecho. Si se agarra
 ## de la tapa, sólo derecha. Lo que no es caja (un compañero, ver CharacterGrabbable) sigue como estaba.
 ##
-## ── LOS PAQUETES SON MÓDULOS (04/11/2026, lo pidió el dios del juego: «cada celda es como un tamaño de caja y la larga
+## ── LOS PAQUETES SON MÓDULOS (04/11/2026, lo pidió el usuario: «cada celda es como un tamaño de caja y la larga
 ## serían dos celdas juntas… el punto de agarre se centre en las caras») ───────────────────────────────────────────────
 ## Una caja es una pila de MÓDULOS de `MODULE` m de lado (la grande, 1 × 1 × 1; la alargada, 1 × 1 × 2), y sus puntos —los
 ## de agarre y los de las manos, los mismos— son EL CENTRO DE LA CARA DE CADA MÓDULO. Lo que se declara en celdas sale
@@ -41,7 +41,7 @@ extends Interactable
 ## (un punto cada 3 celdas para agarrar, cada 4 para las manos): el punto agarrado quedaba corrido del centro de la cara,
 ## la caja colgaba corrida y la cápsula de quien la llevaba le tocaba una esquina y la giraba.*
 ##
-## ── CADA UNO LLEVA EL CENTRO DE SU PARTE (04/11/2026, propuesto al dios del juego a partir de su idea y aprobado) ─────
+## ── CADA UNO LLEVA EL CENTRO DE SU PARTE (04/11/2026, propuesto al usuario a partir de su idea y aprobado) ─────
 ## El punto por donde lleva cada mano no es el que agarró sino uno que se deriva de él (`_held`, lo que usa el solver):
 ## la cara que agarró, y en ella, el centro de SU PARTE de la caja. Solo, su parte es la caja entera: su punto queda
 ## sobre el centro de la caja y la alargada nunca cuelga de una punta. Por eso SOLO, LA ALARGADA SE LLEVA DE LO ANCHO:
@@ -85,7 +85,7 @@ var _struck_at := -100000
 ##
 ## ⚠ ES UNA BANDERA Y NO LA REGLA "CONGELADO ⇒ NO AGARRABLE", que parece la general y no lo es: los
 ## PROXIES REMOTOS son cuerpos congelados (ver CharacterKind.simulates), y agarrar, empujar
-## y tirarle cosas a un compañero es juego deseado (ver conceptual/multiplayer.md). Esa regla en la base
+## y tirarle cosas a un compañero es juego deseado (ver character-parametric:docs/conceptual/multiplayer.md). Esa regla en la base
 ## habría apagado en silencio toda la interacción entre jugadores en red.
 var offers_grab := true
 
@@ -115,7 +115,7 @@ const FORCE_PER_STRENGTH  := 1600.0
 const TORQUE_PER_STRENGTH := 300.0
 
 ## ── LO QUE PESA SE NOTA EN LA LENTITUD, NUNCA EN NO PODER ────────────────────────────────────────
-## Todo paquete se levanta, también solo (el dios del juego, 11/10/2026: «un paquete que nadie pueda
+## Todo paquete se levanta, también solo (el usuario, 11/10/2026: «un paquete que nadie pueda
 ## levantar es una decisión que nos limita mucho en gameplays»). Antes, si la fuerza no llegaba a m·g el
 ## objeto colgaba: el pibe no levantaba el armario y la caja fuerte sólo el genérico y el forzudo.
 ##
@@ -124,11 +124,11 @@ const TORQUE_PER_STRENGTH := 300.0
 ## pasa tu fuerza sube despacio y cuesta manejarlo con la mira (con 0,15 le quedan 1,5 m/s² para moverlo);
 ## y quien lo lleva camina, corre, arranca y frena más lento (`carry_speed_factor`), lo que además evita que el paquete
 ## torpe se le quede atrás y se le suelte. Debajo de una carga de 1 / 1,15 = 0,87 el techo es el de
-## siempre: lo que ya se llevaba se lleva igual. TODO PESO FRENA ALGO (04/11/2026, el dios del juego: «simplifica el
+## siempre: lo que ya se llevaba se lleva igual. TODO PESO FRENA ALGO (04/11/2026, el usuario: «simplifica el
 ## sistema»): *hasta entonces, hasta una carga de 0,3 se caminaba como con las manos vacías, y los fuertes no notaban
 ## la caja grande.*
 const LIFT_MARGIN := 0.15
-## ── LO QUE SE LLEVA VA UN POCO ABAJO DE LA MIRADA (03/11/2026, lo pidió el dios del juego) ──────────────────────
+## ── LO QUE SE LLEVA VA UN POCO ABAJO DE LA MIRADA (03/11/2026, lo pidió el usuario) ──────────────────────
 ## «El paquete le tapa la vista… en tercera persona se ve medio ridículo… corriendo con un paquete justo al frente de su
 ## cara». Lo agarrado sigue yendo adonde se apunta, a `LocomotionCommon.hold_reach` del pecho —la misma para todos, ver
 ## LocomotionCommon—, pero `hold_drop_deg` más abajo: mirando al horizonte o arriba, esa diferencia entera; mirando abajo se
@@ -136,11 +136,11 @@ const LIFT_MARGIN := 0.15
 ## aflojar el resorte: lo mismo para todos y con cualquier peso. Los números, en el F1 de los experimentos (ver LocomotionPanel).
 ## ── EL CONO DE LO QUE SE LLEVA (03/11/2026) ─────────────────────────────────────────────────────────────────────────
 ## Lo que se lleva se suelta si su punto sale de este cono alrededor de la mirada: el mismo para todos los arquetipos (el
-## dios del juego: «no es algo que se lea visualmente… se podría sentir inconsistente o injusto»). Se achica mientras el
+## usuario: «no es algo que se lea visualmente… se podría sentir inconsistente o injusto»). Se achica mientras el
 ## cuerpo está inclinado por un golpe —un roce, el golpe a la caja, ver LOS GOLPES A LO QUE SE LLEVA—, hasta
 ## `carry_cone_at_fall` de él justo antes de caerse: la diferencia entre arquetipos es cuánto los inclina un golpe, su
 ## estabilidad. *Antes era el de los controles, 120°: no se soltaba casi nunca.*
-## ── EL TOPE DEL PECHO (04/11/2026, lo pidió el dios del juego: «hacer esta colisión de una manera más inteligente…
+## ── EL TOPE DEL PECHO (04/11/2026, lo pidió el usuario: «hacer esta colisión de una manera más inteligente…
 ## simple y bien documentado… estructural») ──────────────────────────────────────────────────────────────────────────
 ## Lo que se lleva no choca con nada de quien lo lleva (ver `ignore_holder`): lo frena una PARED INVISIBLE delante de su
 ## pecho, vertical y de frente a donde apunta —la sacada horizontal de la mano, del pecho al objetivo—, a
@@ -169,7 +169,7 @@ var _holds: Dictionary = {}
 ## de dónde estaba el cuadro anterior (`_prev_desired`), suavizado.
 var _prev_desired := Vector3.INF
 var _desired_velocity := Vector3.ZERO
-## EL FRENO DEL GIRO, CONTRA LO QUE GIRA EL OBJETIVO (04/11/2026, el dios del juego: «cuando estás girando con el
+## EL FRENO DEL GIRO, CONTRA LO QUE GIRA EL OBJETIVO (04/11/2026, el usuario: «cuando estás girando con el
 ## paquete… se está cambiando de posición y después se gira para coincidir con la cara del agarre con tu pecho… no gira
 ## con movimiento angular en base al yaw»): el mismo arreglo que el de la posición. El freno del giro pegaba sobre todo el
 ## giro de la caja contra el mundo, así que al girar quien la lleva la caja se quedaba mirando adonde miraba y llegaba
@@ -177,7 +177,7 @@ var _desired_velocity := Vector3.ZERO
 ## y la caja gira con el que la lleva. Un salto de la orientación pedida de más de `AIM_JUMP` rad en un cuadro (cambió la
 ## cara por donde se lleva) no cuenta como giro.
 ##
-## GIRAR LO QUE SE LLEVA (04/11/2026, el dios del juego: «meté lo de poder girar paquetes»): quien lo lleva solo le suma
+## GIRAR LO QUE SE LLEVA (04/11/2026, el usuario: «meté lo de poder girar paquetes»): quien lo lleva solo le suma
 ## un giro (`set_turn`: rumbo alrededor de la vertical y vuelta alrededor de su derecha, en rad), relativo a cómo lo
 ## llevaría sin girarlo, así que gira con él; el paquete gira sobre su centro, no sobre la mano (ver `_turn_now`), y las
 ## manos toman las caras que les queden a los costados (ver ArmsController, UNA CAJA). Con dos o más, no gira.
@@ -239,7 +239,7 @@ func clear_all_holds() -> void:
 		_released()
 
 
-## ── AL SOLTARLO, NO SALE PERFECTO (04/11/2026, el dios del juego) ─────────────────────────────────────────────────
+## ── AL SOLTARLO, NO SALE PERFECTO (04/11/2026, el usuario) ─────────────────────────────────────────────────
 ## El agarre lo lleva derecho y sin girar, así que soltado aterrizaba plano y se clavaba. Al soltar la última mano, una
 ## caja se lleva un giro de vuelco: hacia donde iba, `RELEASE_TUMBLE` rad/s por cada m/s de lo que avanzaba (respecto de
 ## su marco), y un poco alrededor de la vertical. Así cae de canto y se vuelca o se desliza, como un objeto.
@@ -313,7 +313,7 @@ func _solve_position(body: RigidBody3D, delta: float) -> void:
 	var omega := 1.0 / (RESPONSE_TIME * _softness(body))
 	var m     := body.mass
 	# EL FRENO, CONTRA LO QUE SE MUEVE EL OBJETIVO (ver arriba). El primer cuadro, contra el marco (ver `frame_velocity`):
-	# a bordo, la velocidad que se frena es la de la caja respecto de la nave, no la del mundo; si no, a 30 m/s el freno
+	# a bordo, la velocidad que se frena es la de la caja respecto de la meca, no la del mundo; si no, a 30 m/s el freno
 	# tiraba la caja para atrás de la mano.
 	var following := frame_velocity(body, body.global_position)
 	if _prev_desired.is_finite() and delta > 0.0:
@@ -329,7 +329,7 @@ func _solve_position(body: RigidBody3D, delta: float) -> void:
 	body.apply_central_force(force.limit_length(ceiling) + wall)
 
 
-## ── LO PESADO SE LLEVA MÁS BLANDO (04/11/2026, el dios del juego) ──────────────────────────────────────────────────
+## ── LO PESADO SE LLEVA MÁS BLANDO (04/11/2026, el usuario) ──────────────────────────────────────────────────
 ## El resorte del agarre era igual de firme para todo —0,08 s— y cualquier golpe se corregía enseguida: parecía
 ## programado. Ahora tarda más en llegar adonde se apunta cuanto más pesa para quienes lo llevan (la carga, ver
 ## `load_of`): de 1 con nada a `LocomotionCommon.heavy_softness` veces con una carga de 1 o más. Lo liviano, firme; lo pesado
@@ -459,7 +459,7 @@ func _solve_orientation(body: RigidBody3D) -> void:
 	# amortiguación solo ya frena cualquier giro suelto, que es lo que queremos.
 	var err := _orientation_error(body)
 	# EL FRENO DEL GIRO, CONTRA LO QUE GIRA EL OBJETIVO (ver `_prev_aim`). La orientación pedida está en el mundo, así que
-	# a bordo ya trae el giro de la nave.
+	# a bordo ya trae el giro de la meca.
 	var following := frame_spin(body)
 	var aim := (err * body.global_transform.basis.orthonormalized().get_rotation_quaternion()).normalized()
 	var dt := get_physics_process_delta_time()
@@ -680,10 +680,10 @@ func _swing(from_axis: Vector3, to_axis: Vector3) -> Quaternion:
 		return Quaternion.IDENTITY
 	return Quaternion(from_axis.normalized(), to_axis.normalized())
 
-## EL MARCO DE LO AGARRADO (el dios del juego, 2/11/2026: «tiene que tener en cuenta cómo anular la inercia de la nave. No
-## anularla, pero hacerla relativa… que funcione así bien ese PD controller mientras está en la nave»): la velocidad, en
-## `point`, de aquello en lo que va el cuerpo —a bordo, la nave—, y su giro. El PD frena la velocidad RELATIVA a eso: con
-## la nave a velocidad constante, llevar algo es como en tierra; cuando acelera o dobla, se atrasa lo que la fuerza de las
+## EL MARCO DE LO AGARRADO (el usuario, 2/11/2026: «tiene que tener en cuenta cómo anular la inercia de la nave. No
+## anularla, pero hacerla relativa… que funcione así bien ese PD controller mientras está en la meca»): la velocidad, en
+## `point`, de aquello en lo que va el cuerpo —a bordo, la meca—, y su giro. El PD frena la velocidad RELATIVA a eso: con
+## la meca a velocidad constante, llevar algo es como en tierra; cuando acelera o dobla, se atrasa lo que la fuerza de las
 ## manos no alcanza a compensar (la inercia, relativa). El marco del cuerpo es el suyo (ver MotionFrame); si no va
 ## adentro de nada, es el mundo y da cero, como siempre.
 static func frame_velocity(body: Node, point: Vector3) -> Vector3:

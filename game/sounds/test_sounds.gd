@@ -201,6 +201,6 @@ static func _wav(samples: PackedFloat32Array, loop: bool) -> AudioStreamWAV:
 		wav.loop_begin = 0
 		# UNA MENOS que el tamaño: `loop_end` es un ÍNDICE de muestra, no una cantidad. Apuntando a
 		# `size()` el mezclador lee una muestra fuera del buffer en cada vuelta, y eso es un CLIC
-		# periódico —el "tac, tac" que se escuchaba en los tres sonidos, el zumbido de la nave incluido—.
+		# periódico —el "tac, tac" que se escuchaba en los tres sonidos, el zumbido de la meca incluido—.
 		wav.loop_end = samples.size() - 1
 	return wav

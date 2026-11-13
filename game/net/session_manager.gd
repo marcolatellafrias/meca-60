@@ -4,12 +4,12 @@ extends Node
 ## lobby + a filtered lobby-list search (short alphanumeric code stored as lobby data).
 ## Friends can also join via the Steam overlay ("Join Game"), and if Steam launched us with
 ## +connect_lobby we join that lobby directly, skipping the menu. Testing runs under Spacewar
-## (app id 480, see steam_appid.txt). See conceptual/multiplayer.md and technical/ui.md.
+## (app id 480, see steam_appid.txt). See character-parametric:docs/conceptual/multiplayer.md and character-parametric:docs/technical/ui.md.
 ##
 ## API names are verified against the bundled GodotSteam build. If Steam isn't available, host()
 ## still starts a **local-only** session (play alone, nobody can join) so dev iteration works.
 
-## De 2 a 4 jugadores, como las naves (el dios del juego, 29/10/2026: «tope de 4 jugadores»; eran 5).
+## De 2 a 4 jugadores, como las naves (el usuario, 29/10/2026: «tope de 4 jugadores»; eran 5).
 const MAX_MEMBERS := 4
 const VIRTUAL_PORT := 0
 ## Puerto para el modo local (ENet), para testear multiplayer con varias instancias.

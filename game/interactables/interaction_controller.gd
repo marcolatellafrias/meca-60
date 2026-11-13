@@ -1,7 +1,7 @@
 class_name InteractionController
 extends Node
 
-## EL TIRO Y EL EMPUJÓN, DE UN MISMO NÚMERO DE CADA UNO (04/11/2026, el dios del juego: «es preferible tener un valor
+## EL TIRO Y EL EMPUJÓN, DE UN MISMO NÚMERO DE CADA UNO (04/11/2026, el usuario: «es preferible tener un valor
 ## normalizado que afecte a las dos en vez de que una afecte a la otra»): la FUERZA DE BRAZOS del arquetipo
 ## (`throw_strength`, 1 lo normal; se ajusta en la F3, Movimiento) por dos perillas de todos, en la F1 (pestaña TIRAR):
 ## `LocomotionCommon.throw_per_arm` (N·s de impulso al tirar a carga entera) y `LocomotionCommon.push_per_arm` (m/s que le da el
@@ -153,7 +153,7 @@ func is_charging_throw() -> bool:
 	return _is_charging_throw
 
 ## LOS BOTONES DE LAS MANOS (ver CharacterIntent, LAS MANOS): lo que cambió desde el cuadro anterior. En ragdoll no se
-## agarra, ni se carga, ni se activa (ver technical/characters.md); soltar sí.
+## agarra, ni se carga, ni se activa (ver character-parametric:docs/technical/characters.md); soltar sí.
 func _read_intent() -> void:
 	if not is_instance_valid(who) or who.intent == null:
 		return
@@ -471,7 +471,7 @@ func _release_throw() -> void:
 	_is_charging_throw = false
 	_throw_charge      = 0.0
 
-## ── EL EMPUJÓN: UNA CAJA ADELANTE (04/11/2026, el dios del juego: «una zona que empuja al frente tuyo donde estás
+## ── EL EMPUJÓN: UNA CAJA ADELANTE (04/11/2026, el usuario: «una zona que empuja al frente tuyo donde estás
 ## mirando… mucho más permisiva»; «directamente una caja»; «todo lo que está adentro») ─────────────────────────────
 ## Con las manos vacías, la R empuja TODO lo que haya en una caja delante del pecho, hacia donde mira en el plano:
 ## `PUSH_BOX_WIDTH` de ancho, el alcance más `PUSH_BOX_EXTRA` de largo, `PUSH_BOX_HEIGHT` de alto. A cada uno lo mismo,
@@ -614,7 +614,7 @@ func _launch(rb: RigidBody3D, impulse: Vector3) -> void:
 			return
 	rb.apply_central_impulse(impulse)
 	if rb is CharacterRigidBody3D:
-		(rb as CharacterRigidBody3D).push(impulse / rb.mass)  # adentro de la nave, con nombre (ver EL MARCO)
+		(rb as CharacterRigidBody3D).push(impulse / rb.mass)  # adentro de la meca, con nombre (ver EL MARCO)
 
 func _get_interaction_origin() -> Vector3:
 	var bi := char_rigidbody.get_parent() as BoneInstantiator
@@ -718,7 +718,7 @@ func _is_outside_cone(world_pos: Vector3) -> bool:
 		return false
 	return to_pos.normalized().dot(cam_fwd) < cos(deg_to_rad(grab_cone_half_angle))
 
-## A TIRO DE CLIC ES A TIRO DE USARLO (lo pidió el dios del juego, 11/10/2026): el detector sólo deja apuntar a lo que
+## A TIRO DE CLIC ES A TIRO DE USARLO (lo pidió el usuario, 11/10/2026): el detector sólo deja apuntar a lo que
 ## pasa esto, que es lo mismo que en `update` lo hace soltar. Había un rango intermedio donde el clic agarraba y en el
 ## cuadro siguiente se soltaba —sonaba el «alzar» y no venía nada—: un objeto que se sostiene se apuntaba hasta el
 ## 85 % del alcance desde la punta del pecho, y se soltaba a más de 1 m de su base (hoy, de su alcance); en el genérico ese
@@ -760,7 +760,7 @@ func release_interact() -> void:
 	_stop_grab()
 	_stop_control()
 
-## GIRAR LO QUE LLEVO (04/11/2026, el dios del juego: «meté lo de poder girar paquetes»): con el clic derecho apretado,
+## GIRAR LO QUE LLEVO (04/11/2026, el usuario: «meté lo de poder girar paquetes»): con el clic derecho apretado,
 ## el mouse gira lo que llevo en vez de la cámara —de costado lo gira alrededor de la vertical, para arriba y abajo lo
 ## da vuelta— (ver GrabbableInteractable, GIRAR LO QUE SE LLEVA). Lo girado se queda al soltar el clic, relativo a mí,
 ## y vuelve a cero al agarrar otra cosa. ⚠ En red sólo gira quien simula la caja: el giro no viaja con la intención.
@@ -790,7 +790,7 @@ func apply_controlled_motion(relative: Vector2) -> void:
 	if is_instance_valid(_controlled):
 		_controlled.handle_mouse_motion(relative)
 
-## LA RUEDITA: mueve un control o lo que se tiene en la mano. Lo que se lleva no (04/11/2026, el dios del juego: «eso yo
+## LA RUEDITA: mueve un control o lo que se tiene en la mano. Lo que se lleva no (04/11/2026, el usuario: «eso yo
 ## pensé que lo había eliminado… habría que alargar los brazos excesivamente»): va a la distancia de todos (ver
 ## LocomotionCommon.hold_reach).
 func adjust_distance(dir: float) -> void:

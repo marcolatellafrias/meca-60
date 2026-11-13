@@ -1,7 +1,6 @@
 # Lo traído de character-parametric
 
-`game/character/`, `game/interactables/`, `game/supplies/` (los paquetes), `game/common/`… y la frontera en `game/character_port/`
-(su `LEEME.md` dice qué se trajo y dónde se cortó). **Ya es código de la meca**: se edita y se simplifica.
+`game/character/`, `game/interactables/`, `game/supplies/` (los paquetes), `game/common/`… (ver abajo qué se trajo y dónde se cortó). **Ya es código de la meca**: se edita y se simplifica.
 
 - **El jugador** es el personaje de allá: ente (sin cuerpo, **V** vuela) o cuerpo con **B** (el gordo atlético).
 - Agarrar (clic izquierdo), sentarse (**E**), empujar (**R**).
@@ -54,3 +53,25 @@ Pruebas:
   no debería cambiar a nadie, correrlo antes y después y comparar**.
 
 Ver también [[red]].
+
+## Qué se trajo y dónde se cortó
+El 11/11/2026, de `D:\Godot\character-parametric` (último commit allá: `50a538ef`), pieza por pieza: el personaje, agarrar,
+sentarse, los controles de mano, la red (`SessionManager`, `NetSpawner`, `CharacterSpawner`…, con GodotSteam), los
+paquetes y su daño (hoy en `game/supplies/`), las partículas, el sistema de sonido, la depuración del personaje
+(`DebugPanel`, `TunerPanel`, `PropertyTuner`) y la interfaz (`UIState`, la consola, la pausa, el menú de inicio). Se cortó
+en la ciudad, el tránsito, la nave y sus paneles.
+
+**La frontera** (`game/character_port/`: trece piezas vacías con los nombres de allá —`City`, `CarBody`, `CityMap`,
+`WeatherTuner`, `Inspector`, `ShipStyle`…— para que lo traído compilara) **se borró el 13/11/2026**, con lo que las
+llamaba: el mapa (F2), el clima (F6), el carnero, los ajustes de autos y de tránsito y el inspector vacío de
+`PlayerController`, la cámara del tránsito en `CharacterSpawner`, `ModelBox` (el ida y vuelta con Blender de la silla,
+sin modelos acá), `WorldSeeds` y `WorldSettings` (las semillas del día y la niebla de la ciudad), los sonidos de la nave y
+la ciudad del catálogo, y los paquetes de ciudad que pedía la fila Multijugador. El panel de depuración del jugador
+(sólo con sesión de red) pasó de la F1 a la **F9**, la primera de los paneles globales.
+
+**Los comentarios** dicen «el usuario» donde allá decían «el dios del juego», y «la meca» donde describían estar adentro
+de algo que se mueve (allá, la nave). Las notas de allá que nombran se citan como `character-parametric:docs/…`.
+
+**Falta** (de la sesión de Personajes): partir `BoneInstantiator`, separar en `PlayerController` lo del jugador de lo de
+prueba, y la pose de sostener algo con la mano (quedó a medias).
+

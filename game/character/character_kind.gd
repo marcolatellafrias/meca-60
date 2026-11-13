@@ -5,7 +5,7 @@ extends RefCounted
 ## Un solo personaje para todo —el jugador, el compañero que llega por red, el tripulante de exhibición, la figura quieta
 ## del sandbox y el ente que lo recorre—, y estas seis respuestas dicen en qué se diferencian. Se le pone a
 ## `BoneInstantiator.kind` ANTES de agregarlo al árbol, casi siempre con uno de los presets de abajo, y el cuerpo físico
-## lee el mismo objeto. Lo pidió el dios del juego: «hay muchas inconsistencias entre ente, dummy, jugador, etc., quiero
+## lee el mismo objeto. Lo pidió el usuario: «hay muchas inconsistencias entre ente, dummy, jugador, etc., quiero
 ## simplificar todos estos sistemas en uno solo, una api con flags». Reemplaza a `is_active`, `is_puppet`, `is_display` y
 ## `looks_around`. Lo que hace (mirar, moverse, agarrar, sentarse) no está acá: es la intención (ver CharacterIntent).
 
@@ -75,7 +75,7 @@ static func npc() -> CharacterKind:
 	return _make(Driver.NONE, Shown.WHOLE, Hands.ALWAYS, Physics.SIMULATED, Motion.PHYSICAL, true)
 
 
-## UN PEATÓN EN SU CAMINO (05/11/2026, el dios del juego: «que sigan caminos como los autos, y la física sólo cuando
+## UN PEATÓN EN SU CAMINO (05/11/2026, el usuario: «que sigan caminos como los autos, y la física sólo cuando
 ## algo los saca»): su cápsula la pone su camino (ver Pedestrian), KINEMÁTICA y en la capa 1 como la de un compañero de
 ## red —se lo choca—, y la cabeza mira hacia donde va. Todavía no se cae: el golpe que lo saca del camino viene después.
 static func pedestrian() -> CharacterKind:

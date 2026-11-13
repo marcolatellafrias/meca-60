@@ -2,8 +2,8 @@ class_name SessionPlayer
 extends RefCounted
 
 # One connected peer this session. Distinct from the persistent Player account
-# (conceptual/people.md) — this just maps a Godot peer id to a Steam identity for
-# the current run. See conceptual/multiplayer.md.
+# (character-parametric:docs/conceptual/people.md) — this just maps a Godot peer id to a Steam identity for
+# the current run. See character-parametric:docs/conceptual/multiplayer.md.
 
 var peer_id: int = 0
 var steam_id: int = 0

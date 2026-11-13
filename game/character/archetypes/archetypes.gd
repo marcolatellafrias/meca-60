@@ -50,7 +50,7 @@ var human_chance : float = 1.0
 var shoulder_swing : float = 1.0
 var arm_swing : float = 0.5
 var root_bounciness : float = 1.0  # cuánto se hunde la pelvis al pisar, 1 la de referencia (ver PoseShape)
-## ── EL ANDAR QUE ERA DE TODOS, DE CADA UNO (07/11/2026, el dios del juego: «cuando veo que dice un arquetipo arriba…
+## ── EL ANDAR QUE ERA DE TODOS, DE CADA UNO (07/11/2026, el usuario: «cuando veo que dice un arquetipo arriba…
 ## supongo que estoy cambiando los sliders de ese arquetipo»; «me gusta tuitear todo independientemente») ─────────
 ## Lo que hasta entonces era una sola base para todos (WalkStyle): ahora cada arquetipo tiene el suyo, y cada personaje
 ## arma su estilo de caminar con esto (ver WalkStyle.for_archetype). Con `walk_` para no confundirse con los
@@ -67,7 +67,7 @@ var walk_run_elbow : float = 0.3
 var walk_stride_growth : float = 0.5
 var walk_swing_share : float = 0.38
 var walk_lead : float = 0.25
-## ── UNA PERILLA, UN MOVIMIENTO (07/11/2026, el dios del juego: «hay bastante más limpieza… qué cosas hay duplicadas») ──
+## ── UNA PERILLA, UN MOVIMIENTO (07/11/2026, el usuario: «hay bastante más limpieza… qué cosas hay duplicadas») ──
 ## `walk_hip_sway` mueve sólo la cadera (left_hip y right_hip de costado), `walk_twist` todo el giro de la columna contra
 ## las piernas, `walk_spine_bow` sólo el arco de costado, y `arm_swing` el braceo entero. *Hasta entonces `hip_swing`
 ## movía la cadera y también cuánto giraba la columna, `walk_hip_sway` multiplicaba la cadera y el arco, y
@@ -80,8 +80,8 @@ var step_height : float = 0.5
 ## De acá sale TODO lo demás (SkeletonSizesUtil.create): la altura de pelvis que hace falta para que
 ## el pie llegue a esa zancada con la rodilla flexionada, y de ahí el alcance y la zancada en metros.
 ## Por eso `distance_from_ground_factor` ya no se escribe a mano — se deriva. Ver
-## technical/character-animation.md (el modelo de marcha).
-## ── LA ZANCADA, DE 0 A 1 (05/11/2026, el dios del juego: «que sea un valor normalizado en base al largo de las piernas,
+## character-parametric:docs/technical/character-animation.md (el modelo de marcha).
+## ── LA ZANCADA, DE 0 A 1 (05/11/2026, el usuario: «que sea un valor normalizado en base al largo de las piernas,
 ## y que si está en el máximo literalmente la pelvis toque el suelo… de esa manera voy a ver los límites») ──────────
 ## Qué tan lejos de la cadera llega el pie a toda velocidad, en largos de pierna: con 1 el pie llega a un largo de pierna
 ## entero, cosa que sólo se puede con la cadera en el piso; con 0, no se aleja. La pelvis baja lo que haga falta para que
@@ -119,7 +119,7 @@ var spine_bend : float = 0.0
 ## esqueleto y se leía de ahí; ahora está todo derecho y la flexión hay que pedirla.
 var leg_bentness : float = 0.0
 
-## EL TAMAÑO DE TODO EL CUERPO (07/11/2026, el dios del juego: «escala todo el fat man un 20 % (sus huesos, anchos,
+## EL TAMAÑO DE TODO EL CUERPO (07/11/2026, el usuario: «escala todo el fat man un 20 % (sus huesos, anchos,
 ## profundidad, etc)»): multiplica todo lo que mide en metros —huesos, anchos, fondos, cabeza, el paso, la cápsula—,
 ## con la misma palanca que la lupa del sandbox (ver SkeletonSizesUtil.size_scale). 1 = tal cual.
 var body_scale : float = 1.0
@@ -178,7 +178,7 @@ var has_neck: bool = true
 ## simétricos. Por eso la interpolación va en dos tramos (lerp_three).
 ## Reemplazan a `height` + `legs_to_feet_proportion` + `chest_to_low_spine_proportion` + `reach`:
 ## ahora el modelo define lo posible y el arquetipo elige adentro. Ver "The reference rig" en
-## technical/character-body.md.
+## character-parametric:docs/technical/character-body.md.
 ##
 ## ── EL TORSO PUEDE SER NEGATIVO, Y ESTÁ BIEN ──────────────────────────────────────────────────────
 ## `torso_chain_for` no clampea, así que un valor negativo ENCOGE respecto de lo esculpido. El nene, el
@@ -243,13 +243,13 @@ static func create(archetype: Archetype, apply_saved := true) -> EntityArchetype
 	# (El gordo atlético todavía no sale a la calle: `_pick_archetype` no lo sortea.)
 	if apply_saved:
 		PoseShapes.apply(out, int(archetype))
-	# LA CARGA DEL SALTO, LA MISMA PARA TODOS (04/11/2026, el dios del juego: «haría que sea el mismo en todos, al igual
+	# LA CARGA DEL SALTO, LA MISMA PARA TODOS (04/11/2026, el usuario: «haría que sea el mismo en todos, al igual
 	# que el wind up de arrojar algo»): `JUMP_WINDUP_S`. Ya no es una perilla de cada uno (ver PoseShape.JUMP_KNOBS).
 	out.time_to_max_jump = JUMP_WINDUP_S
 	return out
 
 
-## (De 0,5 a 0,25 s el 04/11/2026, el dios del juego: «podés aumentarle la carga así no necesitan tanto windup».)
+## (De 0,5 a 0,25 s el 04/11/2026, el usuario: «podés aumentarle la carga así no necesitan tanto windup».)
 const JUMP_WINDUP_S := 0.25
 
 
@@ -282,7 +282,7 @@ static func _authored(archetype: Archetype) -> EntityArchetype:
 ## Con `EntityInstantiation.FORCE_ARCHETYPE` apuntando acá, todos los personajes vuelven a ser este —
 ## la vista de la fase 1, que sigue sirviendo para mirar las proporciones del modelo sin ruido. Para
 ## mirar UN arquetipo sin tocar código está el panel de debug (tab Arquetipos).
-## Ver "The reference rig" en technical/character-body.md.
+## Ver "The reference rig" en character-parametric:docs/technical/character-body.md.
 static func generic_arch() -> EntityArchetype:
 	var arch = EntityArchetype.new()
 	arch.strength = 1.0
@@ -411,7 +411,7 @@ static func fat_man_arch() -> EntityArchetype:
 	# Blender son 1.61765 de cadera y 1.45811 de hombro: con `fat 1.0` la cadera ya trae ×1.3 puesto, y
 	# con `muscle 0.0` el hombro no trae nada y la medida va entera acá.
 	# ⚠ Si algún día se mueve `fat` o `muscle`, estos dos hay que volver a despejarlos.
-	# 1,90 m (07/11/2026, el dios del juego: «dejalo que mida 1.90»): sin esto, 1,75.
+	# 1,90 m (07/11/2026, el usuario: «dejalo que mida 1.90»): sin esto, 1,75.
 	arch.body_scale = 1.0857
 	arch.breath_depth = 0.3
 	arch.breath_rate = 0.0
@@ -431,7 +431,7 @@ static func fat_man_arch() -> EntityArchetype:
 
 static func kid_arch() -> EntityArchetype:
 	var arch = EntityArchetype.new()
-	# LA FUERZA (04/11/2026, propuesta al dios del juego): kid 0,35, viejo 0,45, flaco alto 0,6, gordo 0,9, fornido
+	# LA FUERZA (04/11/2026, propuesta al usuario): kid 0,35, viejo 0,45, flaco alto 0,6, gordo 0,9, fornido
 	# 1,2, gordo atlético 1,4 (ver `create`). Contra los pesos de las cajas, ver GrabbableInteractable.load_of.
 	arch.strength = 0.35
 	arch.speed = 0.4
@@ -480,7 +480,7 @@ static func kid_arch() -> EntityArchetype:
 	arch.stance_width = 1.0
 	return arch
 
-## EL FLACO ALTO. *Del 22/10/2026 al 07/11/2026 fue una copia del gordo con lo suyo encima (el dios del juego: «no tienen
+## EL FLACO ALTO. *Del 22/10/2026 al 07/11/2026 fue una copia del gordo con lo suyo encima (el usuario: «no tienen
 ## que haber copias»); son los mismos números, escritos acá.*
 static func lanky_arch() -> EntityArchetype:
 	var arch = EntityArchetype.new()
@@ -494,7 +494,7 @@ static func lanky_arch() -> EntityArchetype:
 	balance(arch, 70.0, Vector3(0.8, 0.8, 0.6), 1.1, 0.8)
 	arch.time_to_standup = 2.0
 	arch.throw_strength = 0.8
-	# EL SALTO DE CADA UNO (04/11/2026, el dios del juego: «algunos personajes con más salto, algunos con menos»): el
+	# EL SALTO DE CADA UNO (04/11/2026, el usuario: «algunos personajes con más salto, algunos con menos»): el
 	# fornido 1,0, el gordo atlético 0,85, el kid 0,8, el flaco alto 0,7, el gordo 0,45, el viejo 0,35.
 	arch.jump_height = 0.7
 	arch.min_age = 1
@@ -582,7 +582,7 @@ static func buff_arch() -> EntityArchetype:
 
 
 ## EL GORDO ATLÉTICO. *Del 26/10/2026 al 07/11/2026 nacía en `create` como la mitad del gordo y la mitad del fornido, con
-## lo que cada uno tenía guardado; son esos números, escritos acá (el dios del juego: «no tienen que haber copias»). Lo
+## lo que cada uno tenía guardado; son esos números, escritos acá (el usuario: «no tienen que haber copias»). Lo
 ## suyo encima: el más fuerte de todos (04/11/2026, «el gordo atlético deberían ser los más fuertes»), su salto y su tiro.*
 static func fat_athletic_arch() -> EntityArchetype:
 	var arch = EntityArchetype.new()
@@ -632,7 +632,7 @@ static func fat_athletic_arch() -> EntityArchetype:
 	return arch
 
 
-## ── EL EQUILIBRIO DE CADA ARQUETIPO (02/11/2026, propuesto al dios del juego y aprobado como punto de partida) ──────
+## ── EL EQUILIBRIO DE CADA ARQUETIPO (02/11/2026, propuesto al usuario y aprobado como punto de partida) ──────
 ## El peso dice cuánto cuesta moverlo (la masa: en un choque, el liviano se lleva el cambio de velocidad); la estabilidad,
 ## adelante, atrás y de costado, cómo está plantado de cada lado. Los dos juntos son la FIRMEZA, que divide cuánto lo
 ## inclinan los golpes y la inercia (ver CharacterRigidBody3D._firmness): todos caen en el mismo punto, así que

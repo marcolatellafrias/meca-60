@@ -3,7 +3,7 @@ extends CanvasLayer
 ## cierra con la tecla física a la izquierda del 1 (º / ~). Anda en el menú y en el juego, es
 ## independiente de que exista un jugador o una escena. Un registro de comandos (register) es
 ## la fuente única de acciones de dev — los botones del panel F1 llamarán a estos comandos
-## (paso 7). Ver technical/ui.md.
+## (paso 7). Ver character-parametric:docs/technical/ui.md.
 
 ## Tecla física a la izquierda del 1 (en teclado español es "º", en US es "~").
 const TOGGLE_KEY := KEY_QUOTELEFT
@@ -74,7 +74,7 @@ func _register_builtins() -> void:
 	register("join", _cmd_join, "join <código> — se une por código (Steam)")
 	register("host_local", func(_a): SessionManager.host_local(), "hostea local (ENet) para test multi-instancia")
 	register("join_local", _cmd_join_local, "join_local [ip] — se une a un host local (default 127.0.0.1)")
-	register("spawn", _cmd_spawn, "spawn <box_light_square|box_heavy_square|dashboard|seat>")
+	register("spawn", _cmd_spawn, "spawn <box_light_square|box_heavy_square|seat|package:battery…>")
 
 func _cmd_help(_args: PackedStringArray) -> void:
 	log_line("Comandos:")

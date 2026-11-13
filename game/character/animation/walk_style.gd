@@ -2,7 +2,7 @@ class_name WalkStyle
 extends Resource
 
 ## ── LA CAMINATA, EN POCOS NÚMEROS ────────────────────────────────────────────────────────────────
-## Lo pidió el dios del juego (12/10/2026): «una mejor caminata base, que pueda tweakear con pocos parámetros», con
+## Lo pidió el usuario (12/10/2026): «una mejor caminata base, que pueda tweakear con pocos parámetros», con
 ## modificadores que se le suman a cada personaje (ver el plan de la caminata, en el estado de la locomoción). Esto es la
 ## BASE: las piernas (la marcha de fase, ver SkeletonSizesUtil._update_gait, que lee estos números) y el tren superior (ver BoneAnimations
 ## y BoneInstantiator._update_pelvis_drop), separados para probar combinaciones de los dos. Lo de cada arquetipo —su
@@ -33,7 +33,7 @@ extends Resource
 ## suyo (ver EntityArchetype, UNA PERILLA, UN MOVIMIENTO). El braceo es `arm_swing` del arquetipo (ver UN NOMBRE, UN
 ## LUGAR).
 @export_range(0.0, 3.0, 0.05) var hip_sway := 1.0
-## LA COLUMNA DE COSTADO, CON PERILLA PROPIA (07/11/2026, el dios del juego: «el lower spine que se swinguea
+## LA COLUMNA DE COSTADO, CON PERILLA PROPIA (07/11/2026, el usuario: «el lower spine que se swinguea
 ## lateralmente con los pasos… lo quiero cambiar y no puedo»): el ARCO —lower_spine para un lado, higher_spine y chest
 ## para el otro—, sólo con su perilla desde el 07/11/2026 (antes lo escalaba también `hip_sway`), y la INCLINACIÓN de
 ## lower_spine según cuánto se abren los pies a lo ancho.
@@ -44,7 +44,7 @@ extends Resource
 ## EL BRAZO QUE SE ABRE DEL CUERPO en los extremos del paso, aparte del braceo (ver BoneAnimations.ARM_OPEN): 0 nada,
 ## 1 lo de siempre.
 @export_range(0.0, 3.0, 0.05) var arm_open := 1.0
-## EL CODO AL CORRER (07/11/2026, el dios del juego: «mientras más rápido vayan… se cambie el ángulo del brazo»; «que sea
+## EL CODO AL CORRER (07/11/2026, el usuario: «mientras más rápido vayan… se cambie el ángulo del brazo»; «que sea
 ## relativo a la velocidad máxima del personaje»): cuánto se acerca la mano al hombro a toda velocidad —o sea, cuánto
 ## más se dobla el codo—, en fracción de su distancia de reposo. Empieza recién por encima de su caminar y llega entero
 ## a su sprint (ver BoneAnimations, EL BRACEO GIRA EN EL HOMBRO).
@@ -67,7 +67,7 @@ const ARCHETYPE_KNOBS: Array[String] = ["twist", "spine_bow", "spine_roll", "lea
 	"bounce_up", "arm_open", "run_elbow", "stride_growth", "swing_share", "lead"]
 
 
-## ── UN NOMBRE, UN LUGAR (07/11/2026, el dios del juego eligió arreglarlo) ─────────────────────────────────────────────
+## ── UN NOMBRE, UN LUGAR (07/11/2026, el usuario eligió arreglarlo) ─────────────────────────────────────────────
 ## Un modificador cambia cada número que se llame como él donde esté: en el arquetipo, en el individuo y en este estilo.
 ## `step_height` y `arm_swing` estaban en los dos lados, así que se aplicaban dos veces —«Arrastrando los pies», ×0,15
 ## del pie, lo dejaba en ×0,02—. Se fueron de acá, y esta regla avisa si un número de este estilo vuelve a llamarse

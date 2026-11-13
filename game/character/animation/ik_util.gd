@@ -9,7 +9,7 @@ const GAIT_MIN_SPEED := 0.15
 ## piso un paso ya empezado siempre termina — y como se recalcula con la velocidad EN VIVO cada
 ## frame, acelerar de golpe a mitad de paso lo acelera también (no hay duración congelada).
 ## Se apaga solo: cuando el pie aterriza no queda nadie en vuelo y la fase se congela (no marcha en
-## el lugar). Ver technical/character-animation.md.
+## el lugar). Ver character-parametric:docs/technical/character-animation.md.
 const MIN_SWING_RATE := 1.6
 ## Paso de asentamiento: al frenar, si un pie quedó desplazado más que esta fracción del alcance, da
 ## un pasito para meterse bajo la cadera. Es el "último pasito" al detenerse.
@@ -26,8 +26,8 @@ const STEP_DOWN_SHARE := 0.5
 ## cuerpo (`rate = v/S`), así que no hay patinaje: no tiene umbrales, ni cooldown, ni "quién pisa ahora".
 ##
 ## Hubo otro, el de DISPARO (el de la build de marzo de 2026, mejorado el 12/10: cada paso un evento que sale cuando el
-## cuerpo deja atrás al pie), que la tecla G alternaba con éste. El 18/10/2026 el dios del juego se quedó con éste y se
-## borraron el otro y la tecla (ver docs/technical/character-animation.md).
+## cuerpo deja atrás al pie), que la tecla G alternaba con éste. El 18/10/2026 el usuario se quedó con éste y se
+## borraron el otro y la tecla (ver character-parametric:docs/technical/character-animation.md).
 
 ## El estilo de caminar de este cuerpo (ver WalkStyle); sin uno, la base.
 var style: WalkStyle = null
@@ -84,7 +84,7 @@ var right_arm_pole: Node3D
 # ── Estado de la marcha ───────────────────────────────────────────────────────────────────────────
 # Un único acumulador de fase manda los dos pies (el derecho va medio ciclo desfasado). Con eso la
 # alternancia es exacta por construcción: no hay umbrales, cooldowns ni "quién pisa ahora".
-# Ver technical/character-animation.md.
+# Ver character-parametric:docs/technical/character-animation.md.
 
 ## Fase del ciclo de marcha, 0..1. La pierna izquierda usa esta fase; la derecha, +0.5.
 var gait_phase: float = 0.0
@@ -138,12 +138,12 @@ var recovery_targets_locked: bool = false
 ## personaje que camina hacia −Z necesita el piso yendo a +Z. El indicador visual del sandbox lee ESTE
 ## vector tal cual (ver CharacterArchetype.Belt), así que un signo al revés se ve.
 ##
-## Lo usan el maniquí del design sandbox, con su cinta (ver CharacterArchetype.Walker), y quien pisa la nave en vuelo
-## (ver BoneInstantiator._ride_floor): ahí el piso es el de la nave.
+## Lo usan el maniquí del design sandbox, con su cinta (ver CharacterArchetype.Walker), y quien pisa la meca en vuelo
+## (ver BoneInstantiator._ride_floor): ahí el piso es el de la meca.
 var ground_velocity := Vector3.ZERO
 ## LO QUE PASÓ DESDE EL ÚLTIMO SOLVE, para llevar los pies con el piso (ver `_slide_with_ground`), cuando quien lo mueve
 ## lo sabe mejor que `inputs.delta`: un proxy resuelve a media tasa, y con el delta de un cuadro sus pies viajaban la
-## mitad que la nave en vuelo, se quedaban atrás y la pierna terminaba en un punto. 0 = `inputs.delta`, como la cinta.
+## mitad que la meca en vuelo, se quedaban atrás y la pierna terminaba en un punto. 0 = `inputs.delta`, como la cinta.
 var ground_step := 0.0
 ## Los gizmos de marcha (poles, targets, anillos de alcance y zancada, sondeos del raycast) se
 ## dibujan solo si esto está prendido. Arranca APAGADO: son ayudas de autoría, no del juego.
@@ -330,7 +330,7 @@ func advance_gait(delta: float, sizes: SkeletonSizesUtil, inputs: AnimationInput
 	_gait_speed = Vector2(inputs.velocity.x, inputs.velocity.z).length()
 	# DESPEGANDO, NINGÚN PASO NUEVO (ver BoneInstantiator.taking_off): los dos pies dejan el piso juntos.
 	var moving := _gait_speed > GAIT_MIN_SPEED and not inputs.taking_off
-	# AL ATERRIZAR, LA MARCHA VUELVE A EMPEZAR (05/11/2026, el dios del juego: «cuando aterrizás… deberían volver a
+	# AL ATERRIZAR, LA MARCHA VUELVE A EMPEZAR (05/11/2026, el usuario: «cuando aterrizás… deberían volver a
 	# posición neutra y empezar a acelerar de vuelta»): el ciclo seguía corriendo en el aire, y al tocar el piso cada pie
 	# retomaba la marcha a mitad de un paso, que terminaba en un cuadro —medido con el flaco y la tele: el pie saltaba
 	# 69 cm—. Ahora, al tocar el piso, los pasos en curso se cortan —los dos pies quedan donde caen— y la fase se engancha
@@ -432,7 +432,7 @@ func _set_was_airborne(left: bool, value: bool) -> void:
 
 
 ## Resuelve una pierna para este frame: decide dónde va el pie (apoyo / vuelo / aire) y dobla la
-## pierna con la IK de dos huesos. Ver technical/character-animation.md.
+## pierna con la IK de dos huesos. Ver character-parametric:docs/technical/character-animation.md.
 func update_ik_raycast(
 	left: bool, bones: CustomBonesUtil, sizes: SkeletonSizesUtil, inputs: AnimationInputs,
 ) -> void:
@@ -452,7 +452,7 @@ func update_ik_raycast(
 	var total_raycast_length: float = min_raycast_length * 1.5
 	leg.raycast.target_position.y   = -(total_raycast_length - sizes.raycast_start_y_offset)
 	var max_raycast_distance: float       = leg.raycast.target_position.length()
-	# UN ESCALÓN ABAJO SE PISA (05/11/2026, el dios del juego: bajando la escalera la pierna «hace como un corte y se
+	# UN ESCALÓN ABAJO SE PISA (05/11/2026, el usuario: bajando la escalera la pierna «hace como un corte y se
 	# teletransporta»): lo que la pierna no llega parada lo pone la pelvis, que baja (ver
 	# BoneInstantiator._update_pelvis_drop), hasta `STEP_DOWN_SHARE` de pierna. *Hasta entonces el alcance era el de la
 	# pierna parada, medido desde la cadera de AHORA: el punto de aterrizaje, adelante, caía en el escalón de abajo, «no
@@ -536,7 +536,7 @@ func update_ik_raycast(
 	var probe_local := Vector3(leg.neutral_local.x + lead.x, leg.neutral_local.y, leg.neutral_local.z + lead.y)
 
 	var ground_local: Vector3 = basis_owner.global_transform.affine_inverse() * inputs.ground_point
-	# ── UN PIE DELANTE DEL OTRO (03/11/2026, lo pidió el dios del juego) ──────────────────────────────────────────
+	# ── UN PIE DELANTE DEL OTRO (03/11/2026, lo pidió el usuario) ──────────────────────────────────────────
 	# El tercero es la LÍNEA DEL MEDIO, con el mismo adelanto del paso: en un camino más angosto que la estancia, a los
 	# costados no hay piso que alcance, y los dos pies van a la línea, uno delante del otro. En piso normal el primero
 	# acierta y éste no se tira nunca (cuesta lo mismo que antes).
@@ -647,7 +647,7 @@ func update_ik_raycast(
 	_level_foot(left, bones, inputs)
 
 
-## ── EL ÁNGULO DEL PIE, POR ESTADOS (05/11/2026, el dios del juego: «el estilo de esta animación no le tiene miedo a
+## ── EL ÁNGULO DEL PIE, POR ESTADOS (05/11/2026, el usuario: «el estilo de esta animación no le tiene miedo a
 ## estados discretamente distintos… con los pies tocando el piso o no»; «este ángulo debería ser algo absoluto y no
 ## relativo, porque ahí volvería el tembleque») ─────────────────────────────────────────────────────────────────────
 ## Tres estados, y el cambio entre uno y otro es de golpe, como el salto:
@@ -664,8 +664,8 @@ func update_ik_raycast(
 ## 50° para atrás—; y la punta del aire entraba y salía en un blend. El 05/11 se probó también que el pie siguiera a la
 ## tibia, y temblaba.*
 const FLIGHT_BACK := deg_to_rad(40.0)
-const FLIGHT_FRONT := 0.0  # adelante llega plano, como apoya (06/11/2026, el dios del juego; era 15°)
-## Lo que baja la punta del pie en el aire (05/11/2026, el dios del juego: «haría a las poses sentirse menos stiff… que
+const FLIGHT_FRONT := 0.0  # adelante llega plano, como apoya (06/11/2026, el usuario; era 15°)
+## Lo que baja la punta del pie en el aire (05/11/2026, el usuario: «haría a las poses sentirse menos stiff… que
 ## estén un poco para abajo… la misma inclinación en todos los arquetipos»).
 const AIR_FOOT_POINT := deg_to_rad(20.0)
 

@@ -6,7 +6,7 @@ extends Resource
 ## está arranca con lo que tenía con el sistema viejo (ver BlockShape.from_sizes). El botón Guardar del panel (ver
 ## LocomotionTuner, la pestaña Cuerpo) las escribe en `PATH`; se leen al arrancar.
 ##
-## ⚠ El archivo es del dios del juego (lo escribe el panel cuando él guarda): no se commitea a mano.
+## ⚠ El archivo es del usuario (lo escribe el panel cuando él guarda): no se commitea a mano.
 
 const PATH := "res://game/character/archetypes/block_shapes.tres"
 

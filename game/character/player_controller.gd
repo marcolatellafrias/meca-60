@@ -10,7 +10,7 @@ var player_camera: Camera3D
 var is_ready: bool = false
 
 ## ADÓNDE MIRA, que es SU INTENCIÓN (ver CharacterIntent): el mouse la escribe, el cuerpo la sigue y la cámara también.
-## El rumbo, en el mundo; la intención lo guarda en los ejes del marco (ver MotionFrame), así viaja solo con la nave.
+## El rumbo, en el mundo; la intención lo guarda en los ejes del marco (ver MotionFrame), así viaja solo con la meca.
 var camera_pitch: float:
 	get:
 		var bi := _get_bi()
@@ -50,7 +50,7 @@ var stamina_regen_rate: float = 0.5
 var stamina_refractory_time: float = 2.0
 var _stamina: float = 5.0
 ## LO QUE OCUPAN LAS HERIDAS de la barra de estamina, de 0 a 1 desde el final, como en Peak: la estamina no puede pasar
-## de lo que queda (ver CrewHealth, que lo escribe, y docs/conceptual/hud.md).
+## de lo que queda (ver CrewHealth, que lo escribe, y character-parametric:docs/conceptual/hud.md).
 var injury: float = 0.0
 var _refractory_timer: float = 0.0
 var _was_sprinting: bool = false
@@ -68,20 +68,12 @@ var arms_controller: ArmsController = null
 
 var _creative: bool = false
 var _debug_panel: DebugPanel = null
-## LA TECLA DEL PANEL DE DEBUG: F1 en el juego; en el sandbox, F8, porque ahí la F1 es del panel de la fila (lo decidió
-## el dios del juego, 11/10/2026). La cambia quien arma el personaje.
-var debug_panel_key: Key = KEY_F1
-## El identificador de piezas de la ciudad del F1 (ver Inspector). Se usa con el panel CERRADO: el
-## panel libera el mouse y entonces no se puede apuntar.
-var _inspector: Inspector = null
+## LA TECLA DEL PANEL DE DEBUG: F9, la primera de los paneles globales del sandbox (ver docs/technical/sandbox.md): de
+## F1 a F7 son de las filas, y la F8 detiene el juego. *Era la F1, y en una sesión de red chocaba con los paneles de
+## fila.* La cambia quien arma el personaje.
+var debug_panel_key: Key = KEY_F9
 ## El puntito blanco del centro de la pantalla (ver Crosshair).
 var _crosshair: Crosshair = null
-## Si el inspector está prendido. Vive acá y no en el inspector porque el inspector se rehace en cada
-## respawn; así el modo sobrevive a morir, que es cuando más se lo quiere seguir usando.
-var _inspector_on := false
-var _inspector_toggle: CheckButton = null
-var _map_overlay: CityMapOverlay = null
-var _weather_tuner: WeatherTuner = null
 
 ## Punto de entrada único cuando el BoneInstantiator (re)construye el esqueleto del jugador
 ## activo — tanto el build inicial como cada respawn. Construye lo persistente una sola vez
@@ -94,24 +86,9 @@ func on_skeleton_built(target: BoneInstantiator, cam: Camera3D) -> void:
 		is_ready = true
 	rebind(target)
 	_use_own_camera()
-	_build_inspector()
 	if target.debug_enabled:
 		_setup_debug_panel()  # refleja el personaje nuevo (se recrea adentro)
-	# El mouse_mode lo maneja UIState (technical/ui.md); acá no lo tocamos.
-
-## EL INSPECTOR (apuntar para identificar, la I; ver Inspector), para todo jugador de esta máquina, con panel de debug o
-## sin él —el ente del sandbox no tiene panel—. Nuevo en cada cuerpo (mira por su cámara y excluye su cápsula); el
-## estado se restaura ANTES de escuchar, porque arranca apagado. *Hasta el 03/11/2026 lo armaba el panel de debug, y el
-## ente, al pasar a ser el personaje del juego, se quedó sin la I (lo vio el dios del juego).*
-func _build_inspector() -> void:
-	if is_instance_valid(_inspector):
-		_inspector.queue_free()
-	_inspector = Inspector.new()
-	add_child(_inspector)
-	_inspector.setup(player_camera, char_rigidbody)
-	_inspector.set_enabled(_inspector_on)
-	_inspector.toggled.connect(_on_inspector_toggled)
-
+	# El mouse_mode lo maneja UIState (character-parametric:docs/technical/ui.md); acá no lo tocamos.
 
 ## Nodos que viven en el PlayerController y sobreviven a los respawns: se crean una sola vez.
 func _construct_persistent(target: BoneInstantiator, cam: Camera3D) -> void:
@@ -201,23 +178,6 @@ func _input(event: InputEvent) -> void:
 		_debug_panel.toggle()
 		return
 
-	# F6, el afinador del clima y las nubes. Este SI libera el mouse (se anota en UIState): hay que
-	# arrastrar sliders.
-	if is_instance_valid(_weather_tuner) and not _direct() and event is InputEventKey and event.pressed and not event.echo \
-			and event.keycode == KEY_F6:
-		_weather_tuner.toggle()
-		return
-
-
-	# LA TECLA Y EL CLIC DEL INSPECTOR NO ESTÁN ACÁ: son del modo y los maneja él (ver Inspector). Acá
-	# solo se refleja el cambio en la casilla del panel, por su señal.
-
-	# F2, el mapa de al lado: a diferencia del panel, no bloquea el gameplay —se mira en movimiento—.
-	if is_instance_valid(_map_overlay) and not _direct() and event is InputEventKey and event.pressed and not event.echo \
-			and event.keycode == KEY_F2:
-		_map_overlay.toggle()
-		return
-
 	# Con cualquier overlay abierto (pausa/menú/consola/debug) se bloquea el input de gameplay.
 	if not UIState.gameplay_active():
 		return
@@ -285,7 +245,7 @@ func _input(event: InputEvent) -> void:
 				KEY_E:
 					if is_instance_valid(bi): bi.intent.activate = true
 				# En ragdoll no se interactúa (ni clic, ni E, ni R): la carga no avanzaría —el update de la
-				# interacción no corre— y al soltar quedaría el empujón a medias. Ver technical/characters.md.
+				# interacción no corre— y al soltar quedaría el empujón a medias. Ver character-parametric:docs/technical/characters.md.
 				KEY_R when not _direct():  # en el sandbox la R regenera la parcela
 					if is_instance_valid(bi): bi.intent.throw = true
 				# LAS TECLAS DE DEPURACIÓN, sólo con depuración (`debug_enabled`, el jugador del juego): en el sandbox la F es
@@ -301,9 +261,6 @@ func _input(event: InputEvent) -> void:
 				# Físicas / debug
 				KEY_G when _debug_keys(): _toggle_ragdoll()
 				KEY_P when _debug_keys(): _respawn()
-				KEY_H when _debug_keys():
-					if is_instance_valid(player_camera):
-						DebugRam.fire(get_tree(), player_camera.global_transform)
 
 
 		else: # released
@@ -657,7 +614,7 @@ func impacts_shown() -> bool:
 	return is_instance_valid(_impact_debug_hud) and _impact_debug_hud.visible
 
 
-## PRENDE O APAGA EL VUELO LIBRE desde afuera (la V lo alterna): al subir a la nave con la U se apaga (ver PilotRide).
+## PRENDE O APAGA EL VUELO LIBRE desde afuera (la V lo alterna): al subir a la meca con la U se apaga (ver PilotRide).
 func set_creative(on: bool) -> void:
 	_set_creative(on)
 
@@ -690,19 +647,6 @@ func _set_creative(on: bool) -> void:
 		char_rigidbody.rotation.y = camera_yaw
 
 
-func _set_inspector(on: bool) -> void:
-	_inspector_on = on
-	if is_instance_valid(_inspector):
-		_inspector.set_enabled(on)
-
-
-## Cuando el inspector se prende o se apaga POR SU TECLA, para que la casilla del panel diga la verdad.
-func _on_inspector_toggled(on: bool) -> void:
-	_inspector_on = on
-	if is_instance_valid(_inspector_toggle):
-		_inspector_toggle.set_pressed_no_signal(on)
-
-
 func _setup_debug_panel() -> void:
 	# Se re-llama en cada respawn (desde on_skeleton_built): recreamos el panel para reflejar
 	# el nuevo personaje (y no acumular paneles).
@@ -715,53 +659,15 @@ func _setup_debug_panel() -> void:
 	var bi := _get_bi()
 	if is_instance_valid(bi) and is_instance_valid(bi.entity_instantiation):
 		_debug_panel.add_text("Info", _character_stats_text(bi.entity_instantiation))
-	var d := WorldSeeds.ba_date()
-	_debug_panel.add_info("BA date",     "%04d-%02d-%02d" % [int(d.get("year", 0)), int(d.get("month", 0)), int(d.get("day", 0))])
-	_debug_panel.add_info("Weekly seed", str(WorldSeeds.weekly_seed()))
-	_debug_panel.add_info("Daily seed",  str(WorldSeeds.daily_seed()))
 	_debug_panel.add_info("Red", _net_status_text())
 
 	# ── Acciones ──
 	_debug_panel.add_action("Acciones", "Toggle creative (V)",      func(): _set_creative(not _creative))
 	_debug_panel.add_action("Acciones", "Toggle ragdoll (G)",       _toggle_ragdoll)
 	_debug_panel.add_action("Acciones", "Respawn (P)",              _respawn)
-	_debug_panel.add_slider("Acciones", "Ariete de prueba, como la nave (H): %.0f m/s", 1.0, DebugRam.MAX_SPEED, 0.5, DebugRam.speed,
-		func(v: float) -> void: DebugRam.speed = v)
-	_debug_panel.add_text("Acciones", "Recuperación de autos golpeados")
-	_debug_panel.add_slider("Acciones", "Frecuencia de vuelta: %.2f rad/s", 0.3, 6.0, 0.05, CarBody.position_frequency,
-		func(v: float) -> void: CarBody.position_frequency = v)
-	_debug_panel.add_slider("Acciones", "Amortiguación de vuelta: %.2f", 0.0, 1.5, 0.01, CarBody.position_damping,
-		func(v: float) -> void: CarBody.position_damping = v)
-	_debug_panel.add_slider("Acciones", "Estabilizador máximo: %.1f m/s²", 1.0, 30.0, 0.5, CarBody.max_accel,
-		func(v: float) -> void: CarBody.max_accel = v)
-	_debug_panel.add_slider("Acciones", "Frecuencia de enderezarse: %.2f rad/s", 0.5, 10.0, 0.1, CarBody.tilt_frequency,
-		func(v: float) -> void: CarBody.tilt_frequency = v)
-	_debug_panel.add_slider("Acciones", "Amortiguación de enderezarse: %.2f", 0.0, 1.5, 0.01, CarBody.tilt_damping,
-		func(v: float) -> void: CarBody.tilt_damping = v)
-	_debug_panel.add_slider("Acciones", "Giro que recibe del golpe: %.2f", 0.0, 1.0, 0.05, CarBody.spin_share,
-		func(v: float) -> void: CarBody.spin_share = v)
-	_debug_panel.add_slider("Acciones", "Se cae pasado: %.0f°", 20.0, 180.0, 1.0, rad_to_deg(CarBody.lost_tilt),
-		func(v: float) -> void: CarBody.lost_tilt = deg_to_rad(v))
-	_debug_panel.add_slider("Acciones", "Se cae lejos de la ruta: %.0f m", 2.0, 40.0, 1.0, CarBody.lost_distance,
-		func(v: float) -> void: CarBody.lost_distance = v)
-	_debug_panel.add_slider("Acciones", "Propulsor máximo: %.1f m/s²", 0.0, 30.0, 0.5, CarBody.thrust,
-		func(v: float) -> void: CarBody.thrust = v)
-	_debug_panel.add_slider("Acciones", "Propulsor se apaga en: %.1f s", 0.0, 8.0, 0.1, CarBody.fall_thrust_s,
-		func(v: float) -> void: CarBody.fall_thrust_s = v)
 	if is_instance_valid(_impact_debug_hud):
 		_debug_panel.add_toggle("Acciones", "Ver impactos", _impact_debug_hud.visible,
 			func(on: bool) -> void: _impact_debug_hud.visible = on)
-	_debug_panel.add_action("Acciones", "Indicadores de tráfico",    func(): TrafficDebugDrawer.ENABLED = not TrafficDebugDrawer.ENABLED)
-	# El afinador de vista (F3) tiene todo esto por separado; acá va el atajo al que se usa siempre: la vista debug
-	# pintada POR BARRIO, que es la que hace legibles los distritos desde el aire.
-	_debug_panel.add_action("Acciones", "Ciudad: vista debug por barrio", _toggle_city_debug_view)
-	_debug_panel.add_action("Acciones", "Neblina", func(): CityDebugView.toggle_fog(get_tree()))
-
-	# Identificar lo que se apunta (ver `_build_inspector`): acá sólo su casilla. Se USA con el panel cerrado,
-	# porque el panel libera el mouse y sin mouse capturado no se puede apuntar.
-	_inspector_toggle = _debug_panel.add_toggle("Acciones", "Apuntar para identificar (I · O modo · clic de ruedita actúa y copia)",
-		_inspector_on, _set_inspector)
-
 	# ── Arquetipos ──
 	# Dos acciones por arquetipo, y son distintas: "Ser" cambia TU personaje y además deja la P pegada
 	# a ese arquetipo (apretarla repetido da otra variación del mismo); "Spawnear" deja un NPC al lado
@@ -783,33 +689,9 @@ func _setup_debug_panel() -> void:
 	_debug_panel.add_action("Spawn", "Character",          _debug_spawn_character)
 	_debug_panel.add_action("Spawn", "Caja liviana ▪",     func(): _debug_spawn("box_light_square"))
 	_debug_panel.add_action("Spawn", "Caja pesada ▪",      func(): _debug_spawn("box_heavy_square"))
-	_debug_panel.add_action("Spawn", "Dashboard",          func(): _debug_spawn("dashboard"))
 	_debug_panel.add_action("Spawn", "Seat",               func(): _debug_spawn("seat"))
 	_debug_panel.add_action("Spawn", "Limpiar spawns",     _clear_spawns)
 
-	# ── Mapa ──
-	# El mapa se centra y se teletransporta sobre la cápsula propia (ver CityMap).
-	var map := CityMap.new()
-	map.player = char_rigidbody
-	_debug_panel.add_action("Mapa", "Centrar en mí", map.center_on_player)
-	_debug_panel.add_control("Mapa", map)
-
-	# Y el mismo mapa, chico y en la esquina, para mirar en movimiento (F2).
-	if is_instance_valid(_map_overlay):
-		_map_overlay.queue_free()
-	_map_overlay = CityMapOverlay.new()
-	_map_overlay.setup(char_rigidbody)
-	add_child(_map_overlay)
-
-	# ── Clima ── el afinador de F6: clima, alcance de la niebla y nubes.
-	if is_instance_valid(_weather_tuner):
-		_weather_tuner.queue_free()
-	_weather_tuner = WeatherTuner.new()
-	add_child(_weather_tuner)
-	_weather_tuner.setup_panel()
-
-	# ── Performance ──
-	PerformanceToggles.build_tab(_debug_panel, get_tree())
 
 
 func _character_stats_text(inst: EntityInstantiation) -> String:
@@ -892,25 +774,10 @@ func _debug_spawn_character(character_seed: int = -1) -> void:
 
 func _debug_spawn(type_name: String) -> void:
 	var pos := _debug_spawn_pos()
-	# Objetos de escena estáticos (no caen). El asiento se apoya en el piso; el dashboard es un panel
-	# de control y va a altura de uso, sobre el piso. Las cajas son rigidbodies: caen solas.
+	# El asiento es estático y se apoya en el piso. Las cajas son rigidbodies: caen solas.
 	if type_name == "seat":
 		pos = _snap_to_ground(pos)
-	elif type_name == "dashboard":
-		pos = _snap_to_ground(pos) + Vector3.UP * 1.5
 	NetSpawner.request_spawn(type_name, Transform3D(Basis(), pos))
-
-## LA VISTA DEBUG DE LOS EDIFICIOS, pintada por barrio: la forma en modulos, un color por distrito y un tono por
-## modulo (ver City.building_debug_view y building_debug_palette). El afinador de vista (F3) tiene cada cosa por
-## separado; esto prende y apaga las dos de una, que es como se usa.
-func _toggle_city_debug_view() -> void:
-	for node in get_tree().get_nodes_in_group("city_generator"):
-		var city := node as City
-		if city == null:
-			continue
-		city.building_debug_palette = City.DebugPalette.DISTRICT
-		city.building_debug_view = not city.building_debug_view
-
 
 ## Limpia todo lo spawneado (ver NetSpawner).
 func _clear_spawns() -> void:

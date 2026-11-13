@@ -110,7 +110,7 @@ static func create(sizes: SkeletonSizesUtil, inst: EntityInstantiation) -> Custo
 	#     su propia variable, ver `spine_bend`). Con el cuello corto, inclinarlo solo a él ya lee como
 	#     hombros encogidos y cabeza adelantada: el encorvado de dibujito, con un hueso.
 	if stats.has_neck:
-		# NACE EN LA PUNTA DEL PECHO Y LLEGA A LA CABEZA (22/10/2026, lo pidió el dios del juego: los huesos nunca se
+		# NACE EN LA PUNTA DEL PECHO Y LLEGA A LA CABEZA (22/10/2026, lo pidió el usuario: los huesos nunca se
 		# desconectan). La cabeza sigue donde estaba —en la tapa (`neck_anchor`, ver SkeletonSizesUtil) y de ahí su largo,
 		# inclinado por el encorvado—, y el cuello va derecho desde la punta del pecho hasta ahí (ver `_neck`). Nacía en la
 		# tapa, corrido de la punta del pecho, y en la vista de esqueleto quedaba un hueco.

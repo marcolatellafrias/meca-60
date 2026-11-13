@@ -1,7 +1,7 @@
 class_name PlayerHUD
 extends CanvasLayer
 
-## EL HUD DEL JUGADOR (ver docs/conceptual/hud.md): UNA SOLA BARRA, la de la ESTAMINA, como en Peak —lo amarillo se
+## EL HUD DEL JUGADOR (ver character-parametric:docs/conceptual/hud.md): UNA SOLA BARRA, la de la ESTAMINA, como en Peak —lo amarillo se
 ## gasta corriendo y se recarga; las HERIDAS ocupan una parte roja desde el final, que se cura sola (ver CrewHealth),
 ## y con la barra entera roja se queda herido—. Se ve sólo al correr, mientras se recarga o mientras haya heridas.
 ## Lo demás —la velocidad, la carga del salto y del lanzamiento, la estabilidad— es de depuración: se ve sólo con el
@@ -156,7 +156,7 @@ static func create(inst: EntityInstantiation) -> PlayerHUD:
 	hud._debug_parts.append(stability)
 
 	# Los stats del personaje (seed/arquetipo/height/weight/…) ahora viven en el tab
-	# Info del panel de debug (F1), no en el HUD de gameplay. Ver technical/ui.md.
+	# Info del panel de debug (F1), no en el HUD de gameplay. Ver character-parametric:docs/technical/ui.md.
 
 	return hud
 

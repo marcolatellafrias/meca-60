@@ -52,7 +52,7 @@ const LEG_DEPTH_SHARE := 0.80
 
 ## LO MÁS ANGOSTO QUE PUEDE QUEDAR LA ENTREPIERNA, en metros, y es un número MEDIDO: una entrepierna más
 ## angosta que esto se rasga al caminar. Medido en la fila de caderas del sandbox (ver
-## docs/technical/hip-topology.md), con 3 cm la peor cara de la entrepierna se plegó al 32% de su área y dos
+## character-parametric:docs/technical/hip-topology.md), con 3 cm la peor cara de la entrepierna se plegó al 32% de su área y dos
 ## se dieron vuelta —o sea dos agujeros—; con 5 cm queda en 42% y ninguna, y de ahí para arriba no mejora.
 const CROTCH_GAP_MIN := 0.05
 
@@ -397,7 +397,7 @@ func pose_hand(side: String, grip: int, weight: float) -> void:
 		skeleton.set_bone_pose(idx[k], locals[k] * Transform3D(Basis(Vector3.BACK, angle * turn), Vector3.ZERO))
 
 
-## LA MANO EN REPOSO (01/11/2026, el dios del juego: «una pose muy básica para las manos en reposo… pondría la misma pose
+## LA MANO EN REPOSO (01/11/2026, el usuario: «una pose muy básica para las manos en reposo… pondría la misma pose
 ## del puño que… se hace cuando estás agarrando un volante»): el puño.
 static func rest_pose() -> Dictionary:
 	return TubeHand.FIST

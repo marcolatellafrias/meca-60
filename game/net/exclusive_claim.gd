@@ -7,9 +7,9 @@ extends Node
 ## Encapsula UNA sola vez, acá, el patrón host-authoritative de "pedir → conceder/negar → difundir",
 ## incluido el gotcha de que `rpc_id(propio_id)` NO se invoca localmente (el host se auto-despacha).
 ## Los interactuables lo usan por SEÑALES y no re-implementan arbitraje: el asiento, los controles del
-## dashboard, y a futuro las estaciones de la nave. La propiedad (esto) y el ESTADO que cada
+## dashboard, y a futuro las estaciones de la meca. La propiedad (esto) y el ESTADO que cada
 ## interactuable sincroniza (valor del control, pose sentado) son capas separadas.
-## Ver docs/conceptual/multiplayer.md.
+## Ver character-parametric:docs/conceptual/multiplayer.md.
 ##
 ## FUERA DEL ÁRBOL NO HACE NADA: ahí `multiplayer` es null, así que no es de nadie, no se pide ni se suelta. Pasa
 ## cuando su interactuable se borra con alguien usándolo y quien lo usa lo suelta en el mismo cuadro: el libro de la

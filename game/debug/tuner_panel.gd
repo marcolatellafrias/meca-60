@@ -273,7 +273,7 @@ func sections() -> Array[Dictionary]:
 	return []
 
 
-## ── LA CABECERA (07/11/2026, el dios del juego: en el de locomoción, «el arquetipo… como tabs» y arriba «un slider de
+## ── LA CABECERA (07/11/2026, el usuario: en el de locomoción, «el arquetipo… como tabs» y arriba «un slider de
 ## suavizado… única de todos los arquetipos») ─────────────────────────────────────────────────────────────────────────
 ## Controles que van ARRIBA de la barra de pestañas y no adentro del scroll: lo que vale para todas las pestañas —qué
 ## se está editando, una perilla de todos— y tiene que quedarse a la vista. Se rearma con `rebuild`, así que cada
@@ -376,7 +376,7 @@ func _fill(all: Array[Dictionary]) -> void:
 		# UNA SECCIÓN SIN OBJETO —sólo toggles— no tiene propiedades que leer.
 		if section.has("target"):
 			PropertyTuner.build(_box, section)
-		# ── VARIOS OBJETOS BAJO UN SOLO TÍTULO (07/11/2026, el dios del juego: «se separaron en dos subcategorías
+		# ── VARIOS OBJETOS BAJO UN SOLO TÍTULO (07/11/2026, el usuario: «se separaron en dos subcategorías
 		# separadas, aunque tiene el mismo título… que eso no sea posible por diseño»): `blocks`, una lista de specs de
 		# PropertyTuner que van uno debajo del otro, cada uno con su renglón chico (`caption`) que dice de quién es. Así un
 		# tema que vive en dos objetos —lo de un arquetipo y lo de todos— es UNA sección, no dos con el mismo nombre.

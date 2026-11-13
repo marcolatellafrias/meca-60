@@ -201,7 +201,7 @@ func build_body() -> RigidBody3D:
 ## El individuo de la parcela: el cuerpo real apoyado en el piso, con los gizmos que la fila tenga
 ## elegidos. La semilla todavía no cambia nada (ver `describe`).
 ##
-## ACÁ EL CUERPO VA CONGELADO, y es la misma decisión que la nave de su fila: una parcela muestra UN
+## ACÁ EL CUERPO VA CONGELADO, y es la misma decisión que la meca de su fila: una parcela muestra UN
 ## diseño y tiene que seguir mostrándolo: suelto, el paquete se lo lleva cualquiera que lo roce y la fila
 ## queda desarmada hasta que alguien aprieta R. Kinemático y no estático porque sigue siendo un cuerpo
 ## con el que se choca, no decorado.

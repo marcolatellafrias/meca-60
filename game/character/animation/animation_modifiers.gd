@@ -6,13 +6,13 @@ var bi: BoneInstantiator
 const JUMP_SQUAT_Y    := -0.3
 const JUMP_SQUAT_Z    :=  0.13
 const JUMP_SQUAT_TILT :=  0.3
-## LA AGACHADA, UNA SOLA MEDIDA (04/11/2026, el dios del juego, mirando «agacharse en el lugar»: «los personajes podrían
+## LA AGACHADA, UNA SOLA MEDIDA (04/11/2026, el usuario, mirando «agacharse en el lugar»: «los personajes podrían
 ## agacharse mucho más»): la cadera baja `CROUCH_SHARE` del largo de SU pierna (`crouch_drop`), y lo mismo el pecho —de
 ## donde sale el alcance, ver BoneInstantiator.get_interaction_origin— y la cámara (FirstPersonView); la cápsula queda
 ## en `CharacterRigidBody3D.CROUCH_CAPSULE` de su alto. *Hasta entonces la pose bajaba 30 cm fijos para todos (−0,3),
 ## el alcance el 35 % de la pierna y la cápsula el 55 %: tres medidas que no coincidían.*
 const CROUCH_SHARE    :=  0.55
-## LO QUE TARDA EN AGACHARSE Y EN PARARSE (s), el jugador y los dummies (04/11/2026, el dios del juego: «es como casi
+## LO QUE TARDA EN AGACHARSE Y EN PARARSE (s), el jugador y los dummies (04/11/2026, el usuario: «es como casi
 ## inmediata… aumentaría un poquito la duración»; era 0,12).
 const CROUCH_S        :=  0.25
 const CROUCH_Z        :=  0.2
@@ -87,7 +87,7 @@ func _apply_root_offsets() -> void:
 	if is_seated:
 		return
 	# La bajada geométrica va con el mismo signo que agacharse: las tres razones para bajar la pelvis
-	# se suman en un solo número. Ver technical/character-animation.md (ajuste de pelvis).
+	# se suman en un solo número. Ver character-parametric:docs/technical/character-animation.md (ajuste de pelvis).
 	var y          := squat_y()                      - crouch_drop(bi) * crouch_t - pelvis_drop
 	var squat      := jump_squat_t * LocomotionCommon.base().jump_squat
 	var z          := JUMP_SQUAT_Z    * squat + CROUCH_Z    * crouch_t

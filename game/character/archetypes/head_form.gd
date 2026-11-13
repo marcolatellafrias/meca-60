@@ -3,13 +3,13 @@ extends Resource
 
 ## LA FORMA DE UNA CABEZA, DE NUEVO: un cilindro con un domo en cada punta, como la malla de `bone.glb` con la que se
 ## dibujaban los huesos en la build de marzo (después BoneCapsuleMesh, borrada el 18/10/2026), y unos pocos loop cuts entre las dos tapas. Lo pidió
-## el dios del juego (13/10/2026): la pila de vueltas de HeadShape nació para poder hacer cabezas cuadradas y otras
+## el usuario (13/10/2026): la pila de vueltas de HeadShape nació para poder hacer cabezas cuadradas y otras
 ## redondas, y como ya no va a haber cuadradas, daba una geometría fea —tramos rectos entre vueltas, esquinas de
 ## superelipse— para conseguir curvas. Acá todo es curvo de entrada:
 ##
 ##   · LAS SECCIONES SON CÍRCULOS, siempre: un diámetro por anillo, que sólo crece o se achica y se corre adelante o
 ##     atrás —nunca se deforma—. Lo único que rompe el círculo es la cara aplanada (ver `ring_point`), y es una para
-##     todas las cabezas (ver HeadForms.face_flat). Lo pidió el dios del juego (16/10/2026): el pelo se va a modelar
+##     todas las cabezas (ver HeadForms.face_flat). Lo pidió el usuario (16/10/2026): el pelo se va a modelar
 ##     sobre algo estándar —el círculo de la tapa de arriba y uno más abajo, que dan un tamaño y una inclinación—, y con
 ##     elipses cada cabeza era otra cosa. Antes cada anillo tenía ancho y fondo; quedó el ancho.
 ##   · LAS DOS TAPAS mandan siempre —su diámetro, cuánto se corren hacia adelante y lo alto de su domo— y son lo
@@ -17,7 +17,7 @@ extends Resource
 ##   · LOS LOOP CUTS DEL MEDIO se prenden de a uno (ver HeadCut): la forma pasa por los que mandan con una curva suave
 ##     —una cúbica monótona por canal, que no se pasa de largo entre dos cortes— y por los apagados, interpolada.
 ##
-## Es la primera parte del plan del dios del juego: hacer acá unas cuantas formas que le gusten; después, ver en
+## Es la primera parte del plan del usuario: hacer acá unas cuantas formas que le gusten; después, ver en
 ## cuántos cortes se descomponen y modelar el pelo sobre eso (quizás exportando la forma a Blender, con los cortes como
 ## blend shapes). Es LA cabeza del personaje desde el 15/10/2026 (la pila de vueltas se borró): cada arquetipo canónico
 ## elige una forma (ver CharacterLook.head_form), y se edita en la fila «Formas de cabeza» (ver HeadFormArchetype).
@@ -50,7 +50,7 @@ const DOME_RINGS := 2
 ## plana. Atrás y a los costados el anillo sigue siendo el círculo, y el punto de adelante no se mueve (ver
 ## `ring_point`). Es el horizontal de `flat_front`, que es el vertical.
 ##
-## ES UNA PARA TODAS LAS CABEZAS (ver HeadForms.face_flat, lo pidió el dios del juego, 16/10/2026): no se guarda con la
+## ES UNA PARA TODAS LAS CABEZAS (ver HeadForms.face_flat, lo pidió el usuario, 16/10/2026): no se guarda con la
 ## forma. Esto, en −1, la toma de ahí; sólo una captura que compara grados la fija para una forma.
 var face_flat := -1.0
 
@@ -255,7 +255,7 @@ func build_arrays() -> Array:
 	for j in AROUND:
 		var j1 := (j + 1) % AROUND
 		# LAS PUNTAS, CON EL MISMO GIRO QUE LOS TRAMOS: al revés, la medida de abajo las daba vuelta y quedaban de
-		# espaldas, un agujero en cada punta (lo vio el dios del juego, 16/10/2026).
+		# espaldas, un agujero en cada punta (lo vio el usuario, 16/10/2026).
 		tris.append_array([0, 1 + j1, 1 + j])
 		var top := 1 + (rows.size() - 1) * AROUND
 		tris.append_array([last_pole, top + j, top + j1])

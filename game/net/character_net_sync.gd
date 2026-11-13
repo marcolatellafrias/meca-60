@@ -12,7 +12,7 @@ extends Node
 ## crouch/jump/throw (pose).
 ## Todo lo que el proxy NO puede derivar solo (grounded/pasos SÍ los deriva local). El agarre (brazos
 ## a handle points) es aparte. Sin MultiplayerSynchronizer: el remoto interpola, no re-simula.
-## Ver docs/conceptual/multiplayer.md y technical/character-animation.md.
+## Ver character-parametric:docs/conceptual/multiplayer.md y character-parametric:docs/technical/character-animation.md.
 
 ## Delay de render para la interpolación (mostramos el pasado reciente).
 const INTERP_DELAY_MS := 100.0
@@ -24,11 +24,11 @@ const BUFFER_MAX := 20
 var _buffer: Array = []
 
 ## ── A BORDO ──────────────────────────────────────────────────────────────────────────────────────
-## Adentro de algo que se mueve —la nave en vuelo, ver MotionFrame y CharacterRigidBody3D, EL MARCO—, la posición y la
+## Adentro de algo que se mueve —la meca en vuelo, ver MotionFrame y CharacterRigidBody3D, EL MARCO—, la posición y la
 ## velocidad viajan EN ESE MARCO, y `floor` dice cuál es (`MotionFrame.id`, el mismo en todas las máquinas; 0 es el
 ## mundo). La mirada viaja siempre en los ejes del marco, como la guarda la intención. El proxy se dibuja
 ## INTERP_DELAY_MS en el pasado: en el marco del mundo eso, a 18 m/s, lo dejaba casi dos metros atrás de donde va,
-## contra la pared del fondo de la nave. En el marco de la nave el pasado es el mismo lugar, y se pasa al mundo con la
+## contra la pared del fondo de la meca. En el marco de la meca el pasado es el mismo lugar, y se pasa al mundo con la
 ## nave como está AHORA en esta máquina (`_to_world`). EL MARCO DE UN PROXY LO DICE SU DUEÑO, no el volumen de esta
 ## máquina: en el borde, con la histéresis, podrían no coincidir.
 var _frames := {}
@@ -271,12 +271,12 @@ func _apply_push(impulse: Vector3) -> void:
 			and (bi.ragdoll_util.is_active or bi.ragdoll_util.is_recovering):
 		return  # no empujar a un jugador ya caído/levantándose
 	rb.apply_central_impulse(impulse)
-	rb.push(impulse / rb.mass)  # adentro de la nave el cuerpo no se mide: va con nombre (ver CharacterRigidBody3D, EL MARCO)
+	rb.push(impulse / rb.mass)  # adentro de la meca el cuerpo no se mide: va con nombre (ver CharacterRigidBody3D, EL MARCO)
 
 # ── Sentado: sincronizar en qué asiento está cada jugador ──────────────────────
 # Análogo al grab: solo viaja la REFERENCIA al asiento (mismo path en todas las máquinas, spawn con
 # nombre estable). El pose sentado lo arma cada proxy corriendo el mismo _solve_frame con su propio
-# esqueleto (sentado solo cambia la raíz y las piernas). Ver technical/character-animation.md.
+# esqueleto (sentado solo cambia la raíz y las piernas). Ver character-parametric:docs/technical/character-animation.md.
 
 ## El asiento viaja como la intención (ver CharacterIntent.seat): el proxy lo recibe en la suya, y su cuerpo se sienta
 ## (ver BoneInstantiator._follow_seat). Path pendiente de resolver (proxy): el asiento puede no existir aún al unirse.

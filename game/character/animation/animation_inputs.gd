@@ -5,7 +5,7 @@ extends RefCounted
 ## cada frame — hoy desde la cápsula física; a futuro desde la red + raycasts locales en un proxy.
 ## Los módulos de animación LEEN de acá en vez de meter mano en char_rigidbody/controllers.
 ##
-## Refactor de desacople (etapa 1: locomotion_signals). Ver technical/character-animation.md.
+## Refactor de desacople (etapa 1: locomotion_signals). Ver character-parametric:docs/technical/character-animation.md.
 
 # ── Transform / movimiento ──
 var velocity: Vector3 = Vector3.ZERO       # velocidad de movimiento (world) → pasos, lean

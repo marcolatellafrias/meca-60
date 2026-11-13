@@ -38,14 +38,14 @@ var ik_util: IkUtil
 ## LO QUE SE VE del personaje. El rig lógico de CustomBone no dibuja nada: lo dibuja esto, las partes generadas
 ## (`ProceduralBodyUtil`), el único cuerpo desde el 18/10/2026. Si no hubiera cuerpo (null), lo visible vuelven a ser
 ## los cuerpos del ragdoll.
-## Ver technical/characters.md.
+## Ver character-parametric:docs/technical/characters.md.
 var body_visual: CharacterBodyVisual
 var locomotion_signals: LocomotionSignals
 var procedural_animator: ProceduralBoneAnimator
 var ragdoll_util: RagdollUtil
 
 ## Entrada de animación: la llena _update_animation_inputs() cada frame; los módulos de animación
-## la leen en vez de char_rigidbody (refactor de desacople, ver technical/character-animation.md).
+## la leen en vez de char_rigidbody (refactor de desacople, ver character-parametric:docs/technical/character-animation.md).
 var animation_inputs: AnimationInputs
 
 var anim_mod: AnimationModifiers
@@ -64,7 +64,7 @@ var net_sync: CharacterNetSync
 ## el cuerpo llama al EMPEZAR SU PASO DE FÍSICA, antes del rayo al piso y de la pose. UNA SOLA REGLA PARA TODOS: la
 ## cápsula que no se simula se pone ahí y en ningún otro lado. *Hasta entonces sólo la red tenía ese lugar, y el salón de
 ## personas ponía a los suyos entre pasos de física: el servidor les devolvía su lugar viejo, el rayo no encontraba el
-## piso y la mitad caminaba sin dar pasos (lo vio el dios del juego).*
+## piso y la mitad caminaba sin dar pasos (lo vio el usuario).*
 var puppeteer: Object = null
 
 @onready var global_targets:   Node3D = $"global_targets"
@@ -378,15 +378,15 @@ func _on_fall_triggered(world_dir: Vector3) -> void:
 		return
 	# No re-disparar si ya estoy ragdolleando NI levantándome: un impacto espurio durante la
 	# recuperación (p.ej. la cápsula asentándose) reiniciaría el ragdoll a mitad de camino y dejaría
-	# los huesos desarmados. Ver technical/characters.md.
+	# los huesos desarmados. Ver character-parametric:docs/technical/characters.md.
 	if not is_instance_valid(ragdoll_util) or ragdoll_util.is_active or ragdoll_util.is_recovering:
 		return
 	char_rigidbody.is_snapshot_active = false
 	ragdoll_util.activate_with_impact(char_rigidbody, custom_bones_util.lower_spine, world_dir)
 	if not kind.simulates():
 		# LOS HUESOS ARRANCAN CON LA VELOCIDAD DEL MARCO en su punto, y el golpe encima: la cápsula de quien no se simula
-		# está congelada y no tiene velocidad que pasarles, así que arrancaban quietos en el mundo y la nave se les iba
-		# —salían volando para atrás, lo vio la nave—.
+		# está congelada y no tiene velocidad que pasarles, así que arrancaban quietos en el mundo y la meca se les iba
+		# —salían volando para atrás, lo vio la meca—.
 		var frame := char_rigidbody.frame
 		if is_instance_valid(frame):
 			for body: RigidBody3D in ragdoll_util._bodies.values():
@@ -396,8 +396,8 @@ func _on_fall_triggered(world_dir: Vector3) -> void:
 
 
 ## LOS 19 CUERPOS DEL RAGDOLL, uno por hueso. VAN EN EL MUNDO, no colgados del personaje: si el personaje cuelga de algo
-## que se mueve a mano —la nave de las maquetas—, un cuerpo rígido que cuelga de eso se teletransporta con él en cada
-## paso; iba con la nave dos veces —por su velocidad y por el arrastre— y, como un teletransporte no choca, atravesaba el
+## que se mueve a mano —la meca de las maquetas—, un cuerpo rígido que cuelga de eso se teletransporta con él en cada
+## paso; iba con la meca dos veces —por su velocidad y por el arrastre— y, como un teletransporte no choca, atravesaba el
 ## piso y las paredes (02/11/2026). Lo lleva el marco (ver RagdollUtil.follow_frame); con la detección continua, rápidos
 ## y finos no cruzan el piso.
 func _make_ragdoll() -> void:
@@ -423,7 +423,7 @@ func _make_ragdoll() -> void:
 ## ── EL RAGDOLL DE QUIEN NO SE SIMULA (02/11/2026) ──────────────────────────────────────────────────────────────────
 ## Uno de exhibición no nace con ragdoll (ver initialize_skeleton): se le arma recién cuando se cae, y sólo si su clase
 ## se cae (`can_fall`) —sentado no se cae nunca, como con cinturón—. No se levanta: a los segundos, quien lo armó lo
-## rearma en su puesto (ver `exhibit_fallen`, DisplayCharacter.stand). Lo pidió el dios del juego.
+## rearma en su puesto (ver `exhibit_fallen`, DisplayCharacter.stand). Lo pidió el usuario.
 func _ensure_late_ragdoll() -> bool:
 	if not kind.can_fall or not is_instance_valid(char_rigidbody):
 		return false
@@ -476,7 +476,7 @@ func _clear_prior_generations() -> void:
 # costaba un personaje, ~0,35 ms cada uno, y el jugador local hacía cuatro por cuadro a 60 fps). En
 # `_process` la física del cuadro ya corrió, así que la pose que se dibuja es la de la cápsula de ahora —la
 # misma que daba el último paso— y el delta que se le pasa es todo el tiempo de física desde el último
-# solve: los suavizados y la fase de marcha son función de delta (ver technical/character-animation.md).
+# solve: los suavizados y la fase de marcha son función de delta (ver character-parametric:docs/technical/character-animation.md).
 #
 # Lo que TOCA LA FÍSICA sigue en cada paso, en `_physics_process`: la red del proxy, el ragdoll y la
 # recuperación enteros, la cápsula sentada clavada al asiento y los cuerpos del ragdoll siguiendo a los
@@ -487,7 +487,7 @@ func _clear_prior_generations() -> void:
 # seguido que a 120 Hz (el medio ritmo de antes, que a más de 120 fps sigue ahorrando); y los de lejos, a 30 y
 # a 15 Hz.
 
-## LOS DE LEJOS SE MUEVEN A MENOS TASA (decidido por el dios del juego, «15–30 Hz»). El criterio es cuánto
+## LOS DE LEJOS SE MUEVEN A MENOS TASA (decidido por el usuario, «15–30 Hz»). El criterio es cuánto
 ## atrasa en pantalla: a 1080p, con el campo de 75° de la cámara, un metro a `d` metros mide ~700/`d`
 ## píxeles, y un pie o una mano que se balancean caminando van a ~2,5 m/s. A 30 Hz la pose atrasa como mucho
 ## un cuadro de 60 (4 cm): a 20 m es 1,4 px. A 15 Hz, tres cuadros (12 cm): a 45 m es 1,9 px. Por debajo de
@@ -538,7 +538,7 @@ func _physics_process(delta: float) -> void:
 		_solve_pose(delta)
 		return
 
-	# Sentado, la cápsula va clavada en XZ al asiento en cada paso, no sólo al resolver: la nave se mueve en
+	# Sentado, la cápsula va clavada en XZ al asiento en cada paso, no sólo al resolver: la meca se mueve en
 	# cada paso, y de la cápsula cuelgan la cámara y el rayo de interacción.
 	if is_seated and is_instance_valid(current_seat):
 		_pin_capsule_to_seat()
@@ -552,7 +552,7 @@ func _physics_process(delta: float) -> void:
 	_pose_delta += delta
 
 
-## ── LA POSE VIVA CON LA FÍSICA CONGELADA (04/11/2026, el dios del juego: «para pausar cuando están cayendo o subiendo y
+## ── LA POSE VIVA CON LA FÍSICA CONGELADA (04/11/2026, el usuario: «para pausar cuando están cayendo o subiendo y
 ## ver los cambios directamente») ───────────────────────────────────────────────────────────────────────────────────
 ## `set_pose_frozen(true)` congela su cápsula —quieta donde está, sin proceso de física, y su guion apagado— pero sigue
 ## posándolo cada cuadro con lo que traía en ese instante (la velocidad, si sube o cae, cuánto lleva en el aire): lo que
@@ -731,7 +731,7 @@ func _update_ragdoll_ext_state() -> void:
 # existe una sola vez. Antes eran dos funciones copiadas y derivaron: al sentado le faltaba
 # `drive_grab` — los brazos de un proxy sentado nunca llegaban al controllable que manejaba — y
 # `sync_to_bones`. Regla: un paso nuevo va al bloque compartido; si ramificás, tiene que ser raíz o
-# piernas. Ver technical/character-animation.md.
+# piernas. Ver character-parametric:docs/technical/character-animation.md.
 #
 # El ORDEN de las piernas es lo único que difiere entre modos, y no es negociable:
 #   - Parado van ANTES del procedural: los raycasts de pie salen de las caderas, y el procedural
@@ -743,7 +743,7 @@ func _solve_frame(delta: float) -> void:
 	var planted := not seated and _is_planted()
 
 	if planted:
-		# Los pies, a sus puntos de la nave; y la pelvis baja lo que haga falta para alcanzarlos, como en tierra.
+		# Los pies, a sus puntos de la meca; y la pelvis baja lo que haga falta para alcanzarlos, como en tierra.
 		_place_planted_targets()
 		_update_pelvis_drop(delta)
 	elif not seated:
@@ -801,9 +801,9 @@ func _pin_capsule_to_seat() -> void:
 
 ## ── LOS EJES DE LA SILLA (02/11/2026) ─────────────────────────────────────────────────────────────────────────────
 ## Sentado, todo se arma en los ejes del asiento y no en los del mundo: su arriba, y adelante —para donde mira el que
-## está sentado, sobre el plano del asiento—. La nave cabecea y se ladea, y con la vertical del mundo la pelvis se
+## está sentado, sobre el plano del asiento—. La meca cabecea y se ladea, y con la vertical del mundo la pelvis se
 ## despegaba de la silla (medido: 12 cm para atrás con 20° de cabeceo, 11 cm de costado con 20° de alabeo) y las piernas
-## y los pies quedaban armados para un piso derecho. Lo vio el dios del juego cuando la tripulación dejó de congelarse.
+## y los pies quedaban armados para un piso derecho. Lo vio el usuario cuando la tripulación dejó de congelarse.
 func _seat_up() -> Vector3:
 	return current_seat.global_basis.y.normalized()
 
@@ -819,7 +819,7 @@ func _seat_pelvis_point() -> Vector3:
 		- _seat_forward() * current_seat.pelvis_back_of_centre()
 
 ## Piernas paradas: la marcha (target aéreo + raycast al piso + IK). Ver el modelo de gait en
-## technical/character-animation.md.
+## character-parametric:docs/technical/character-animation.md.
 func _pose_legs_standing() -> void:
 	var tuck := LocomotionCommon.base().leg_tuck(self)
 	ik_util.update_airborne_target(true, tuck)
@@ -847,14 +847,14 @@ func _pose_legs_seated() -> void:
 	var forward := _seat_forward()
 	var down := -_seat_up()
 
-	# ── SENTADO DERECHO (22/10/2026, lo pidió el dios del juego): el muslo recto hacia adelante, horizontal, desde donde
+	# ── SENTADO DERECHO (22/10/2026, lo pidió el usuario): el muslo recto hacia adelante, horizontal, desde donde
 	# nace (el hueso del muslo), y la pantorrilla a 90°, recta para abajo. Antes la pantorrilla iba un poco para atrás y
 	# el pie quedaba corto (0,85 de la tibia). Un pelo menos que la tibia entera, para que la IK no quede en el borde.
 	var left_hip  := custom_bones_util.left_higher_leg.global_position
 	var right_hip := custom_bones_util.right_higher_leg.global_position
 	var left_knee  := left_hip  + forward * skel_sizes_util.higher_leg_size.y
 	var right_knee := right_hip + forward * skel_sizes_util.higher_leg_size.y
-	# LOS PIES ADENTRO (28/10/2026, lo pidió el dios del juego: «que los pies los meta un poquito para adentro de la
+	# LOS PIES ADENTRO (28/10/2026, lo pidió el usuario: «que los pies los meta un poquito para adentro de la
 	# silla, como en la vida real»): si las rodillas quedan más adelante que lo de siempre, la pantorrilla se va para
 	# atrás justo eso, y el pie vuelve a caer donde caía, bajo el borde del asiento.
 	var shin_length := skel_sizes_util.lower_leg_size.y * SEATED_SHIN_REACH
@@ -873,10 +873,10 @@ func _pose_legs_seated() -> void:
 ## ── PLANTADO EN LA NAVE (02/11/2026) ──────────────────────────────────────────────────────────────────────────────
 ## Parado a bordo de exhibición ES IGUAL QUE SENTADO, sólo que las piernas van al piso en vez de a la silla (el dios del
 ## juego: «la inclinación del root bone por inercia o por impacto sucede también cuando están parados; la única
-## diferencia es que están con las piernas en el piso en vez de la silla»). La cápsula va fija en su punto de la nave y
-## girada con ella (ver CharacterRigidBody3D.ride); los pies, CLAVADOS en dos puntos del piso de la nave guardados en el
+## diferencia es que están con las piernas en el piso en vez de la silla»). La cápsula va fija en su punto de la meca y
+## girada con ella (ver CharacterRigidBody3D.ride); los pies, CLAVADOS en dos puntos del piso de la meca guardados en el
 ## marco de la cápsula (`plant_feet`), así nada de lo que recuerda queda en el mundo. Sin rayos contra el casco —que en
-## las maquetas se mueve a mano y salta de a pasos— y sin pasos: el piso lo dice la nave. La pelvis sí baja lo que haga
+## las maquetas se mueve a mano y salta de a pasos— y sin pasos: el piso lo dice la meca. La pelvis sí baja lo que haga
 ## falta para alcanzarlos (la respiración la sube unos centímetros), como en tierra. Lo de arriba —la inclinación por inercia o por golpes, la respiración, los brazos— es lo de siempre.
 var _planted_feet: Array[Vector3] = []
 
@@ -899,14 +899,14 @@ func plant_feet(floor_point: Vector3) -> void:
 		_planted_feet.append(Vector3(side * skel_sizes_util.raycast_stance_offset, ankle_local.y, 0.0))
 
 
-## Los blancos de los pies, en sus puntos de la nave: de ellos mide la bajada de pelvis y a ellos van las piernas.
+## Los blancos de los pies, en sus puntos de la meca: de ellos mide la bajada de pelvis y a ellos van las piernas.
 func _place_planted_targets() -> void:
 	var body := char_rigidbody.global_transform.orthonormalized()
 	ik_util.left_leg_current_target.global_position = body * _planted_feet[0]
 	ik_util.right_leg_current_target.global_position = body * _planted_feet[1]
 
 
-## Las piernas a sus pies clavados, con la rodilla adelante y los pies planos sobre el piso de la nave.
+## Las piernas a sus pies clavados, con la rodilla adelante y los pies planos sobre el piso de la meca.
 func _pose_legs_planted() -> void:
 	_place_planted_targets()
 	var body := char_rigidbody.global_transform.orthonormalized()
@@ -930,9 +930,9 @@ func _pose_legs_planted() -> void:
 func _repin_legs_seated() -> void:
 	ik_util.solve_two_bone_ik(custom_bones_util.left_higher_leg,  custom_bones_util.left_lower_leg,  _seated_left_foot,  _seated_left_pole)
 	ik_util.solve_two_bone_ik(custom_bones_util.right_higher_leg, custom_bones_util.right_lower_leg, _seated_right_foot, _seated_right_pole)
-	# LOS PIES, NIVELADOS (22/10/2026: el dios del juego los vio en posiciones raras al sentarse): sentado nadie los
+	# LOS PIES, NIVELADOS (22/10/2026: el usuario los vio en posiciones raras al sentarse): sentado nadie los
 	# nivelaba (ver IkUtil._level_foot) y colgaban rígidos de la tibia, con su inclinación. Planos, mirando adonde mira.
-	# CON LA PUNTA UN POCO PARA ABAJO (29/10/2026, lo pidió el dios del juego: «ahora están como muy rígidos y es medio
+	# CON LA PUNTA UN POCO PARA ABAJO (29/10/2026, lo pidió el usuario: «ahora están como muy rígidos y es medio
 	# poco natural la pose»): `SEATED_FOOT_POINT`, girados sobre el eje de costado del cuerpo.
 	# Nivelados con el asiento (ver LOS EJES DE LA SILLA): armados como en un piso derecho y llevados a su inclinación.
 	var tilt := Basis(Quaternion(Vector3.UP, _seat_up()))
@@ -1000,7 +1000,7 @@ func _sync_ragdoll_bodies() -> void:
 ## La FUENTE cambia según el estado: parado son los CustomBone; ragdolleando o levantándose son los
 ## cuerpos rígidos, porque ahí los huesos quedan congelados y lo que se mueve son ellos. Los cuerpos
 ## del ragdoll van invisibles y el cuerpo visible los sigue, así que el personaje se ve igual de pie
-## que tirado en el piso. Ver technical/characters.md.
+## que tirado en el piso. Ver character-parametric:docs/technical/characters.md.
 func _sync_body_visual() -> void:
 	if not is_instance_valid(body_visual):
 		return
@@ -1019,7 +1019,7 @@ func _update_local_targets_positions() -> void:
 	local_targets.global_rotation = Vector3(0, animation_inputs.basis.get_euler().y, 0)
 
 ## Productor de la entrada de animación. Hoy lee la cápsula física (igual que antes lo hacían los
-## módulos directo); a futuro un proxy la llenará desde la red. Ver technical/character-animation.md.
+## módulos directo); a futuro un proxy la llenará desde la red. Ver character-parametric:docs/technical/character-animation.md.
 func _update_animation_inputs(delta: float = 0.0) -> void:
 	if not is_instance_valid(char_rigidbody) or animation_inputs == null:
 		return
@@ -1138,7 +1138,7 @@ func jump_charge() -> float:
 	return _jump_charge / maxf(arch.time_to_max_jump, 0.001) if arch != null else 0.0
 
 
-## EL SALTO SALE AL TERMINAR DE SOLTAR LA CARGA (05/11/2026, el dios del juego: «que empiece a estar en el aire recién
+## EL SALTO SALE AL TERMINAR DE SOLTAR LA CARGA (05/11/2026, el usuario: «que empiece a estar en el aire recién
 ## cuando termine la animación opuesta de cargar el salto… una diferencia bien discreta entre cargar y soltar mientras
 ## tocás el piso y cuando estás en el aire»): al soltar, la agachada vuelve en `JUMP_RELEASE_S` con los pies en el piso,
 ## y recién ahí, si sigue en el piso, sale la velocidad del salto. Así en el aire el cuerpo arranca en su postura de
@@ -1148,7 +1148,7 @@ const JUMP_RELEASE_S := 0.08
 var _jump_pending := -1.0
 var _jump_release_left := 0.0
 ## DESPEGANDO: desde que suelta el salto hasta que deja el piso (como mucho `TAKE_OFF_MAX_S`). Mientras, la marcha no
-## arranca un paso nuevo y los dos pies despegan juntos (05/11/2026, el dios del juego: en el salto «un pie empezaba
+## arranca un paso nuevo y los dos pies despegan juntos (05/11/2026, el usuario: en el salto «un pie empezaba
 ## antes que el otro»; medido en «caer en loop»: los seis salían con la izquierda ya en el aire, porque arrancaban a
 ## correr entre soltar el salto y despegar). Ver IkUtil.advance_gait.
 var taking_off := false
@@ -1283,7 +1283,7 @@ func get_interaction_origin() -> Vector3:
 	chest_tip_y -= AnimationModifiers.crouch_drop(self) * crouch_t
 
 	var at := Vector3(char_rigidbody.global_position.x, chest_tip_y, char_rigidbody.global_position.z)
-	# EL PECHO SE ECHA ATRÁS CON LO QUE LLEVA, y el punto de donde sale el agarre con él (04/11/2026, el dios del juego:
+	# EL PECHO SE ECHA ATRÁS CON LO QUE LLEVA, y el punto de donde sale el agarre con él (04/11/2026, el usuario:
 	# «que siga al pecho»): lo que el giro de la columna (ver `carry_lean`) corre la punta del pecho desde la cadera, menos
 	# lo que la cadera va hacia el paquete (LocomotionCommon.carry_lean_hips). Con él se corren el objetivo de lo que se lleva y
 	# el tope del pecho (ver GrabbableInteractable), así la caja se acerca cuando uno se echa atrás y los brazos no se
@@ -1352,7 +1352,7 @@ func set_character_visible(value: bool) -> void:
 # Y reemplaza a la derivación vieja `stride → altura de pelvis → alcance del pie`, que iba al revés:
 # ahora `stride` significa literalmente el largo del paso, y la pelvis es una consecuencia.
 
-## ── LA PELVIS, EN DOS CAPAS (07/11/2026, el dios del juego eligió, entre varias a prueba, «curva: se hunde al pisar» con
+## ── LA PELVIS, EN DOS CAPAS (07/11/2026, el usuario eligió, entre varias a prueba, «curva: se hunde al pisar» con
 ## el suavizado de cadera al 50 %; «dejar el código limpio») ─────────────────────────────────────────────────────────
 ## 1. LA NECESIDAD, SUAVE Y ATADA AL PASO: lo que la pierna apoyada pide para llegar a su pie (ver `_leg_drop`), seguido
 ##    sin saltos. Tarda `PELVIS_STEP_SHARE` de lo que dura el paso de un pie (ver IkUtil.step_time): corriendo, los pasos
@@ -1384,7 +1384,7 @@ var _modifiers: Array[WalkModifier] = []
 func _update_passive_state(delta: float) -> void:
 	if passive_state == null or not is_instance_valid(char_rigidbody):
 		return
-	# Contra el piso que pisa: parado en la nave que vuela no es correr (ver CharacterRigidBody3D, EL PISO QUE SE
+	# Contra el piso que pisa: parado en la meca que vuela no es correr (ver CharacterRigidBody3D, EL PISO QUE SE
 	# MUEVE). Un proxy sigue leyendo su linear_velocity, como hasta ahora.
 	var v := char_rigidbody.get_motion_velocity() if char_rigidbody.kind.simulates() else char_rigidbody.linear_velocity
 	var speed: float = Vector2(v.x, v.z).length()
@@ -1395,7 +1395,7 @@ func _update_passive_state(delta: float) -> void:
 	passive_state.update(delta, effort)
 
 
-## LOS PIES VAN CON EL PISO QUE SE MUEVE (ver CharacterRigidBody3D.floor_velocity): parado en la nave en vuelo, los
+## LOS PIES VAN CON EL PISO QUE SE MUEVE (ver CharacterRigidBody3D.floor_velocity): parado en la meca en vuelo, los
 ## puntos donde el paso dejó los pies viajan con ella (ver IKUtil.ground_velocity), lo que pasó desde el último solve
 ## (`step`: la pose se resuelve una vez por cuadro, y los de lejos menos). Sólo mientras pisa algo que se mueve, y a cero una vez al bajarse: la cinta
 ## del sandbox escribe lo mismo para caminar en el lugar, y no hay que pisarla.
@@ -1426,7 +1426,7 @@ func _update_pelvis_drop(delta: float) -> void:
 	var max_len: float = skel_sizes_util.leg_height * SkeletonSizesUtil.MAX_EXTENSION
 	# NUNCA MÁS QUE UNA PIERNA: un pie que quedó lejos —un piso que se fue de abajo— hacía bajar la pelvis, la cadera
 	# bajada quedaba más lejos todavía, y en cada cuadro bajaba más, sin fin (02/11/2026, lo vio la nave a bordo).
-	# DESDE LA CADERA SIN BAJAR, Y EN VERTICAL (05/11/2026, el dios del juego: «se supone que yo la zancada la puedo
+	# DESDE LA CADERA SIN BAJAR, Y EN VERTICAL (05/11/2026, el usuario: «se supone que yo la zancada la puedo
 	# aumentar y que la pelvis se va a bajar para machear la caminata»): la cadera de este momento todavía tiene puesta la
 	# bajada del cuadro anterior, así que se le devuelve (`pelvis_drop`) antes de medir; y lo que se pide es cuánto bajar
 	# la cadera derecho para abajo para que el pie, a la distancia horizontal que está, quede al alcance (ver
@@ -1526,7 +1526,7 @@ func _leg_drop(hip: CustomBone, target: Node3D, max_len: float, applied: float) 
 
 ## Re-resuelve la IK de las piernas contra los MISMOS targets de piso, después de que los offsets de
 ## raíz movieron la pelvis. Sin esto los pies se despegan del suelo exactamente lo que bajó la
-## pelvis. Mismo patrón que _repin_legs_seated. Ver technical/character-animation.md.
+## pelvis. Mismo patrón que _repin_legs_seated. Ver character-parametric:docs/technical/character-animation.md.
 func _repin_legs_standing() -> void:
 	ik_util.solve_two_bone_ik(custom_bones_util.left_higher_leg, custom_bones_util.left_lower_leg,
 		ik_util.left_leg_current_target.global_position, ik_util.left_leg_pole.global_position)

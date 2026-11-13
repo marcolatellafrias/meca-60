@@ -5,7 +5,7 @@ var _last_impact_world_dir: Vector3 = Vector3.ZERO
 
 var can_sprint: bool = true
 
-# Creative/debug flight (see PlayerController + technical/characters.md). No noclip: the capsule still collides.
+# Creative/debug flight (see PlayerController + character-parametric:docs/technical/characters.md). No noclip: the capsule still collides.
 # Teclas y velocidades viven en CreativeFlight, compartidas con el sandbox y el freecam de debug. Es la física
 # FREE_FLIGHT de su clase (ver `creative_mode`, más abajo).
 
@@ -16,7 +16,7 @@ var can_sprint: bool = true
 ## (ver SPRINT_ACCEL), no acá. Hubo un intento de meterla bajando `ACCEL_SCALE` a 3.5, y el efecto
 ## fue el equivocado: enlenteció el andar normal, que es el 90% del juego.
 const SPEED_SCALE := 10.0
-## LA FRENADA ACTÚA SÓLO AL SOLTAR (06/11/2026, lo encontró el dios del juego: «aún el Fat Man… se frena ahí nomás»):
+## LA FRENADA ACTÚA SÓLO AL SOLTAR (06/11/2026, lo encontró el usuario: «aún el Fat Man… se frena ahí nomás»):
 ## hasta entonces `_apply_braking_force` corría en todo momento, también empujando, y le comía a todos el 37,5 % de la
 ## aceleración caminando y el 75 % en la banda del sprint. Al sacarla, la escala baja de 10 a 6,25 —el 62,5 % que quedaba—
 ## y la frenada sube de 0,375 a 0,6 de la aceleración: arrancar a caminar y frenar soltando desde la caminata dan lo
@@ -24,7 +24,7 @@ const SPEED_SCALE := 10.0
 const ACCEL_SCALE := 6.25
 const BRAKE_FACTOR := 0.6
 
-## ── LA BANDA DE SPRINT, LINEAL (06/11/2026, el dios del juego: «no me gusta esa forma de funcionar del sprint, me lo
+## ── LA BANDA DE SPRINT, LINEAL (06/11/2026, el usuario: «no me gusta esa forma de funcionar del sprint, me lo
 ## imagino más lineal») ────────────────────────────────────────────────────────────────────────────────────────────────
 ## Multiplicador de aceleración ENTRE LA CAMINATA Y EL TOPE del sprint, el mismo en toda la banda: por debajo de la
 ## velocidad de caminata acelera igual que caminando, y de ahí al tope sube a ritmo parejo, con esta fracción. Así el
@@ -40,7 +40,7 @@ const BRAKE_FACTOR := 0.6
 const SPRINT_ACCEL := 0.5
 
 ## Resistencia a voltearse (ragdoll por choque). La firmeza escala con el PESO relativo a este peso de referencia: un
-## pesado necesita un golpe mucho más fuerte para inclinarse y caerse que un liviano. Ver technical/characters.md
+## pesado necesita un golpe mucho más fuerte para inclinarse y caerse que un liviano. Ver character-parametric:docs/technical/characters.md
 ## (topple resistance) y `_firmness`.
 const REFERENCE_WEIGHT := 60.0
 ## Lo que no es un golpe: el cambio de velocidad que no se explica por fuerzas propias y queda abajo de esto (m/s) es
@@ -97,14 +97,14 @@ var impact_damping: float = 6.0
 ## Sin perillas por personaje: lo que cambia de uno a otro es la firmeza.
 const LEAN_PER_MS := 0.3
 ## EL GOLPE VERTICAL QUE LO TUMBA AL ATERRIZAR, en m/s, con UMBRAL PROPIO, distinto del de los golpes de costado y de su
-## arquetipo (`EntityArchetype.landing_tolerance`; lo pidió el dios del juego, 03/11/2026: «que no sea frustrante»). Por
+## arquetipo (`EntityArchetype.landing_tolerance`; lo pidió el usuario, 03/11/2026: «que no sea frustrante»). Por
 ## debajo, el rebote de siempre (`impact_y`) y sigue corriendo. Cae en el acto, como un golpe seco.
 var landing_tolerance: float = 9.0
 var impact_y_threshold: float = 2.0
 
 var ragdoll_threshold: float = 0.85
 ## ── EL EBRIO: EL EQUILIBRIO QUE DERIVA Y SE CORRIGE DE GOLPE ──────────────────────────────────────
-## Lo pidió el dios del juego (12/10/2026): «el torso hace movimientos suaves y drifting, y cada tanto se corrige
+## Lo pidió el usuario (12/10/2026): «el torso hace movimientos suaves y drifting, y cada tanto se corrige
 ## rápidamente y medio que rebota un poquito», y que sea el controlador PD del equilibrio —`impact_xz`, el que suma los
 ## golpes y tumba al pasar `ragdoll_threshold`—, porque tiene impacto en el juego. La DERIVA (`balance_drift`, en
 ## 1/s²) empuja el equilibrio despacio en una dirección que cambia sola; cuando se va más allá de `balance_correct_at`
@@ -120,7 +120,7 @@ var _correcting: float = 0.0
 
 ## Estabilidad direccional (de EntityArchetype): multiplican el umbral de impacto según de dónde
 ## venga el golpe. >1 = más difícil de voltear en esa dirección; <1 = más fácil. Se setean por
-## arquetipo en create(). Ver technical/characters.md.
+## arquetipo en create(). Ver character-parametric:docs/technical/characters.md.
 var stability_forward: float = 1.0
 var stability_backward: float = 1.0
 var stability_sideways: float = 1.0
@@ -142,7 +142,7 @@ var _impact_xz_vel: Vector2 = Vector2.ZERO
 ## (`hit_xz`: los empujones medidos o con nombre, de reposo cero) y el de lo CONTINUO (`_lean_xz`: la inercia del marco,
 ## que le corre el reposo, y la deriva del ebrio). Se separan porque la cámara sigue sólo al de los golpes (ver
 ## PlayerController._place_camera_at_head): un golpe se tiene que sentir aunque no tumbe, y que la inercia moviera la
-## vista todo el viaje marearía (02/11/2026, el dios del juego: «el feedback del choque es muy útil para mostrarle al
+## vista todo el viaje marearía (02/11/2026, el usuario: «el feedback del choque es muy útil para mostrarle al
 ## jugador de que un impacto aunque no lo haya hecho caer influye en el gameplay»).
 var hit_xz: Vector2 = Vector2.ZERO
 var _hit_vel: Vector2 = Vector2.ZERO
@@ -154,7 +154,7 @@ var _impact_y_vel: float = 0.0
 var _prev_velocity: Vector3 = Vector3.ZERO
 var _frame_force: Vector3 = Vector3.ZERO
 var _last_impact_xz_magnitude: float = 0.0
-## EL EMPUJÓN QUE NO LE CAMBIÓ LA VELOCIDAD, en m/s y ejes del mundo (lo horizontal): el de un choque de la nave, que a
+## EL EMPUJÓN QUE NO LE CAMBIÓ LA VELOCIDAD, en m/s y ejes del mundo (lo horizontal): el de un choque de la meca, que a
 ## la cápsula la lleva el marco entera (ver `crash`). Los demás golpes —medidos, el choque blando entre jugadores, la R—
 ## ya están en su velocidad. Al caerse sale con su velocidad MÁS esto (ver RagdollUtil.activate_with_impact).
 var _last_push := Vector3.ZERO
@@ -183,27 +183,27 @@ var speed_cap: float = INF
 var impact_y_signed: float = 0.0
 
 ## ── EL MARCO (03/11/2026, ver MotionFrame) ─────────────────────────────────────────────────────────────────────────
-## Adentro de algo que se mueve —la cabina de la nave—, EL MARCO ES ESO: un solo campo, `frame`, y null afuera (el
-## mundo). Lo pidió el dios del juego: «que el personaje tenga claramente una flag que diga si se está moviendo en un
+## Adentro de algo que se mueve —la cabina de la meca—, EL MARCO ES ESO: un solo campo, `frame`, y null afuera (el
+## mundo). Lo pidió el usuario: «que el personaje tenga claramente una flag que diga si se está moviendo en un
 ## espacio global o local a un área»; «no haya dos sistemas separados». Se entra y se sale por el volumen de la cabina,
 ## decidido por un punto —el centro de la cápsula, que cayéndose va con la pelvis— (ver MotionFrame.around); a un
 ## compañero de red se lo dice su dueño (ver CharacterNetSync).
 ##
 ## LA FÍSICA SIGUE EN EL MUNDO: la cápsula que se simula se suma al marco (`join`, sin sentir nada: no se desliza), y el
-## marco le suma en cada paso lo que la nave cambió de velocidad en su punto; entrar o salir no toca la velocidad. Lo
+## marco le suma en cada paso lo que la meca cambió de velocidad en su punto; entrar o salir no toca la velocidad. Lo
 ## que cambia con el marco es CONTRA QUÉ SE MIDE: caminar y frenar van contra la velocidad del marco en su punto
 ## (`floor_velocity`), la animación lee la velocidad contra el marco (`get_motion_velocity`), los pies plantados viajan
 ## con él (ver BoneInstantiator._ride_floor), la mirada va en sus ejes (ver CharacterIntent), y la red manda en él.
 ##
-## Y ADENTRO DEL MARCO EL CUERPO NO SE MIDE: un golpe no es lo que le cambió la velocidad (eso lo hace también la nave),
+## Y ADENTRO DEL MARCO EL CUERPO NO SE MIDE: un golpe no es lo que le cambió la velocidad (eso lo hace también la meca),
 ## sino lo que entra con nombre:
 ##   · LA INERCIA: la aceleración del marco en su punto, al revés —acelerar tira para atrás, frenar para adelante, la
 ##     curva para afuera—, corre el punto de equilibrio del mismo resorte de los golpes (`impact_xz`), que se inclina hacia
-##     ahí y rebota (ver `_update_frame_lean`). No tumba. Cuánto, lo elige el dios del juego en el F3 de la nave
+##     ahí y rebota (ver `_update_frame_lean`). No tumba. Cuánto, lo elige el usuario en el F3 de la meca
 ##     (`MotionFrame.inertia_felt`).
-##   · LOS EMPUJONES CON NOMBRE: el choque blando entre jugadores, el empujón con R y los choques de la nave entran por
+##   · LOS EMPUJONES CON NOMBRE: el choque blando entre jugadores, el empujón con R y los choques de la meca entran por
 ##     `push`, como un golpe, y ésos sí pueden tumbarlo si está parado.
-## Corre también en un compañero de red y en uno de exhibición, que no se simulan: la nave llega por red o es la de la
+## Corre también en un compañero de red y en uno de exhibición, que no se simulan: la meca llega por red o es la de la
 ## escena, así que cada máquina inclina a cada uno sin mandar nada.
 var frame: MotionFrame = null
 ## SENTADO (lo pone la silla con `set_seated`, ver SeatInteractable): no se cae nunca, el resorte tiene tope, y el cuerpo
@@ -215,7 +215,7 @@ var seated := false
 ## velocidad— y deja de ser miembro físico de su marco, que sigue siendo su `frame` para la inercia y la mirada. Seguía
 ## suelta, con gravedad y recibiendo lo del marco; la silla le escribía la posición en cada paso, pero la velocidad se
 ## juntaba entre corrección y corrección y el ente sentado en la silla del piloto se hundía atravesando el asiento (lo
-## vio el dios del juego). Al pararse vuelve al marco con su velocidad: la de la nave en su punto.
+## vio el usuario). Al pararse vuelve al marco con su velocidad: la de la meca en su punto.
 func set_seated(on: bool) -> void:
 	if on == seated:
 		return
@@ -246,7 +246,7 @@ var _frame_accel := Vector3.ZERO
 
 
 
-## ── EL PISO LO DICE QUIEN LO MANEJA (05/11/2026, el dios del juego: «un sustituto de piso… que sería el path predefinido
+## ── EL PISO LO DICE QUIEN LO MANEJA (05/11/2026, el usuario: «un sustituto de piso… que sería el path predefinido
 ## con el nivel de suelo que ya lo sabemos») ──────────────────────────────────────────────────────────────────────
 ## Un peatón en su camino nunca deja el nivel del piso, y su camino sabe a qué altura está: con `ground_by_driver`, el
 ## rayo al piso se apaga y el piso es `driver_ground`, que quien lo maneja escribe al ponerlo (ver
@@ -312,10 +312,10 @@ func _follow_frame() -> void:
 
 ## ── PARADO DE EXHIBICIÓN A BORDO (02/11/2026, ver DisplayCharacter.stand y BoneInstantiator, PLANTADO EN LA NAVE) ──
 ## Uno que no se simula no lo lleva nada. Parado a bordo, SU CÁPSULA VA FIJA EN SU PUNTO DEL MARCO, derecha con el marco
-## y girada lo que diga su intención; no la mueve ni la inercia ni el ángulo de la nave, y los pies van clavados al piso.
+## y girada lo que diga su intención; no la mueve ni la inercia ni el ángulo de la meca, y los pies van clavados al piso.
 ## La inercia y los golpes la inclinan desde la base de la columna, como sentado.
 ## *Hasta el 02/11/2026 iba derecho en el mundo con los pies plantados por el rayo de siempre: atravesaba el piso a la
-## altura del pecho y daba pasos en el aire (lo vio el dios del juego).*
+## altura del pecho y daba pasos en el aire (lo vio el usuario).*
 var _riding := false
 var _ride_point := Vector3.ZERO
 
@@ -351,8 +351,8 @@ func push(dv: Vector3) -> void:
 		_take_hit(dv)
 
 
-## UN CHOQUE DE LA NAVE que lo lleva (la señal `crashed` de su marco): `dv` es lo que perdió de velocidad la nave (m/s,
-## ejes del mundo; hacia adelante, se van para adelante). Entra como un empujón con nombre por `CRASH_SCALE`: la nave
+## UN CHOQUE DE LA NAVE que lo lleva (la señal `crashed` de su marco): `dv` es lo que perdió de velocidad la meca (m/s,
+## ejes del mundo; hacia adelante, se van para adelante). Entra como un empujón con nombre por `CRASH_SCALE`: la meca
 ## pierde mucha más velocidad que la que se le pasa a quien va adentro, que se agarra, se apoya y se frena contra lo que
 ## tiene a mano. Elegido para que el de referencia (firmeza 1,33) parado sólo se incline mucho con un choque suave
 ## (6 m/s), se caiga desde unos 11 y el medio (14) ya lo tumbe; cada arquetipo, según su firmeza (ver `_firmness`).
@@ -374,7 +374,7 @@ func _on_frame_crashed(dv: Vector3) -> void:
 ## llevando— y la caída llega `FALL_WARNING` después, en la dirección del golpe. UN GOLPE SECO que solo ya pasa el umbral
 ## tumba en el acto, sin resorte ni aviso (03/11/2026, ver `_take_hit`). Y LA INCLINACIÓN DEL MARCO SUMA: con la nave cabeceada
 ## o ladeada más de `TILT_EASY`, el umbral baja a `TILT_FALL` (no tumba sola: sólo hace que un golpe tumbe antes). Lo
-## pidió el dios del juego por la nave.
+## pidió el usuario por la meca.
 const FALL_WARNING := 0.15
 const TILT_EASY := deg_to_rad(20.0)
 const TILT_FALL := 2.0 / 3.0
@@ -425,7 +425,7 @@ func _update_floor() -> void:
 	floor_velocity = frame.velocity_at(global_position) if frame != null else Vector3.ZERO
 
 
-## ── DE SU CAMINO A SIMULARSE, Y DE VUELTA (06/11/2026, el dios del juego: el peatón «golpeado… se vuelve físico al
+## ── DE SU CAMINO A SIMULARSE, Y DE VUELTA (06/11/2026, el usuario: el peatón «golpeado… se vuelve físico al
 ## desviarse de su path y después intenta retomarlo», como el auto) ─────────────────────────────────────────────────
 ## `set_simulated(true)`: la cápsula que ponía su camino (FOLLOWS_DRIVER) pasa a simularse como la de cualquiera —con su
 ## gravedad, sus capas de siempre, sus golpes y su caída—, con `velocity` (la que traía por su camino; lo que se le sume
@@ -481,7 +481,7 @@ func _freeze_for_driver() -> void:
 		collision_layer = 0
 
 func _ready() -> void:
-	# SIN FRENO DE AIRE (06/11/2026, el dios del juego: «sacaría el freno de aire»): Godot le suma a todo cuerpo el de
+	# SIN FRENO DE AIRE (06/11/2026, el usuario: «sacaría el freno de aire»): Godot le suma a todo cuerpo el de
 	# Configuración del proyecto (0,1 por segundo) salvo que se lo reemplace; frena lo que corre y los dejaba en el ~80 %
 	# de su tope. Lo que frena a un personaje es su frenada (ver `_apply_braking_force`).
 	linear_damp = 0.0
@@ -507,7 +507,7 @@ func _ready() -> void:
 ## acercamiento · masa_del_otro/(mi+suya) — el liviano sale volando (y se cae si supera su umbral, lo
 ## mide _detect_external_impact), el pesado apenas se frena y sigue de largo. Una sola vez por choque
 ## (si no, cada frame de solape lo frenaría). Cada máquina lo hace para SU jugador local → simétrico.
-## Ver technical/characters.md.
+## Ver character-parametric:docs/technical/characters.md.
 func _resolve_player_collisions() -> void:
 	if collider == null or collider.disabled:
 		return  # yo estoy ragdolleando / sin colisión
@@ -548,7 +548,7 @@ func _physics_process(delta: float) -> void:
 	_update_floor()
 	# QUIEN NO SE SIMULA (un compañero de red, uno de exhibición, una figura): la cápsula la pone quien lo maneja y no se
 	# miden golpes, pero SÍ se actualiza el rayo al piso para que la animación sepa si está apoyado (si no, los pies
-	# quedan recogidos y no camina). Ver technical/character-animation.md.
+	# quedan recogidos y no camina). Ver character-parametric:docs/technical/character-animation.md.
 	if not kind.simulates():
 		if _riding and _ext_ragdoll_state == 0:
 			# A BORDO NO HAY PISO QUE LEER (ver PARADO DE EXHIBICIÓN A BORDO): va fijo en su marco, apoyado y quieto
@@ -563,9 +563,9 @@ func _physics_process(delta: float) -> void:
 			is_grounded = _ground_ray.is_colliding()
 		# QUIETO EN SU MARCO: al de exhibición y a la figura no los mueve nadie más que lo que los lleva, así que su
 		# velocidad es la del marco —contra él, cero—. Con cero en el mundo, la animación lo leía corriendo para atrás a la
-		# velocidad de la nave y se tiraba para atrás y al costado todo el vuelo (lo vio el dios del juego, 03/11/2026). Al
+		# velocidad de la nave y se tiraba para atrás y al costado todo el vuelo (lo vio el usuario, 03/11/2026). Al
 		# compañero de red se la pone la red, y al peatón su camino (ver Pedestrian): pisársela acá le sacaba los pasos a
-		# los que se dibujaban después de este paso (05/11/2026, lo vio el dios del juego en el salón de personas).
+		# los que se dibujaban después de este paso (05/11/2026, lo vio el usuario en el salón de personas).
 		if kind.is_exhibit():
 			puppet_velocity = floor_velocity
 		# El ebrio se balancea también en el sandbox, y la inercia del marco inclina al de exhibición (ver EL MARCO): sin
@@ -643,7 +643,7 @@ func _take_hit(impact_dv: Vector3) -> void:
 	var local_impact := global_transform.basis.inverse() * impact_dv
 
 	var xz := Vector2(local_impact.x, local_impact.z)
-	# SIN UMBRAL QUE LO HAGA TODO O NADA (02/11/2026, el dios del juego: «la diferencia entre arquetipos se ve en cada
+	# SIN UMBRAL QUE LO HAGA TODO O NADA (02/11/2026, el usuario: «la diferencia entre arquetipos se ve en cada
 	# golpe, no solo en los grandes»): todo golpe que pase el ruido inclina, dividido por la FIRMEZA —el peso y la
 	# estabilidad de ese lado, ver `_firmness`—, y todos caen en el mismo punto (`ragdoll_threshold`). Así INCLINARSE ES
 	# ESTAR CERCA DE CAER, igual para todos: un pesado muy inclinado está tan por caerse como un liviano. Antes el peso y
@@ -668,7 +668,7 @@ func _take_hit(impact_dv: Vector3) -> void:
 			hit_xz = impact_xz.limit_length(fall_at * 0.95) - _lean_xz
 			impact_xz = hit_xz + _lean_xz
 		elif xz.length() * LEAN_PER_MS / _firmness(local_impact) >= fall_at:
-			# UN GOLPE SECO QUE SOLO YA TUMBA, CAE EN EL ACTO: sin resorte ni aviso (el dios del juego, 03/11/2026: «caída
+			# UN GOLPE SECO QUE SOLO YA TUMBA, CAE EN EL ACTO: sin resorte ni aviso (el usuario, 03/11/2026: «caída
 			# repentina»). El aviso queda para lo que se junta de a poco.
 			_snapshot_acc_after = impact_xz.length()
 			_fall_in = 0.0
@@ -689,7 +689,7 @@ func _take_hit(impact_dv: Vector3) -> void:
 		impact_y = clampf(impact_y + local_impact.y / LocomotionCommon.LANDING_FULL_SPEED, -1.0, 1.0)
 		_impact_y_vel = 0.0
 
-## ── AL ATERRIZAR, FRENA EL CUERPO (04/11/2026, el dios del juego; LocomotionCommon.landing_brake, de todos) ───────
+## ── AL ATERRIZAR, FRENA EL CUERPO (04/11/2026, el usuario; LocomotionCommon.landing_brake, de todos) ───────
 ## Prendido, el golpe de aterrizar le saca velocidad horizontal según qué tan fuerte cayó: `hard` (m/s, lo que el piso le
 ## sacó de golpe para abajo) contra el aterrizaje que lo tumba (`landing_tolerance`), hasta `LANDING_BRAKE_MAX` de lo que
 ## traía. Se le saca a la velocidad ahí mismo y también a la que el detector recuerda (`_prev_velocity`), así no la lee
@@ -766,7 +766,7 @@ const DIRECT_JUMP := 5.0
 const DIRECT_GRAVITY := 18.0
 
 
-## ── EL MOVIMIENTO DIRECTO NO TIENE CUERPO FÍSICO (07/11/2026, el dios del juego: «que tanto el salto como el sistema de
+## ── EL MOVIMIENTO DIRECTO NO TIENE CUERPO FÍSICO (07/11/2026, el usuario: «que tanto el salto como el sistema de
 ## golpes y todo eso sea como un simulador físico del personaje que se pueda apagar con una flag»; «sí» a que la flag
 ## sea la del movimiento directo) ──────────────────────────────────────────────────────────────────────────────────
 ## Con `Motion.DIRECT` (el ente) no se miden golpes, no hay empujones con nombre ni aterrizajes que lo inclinen, no lo
@@ -794,7 +794,7 @@ func jump_direct() -> void:
 
 ## ADONDE VA, lo que pide la intención (ver CharacterIntent.move), contra el marco. Con movimiento DIRECTO (ver arriba)
 ## la velocidad que pide es la que tiene, al instante: sin aceleración ni frenada.
-## ── EL CONTROL EN EL AIRE (05/11/2026, el dios del juego: «si el jugador puede controlar su personaje mientras esté en
+## ── EL CONTROL EN EL AIRE (05/11/2026, el usuario: «si el jugador puede controlar su personaje mientras esté en
 ## el aire… da más skill expression»; a prueba, en la parcela «saltos con curva») ─────────────────────────────────────
 ## Cuánto de la aceleración y la frenada del piso tiene en el aire: 1, lo mismo que en el piso (lo de siempre: dobla en
 ## seco y se para en el aire); menos, el impulso del salto manda; 0, nada. De todos, también del jugador.
@@ -841,7 +841,7 @@ func _apply_movement_force() -> void:
 	effective_max = minf(effective_max, speed_cap)
 
 	var fwd_accel: float = accel_back if forward_component >= 0.0 else accel_forward
-	# LO QUE LLEVA PESA TAMBIÉN AL ARRANCAR Y AL FRENAR (03/11/2026, lo pidió el dios del juego): la aceleración y la
+	# LO QUE LLEVA PESA TAMBIÉN AL ARRANCAR Y AL FRENAR (03/11/2026, lo pidió el usuario): la aceleración y la
 	# frenada van por lo mismo que la velocidad máxima (ver GrabbableInteractable.carry_speed_factor).
 	var current_accel: float = (fwd_accel * abs_fwd + accel_side * abs_side) / max(total_input, 0.001) \
 		* carry_speed_factor
@@ -890,7 +890,7 @@ func _apply_movement_force() -> void:
 		_frame_force += brake_force
 
 
-## ── LA BANDA DEL SPRINT VALE PARA LOS DOS LADOS (06/11/2026, el dios del juego: «que la aceleración funcione en ambos
+## ── LA BANDA DEL SPRINT VALE PARA LOS DOS LADOS (06/11/2026, el usuario: «que la aceleración funcione en ambos
 ## lados… qué tanto puedes acelerar, pero qué tanto puedes desacelerar también») ────────────────────────────────────────
 ## Más rápido que su caminata, todo lo que le cambia la velocidad —empujar, apretar para atrás, soltar— va a
 ## `SPRINT_ACCEL` de lo de siempre: la velocidad del sprint se pierde al ritmo en que se gana. Hasta la caminata, entero.
@@ -951,7 +951,7 @@ func jump_to_height(height: float) -> void:
 	_self_dv(Vector3.UP * sqrt(2.0 * g * height))
 
 
-## LO QUE EL CUERPO SE HACE SOLO NO ES UN GOLPE (05/11/2026, el dios del juego): un cambio de velocidad que pide él
+## LO QUE EL CUERPO SE HACE SOLO NO ES UN GOLPE (05/11/2026, el usuario): un cambio de velocidad que pide él
 ## —saltar, frenar al aterrizar— va a la velocidad ahí mismo y también a la que el detector recuerda (`_prev_velocity`),
 ## así `_detect_external_impact` no lo ve, sea cual sea el orden de los procesos.
 func _self_dv(dv: Vector3) -> void:
@@ -1003,7 +1003,7 @@ static func create(root_size: Vector3, distance_from_ground: float, leg_height: 
 
 	# Resistencia a voltearse: la FIRMEZA (ver `_firmness`) sale del peso —la masa— y de las estabilidades
 	# direccionales del arquetipo, según de dónde venga. Así un chico rápido NO tumba a un gordo (el gordo recibe poco Δv
-	# por su masa Y es más firme), pero el gordo sí tumba al chico. Ver technical/characters.md.
+	# por su masa Y es más firme), pero el gordo sí tumba al chico. Ver character-parametric:docs/technical/characters.md.
 	rb.stability_forward   = arch.forward_stability
 	rb.stability_backward  = arch.backwards_stability
 	rb.stability_sideways  = arch.sideways_stability

@@ -14,7 +14,7 @@ const GRAB_MIN_BEND_FACTOR:      float = 0.97
 ## LA IDA DEL BRAZO, AL AGARRAR, SEGÚN LO QUE TIENE QUE RECORRER (como la ley de Fitts: lo cerca se toca enseguida, lo
 ## lejos tarda un poco más): la mano LLEGA, del todo, en `REACH_BASE` más `REACH_PER_METRE` por cada metro de la mano a lo
 ## que agarra —0,06 s a 10 cm, 0,1 s a 50 cm—, con un arranque y una llegada suaves (smoothstep). *Era un lerp que llegaba
-## al 90 % en 0,08–0,16 s y después se acercaba cada vez más lento sin terminar nunca: el dios del juego la veía lenta y
+## al 90 % en 0,08–0,16 s y después se acercaba cada vez más lento sin terminar nunca: el usuario la veía lenta y
 ## «nunca se le siente como asentada en ese punto» (29/10/2026).* La vuelta, al soltar, en `RELEASE_TIME`.
 const REACH_BASE:      float = 0.05
 const REACH_PER_METRE: float = 0.1
@@ -38,9 +38,9 @@ var _grab_right_blend_target: float = 0.0
 
 ## ── LO QUE SE GUARDA DE UN CUADRO AL OTRO, EN EL MARCO DEL CUERPO (02/11/2026) ──────────────────────────────────────
 ## Los puntos de las manos, de dónde venían, el pecho y el punto agarrado se guardan EN EL MARCO DE LA CÁPSULA
-## (`_on_body` al escribir, `_in_world` al leer), no del mundo. Guardados en el mundo, en la nave que vuela se quedaban
-## donde estaban: al soltar, la mano volvía hacia un punto que la nave ya había dejado atrás, y el brazo se iba para atrás
-## unos cuadros (lo vio el dios del juego: «todo lo de los personajes a bordo relativo… prolijo, simple y bien
+## (`_on_body` al escribir, `_in_world` al leer), no del mundo. Guardados en el mundo, en la meca que vuela se quedaban
+## donde estaban: al soltar, la mano volvía hacia un punto que la meca ya había dejado atrás, y el brazo se iba para atrás
+## unos cuadros (lo vio el usuario: «todo lo de los personajes a bordo relativo… prolijo, simple y bien
 ## explicado»). Caminando pasaba igual, más chico. Lo que se agarra todavía se lee en el mundo cada cuadro, de su nodo.
 var _grab_left_handle_local:  Vector3 = Vector3.ZERO
 var _grab_right_handle_local: Vector3 = Vector3.ZERO
@@ -210,7 +210,7 @@ func _kept_handles(interactable: Interactable) -> Array[Node3D]:
 ## su hombro con una—, el arco centrado en él, o donde agarró la primera vez.
 ## *Se contaba en grados, primero desde que la mano tomaba el punto —lo que tardaba en llegar, con la pieza girando, se
 ## comía el intervalo siguiente— y después desde su lugar —el punto más cercano a él caía hasta medio punto antes o
-## después—: los intervalos no eran iguales (lo vio el dios del juego en la válvula, 30/10/2026).*
+## después—: los intervalos no eran iguales (lo vio el usuario en la válvula, 30/10/2026).*
 ## Lado → dónde agarró la primera vez, desde el centro, en el marco del cuerpo (para «desde donde agarró»; ver LO QUE SE
 ## GUARDA DE UN CUADRO AL OTRO).
 var _anchors := {}
@@ -367,10 +367,10 @@ func _apply_grab_arms(delta: float) -> void:
 		_in_world(_grab_right_handle_local), _grab_right_handle_node, "right", grip, right, _grab_right_blend)
 
 ## ── EL BRAZO QUE AGARRA (29/10/2026, de cero) ──────────────────────────────────────────────────────────────────────
-## LA MANO VA DERECHA, RÍGIDA AL ANTEBRAZO: no hay muñeca que se doble. Lo pidió el dios del juego al empezar de cero la
+## LA MANO VA DERECHA, RÍGIDA AL ANTEBRAZO: no hay muñeca que se doble. Lo pidió el usuario al empezar de cero la
 ## animación de las manos: «me gustaría que el ángulo del antebrazo, muñeca y dedo sean el mismo… pensar todo eso como
 ## un conjunto». Así, lo que toca la cosa es un punto fijo de la mano —al apretar, los nudillos del puño o la punta del
-## índice, las dos maneras que el dios del juego quiere probar (ver TubeHand.press_with); empuñando, el hueco del puño;
+## índice, las dos maneras que el usuario quiere probar (ver TubeHand.press_with); empuñando, el hueco del puño;
 ## el medio de la palma en lo demás (ver ProceduralBodyUtil.hand_point)—. La muñeca va a donde ese punto cae justo en
 ## `handle`: el punto, menos ese desvío girado como queda el antebrazo.
 ##
@@ -384,7 +384,7 @@ func _apply_grab_arms(delta: float) -> void:
 ## la base de CustomBone.pose_from_rest_to), en `PASSES` pasadas: en la última la muñeca y el antebrazo ya coinciden,
 ## así que con el brazo llegado la punta cae justo en el punto en ese mismo cuadro. *Se usaba el antebrazo del cuadro
 ## anterior, que el cuerpo corre un poco en cada cuadro —respira, se balancea—: la mano perseguía un blanco que se le
-## movía y nunca se asentaba (lo vio el dios del juego, 29/10/2026).* Sin cuerpo generado (el de cápsulas), la muñeca va
+## movía y nunca se asentaba (lo vio el usuario, 29/10/2026).* Sin cuerpo generado (el de cápsulas), la muñeca va
 ## al punto. `weight` es el peso suavizado del brazo; `raw`, el de verdad, para saber si ya llegó.
 const PASSES := 3
 
@@ -453,7 +453,7 @@ static func _predicted_forearm(upper: CustomBone, shoulder: Vector3, wrist: Vect
 ## EL GIRO EN UN ARO (30/10/2026): de los dos que alinean los nudillos con el aro (`along`), el que deja la palma
 ## (`palm`, en el marco de la muñeca) mirando hacia su centro (`inward`, desde el punto). No depende de cómo estaba la
 ## mano, así que no puede quedar dada vuelta. *Con la continuidad de las barras, la mano que volvía a agarrar en otro
-## punto del aro se quedaba a veces con la palma para afuera (lo vio el dios del juego en la válvula).*
+## punto del aro se quedaba a veces con la palma para afuera (lo vio el usuario en la válvula).*
 static func _rim_roll(forearm: Basis, along: Vector3, inward: Vector3, across: Vector3, palm: Vector3) -> float:
 	var roll := _roll_to(forearm.inverse() * along, across, 0.0)
 	var facing := (forearm * (Basis(Vector3.UP, roll) * palm)).dot(inward)
@@ -499,7 +499,7 @@ func _apply_grab_body_adjustments() -> void:
 
 	# LA ALTURA DE LA COSA, el centro de sus puntos, y no la del punto que agarra: el punto de un volante sube y baja con
 	# el aro al girarlo, y el cuerpo entero cabeceaba con él —«como si moviera la cámara arriba y abajo rápido», lo vio
-	# el dios del juego—.
+	# el usuario—.
 	var lean_at := _points_center(_grab_interactable) if is_instance_valid(_grab_interactable) else _in_world(_grab_point_local)
 	var grab_y_rel := lean_at.y - _in_world(_grab_chest_rest_local).y
 	var y_norm     : float = clamp(grab_y_rel / max(sizes.torso_height, 0.001), -1.0, 1.0)
@@ -532,7 +532,7 @@ func _apply_grab_body_adjustments() -> void:
 
 ## EL HOMBRO SE ECHA ATRÁS con lo que se tiene cerca (`t` chico) delante del pecho, y adelante con lo que está lejos.
 ## Lo que se tiene cerca pero ARRIBA del hombro (`rise`, ver `_rise`) —el tubo en la oreja— no lo echa atrás: el codo
-## va adelante, y con el hombro echado atrás 37° el brazo se doblaba detrás del cuerpo (lo vio el dios del juego).
+## va adelante, y con el hombro echado atrás 37° el brazo se doblaba detrás del cuerpo (lo vio el usuario).
 func _grab_shoulder_y(t: float, rise := 0.0) -> float:
 	if t < 0.5:
 		return lerpf(GRAB_SHOULDER_Y_BACK, 0.0, t * 2.0) * (1.0 - rise)
@@ -562,7 +562,7 @@ func _apply_shoulder_rotation(shoulder: CustomBone, y_angle: float, z_angle: flo
 ## PEGADO AL CUERPO, EL BRAZO SE DOBLA PAREJO: con la mano a menos de la mitad del brazo del hombro, el brazo y el
 ## antebrazo se van igualando (el total, el mismo). El antebrazo de estos cuerpos es 6–10 cm más largo que el brazo, y
 ## con la mano más cerca del hombro que esa diferencia la IK no puede abrir el codo hacia el pole: lo pliega al lado
-## opuesto de la mano —con el tubo en la oreja, atrás y adentro del cuerpo, lo vio el dios del juego—. Parejos, el codo
+## opuesto de la mano —con el tubo en la oreja, atrás y adentro del cuerpo, lo vio el usuario—. Parejos, el codo
 ## va siempre adonde cuelga (ver `_elbow_dir`).
 func _arm_lengths(dist: float) -> Vector2:
 	var sizes := bi.skel_sizes_util
@@ -576,7 +576,7 @@ func _arm_lengths(dist: float) -> Vector2:
 ## a la mano (`line`, normalizada). Agarrando delante del cuerpo queda abajo y afuera, como siempre; con la mano arriba
 ## del hombro —el tubo en la oreja— lo de abajo se va con la línea y queda adelante y afuera. *Era sólo «abajo, de
 ## costado a la línea» desde un hombro corrido afuera: con la mano cerca de la cabeza la línea quedaba casi vertical, el
-## codo sin plano, y se iba para atrás y el brazo atravesaba el cuerpo (lo vio el dios del juego con el teléfono).*
+## codo sin plano, y se iba para atrás y el brazo atravesaba el cuerpo (lo vio el usuario con el teléfono).*
 func _elbow_dir(line: Vector3, is_left: bool, pole_reach: float) -> Vector3:
 	var char_basis := bi.char_rigidbody.global_transform.basis
 	var side_dir := char_basis.x * (-1.0 if is_left else 1.0)
@@ -655,7 +655,7 @@ func _apply_throw_arms(_delta: float) -> void:
 func _assign_handles(interactable: Interactable) -> Array[Node3D]:
 	var cb := bi.custom_bones_util
 	# CON UNA MANO (ver Interactable.hands): la del lado donde está —el hombro más cercano a la cosa— y, si tiene varios
-	# puntos, el más cercano a ese hombro. SENTADO, EL LADO ES EL DE LA SILLA (02/11/2026, el dios del juego: en la nave el
+	# puntos, el más cercano a ese hombro. SENTADO, EL LADO ES EL DE LA SILLA (02/11/2026, el usuario: en la nave el
 	# acelerador y la lenta están a la derecha del piloto y los agarraba con la izquierda): mirar algo gira el cuerpo entero
 	# hacia ello, y con los dos hombros a la misma distancia ganaba siempre la izquierda. La silla no gira: de qué lado de
 	# ella está la cosa no cambia con la mirada.
@@ -672,7 +672,7 @@ func _assign_handles(interactable: Interactable) -> Array[Node3D]:
 		return one
 	# CON DOS: CADA MANO, EL PUNTO MÁS HACIA SU LADO de la pieza —el volante de los costados, el yugo de sus cuernos, el
 	# libro de sus bordes—. Antes cada una tomaba el más cercano a su hombro, y sentado frente a un volante inclinado esos
-	# eran los de abajo (lo vio el dios del juego).
+	# eran los de abajo (lo vio el usuario).
 	if interactable is GrabbableInteractable and (interactable as GrabbableInteractable).box_half != Vector3.ZERO:
 		return _box_handles(interactable as GrabbableInteractable)
 	var left_h := _side_handle(interactable, true, null)
@@ -680,12 +680,12 @@ func _assign_handles(interactable: Interactable) -> Array[Node3D]:
 	return [left_h, right_h]
 
 
-## ── UNA CAJA, CON LAS DOS MANOS DESDE SUS COSTADOS (03/11/2026, lo pidió el dios del juego) ───────────────────────
+## ── UNA CAJA, CON LAS DOS MANOS DESDE SUS COSTADOS (03/11/2026, lo pidió el usuario) ───────────────────────
 ## «Con las dos manos, desde sus dos costados», y con los puntos de la caja (el centro de la cara de cada módulo, ver
 ## GrabbableInteractable, LOS PAQUETES SON MÓDULOS), no con puntos a mano: cada mano, en la cara de la caja que da a su
 ## lado, el punto más cerca de su hombro. Si esas dos caras quedan más lejos que lo que abren los brazos
 ## (`BOX_HAND_SPAN`: la alargada tomada de lo largo), las dos van PEGADAS A LA CARA DE ENFRENTE, la que da a su pecho,
-## cada una al punto más cerca de su hombro —una por módulo—, como ventosas (04/11/2026, el dios del juego: «un approach
+## cada una al punto más cerca de su hombro —una por módulo—, como ventosas (04/11/2026, el usuario: «un approach
 ## un poco más estilizado… que se le peguen las manos»). *Del 03/11 iban a la cara de abajo: los brazos atravesaban la
 ## caja.*
 const BOX_HAND_SPAN := 0.9

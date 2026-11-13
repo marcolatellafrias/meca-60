@@ -4,7 +4,7 @@ extends Node
 ## "activo" cuando no hay ningún overlay: ahí se captura el mouse. Cualquier overlay
 ## libera el mouse y bloquea el input de gameplay — player_controller y la cápsula
 ## consultan gameplay_active() antes de leer input. No frena la simulación (co-op: el
-## mundo sigue). Ver technical/ui.md.
+## mundo sigue). Ver character-parametric:docs/technical/ui.md.
 
 const PAUSE := "pause"
 const MENU := "menu"
@@ -74,7 +74,7 @@ const MASSING := "massing"
 const GENERATION := "generation"
 ## LA ESCALA DE LA CIUDAD DEL MAPA Y EL RADAR (F1 en la fila Escalas, ver ScaleTuner).
 const SCALES := "scales"
-## LA NAVEGACIÓN: qué mapa lleva la nave (F2 en las filas Nave y Escalas, ver NavigationTuner).
+## LA NAVEGACIÓN: qué mapa lleva la meca (F2 en las filas Nave y Escalas, ver NavigationTuner).
 const NAVIGATION := "navigation"
 ## LA SILLA: abrir y traer de Blender cada sección (F1 en la fila Nave, ver SeatPanel).
 const SEAT := "seat"
@@ -82,7 +82,7 @@ const SEAT := "seat"
 const BODY := "body"
 ## LA EXAGERACIÓN DE LA CAÍDA (F1 en los Experimentos de locomoción, ver LocomotionPanel).
 const LOCOMOTION := "locomotion"
-## LOS PANELES DE TECLA F SE ANOTAN SOLOS al montarse (ver `register_panel` y TunerPanel.setup) (lo pidió el dios del juego, 07/11/2026: «puedo abrir varios paneles en simultáneo… cuando abro uno, no es que se cierre el anterior, sino que se apila… debería ser una regla que se enforcea automáticamente en el sistema de paneles»): así
+## LOS PANELES DE TECLA F SE ANOTAN SOLOS al montarse (ver `register_panel` y TunerPanel.setup) (lo pidió el usuario, 07/11/2026: «puedo abrir varios paneles en simultáneo… cuando abro uno, no es que se cierre el anterior, sino que se apila… debería ser una regla que se enforcea automáticamente en el sistema de paneles»): así
 ## `open_only` cierra a TODOS, también al que se agregue mañana. *Hasta entonces era una lista escrita a mano (`PANELS`), y
 ## el panel que no estaba en ella ni cerraba a los otros ni lo cerraban: se apilaban.*
 var _panels: Dictionary = {}

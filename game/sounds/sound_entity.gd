@@ -48,7 +48,7 @@ extends Node3D
 ##     `sound_transition(event, avance)` mientras pasa (0 a 1), `end_sound_transition(event)` al terminar, y
 ##     `cancel_sound_transition(event)` si se corta; el golpe suena una vez, cuando el avance cruza el punto. La clase
 ##     anuncia qué eventos lo tienen en su constante `SOUND_MOMENTS`, que heredan sus hijas, y el panel le pone a cada
-##     una de esas claves su slider. Lo pidió el dios del juego el 11/10/2026: primero un toggle, después «un slider,
+##     una de esas claves su slider. Lo pidió el usuario el 11/10/2026: primero un toggle, después «un slider,
 ##     así puedo decidir en qué momento de la transición ocurre», y como primitiva, para cualquiera.
 ##   · LAS VUELTAS: un loop puede tener una PAUSA entre vuelta y vuelta (Sounds.loop_pause, un slider de su caja):
 ##     suena el archivo entero, calla la pausa y vuelve, mientras siga prendido —el timbre del teléfono—. Cuándo suena
@@ -69,7 +69,7 @@ extends Node3D
 ## en la pieza que va en la mano, ver HeldInteractable), o en el `at` que se le pase.
 ##
 ## De las constantes `SOUNDS` sale quién pide cada clave (`askers`): lo que dice el panel de sonidos, y lo que mira el
-## test (tests/sound_keys). Ver docs/technical/audio.md.
+## test (tests/sound_keys). Ver character-parametric:docs/technical/audio.md.
 
 ## LOS EVENTOS Y ESTADOS QUE SE REPITEN ENTRE CLASES; cada clase puede tener los suyos.
 const PRESS := &"press"

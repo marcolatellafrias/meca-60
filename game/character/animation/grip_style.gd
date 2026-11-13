@@ -2,11 +2,11 @@ class_name GripStyle
 extends Resource
 
 ## ── CÓMO AGARRA LA MANO, LO QUE SE PRUEBA EN EL F1 (29/10/2026, sesión de siluetas de los personajes) ─────────────────
-## Las perillas de la animación de las manos que el dios del juego quiere probar en vez de decidir de antemano («esto es
+## Las perillas de la animación de las manos que el usuario quiere probar en vez de decidir de antemano («esto es
 ## el típico caso de panel F»). Las lee ArmsController; las mueve el F1 de la fila Agarre del sandbox (ver PressPanel).
 ## Se guardan con el botón del panel (ver GripSettings); sin guardar, arrancan como acá.
 ##
-## UNA POR FAMILIA de lo que se agarra (el dios del juego: «el volante y la valve… se utilizan de forma distinta y tienen
+## UNA POR FAMILIA de lo que se agarra (el usuario: «el volante y la valve… se utilizan de forma distinta y tienen
 ## distintos parámetros para cambio de mano y todo eso»): la válvula lo dice con su marca (`FAMILY_META`, ver
 ## ValveArchetype); lo demás que gira, el volante.
 
@@ -18,7 +18,7 @@ static var families := _saved_families()
 
 
 ## Lo guardado con el F1 (ver GripSettings); lo que no está guardado, como acá. EL VOLANTE, SIN VOLVER A AGARRAR (30/10/2026,
-## el dios del juego: «el volante es como el del Cybertruck, que tiene hasta cierto tope y no da vueltas… que el volante
+## el usuario: «el volante es como el del Cybertruck, que tiene hasta cierto tope y no da vueltas… que el volante
 ## directamente no tenga cambio de manos, porque nunca va a pasar de ese ángulo máximo»): las manos quedan en sus puntos
 ## de punta a punta del recorrido. Se puede prender en el F1.
 static func _saved_families() -> Dictionary:
@@ -28,7 +28,7 @@ static func _saved_families() -> Dictionary:
 	return {WHEEL: wheel, VALVE: valve}
 
 
-## La de la válvula, de arranque: vuelve a agarrar pasados 90° (30/10/2026, el dios del juego: «aumentamos el rango de
+## La de la válvula, de arranque: vuelve a agarrar pasados 90° (30/10/2026, el usuario: «aumentamos el rango de
 ## cambio de mano… el doble de lo que es ahora»; era 45°).
 static func _valve() -> GripStyle:
 	var out := GripStyle.new()
@@ -48,7 +48,7 @@ static func _steering() -> GripStyle:
 @export var regrip := true
 ## Cuánto gira una mano con el aro antes de volver a agarrar, en grados (se cuenta en puntos del aro, redondeado).
 @export_range(10.0, 180.0, 1.0, "suffix:°") var regrip_angle := 45.0
-## DESDE DÓNDE SE CUENTA (30/10/2026, el dios del juego: «pensá en varios paradigmas»; ver ArmsController._regrip):
+## DESDE DÓNDE SE CUENTA (30/10/2026, el usuario: «pensá en varios paradigmas»; ver ArmsController._regrip):
 ##   0. DESDE SU COSTADO: la mano arranca en su costado y gira con el aro hasta el ángulo; ahí vuelve a su costado.
 ##   1. CENTRADO EN SU COSTADO: el mismo arco, la mitad antes y la mitad después de su costado: el brazo se aparta la
 ##      mitad de su lugar natural.

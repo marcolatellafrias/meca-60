@@ -15,7 +15,7 @@ extends Node
 ## y mandan su INTENCIÓN (grab point + a dónde tiran) a la autoridad, que suma esas fuerzas. Al
 ## soltar la autoridad, se promueve al siguiente que quede agarrando (o vuelve al host). La
 ## velocidad se transfiere al cambiar de autoridad para no perder un throw.
-## Ver docs/conceptual/multiplayer.md.
+## Ver character-parametric:docs/conceptual/multiplayer.md.
 
 const INTERP_DELAY_MS := 100.0
 const MAX_EXTRAP_S := 0.15
@@ -206,7 +206,7 @@ func begin_grab() -> void:
 ## Lanza el cuerpo con un impulso, sobreviviendo el handoff de autoridad al soltar. La AUTORIDAD FINAL
 ## (el host, u offline el local) lo aplica a su instancia — la que se sincroniza — así no depende del
 ## buffer y no hay snap. El cliente NO aplica local (si lo hiciera, al pasar la autoridad al host su
-## caja volvería atrás ~1 RTT). Ver conceptual/multiplayer.md (Causa B).
+## caja volvería atrás ~1 RTT). Ver character-parametric:docs/conceptual/multiplayer.md (Causa B).
 func throw_body(impulse: Vector3) -> void:
 	if not multiplayer.has_multiplayer_peer() or multiplayer.is_server():
 		var body := get_parent() as RigidBody3D  # offline u host: soy (o seré) la autoridad

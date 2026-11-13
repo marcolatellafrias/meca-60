@@ -2,7 +2,7 @@ class_name WalkModifier
 extends Resource
 
 ## ── LOS MODIFICADORES DE CAMINATA, POSE Y QUIETO ─────────────────────────────────────────────────
-## Lo pidió el dios del juego (12/10/2026): modificadores que se le aplican a los personajes y que SE SUMAN —varios en
+## Lo pidió el usuario (12/10/2026): modificadores que se le aplican a los personajes y que SE SUMAN —varios en
 ## uno—, en cuatro categorías para probar combinaciones: las PIERNAS (saltarín, zancos largos…), el TREN SUPERIOR
 ## (contoneo, rígido…), la POSE (encorvado, tirado atrás…) y QUIETO (temblando, respirando rápido…).
 ##
@@ -51,7 +51,7 @@ func _props() -> Array:
 
 
 ## ── EL CATÁLOGO ──────────────────────────────────────────────────────────────────────────────────
-## Los de la primera tanda, elegidos por el dios del juego. El saltarín, en variaciones «dependiendo del ritmo y cómo
+## Los de la primera tanda, elegidos por el usuario. El saltarín, en variaciones «dependiendo del ritmo y cómo
 ## da el paso».
 static func catalogue() -> Array[WalkModifier]:
 	var C := Category

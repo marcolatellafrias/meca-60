@@ -1,24 +1,24 @@
 class_name MotionFrame
 extends Node3D
 
-## EL MARCO: lo que se mueve y lleva cosas adentro —la nave; mañana un auto o un ascensor—. Lo pidió el dios del juego
+## EL MARCO: lo que se mueve y lleva cosas adentro —la meca; mañana un auto o un ascensor—. Lo pidió el usuario
 ## (03/11/2026): «que el personaje tenga claramente una flag que diga si se está moviendo en un espacio global o local a
 ## un área»; «no haya dos sistemas separados». Cada cuerpo que puede ir adentro de algo tiene UN marco: ninguno (el
 ## mundo, global) o éste (local). *Hasta el 03/11/2026 la idea estaba en siete lugares, cada uno a su manera: la silla,
 ## el parado de exhibición, el piso que se mueve, el meta de la altura del piso, la bodega, el freno del agarre y un piso
-## invisible para los ragdolls; y la aceleración de la nave se medía en tres.*
+## invisible para los ragdolls; y la aceleración de la meca se medía en tres.*
 ##
 ## LAS REGLAS, UNA SOLA VEZ:
 ##   · QUIÉN ESTÁ ADENTRO lo dice EL VOLUMEN (`add_volume`): la cabina, y la rampa mientras está abierta. Lo decide UN
 ##     punto del cuerpo (el centro de la cápsula, la pelvis del ragdoll) con `MARGIN` de histéresis: para entrar hay que
 ##     pasar ese tanto adentro, para salir ese tanto afuera (`around`). Así, parado en el umbral no cambia a cada paso.
 ##     Lo corre sólo quien simula: un proxy toma el marco que le manda su dueño por la red (`id`).
-##   · LA FÍSICA SIGUE EN EL MUNDO. En cada paso, después de que la nave se movió y antes del solver, el marco le suma a
-##     cada miembro lo que cambió la velocidad de la nave en su punto, menos lo que el miembro "siente" (`felt`): el
+##   · LA FÍSICA SIGUE EN EL MUNDO. En cada paso, después de que la meca se movió y antes del solver, el marco le suma a
+##     cada miembro lo que cambió la velocidad de la meca en su punto, menos lo que el miembro "siente" (`felt`): el
 ##     jugador no siente nada (se inclina, ver CharacterRigidBody3D); el ragdoll y las cajas, la perilla del F3
-##     (`inertia_felt`). Si la nave salta de golpe (reaparece), los lleva con ella. Entrar o salir no toca la velocidad
+##     (`inertia_felt`). Si la meca salta de golpe (reaparece), los lleva con ella. Entrar o salir no toca la velocidad
 ##     —ya es del mundo—: sólo cambia contra qué se mide caminar, frenar, la red y el agarre.
-##   · ADENTRO SE CHOCA SÓLO CON LO DEL MARCO: su SOMBRA (`cast_shadow`: una copia de las formas de choque de la nave
+##   · ADENTRO SE CHOCA SÓLO CON LO DEL MARCO: su SOMBRA (`cast_shadow`: una copia de las formas de choque de la meca
 ##     que el motor de física mueve sabiendo su velocidad) y los otros que van adentro, en `LAYER`. Lo de afuera —la
 ##     calle, el casco movido a mano en las maquetas— no se ve. Es lo que hacía el ente con su capa de viajar,
 ##     generalizado. *Medido el 03/11/2026: un casco cinemático movido a mano deja que lo de encima se deslice de a poco,
@@ -45,8 +45,8 @@ const FELT_KNOB := -1.0
 const ACCEL_FOLLOW := 12.0
 const MAX_ACCEL := 60.0
 
-## LA PERILLA DE INERCIA, de 0 a 1, para todos: cuánto de lo que acelera la nave se siente (inclina torsos, desliza
-## ragdolls y cajas). La elige el dios del juego en el F3 de la nave (ShipFlatPanel), que la guarda (ver ShipKits).
+## LA PERILLA DE INERCIA, de 0 a 1, para todos: cuánto de lo que acelera la meca se siente (inclina torsos, desliza
+## ragdolls y cajas). La elige el usuario en el F3 de la nave (ShipFlatPanel), que la guarda (ver ShipKits).
 static var inertia_felt := 1.0
 
 ## La altura del piso, en el marco (la de ShipGrid.floor_y en la nave).
@@ -76,7 +76,7 @@ var _shadow: AnimatableBody3D = null
 var _shadow_feet: AnimatableBody3D = null
 var _shadow_sources: Array = []
 var _shadow_wait := 0
-## Cada cuántos pasos se mira si alguna forma de la nave se movió (ver `_place_shadow`): 60 veces por segundo.
+## Cada cuántos pasos se mira si alguna forma de la meca se movió (ver `_place_shadow`): 60 veces por segundo.
 const SHADOW_CHECK_STEPS := 4
 
 
@@ -123,7 +123,7 @@ static func around(point: Vector3, current: Object) -> MotionFrame:
 	return null
 
 
-## SI SE ESTÁ YENDO: él o algo de arriba suyo se va a borrar al terminar el cuadro. *Al cambiar la nave en el F3, la
+## SI SE ESTÁ YENDO: él o algo de arriba suyo se va a borrar al terminar el cuadro. *Al cambiar la meca en el F3, la
 ## nueva se arma en el mismo cuadro y en el mismo lugar que la vieja, que todavía no se borró: los que se paraban en la
 ## nueva elegían el marco de la vieja y quedaban apuntando a algo borrado (03/11/2026, el toggle de los parados).*
 func is_leaving() -> bool:
@@ -183,7 +183,7 @@ func acceleration_at(point: Vector3) -> Vector3:
 ## `body` PASA A IR ADENTRO: lo lleva el marco y siente `felt` (0 nada, 1 todo; `FELT_KNOB`, la perilla). Sólido
 ## (`solid`), los otros de adentro chocan con él; si no (un ragdoll), él choca con lo del marco pero nadie con él.
 ## Deja de chocar con lo de afuera. Si estaba en otro marco, sale de ése. Con `keeps_momentum` (lo suelto: un ragdoll,
-## una caja) EN UN CHOQUE CONSERVA SU VELOCIDAD —la nave se frena y él no, y se va solo hacia la trompa—; sin eso (una
+## una caja) EN UN CHOQUE CONSERVA SU VELOCIDAD —la meca se frena y él no, y se va solo hacia la trompa—; sin eso (una
 ## cápsula, que no se suelta), lo sigue llevando entero y el choque le llega como empujón (ver `crashed`).
 func join(body: CollisionObject3D, felt := 0.0, solid := true, keeps_momentum := false) -> void:
 	var before := frame_of(body)
@@ -226,7 +226,7 @@ func applied_dv(body: Object) -> Vector3:
 
 
 ## UN CHOQUE (ver `crashed`): `dv`, lo que perdió de velocidad lo que se mueve de golpe (m/s, mundo). UN CHOQUE ES SÓLO
-## UN EMPUJÓN (el dios del juego, 03/11/2026): ese salto no entra en la aceleración (no inclina por inercia: ya inclina
+## UN EMPUJÓN (el usuario, 03/11/2026): ese salto no entra en la aceleración (no inclina por inercia: ya inclina
 ## como golpe) ni se les resta a los sueltos (`keeps_momentum`), que siguen con lo que traían. *Hasta el 03/11/2026 se
 ## contaba dos veces: como golpe y como una aceleración enorme, recortada y suavizada.*
 func crash(dv: Vector3) -> void:
@@ -258,7 +258,7 @@ func cast_shadow(root: Node3D, leave_out: Array = []) -> void:
 		var owner_body := source.get_parent() as PhysicsBody3D
 		if source.shape == null or owner_body == null or owner_body == _shadow or owner_body == _shadow_feet 				or not owner_body.collision_layer & seen:
 			continue
-		# Lo suelto que va adentro (una caja, un cuerpo) no es la nave: se mueve solo, y es miembro.
+		# Lo suelto que va adentro (una caja, un cuerpo) no es la meca: se mueve solo, y es miembro.
 		if _members.has(owner_body) or owner_body != root and owner_body is RigidBody3D and not owner_body.freeze:
 			continue
 		if leave_out.any(func(out: Variant) -> bool: return is_instance_valid(out) and (out as Node).is_ancestor_of(source)):
@@ -284,9 +284,9 @@ func _shadow_body(label: String, layer: int) -> AnimatableBody3D:
 
 
 ## LA SOMBRA SIGUE AL MARCO en cada paso (el cuerpo entero, que el motor mueve sabiendo su velocidad), y sus formas a
-## las de la nave CADA `SHADOW_CHECK_STEPS` PASOS Y SÓLO LAS QUE SE MOVIERON (una compuerta, una silla que gira): a cada
+## las de la meca CADA `SHADOW_CHECK_STEPS` PASOS Y SÓLO LAS QUE SE MOVIERON (una compuerta, una silla que gira): a cada
 ## forma que se le toca el lugar, el motor rearma la sombra entera. *El 03/11/2026 se reubicaban las 218 en cada paso:
-## el paso de física pasó de 1,8 a 15 ms y la maqueta se arrastraba (lo vio el dios del juego).*
+## el paso de física pasó de 1,8 a 15 ms y la maqueta se arrastraba (lo vio el usuario).*
 func _place_shadow(all := false) -> void:
 	_shadow.global_transform = global_transform
 	_shadow_feet.global_transform = global_transform
@@ -315,7 +315,7 @@ func _physics_process(delta: float) -> void:
 	if delta <= 0.0:
 		return
 	var now := global_transform
-	# EL PRIMER PASO SÓLO MIRA DÓNDE ESTÁ: lo que se mueve suele armarse en un lugar y llevarse a otro (la nave se arma
+	# EL PRIMER PASO SÓLO MIRA DÓNDE ESTÁ: lo que se mueve suele armarse en un lugar y llevarse a otro (la meca se arma
 	# en el origen, ver ShipKits.build), y ese traslado no es un salto. *Hasta el 03/11/2026 sí: se llevaba 64 m a los
 	# que ya estaban adentro, y los dejaba afuera.*
 	if _steps == 0:
@@ -349,7 +349,7 @@ func _physics_process(delta: float) -> void:
 		_place_shadow()
 
 
-## LOS LLEVA: a cada miembro, lo que cambió la velocidad de la nave en su punto (y su giro), menos lo que siente.
+## LOS LLEVA: a cada miembro, lo que cambió la velocidad de la meca en su punto (y su giro), menos lo que siente.
 ## Y EL FRENO DEL AIRE, CONTRA EL MARCO: el `linear_damp` / `angular_damp` de un cuerpo lo frena contra el mundo, pero el
 ## aire de la cabina viaja con ella; se le devuelve lo que el freno le va a sacar de la velocidad del marco. *Hasta el
 ## 03/11/2026 no: los huesos del ragdoll (freno 0,5) se atrasaban contra la nave en proporción a su velocidad —a 23 m/s,
@@ -373,7 +373,7 @@ func _carry(velocity_before: Vector3, spin_before: Vector3, before: Transform3D,
 		var point := rigid.global_position
 		var then := before * (global_transform.affine_inverse() * point)
 		var dv := (velocity_at(point) - (velocity_before + spin_before.cross(then - before.origin))) * carried
-		# LO SUELTO CONSERVA LO QUE TRAÍA EN UN CHOQUE (ver `crash`): no se le resta lo que perdió la nave.
+		# LO SUELTO CONSERVA LO QUE TRAÍA EN UN CHOQUE (ver `crash`): no se le resta lo que perdió la meca.
 		if _loose.has(body):
 			dv += _crash_dv * carried
 		dv += velocity_at(point) * _undamp(rigid.linear_damp, delta)
@@ -382,7 +382,7 @@ func _carry(velocity_before: Vector3, spin_before: Vector3, before: Transform3D,
 		_applied[body] = dv
 
 
-## UN SALTO (una reaparición): los de adentro van con la nave, con su velocidad girada igual.
+## UN SALTO (una reaparición): los de adentro van con la meca, con su velocidad girada igual.
 func _carry_jump(step: Transform3D) -> void:
 	for body: Variant in _members.keys():
 		# Lo borrado se va, como en `_carry` (en la meca, 11/11/2026: el ente que se borra al abrir la sesión de red).

@@ -10,11 +10,10 @@ extends Node
 ##
 ## Herramienta de authoring/testing, NO la vía de producción (el juego reconstruye por seed).
 ## Las cajas se construyen por código a partir de una variante determinística (mismo nombre →
-## mismo tamaño/masa en todas las máquinas). Ver docs/conceptual/multiplayer.md.
+## mismo tamaño/masa en todas las máquinas). Ver character-parametric:docs/conceptual/multiplayer.md.
 
 ## Escenas para entidades no-caja.
 const SCENES := {
-	"dashboard": "res://game/interactables/controllable/dashboard.tscn",
 	"seat": "res://game/interactables/activatable/working_seat.tscn",  # SeatInteractable funcional (no la malla suelta)
 }
 

@@ -1,7 +1,7 @@
 class_name FirstPersonView
 extends RefCounted
 
-## ── DÓNDE VAN LOS OJOS DE UN PERSONAJE (03/11/2026, el dios del juego aprobó camara-casos.md) ────────────────────────
+## ── DÓNDE VAN LOS OJOS DE UN PERSONAJE (03/11/2026, el usuario aprobó camara-casos.md) ────────────────────────
 ## Una sola regla para toda cámara de primera persona —la del jugador (PlayerController) y la de quien posee a un
 ## personaje para mirar por sus ojos (PossessionCamera)—, así ven lo mismo. Cada cámara tiene su propio estado (la pelvis
 ## lenta, el sacudón suavizado), así que cada una tiene el suyo de éstos.
@@ -77,7 +77,7 @@ func _awake_eye(bi: BoneInstantiator, delta: float, bob: float) -> Vector3:
 		# La respiración es balanceo, pero lenta: no la separa el filtro, se la saca entera y vuelve por la perilla.
 		var breath := bi.passive_animations.breath_lift() if is_instance_valid(bi.passive_animations) else 0.0
 		var rest := spine_local.y - squat - breath
-		# SIN CUERPO FÍSICO, PEGADO A SU CÁPSULA (07/11/2026, el dios del juego: «cuando estoy en modo ente y camino… se
+		# SIN CUERPO FÍSICO, PEGADO A SU CÁPSULA (07/11/2026, el usuario: «cuando estoy en modo ente y camino… se
 		# me baja la cámara»; ver CharacterRigidBody3D.has_body_physics): el ente es un personaje entero que no se ve, y
 		# la pelvis de ese cuerpo baja con los pasos —por la pelvis lenta se colaban hasta 7 cm caminando—. Sus ojos van
 		# a una altura fija sobre la cápsula —la de la pelvis en su reposo congelado (ver CustomBonesUtil.freeze_rest)—,
@@ -100,7 +100,7 @@ func _awake_eye(bi: BoneInstantiator, delta: float, bob: float) -> Vector3:
 ## Los ojos van con la cabeza cuando un golpe inclina el cuerpo, igual que el cuerpo —el mismo giro de la base de la
 ## columna que le da la animación (BoneAnimations.IMPACT_LEAN), con el mismo suavizado—, aunque no lo tumbe: el golpe es
 ## información de juego. Sólo los golpes: la inercia, que inclina el cuerpo todo el viaje, no los mueve (ver
-## CharacterRigidBody3D, EL RESORTE EN DOS PARTES). Lo pidió el dios del juego, igual al del cuerpo para empezar: «lo
+## CharacterRigidBody3D, EL RESORTE EN DOS PARTES). Lo pidió el usuario, igual al del cuerpo para empezar: «lo
 ## haría igual al sacudón real. Y después en todo caso lo tuiqueo un poco».
 func _hit_sway(bi: BoneInstantiator, at: Vector3, delta: float) -> Vector3:
 	var pelvis := bi.custom_bones_util.lower_spine

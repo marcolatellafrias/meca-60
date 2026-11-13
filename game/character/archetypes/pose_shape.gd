@@ -48,7 +48,7 @@ extends Resource
 ## SEPARACIÓN DE LOS PIES, en múltiplos del ancho de cadera: 1 es un pie bajo cada cadera.
 @export_range(0.0, 2.0, 0.05) var stance_width := 1.0
 
-## QUIETO: RESPIRA Y TIEMBLA (07/11/2026, el dios del juego: «los permanentes quisiera poder elegirlos del panel… dejarlos
+## QUIETO: RESPIRA Y TIEMBLA (07/11/2026, el usuario: «los permanentes quisiera poder elegirlos del panel… dejarlos
 ## con un valor bien alto… y cambio el slider, que es qué factor de esa constante usa ese arquetipo»). De 0 a 1, una parte
 ## del techo de cada uno (ver PassiveState: TREMOR_MAX, BREATH_DEPTH_MAX, BREATH_RATE_MAX).
 @export_range(0.0, 1.0, 0.01) var tremor := 0.0
@@ -105,7 +105,7 @@ extends Resource
 @export_range(0.1, 8.0, 0.05) var acceleration := 0.6
 ## LA FUERZA: contra el peso de lo que lleva, cuánto lo frena (ver GrabbableInteractable.load_of); de a varios, se suma.
 @export_range(0.1, 2.5, 0.05) var strength := 1.0
-## LA FUERZA DE BRAZOS, aparte de la de llevar (04/11/2026, el dios del juego: «quiero tener un independiente»; «un valor
+## LA FUERZA DE BRAZOS, aparte de la de llevar (04/11/2026, el usuario: «quiero tener un independiente»; «un valor
 ## normalizado que afecte a las dos»): 1 lo normal. El tiro y el empujón (R) son esto por sus perillas de todos (ver
 ## InteractionController, EL TIRO Y EL EMPUJÓN).
 @export_range(0.1, 2.5, 0.05) var throw_strength := 1.0

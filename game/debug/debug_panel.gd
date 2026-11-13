@@ -5,7 +5,7 @@ extends CanvasLayer
 # vía add_info / add_text / add_action / add_toggle / add_control; el panel solo renderiza. Ocupa todo el
 # alto de la pantalla, así casi no hace falta scrollear. Su visibilidad y el mouse
 # los maneja UIState (tecla F1). Solo se crea para un personaje con debug_enabled = true.
-# La consola global (tecla º) es aparte. Ver technical/ui.md.
+# La consola global (tecla º) es aparte. Ver character-parametric:docs/technical/ui.md.
 
 const WIDTH := 480.0
 const MARGIN := 20.0

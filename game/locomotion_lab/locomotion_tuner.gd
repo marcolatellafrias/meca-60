@@ -1,7 +1,7 @@
 class_name LocomotionTuner
 extends TunerPanel
 
-## ── LA LOCOMOCIÓN DE CADA ARQUETIPO (03/11/2026, lo pidió el dios del juego) ─────────────────────────────────────────
+## ── LA LOCOMOCIÓN DE CADA ARQUETIPO (03/11/2026, lo pidió el usuario) ─────────────────────────────────────────
 ## «Un panel para cambiar animaciones de caminata de cada personaje y pose. Velocidad, estabilidad, fuerza de salto, todas
 ## las variantes de locomoción y animación, pero que estén bien separadas, así no se mezclan tantas cosas a la vez.»
 ## Por arquetipo y guardado; un panel, cinco pestañas, una a la vez:
@@ -23,12 +23,12 @@ const TAB_POSE := "POSE"
 const TAB_MOVE := "MOVIMIENTO"
 const TAB_BALANCE := "EQUILIBRIO"
 const TAB_JUMP := "SALTO"
-## LAS MEDIDAS DEL CUERPO (03/11/2026, lo pidió el dios del juego: «dimensiones del cuerpo, grosores de extremidades»):
+## LAS MEDIDAS DEL CUERPO (03/11/2026, lo pidió el usuario: «dimensiones del cuerpo, grosores de extremidades»):
 ## la forma de bloques del arquetipo (BlockShape: largos, anchos, grosores), la misma que se guarda en BlockShapes. Era
 ## el F1 de la fila Personajes (BlockPanel), que se fue para no tener dos paneles de lo mismo.
 const TAB_BODY := "CUERPO"
 
-## ── LOS NOMBRES Y LAS AYUDAS, POR PARTE DEL CUERPO (07/11/2026, el dios del juego: «varias opciones… no están bien
+## ── LOS NOMBRES Y LAS AYUDAS, POR PARTE DEL CUERPO (07/11/2026, el usuario: «varias opciones… no están bien
 ## descritas… balanceo lateral, no dice de qué… muchas cosas que están mal clasificadas»; «color coding… torso, brazos,
 ## piernas… por subsecciones»; «preferiría que me las describas con los nombres de los huesos reales… lower spine,
 ## higher spine, chest… esto va para todo») ─────────────────────────────────────────────────────────────────────────
@@ -105,7 +105,7 @@ const WALK_HELP := {
 	"walk_run_elbow": "Cuánto más se dobla el codo corriendo: la mano se acerca al hombro (entre upper_arm y lower_arm). Nada hasta su velocidad de caminar y entero a su sprint.",
 }
 
-## ── QUÉ USA CADA PERILLA (07/11/2026, el dios del juego: «diferenciar bien… las cosas que usan el ancho entre pies y las
+## ── QUÉ USA CADA PERILLA (07/11/2026, el usuario: «diferenciar bien… las cosas que usan el ancho entre pies y las
 ## que usan la profundidad… tal vez con un símbolo… si les hago hover, me dice qué usa para crear la animación») ──────
 ## Un símbolo en blanco a la derecha del nombre de cada perilla de la caminata (blanco, para que no se confunda con el color de la parte), y al pasar el mouse, qué la mueve. Sin colores nuevos:
 ## los colores ya son las partes del cuerpo. Sale del código de BoneAnimations: `foot_spread_unified.y` es el largo (un
@@ -148,7 +148,7 @@ const PARTS := [
 ## El gris de los títulos que no son de una parte.
 const NOTE_COLOR := Color(0.62, 0.66, 0.72)
 
-## Los arquetipos que se eligen: todos menos el genérico (el dios del juego no lo quiere ver).
+## Los arquetipos que se eligen: todos menos el genérico (el usuario no lo quiere ver).
 var _archetype := EntityArchetype.Archetype.fat_man
 var _pose: PoseShape = null
 var _base_pose: PoseShape = null
@@ -213,7 +213,7 @@ static func _legend() -> String:
 	return "   ".join(out) + "   — pasá el mouse por un nombre"
 
 
-## ── UNA PARTE ES UNA SECCIÓN (07/11/2026, el dios del juego: «cuando agregaste más opciones se separaron en dos
+## ── UNA PARTE ES UNA SECCIÓN (07/11/2026, el usuario: «cuando agregaste más opciones se separaron en dos
 ## subcategorías separadas, aunque tiene el mismo título… que eso no sea posible por diseño… si agrego una opción, tengo
 ## que sí o sí ponerlo en su categoría y sí o sí queda junto a las otras») ─────────────────────────────────────────
 ## Cada parte del cuerpo da UNA sola sección por pestaña, con un título y un color, y adentro un bloque por objeto
@@ -265,7 +265,7 @@ static func _unassigned(common: Dictionary) -> Array[Dictionary]:
 		"color": UNASSIGNED_COLOR, "blocks": [block] as Array[Dictionary]}] as Array[Dictionary]
 
 
-## ── LA CABECERA (07/11/2026, el dios del juego: «que el arquetipo sea como tabs en vez de una lista vertical y que se
+## ── LA CABECERA (07/11/2026, el usuario: «que el arquetipo sea como tabs en vez de una lista vertical y que se
 ## resalte mejor cuál es el que está seleccionado») ─────────────────────────────────────────────────────────────────
 ## Arriba de las pestañas de tema: los arquetipos en fila, el elegido pintado. *Un rato hubo también un slider de
 ## suavizado de cadera y un selector de rebote de pelvis, para todos; quedó lo elegido, fijo (ver BoneInstantiator, LA

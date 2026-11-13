@@ -3,15 +3,15 @@ extends Resource
 
 ## ── LA FORMA DE BLOQUES DE UN ARQUETIPO (31/10/2026, sesión de siluetas de los personajes) ─────────────────────────
 ## El sistema nuevo de proporciones, de cero, sobre el mismo esqueleto: unos pocos números en metros por arquetipo, de
-## los que salen los huesos y el cuerpo de cajas y cápsulas (ver BlockBody). Lo pidió el dios del juego: «quiero cambiar
+## los que salen los huesos y el cuerpo de cajas y cápsulas (ver BlockBody). Lo pidió el usuario: «quiero cambiar
 ## bastante las proporciones y jugar con eso… quedarme de cualquier forma con el sistema viejo me va a limitar». El viejo
 ## —la forma del torso con sus loop cuts, la malla— quedó archivado y su malla se borró el 07/11/2026; la postura
 ## (la joroba, el encorvado del cuello, los hombros) sigue siendo del arquetipo, porque es de los huesos.
 ##
-## ── LAS CINCO REGLAS (las aprobó el dios del juego) ────────────────────────────────────────────────────────────────
+## ── LAS CINCO REGLAS (las aprobó el usuario) ────────────────────────────────────────────────────────────────
 ##   1. EL HOMBRO VA EN EL COSTADO DEL PECHO: la articulación, un radio de brazo debajo del tope de la caja del pecho y
 ##      justo en su costado, así con el brazo colgando se ve la mitad de su domo, afuera de la caja, y el tope del domo
-##      queda al ras del tope del pecho. El ancho de hombros sale de ahí. (31/10/2026, el dios del juego: «si los brazos
+##      queda al ras del tope del pecho. El ancho de hombros sale de ahí. (31/10/2026, el usuario: «si los brazos
 ##      estuvieran apuntando hacia abajo… se vería la mitad de la articulación». Iba un radio adentro del costado, y el
 ##      brazo salía de adentro del torso.)
 ##   2. LA CADERA, IGUAL: el muslo nace un radio de pierna adentro del costado y arriba del fondo de la caja de abajo. La
@@ -44,13 +44,13 @@ extends Resource
 @export_range(0.2, 1.8, 0.005, "suffix:m") var arm_length := 0.7
 ## Dónde cae el codo, en fracción del brazo desde el hombro.
 @export_range(0.2, 0.8, 0.01) var elbow_at := 0.45
-## EL BRAZO, NUNCA FINITO (01/11/2026, el dios del juego: «quiero que se sientan un poco más chunky, a pesar de que sean
+## EL BRAZO, NUNCA FINITO (01/11/2026, el usuario: «quiero que se sientan un poco más chunky, a pesar de que sean
 ## flacos… que la baseline sea un brazo de grosor más o menos gruesito»): el piso del rango es ese grosor. La mano sale
 ## de acá: su muñeca es el ancho del brazo (ver TubeHand, la de bloques).
 @export_range(0.09, 0.4, 0.005, "suffix:m") var arm_width := 0.115
-## CUÁNTO SE ABREN LOS BRAZOS en reposo, en grados, puesto a ojo por arquetipo (01/11/2026, el dios del juego: «que
+## CUÁNTO SE ABREN LOS BRAZOS en reposo, en grados, puesto a ojo por arquetipo (01/11/2026, el usuario: «que
 ## simplemente sea un valor hecho a mano a ojo»). Es la única apertura: la de la pose se fue (03/11/2026).
-## 0 ES ROZANDO EL TORSO (03/11/2026, lo pidió el dios del juego: el torso se le comía los brazos al flaco alto): el
+## 0 ES ROZANDO EL TORSO (03/11/2026, lo pidió el usuario: el torso se le comía los brazos al flaco alto): el
 ## hombro va un radio de brazo afuera del costado del pecho, así colgando derecho el brazo apenas lo toca, y se cuenta
 ## desde el ángulo en que tampoco entra en la panza ni en la cadera, si son más anchas (ver `_touch_angle`). *Antes el
 ## hombro iba en el costado del pecho y se contaba desde la vertical: la mitad del brazo quedaba adentro del torso.*
@@ -66,12 +66,12 @@ extends Resource
 @export_range(0.08, 0.8, 0.005, "suffix:m") var head_height := 0.26
 ## A qué altura de la cabeza gira: 0 desde su base, 0,3 desde adentro.
 @export_range(0.0, 0.8, 0.01) var atlas := 0.25
-## EL CUELLO NACE ADELANTE (02/11/2026, el dios del juego: «que sea un toggle, que la cabeza salga desde ahí, y que lo de
+## EL CUELLO NACE ADELANTE (02/11/2026, el usuario: «que sea un toggle, que la cabeza salga desde ahí, y que lo de
 ## encorvado sea otra cosa»): apagado, nace en el centro de la tapa del pecho (regla 4); prendido, pegado a su cara de
 ## adelante, con el frente del cuello al ras del frente del pecho. El encorvado (la pose) lo inclina aparte.
 @export var neck_forward := false
 
-## EL PIE, SÓLO SU LARGO (31/10/2026, el dios del juego: «sacaría tanto la variable de ancho como la de talón… y la de
+## EL PIE, SÓLO SU LARGO (31/10/2026, el usuario: «sacaría tanto la variable de ancho como la de talón… y la de
 ## alto que sea proporcional siempre al ancho»): de ancho, el de la pierna; de alto, su radio (regla 3); y arranca atrás
 ## en la línea de la cápsula, sin escalón (ver BlockBody._foot).
 @export_group("Pies")
@@ -108,7 +108,7 @@ func seat_fit() -> Vector2:
 	return Vector2(leg_width * 0.5, maxf(lower_depth, maxf(middle_depth, chest_depth)) * 0.5)
 
 
-## ── EL HOMBRO METIDO EN EL TORSO (04/11/2026, el dios del juego: «los brazos dejaron de posicionarse pensando en que su
+## ── EL HOMBRO METIDO EN EL TORSO (04/11/2026, el usuario: «los brazos dejaron de posicionarse pensando en que su
 ## domo estuviera mitad metido en el torso, así cuando se dobla no se nota la costura… haría que eso sea un toggle en el
 ## F1») ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ## Prendido, como antes del 03/11: el hombro en el costado del pecho —la mitad del domo del brazo adentro del torso— y
@@ -130,7 +130,7 @@ func _touch_angle(chain: float, u: float) -> float:
 
 
 ## ── LAS DE FÁBRICA: PROPORCIONES REALISTAS (01/11/2026) ────────────────────────────────────────────────────────────
-## El arranque de cada arquetipo sin nada guardado. Lo pidió el dios del juego: «las proporciones en general de todos los
+## El arranque de cada arquetipo sin nada guardado. Lo pidió el usuario: «las proporciones en general de todos los
 ## personajes están muy cartoony… unas proporciones un poco más realistas»; y «en todos los arquetipos haría la misma
 ## profundidad en todas las cajas del torso» (por eso `depth` es uno solo). La joroba no es de acá: es postura del
 ## arquetipo y queda como estaba.
@@ -164,7 +164,7 @@ const FACTORY := {
 		"depth": 0.22, "arm": 0.58, "elbow": 0.56, "arm_w": 0.1, "open": 7, "neck": 0.05, "neck_w": 0.14,
 		"head_h": 0.28, "atlas": 0.3, "foot": 0.26, "neck_fwd": true},
 	# 1,55: un chico de doce años, más grande que uno real para que no contraste tanto con los adultos (02/11/2026, el
-	# dios del juego: «hay demasiado contraste de tamaño»): la cabeza grande, el torso corto, finito.
+	# usuario: «hay demasiado contraste de tamaño»): la cabeza grande, el torso corto, finito.
 	"kid": {"legs": 0.74, "knee": 0.5, "leg_w": 0.11, "torso": 0.53, "lower": 0.30, "middle": 0.28, "chest": 0.31,
 		"depth": 0.18, "arm": 0.52, "elbow": 0.55, "arm_w": 0.095, "open": 6, "neck": 0.045, "neck_w": 0.12,
 		"head_h": 0.28, "atlas": 0.3, "foot": 0.23},

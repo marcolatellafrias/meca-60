@@ -1,14 +1,14 @@
 class_name CharacterLooks
 extends Resource
 
-## LOS ASPECTOS CANÓNICOS: uno por arquetipo (ver CharacterLook), lo que el dios del juego elige en la fila Personajes
+## LOS ASPECTOS CANÓNICOS: uno por arquetipo (ver CharacterLook), lo que el usuario elige en la fila Personajes
 ## para que los seis se parezcan a sus concept arts (11/10/2026).
 ##
 ## Va a `res://`, como las cabezas y los torsos (ver TorsoShapes): es diseño del personaje. Y se guarda ENTERO, no como
 ## diferencia contra un defecto: el defecto es el personaje sin nada —ojos redondos, sin labios, sin accesorios—, lo
 ## mismo que un `CharacterLook` nuevo, así que no hay nada del código que se pueda perder.
 ##
-## ⚠ El archivo lo escribe el sandbox cuando el dios del juego cambia algo: es suyo, no se commitea a mano.
+## ⚠ El archivo lo escribe el sandbox cuando el usuario cambia algo: es suyo, no se commitea a mano.
 
 ## Dónde se guarda. `static var` y no `const`, como en las otras tablas, para que un test lo apunte a `user://`.
 ## (Los datos del low poly, el único estilo desde el 22/10/2026: el archivo conserva su sufijo «_low» hasta que el dios del
@@ -34,7 +34,7 @@ static func table() -> CharacterLooks:
 
 
 ## ── LA FORMA DE CABEZA DE CADA ARQUETIPO ────────────────────────────────────────────────────────
-## Las de arranque, elegidas por el maestro de la estética (15/10/2026) entre las formas que eligió el dios del juego
+## Las de arranque, elegidas por el maestro de la estética (15/10/2026) entre las formas que eligió el usuario
 ## (ver HeadForms.CHOSEN), hasta que él elija otra con el panel de la fila Personajes. Al quedar diez formas
 ## (16/10/2026) él eligió el reemplazo de las que se fueron: el niño, la redonda de abajo 6 cm (era la pelota); el flaco
 ## alto, la larga de mentón largo (el pepino); el viejo, la larga de pómulos bajos (la alargada sin pómulos); el

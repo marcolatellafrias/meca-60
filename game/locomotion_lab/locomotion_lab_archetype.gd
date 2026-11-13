@@ -9,7 +9,7 @@ extends SeededArchetype
 ## cambian la variante. Se caen con el equilibrio de siempre y se levantan solos (ver CharacterGetUp).
 ##
 ## *Viene de la parcela «Experimentos de locomoción» de character-parametric (2.261 líneas, con pasillos de obstáculos,
-## botones, sillas de la nave y quince escenas): acá quedan seis escenas y lo mínimo.* Sus paneles: F1 lo de todos los
+## botones, sillas de la meca y quince escenas): acá quedan seis escenas y lo mínimo.* Sus paneles: F1 lo de todos los
 ## arquetipos (LocomotionPanel), F3 lo de cada arquetipo (LocomotionTuner).
 
 enum Scene { RUN, JUMP, DROP, CARRY, CATCH, CLASH, SLALOM }

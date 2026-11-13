@@ -18,7 +18,7 @@ enum InputMode { SCROLL, MOUSE_HORIZONTAL, LOOK }
 # 1.0 = handles exactly on the disc circumference; lower values pull them inward.
 @export var handle_radius_factor: float = 0.97
 
-## ── EL VOLANTE SE GIRA MIRANDO (29/10/2026, el dios del juego) ────────────────────────────────────────────────────
+## ── EL VOLANTE SE GIRA MIRANDO (29/10/2026, el usuario) ────────────────────────────────────────────────────
 ## «Yo debería mirar a la derecha y que el volante gire a la derecha… si miro al centro, no importa de qué ángulo estaba,
 ## siempre voy a volver al punto medio». Con `InputMode.LOOK`, mientras se lo agarra el giro ES el ángulo de costado
 ## entre adonde mira quien lo maneja y el centro del volante, por `look_gain`: mirar al centro lo endereza; mirar a la
@@ -34,7 +34,7 @@ var total_rotation: float = 0.0
 ## Con `stretch_max` > 0 tiene un fuelle en vez de eje (`bellows`, lo pone ControlArchetype.dress) y, cuando alguien se
 ## sienta en la silla de su puesto (ver SeatInteractable.station), se INCLINA desde su base para que su eje apunte a la
 ## punta del pecho de quien se sentó —de donde salen los brazos—, hasta `TILT_MAX`; el fuelle se curva con él. Al
-## levantarse, vuelve. Lo decidió el dios del juego (11/10/2026): un ajuste de ángulo, no de largo —antes se estiraba
+## levantarse, vuelve. Lo decidió el usuario (11/10/2026): un ajuste de ángulo, no de largo —antes se estiraba
 ## hacia adelante al agarrarlo, y eso nunca fue lo pensado—, y guiado por los brazos y no por la cara, porque se maneja
 ## mirando al parabrisas y no al volante. La punta del pecho sale del asiento y no de los huesos, así que respirar no lo
 ## mueve. Parado, nadie lo ajusta.
@@ -70,11 +70,11 @@ func sound_range(_event: StringName) -> Vector2:
 	return Vector2(0.0 if one_way else -max_rotation, max_rotation)
 
 ## UNA MANO SI EL ARO ES CHICO —una perilla, una válvula chica—, DOS SI ES GRANDE —el volante, una válvula grande—
-## (lo decidió el dios del juego, 11/10/2026): por el radio de sus puntos. Medidos: volante y rueda 0,25 m, válvula
+## (lo decidió el usuario, 11/10/2026): por el radio de sus puntos. Medidos: volante y rueda 0,25 m, válvula
 ## grande 0,14, perilla 0,06, válvula chica 0,03.
 const TWO_HANDS_RADIUS := 0.1
 
-## Se empuña: el puño alrededor del aro (ver Interactable.Grip.WRAP; lo pidió el dios del juego, 29/10/2026: «la valve y
+## Se empuña: el puño alrededor del aro (ver Interactable.Grip.WRAP; lo pidió el usuario, 29/10/2026: «la valve y
 ## el volante deberían ir con pose de puño también… orientado de otra manera, entonces parecerá que lo está agarrando»).
 func grip_kind() -> Grip:
 	return Grip.WRAP

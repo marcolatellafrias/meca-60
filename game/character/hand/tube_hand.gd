@@ -1,7 +1,7 @@
 class_name TubeHand
 
 ## ── LA MANO DE TUBOS (29/10/2026, sesión de siluetas de los personajes) ────────────────────────────────────────────
-## Lo pidió el dios del juego al ver la mano estilizada: «no me gustan y no van con este estilo de juego… algo un poco más
+## Lo pidió el usuario al ver la mano estilizada: «no me gustan y no van con este estilo de juego… algo un poco más
 ## realista. Que sean 5 dedos y un poco más largos… los dedos unidos a la mesh los vamos a sacar por ahora. Vamos a
 ## dejar dedos separados. Así podemos ir iterando más rápido». Una palma y cinco dedos, cada uno su tubo low poly con
 ## domo en las dos puntas, sueltos (se tocan, no se cosen), y un hueso por falange (ver `bones`). Se probó en el banco
@@ -27,18 +27,18 @@ const VARIANTS := [
 	 "finger_r": [0.0098, 0.0078], "thumb": [0.08, 0.0118, 0.009], "spread": 3.5},
 	{"name": "maciza", "palm": [0.10, 0.1, 0.056, 0.04], "fingers": [0.082, 0.092, 0.086, 0.068],
 	 "finger_r": [0.0125, 0.0105], "thumb": [0.07, 0.0145, 0.0115], "spread": 2.0},
-	# LA DE BLOQUES (01/11/2026, el dios del juego: «la muñeca, el alto y el ancho… sea el mismo que la del brazo. Así
+	# LA DE BLOQUES (01/11/2026, el usuario: «la muñeca, el alto y el ancho… sea el mismo que la del brazo. Así
 	# siempre encaja a la perfección… y que los dedos escalen para llenar el espacio disponible y se lo dividan entre
 	# ellos… el pulgar también copia el grosor de los otros»). La muñeca es el ancho del brazo: la palma es tan ancha y
 	# tan gruesa como él, los cuatro dedos se reparten su ancho en cuartos (radio = ancho / 8), rectos, y el pulgar es
-	# igual de grueso. AL RAS (`flush`, el dios del juego: «los dedos no están pegados a la pared opuesta a la palma…
+	# igual de grueso. AL RAS (`flush`, el usuario: «los dedos no están pegados a la pared opuesta a la palma…
 	# las primeras falanges… tienen como un offset»): los dedos van pegados al dorso y nacen justo en el borde de la palma,
 	# en línea, sin arco. Los largos, tres cuartos de los de una mano de verdad para esa palma: crecen con el brazo, y el del
 	# musculoso, a largo entero, llegaba a 33 cm.
 	{"name": "bloques", "palm": [0.06, 0.075, 0.075, 0.075], "fingers": [0.05, 0.056, 0.052, 0.042],
 	 "finger_r": [0.009375, 0.009375], "thumb": [0.042, 0.009375, 0.009375], "spread": 0.0, "flush": true},
 ]
-## LA ELEGIDA (29/10/2026, el dios del juego: «vamos a ir con… la mano maciza por ahora»).
+## LA ELEGIDA (29/10/2026, el usuario: «vamos a ir con… la mano maciza por ahora»).
 const CHOSEN := 2
 ## La del cuerpo de bloques (ver arriba): es la de todos (ver `current`).
 const BLOCKS := 3
@@ -50,7 +50,7 @@ static func current() -> int:
 	return BLOCKS
 
 
-## ── LOS HUESOS DE LA MANO (29/10/2026, el dios del juego: «obviamente le agregaría huesos a la mano, así seguimos con el
+## ── LOS HUESOS DE LA MANO (29/10/2026, el usuario: «obviamente le agregaría huesos a la mano, así seguimos con el
 ## sistema ese que creo que es más simple, que mover objetos») ──────────────────────────────────────────────────────────
 ## Cada dedo, un tubo que se dobla en sus nudillos, con un hueso por falange: tres en los cuatro dedos y dos en el pulgar
 ## (el tercero, el metacarpiano, es la palma). El primero de cada dedo cuelga de la muñeca y nace en la base del tubo; los
@@ -70,7 +70,7 @@ const KNUCKLE_BAND := 0.55
 
 
 ## ── APRETAR: CON EL PUÑO O CON EL DEDO (29/10/2026, la primera categoría de agarre, ver Interactable.Grip.PRESS) ──
-## Las dos maneras quedan, y se elige con `press_with` (el F1 de la fila de botones del sandbox): el dios del juego
+## Las dos maneras quedan, y se elige con `press_with` (el F1 de la fila de botones del sandbox): el usuario
 ## prefería el puño —«es algo que se lee mejor a la distancia… esto de hacer el dedo y que coincida con el dedo, eso es
 ## todo muy complicado»—, con botones de un tamaño mínimo, pero «hay que hacer las dos versiones y mantener las dos… así
 ## yo las pruebo… no podemos definirlo ahora sin siquiera tener un componente de minijuegos para probarlo».

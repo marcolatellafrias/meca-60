@@ -2,7 +2,7 @@ class_name LocomotionPanel
 extends TunerPanel
 
 ## ── EL F1 DE LA FILA LOCOMOCIÓN: LO DE TODOS LOS ARQUETIPOS (de character-parametric, traído el 13/11/2026; allá el
-## dios del juego eligió «dos paneles» con las mismas pestañas) ───────────────────────────────────────────────────
+## usuario eligió «dos paneles» con las mismas pestañas) ───────────────────────────────────────────────────
 ## Lo que vale igual para todos (ver LocomotionCommon), con las pestañas del F3 de Personajes, que es lo de cada arquetipo
 ## (ver LocomotionTuner): si algo es del salto, está en la pestaña SALTO de uno o del otro. Cada sección, una lista de sus
 ## números (`SECTIONS`): lo que decide dónde va un número es esa lista, y uno que no esté en ninguna sale en rojo, al final.
@@ -92,7 +92,7 @@ const HELP := {
 	"interaction_reach": "Con 1,00 el botón más bajo (a 0,2 m) pide agacharse a los seis. Cambiarlo rearma a todos.",
 	"shoulder_inside": "Prendido, la mitad del domo del brazo adentro del torso; apagado, el brazo rozando. Rearma a todos.",
 }
-## LO DE EN EL AIRE Y LO DE CAYENDO, de dos colores (05/11/2026, el dios del juego: «hay mucho texto… un color coding»).
+## LO DE EN EL AIRE Y LO DE CAYENDO, de dos colores (05/11/2026, el usuario: «hay mucho texto… un color coding»).
 const APEX_COLOR := Color(0.8, 0.6, 1.0)
 const FALL_COLOR := Color(0.45, 0.9, 0.5)
 const AIR_APEX := ["torso_apex_deg", "legs_still_bend", "apex_front_deg", "apex_out_deg", "apex_bend"]

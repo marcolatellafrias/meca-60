@@ -20,7 +20,7 @@ const LIPS := 0.014
 ## de la fila Personajes (ver CharacterLookPanel).
 @export var head_form := -1
 ## EL COLOR DE LA PIEL; transparente es el crema de siempre (ver CharacterBodyVisual.BODY_COLOR). El de los concept
-## arts del 12/10/2026 es durazno. UNO SOLO PARA TODOS, el del gordo (02/11/2026, el dios del juego: «que use el mismo
+## arts del 12/10/2026 es durazno. UNO SOLO PARA TODOS, el del gordo (02/11/2026, el usuario: «que use el mismo
 ## color base para todos. El color base del gordo me gusta»): también el de quien no tiene aspecto guardado.
 @export var skin := Color(0.94921875, 0.7426483, 0.5450592, 1)
 

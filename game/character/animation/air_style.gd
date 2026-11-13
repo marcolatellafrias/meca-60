@@ -1,7 +1,7 @@
 class_name AirStyle
 extends RefCounted
 
-## ── EL RAGDOLL EN EL AIRE (04/11/2026, el dios del juego: «si tu personaje está cayendo desde hace cierto tiempo,
+## ── EL RAGDOLL EN EL AIRE (04/11/2026, el usuario: «si tu personaje está cayendo desde hace cierto tiempo,
 ## ragdolea en el aire directamente») ──────────────────────────────────────────────────────────────────────────────
 ## Cayendo más rápido que `ragdoll_speed` m/s, se tira en el aire —por la velocidad de caída y no por el tiempo, así un
 ## salto muy alto hacia arriba no lo dispara—, con la velocidad que traía y un giro chico al azar (`RAGDOLL_SPIN`), por

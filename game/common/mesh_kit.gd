@@ -3,7 +3,7 @@ extends RefCounted
 
 ## LAS PIEZAS SUELTAS CON SU MATERIAL, en un solo lugar: la caja, el cilindro, la esfera y el material mate de color.
 ## Estaban copiadas casi letra por letra en una veintena de archivos —los componentes y artefactos de los tableros, el
-## equipo de la nave, las expendedoras, la sucursal— (ver censo-codigo, el punto 1), cada una a su manera de nombrar lo
+## equipo de la meca, las expendedoras, la sucursal— (ver censo-codigo, el punto 1), cada una a su manera de nombrar lo
 ## mismo. Acá hacen exactamente lo que hacían aquellas: las mismas primitivas de Godot, los mismos campos y en el
 ## mismo orden, así que migrar un archivo no mueve ni un vértice.
 ##

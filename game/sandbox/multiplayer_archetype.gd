@@ -1,7 +1,7 @@
 class_name MultiplayerArchetype
 extends SeededArchetype
 
-## LA FILA MULTIJUGADOR: la red del juego, entera, en una parcela del sandbox (lo pidió el dios del juego, 06/11/2026:
+## LA FILA MULTIJUGADOR: la red del juego, entera, en una parcela del sandbox (lo pidió el usuario, 06/11/2026:
 ## «quisiera mantenerla… que se sincronice solamente en esa zona»). Es lo mismo que usaba la partida —SessionManager,
 ## CharacterSpawner, CharacterNetSync, NetSpawner, NetBody—, sin copias: esta parcela sólo pone las teclas y el lugar.
 ## Quien maneja la sesión es SandboxSession.
@@ -18,10 +18,9 @@ const START := Vector3(0.0, 0.5, 12.0)
 const OBJECTS := [
 	["box_light_square", Vector3(-9.0, 0.6, 6.0)],
 	["box_heavy_square", Vector3(-6.0, 0.6, 6.0)],
-	["box_light_xlong", Vector3(-3.0, 0.6, 6.0)],
-	["box_heavy_long", Vector3(0.0, 0.6, 6.0)],
-	["package:television", Vector3(3.0, 0.6, 6.0)],
-	["package:trunk", Vector3(6.5, 0.8, 6.0)],
+	["package:battery", Vector3(-3.0, 0.6, 6.0)],
+	["package:crate_missiles", Vector3(0.0, 0.6, 6.0)],
+	["package:component", Vector3(3.0, 0.6, 6.0)],
 	["seat", Vector3(-9.0, 0.0, 11.0)],
 ]
 

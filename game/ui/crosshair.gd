@@ -3,7 +3,7 @@ extends CanvasLayer
 
 ## EL PUNTITO DEL CENTRO DE LA PANTALLA: un punto blanco chico, siempre puesto. No es una mira de arma ni
 ## tiene nada que ver con el modo identificar; está para saber exactamente adónde apunta la cámara —al
-## agarrar algo, al apretar un control de la nave, al señalar una pieza—, que sin una referencia en el medio
+## agarrar algo, al apretar un control de la meca, al señalar una pieza—, que sin una referencia en el medio
 ## se estima mal. Va en el juego y en el design sandbox, el mismo nodo en los dos.
 ##
 ## Es una capa propia y no un Control suelto porque un CanvasItem colgado de un Node3D no tiene dónde

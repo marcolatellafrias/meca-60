@@ -2,11 +2,11 @@ class_name CabinGrid
 extends RefCounted
 
 ## LA CABINA DE LA MECA EN NÚMEROS: UNA CELDA, MÓDULOS CUADRADOS Y POCAS REGLAS, de las que sale todo lo demás (los
-## pisos, las paredes, los huecos, los asientos, el ascensor y el afuera). La idea es la de la nave de
+## pisos, las paredes, los huecos, los asientos, el ascensor y el afuera). La idea es la de la meca de
 ## character-parametric (`ShipGrid`): cambiar un número y que todo lo siga (el usuario, 13/11/2026: «con una sola
 ## variante parametrizamos… después, si queremos cambiar las proporciones o algo, es cuestión de cambiar un valor»).
 ##
-##   · UNA SOLA CELDA PARA TODO (`CELL`): 1/16 del cubo de recurso (3,94 cm), casi la de los tableros de la nave (4 cm,
+##   · UNA SOLA CELDA PARA TODO (`CELL`): 1/16 del cubo de recurso (3,94 cm), casi la de los tableros de la meca (4 cm,
 ##     del tamaño de la mano), y el cubo de 63 cm es 16 × 16 justas: un hueco de recurso encaja en cualquier tablero.
 ##     Toda medida de la cabina es CELDAS ENTERAS. OJO: LA PISADA DE LAS ESCALERAS DE TODO EL JUEGO (Stairs.TREAD, del
 ##     módulo Mundo) son 8 de estas celdas; cambiar `CELL` o el nombre de la clase, avisándole.

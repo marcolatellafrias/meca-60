@@ -60,7 +60,7 @@ func get_outline_targets() -> Array[Node]:
 ## Un control con `inertia` no se frena en seco al soltarlo: SIGUE CON LA VELOCIDAD QUE LLEVABA y se va apagando, como
 ## un tambor pesado que se larga girando. `inertia` es cuánto tarda en apagarse (s); 0, en seco, que es lo de siempre.
 ##
-## ES UNA SOLA PARA TODOS (Era 3 del plan de la nave): la base mide la velocidad mientras se lo maneja (`_track_motion`,
+## ES UNA SOLA PARA TODOS (Era 3 del plan de la meca): la base mide la velocidad mientras se lo maneja (`_track_motion`,
 ## con el valor que el control mueve; los de dos ejes, `_track_motion_2d`) y el control, suelto, avanza lo que le da
 ## `_coast` (o `_coast_2d`) y dice si se movió (`_coasted`). Cuando se apaga o da contra un tope, frena y hace lo suyo al
 ## quedar suelto (`_coast_ended`: con posiciones, va a la más cercana). La usan la rueda (RotatingComponent), la palanca
@@ -188,13 +188,13 @@ func _physics_process(delta: float) -> void:
 # común y el claim cubre la carrera simultánea (el perdedor suelta vía control_lost). El controlador
 # confirmado streamea su estado; los demás lo aplican y suprimen su dinámica local (_remote_controlled).
 # El ruteo va por el path del nodo, estable porque el dashboard se genera determinístico por seed y
-# nombra sus controles (ver ProceduralDashboard). Ver conceptual/multiplayer.md.
+# nombra sus controles (ver ProceduralDashboard). Ver character-parametric:docs/conceptual/multiplayer.md.
 # (Falta: el estado en reposo no viaja en el snapshot de join — lo trae _request_control_states.)
 
 func _ready() -> void:
 	# EL CONTROL NACE EN SU VALOR DE REPOSO. `default_value` era solo el destino del auto-retorno, así
 	# que una palanca con reposo en el medio nacía en 0 y "volvía" al centro emitiendo todo el recorrido:
-	# la palanca de altura de la nave la hacía bajar sola al aparecer. Quien lo arma (ProceduralDashboard)
+	# la palanca de altura de la meca la hacía bajar sola al aparecer. Quien lo arma (ProceduralDashboard)
 	# setea `default_value` antes de meterlo al árbol, así que acá ya tiene el valor bueno.
 	visual_value   = default_value
 	_network_state = default_value

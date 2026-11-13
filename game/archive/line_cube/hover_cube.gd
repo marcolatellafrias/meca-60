@@ -533,7 +533,7 @@ func possess_end() -> void:
 func possess_camera(first: bool, delta: float) -> Transform3D:
 	if first:
 		_chase_yaw = _view_yaw()
-		var eyes := _seat() + Vector3(0.0, ShipStyle.current.seat_eye_height, 0.0)
+		var eyes := _seat() + Vector3(0.0, SeatInteractable.STATION_EYE_HEIGHT, 0.0)
 		return _look.global_transform * Transform3D(Basis(Vector3.UP, _head_yaw()) * Basis(Vector3.RIGHT, _head.y), eyes)
 	_chase_yaw = lerp_angle(_chase_yaw, _view_yaw(), 1.0 - exp(-4.0 * delta))
 	var from := global_position + Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 14.0, 34.0)

@@ -3,7 +3,7 @@ extends SoundEntity
 
 ## EL DAÑO DE UN OBJETO AGARRABLE: cuelga del cuerpo, mide los golpes que recibe, le baja la durabilidad
 ## y lo muestra OSCURECIÉNDOLO; cuando llega a cero avisa que se rompió. Es el modelo de
-## conceptual/objects.md —la durabilidad arranca en 1.0, cada golpe por encima de un umbral le resta, los
+## character-parametric:docs/conceptual/objects.md —la durabilidad arranca en 1.0, cada golpe por encima de un umbral le resta, los
 ## golpecitos no cuentan, y la fragilidad dice cuánto resta cada uno—, sin la parte de valor y entrega,
 ## que todavía no existe.
 ##

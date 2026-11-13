@@ -12,7 +12,7 @@ extends Interactable
 ## libro a las dos manos. Otro clic la devuelve. Tenerla NO impide moverse, pero más allá del
 ## ALCANCE de quien la tiene, medido desde su base, se le escapa de la mano y vuelve sola a su lugar: eso es lo que la
 ## ata a su tablero, y lo que hace que la información del manual sea de uno solo. Era un metro fijo, y desde la silla
-## de una consola el libro y el mapa quedaban más lejos que eso: no se podían agarrar (lo decidió el dios del juego,
+## de una consola el libro y el mapa quedaban más lejos que eso: no se podían agarrar (lo decidió el usuario,
 ## 11/10/2026: que salga del alcance de cada uno).
 ##
 ## Las manos llegan por IK a los handle points de la PIEZA (los arma cada objeto como hijos de ella), con el
@@ -192,8 +192,8 @@ func is_out_of_range(origin: Vector3, reach: float) -> bool:
 
 # ── El viaje de la pieza ──────────────────────────────────────────────────────
 
-## EL VIAJE SE CUENTA DESDE LA BASE, no en el mundo: la base va con lo que la lleva —la nave—, así que si la nave vuela la
-## pieza no se queda atrás (el dios del juego, 31/10/2026: «cuando me meto a bordo de la nave con la U… el mapa o el
+## EL VIAJE SE CUENTA DESDE LA BASE, no en el mundo: la base va con lo que la lleva —la meca—, así que si la meca vuela la
+## pieza no se queda atrás (el usuario, 31/10/2026: «cuando me meto a bordo de la nave con la U… el mapa o el
 ## manual quedan desfasados»; contado en el mundo, a 24 m/s la pieza iba unos 2 m detrás de la mano, y de costado en las
 ## curvas). La pieza guarda dónde está respecto de la base (`_piece_local`) y viaja desde ahí: sacarlo de su lugar en el
 ## mundo arrastraba el atraso. Con la base quieta es lo mismo que antes, y el suavizado al girar la cabeza sigue igual.

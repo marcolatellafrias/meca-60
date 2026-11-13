@@ -6,7 +6,7 @@ extends SoundEntity
 var handle_points: Array[Node3D] = []
 
 ## ── CÓMO SE TOMA, DE CERO (29/10/2026) ──────────────────────────────────────────────────────────────────────────
-## Lo pidió el dios del juego: todo lo de la animación de las manos «empezar todo de cero… dividir todos los tipos de
+## Lo pidió el usuario: todo lo de la animación de las manos «empezar todo de cero… dividir todos los tipos de
 ## agarre posibles en categorías y después ir tacleando categoría por categoría». Las seis maneras de antes (envolver,
 ## pinza, cubrir, apoyar, sostener), con sus poses, su dirección por punto y su tensión de muñeca, se borraron; quedan los
 ## puntos de donde se toma cada cosa. Las categorías vuelven de a una:
@@ -23,7 +23,7 @@ enum Grip { NONE, PRESS, WRAP }
 func grip_kind() -> Grip:
 	return Grip.NONE
 
-## CON CUÁNTAS MANOS SE AGARRA: una o dos (lo decidió el dios del juego, 11/10/2026). Lo de casi todo sale de sus
+## CON CUÁNTAS MANOS SE AGARRA: una o dos (lo decidió el usuario, 11/10/2026). Lo de casi todo sale de sus
 ## puntos: uno, una mano; más, dos. Lo que gira lo pisa por su tamaño (ver RotatingComponent): una perilla tiene varios
 ## puntos en su borde y se gira con una mano.
 func hands() -> int:

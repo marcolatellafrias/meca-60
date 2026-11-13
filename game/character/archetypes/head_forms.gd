@@ -1,7 +1,7 @@
 class_name HeadForms
 extends Resource
 
-## LAS FORMAS DE CABEZA del sistema nuevo (ver HeadForm): unas ranuras que el dios del juego esculpe en la fila «Formas
+## LAS FORMAS DE CABEZA del sistema nuevo (ver HeadForm): unas ranuras que el usuario esculpe en la fila «Formas
 ## de cabeza» del sandbox, guardadas ENTERAS en `res://` (como los aspectos, ver CharacterLooks): el defecto del código
 ## es sólo de dónde arranca una ranura que nadie tocó.
 ##
@@ -15,7 +15,7 @@ const SLOTS := 10
 ## Ranura (int) → HeadForm.
 @export var by_slot: Dictionary = {}
 ## LA CARA APLANADA DE TODAS LAS CABEZAS (ver HeadForm.face_flat): una sola, para todos los personajes, y no una por
-## forma (lo pidió el dios del juego, 16/10/2026). Se mueve con el F1 de la fila «Formas de cabeza» o con U y J, se ve
+## forma (lo pidió el usuario, 16/10/2026). Se mueve con el F1 de la fila «Formas de cabeza» o con U y J, se ve
 ## en el momento y se guarda con «Guardar».
 @export_range(0.0, 1.0, 0.05) var face_flat := 0.0
 
@@ -69,7 +69,7 @@ static func forget(slot: int) -> bool:
 	return ResourceSaver.save(all, path) == OK
 
 
-## LAS ELEGIDAS, como ranuras de arranque: lo que el dios del juego eligió de las variaciones (13/10/2026) —del huevo
+## LAS ELEGIDAS, como ranuras de arranque: lo que el usuario eligió de las variaciones (13/10/2026) —del huevo
 ## la 3, la 4 y la 7 (la 6 con la base hacia adelante se probó y se fue); de la alargada la 2; de la redonda la 1 y la 2; de las nuevas el
 ## pepino, la pelota y el tubo; de los pómulos alineados, con el frente plano, la 1, la 4 y la 8; de los
 ## más largos, la 1, la 2, la 4 y la 6; la más redonda con el domo de abajo en 6 y en 4,5 cm, y esas dos con la tapa de
@@ -78,7 +78,7 @@ static func forget(slot: int) -> bool:
 ## variante de domo bajo se probaron y se fueron)—. Cada una es una
 ## receta de números (ver `from_spec`), en metros de una cabeza de verdad (unos 24 cm de alto).
 ##
-## DE VEINTICINCO A DIEZ (16/10/2026): el dios del juego las miró en grupos por semejanza y se quedó con éstas —de los
+## DE VEINTICINCO A DIEZ (16/10/2026): el usuario las miró en grupos por semejanza y se quedó con éstas —de los
 ## huevos, el del mentón adelante; de los pómulos alineados, más abajo, mentón largo, un poco más larga, y las dos
 ## largas de pómulos bajos y de mentón largo; de las redondas, las de abajo 6 y 4,5 cm y la de abajo 6 con arriba 15;
 ## de las peras, la recta—. Las ranuras se renumeraron del 1 al 10, en este orden.
@@ -114,7 +114,7 @@ static func code_form(slot: int) -> HeadForm:
 ## 16/10/2026); queda en las recetas porque así se escribieron todas, las de acá y las de las capturas.
 ##
 ## `plano` prende el frente plano (ver HeadForm.flat_front) y `cara` es cuánto se aplana la cara (HeadForm.face_flat). «adelante» de un corte puede ser `"frente"`: el corte se corre lo justo para que SU FRENTE quede a plomo con el de la tapa de abajo
-## —los pómulos alineados que pidió el dios del juego (13/10/2026)—, así de perfil no hay escalón y el corte sólo
+## —los pómulos alineados que pidió el usuario (13/10/2026)—, así de perfil no hay escalón y el corte sólo
 ## ensancha hacia los costados.
 static func from_spec(new_name: String, spec: Dictionary) -> HeadForm:
 	var f := HeadForm.new()

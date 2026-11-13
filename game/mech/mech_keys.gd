@@ -7,7 +7,7 @@ extends Node
 ##   W/S adelante y atrás (hacia donde mira el torso) · A/D de costado · Shift corre · Ctrl se agacha
 ##   espacio: mantener carga el salto, soltar salta; en el aire, el propulsor
 ##   mouse: hacia dónde mirar. LA CABEZA del que va sentado mira ahí YA, y el torso la alcanza con su demora (el
-##     usuario: «que con delay se gire la nave, pero que yo pueda mirar normalmente»).
+##     usuario: «que con delay se gire la meca, pero que yo pueda mirar normalmente»).
 ##   clic izq. / der.: directo · Q / E: gancho · Z / C: uppercut · 1 / 3: desde arriba · F: la postura · G: el ascensor
 ## Y LA CÁMARA de poseerla: en primera persona, la del que va sentado en el piso del medio; en tercera, atrás y arriba.
 
@@ -112,7 +112,7 @@ func head_yaw() -> float:
 func camera(first: bool, delta: float) -> Transform3D:
 	if first:
 		_chase_yaw = _view_yaw()
-		var eyes := MechCabin.seat() + Vector3(0.0, ShipStyle.current.seat_eye_height, 0.0)
+		var eyes := MechCabin.seat() + Vector3(0.0, SeatInteractable.STATION_EYE_HEIGHT, 0.0)
 		return mech.global_transform * Transform3D(Basis(Vector3.UP, head_yaw()) * Basis(Vector3.RIGHT, _head_pitch), eyes)
 	_chase_yaw = lerp_angle(_chase_yaw, _view_yaw(), 1.0 - exp(-4.0 * delta))
 	var from := mech.global_position + Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 14.0, 34.0)

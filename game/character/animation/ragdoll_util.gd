@@ -58,7 +58,7 @@ var _lower_spine_body: RigidBody3D = null
 ## no "qué pose sostiene el personaje". Después fue una FOTO de `global_transform` al crear el ragdoll, que
 ## llegó a derivar 8,9° entre respawns mientras el reposo del brazo heredaba historia; derivada del reposo
 ## congelado no depende de qué pase entre `freeze_rest()` y esta llamada. Al cambiarla (11/10/2026) se
-## midió que da lo mismo que la foto: ≤0,04°, el ruido de la medida. Ver technical/character-animation.md.
+## midió que da lo mismo que la foto: ≤0,04°, el ruido de la medida. Ver character-parametric:docs/technical/character-animation.md.
 var _relaxed_basis: Dictionary = {}
 
 var _parent_bone: Dictionary = {}
@@ -144,7 +144,7 @@ func _build_joints() -> void:
 	# actual del esqueleto antes de armarlas. En un proxy el solve corre a media tasa (los cuerpos van
 	# 1-2 frames atrás de los huesos), y sin este sync la junta congelaría el brazo/pie en su lugar viejo
 	# → pegado pero corrido del hombro/tobillo. Al ser la primera línea, armar juntas desde una pose vieja
-	# es imposible por construcción. Ver technical/character-animation.md (solve a media tasa).
+	# es imposible por construcción. Ver character-parametric:docs/technical/character-animation.md (solve a media tasa).
 	sync_to_bones()
 	_parent_bone.clear()
 	var bu := _bones_util
@@ -365,8 +365,8 @@ func activate(char_rb: CharacterRigidBody3D, skeleton_root: CustomBone, trip := 
 
 ## ── TIRADO, EN EL MARCO DEL PERSONAJE (03/11/2026, ver MotionFrame) ─────────────────────────────────────────────────
 ## Mientras está activo, sus huesos van en el marco del personaje —la cápsula va con la pelvis, así que el marco sale de
-## ahí, y cambia con él (ver BoneInstantiator)—, SIN INERCIA: la nave los lleva enteros, y sólo los mueve su caída —el
-## empujón del golpe, ver `activate_with_impact`— y lo que chocan (el dios del juego, 03/11/2026). No son sólidos para
+## ahí, y cambia con él (ver BoneInstantiator)—, SIN INERCIA: la meca los lleva enteros, y sólo los mueve su caída —el
+## empujón del golpe, ver `activate_with_impact`— y lo que chocan (el usuario, 03/11/2026). No son sólidos para
 ## los demás de adentro. Afuera, como siempre. Se sale antes de apagarlo, así lo que el marco les cambió a las capas no
 ## pisa lo de la recuperación.
 var _frame: MotionFrame = null
@@ -381,10 +381,10 @@ func follow_frame(frame: MotionFrame) -> void:
 		if is_instance_valid(_frame):
 			_frame.leave(body)
 		if is_instance_valid(frame):
-			frame.join(body, 0.0, false, true)  # sin inercia, y un choque de la nave no se los lleva: siguen solos
+			frame.join(body, 0.0, false, true)  # sin inercia, y un choque de la meca no se los lleva: siguen solos
 	_frame = frame
 
-## ── TIRAR AL PISO, LA ENTRADA DE TODOS (04/11/2026, el dios del juego: «una API de ragdoll bastante sólida y simple,
+## ── TIRAR AL PISO, LA ENTRADA DE TODOS (04/11/2026, el usuario: «una API de ragdoll bastante sólida y simple,
 ## así después puedo probar con estas cosas más tarde») ──────────────────────────────────────────────────────────────
 ## Arma el ragdoll —los huesos con la velocidad que traía la cápsula, ver `activate`—, le suma `push` (m/s, a todo el
 ## cuerpo) y lo hace girar entero a `spin` (rad/s, en el mundo: cada hueso con la velocidad de ese giro en su punto,
@@ -407,12 +407,12 @@ func activate_with_impact(
 	skeleton_root: CustomBone,
 	world_dir: Vector3
 ) -> void:
-	# ── LA CAÍDA, UNA REGLA (03/11/2026, el dios del juego) ──────────────────────────────────────────────────────────
+	# ── LA CAÍDA, UNA REGLA (03/11/2026, el usuario) ──────────────────────────────────────────────────────────
 	# AL CAER, EL CUERPO SALE CON LA VELOCIDAD QUE TRAÍA CONTRA LO QUE LO SOSTIENE, MÁS EL EMPUJÓN QUE RECIBIÓ (en m/s),
-	# sin casos especiales —el empujón que le cambió la velocidad ya viene en ella; el de un choque de la nave, que no,
+	# sin casos especiales —el empujón que le cambió la velocidad ya viene en ella; el de un choque de la meca, que no,
 	# en CharacterRigidBody3D._last_push—: el nene que empuja el gordo sale con el empujón; el que corre
-	# y se pega en la cabeza sigue adelante por su velocidad; el del choque de la nave sale hacia la trompa. Los huesos
-	# arrancan con la velocidad de la cápsula (ver `activate`), que adentro de la nave ya es la de la nave más la suya; acá
+	# y se pega en la cabeza sigue adelante por su velocidad; el del choque de la meca sale hacia la trompa. Los huesos
+	# arrancan con la velocidad de la cápsula (ver `activate`), que adentro de la meca ya es la de la meca más la suya; acá
 	# se les suma el empujón, por la exageración (`impact_fall_linear`). Sin el tropezón de la caída a mano.
 	# *Hasta el 03/11/2026: el máximo entre la velocidad y la inclinación del golpe ×2, que no es una velocidad, más un
 	# tropezón de al menos 3 m/s.*
@@ -461,7 +461,7 @@ func deactivate(char_rb: CharacterRigidBody3D, skeleton_root: CustomBone) -> voi
 	# descongelaba acá y, si el ground-snap fallaba, Jolt la eyectaba por el aire → ese impacto
 	# re-disparaba el ragdoll a mitad de recuperación y los huesos quedaban desarmados. Frozen no se
 	# puede eyectar; el esqueleto (hijo de la cápsula) queda quieto y el blend converge limpio. La
-	# descongela _finish_recovery al terminar. Ver technical/characters.md.
+	# descongela _finish_recovery al terminar. Ver character-parametric:docs/technical/characters.md.
 	if is_instance_valid(_lower_spine_body):
 		char_rb.snap_feet_to_ground(_lower_spine_body.global_position, _ragdoll_rids)
 	char_rb.linear_velocity   = Vector3.ZERO
@@ -476,7 +476,7 @@ func deactivate(char_rb: CharacterRigidBody3D, skeleton_root: CustomBone) -> voi
 ## Semilla de velocidad para el ragdoll PROXY: arrancar con el momento del dueño (su velocidad de
 ## caída), si no el proxy cae de CERO (cápsula puppet congelada) mientras el dueño sale volando →
 ## el ragdoll queda "offseteado" del lugar donde debería. Los huesos siguen conectados; sólo iguala
-## el impulso inicial. Ver technical/characters.md.
+## el impulso inicial. Ver character-parametric:docs/technical/characters.md.
 func seed_velocity(vel: Vector3) -> void:
 	for bone in _bodies:
 		var rb: RigidBody3D = _bodies[bone]
@@ -541,7 +541,7 @@ func update(delta: float) -> void:
 		_show_collision_state()
 
 
-## ── LOS HUESOS, EN VERDE O ROJO (03/11/2026, lo pidió el dios del juego) ────────────────────────────────────────────
+## ── LOS HUESOS, EN VERDE O ROJO (03/11/2026, lo pidió el usuario) ────────────────────────────────────────────
 ## Con `debug_ragdoll_color`, cada cuerpo del ragdoll se ve —a través del cuerpo dibujado, medio transparente— en VERDE si
 ## su colisión está prendida y en ROJO si está apagada: al caer, el hueso que nace adentro de otra superficie espera sin
 ## chocar hasta salir (`_pending_bodies`), y en la recuperación están todos sin chocar. Siempre, no sólo tirado.
@@ -742,7 +742,7 @@ func _solve_recovery_leg(left: bool, root_body: RigidBody3D, root_bone: CustomBo
 	# frame incluso en recuperación. NO current_target: durante la recuperación (recovery_targets_locked)
 	# el sistema de pasos está apagado y current_target queda CONGELADO donde estaba antes de caer (puede
 	# quedar a metros → la pierna se estira derecha). next_target sigue vivo bajo la cápsula ya apoyada,
-	# así que es el "dónde va el pie parado" correcto. Ver technical/character-animation.md.
+	# así que es el "dónde va el pie parado" correcto. Ver character-parametric:docs/technical/character-animation.md.
 	var plant_t: float = smoothstep(0.0, 1.0, clamp(t / max(recovery_plant_fraction, 0.001), 0.0, 1.0))
 	var ankle_target := Vector3(hip_world.x, floor_y, hip_world.z)  # fallback: bajo la cadera, en el piso
 	if is_instance_valid(ik_util):

@@ -4,12 +4,12 @@ extends RefCounted
 ## ── LO QUE QUIERE HACER (03/11/2026) ─────────────────────────────────────────────────────────────────────────────────
 ## LA MISMA INTENCIÓN PARA TODOS LOS QUE MANEJAN: el teclado (PlayerController), la red (CharacterNetSync) y el guion
 ## (ExhibitOperator) escriben esto, y el cuerpo lo hace igual venga de donde venga —nadie más le toca la mirada, el paso,
-## las manos o la silla—. Lo pidió el dios del juego: el piloto de exhibición doblaba el volante sin mirar hacia la curva,
+## las manos o la silla—. Lo pidió el usuario: el piloto de exhibición doblaba el volante sin mirar hacia la curva,
 ## cosa que un jugador sí hace, porque el guion tenía un camino aparte (`seated_turn`, `head_pitch`). Vive en
 ## `BoneInstantiator.intent`, y el cuerpo físico lee el mismo objeto.
 ##
 ## LA MIRADA VA EN LOS EJES DEL MARCO (ver MotionFrame, CharacterRigidBody3D.frame), o del mundo si no tiene: así viaja
-## sola con la nave, y nada tiene que sumarle lo que la nave giró. Rumbo y cabeceo en radianes; el rumbo, hacia −Z
+## sola con la meca, y nada tiene que sumarle lo que la meca giró. Rumbo y cabeceo en radianes; el rumbo, hacia −Z
 ## girando a la izquierda (+), como un `rotation.y`.
 
 var look_yaw := 0.0
@@ -25,7 +25,7 @@ var jump := false
 ## BoneInstantiator._update_crouch). Es el Ctrl del jugador y el `crouch` del guion. *Hasta entonces el jugador y el
 ## guion se agachaban cada uno con su propio código.*
 var crouch := false
-## LAS MANOS, LOS MISMOS BOTONES PARA TODOS (05/11/2026, el dios del juego: «un solo sistema… para atajar, para mover,
+## LAS MANOS, LOS MISMOS BOTONES PARA TODOS (05/11/2026, el usuario: «un solo sistema… para atajar, para mover,
 ## para todo»): los aprieta el teclado o el guion, y los lee el controlador de interacción de cada uno
 ## (InteractionController._read_intent). `use`, el clic: mientras está, agarra o usa lo que mira; al soltarlo, lo suelta.
 ## `throw`, la R: mientras está, carga el tiro —o el empujón, con las manos vacías—; al soltarlo, tira. `turn_held`, el

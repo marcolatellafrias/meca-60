@@ -4,7 +4,7 @@ extends Node3D
 ## LO QUE SE VE DE UN PERSONAJE. El rig lógico de `CustomBone`s no dibuja nada: es una jerarquía de
 ## Node3D que la IK, el animador procedural y el ragdoll mueven. Quién la DIBUJA es `ProceduralBodyUtil`, las partes
 ## generadas por código, skinneadas: el único cuerpo desde el 18/10/2026 (el de cápsulas por hueso y el modelo de Blender
-## skineado se borraron, ver docs/technical/character-history.md).
+## skineado se borraron, ver character-parametric:docs/technical/character-history.md).
 ##
 ## Las dos llamadas que el pipeline hace por frame son `sync_from_bones()` (normal) y
 ## `sync_from_ragdoll()` (mientras el personaje está caído) — la segunda existe porque durante el
@@ -27,7 +27,7 @@ const BODY_ROUGHNESS := 0.95
 
 
 ## El material de una malla del cuerpo: el color, recibiendo luz y mate. Un `StandardMaterial3D`, sin shader propio
-## (29/10/2026, el dios del juego borró los dos shaders toon: «después, en todo caso, más adelante, si quiero poner un
+## (29/10/2026, el usuario borró los dos shaders toon: «después, en todo caso, más adelante, si quiero poner un
 ## shader, lo hago»).
 ##
 ## `vertex_color` es para una malla PINTADA —una manga de tela y una mano de piel en la misma malla, ver

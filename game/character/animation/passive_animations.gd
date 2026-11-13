@@ -23,7 +23,7 @@ extends Node
 ##
 ## Para respirar tirado en el piso hay que escribir DESPUÉS del sync. Lo que se había pensado para eso
 ## era un shape key `breath_max` de la malla de Blender, y se fue con ella. Ver
-## technical/character-history.md.
+## character-parametric:docs/technical/character-history.md.
 
 var bi: BoneInstantiator
 
@@ -75,7 +75,7 @@ func _register_breathing(st: PassiveState) -> void:
 	var pa := bi.procedural_animator
 	var cb := bi.custom_bones_util
 	var breath := func() -> float: return st.breath() * st.breath_amplitude()
-	# SENTADO, SIN BALANCEO (22/10/2026, lo pidió el dios del juego): el pecho inclinado llevaba la espalda hasta 5,7 cm
+	# SENTADO, SIN BALANCEO (22/10/2026, lo pidió el usuario): el pecho inclinado llevaba la espalda hasta 5,7 cm
 	# para atrás y para adelante (el gordo), y el respaldo, que se pone una vez al sentarse (ver SeatInteractable), no
 	# la podía tocar todo el tiempo. Sentado se inclina `SEATED_SWAY` de lo de parado: menos que la luz del respaldo.
 	var lean := func() -> float:
