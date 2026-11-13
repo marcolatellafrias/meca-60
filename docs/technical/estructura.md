@@ -51,12 +51,12 @@ el cubo péndulo, la meca péndulo); ese día se aplanaron y después se separó
 - `game/muscle_arm/` · `MuscleArm`, con sus perillas, su panel y su parcela (filas **Meca física** y **Brazo**).
 Los dos heredan de `MechArm`. `Mech.arms_kind` dice cuál lleva (o ninguno: la de práctica). Ver [[brazo]].
 
-## La otra variante de equilibrio — `game/line_cube/`
+## La otra variante de equilibrio — `game/archive/line_cube/` (archivada)
 **La línea de equilibrio**, congelada, entera y aparte, por si se vuelve a ella: `HoverCube` (el cubo que flota con
 resorte, la línea, tropezar) y `LeggedCube` (con pelvis y piernas), con sus perillas, paneles y parcela. Fila **Cubo con
 piernas**. No comparte nada con la meca salvo `MechBody`, `MechLeg` y `Clay`. Ver [[cubo]] y [[cubo-con-piernas]].
 
-## El sandbox — `game/sandbox/`, `game/arena/`
+## El sandbox — `game/sandbox/`
 `DesignSandbox` (el que camina, en qué parcela está, sus teclas y qué panel F abre dónde), `SandboxCatalogue` (las
 filas de cada módulo y el chequeo de las reglas), `SandboxRow` (una fila declarada), `SandboxSuper` (las
 supercategorías), `SandboxKey` (una tecla del panel chico), `SandboxLayout` (dónde va cada fila en el piso),
@@ -64,7 +64,7 @@ supercategorías), `SandboxKey` (una tecla del panel chico), `SandboxLayout` (d�
 Ver [[sandbox]], [[poseer]], [[filas]].
 
 ## Lo que vino de character-parametric
-`game/character/`, `game/interactables/`, `game/net/`, `game/objects/`, `game/common/`, `game/debug/`… El personaje,
+`game/character/`, `game/interactables/`, `game/net/`, `game/common/`, `game/debug/`… El personaje,
 agarrar, sentarse, el marco (`MotionFrame`) y la red. **Ya es código de la meca**: se edita cuando hace falta. Sigue
 entero como vino, con cosas de ciudad y de nave que acá no se usan: **es la segunda etapa de limpieza**, después de la
 meca. Ver [[personajes-traidos]].

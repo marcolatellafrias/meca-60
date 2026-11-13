@@ -1,6 +1,6 @@
 # El cubo
 
-`game/line_cube/` · sin fila propia (es la base de [[cubo-con-piernas]]) · ver [[filas]]
+`game/archive/line_cube/` · sin fila propia (es la base de [[cubo-con-piernas]]) · ver [[filas]]
 
 **La otra variante de equilibrio, la línea**, congelada y aparte de la meca por si se vuelve a ella (ver [[estructura]]).
 

@@ -15,8 +15,9 @@ tránsito, la nave y sus paneles.
 - `game/net/` (sin el tránsito): `SessionManager`, `NetSpawner`, `CharacterSpawner`, `CharacterNetSync`, `NetBody`,
   `ExclusiveClaim`, `NameTag`, `SessionPlayer`. Y `addons/godotsteam` (sin los temporales de Windows) y
   `steam_appid.txt`.
-- `game/objects/` (los paquetes y su daño), `game/particles/`, `game/sounds/`, `game/main/` (`WorldSettings`,
-  `WorldSeeds`), `game/ship/working_seat.tscn` (la silla de las consolas), `game/city/props/unit_mesh.gd`.
+- los paquetes y su daño (hoy en `game/supplies/`), `game/particles/`, `game/sounds/`, `game/main/` (`WorldSettings`,
+  `WorldSeeds`), `working_seat.tscn` (la silla de las consolas, hoy en `game/interactables/activatable/`), `unit_mesh.gd` (hoy en
+  `game/common/`).
 - `game/common/`: `debug_util`, `mesh_kit`, `model_box`, `motion_frame` (el marco: lo que se mueve y lleva cosas),
   `physics_layers`.
 - `game/debug/`: la depuración del personaje (`DebugPanel`, `ImpactDebugHUD`, `TunerPanel`, `PropertyTuner`…). *Las

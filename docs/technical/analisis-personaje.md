@@ -132,7 +132,7 @@ cambios de auto, yo los dejaría hasta diseñar las consolas.
 - **Los comentarios hablan de otro proyecto**: fechas, «el dios del juego», documentos que acá no existen
   (`docs/technical/…`, `docs/conceptual/…`).
 - **Los nombres**: «exhibit», «ship», «nave», «sucursal» aparecen unas 350 veces en lo traído.
-- **`UnitMesh`** vive en `game/city/props/` y lo usan las partículas y `MeshKit`: está en la carpeta equivocada.
+- **`UnitMesh`** vivía en `game/city/props/` y lo usan las partículas y `MeshKit`: el 13/11/2026 pasó a `game/common/`.
 
 ## El orden que propondría
 1. **Los paquetes de ciudad** y lo poco suelto: unas 1.300 líneas, sin decisiones.

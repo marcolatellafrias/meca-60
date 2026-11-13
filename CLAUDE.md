@@ -88,7 +88,7 @@ trabe contra algo fijo, que ceda si le pegan, y que la piña valga la velocidad 
 pared, **J/K** bolas, **F1** su panel; poseído, el mouse lleva la mano. La mano (`MechHand`) es izquierda o derecha, una
 el espejo de la otra, montada por regla (el pulgar hacia donde dobla el codo, la palma hacia el cuerpo).
 
-**Cubo con piernas** (`LeggedCube`, en `game/line_cube/`, hereda de `HoverCube`): **la otra variante de equilibrio, la línea** (no el péndulo), que
+**Cubo con piernas** (`LeggedCube`, en `game/archive/line_cube/`, hereda de `HoverCube`): **la otra variante de equilibrio, la línea** (no el péndulo), que
 se guarda por si se vuelve a ella. El cubo flota con un resorte vertical y parado no gira; un golpe lo corre y aparte lo
 inclina con la línea de equilibrio; al pasarla tropieza, cae con física y se recupera con toberas. Con pelvis, dos
 piernas de dibujo (pasos por radio) y el torso que gira aparte. **F1** su panel, **N/M** volcarlo, **J/K** las bolas. Archivada.
@@ -127,20 +127,22 @@ ordenan y lo que todavía se le critica, en [docs/technical/estructura.md](docs/
 - `game/pose_arm/` — **el brazo discreto**: `PoseArm` (se dibuja en la pose; el puño barre su camino y da un impulso).
 - `game/muscle_arm/` — **el brazo físico**: `MuscleArm` (las piezas, las articulaciones, los músculos y llevarlo a
   mano), `MuscleArmSettings`, `MuscleArmPanel` (su F1) y `MuscleArmArchetype` (el torso fijo, el bloque y la pared).
-- `game/line_cube/` — **la otra variante de equilibrio, la línea, congelada y aparte**: `HoverCube` (flotar con resorte,
+- `game/archive/` — **lo archivado** (como la fila Archivo del sandbox). Hoy, `line_cube/`: **la otra variante de
+  equilibrio, la línea, congelada y aparte**: `HoverCube` (flotar con resorte,
   la línea, tropezar, recuperarse) y `LeggedCube` (pelvis, piernas, torso aparte), con sus perillas, paneles y parcela.
   No comparte nada con la meca salvo `MechBody`, `MechLeg` y `Clay`. No se toca salvo que se vuelva a ella.
-- `game/supplies/` — **los recursos**: `SupplyLook` (el dibujo de cada cubo, lo que se lleva y lo que va en la meca). El
-  cuerpo que se agarra lo arma `PackageArchetype` (`game/objects/`), cuyo catálogo son hoy esos cinco cubos.
-- `game/arena/` — `TestBall` (la bola de la J), `PeopleArchetype` (las personas de allá) con `CharacterGetUp` (que se
-  levanten solas) y `ObjectLotArchetype` (el lote de recursos).
+- `game/supplies/` — **los recursos**: `SupplyLook` (el dibujo de cada cubo, lo que se lleva y lo que va en la meca),
+  `PackageArchetype` (el cuerpo que se agarra; su catálogo son esos cinco cubos), `PackageDamage` y `ObjectLotArchetype`
+  (el lote de recursos del sandbox).
+- `game/character/` también tiene `PeopleArchetype` (las personas del sandbox) y `CharacterGetUp` (que se levanten
+  solas).
 - `game/sandbox/` — el sandbox de parcelas (ver `docs/technical/sandbox.md`: cada módulo declara sus filas en su archivo de
-  filas; `SandboxCatalogue` las junta y chequea las reglas; crea al jugador), poseer (`SandboxPossession`) y la sesión de
+  filas; `SandboxCatalogue` las junta y chequea las reglas; crea al jugador), poseer (`SandboxPossession`), la bola de la J (`TestBall`) y la sesión de
   red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Las teclas reservadas, en `SandboxKey.RESERVED`. Poseyendo
   sólo valen las de lo poseído.
 - `game/ui/` — la pausa (autoload `PauseMenu`, Escape), el menú de inicio (`main_menu.tscn`), las Opciones
   (`GameOptions`, `user://opciones.cfg`), `UIState` y la consola.
-- Lo traído de character-parametric: `game/character/`, `game/interactables/`, `game/net/`, `game/objects/`,
+- Lo traído de character-parametric: `game/character/`, `game/interactables/`, `game/net/`,
   `game/common/`, `game/debug/`… y la frontera en `game/character_port/` (ver su LEEME.md). **Ya es código de la meca**
   (el usuario, 12/11/2026: «debería ser su propio código además, mejorado, simplificado, tailoreado para nuestro
   caso»): se edita cuando hace falta, y lo que no se usa acá se puede ir sacando.

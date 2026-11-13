@@ -15,7 +15,7 @@ extends Node
 ## Escenas para entidades no-caja.
 const SCENES := {
 	"dashboard": "res://game/interactables/controllable/dashboard.tscn",
-	"seat": "res://game/ship/working_seat.tscn",  # SeatInteractable funcional (no la malla suelta)
+	"seat": "res://game/interactables/activatable/working_seat.tscn",  # SeatInteractable funcional (no la malla suelta)
 }
 
 ## Variantes de caja: tamaño en CELDAS de grabbable, masa (kg) y color. En celdas y no en metros a

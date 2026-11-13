@@ -7,7 +7,7 @@ extends SeededArchetype
 ## (E). R los vuelve a poner en su lugar. *Todavía no se enchufan en nada: eso es lo que sigue (ver docs/conceptual/recursos.md).*
 
 const FOOTPRINT := Vector2(10.0, 9.0)
-const CHAIR_SCENE := "res://game/ship/working_seat.tscn"
+const CHAIR_SCENE := "res://game/interactables/activatable/working_seat.tscn"
 
 
 func _init() -> void:

@@ -11,7 +11,7 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 | Arena de esquivar | `DodgeArenaArchetype` | `game/dodge_arena/` entero | `MechPanel` (F1) | `dodge_arena_look` | la meca, `game/projectiles/` |
 | Mapa de pelea | `BattlefieldArchetype` | `game/battlefield/` (`Battlefield`) | — | `battlefield_check` | la meca, `PackageArchetype`, `Clay`, `Stairs` |
 | Brazo | `MuscleArmArchetype` | `game/muscle_arm/` entero | `MuscleArmPanel` (F1) | `muscle_arm_look` | `MechArm`, `MechBody.arm`, `MechHand`, `TestBall`, `Mech.SHOULDER` |
-| Cubo con piernas (archivada) | `LeggedCubeArchetype` | `game/line_cube/` entero | `LeggedCubePanel` (F1) | `legged_check` | `MechBody`, `MechLeg`, `Clay`, `TestBall` |
+| Cubo con piernas (archivada) | `LeggedCubeArchetype` | `game/archive/line_cube/` entero | `LeggedCubePanel` (F1) | `legged_check` | `MechBody`, `MechLeg`, `Clay`, `TestBall` |
 | Personajes | `PeopleArchetype` | `CharacterGetUp` | `LocomotionTuner` (F3, de la fila Locomoción) | `people_look`, `sizes_check` | el personaje |
 | Locomoción | `LocomotionLabArchetype` | `game/locomotion_lab/` entero (`LocomotionLab`, `CharacterActions`, los dos paneles) | `LocomotionPanel` (F1), `LocomotionTuner` (F3, también en Personajes) | `locomotion_look` | el personaje, `PeopleArchetype`, `PackageArchetype`, `Clay` |
 | Recursos | `ObjectLotArchetype` | `game/supplies/` (`SupplyLook`) | — | `supplies_look` | `PackageArchetype`, el agarre |
@@ -28,7 +28,7 @@ y `Clay`. Tests: `mech_balance_check` (el equilibrio), `mech_ride_check` (camina
 **Borrar un camino**: la Meca discreta se lleva `game/pose_arm/`; la Meca física, `game/muscle_arm/` y la fila Brazo. En
 los dos casos `Mech.arms_kind` queda con un solo valor útil y se puede sacar.
 
-**Borrar la fila Cubo con piernas** (la otra variante de equilibrio, la línea) se lleva `game/line_cube/` entero, sin
+**Borrar la fila Cubo con piernas** (la otra variante de equilibrio, la línea) se lleva `game/archive/line_cube/` entero, sin
 tocar nada más.
 
 Ver [[sandbox]] para cómo se arma una fila.

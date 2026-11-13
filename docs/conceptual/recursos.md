@@ -1,6 +1,6 @@
 # Los recursos de la meca
 
-`game/supplies/` (el dibujo, `SupplyLook`) · `game/objects/` (el cuerpo que se agarra, `PackageArchetype`) · fila
+`game/supplies/` (el dibujo, `SupplyLook`) · `PackageArchetype` (el cuerpo que se agarra, en la misma carpeta) · fila
 **Recursos** · ver [[filas]]
 
 Lo que se busca en el mundo y se trae a la meca. **Todo es un cubo de 63 cm** que se agarra siempre igual, de un punto

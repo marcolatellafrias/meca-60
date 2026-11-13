@@ -1,6 +1,6 @@
 # Lo traído de character-parametric
 
-`game/character/`, `game/interactables/`, `game/objects/`, `game/common/`… y la frontera en `game/character_port/`
+`game/character/`, `game/interactables/`, `game/supplies/` (los paquetes), `game/common/`… y la frontera en `game/character_port/`
 (su `LEEME.md` dice qué se trajo y dónde se cortó). **Ya es código de la meca**: se edita y se simplifica.
 
 - **El jugador** es el personaje de allá: ente (sin cuerpo, **V** vuela) o cuerpo con **B** (el gordo atlético).

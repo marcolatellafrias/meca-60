@@ -1,6 +1,6 @@
 # El cubo con piernas
 
-`game/line_cube/` · fila **Cubo con piernas** · ver [[filas]]
+`game/archive/line_cube/` · fila **Cubo con piernas** · ver [[filas]]
 
 **La otra variante de equilibrio, la línea**, congelada y aparte de la meca por si se vuelve a ella (ver [[estructura]]).
 
