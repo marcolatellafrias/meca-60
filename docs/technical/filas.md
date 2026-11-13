@@ -1,7 +1,7 @@
 # Las filas del sandbox y su código
 
 Cada módulo declara sus filas y sus paneles en su archivo de filas (`MechRows`, `CharacterRows`, `WorldRows`,
-`ArtRows`, `SupplyRows`, `NetworkRows`; ver [[sandbox]]). **Borrar una fila es borrar todo lo de su renglón** (lo
+`ArtRows`, `SupplyRows`, `NetworkRows`, `BossRows`; ver [[sandbox]]). **Borrar una fila es borrar todo lo de su renglón** (lo
 compartido, en la última columna, se queda). Cómo está armado el código, en [[estructura]].
 
 | Fila | Arquetipo | Código propio | Paneles | Tests | Usa (compartido) |
@@ -20,6 +20,7 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 | Multijugador | `MultiplayerArchetype` | `SandboxSession` | — | `net_check` | `game/net/` |
 | Partículas | `ParticleArchetype` | — | — | — | `game/particles/` |
 | Píxeles | `PixelArtArchetype` | `game/pixel_art/` entero, `tools/pixel_art_modelos_prueba.py` | `PixelPaintPanel` (F1) | `pixel_art_look` | `Clay`, `SupplyLook` (colores) |
+| Jefe bola | `BallBossArchetype` | `game/bosses/` entero (`BallBoss`, `BallLegs`, `Tentacle`, `BallBossSettings`, `BossRows`) | `BallBossPanel` (F1) | `ball_boss_look` | `MechKeys.axis`, `Clay`, `PhysicsLayers.FIXED` |
 
 ## La meca (lo que comparten sus dos filas)
 `game/balance_body/` entero (el cuerpo con equilibrio, que comparte con los jefes: `BalanceBody`, `BodyLegs`,

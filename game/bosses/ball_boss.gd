@@ -1,0 +1,230 @@
+class_name BallBoss
+extends CharacterBody3D
+
+## EL JEFE BOLA (13/11/2026), PASO 1: la bola con su rendija y las cuatro patas, para ver la forma, cómo camina, cómo
+## choca y cómo se mueve. Lo pensó el usuario: «una bola con una rendija en el medio que le da toda la vuelta y ahí tiene
+## un cañón que puede girar toda la circunferencia, y que tenga cuatro patas… como tentáculos con hélices al final»;
+## «vamos a ir agregando cosas de a poco… empezar con la bola y las piernas solamente». Por ahora sin cañón, sin dash ni
+## vuelo, y lo maneja quien lo posee (la O): la computadora, después.
+##
+## SE MUEVE COMO EL CUBO CINEMÁTICO (ver KinematicPillar): el controlador de personaje del motor, con un cilindro que mira
+## sólo lo fijo del mundo (PhysicsLayers.FIXED), del piso a lo alto de la bola. Contra lo suelto y los personajes, la
+## bola (un AnimatableBody3D que lo sigue). Movimiento discreto, en metros y segundos (BallBossSettings).
+##   · MOVERSE: una velocidad y el tiempo para llegar a ella. En el aire no se mueve de costado.
+##   · GIRAR: con tope de velocidad y de aceleración.
+##   · SALTAR (espacio): sólo para arriba.
+##   · AGACHARSE (Ctrl): SÓLO BAJA LA BOLA; los tentáculos se doblan solos (el usuario: «lo único que hace en realidad es
+##     bajar la bola, porque el IK de los tentáculos es como que actúa solo»).
+## Es MÁS DEL DOBLE DE LA MECA («quiero que sea más grande que la meca… por lo menos el doble»): la bola mide 22 m y su
+## techo queda a 37 m (el cubo de la meca, 18 m).
+
+## El radio de la bola, el alto de la rendija y su fondo (m).
+const RADIUS := 11.0
+const SLIT := 1.6
+const SLIT_DEPTH := 1.2
+## El cilindro contra lo fijo: un poco más ancho que la bola (m).
+const REACH := 12.0
+
+## ── LO QUE SE LE PIDE ──
+var move := Vector2.ZERO
+var crouch := false
+var jump := false
+var aim_yaw := 0.0
+
+## ── LO QUE MIDE ──
+var grounded := false
+## Cuánto está agachado (0 a 1) y a qué altura va el centro de la bola.
+var crouched := 0.0
+var center_height := 26.0
+var legs: BallLegs = null
+
+var _yaw := 0.0
+var _yaw_speed := 0.0
+var _jump_was := false
+var _cylinder := CylinderShape3D.new()
+var _holder: CollisionShape3D = null
+var _ball: AnimatableBody3D = null
+var _driving := false
+var _chase_yaw := 0.0
+
+
+func _init() -> void:
+	# A él no lo ve nadie, y él ve sólo lo fijo del mundo.
+	collision_layer = 0
+	collision_mask = PhysicsLayers.FIXED
+	floor_snap_length = 0.3
+
+
+func _ready() -> void:
+	_cylinder.radius = REACH
+	_holder = CollisionShape3D.new()
+	_holder.shape = _cylinder
+	add_child(_holder)
+	_yaw = global_rotation.y
+	aim_yaw = _yaw
+	_fit(BallBossSettings.current)
+	# LA BOLA: la que se ve y la que empuja lo suelto. Nace ya en su lugar (ver PillarFeet: un cuerpo entra a la física
+	# donde está al agregarlo al árbol).
+	_ball = AnimatableBody3D.new()
+	_ball.name = "Bola"
+	_ball.top_level = true
+	_ball.sync_to_physics = false
+	_ball.transform = _ball_place()
+	add_child(_ball)
+	_ball.sync_to_physics = true
+	_dress(_ball)
+	legs = BallLegs.new()
+	add_child(legs)
+	legs.place_now(BallBossSettings.current, _ball_place().origin, _yaw, RADIUS)
+	add_to_group(SandboxPossession.GROUP)
+
+
+## LA BOLA DE ARCILLA: dos medias esferas separadas por la rendija, que le da toda la vuelta, con su fondo oscuro; y en la
+## rendija, adelante, una marca amarilla: ahí va a ir el cañón.
+static func _dress(ball: AnimatableBody3D) -> void:
+	var shape := CollisionShape3D.new()
+	var sphere := SphereShape3D.new()
+	sphere.radius = RADIUS
+	shape.shape = sphere
+	ball.add_child(shape)
+	for up in [1.0, -1.0]:
+		var half := SphereMesh.new()
+		half.radius = RADIUS
+		half.height = RADIUS
+		half.is_hemisphere = true
+		var part := MeshInstance3D.new()
+		part.mesh = half
+		part.material_override = Clay.material(Clay.METAL.darkened(0.05))
+		part.position = Vector3.UP * SLIT * 0.5 * up
+		if up < 0.0:
+			part.rotation = Vector3(PI, 0.0, 0.0)
+		ball.add_child(part)
+	Clay.cylinder(ball, RADIUS - SLIT_DEPTH, SLIT + 0.2, Vector3.ZERO, Clay.DARK.darkened(0.4))
+	Clay.box(ball, Vector3(2.4, SLIT * 0.7, 1.0), Vector3(0.0, 0.0, -(RADIUS - SLIT_DEPTH)), Clay.YELLOW)
+
+
+func _physics_process(delta: float) -> void:
+	var k := BallBossSettings.current
+	_read()
+	crouched = move_toward(crouched, 1.0 if crouch else 0.0, k.crouch_rate * delta)
+	_fit(k)
+	grounded = is_on_floor()
+	var flat_now := _walk(k, delta)
+	velocity = Vector3(flat_now.x, _rise(k, delta), flat_now.z)
+	_jump_was = jump
+	_turn(k, delta)
+	rotation.y = _yaw
+	move_and_slide()
+	grounded = is_on_floor()
+	var flat := get_real_velocity()
+	flat.y = 0.0
+	_ball.global_transform = _ball_place()
+	legs.step(k, delta, _ball_place().origin, _yaw, flat, grounded, RADIUS)
+
+
+func _walk(k: BallBossSettings, delta: float) -> Vector3:
+	if not grounded:
+		return Vector3.ZERO
+	var wanted := Basis(Vector3.UP, _yaw) * Vector3(move.x, 0.0, -move.y).limit_length(1.0) * k.walk_speed
+	if k.reach_time <= 0.0:
+		return wanted
+	return Vector3(velocity.x, 0.0, velocity.z).move_toward(wanted, k.walk_speed / k.reach_time * delta)
+
+
+## EL SALTO: sube `jump_height` en `jump_time` (g = 2·h / t², y sale a v = 2·h / t). Devuelve la velocidad para arriba.
+func _rise(k: BallBossSettings, delta: float) -> float:
+	if grounded:
+		if jump and not _jump_was:
+			return 2.0 * k.jump_height / k.jump_time
+		return 0.0
+	return velocity.y - 2.0 * k.jump_height / (k.jump_time * k.jump_time) * delta
+
+
+## La altura del centro (parado o agachado) y el cilindro, del piso a lo alto de la bola.
+func _fit(k: BallBossSettings) -> void:
+	center_height = lerpf(k.stand_height, k.crouch_height, smoothstep(0.0, 1.0, crouched))
+	_cylinder.height = center_height + RADIUS
+	_holder.position.y = _cylinder.height * 0.5
+
+
+func _ball_place() -> Transform3D:
+	return Transform3D(Basis(Vector3.UP, _yaw), global_position + Vector3.UP * center_height)
+
+
+func _turn(k: BallBossSettings, delta: float) -> void:
+	var error := clampf(wrapf(aim_yaw - _yaw, -PI, PI), -PI * 0.6, PI * 0.6)
+	aim_yaw = _yaw + error
+	var top := deg_to_rad(k.turn_speed)
+	_yaw_speed = move_toward(_yaw_speed, clampf(error * 4.0, -top, top), deg_to_rad(k.turn_accel) * delta)
+	_yaw += _yaw_speed * delta
+
+
+## LA PONE en `where` (el punto del piso debajo de su centro), quieta, con los pies en su lugar.
+func put(where: Transform3D) -> void:
+	global_position = where.origin
+	_yaw = where.basis.get_euler().y
+	rotation.y = _yaw
+	aim_yaw = _yaw
+	_yaw_speed = 0.0
+	velocity = Vector3.ZERO
+	grounded = false
+	_ball.sync_to_physics = false
+	_ball.global_transform = _ball_place()
+	_ball.sync_to_physics = true
+	legs.place_now(BallBossSettings.current, _ball_place().origin, _yaw, RADIUS)
+
+
+## ── POSEERLA (ver SandboxPossession) ─────────────────────────────────────────────────────────────────────────────
+
+func _read() -> void:
+	if not (_driving and UIState.gameplay_active()):
+		return
+	move = Vector2(MechKeys.axis(KEY_D, KEY_A), MechKeys.axis(KEY_W, KEY_S))
+	crouch = Input.is_physical_key_pressed(KEY_CTRL)
+	jump = Input.is_physical_key_pressed(KEY_SPACE)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+	var motion := event as InputEventMouseMotion
+	if not _driving or motion == null or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
+		return
+	aim_yaw -= motion.relative.x * 0.0025 * GameOptions.mouse_sensitivity
+	get_viewport().set_input_as_handled()
+
+
+func possess_name() -> String:
+	return "Jefe bola"
+
+
+func possess_controls() -> PackedStringArray:
+	return PackedStringArray([
+		"W/S adelante y atrás · A/D de costado · mouse gira (con tope)",
+		"Ctrl se agacha (baja la bola) · espacio salta (sólo para arriba)",
+	])
+
+
+func possess_status() -> String:
+	return "%.1f m/s · centro a %.1f m%s · %d pasos" % [Vector2(velocity.x, velocity.z).length(), center_height,
+		"" if grounded else " · en el aire", legs.steps]
+
+
+func possess_begin() -> void:
+	_driving = true
+	_chase_yaw = _yaw
+
+
+func possess_end() -> void:
+	_driving = false
+	move = Vector2.ZERO
+	crouch = false
+	jump = false
+
+
+func possess_camera(first: bool, delta: float) -> Transform3D:
+	if first:
+		var eye := global_position + Vector3.UP * center_height + Basis(Vector3.UP, _yaw) * Vector3(0.0, 0.0, -RADIUS)
+		return Transform3D(Basis(Vector3.UP, _yaw), eye)
+	_chase_yaw = lerp_angle(_chase_yaw, _yaw, 1.0 - exp(-3.0 * delta))
+	var at := global_position + Vector3.UP * center_height * 0.7
+	var from := at + Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 22.0, 75.0)
+	return Transform3D(Basis(), from).looking_at(at, Vector3.UP)

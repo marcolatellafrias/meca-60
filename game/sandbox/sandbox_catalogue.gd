@@ -14,6 +14,7 @@ static func rows() -> Array[SandboxRow]:
 	out.append_array(WorldRows.rows())
 	out.append_array(ArtRows.rows())
 	out.append_array(NetworkRows.rows())
+	out.append_array(BossRows.rows())
 	return out
 
 

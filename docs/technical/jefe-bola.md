@@ -1,0 +1,62 @@
+# El jefe bola
+
+`game/bosses/` · fila **Jefe bola** (supercategoría Jefes) · test `ball_boss_look` · ver [[laboratorio-cinematico]],
+[[contratos]]
+
+El primer jefe, pensado por el usuario (13/11/2026): «una bola con una rendija en el medio que le da toda la vuelta y
+ahí tiene un cañón que puede girar toda la circunferencia, y que tenga cuatro patas… como tentáculos con hélices al
+final». Se arma **de a poco, un paso por vez** («quiero ir haciendo cosas de a poco en este personaje»).
+
+## Paso 1 (13/11/2026): la bola y las patas
+Para ver la forma, cómo camina, cómo choca y cómo se mueve. **Sin cañón, sin dash y sin vuelo.** La maneja quien la
+posee (la **O**). La computadora todavía no.
+
+- **La bola** (`BallBoss`): mide 22 m y su centro va a 26 m del piso, así que el techo queda a 37 m. Es **más del doble
+  de la meca**, que mide 18 m («por lo menos el doble… después podemos cambiar las escalas»). Son dos medias esferas
+  separadas por **la rendija**, de 1,6 m de alto, con el fondo oscuro. Adelante, en la rendija, hay una marca amarilla:
+  ahí va el cañón.
+- **Se mueve como el cubo cinemático**: con el controlador de personaje del motor (`CharacterBody3D`). Contra lo fijo
+  del mundo choca con un cilindro de 12 m de radio, que va del piso a lo alto de la bola. Contra lo suelto y los
+  personajes choca la bola misma, un `AnimatableBody3D` que la sigue. El movimiento es discreto:
+  - caminar: una velocidad y un tiempo para llegar a ella;
+  - girar: con tope de velocidad y de aceleración;
+  - saltar: sólo para arriba;
+  - **agacharse sólo baja la bola**, de 26 m a 14 m; los tentáculos se doblan solos.
+- **Los tentáculos** (`Tentacle`) tienen **su propio IK**, aparte del de la meca (el usuario: «no me gusta el sistema IK
+  que tiene la meca… mantenerlo separado y modularizado»).
+  - Cada tentáculo es **una curva de largo fijo**: sale de la bola hacia afuera y un poco para arriba, y entra al pie
+    desde arriba.
+  - Lo único que se busca, con una búsqueda binaria, es cuánto se abre la curva para que mida lo que mide el tentáculo
+    (36 m).
+  - No hay cadena que iterar ni rodillas que salten de lado. Si la bola baja, sobra largo y el tentáculo se arquea
+    para arriba; si no llega, queda recto.
+- **Los pies son cuatro paletas triangulares en cruz**, apoyadas en el piso. Son el `rotor` del tentáculo: el mismo
+  elemento va a girar como hélice («con un solo elemento cubrimos las dos cosas»).
+- **Los pasos** (`BallLegs`):
+  - Cada pie tiene su lugar en diagonal, a 24 m del centro, un poco adelantado si camina.
+  - El piso se busca con un rayo a lo fijo del mundo, así que sobre un edificio pisa el techo.
+  - Cuando un pie queda a más de 6 m de su lugar, sale **con el de su diagonal**, en arco.
+  - En el aire, los pies cuelgan; al caer, apoyan donde estén.
+- **F1**: las perillas (`BallBossPanel`), con una pestaña por grupo: Moverse, Girar, Saltar, Agacharse y Tentáculos.
+
+### Lo medido (`ball_boss_look`)
+| Prueba | Resultado |
+|---|---|
+| Caminar | 6 m/s; en 5 s, 4 pasos de a dos |
+| Agacharse | el centro baja de 26 a 14 m |
+| Saltar | sube 8 m |
+| Girar 90° en el lugar | 4 pasos |
+| Contra la pared | el centro queda a 12,00 m (el radio del cilindro) |
+| Al lado del edificio de 12 m | dos pies en el techo (a 12,2 m) y dos en el piso |
+
+### Lo que falta o queda abierto
+- Los tentáculos atraviesan lo fijo: el cilindro sólo cubre la bola, y un tentáculo puede cruzar una pared baja para
+  apoyar del otro lado.
+- Los pies no tienen choque: no patean ni achatan lo suelto, como hacen los del cubo.
+- Lo próximo, cuando el usuario diga: el cañón en la rendija.
+- Ideas del usuario para más adelante:
+  - disparar adelante o al cielo, para que caiga una lluvia de misiles;
+  - hacerse bola y rodar más rápido, con las patas retraídas;
+  - las hélices como melee;
+  - disparos cargados, rayos;
+  - dos cañoncitos al costado.

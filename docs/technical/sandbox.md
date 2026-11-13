@@ -4,7 +4,7 @@
 
 ## Cómo está ordenado
 **Supercategoría → fila → subcategoría → parcela.**
-- **Supercategoría** (`SandboxSuper.Id`): una por módulo (Meca, Interior, Personajes, Mundo, Arte, Red). Bloque contiguo,
+- **Supercategoría** (`SandboxSuper.Id`): una por módulo (Meca, Interior, Personajes, Mundo, Arte, Red, Jefes). Bloque contiguo,
   piso apenas teñido, su nombre a la izquierda. **Obligatoria**: sin ella la fila no compila.
 - **Fila** (`SandboxRow`): una categoría, con una o varias parcelas.
 - **Subcategoría** (`row.group(...)`): parcelas juntas dentro de la fila, con el suelo de otro tono.
@@ -13,7 +13,7 @@
 
 ## Agregar una fila
 Va en el archivo de filas **de tu módulo** (`MechRows`, `CharacterRows`, `WorldRows`, `ArtRows`, `SupplyRows`,
-`NetworkRows`), nunca en `design_sandbox.gd`:
+`NetworkRows`, `BossRows`), nunca en `design_sandbox.gd`:
 
 ```gdscript
 SandboxRow.new(SandboxSuper.Id.MECH, "Meca discreta") \

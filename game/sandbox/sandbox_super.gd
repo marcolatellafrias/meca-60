@@ -9,7 +9,7 @@ extends RefCounted
 ## Cada bloque es contiguo, en el orden de este enum, con su piso apenas teñido y su nombre a la izquierda. Reglas en
 ## docs/technical/sandbox.md.
 
-enum Id { MECH, INTERIOR, CHARACTERS, WORLD, ART, NETWORK }
+enum Id { MECH, INTERIOR, CHARACTERS, WORLD, ART, NETWORK, BOSSES }
 
 const NAMES := {
 	Id.MECH: "Meca",
@@ -18,6 +18,7 @@ const NAMES := {
 	Id.WORLD: "Mundo",
 	Id.ART: "Arte",
 	Id.NETWORK: "Red",
+	Id.BOSSES: "Jefes",
 }
 ## El tono de su piso (el matiz, de 0 a 1): separados, para que dos bloques vecinos no se confundan.
 const HUES := {
@@ -27,6 +28,7 @@ const HUES := {
 	Id.WORLD: 0.15,
 	Id.ART: 0.8,
 	Id.NETWORK: 0.62,
+	Id.BOSSES: 0.44,
 }
 
 
