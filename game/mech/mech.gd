@@ -39,7 +39,7 @@ var arms: Array[MechArm] = []
 func _init() -> void:
 	super()
 	mass = MASS
-	size = Vector3.ONE * CabinGrid.SIZE
+	size = CabinGrid.box()
 
 
 func _ready() -> void:

@@ -65,7 +65,7 @@ static func build(holder: Node3D, solid: PhysicsBody3D) -> void:
 static func bounds() -> AABB:
 	var outer := CabinGrid.HALF + WALK + 0.25
 	var back := _lane(1).y + 0.3
-	return AABB(Vector3(-outer, -CabinGrid.HALF - 0.3, SIDE_END - 0.3), Vector3(outer * 2.0, CabinGrid.SIZE + 2.4, back - SIDE_END + 0.3))
+	return AABB(Vector3(-outer, -CabinGrid.HALF_HEIGHT - 0.3, SIDE_END - 0.3), Vector3(outer * 2.0, CabinGrid.HEIGHT + 2.4, back - SIDE_END + 0.3))
 
 
 ## LA ESCALERA SE ARMA CON `Stairs` (la regla del usuario, ver docs/technical/escaleras.md): escalones para los pies y una

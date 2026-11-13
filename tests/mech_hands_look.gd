@@ -40,7 +40,7 @@ func _ready() -> void:
 	add_child(world)
 	_mech = Mech.new()
 	_mech.arms_kind = Mech.Arms.MUSCLE
-	_mech.position = Vector3(0.0, BodySettings.current.hover_height + CabinGrid.SIZE * 0.5, 0.0)
+	_mech.position = Vector3(0.0, BodySettings.current.hover_height + CabinGrid.HALF_HEIGHT, 0.0)
 	add_child(_mech)
 	_eye = Camera3D.new()
 	_eye.far = 2000.0

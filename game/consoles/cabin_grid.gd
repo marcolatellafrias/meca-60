@@ -13,16 +13,18 @@ extends RefCounted
 ##   · EL MÓDULO: un cuadrado de 3 cubos (48 celdas, 1,89 m). Cada piso es una grilla de `COLUMNS` × `ROWS` módulos,
 ##     entre sus paredes. LA COLUMNA 0 ES LA DE LA IZQUIERDA (−X) y LA FILA 0 LA DEL FRENTE (−Z).
 ##   · LOS PISOS: `FLOORS`, de `FLOOR_CELLS` cada uno, de losa a losa.
-##   · LA CAJA ES UN CUBO: el ancho, el fondo y el alto dan lo mismo (204 celdas, 8,03 m). Es la caja de la meca (ver
-##     `SIZE`).
+##   · LA CAJA ES CUADRADA EN PLANTA y CRECE PARA ARRIBA (el usuario, 13/11/2026: «el formato de cubo está bueno… al
+##     girar no tiene tantos problemas de colisión. Pero en vertical no tiene problema en crecer»): el ancho y el fondo
+##     salen de los módulos (`SIZE`); el alto, de los pisos y del alto de cada uno (`HEIGHT`). Con 4 módulos, 3 pisos y
+##     68 celdas por piso es un cubo de 204 celdas (8,03 m), la de siempre.
 ##   · QUÉ VA EN CADA PISO (`seat_floors`): la planta baja es DE SERVICIO, sin asientos (la munición, las baterías, los
 ##     tableros eléctricos, el ascensor en el medio); los de arriba, DOS ASIENTOS cada uno, a los dos lados del medio
 ##     del frente (el usuario, 13/11/2026: el caso de 4 jugadores, «planta baja de servicio»).
 ##   · EL FRENTE ES UNA CAJA DE VIDRIO QUE SOBRESALE (`GLASS_OUT_CELLS`): vidrio al frente, a los costados, arriba y
 ##     abajo, sin parantes; lo único que la corta son las losas del medio. Atrás, la puerta de cada piso, en el medio.
 ##   · LA FORMA SE CAMBIA JUGANDO (`shape`, el panel F2 de las filas de la meca, CabinShapePanel): cuántos módulos por
-##     lado, cuántos pisos y cuánto sobresale el vidrio. La caja sigue siendo un cubo: el alto de un piso sale de
-##     repartir el lado entre los pisos. Lo guardado (`SAVED`) es la forma de todas las mecas.
+##     lado, cuántos pisos, el alto de cada piso y cuánto sobresale el vidrio. Lo guardado (`SAVED`) es la forma de
+##     todas las mecas.
 ##
 ## Ejes: X a la derecha, Y arriba, −Z al frente; el origen en el centro de la caja.
 
@@ -52,7 +54,8 @@ const SLAB := SLAB_CELLS * CELL
 const SAVED := "res://game/consoles/cabin_shape.tres"
 
 ## ── LA FORMA (ver `shape`): lo que cambia el panel, y lo que sale de ahí ─────────────────────────────────────────
-## Módulos por lado (las columnas y las filas, iguales: la caja es un cubo), pisos y cuánto sobresale el vidrio.
+## Módulos por lado (las columnas y las filas, iguales: la planta es cuadrada), pisos, alto de un piso y cuánto
+## sobresale el vidrio.
 static var COLUMNS := 4
 static var ROWS := 4
 static var FLOORS := 3
@@ -62,9 +65,12 @@ static var FLOOR_HEIGHT := 0.0
 static var WIDTH_CELLS := 0
 static var DEPTH_CELLS := 0
 static var HEIGHT_CELLS := 0
-## EL LADO DE LA CAJA (la caja de la meca es un cubo: ver `cube_ok`).
+## EL LADO DE LA CAJA, en planta (el ancho y el fondo), y su mitad.
 static var SIZE := 0.0
 static var HALF := 0.0
+## EL ALTO DE LA CAJA, de la losa de abajo a la de arriba, y su mitad (el origen de la caja es su centro).
+static var HEIGHT := 0.0
+static var HALF_HEIGHT := 0.0
 ## Lo de adentro, desde el centro hasta la cara de adentro de la pared.
 static var INNER := 0.0
 static var GLASS_OUT := 0.0
@@ -75,26 +81,27 @@ static var LIFT_HOLE := 0.0
 static func _static_init() -> void:
 	var saved := load(SAVED) as CabinShape if ResourceLoader.exists(SAVED) else null
 	if saved != null:
-		shape(saved.modules, saved.floors, saved.glass_out)
+		shape(saved.modules, saved.floors, saved.floor_cells, saved.glass_out)
 	else:
-		shape(COLUMNS, FLOORS, GLASS_OUT_CELLS)
+		shape(COLUMNS, FLOORS, FLOOR_CELLS, GLASS_OUT_CELLS)
 
 
-## CAMBIA LA FORMA: `modules` por lado, `floors` pisos y el vidrio que sobresale `glass_out` celdas. El lado sale de
-## los módulos, y el alto de un piso, de repartir ese lado entre los pisos (lo que no da justo queda en el de arriba).
-## Las mecas que ya estaban no cambian: hay que rearmarlas (ver CabinShapePanel).
-static func shape(modules: int, floors: int, glass_out: int) -> void:
+## CAMBIA LA FORMA: `modules` por lado, `floors` pisos de `floor_cells` celdas cada uno (de losa a losa) y el vidrio
+## que sobresale `glass_out` celdas. Las mecas que ya estaban no cambian: hay que rearmarlas (ver CabinShapePanel).
+static func shape(modules: int, floors: int, floor_cells: int, glass_out: int) -> void:
 	COLUMNS = maxi(modules, 1)
 	ROWS = COLUMNS
 	FLOORS = maxi(floors, 1)
 	GLASS_OUT_CELLS = maxi(glass_out, 0)
 	WIDTH_CELLS = COLUMNS * MODULE_CELLS + WALL_CELLS * 2
 	DEPTH_CELLS = ROWS * MODULE_CELLS + WALL_CELLS * 2
-	HEIGHT_CELLS = WIDTH_CELLS
-	FLOOR_CELLS = HEIGHT_CELLS / FLOORS
+	FLOOR_CELLS = maxi(floor_cells, SLAB_CELLS + 1)
+	HEIGHT_CELLS = FLOORS * FLOOR_CELLS
 	FLOOR_HEIGHT = FLOOR_CELLS * CELL
 	SIZE = WIDTH_CELLS * CELL
 	HALF = SIZE * 0.5
+	HEIGHT = HEIGHT_CELLS * CELL
+	HALF_HEIGHT = HEIGHT * 0.5
 	INNER = HALF - WALL
 	GLASS_OUT = GLASS_OUT_CELLS * CELL
 	LIFT_HOLE = (COLUMNS * MODULE_CELLS / 4 - LIFT_MARGIN_CELLS) * CELL
@@ -107,24 +114,25 @@ static func current() -> CabinShape:
 	var now := CabinShape.new()
 	now.modules = COLUMNS
 	now.floors = FLOORS
+	now.floor_cells = FLOOR_CELLS
 	now.glass_out = GLASS_OUT_CELLS
 	return now
 
 
-## Si el ancho, el fondo y el alto dan lo mismo: la caja de la meca es un cubo. Lo mira tests/load_all.
-static func cube_ok() -> bool:
-	return WIDTH_CELLS == DEPTH_CELLS and WIDTH_CELLS == HEIGHT_CELLS
+## La caja entera: el lado en planta y el alto.
+static func box() -> Vector3:
+	return Vector3(SIZE, HEIGHT, SIZE)
 
 
 ## La línea del piso `index` (0 el de abajo, `FLOORS` el techo): el medio de su losa, salvo las de las puntas, que
 ## quedan adentro de la caja.
 static func floor_line(index: int) -> float:
-	return HALF if index >= FLOORS else -HALF + index * FLOOR_HEIGHT
+	return -HALF_HEIGHT + index * FLOOR_HEIGHT
 
 
 ## Dónde está la losa `index`: su medio, ya adentro de la caja.
 static func slab_y(index: int) -> float:
-	return clampf(floor_line(index), -HALF + SLAB * 0.5, HALF - SLAB * 0.5)
+	return clampf(floor_line(index), -HALF_HEIGHT + SLAB * 0.5, HALF_HEIGHT - SLAB * 0.5)
 
 
 ## Donde se pisa en el piso `index`.

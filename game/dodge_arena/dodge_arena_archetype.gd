@@ -70,7 +70,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	var mech := Mech.new()
 	mech.name = "Meca"
 	mech.arms_kind = Mech.Arms.POSE
-	mech.transform = Transform3D(Basis(), Vector3(0.0, BodySettings.current.hover_height + CabinGrid.SIZE * 0.5, START))
+	mech.transform = Transform3D(Basis(), Vector3(0.0, BodySettings.current.hover_height + CabinGrid.HALF_HEIGHT, START))
 	root.add_child(mech)
 	return root
 

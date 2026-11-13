@@ -35,7 +35,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	root.name = "MapaDePelea"
 	parent.add_child(root)
 	Battlefield.build(root)
-	var standing := BodySettings.current.hover_height + CabinGrid.SIZE * 0.5
+	var standing := BodySettings.current.hover_height + CabinGrid.HALF_HEIGHT
 	var mech := Mech.new()
 	mech.arms_kind = Mech.Arms.POSE
 	mech.position = Vector3(Battlefield.SPAWN.x, standing, Battlefield.SPAWN.y)

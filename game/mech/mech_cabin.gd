@@ -5,8 +5,8 @@ extends Node3D
 ##   · LOS PISOS de paredes de verdad, no una caja pintada (el usuario, 12/11/2026): las losas, los costados, atrás la
 ##     pared con el HUECO de la puerta, y los asientos. Las medidas, de la grilla (CabinGrid), que se cambia jugando.
 ##   · AL FRENTE, UNA CAJA DE VIDRIO QUE SOBRESALE (`_glass`): vidrio al frente, a los costados, arriba y abajo, sin
-##     parantes; la cortan sólo las losas del medio, que siguen hasta el vidrio. El de más arriba ve para arriba y el de
-##     más abajo, para abajo (el usuario, 13/11/2026: «que también se doble en la parte de arriba y de abajo… así
+##     parantes ni marcos; todas las losas llegan en metal hasta la cara de la caja y siguen en vidrio. El de más arriba
+##     ve para arriba y el de más abajo, para abajo (el usuario, 13/11/2026: «que también se doble en la parte de arriba y de abajo… así
 ##     efectivamente logramos una parte más sobresalida»).
 ##   · EL AFUERA (MechExterior): la pasarela de planta baja y la escalera de atrás.
 ##   · EL ASCENSOR DE LA PELVIS (PelvisLift): por donde se sube desde el suelo, con la meca agachada.
@@ -65,15 +65,13 @@ func _ready() -> void:
 			PelvisLift.build_floor(self, interior, y, SLAB, metal.darkened(0.12))
 		else:
 			_solid(Vector3(size, SLAB, size), Vector3(0, y, 0), metal.darkened(0.12))
-		# ADELANTE, EN LA CAJA DE VIDRIO: abajo y arriba, vidrio que se pisa; las del medio siguen la losa.
+		# ADELANTE, EN LA CAJA DE VIDRIO, TODAS LAS LOSAS IGUALES: el metal llega hasta la cara de la caja y lo que sigue
+		# hasta el vidrio es vidrio que se pisa (el usuario, 13/11/2026: «quiero que los tres estén alineados»).
 		if out > 0.0:
 			var ahead := Vector3(size, SLAB, out)
 			var at := Vector3(0, y, -CabinGrid.HALF - out * 0.5)
-			if index == 0 or index == CabinGrid.FLOORS:
-				Clay.box(self, ahead, at, GLASS)
-				Clay.shape_box(interior, ahead, at)
-			else:
-				_solid(ahead, at, metal.darkened(0.12))
+			Clay.box(self, ahead, at, GLASS)
+			Clay.shape_box(interior, ahead, at)
 	for index in CabinGrid.FLOORS:
 		var base := CabinGrid.ground(index)
 		var wall_h := CabinGrid.clear_height(index)
@@ -97,25 +95,20 @@ func _ready() -> void:
 	add_child(lift)
 
 
-## LA CAJA DE VIDRIO DEL FRENTE, de `out` de fondo (sin fondo, el vidrio plano en la cara del cubo): el frente y los
-## dos costados, de punta a punta, con formas que no dejan atravesarlos; sus aristas de afuera, en metal fino, para que
-## se lea la forma. El vidrio de arriba y de abajo es la punta de las losas (ver `_ready`).
+## LA CAJA DE VIDRIO DEL FRENTE, de `out` de fondo (sin fondo, el vidrio plano en la cara de la caja): el frente y los
+## dos costados, de punta a punta, con formas que no dejan atravesarlos. Sin marcos (el usuario, 13/11/2026: «esos
+## marcos se los sacaría»). El vidrio de arriba y de abajo es la punta de las losas (ver `_ready`).
 func _glass(size: float, out: float) -> void:
+	var height := CabinGrid.HEIGHT
 	var front := -CabinGrid.HALF - out + 0.02 if out > 0.0 else -CabinGrid.HALF + WALL * 0.5
-	Clay.box(self, Vector3(size, size, 0.04), Vector3(0, 0, front), GLASS)
-	Clay.shape_box(interior, Vector3(size, size, 0.1), Vector3(0, 0, front - 0.03))
+	Clay.box(self, Vector3(size, height, 0.04), Vector3(0, 0, front), GLASS)
+	Clay.shape_box(interior, Vector3(size, height, 0.1), Vector3(0, 0, front - 0.03))
 	if out <= 0.0:
 		return
-	var edge := Clay.METAL.darkened(0.25)
 	for side: float in [-1.0, 1.0]:
 		var x := side * (CabinGrid.HALF - 0.02)
-		Clay.box(self, Vector3(0.04, size, out), Vector3(x, 0, -CabinGrid.HALF - out * 0.5), GLASS)
-		Clay.shape_box(interior, Vector3(0.1, size, out), Vector3(x, 0, -CabinGrid.HALF - out * 0.5))
-		Clay.box(self, Vector3(0.06, size, 0.06), Vector3(side * CabinGrid.HALF, 0, -CabinGrid.HALF - out), edge)
-		Clay.box(self, Vector3(size, 0.06, 0.06), Vector3(0, side * CabinGrid.HALF, -CabinGrid.HALF - out), edge)
-		for y_side: float in [-1.0, 1.0]:
-			Clay.box(self, Vector3(0.06, 0.06, out), Vector3(side * CabinGrid.HALF, y_side * CabinGrid.HALF,
-				-CabinGrid.HALF - out * 0.5), edge)
+		Clay.box(self, Vector3(0.04, height, out), Vector3(x, 0, -CabinGrid.HALF - out * 0.5), GLASS)
+		Clay.shape_box(interior, Vector3(0.1, height, out), Vector3(x, 0, -CabinGrid.HALF - out * 0.5))
 
 
 ## LOS ASIENTOS DEL PISO `index` (ver CabinGrid.seat_floors): LAS SILLAS DE VERDAD, las de las consolas (`SEAT_SCENE`),
@@ -165,8 +158,8 @@ func build_frame() -> void:
 	mech.add_child(frame)
 	frame.floor_height = CabinGrid.ground(0)
 	var out := CabinGrid.GLASS_OUT
-	frame.add_volume(AABB(Vector3(-CabinGrid.HALF, -CabinGrid.HALF, -CabinGrid.HALF - out),
-		Vector3(CabinGrid.SIZE, CabinGrid.SIZE, CabinGrid.SIZE + out)))
+	frame.add_volume(AABB(Vector3(-CabinGrid.HALF, -CabinGrid.HALF_HEIGHT, -CabinGrid.HALF - out),
+		Vector3(CabinGrid.SIZE, CabinGrid.HEIGHT, CabinGrid.SIZE + out)))
 	frame.add_volume(MechExterior.bounds())
 	frame.add_volume(PelvisLift.shaft())
 	interior.collision_layer = 1

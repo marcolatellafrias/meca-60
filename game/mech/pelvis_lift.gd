@@ -77,7 +77,7 @@ func _ready() -> void:
 
 ## Su piso bajado: a la misma distancia debajo del cubo que con la caja de siempre.
 static func lowered() -> float:
-	return -CabinGrid.HALF - LOWERED_BELOW * MechBody.scale
+	return -CabinGrid.HALF_HEIGHT - LOWERED_BELOW * MechBody.scale
 
 
 ## Su piso subido: al ras del piso de abajo.
@@ -136,7 +136,7 @@ static func build_floor(holder: Node3D, body: PhysicsBody3D, y: float, thickness
 ## piso bajado: el que camina por el suelo debajo de la meca agachada no entra; el que se para en el ascensor, sí.
 static func shaft() -> AABB:
 	var bottom := lowered() + 0.55
-	return AABB(Vector3(-drum(), bottom, -drum()), Vector3(drum() * 2.0, -CabinGrid.HALF - bottom + 0.3, drum() * 2.0))
+	return AABB(Vector3(-drum(), bottom, -drum()), Vector3(drum() * 2.0, -CabinGrid.HALF_HEIGHT - bottom + 0.3, drum() * 2.0))
 
 
 ## LA PELVIS: el tambor hueco, centrado en su medio (como la caja de siempre).

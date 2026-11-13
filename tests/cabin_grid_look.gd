@@ -4,7 +4,7 @@ extends Node3D
 ## discreta parada de frente, cortada por el costado izquierdo y sin techo, desde un asiento y mirando abajo desde el
 ## vidrio (ver CabinGrid).
 ## Imprime las medidas que salen de la grilla.
-##   tools/godot_ventana.sh res://tests/cabin_grid_look.tscn -- --salida=C:/carpeta --formas=4x3x12,2x2x12
+##   tools/godot_ventana.sh res://tests/cabin_grid_look.tscn -- --salida=C:/carpeta --formas=4x3x68x12,2x2x68x12
 
 const VIEW := Vector2i(1280, 720)
 
@@ -13,8 +13,8 @@ var _mech: Mech = null
 var _eye: Camera3D = null
 var _title: Label = null
 var _cut: Array[Node3D] = []
-## Las formas que mira (módulos por lado, pisos, vidrio en celdas): `--formas=4x3x12,2x2x12`; sin eso, la guardada.
-var _shapes: Array[Vector3i] = [Vector3i(CabinGrid.COLUMNS, CabinGrid.FLOORS, CabinGrid.GLASS_OUT_CELLS)]
+## Las formas que mira (módulos por lado, pisos, alto de piso y vidrio en celdas): `--formas=4x3x68x12,2x2x68x12`; sin eso, la guardada.
+var _shapes: Array[Vector4i] = [Vector4i(CabinGrid.COLUMNS, CabinGrid.FLOORS, CabinGrid.FLOOR_CELLS, CabinGrid.GLASS_OUT_CELLS)]
 
 
 func _ready() -> void:
@@ -25,7 +25,7 @@ func _ready() -> void:
 			_shapes.clear()
 			for each in argument.trim_prefix("--formas=").split(","):
 				var parts := each.split("x")
-				_shapes.append(Vector3i(int(parts[0]), int(parts[1]), int(parts[2])))
+				_shapes.append(Vector4i(int(parts[0]), int(parts[1]), int(parts[2]), int(parts[3])))
 	get_window().size = VIEW
 	var ground := StaticBody3D.new()
 	Clay.solid(ground, Vector3(900, 1, 900), Vector3(0, -0.5, 0), Color(0.82, 0.80, 0.76))
@@ -56,21 +56,21 @@ func _ready() -> void:
 	_title.add_theme_constant_override("outline_size", 10)
 	layer.add_child(_title)
 	var shots: Array = []
-	for shape: Vector3i in _shapes:
-		CabinGrid.shape(shape.x, shape.y, shape.z)
-		var name_of := "%d × %d módulos, %d pisos, vidrio %d celdas" % [shape.x, shape.x, shape.y, shape.z]
-		print("GRILLA %s: caja %.2f m (cubo %s) · piso %.2f m, libre %.2f m · asientos %d · ascensor %.2f m" % [
-			name_of, CabinGrid.SIZE, CabinGrid.cube_ok(), CabinGrid.FLOOR_HEIGHT, CabinGrid.clear_height(0),
+	for shape: Vector4i in _shapes:
+		CabinGrid.shape(shape.x, shape.y, shape.z, shape.w)
+		var name_of := "%d × %d módulos, %d pisos de %d celdas" % [shape.x, shape.x, shape.y, shape.z]
+		print("GRILLA %s: caja %.2f m de lado, %.2f m de alto · piso %.2f m, libre %.2f m · asientos %d · ascensor %.2f m" % [
+			name_of, CabinGrid.SIZE, CabinGrid.HEIGHT, CabinGrid.FLOOR_HEIGHT, CabinGrid.clear_height(0),
 			CabinGrid.seats().size(), PelvisLift.hole()])
 		_mech = Mech.new()
 		_mech.arms_kind = Mech.Arms.POSE
-		_mech.position = Vector3(0.0, BodySettings.current.hover_height + CabinGrid.SIZE * 0.5, 0.0)
+		_mech.position = Vector3(0.0, BodySettings.current.hover_height + CabinGrid.HALF_HEIGHT, 0.0)
 		add_child(_mech)
 		await get_tree().create_timer(2.5).timeout
 		_mech.freeze = true
 		_cut.clear()
 		_find_cut()
-		var k := CabinGrid.SIZE / 8.0
+		var k := maxf(CabinGrid.SIZE, CabinGrid.HEIGHT) / 8.0
 		_title.text = name_of
 		_look(Vector3(-11.0, 1.5, -15.0) * k + Vector3(0, 0, -4), Vector3(0.0, -0.5 * k, 0.0), 42.0)
 		shots.append(await _grab())

@@ -15,17 +15,20 @@ pisos o de jugadores (de 1 a 4) sin rehacer nada a mano.
 - **El módulo**: un cuadrado de 3 cubos, de **48 celdas (1,89 m)**. Cada piso es una grilla de **4 × 4 módulos** entre
   sus paredes. La columna 0 es la de la izquierda y la fila 0, la del frente.
 - **Tres pisos de 68 celdas** (2,68 m de losa a losa; quedan 2,48 m libres), paredes de 6 celdas y losas de 5.
-- **La caja es un cubo**: 204 celdas de ancho, de fondo y de alto, **8,03 m** (`CabinGrid.SIZE`). `cube_ok()` lo
-  comprueba. **La caja física de la meca es esa**: `Mech` toma su tamaño de `CabinGrid.SIZE` (lo aceptó el módulo
+- **La caja es cuadrada en planta y crece para arriba**: el lado sale de los módulos (`CabinGrid.SIZE`) y el alto, de los
+  pisos por el alto de cada uno (`CabinGrid.HEIGHT`). Con la forma de siempre es un cubo de 204 celdas, **8,03 m** (el
+  usuario, 13/11/2026: «el formato de cubo… al girar no tiene tantos problemas de colisión. Pero en vertical no tiene
+  problema en crecer»). **La caja física de la meca es esa**: `Mech` toma su tamaño de `CabinGrid.SIZE` (lo aceptó el módulo
   Meca el 13/11/2026; desde que la forma cambia jugando, ya no hay `Mech.SIZE`).
 
 ## La forma se cambia jugando: el panel F2
 En las filas de la meca (Meca discreta, Meca física y la Arena de esquivar), **F2** (`CabinShapePanel`) cambia
-**cuántos módulos por lado** (1 a 6), **cuántos pisos** (1 a 5) y **cuánto sobresale el vidrio** (celdas). Lo pidió
+**cuántos módulos por lado** (1 a 6), **cuántos pisos** (1 a 5), **el alto de cada piso** (40 a 120 celdas, de losa a
+losa) y **cuánto sobresale el vidrio** (celdas). Lo pidió
 el usuario el 13/11/2026, para probar configuraciones («tal vez podremos ver una versión de 2x2 o una de 3x3, siempre
 manteniendo el aspect ratio de cubo por ahora»).
-- **La caja sigue siendo un cubo**: el lado sale de los módulos, y el alto de un piso, de repartir ese lado entre los
-  pisos (lo que no da justo queda en el de arriba). El panel avisa si un piso queda tan bajo que no se pasa parado.
+- **El alto es libre**: pisos por alto de cada uno; la planta, cuadrada. *Hasta el 13/11/2026 la caja era siempre un
+  cubo y el alto de un piso salía de repartir el lado.* El panel avisa si un piso queda tan bajo que no se pasa parado.
 - **Probar** rearma todas las mecas con esa forma, sin guardar; **Guardar** la escribe en
   `game/consoles/cabin_shape.tres` (no se sube al repositorio) y es la forma de todas las mecas, también al reiniciar.
 - **El ascensor va en celdas sueltas**, no en módulos: su hueco es un cuarto del ancho de adentro menos tres celdas
@@ -54,8 +57,9 @@ manteniendo el aspect ratio de cubo por ahora»).
   **cuatro maniquíes**, para ver la escala de adentro (`MechCabin.seat_dummies`). La caja maciza no choca con el
   cuerpo de las sillas ni con los maniquíes: los empujaba y se volteaba.
 - **El frente es una caja de vidrio que sobresale** (`GLASS_OUT_CELLS`, 12 celdas, 47 cm): vidrio al frente, a los
-  costados, arriba y abajo, **sin parantes**, más transparente. La cortan sólo las losas del medio, que siguen hasta
-  el vidrio; abajo y arriba, la punta es de vidrio y se pisa. Así **el de más arriba ve para arriba y el de más abajo,
+  costados, arriba y abajo, **sin parantes ni marcos**, más transparente. **Todas las losas son iguales**: el metal
+  llega hasta la cara de la caja y lo que sigue hasta el vidrio es vidrio que se pisa (el usuario: «quiero que los tres
+  estén alineados»). Así **el de más arriba ve para arriba y el de más abajo,
   para abajo**, y los de adentro ven de costado por las caras del vidrio (el usuario, 13/11/2026: «el vidrio se dobla…
   más visión periférica… que también se doble en la parte de arriba y de abajo»; el fondo, chico, «así está igualado a
   los costados y arriba y abajo»). Los costados de la caja llegan hasta su frente. *Antes: el frente plano todo

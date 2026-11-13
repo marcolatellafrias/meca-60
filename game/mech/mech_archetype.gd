@@ -43,7 +43,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	var root := Node3D.new()
 	root.name = "Meca"
 	parent.add_child(root)
-	var standing := BodySettings.current.hover_height + CabinGrid.SIZE * 0.5
+	var standing := BodySettings.current.hover_height + CabinGrid.HALF_HEIGHT
 	# Nace donde va parada, mirando hacia donde uno llega (−X); la de práctica, adelante, mirándola.
 	var mech := Mech.new()
 	mech.arms_kind = arms
