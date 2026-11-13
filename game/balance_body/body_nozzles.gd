@@ -121,7 +121,7 @@ func get_up(k: BodySettings) -> void:
 func _lift(k: BodySettings) -> void:
 	var target := k.hover_height * k.lift_share + _body.size.y * 0.5
 	_body.height = _body.ground_distance(_body.global_position)
-	var accel := k.lift_kp * (target - _body.height) - k.lift_kd * _body.linear_velocity.y + BalanceBody.gravity()
+	var accel := k.lift_kp * (target - _body.height) - k.lift_kd * _body.velocity().y + BalanceBody.gravity()
 	push(Vector3.UP * maxf(accel, 0.0) * _body.mass, Vector3.ZERO, k)
 
 
@@ -188,7 +188,7 @@ func fire(k: BodySettings) -> void:
 		if throttle <= 0.0:
 			continue
 		var pushes := -(basis * (nozzle["out"] as Vector3))
-		_body.apply_force(pushes * most * throttle, basis * (nozzle["at"] as Vector3))
+		_body.push_force(pushes * most * throttle, basis * (nozzle["at"] as Vector3))
 		total += pushes * throttle
 		strongest = maxf(strongest, throttle)
 	if Time.get_ticks_msec() < _show_until:

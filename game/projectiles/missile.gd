@@ -145,7 +145,7 @@ func blast() -> void:
 		# Justo en el centro, para atrás de donde mira.
 		var flat := away.normalized() if away.length_squared() > 0.01 else body.global_basis.z.slide(Vector3.UP).normalized()
 		var way := (flat * (1.0 - float(shape["up"])) + Vector3.UP * float(shape["up"])).normalized()
-		body.apply_central_impulse(way * float(shape["push"]) * near * body.mass)
+		BalanceBody.hit(body, way * float(shape["push"]) * near * body.mass)
 
 
 ## LA MARCA EN EL PISO: el círculo de fondo, el que crece adentro y el borde. Sin sombra y sin luz: se lee igual de día

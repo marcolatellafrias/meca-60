@@ -304,7 +304,8 @@ static func loose_in(space: PhysicsDirectSpaceState3D, shape: Shape3D, where: Tr
 		for hit: Dictionary in hits:
 			seen.append(hit["rid"])
 			var body := hit["collider"] as RigidBody3D
-			if body != null and not body.freeze and not out.has(body):
+			# Lo congelado no se empuja, salvo una meca cinemática (la mueve su puerta, ver BalanceBody.hit).
+			if body != null and (not body.freeze or body is BalanceBody) and not out.has(body):
 				out.append(body)
 		if hits.size() < BATCH:
 			break
@@ -315,7 +316,7 @@ func _push(body: RigidBody3D, way: Vector3, strength: float) -> void:
 	var push: float = spec.get("push", 10.0)
 	var up := 0.15
 	var direction := (way * (1.0 - up) + Vector3.UP * up).normalized()
-	body.apply_central_impulse(direction * push * clampf(strength, 0.25, 1.0) * body.mass)
+	BalanceBody.hit(body, direction * push * clampf(strength, 0.25, 1.0) * body.mass)
 
 
 ## LA MARCA: el fondo, lo que crece (`_fill`) y, en lo que avanza, la pared misma (`_wave`).

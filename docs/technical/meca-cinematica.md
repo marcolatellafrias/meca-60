@@ -1,50 +1,53 @@
-# La meca cinemática (maqueta)
+# La meca cinemática
 
-**Maqueta** (13/11/2026). `game/kinematic_mech/` · fila **Meca cinemática** · test `kinematic_mech_look`. La otra
-variante, la de hoy, en [[meca]] y [[pendulo]].
+**Primera versión** (13/11/2026). Es la meca de siempre ([[meca]]): los mismos brazos, la cabina, las sillas, las
+piernas, la escalera, las toberas y las animaciones. **Lo único que cambia es cómo se mueve**: a mano, en vez de Jolt.
+Fila **Meca cinemática**; test `mech_kinematic_look`. El usuario: «lo único que cambia es que se mueve de forma
+cinemática»; «así puedo hacer dashes, otras cosas con más libertad, sin hacer fuerzas enormes que puedan buguear el
+mapa».
 
-## Qué es
-La tercera alternativa, ni física ni mixta. El usuario: «la totalmente cinemática… así puedo hacer dashes, otras cosas
-con más libertad, sin hacer fuerzas enormes que puedan buguear el mapa». **Cinemática no es sin física: la física la
-escribe ella.** Jolt no la mueve. Cada paso, `KinematicMech` calcula dónde va y se pone ahí: es un `AnimatableBody3D`, así
-el motor sabe su velocidad, lleva lo que tiene encima y empuja lo suelto.
-
-- **El mismo péndulo que la meca física, escrito a mano.** El torso tiene su velocidad y el apoyo lo sigue con las mismas
-  reglas (frenar es instantáneo; alcanzarlo tiene tope). La inclinación es lo que el torso se adelantó a su apoyo, sobre
-  el largo del palo. Las perillas son las mismas (`BodySettings`, el F1).
-- **Un golpe** es un cambio de velocidad del torso (`push`). Pasado `fall_tilt` **se cae**: es una caída escrita, que
-  vuelca alrededor del apoyo hasta quedar acostada, y después se levanta.
-- **Lo fijo la frena.** Todo movimiento se prueba antes (también subir y bajar); contra algo fijo, se desliza y pierde la
-  velocidad que iba contra eso. **Lo suelto no la frena: lo empuja.**
-- **El giro** tiene tope de velocidad y de aceleración. **Si algo fijo lo traba, no gira**: la caja girada se prueba
-  antes.
+## Cómo
+- **Un interruptor del cuerpo**: `BalanceBody.kinematic`, que se pone antes de armarla (`MechArchetype(arms, true)`). Con
+  él, la caja queda congelada (cinemática) y la mueve `BodyKinematic`.
+- **Una sola puerta para empujarla y leer su velocidad**: `push_force`, `push_impulse`, `velocity()`, y para cualquier
+  cuerpo `BalanceBody.hit`. Caminar, saltar, el dash, el propulsor, las piñas, los misiles y las zonas pasan por ahí, así
+  que no saben si la meca es física o cinemática.
+- **El mismo péndulo, escrito a mano**: el apoyo sigue al torso con las mismas reglas y perillas (F1). La inclinación es
+  lo que el torso se adelantó al apoyo, sobre el largo del palo.
+- **Caerse es escrito**: vuelca alrededor del apoyo hasta quedar acostada, espera y se levanta. La caída física rodaba
+  contra el piso; acá no hay piso que la haga rodar.
+- **Lo fijo la frena**: cada movimiento se prueba antes, también subir y bajar, y contra algo fijo se desliza.
+- **El giro tiene tope de aceleración**, y si algo fijo lo traba, no gira.
 - **Un borde**: si el piso baja más de 2 m de un paso al otro, queda en el aire y cae.
-- **Los de adentro** van en su `MotionFrame`, como en la meca de siempre: el marco les suma lo que cambia la velocidad de
-  la caja en su punto. **Esto ya estaba resuelto, sea la meca física o no.**
 
-## Lo medido (13/11/2026, `kinematic_mech_look`)
-La rutina de la K: camina, salto cargado, dash de costado contra una pared, se corre, media vuelta, corre y frena.
-- **Los llevados como la gente** (no sienten la inercia, como el jugador): se despegan del piso 0,11 m como mucho y se
-  mueven contra la caja a 0,6 m/s como mucho. No se mueven de su lugar.
-- **El suelto que siente la inercia entera** sale volando por arriba: la caja está abierta arriba y el dash la frena
-  contra la pared a 18 m/s. Es lo esperable; cuánto sienten las cajas lo dice la perilla de inercia del marco.
+## Lo de adentro: como si la meca estuviera quieta (vale para las dos mecas)
+El usuario: «una vez que están adentro los personajes y los paquetes, es como si estuvieran quietas las cosas… no me
+interesa tener físicas complejas adentro de la meca… la regla es siempre la misma». En `MotionFrame`:
+- **La inercia que se siente es 0** (`inertia_felt`).
+- **Lo suelto que entra lo adopta el marco** (un paquete, un cubo; los personajes entran solos). Va **pegado, como
+  hijo**: mientras está quieto queda clavado en su lugar de la meca, y su gravedad apunta hacia el piso de la meca, así
+  que inclinada o caída no resbala. Si algo lo empuja, se suelta y se mueve; al quedarse quieto, se vuelve a clavar.
+- **Las sillas giran con la meca** (medido: la meca giró 90° y las sillas también).
+
+## Medido (13/11/2026, `mech_kinematic_look`)
+La rutina fue: camina, salto cargado, dash de costado contra una pared, se corre, dos giros de 90°, corre y frena, y un
+golpe fuerte.
+- **Los maniquíes sentados y dos cubos sueltos** se corren contra la meca 0,01 m como mucho, contando la caída.
 - **La pared** la frena: no se mete nada.
-- **La pila de afuera** sale despedida hasta 13,9 m/s: es el caveat de empujar con masa infinita. Hay que ponerle una
-  regla.
-- **Un golpe fuerte** la inclina, se cae (escrito) y se levanta. Los de adentro siguen en su lugar.
+- **Un golpe fuerte** la tira (69°) y se levanta.
+- **La meca física**, después del cambio, da lo mismo que antes: el salto sube 10,5 m y los dashes la corren 15,7, 34,8
+  y 21,2 m.
 
-## Los errores que aparecieron
-- **La sombra del marco copiaba la caja entera.** Los de adentro quedaban metidos en una caja maciza y salían despedidos
-  a 127 m/s. Ahora copia sólo `interior`.
-- **Saltando por arriba de una pared baja, al bajar se metía en ella**, porque sólo se probaba el movimiento de costado.
-- **Girando pegada a una pared**, las esquinas se le metían adentro; al salir, saltaba 2 m en un paso y los de adentro
-  salían despedidos.
-- **Pasando el borde de arriba de una pared, bajaba 16 m de golpe**, porque el rayo del piso era largo.
+Lo que enseñó la primera maqueta, que se borró: la sombra del marco tiene que copiar sólo lo de adentro; hay que probar
+también el movimiento vertical, el giro y los bordes. Y llevar lo suelto sumándole velocidades no alcanza: se corría
+0,6 m en la rutina y 5 m al caerse. Por eso ahora va clavado.
 
 ## Lo que falta
-- Una regla para lo suelto que empuja (un tope, o no chocar y empujar con un impulso calculado).
-- Choque entre mecas: dos cuerpos cinemáticos se atraviesan.
-- Que las piñas de la meca física (`PoseArm`) le peguen: hoy hacen `apply_impulse` y a un cuerpo cinemático no le pasa
-  nada.
-- El casco es una caja abierta arriba. Las piernas son un dibujo simple de dos pies que se acomodan, no `BodyLegs`.
+- **Lo suelto de afuera**: una pila alta sale despedida hasta 27 m/s, porque la caja empuja con masa infinita. Hace falta
+  una regla.
+- **Choque entre mecas**: dos cinemáticas se atraviesan.
+- **La bola de prueba** (la J) rebota sin moverla, porque es un choque de Jolt y no pasa por su puerta.
+- **Los brazos físicos** (`MuscleArm`) leen el giro de la caja, que acá es 0. Por eso la fila usa los brazos discretos.
+- **Los personajes** que caminan adentro siguen con la gravedad del mundo: si la meca se cae, se caen. Pegados van sólo
+  los paquetes.
 - La red, sin probar.

@@ -17,13 +17,15 @@ const FAST := 100.0
 const SMALL := 5.0
 const BIG := 14.0
 
-## El camino: qué brazos lleva.
+## El camino: qué brazos lleva. Y si se mueve cinemática (ver BodyKinematic).
 var arms := Mech.Arms.POSE
+var kinematic := false
 
 
-func _init(arms_kind := Mech.Arms.POSE) -> void:
+func _init(arms_kind := Mech.Arms.POSE, moves_kinematic := false) -> void:
 	arms = arms_kind
-	display_name = Mech.NAMES[arms]
+	kinematic = moves_kinematic
+	display_name = "Meca cinemática" if kinematic else Mech.NAMES[arms]
 
 
 func max_footprint() -> Vector2:
@@ -47,6 +49,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	# Nace donde va parada, mirando hacia donde uno llega (−X); la de práctica, adelante, mirándola.
 	var mech := Mech.new()
 	mech.arms_kind = arms
+	mech.kinematic = kinematic
 	mech.transform = Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(0.0, standing, 0.0))
 	root.add_child(mech)
 	var target := Mech.new()

@@ -24,6 +24,14 @@ extends Node3D
 ##     generalizado. *Medido el 03/11/2026: un casco cinemático movido a mano deja que lo de encima se deslice de a poco,
 ##     y sus piezas fijas no llevan nada; la sombra sincronizada sí.*
 ##   · LOS CHOQUES DE LA NAVE se avisan una vez (`crash` → `crashed`); cada miembro decide qué le hacen.
+##   · LO DE ADENTRO VA COMO SI LA MECA ESTUVIERA QUIETA (13/11/2026; el usuario: «una vez que están adentro los
+##     personajes y los paquetes, es como si estuvieran quietas las cosas… no me interesa tener físicas complejas adentro
+##     de la meca… la regla es siempre la misma»). Por eso la inercia que se siente es 0 (`inertia_felt`), y LO SUELTO
+##     QUE ENTRA (un paquete, un cubo: lo que no es un personaje, que entra solo) LO ADOPTA EL MARCO: cada tanto
+##     (`ADOPT_STEPS`) mira lo suelto adentro de sus volúmenes y lo suma; lo que salió, lo suelta. LO SUELTO VA PEGADO,
+##     COMO HIJO DE LA MECA (`_carry_children`): cada paso se pone donde estaba respecto de ella, más lo que se movió por
+##     su cuenta, y su gravedad es la de la meca (hacia su piso): inclinada o caída, no resbala. *Llevado con sumas de
+##     velocidad, como la gente, un cubo se corría 0,6 m en una rutina y 5 m al caerse la meca (medido el 13/11/2026).*
 ##
 ## Uso: un MotionFrame colgado del cuerpo de lo que se mueve (ver ShipKits.build), con sus volúmenes, su piso y su
 ## sombra. Quien va adentro: `MotionFrame.around(punto, actual)` para saber en cuál está, `join`/`leave` al cambiar.
@@ -43,8 +51,11 @@ const ACCEL_FOLLOW := 12.0
 const MAX_ACCEL := 60.0
 
 ## LA PERILLA DE INERCIA, de 0 a 1, para todos: cuánto de lo que acelera la meca se siente (inclina torsos, desliza
-## ragdolls y cajas). La elige el usuario en el F3 de la nave (ShipFlatPanel), que la guarda (ver ShipKits).
-static var inertia_felt := 1.0
+## ragdolls y cajas). En 0: lo de adentro va como si la meca estuviera quieta (ver arriba). *Era 1 en character-parametric,
+## donde la elegía el F3 de la nave.*
+static var inertia_felt := 0.0
+## Cada cuántos pasos se mira qué suelto entró o salió (ver LO DE ADENTRO, arriba).
+const ADOPT_STEPS := 8
 
 ## La altura del piso, en el marco (la de ShipGrid.floor_y en la nave).
 var floor_height := 0.0
@@ -55,6 +66,15 @@ signal crashed(dv: Vector3)
 
 var _volumes: Array = []
 var _members := {}
+## Lo suelto que adoptó (ver `_adopt`): lo suelta él cuando sale. Y lo que se le dio en el último paso para llevarlo
+## (ver `_carry_children`).
+var _adopted := {}
+var _child_carry := {}
+var _child_rest := {}
+## Lo suelto adoptado que va más lento que esto respecto del marco (m/s, rad/s) está quieto: se clava (ver
+## `_carry_children`).
+const REST_SPEED := 0.3
+const REST_SPIN := 0.5
 var _applied := {}
 var _layers := {}
 var _loose := {}
@@ -339,11 +359,100 @@ func _physics_process(delta: float) -> void:
 			_spin_accel = _spin_accel.lerp((_spin - spin_before) / delta, follow)
 		if _steps > 0:
 			_carry(velocity_before, spin_before, _prev, delta)
+			_carry_children(velocity_before, spin_before, now, delta)
 	_crash_dv = Vector3.ZERO
 	_steps += 1
 	_prev = now
+	if _steps % ADOPT_STEPS == 0:
+		_adopt()
 	if is_instance_valid(_shadow):
 		_place_shadow()
+
+
+## LO SUELTO DE ADENTRO ES DEL MARCO (ver LO DE ADENTRO, arriba): suma lo suelto que está en sus volúmenes y suelta
+## lo que adoptó y salió. No toca a los personajes (entran solos, con su cápsula y su ragdoll) ni a lo congelado, ni a
+## los cuerpos con equilibrio (otra meca).
+func _adopt() -> void:
+	for body: Variant in _adopted.keys():
+		if not is_instance_valid(body):
+			_adopted.erase(body)
+		elif not contains((body as Node3D).global_position, MARGIN):
+			_release(body as RigidBody3D)
+	var space := get_world_3d().direct_space_state
+	for volume: Array in _volumes:
+		var active: Callable = volume[1]
+		if active.is_valid() and not bool(active.call()):
+			continue
+		var box := volume[0] as AABB
+		var shape := BoxShape3D.new()
+		shape.size = box.size
+		for body in AreaStrike.loose_in(space, shape, global_transform * Transform3D(Basis(), box.get_center())):
+			if _members.has(body) or body is BalanceBody or MotionFrame._is_person(body):
+				continue
+			if contains(body.global_position, -MARGIN):
+				join(body, 0.0)
+				_adopted[body] = [body.gravity_scale, body.can_sleep]
+				body.gravity_scale = 0.0
+				body.can_sleep = false
+
+
+## Suelta lo adoptado: vuelve su gravedad y deja el marco.
+func _release(body: RigidBody3D) -> void:
+	var before: Array = _adopted[body]
+	body.gravity_scale = before[0]
+	body.can_sleep = before[1]
+	_adopted.erase(body)
+	_child_carry.erase(body)
+	_child_rest.erase(body)
+	leave(body)
+
+
+## LO SUELTO, PEGADO COMO HIJO (ver LO DE ADENTRO, arriba). Cada paso: dónde está respecto del marco (la sombra, su
+## piso, ya llegó a `_prev`), y la velocidad que lo lleva EXACTO a ese mismo lugar en el marco de ahora durante el paso
+## que viene —lo mismo que va a recorrer el piso de la sombra—, más la suya propia girada con el marco, más la gravedad
+## hacia el piso del marco. *Primero se lo ponía directo en el lugar de ahora y además con la velocidad del marco: el
+## movimiento se contaba dos veces y los cubos se iban 50 m (medido).*
+func _carry_children(_velocity_before: Vector3, _spin_before: Vector3, now: Transform3D, delta: float) -> void:
+	var before := _prev.orthonormalized()
+	var after := now.orthonormalized()
+	var down := after.basis * Vector3.DOWN * float(ProjectSettings.get_setting("physics/3d/default_gravity"))
+	for body: Variant in _adopted.keys():
+		var rigid := body as RigidBody3D
+		if not is_instance_valid(rigid):
+			continue
+		var carried: Array = _child_carry.get(rigid, [Vector3.ZERO, Vector3.ZERO])
+		# Lo suyo: lo que tiene de más sobre lo que se le dio para llevarlo (contactos, la gravedad, un empujón).
+		var own := before.basis.inverse() * (rigid.linear_velocity - (carried[0] as Vector3))
+		var own_spin := before.basis.inverse() * (rigid.angular_velocity - (carried[1] as Vector3))
+		var here := rigid.global_transform.orthonormalized()
+		var local := before.affine_inverse() * here
+		# QUIETO ADENTRO, QUEDA CLAVADO EN SU LUGAR: no acumula ni un centímetro. Si algo lo empuja (más que `REST_SPEED`
+		# de lo suyo), se suelta y se mueve; al volver a quedarse quieto, se clava donde quedó.
+		if own.length() < REST_SPEED and own_spin.length() < REST_SPIN:
+			if not _child_rest.has(rigid):
+				_child_rest[rigid] = local
+			local = _child_rest[rigid]
+			own = Vector3.ZERO
+			own_spin = Vector3.ZERO
+		else:
+			_child_rest.erase(rigid)
+		var there := after * local
+		var move := (there.origin - here.origin) / delta
+		var turn := (there.basis * here.basis.inverse()).get_rotation_quaternion()
+		var spin := Vector3(turn.x, turn.y, turn.z) * (2.0 * signf(turn.w)) / delta
+		rigid.linear_velocity = move + after.basis * own + (Vector3.ZERO if _child_rest.has(rigid) else down * delta)
+		rigid.angular_velocity = spin + after.basis * own_spin
+		_child_carry[rigid] = [move, spin]
+
+
+## Si `body` es parte de un personaje (su cápsula o un hueso de su ragdoll): esos entran y salen solos.
+static func _is_person(body: Node) -> bool:
+	var node := body
+	while node != null:
+		if node is BoneInstantiator:
+			return true
+		node = node.get_parent()
+	return false
 
 
 ## LOS LLEVA: a cada miembro, lo que cambió la velocidad de la meca en su punto (y su giro), menos lo que siente.
@@ -360,7 +469,7 @@ func _carry(velocity_before: Vector3, spin_before: Vector3, before: Transform3D,
 			_loose.erase(body)
 			continue
 		var rigid := body as RigidBody3D
-		if rigid == null or rigid.freeze:
+		if rigid == null or rigid.freeze or _adopted.has(body):
 			_applied[body] = Vector3.ZERO
 			continue
 		var felt: float = _members[body]

@@ -55,6 +55,10 @@ const AIM_LEAD := deg_to_rad(110.0)
 ## LA CAJA: su tamaño (m) y sus perillas. Se ponen antes de agregarlo al árbol (la masa es la de RigidBody3D).
 var size := Vector3.ONE * 8.0
 var knobs: BodySettings = null
+## CINEMÁTICA (13/11/2026, ver BodyKinematic): el mismo cuerpo, con todo lo suyo, pero lo mueve a mano en vez de Jolt.
+## Se pone antes de agregarlo al árbol.
+var kinematic := false
+var kin: BodyKinematic = null
 
 ## ── LO QUE SE LE PIDE ──
 ## Caminar (x a la derecha, y adelante, de −1 a 1), correr, agacharse, el salto (mantenido carga, soltarlo salta; en el
@@ -123,6 +127,10 @@ func _ready() -> void:
 	legs.body = self
 	add_child(legs)
 	moves = BodyMoves.new(self)
+	if kinematic:
+		freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
+		freeze = true
+		kin = BodyKinematic.new(self)
 	_build()
 	label = Label3D.new()
 	label.top_level = true
@@ -157,6 +165,12 @@ func _physics_process(delta: float) -> void:
 	var k := knobs
 	_think()
 	nozzles.rest()
+	if kinematic:
+		kin.step(k, delta)
+		legs.place(k, delta)
+		_after_step(k, delta)
+		_show_label()
+		return
 	gravity_scale = k.fall_gravity if state == State.DOWN else moves.gravity_share(k)
 	angular_damp = k.ground_spin_damp if state == State.DOWN else 0.0
 	if state != State.STANDING:
@@ -183,6 +197,10 @@ func _physics_process(delta: float) -> void:
 	nozzles.fire(k)
 	legs.place(k, delta)
 	_after_step(k, delta)
+	_show_label()
+
+
+func _show_label() -> void:
 	label.global_position = global_position + Vector3(0, size.y + 2.0, 0)
 	label.text = "%s · altura %.1f m · inclinación %.0f°\núltimo golpe %.1f m/s %s · caídas %d · pasos %d" % [
 		["parada", "TIRADA", "sube", "se endereza"][state], height, tilt, last_hit, last_hit_kind, falls, legs.steps_taken]
@@ -366,8 +384,54 @@ func knock(strong: bool) -> void:
 		return
 	var side := global_basis.x
 	side.y = 0.0
-	apply_impulse(side.normalized() * mass * (knobs.knock_strong if strong else knobs.knock_soft),
+	push_impulse(side.normalized() * mass * (knobs.knock_strong if strong else knobs.knock_soft),
 		global_basis * Vector3(0.0, size.y * 0.5, 0.0))
+
+
+## ── EMPUJARLA Y LEER SU VELOCIDAD: UNA SOLA PUERTA PARA LOS DOS MODOS ────────────────────────────────────────────
+## Física, va a Jolt; cinemática, a la velocidad que mueve BodyKinematic. Todo lo que la empuja (caminar, saltar, el
+## dash, el propulsor, las piñas, los misiles, las zonas) pasa por acá.
+
+## Su velocidad (m/s, mundo).
+func velocity() -> Vector3:
+	return kin.velocity if kinematic else linear_velocity
+
+
+func set_velocity(value: Vector3) -> void:
+	if kinematic:
+		kin.velocity = value
+	else:
+		linear_velocity = value
+
+
+## UNA FUERZA (N) en este paso, en el punto `at` (desde su centro, en el mundo). Cinemática, sólo cuenta lo que mueve el
+## centro (el giro lo hace el péndulo).
+func push_force(force: Vector3, at := Vector3.ZERO) -> void:
+	if kinematic:
+		kin.force += force
+	else:
+		apply_force(force, at)
+
+
+## UN IMPULSO (N·s) en `at` (desde su centro, en el mundo). Cinemática: un cambio de velocidad del torso, sólo parada.
+func push_impulse(impulse: Vector3, at := Vector3.ZERO) -> void:
+	if not kinematic:
+		apply_impulse(impulse, at)
+	elif state == State.STANDING:
+		kin.velocity += Vector3(impulse.x, impulse.y if airborne else 0.0, impulse.z) / mass
+
+
+## LE PEGA A CUALQUIER CUERPO: a uno con equilibrio, por su puerta (física o cinemática); a lo demás, de siempre.
+static func hit(body: RigidBody3D, impulse: Vector3, at := Vector3.ZERO) -> void:
+	if body is BalanceBody:
+		(body as BalanceBody).push_impulse(impulse, at)
+	else:
+		body.apply_impulse(impulse, at)
+
+
+## Su velocidad, la tenga como la tenga (con equilibrio, por su puerta; lo demás, de Jolt).
+static func speed_of(body: RigidBody3D) -> Vector3:
+	return (body as BalanceBody).velocity() if body is BalanceBody else body.linear_velocity
 
 
 ## ── LO QUE MIDE ──────────────────────────────────────────────────────────────────────────────────────────────────

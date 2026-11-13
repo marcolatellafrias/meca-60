@@ -79,7 +79,8 @@ func step(k: BodySettings, delta: float) -> void:
 ## arriba: el péndulo no lo lee como un golpe.
 func _jump(k: BodySettings) -> void:
 	var rise := lerpf(k.jump_least, 1.0, jump_charge) * k.jump_height
-	_body.linear_velocity.y = sqrt(2.0 * BalanceBody.gravity() * k.air_gravity * rise)
+	var now := _body.velocity()
+	_body.set_velocity(Vector3(now.x, sqrt(2.0 * BalanceBody.gravity() * k.air_gravity * rise), now.z))
 	jump_charge = 0.0
 	_body.take_off()
 
@@ -90,10 +91,11 @@ func _dash(k: BodySettings) -> void:
 	if stick.length_squared() < 0.01:
 		stick = Vector3.FORWARD
 	var way := (Basis(Vector3.UP, _body.yaw()) * stick).normalized()
-	var flat := Vector3(_body.linear_velocity.x, 0.0, _body.linear_velocity.z)
+	var now := _body.velocity()
+	var flat := Vector3(now.x, 0.0, now.z)
 	var change := way * maxf(flat.dot(way), 0.0) + way * k.dash_speed - flat
-	change.y = maxf(k.dash_lift - _body.linear_velocity.y, 0.0)
-	_body.apply_central_impulse(change * _body.mass)
+	change.y = maxf(k.dash_lift - now.y, 0.0)
+	_body.push_impulse(change * _body.mass)
 	_body.nozzles.show(way, DASH_SHOW)
 	fuel = maxf(fuel - k.dash_cost, 0.0)
 	dashes_left -= 1
@@ -103,7 +105,7 @@ func _dash(k: BodySettings) -> void:
 func gravity_share(k: BodySettings) -> float:
 	if not _body.airborne or _thrusting:
 		return 1.0
-	return k.air_gravity * (k.fall_extra if _body.linear_velocity.y < 0.0 else 1.0)
+	return k.air_gravity * (k.fall_extra if _body.velocity().y < 0.0 else 1.0)
 
 
 ## CAMINAR, CORRER Y AGACHADA. En el aire casi no cambia su velocidad de costado.
@@ -113,14 +115,15 @@ func drive(k: BodySettings, delta: float) -> void:
 	var stick := Vector3(_body.move.x, 0.0, -_body.move.y)
 	var sprinting := _body.sprint and stick.z < 0.0 and not crouching
 	var wanted := Basis(Vector3.UP, _body.yaw()) * stick.limit_length(1.0) * walk * (k.sprint_multiplier if sprinting else 1.0)
-	var flat := Vector3(_body.linear_velocity.x, 0.0, _body.linear_velocity.z)
+	var now := _body.velocity()
+	var flat := Vector3(now.x, 0.0, now.z)
 	var most := k.walk_accel if wanted.length_squared() > 0.0001 else k.walk_brake
 	# LA BANDA DEL SPRINT: por encima de la caminata, la velocidad se gana y se pierde más despacio.
 	if flat.length() > walk:
 		most *= k.sprint_accel
 	if _body.airborne:
 		most = k.air_accel
-	_body.apply_central_force(((wanted - flat) / maxf(delta, 0.0001)).limit_length(most) * _body.mass)
+	_body.push_force(((wanted - flat) / maxf(delta, 0.0001)).limit_length(most) * _body.mass)
 
 
 ## El salto cargándose y el propulsor, para el cartel de poseer.

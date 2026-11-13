@@ -108,6 +108,6 @@ func _sweep(pose: Dictionary, delta: float) -> void:
 ## LE PEGA a `body` en `at` con el puño yendo a `velocity` (mundo): un impulso, una vez por piña.
 func _hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> void:
 	_struck[body.get_instance_id()] = true
-	body.apply_impulse(velocity * HIT_MASS, at - body.global_position)
+	BalanceBody.hit(body, velocity * HIT_MASS, at - body.global_position)
 	last_hit_speed = velocity.length()
 	last_hit = body

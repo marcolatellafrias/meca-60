@@ -105,6 +105,7 @@ func _rebuild_mechs() -> void:
 		var holder := old.get_parent()
 		var fresh := Mech.new()
 		fresh.arms_kind = old.arms_kind
+		fresh.kinematic = old.kinematic
 		# Parada sobre el piso de su parcela (la altura 0 de lo que la tiene, como la arman sus arquetipos).
 		fresh.transform = Transform3D(Basis(Vector3.UP, old.yaw()), Vector3(old.position.x,
 			BodySettings.current.hover_height + CabinGrid.HALF_HEIGHT, old.position.z))

@@ -89,7 +89,8 @@ func _now() -> Attack:
 func _fire(which: Attack, target: Mech) -> void:
 	var floor_y := target.support.y if target.grounded else global_position.y
 	var here := Vector3(target.global_position.x, floor_y, target.global_position.z)
-	var going := Vector3(target.linear_velocity.x, 0.0, target.linear_velocity.z)
+	var moving := target.velocity()
+	var going := Vector3(moving.x, 0.0, moving.z)
 	var base := Vector3(global_position.x, floor_y, global_position.z)
 	var toward := (here - base).normalized() if (here - base).length_squared() > 1.0 else Vector3.FORWARD
 	var edge := DodgeArenaArchetype.RADIUS
