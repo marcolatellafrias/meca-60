@@ -53,41 +53,23 @@ extends Resource
 @export_range(-0.3, 0.3, 0.01) var lean := 0.05
 
 @export_group("Pose")
-## El cuerpo entero tirado adelante (+) o atrás (−), quieto o caminando, en radianes: lo usan los modificadores de pose
-## (ver WalkModifier). Las piernas siguen plantadas.
+## El cuerpo entero tirado adelante (+) o atrás (−), quieto o caminando, en radianes. Las piernas siguen plantadas.
 @export_range(-0.5, 0.5, 0.01) var posture_lean := 0.0
 
 
 ## ── EL DE CADA PERSONAJE (07/11/2026, ver EntityArchetype, EL ANDAR QUE ERA DE TODOS) ──────────────────────────────
-## Estas perillas son de cada arquetipo (`walk_` + el nombre): cada personaje arma su estilo con las de su arquetipo y
-## encima sus modificadores. Las demás —el largo del paso, la hundida y los hombros— quedan en 1 y sólo las mueven los
-## modificadores, como multiplicadores de lo del arquetipo. *Hasta entonces todos leían una
+## Estas perillas son de cada arquetipo (`walk_` + el nombre): cada personaje arma su estilo con las de su arquetipo. Las
+## demás —el largo del paso, la hundida y los hombros— quedan en 1, como multiplicadores de lo del arquetipo. *Hasta entonces todos leían una
 ## sola base (la de abajo, `walk_style.tres`), y el panel de locomoción la mostraba bajo el nombre de un arquetipo.*
 const ARCHETYPE_KNOBS: Array[String] = ["twist", "spine_bow", "spine_roll", "lean", "posture_lean", "hip_sway",
 	"bounce_up", "arm_open", "run_elbow", "stride_growth", "swing_share", "lead"]
 
 
-## ── UN NOMBRE, UN LUGAR (07/11/2026, el usuario eligió arreglarlo) ─────────────────────────────────────────────
-## Un modificador cambia cada número que se llame como él donde esté: en el arquetipo, en el individuo y en este estilo.
-## `step_height` y `arm_swing` estaban en los dos lados, así que se aplicaban dos veces —«Arrastrando los pies», ×0,15
-## del pie, lo dejaba en ×0,02—. Se fueron de acá, y esta regla avisa si un número de este estilo vuelve a llamarse
-## como uno del arquetipo o del individuo.
-static func _check_names(arch: Object) -> void:
-	for prop in WalkStyle.new().get_property_list():
-		var field := str(prop["name"])
-		if int(prop["usage"]) & PROPERTY_USAGE_SCRIPT_VARIABLE and field in arch:
-			push_error("[WalkStyle] «%s» también es del arquetipo: un modificador lo aplicaría dos veces." % field)
-
-
-static func for_archetype(arch: Object, modifiers: Array[WalkModifier]) -> WalkStyle:
+static func for_archetype(arch: Object) -> WalkStyle:
 	var out := WalkStyle.new()
 	if arch != null:
-		if OS.is_debug_build():
-			_check_names(arch)
 		for knob: String in ARCHETYPE_KNOBS:
 			out.set(knob, float(arch.get("walk_" + knob)))
-	for modifier in modifiers:
-		modifier.apply(out)
 	return out
 
 

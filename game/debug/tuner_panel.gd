@@ -69,22 +69,6 @@ var menu_key: Key = KEY_NONE
 ## El mundo que lo montó —el design sandbox—: de él salen la fila y la parcela donde está parado el jugador. Lo escribe
 ## quien lo monta; afuera del sandbox queda en null.
 var sandbox: Node = null
-## ── LOS PERSONAJES DE UN PANEL, UNA SOLA PREGUNTA ────────────────────────────────────────────────────────────────
-## Todo panel que busca personajes —el maniquí que edita, los que rearma, los que pinta con quads— los pide acá, y no
-## recorriendo el grupo de cápsulas por su cuenta. `characters` son los maniquíes del sandbox (`CharacterKind.figure`).
-func characters() -> Array[BoneInstantiator]:
-	return display_characters(get_tree())
-
-
-static func display_characters(tree: SceneTree) -> Array[BoneInstantiator]:
-	var out: Array[BoneInstantiator] = []
-	for rb in tree.get_nodes_in_group(CharacterRigidBody3D.CHARACTER_GROUP):
-		var bi := (rb as Node).get_parent() as BoneInstantiator
-		if is_instance_valid(bi) and bi.kind.is_exhibit():
-			out.append(bi)
-	return out
-
-
 ## SI ESTE PANEL SE ACABA DE CERRAR (en el último cambio de UIState): lo que un panel deshace al cerrarse —apagar sus
 ## quads, volver a mostrar las partes— lo hace sólo si el que se cerró es él, no cada vez que cambia cualquier otro.
 var just_closed := false

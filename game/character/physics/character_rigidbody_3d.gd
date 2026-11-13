@@ -103,20 +103,6 @@ var landing_tolerance: float = 9.0
 var impact_y_threshold: float = 2.0
 
 var ragdoll_threshold: float = 0.85
-## ── EL EBRIO: EL EQUILIBRIO QUE DERIVA Y SE CORRIGE DE GOLPE ──────────────────────────────────────
-## Lo pidió el usuario (12/10/2026): «el torso hace movimientos suaves y drifting, y cada tanto se corrige
-## rápidamente y medio que rebota un poquito», y que sea el controlador PD del equilibrio —`impact_xz`, el que suma los
-## golpes y tumba al pasar `ragdoll_threshold`—, porque tiene impacto en el juego. La DERIVA (`balance_drift`, en
-## 1/s²) empuja el equilibrio despacio en una dirección que cambia sola; cuando se va más allá de `balance_correct_at`
-## (en fracción del umbral de caída) se CORRIGE DE GOLPE —el resorte, `BALANCE_CORRECT_BOOST` veces más duro por
-## `BALANCE_CORRECT_TIME`— y con poco amortiguamiento rebota un poquito. La deriva sola no tumba: un golpe con el cuerpo
-## ya corrido sí, más fácil. Lo ponen los modificadores (ver WalkModifier, «Ebrio»); 0, nada.
-var balance_drift: float = 0.0
-var balance_correct_at: float = 0.0
-const BALANCE_CORRECT_BOOST := 10.0
-const BALANCE_CORRECT_TIME := 0.25
-var _drift_clock: float = randf() * 100.0
-var _correcting: float = 0.0
 
 ## Estabilidad direccional (de EntityArchetype): multiplican el umbral de impacto según de dónde
 ## venga el golpe. >1 = más difícil de voltear en esa dirección; <1 = más fácil. Se setean por
@@ -566,13 +552,10 @@ func _physics_process(delta: float) -> void:
 		# velocidad de la nave y se tiraba para atrás y al costado todo el vuelo (lo vio el usuario, 03/11/2026). Al
 		# compañero de red se la pone la red, y al peatón su camino (ver Pedestrian): pisársela acá le sacaba los pasos a
 		# los que se dibujaban después de este paso (05/11/2026, lo vio el usuario en el salón de personas).
-		if kind.is_exhibit():
-			puppet_velocity = floor_velocity
-		# El ebrio se balancea también en el sandbox, y la inercia del marco inclina al de exhibición (ver EL MARCO): sin
-		# red, se calculan acá. Un compañero de red los trae de su dueño, adentro de `impact_xz` (ver `impact_synced`).
+		# La inercia del marco y los golpes: sin red, se calculan acá. Un compañero de red los trae de su dueño, adentro de `impact_xz` (ver `impact_synced`).
 		if not impact_synced:
 			_update_frame_lean(delta)
-			if balance_drift > 0.0 or frame != null or impact_xz != Vector2.ZERO:
+			if frame != null or impact_xz != Vector2.ZERO:
 				_update_impact_pd(delta)
 			_count_fall(delta)
 		return
@@ -731,17 +714,6 @@ func _update_velocity_indicator() -> void:
 
 func _update_impact_pd(delta: float) -> void:
 	var stiffness := impact_stiffness
-	if balance_drift > 0.0:
-		# LA DERIVA (ver EL EBRIO): una dirección que gira sola, de dos ritmos que no coinciden.
-		_drift_clock += delta
-		var wander := Vector2(sin(_drift_clock * 0.7) + 0.6 * sin(_drift_clock * 1.73 + 1.3),
-			cos(_drift_clock * 0.53) + 0.5 * sin(_drift_clock * 1.21 + 0.4))
-		_impact_xz_vel += wander * balance_drift * delta
-		if balance_correct_at > 0.0 and impact_xz.length() > balance_correct_at * ragdoll_threshold:
-			_correcting = BALANCE_CORRECT_TIME
-	if _correcting > 0.0:
-		_correcting -= delta
-		stiffness *= BALANCE_CORRECT_BOOST
 	# LOS DOS RESORTES (ver EL RESORTE EN DOS PARTES): el continuo va hacia la inercia del marco; el de los golpes, a cero.
 	var lean_acc := -(_lean_xz - _frame_lean) * stiffness - _impact_xz_vel * impact_damping
 	_impact_xz_vel += lean_acc * delta

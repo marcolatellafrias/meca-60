@@ -403,14 +403,9 @@ func _share_points(delta: float) -> void:
 	for i in keys.size():
 		var h: Dictionary = _holds[keys[i]]
 		var face := face_of(h["offset"] as Vector3, box_half)
-		var sags := keys.size() == 1 and LocomotionCommon.base().long_alone_sags
-		var wide := keys.size() == 1 and along >= 0 and not sags
+		var wide := keys.size() == 1 and along >= 0
 		if not _carries_by(face, wide, along):
 			face = _carry_face(h, wide, along)
-		# SE VENCE (ver LocomotionCommon.long_alone_sags): solo, por donde agarró —el centro de ese módulo—.
-		if sags and face == face_of(h["offset"] as Vector3, box_half):
-			h["held"] = (h["held"] as Vector3).move_toward(h["offset"] as Vector3, step)
-			continue
 		var want := Vector3(face.x * box_half.x, face.y * box_half.y, face.z * box_half.z)
 		if along >= 0 and absf(face[along]) < 0.5:
 			var part := floori(float(i) * parts / float(keys.size()))
@@ -510,8 +505,7 @@ func _orientation_error(body: RigidBody3D) -> Quaternion:
 		var unturned := Basis(_turn_now.inverse()) * basis
 		if box_half != Vector3.ZERO:
 			var facing := _facing_upright(unturned, face_of(only["held"] as Vector3, box_half), toward)
-			var carried := _sagged(facing, unturned, only) if LocomotionCommon.base().long_alone_sags else facing
-			return _with_turn(only, carried, basis, unturned)
+			return _with_turn(only, facing, basis, unturned)
 		return _swing(basis * (only["held"] as Vector3), toward)
 
 	_turn_now = Quaternion.IDENTITY
@@ -580,30 +574,6 @@ func _with_turn(h: Dictionary, err: Quaternion, basis: Basis, unturned: Basis) -
 var _turn_base := Quaternion.IDENTITY
 var _turn_base_heading := 0.0
 var _has_turn_base := false
-
-
-## ── SE VENCE (ver LocomotionCommon.long_alone_sags) ──────────────────────────────────────────────────────────────────────
-## Lo que el peso le gana a la fuerza: el torque del peso —la masa por g por la distancia horizontal de la mano al
-## centro— contra el que puede hacer quien lo lleva (`strength` × TORQUE_PER_STRENGTH). De 0 a 1.
-func sag_share(body: RigidBody3D, h: Dictionary) -> float:
-	var lever := global_transform.basis * (h["held"] as Vector3)
-	lever.y = 0.0
-	var capacity := maxf((h["strength"] as float) * TORQUE_PER_STRENGTH, 0.01)
-	return clampf(body.mass * 9.8 * lever.length() / capacity, 0.0, 1.0)
-
-
-## La caja de una mano, vencida: la punta libre baja `sag_share × sag_max_deg`, girando sobre el eje horizontal que cruza
-## de la mano al centro.
-func _sagged(facing: Quaternion, _basis: Basis, h: Dictionary) -> Quaternion:
-	var body := get_parent() as RigidBody3D
-	var lever := global_transform.basis * (h["held"] as Vector3)
-	lever.y = 0.0
-	if not is_instance_valid(body) or lever.length_squared() < 0.0001:
-		return facing
-	# La punta libre está del lado contrario a la mano: de la mano al centro es `-lever`.
-	var axis := Vector3.UP.cross(-lever).normalized()
-	var angle := deg_to_rad(LocomotionCommon.base().sag_max_deg) * sag_share(body, h)
-	return Quaternion(axis, angle) * facing
 
 
 ## UNA MANO EN UNA CAJA: derecha —su eje que más mira arriba, arriba— y la cara `face` (local) de frente a `toward`,

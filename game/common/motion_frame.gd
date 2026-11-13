@@ -35,9 +35,6 @@ const MARGIN := 0.2
 const JUMP_M := 3.0
 ## La capa de lo de adentro (la 21, la del viejo piso de la cabina): la sombra y los miembros sólidos.
 const LAYER := 1 << 20
-## EL RAGDOLL DE EXHIBICIÓN: en su capa, que no mira nadie (ni lo agarran ni lo empujan), y mirando lo del marco.
-const EXHIBIT_RAGDOLL_LAYER := 1 << 21
-const EXHIBIT_RAGDOLL_MASK := LAYER
 ## `felt` de quien siente lo que diga la perilla, en vivo.
 const FELT_KNOB := -1.0
 ## La aceleración que se lee (la inclinación, las cajas) se sigue suave (1/s) y con tope (m/s²): la del marco sale de

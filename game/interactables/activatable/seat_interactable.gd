@@ -227,12 +227,11 @@ static func _is_local(bi: Node) -> bool:
 
 
 ## ── UNA SOLA SILLA PARA TODOS (03/11/2026) ──────────────────────────────────────────────────────────────────────────
-## Al jugador de esta máquina lo sienta el host (ver `activate`, el claim); a todos los demás —el compañero de red, el de
-## exhibición, una figura—, su intención (ver BoneInstantiator._follow_seat), por acá: el mismo `_sit` y el mismo
-## `_release_occupant`, sin claim que pedir. Devuelve false si el asiento ya está tomado por otro que no se va (ver
-## `_evict_display_occupant`).
+## Al jugador de esta máquina lo sienta el host (ver `activate`, el claim); a todos los demás —el compañero de red, los
+## de los experimentos—, su intención (ver BoneInstantiator._follow_seat), por acá: el mismo `_sit` y el mismo
+## `_release_occupant`, sin claim que pedir. Devuelve false si el asiento ya está tomado por otro.
 func sit(bi: Node) -> bool:
-	if is_instance_valid(_seated_bi) and _seated_bi != bi and not _is_exhibit(_seated_bi):
+	if is_instance_valid(_seated_bi) and _seated_bi != bi:
 		return false
 	_sit(bi)
 	return true
@@ -243,10 +242,6 @@ func release(bi: Node) -> void:
 	if _seated_bi == bi:
 		_release_occupant(false, false)
 
-
-static func _is_exhibit(bi: Node) -> bool:
-	var kind: CharacterKind = bi.get("kind")
-	return kind != null and kind.is_exhibit()
 
 func _local_player() -> Node:
 	var spawner := get_tree().get_first_node_in_group("character_spawner")
@@ -394,13 +389,6 @@ func _recline() -> float:
 ## AL QUE SE SIMULA (el jugador), la altura, SOBRE EL ARRIBA DEL ASIENTO —no la vertical del mundo: con la meca cabeceando
 ## o ladeada, la altura del mundo lo corría de la silla (ver BoneInstantiator, LOS EJES DE LA SILLA)—. Su rumbo lo lleva
 ## su mirada, que va en los ejes del marco y viaja sola con la meca (ver CharacterIntent).
-##
-## AL QUE NO SE SIMULA NI LLEGA POR RED (uno de exhibición, una figura), EL TRANSFORM ENTERO, derivado del asiento:
-## "la altura del asiento en el mundo" sólo es donde está el asiento MIENTRAS LA NAVE ESTÁ DERECHA; volcada, la
-## corrección lo tiraba a un punto que ya no es la silla (medido: las cuatro cápsulas se iban entre 1,25 y 2,02 m, el
-## cuerpo se despegaba del asiento y salía de la cabina). GIRADO CON LA SILLA lo que su mirada se aparte del frente de
-## la silla: mirar a un costado es girar entero, la silla con él, como un jugador (ver characters.md, Where you look is
-## the whole body). Su cápsula está estática y fuera de toda capa, así que esto es una escritura de transform y nada más.
 func _carry_occupant() -> void:
 	if not is_instance_valid(_seated_bi):
 		return
@@ -409,14 +397,6 @@ func _carry_occupant() -> void:
 		return
 	if char_rb.kind.simulates():
 		char_rb.global_position = global_position + global_basis.y.normalized() * _occupant_y_offset
-		return
-	if not char_rb.kind.is_exhibit():
-		return
-	var intent: CharacterIntent = _seated_bi.get("intent")
-	var turn := angle_difference(CharacterIntent.yaw_of(char_rb.frame, -global_basis.z), intent.look_yaw) \
-		if intent != null else 0.0
-	var lift := Transform3D(Basis(Vector3.UP, turn), Vector3(0.0, _occupant_y_offset, 0.0))
-	char_rb.global_transform = global_transform.orthonormalized() * lift
 
 
 ## ¿Este personaje sigue realmente sentado acá? Es la MISMA condición que el gate del solve de pose
@@ -471,41 +451,6 @@ func update_seated_visual(occupant: Node, occupant_yaw: float) -> void:
 	var turn := Basis(Vector3.UP, atan2(-facing.x, -facing.z))
 	mesh.global_basis = global_basis.orthonormalized() * turn * Basis.from_scale(mesh.global_basis.get_scale())
 
-## Si el asiento lo tenía UNO DE EXHIBICIÓN (ver CharacterKind.is_exhibit) y el que llega es otro, se lo saca: el que se
-## sienta de verdad tiene prioridad, y con dos ocupantes el asiento queda posado por los dos a la vez. La malla prestada se
-## va con él —es hija de su cápsula—, así que acá sólo se la suelta antes de devolver el visual a su reposo.
-##
-## NO SE BORRA: se para, SE APAGA Y SE ESCONDE (BoneInstantiator.set_active), y cuando el que llegó se levanta, vuelve y
-## se sienta de nuevo (el usuario: «si me siento en una silla desaparecen y se desactivan»).
-func _evict_display_occupant(incoming: Node) -> void:
-	if not is_instance_valid(_seated_bi) or _seated_bi == incoming:
-		return
-	if not _is_exhibit(_seated_bi):
-		return
-	var dummy: Node = _seated_bi
-	_put_aside = dummy
-	_release_occupant(false, false)
-	if dummy.has_method("set_active"):
-		dummy.call("set_active", false)
-
-
-## El de exhibición que se apartó para que se siente otro (ver `_evict_display_occupant`), o null.
-var _put_aside: Node = null
-
-
-## Vuelve el apartado, si lo hay, y se sienta otra vez.
-func _bring_back_put_aside() -> void:
-	var back := _put_aside
-	_put_aside = null
-	if not is_instance_valid(back) or not back.is_inside_tree():
-		return
-	if back.has_method("set_active"):
-		back.call("set_active", true)
-	var intent: CharacterIntent = back.get("intent")
-	if intent != null:
-		intent.seat = self
-
-
 ## Un sonido al sentarse y otro al pararse, en la máquina de quien se sienta (ver SoundEntity).
 const SOUNDS := {SIT: &"silla_sienta", STAND: &"silla_levanta"}
 
@@ -531,7 +476,6 @@ func _fit_station(sitter: Node) -> void:
 
 
 func _sit(bi: Node) -> void:
-	_evict_display_occupant(bi)
 	_seated_bi = bi
 	_fit_station(bi)
 	var char_rb := bi.get("char_rigidbody") as CharacterRigidBody3D
@@ -626,8 +570,6 @@ func _release_occupant(teleport: bool, broadcast: bool) -> void:
 	var char_rb := bi.get("char_rigidbody") as CharacterRigidBody3D
 	_seated_bi = null
 	_fit_station(null)
-	if bi != _put_aside and is_inside_tree():
-		_bring_back_put_aside.call_deferred()
 	if teleport:
 		play_sound(STAND)
 

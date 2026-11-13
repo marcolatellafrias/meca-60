@@ -75,13 +75,7 @@ const KNUCKLE_BAND := 0.55
 ## todo muy complicado»—, con botones de un tamaño mínimo, pero «hay que hacer las dos versiones y mantener las dos… así
 ## yo las pruebo… no podemos definirlo ahora sin siquiera tener un componente de minijuegos para probarlo».
 enum Press { FIST, FINGER }
-static var press_with: Press = _saved_press()
-
-
-## Lo guardado con el F1 (ver GripSettings); sin guardar, el puño.
-static func _saved_press() -> Press:
-	var saved := GripSettings.saved()
-	return saved.press_with as Press if saved != null else Press.FIST
+static var press_with: Press = Press.FIST
 
 ## Cuánto gira cada falange sobre su +Z, en grados, de la base a la punta. EL PUÑO: los cuatro dedos cerrados y el
 ## pulgar encima. Probada en el banco (ArmBendClip, `--vista=dedos`).

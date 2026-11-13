@@ -5,7 +5,6 @@ extends Node3D
 ## que quien la consuma (CharacterSpawner → AreaInstantiator) la reenganche.
 signal active_camera_changed(camera: Camera3D)
 ## Un personaje que no se simula se cayó (ver EL RAGDOLL DE QUIEN NO SE SIMULA): quien lo armó lo rearma.
-signal exhibit_fallen
 
 ## QUÉ CLASE DE PERSONAJE ES (ver CharacterKind: el jugador, un compañero de red, uno de exhibición, una figura, el ente).
 ## Se pone ANTES de agregarlo al árbol; sin poner, uno de la calle (`npc`). Reemplaza a `is_active`, `is_puppet`, `is_display` y
@@ -153,15 +152,9 @@ func _initialize_skeleton() -> void:
 	_clear_prior_generations()
 
 	entity_instantiation = EntityInstantiation.create(master_seed)
-	# LOS MODIFICADORES (ver WalkModifier): lo del arquetipo —la pose, la respiración, el temblor— al nacer; la caminata,
-	# en vivo y propia, si tiene alguno.
-	_modifiers = walk_modifiers.duplicate()
-	for modifier in _modifiers:
-		modifier.apply(entity_instantiation.arch_final)
-		modifier.apply(entity_instantiation)
 	entity_archetype     = entity_instantiation.arch_final
-	# EL ESTILO DE CAMINAR, DE CADA UNO (ver WalkStyle.for_archetype): lo de su arquetipo y encima sus modificadores.
-	walk_style = WalkStyle.for_archetype(entity_archetype, _modifiers)
+	# EL ESTILO DE CAMINAR, DE CADA UNO (ver WalkStyle.for_archetype): lo de su arquetipo.
+	walk_style = WalkStyle.for_archetype(entity_archetype)
 	skel_sizes_util      = SkeletonSizesUtil.create(entity_instantiation, size_scale, head_slot)
 	skel_sizes_util.skin = skin
 	custom_bones_util    = CustomBonesUtil.create(skel_sizes_util, entity_instantiation)
@@ -174,9 +167,6 @@ func _initialize_skeleton() -> void:
 	char_rigidbody  = CharacterRigidBody3D.create(charRb, skel_sizes_util.distance_from_ground,
 		skel_sizes_util.leg_height, kind, intent, entity_instantiation)
 	char_rigidbody.fall_triggered.connect(_on_fall_triggered)
-	# Y LOS MODIFICADORES DEL EQUILIBRIO (ver WalkModifier, el ebrio; CharacterRigidBody3D, EL EBRIO).
-	for modifier in _modifiers:
-		modifier.apply(char_rigidbody)
 	char_rigidbody.add_child(custom_bones_util.lower_spine)
 	add_child(char_rigidbody)
 
@@ -374,7 +364,7 @@ func _maybe_ragdoll_in_air() -> void:
 func _on_fall_triggered(world_dir: Vector3) -> void:
 	if is_seated:
 		return
-	if not kind.simulates() and not _ensure_late_ragdoll():
+	if not kind.simulates() and not is_instance_valid(ragdoll_util):
 		return
 	# No re-disparar si ya estoy ragdolleando NI levantándome: un impacto espurio durante la
 	# recuperación (p.ej. la cápsula asentándose) reiniciaría el ragdoll a mitad de camino y dejaría
@@ -392,7 +382,6 @@ func _on_fall_triggered(world_dir: Vector3) -> void:
 			for body: RigidBody3D in ragdoll_util._bodies.values():
 				if is_instance_valid(body):
 					body.linear_velocity += frame.velocity_at(body.global_position)
-		exhibit_fallen.emit()
 
 
 ## LOS 19 CUERPOS DEL RAGDOLL, uno por hueso. VAN EN EL MUNDO, no colgados del personaje: si el personaje cuelga de algo
@@ -408,11 +397,6 @@ func _make_ragdoll() -> void:
 	ragdoll_util.show_bodies = not is_instance_valid(body_visual)
 	skel_rigidbodies.top_level = true
 	joints.top_level = true
-	# EL QUE NO SE TOCA (ver CharacterKind.is_touchable), en una capa que nadie mira —ni lo agarran ni lo empujan— y
-	# mirando sólo el piso de la cabina y las cajas (ver MotionFrame.EXHIBIT_RAGDOLL_LAYER).
-	if not kind.is_touchable():
-		ragdoll_util.layer = MotionFrame.EXHIBIT_RAGDOLL_LAYER
-		ragdoll_util.mask = MotionFrame.EXHIBIT_RAGDOLL_MASK
 	for body: RigidBody3D in ragdoll_util._bodies.values():
 		if is_instance_valid(body):
 			body.collision_layer = ragdoll_util.layer
@@ -420,16 +404,6 @@ func _make_ragdoll() -> void:
 			body.continuous_cd = true
 
 
-## ── EL RAGDOLL DE QUIEN NO SE SIMULA (02/11/2026) ──────────────────────────────────────────────────────────────────
-## Uno de exhibición no nace con ragdoll (ver initialize_skeleton): se le arma recién cuando se cae, y sólo si su clase
-## se cae (`can_fall`) —sentado no se cae nunca, como con cinturón—. No se levanta: a los segundos, quien lo armó lo
-## rearma en su puesto (ver `exhibit_fallen`, DisplayCharacter.stand). Lo pidió el usuario.
-func _ensure_late_ragdoll() -> bool:
-	if not kind.can_fall or not is_instance_valid(char_rigidbody):
-		return false
-	if not is_instance_valid(ragdoll_util):
-		_make_ragdoll()
-	return true
 
 
 ## Tirado, el ragdoll va en el marco de la cápsula, que va con la pelvis (ver RagdollUtil.follow_frame).
@@ -552,53 +526,17 @@ func _physics_process(delta: float) -> void:
 	_pose_delta += delta
 
 
-## ── LA POSE VIVA CON LA FÍSICA CONGELADA (04/11/2026, el usuario: «para pausar cuando están cayendo o subiendo y
-## ver los cambios directamente») ───────────────────────────────────────────────────────────────────────────────────
-## `set_pose_frozen(true)` congela su cápsula —quieta donde está, sin proceso de física, y su guion apagado— pero sigue
-## posándolo cada cuadro con lo que traía en ese instante (la velocidad, si sube o cae, cuánto lleva en el aire): lo que
-## se toque en los sliders del aire (LocomotionCommon) se ve ya. Lo usa la pausa de los experimentos de locomoción; los demás no
-## se enteran. Al soltarlo sigue con la velocidad que tenía.
-var pose_frozen := false
 ## LA VELOCIDAD VERTICAL QUE LEE EL AIRE (m/s; ver LocomotionCommon): la de la cápsula, sin suavizar —en el aire ya es pareja,
-## y lo que entra y sale al despegar y aterrizar lo suaviza `air_t`—; congelado, la que traía. *Hasta el 05/11/2026 el
+## y lo que entra y sale al despegar y aterrizar lo suaviza `air_t`—. *Hasta el 05/11/2026 el
 ## aire leía una suavizada (LocomotionSignals), que se quedaba atrás: despegando a 2,9 m/s marcaba 1,8; y un rato se
 ## guardó también la del despegue, para medir la subida.*
 var air_vy := 0.0
 ## La velocidad vertical con la que se separó del piso (m/s): la más alta desde que despegó; 0 en el piso. Con ella la
 ## subida de las piernas se mide sola (ver LocomotionCommon.leg_tuck).
 var takeoff_vy := 0.0
-const FROZEN_STEP := 1.0 / 60.0
-var _frozen_solve := false
-var _frozen_state: Array = []
-
-
-func set_pose_frozen(on: bool) -> void:
-	if on == pose_frozen or not is_instance_valid(char_rigidbody):
-		return
-	pose_frozen = on
-	var rb := char_rigidbody
-	if on:
-		_frozen_state = [rb.freeze, rb.linear_velocity, rb.angular_velocity]
-		rb.freeze = true
-		rb.process_mode = Node.PROCESS_MODE_DISABLED
-	else:
-		rb.process_mode = Node.PROCESS_MODE_INHERIT
-		if _frozen_state.size() == 3:
-			rb.freeze = _frozen_state[0]
-			rb.linear_velocity = _frozen_state[1]
-			rb.angular_velocity = _frozen_state[2]
-			rb._prev_velocity = rb.linear_velocity  # seguir no es un golpe
-		_frozen_state = []
-	set_physics_process(not on)
 
 
 func _process(_delta: float) -> void:
-	if pose_frozen:
-		if not _is_ragdolling():
-			_frozen_solve = true
-			_solve_pose(FROZEN_STEP)
-			_frozen_solve = false
-		return
 	if _pose_delta <= 0.0:
 		return
 	if not is_physics_processing():
@@ -657,21 +595,16 @@ static func _ticks_at(hz: float) -> int:
 ## uno de cada dos, y la nivelación del pie, el sondeo del modelo de disparo y la cinta del sandbox corrían
 ## en ellos a media velocidad.
 func _solve_pose(solve_delta: float) -> void:
-	# CONGELADO (ver LA POSE VIVA CON LA FÍSICA CONGELADA): lo que trae del cuadro anterior se queda —lo que lee de la
-	# cápsula, cuánto lleva en el aire, las señales de la marcha—, y lo del aire sigue a los sliders ya.
-	if not _frozen_solve:
-		_update_animation_inputs(solve_delta)  # productor: llena animation_inputs desde la cápsula
-		_update_carry_lean(solve_delta)
+	_update_animation_inputs(solve_delta)  # productor: llena animation_inputs desde la cápsula
+	_update_carry_lean(solve_delta)
 	var aloft := 0.0 if animation_inputs.grounded or is_seated else 1.0
 	var air := LocomotionCommon.base()
-	if not _frozen_solve:
-		air_t = move_toward(air_t, aloft, solve_delta / maxf(air.blend_s, 0.01))
-		# LA VELOCIDAD VERTICAL DEL AIRE (ver `air_vy`).
-		air_vy = char_rigidbody.get_motion_velocity().y
-		takeoff_vy = 0.0 if aloft <= 0.0 else maxf(takeoff_vy, air_vy)
-	# EL TORSO EN EL AIRE, hacia lo que pide su regla a su ritmo (ver LocomotionCommon); congelado, ya.
-	air_lean = air.torso_target(self) if _frozen_solve \
-		else lerpf(air_lean, air.torso_target(self), 1.0 - exp(-solve_delta / maxf(air.torso_follow_s, 0.01)))
+	air_t = move_toward(air_t, aloft, solve_delta / maxf(air.blend_s, 0.01))
+	# LA VELOCIDAD VERTICAL DEL AIRE (ver `air_vy`).
+	air_vy = char_rigidbody.get_motion_velocity().y
+	takeoff_vy = 0.0 if aloft <= 0.0 else maxf(takeoff_vy, air_vy)
+	# EL TORSO EN EL AIRE, hacia lo que pide su regla a su ritmo (ver LocomotionCommon).
+	air_lean = lerpf(air_lean, air.torso_target(self), 1.0 - exp(-solve_delta / maxf(air.torso_follow_s, 0.01)))
 	_ride_floor(solve_delta)
 	_update_local_targets_positions()   # consumidor: lee animation_inputs (ya no la cápsula)
 
@@ -691,14 +624,12 @@ func _solve_pose(solve_delta: float) -> void:
 			char_rigidbody.is_snapshot_active = true
 			_reset_feet_after_recovery = true  # plantar los pies bajo el cuerpo, sin catch-up a los pasos
 
-	if not _frozen_solve:
-		skel_sizes_util.update(solve_delta, animation_inputs, entity_instantiation, ik_util)
+	skel_sizes_util.update(solve_delta, animation_inputs, entity_instantiation, ik_util)
 
 	if is_instance_valid(arms_controller):
 		arms_controller.update_arm_compress(jump_squat_t, 1.0 if is_seated else crouch_t)
 
-	if not _frozen_solve:
-		locomotion_signals.update(solve_delta)
+	locomotion_signals.update(solve_delta)
 
 	ik_util.left_arm_ik_target.position  = skel_sizes_util.left_arm_tip_rest_local
 	ik_util.right_arm_ik_target.position = skel_sizes_util.right_arm_tip_rest_local
@@ -1368,12 +1299,8 @@ const PELVIS_DROP_STILL_S := 0.1
 const PELVIS_DROP_MAX_S := 0.25
 
 var _pelvis_drop_smooth: float = 0.0
-## El estilo de caminar de este personaje (ver WalkStyle): la base, o la suya si tiene modificadores.
+## El estilo de caminar de este personaje (ver WalkStyle): el de su arquetipo.
 var walk_style: WalkStyle = WalkStyle.plain()
-## SUS MODIFICADORES de caminata, pose y quieto (ver WalkModifier). Se ponen antes de `add_child`, como `size_scale`.
-var walk_modifiers: Array[WalkModifier] = []
-## LOS QUE VALEN: la pose de su arquetipo y después los suyos (ver `initialize_skeleton`).
-var _modifiers: Array[WalkModifier] = []
 
 ## Mide el déficit de alcance de las dos piernas y deja el resultado suavizado en anim_mod. Corre
 ## DESPUÉS de colocar los pies (necesita sus targets) y ANTES de la capa procedural (que es la que

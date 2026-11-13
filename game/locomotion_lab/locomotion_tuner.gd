@@ -6,7 +6,7 @@ extends TunerPanel
 ## las variantes de locomoción y animación, pero que estén bien separadas, así no se mezclan tantas cosas a la vez.»
 ## Por arquetipo y guardado; un panel, cinco pestañas, una a la vez:
 ##   · CAMINATA: el andar del arquetipo (PoseShape, grupo Caminata), todo suyo.
-##   · POSE: la postura (PoseShape, grupo Pose) y los modificadores de pose que lleva (WalkModifier).
+##   · POSE: la postura (PoseShape, grupo Pose).
 ##   · MOVIMIENTO: la velocidad de caminar, de costado y para atrás, el sprint, la aceleración.
 ##   · EQUILIBRIO: el peso, la estabilidad de cada lado, el resorte, la caída desde altura, el levantarse.
 ##   · SALTO: la altura y la carga.

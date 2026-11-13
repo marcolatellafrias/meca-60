@@ -4,7 +4,7 @@ extends Resource
 ## ── CÓMO AGARRA LA MANO, LO QUE SE PRUEBA EN EL F1 (29/10/2026, sesión de siluetas de los personajes) ─────────────────
 ## Las perillas de la animación de las manos que el usuario quiere probar en vez de decidir de antemano («esto es
 ## el típico caso de panel F»). Las lee ArmsController; las mueve el F1 de la fila Agarre del sandbox (ver PressPanel).
-## Se guardan con el botón del panel (ver GripSettings); sin guardar, arrancan como acá.
+## *Hasta el 13/11/2026 se podían guardar desde un panel (GripSettings); acá no había nada guardado.*
 ##
 ## UNA POR FAMILIA de lo que se agarra (el usuario: «el volante y la valve… se utilizan de forma distinta y tienen
 ## distintos parámetros para cambio de mano y todo eso»): la válvula lo dice con su marca (`FAMILY_META`, ver
@@ -17,15 +17,12 @@ const VALVE := "válvula"
 static var families := _saved_families()
 
 
-## Lo guardado con el F1 (ver GripSettings); lo que no está guardado, como acá. EL VOLANTE, SIN VOLVER A AGARRAR (30/10/2026,
+## Las dos familias, como acá. EL VOLANTE, SIN VOLVER A AGARRAR (30/10/2026,
 ## el usuario: «el volante es como el del Cybertruck, que tiene hasta cierto tope y no da vueltas… que el volante
 ## directamente no tenga cambio de manos, porque nunca va a pasar de ese ángulo máximo»): las manos quedan en sus puntos
-## de punta a punta del recorrido. Se puede prender en el F1.
+## de punta a punta del recorrido.
 static func _saved_families() -> Dictionary:
-	var saved := GripSettings.saved()
-	var wheel: GripStyle = saved.wheel if saved != null and saved.wheel != null else _steering()
-	var valve: GripStyle = saved.valve if saved != null and saved.valve != null else _valve()
-	return {WHEEL: wheel, VALVE: valve}
+	return {WHEEL: _steering(), VALVE: _valve()}
 
 
 ## La de la válvula, de arranque: vuelve a agarrar pasados 90° (30/10/2026, el usuario: «aumentamos el rango de

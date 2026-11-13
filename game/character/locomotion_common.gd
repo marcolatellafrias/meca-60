@@ -54,17 +54,6 @@ extends Resource
 ## QUÉ TAN RÁPIDO SE MUDA EL PUNTO de cada uno cuando se suma o se va otro (m/s; ver GrabbableInteractable, CADA UNO
 ## LLEVA EL CENTRO DE SU PARTE).
 @export_range(0.2, 5.0, 0.1) var share_shift_speed := 1.2
-## LA LARGA, SOLO: SE VENCE O SE LLEVA DE LO ANCHO (04/11/2026, el usuario: «también quiero probar con la versión
-## de que se venza el paquete largo en base a la fuerza… importa de dónde el jugador lo agarra»). Apagado, solo se lleva
-## siempre por el centro de una cara larga (ver GrabbableInteractable, CADA UNO LLEVA EL CENTRO DE SU PARTE). Prendido,
-## solo se lleva por donde se agarró, y lo que el peso, por lo lejos que queda su centro de la mano, le gana a la fuerza
-## de quien lo lleva la vence hacia abajo, hasta `sag_max_deg` (ver GrabbableInteractable.sag_share).
-@export var long_alone_sags := false
-@export_range(0.0, 80.0, 1.0) var sag_max_deg := 40.0
-## EN LOS EXPERIMENTOS, CÓMO AGARRAN LO LARGO (04/11/2026, el usuario: «podría dejar esa opción de agarre como algo
-## del menú F1, así en todas las parcelas puedo verlo»): de lo ancho (atravesado delante del pecho) o de la punta (a lo
-## largo del camino). Vale para todas las parcelas que dan un paquete largo a uno solo.
-@export var lab_long_by_end := false
 ## ── TIRAR LO QUE SE LLEVA: EL PASE DE PECHO (04/11/2026, el usuario: «agarra el paquete, lo carga hacia atrás,
 ## como un resorte, y después lo suelta de golpe… que el pecho se vaya para atrás y eso le dé lugar a que los brazos se
 ## compriman»; eligió el pase de pecho y el empujón físico) ─────────────────────────────────────────────────────────
