@@ -15,7 +15,7 @@ posee (la **O**). La computadora todavía no.
   doble de la meca**, que mide 18 m («por lo menos el doble… después podemos cambiar las escalas»), y va **cerca del
   piso**: la panza, a 5 m.
 - **La rendija va de arriba a abajo**: da toda la vuelta de adelante, por arriba, hacia atrás. Separa dos medias
-  esferas, la izquierda y la derecha, y mide 2,2 m de ancho, con el fondo oscuro. El cañón va a subir y bajar por ella:
+  esferas, la izquierda y la derecha, y mide 4 m de ancho y se hunde 0,6 m, con el fondo oscuro. El cañón va a subir y bajar por ella:
   disparar adelante o al cielo. **Para apuntar de costado, la bola gira con las patas** (el usuario, 13/11/2026: «la
   rendija es en la otra dirección, si quiere rotar en y, va a usar las piernas»). Adelante, en la rendija, hay una
   marca amarilla: ahí va el cañón.

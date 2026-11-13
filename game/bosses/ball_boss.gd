@@ -24,8 +24,9 @@ extends CharacterBody3D
 
 ## El radio de la bola, el alto de la rendija y su fondo (m).
 const RADIUS := 15.0
-const SLIT := 2.2
-const SLIT_DEPTH := 1.6
+## Ancha y poco hundida (el usuario: «la rendija más gruesa y menos indentada»).
+const SLIT := 4.0
+const SLIT_DEPTH := 0.6
 ## El cilindro contra lo fijo: un poco más ancho que la bola (m).
 const REACH := 16.0
 
