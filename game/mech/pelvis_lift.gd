@@ -77,7 +77,7 @@ func _ready() -> void:
 
 ## Su piso bajado: a la misma distancia debajo del cubo que con la caja de siempre.
 static func lowered() -> float:
-	return -CabinGrid.HALF - LOWERED_BELOW
+	return -CabinGrid.HALF - LOWERED_BELOW * MechBody.scale
 
 
 ## Su piso subido: al ras del piso de abajo.

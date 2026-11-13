@@ -20,31 +20,67 @@ extends RefCounted
 ## la altura de la cintura, la inclinación (`tilt`, del equilibrio), el giro del torso y dónde están los pies y los puños.
 ## Todo en el mundo.
 
+## LAS MEDIDAS VAN CON LA CAJA (el usuario, 13/11/2026: «si achico el cubo de 4x4 a 2x2, se achicarían a la mitad los
+## brazos y las piernas»): `scale` es el lado de la caja sobre el de siempre (8,03 m, ver CabinGrid.shape) y cada medida
+## de abajo es la de siempre (`BASE`) por ese número. Las pone `scale_to`.
+const BASE := {
+	"WAIST": 7.4, "HIP_X": 2.7, "HIP_DROP": 1.2, "THIGH": 4.4, "SHIN": 4.4, "LEG_THICKNESS": 2.1, "ANKLE": 0.6,
+	"FOOT_SIZE": Vector3(2.2, 0.7, 3.4), "FOOT_AHEAD": 0.4, "UPPER_ARM": 5.5, "FOREARM": 5.5,
+}
+static var scale := 1.0
 ## La cintura: dónde se apoya el torso, sobre el suelo, parada.
-const WAIST := 7.4
+static var WAIST := 7.4
 ## Las caderas, a los costados de la pelvis y debajo de la cintura.
-const HIP_X := 2.7
-const HIP_DROP := 1.2
-const THIGH := 4.4
-const SHIN := 4.4
+static var HIP_X := 2.7
+static var HIP_DROP := 1.2
+static var THIGH := 4.4
+static var SHIN := 4.4
 ## Las piernas, macizas (lo pidió el usuario el 12/11/2026: «más chunky»), y sus ARTICULACIONES —cadera, rodilla,
 ## tobillo—, discos de ese mismo grosor, con el eje de costado.
-const LEG_THICKNESS := 2.1
-const JOINT_RADIUS := LEG_THICKNESS * 0.62
+static var LEG_THICKNESS := 2.1
+static var JOINT_RADIUS := LEG_THICKNESS * 0.62
 ## La pelvis, entre los dos discos de las caderas: corta, para darles lugar.
-const PELVIS_SIZE := Vector3(HIP_X * 2.0 - LEG_THICKNESS, 1.8, 3.6)
+static var PELVIS_SIZE := Vector3(HIP_X * 2.0 - LEG_THICKNESS, 1.8, 3.6)
 ## El color de las articulaciones y de los pies: un poco más oscuro que la pierna, no negro.
 const JOINT_COLOR := Color(0.36, 0.375, 0.4)
-const ANKLE := 0.6
-const FOOT_SIZE := Vector3(2.2, 0.7, 3.4)
+static var ANKLE := 0.6
+static var FOOT_SIZE := Vector3(2.2, 0.7, 3.4)
 ## Cuánto va el pie adelante del tobillo.
-const FOOT_AHEAD := 0.4
+static var FOOT_AHEAD := 0.4
 ## Dónde se paran los pies, a cada lado.
-const STANCE_X := HIP_X + 0.3
-const UPPER_ARM := 5.5
-const FOREARM := 5.5
+static var STANCE_X := HIP_X + 0.3
+static var UPPER_ARM := 5.5
+static var FOREARM := 5.5
 ## Hacia dónde dobla el codo, en el espacio del torso (`x` del lado derecho): afuera, abajo y un poco atrás.
 const ELBOW_HINT := Vector3(1.0, -0.8, 0.5)
+
+
+## PONE LAS MEDIDAS PARA UNA CAJA `k` veces la de siempre. Lo que se armó antes no cambia (ver CabinShapePanel, que
+## rearma las mecas). La altura y los pasos de las perillas (BodySettings) van en la misma proporción.
+static func scale_to(k: float) -> void:
+	if is_equal_approx(k, scale):
+		return
+	var knobs := BodySettings.current
+	var ratio := k / scale
+	for name: String in ["hover_height", "step_reach", "step_height", "settle_gap"]:
+		knobs.set(name, float(knobs.get(name)) * ratio)
+	scale = k
+	WAIST = BASE["WAIST"] * k
+	HIP_X = BASE["HIP_X"] * k
+	HIP_DROP = BASE["HIP_DROP"] * k
+	THIGH = BASE["THIGH"] * k
+	SHIN = BASE["SHIN"] * k
+	LEG_THICKNESS = BASE["LEG_THICKNESS"] * k
+	JOINT_RADIUS = LEG_THICKNESS * 0.62
+	PELVIS_SIZE = Vector3(HIP_X * 2.0 - LEG_THICKNESS, 1.8 * k, 3.6 * k)
+	ANKLE = BASE["ANKLE"] * k
+	FOOT_SIZE = (BASE["FOOT_SIZE"] as Vector3) * k
+	FOOT_AHEAD = BASE["FOOT_AHEAD"] * k
+	STANCE_X = HIP_X + 0.3 * k
+	UPPER_ARM = BASE["UPPER_ARM"] * k
+	FOREARM = BASE["FOREARM"] * k
+
+
 ## LA INCLINACIÓN: `lean` es el ángulo (radianes) hacia cada lado, x a la derecha e y adelante, en el espacio de la
 ## raíz. Gira alrededor del eje horizontal que la hace caer para ese lado.
 static func tilt(lean: Vector2) -> Basis:

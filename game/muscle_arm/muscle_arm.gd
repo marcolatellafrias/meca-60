@@ -55,21 +55,21 @@ var _chase_yaw := 0.0
 func _ready() -> void:
 	if standalone:
 		add_to_group(SandboxPossession.GROUP)
-	_rest = STANCES[stance]
+	_rest = stance_at(stance)
 	var base := anchor.global_transform
 	var shoulder := base * shoulder_local
 	var pose := _pose(shoulder, shoulder + base.basis * _local(_rest), base.basis)
-	upper = _piece("Brazo", UPPER_MASS * weight, Vector3(THICKNESS, THICKNESS, MechBody.UPPER_ARM), pose["upper"],
+	upper = _piece("Brazo", UPPER_MASS * weight, Vector3(MechBody.LEG_THICKNESS, MechBody.LEG_THICKNESS, MechBody.UPPER_ARM), pose["upper"],
 		Clay.METAL.darkened(0.1))
-	forearm = _piece("Antebrazo", FOREARM_MASS * weight, Vector3(THICKNESS, THICKNESS, MechBody.FOREARM),
+	forearm = _piece("Antebrazo", FOREARM_MASS * weight, Vector3(MechBody.LEG_THICKNESS, MechBody.LEG_THICKNESS, MechBody.FOREARM),
 		pose["forearm"], Clay.METAL.darkened(0.2))
 	# El hombro y el codo, esferas en la punta de arriba de cada pieza; la mano, en la de abajo del antebrazo, con su
 	# forma de choque (el puño).
-	Clay.sphere(upper, THICKNESS * 0.78, Vector3(0, 0, MechBody.UPPER_ARM * 0.5), MechBody.JOINT_COLOR)
-	Clay.sphere(forearm, THICKNESS * 0.66, Vector3(0, 0, MechBody.FOREARM * 0.5), MechBody.JOINT_COLOR)
+	Clay.sphere(upper, MechBody.LEG_THICKNESS * 0.78, Vector3(0, 0, MechBody.UPPER_ARM * 0.5), MechBody.JOINT_COLOR)
+	Clay.sphere(forearm, MechBody.LEG_THICKNESS * 0.66, Vector3(0, 0, MechBody.FOREARM * 0.5), MechBody.JOINT_COLOR)
 	_mount_hand(forearm)
-	Clay.shape_box(forearm, Vector3(MechHand.PALM.y, MechHand.PALM.x * 2.2, MechHand.length() * 0.8),
-		Vector3(0, 0, -MechBody.FOREARM * 0.5 - MechHand.length() * 0.4))
+	Clay.shape_box(forearm, Vector3(MechHand.PALM.y, MechHand.PALM.x * 2.2, MechHand.length() * 0.8) * MechBody.scale,
+		Vector3(0, 0, -MechBody.FOREARM * 0.5 - MechHand.length() * MechBody.scale * 0.4))
 	# El hombro, una bola; el codo, una bisagra sobre su eje (el Z de la articulación).
 	var ball := PinJoint3D.new()
 	_join(ball, anchor, upper, Transform3D(Basis(), shoulder))

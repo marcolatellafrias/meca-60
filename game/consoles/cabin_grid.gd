@@ -98,6 +98,8 @@ static func shape(modules: int, floors: int, glass_out: int) -> void:
 	INNER = HALF - WALL
 	GLASS_OUT = GLASS_OUT_CELLS * CELL
 	LIFT_HOLE = (COLUMNS * MODULE_CELLS / 4 - LIFT_MARGIN_CELLS) * CELL
+	# LAS PIERNAS Y LOS BRAZOS, EN PROPORCIÓN A LA CAJA (ver MechBody.scale_to): la de siempre son 4 módulos.
+	MechBody.scale_to(float(WIDTH_CELLS) / float(4 * MODULE_CELLS + WALL_CELLS * 2))
 
 
 ## La forma de hoy, para guardarla.

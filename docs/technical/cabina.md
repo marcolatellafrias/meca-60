@@ -34,8 +34,13 @@ manteniendo el aspect ratio de cubo por ahora»).
   altura del piso. Con pisos bajos avisa si queda poca altura libre.
 - **Los asientos**: dos por piso, a los dos lados del medio del frente, en todos los pisos menos la planta baja (con un
   solo piso, en ése).
-- **Las piernas y los brazos todavía no cambian con la caja** (la idea del usuario: achicarlos en proporción). Son del
-  módulo Meca.
+- **Las piernas y los brazos van en proporción a la caja** (el usuario: «si achico el cubo de 4x4 a 2x2, se achicarían a
+  la mitad los brazos y las piernas»): un solo factor, el lado de la caja sobre el de siempre (8,03 m), en
+  `MechBody.scale_to`. Escala las medidas del cuerpo (cintura, caderas, muslos, canillas, grosor, pies, brazos), las
+  posturas y las piñas de los brazos, las manos, el puño, el hombro, las toberas, el ascensor bajado y, de las perillas
+  (BodySettings), la altura, el paso y lo que sube el pie. Lo demás (velocidades, salto, fuerzas, la masa) no cambia.
+  Lo pidió el usuario al módulo Interior el 13/11/2026; el código es del módulo Meca. *El botón de cada perilla del F1
+  vuelve al valor del código, que es el de la caja de siempre.*
 
 ## Qué va en cada piso (el caso de 4 jugadores)
 - **La planta baja es de servicio**: no tiene asientos ni controles fijos. Ahí van la munición, las baterías y los

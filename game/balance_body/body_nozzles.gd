@@ -35,6 +35,8 @@ func _init(body: BalanceBody, holder: Node3D) -> void:
 			var at := normal * half + (u * corner.x + v * corner.y) * half * SPREAD
 			var mount := Node3D.new()
 			mount.transform = Transform3D(Basis.looking_at(normal, v), at)
+			# Del tamaño de la caja (ver MechBody.scale_to): en una caja chica, toberas chicas.
+			mount.scale = Vector3.ONE * MechBody.scale
 			holder.add_child(mount)
 			var mouth := Clay.cylinder(mount, 0.45, 0.6, Vector3(0, 0, -0.2), Clay.DARK, Vector3(90, 0, 0))
 			var glow := StandardMaterial3D.new()

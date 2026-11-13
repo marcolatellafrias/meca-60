@@ -26,7 +26,6 @@ enum Stage { IDLE, WINDUP, STRIKE, HOLD, RETURN }
 const NAMES := ["quieto", "directo", "gancho", "uppercut", "desde arriba"]
 const STANCE_NAMES := ["normal", "cubriéndose", "recogido"]
 ## El grosor de las piezas: el de las piernas (el usuario, 12/11/2026: «más gruesos, y todos del mismo grosor»).
-const THICKNESS := MechBody.LEG_THICKNESS
 ## DÓNDE DESCANSA EL PUÑO en cada postura, desde el hombro, en el espacio de lo que lo sostiene (`x` hacia afuera del
 ## cuerpo; adentro es negativo).
 const STANCES := {
@@ -88,7 +87,7 @@ func _advance(delta: float) -> void:
 		_clock += delta
 		if _clock >= _punch_time():
 			punching = Punch.NONE
-	_rest = _rest.move_toward(STANCES[stance], STANCE_SPEED * delta)
+	_rest = _rest.move_toward(stance_at(stance), STANCE_SPEED * MechBody.scale * delta)
 	if _hand != null:
 		_hand.fist = punching != Punch.NONE or stance == Stance.COVER
 
@@ -96,6 +95,11 @@ func _advance(delta: float) -> void:
 ## Un punto de las piñas o la guardia, en el espacio de lo que lo sostiene: `x` va hacia afuera de su lado.
 func _local(point: Vector3) -> Vector3:
 	return Vector3(side * point.x, point.y, point.z)
+
+
+## DÓNDE DESCANSA EL PUÑO en la postura `which` (ver `STANCES`), en la escala de la caja (ver MechBody.scale_to).
+static func stance_at(which: Stance) -> Vector3:
+	return (STANCES[which] as Vector3) * MechBody.scale
 
 
 ## DÓNDE SE PIDE EL PUÑO AHORA, desde el hombro (como `STANCES`): a lo largo de la piña y de vuelta a su postura, o en
@@ -110,9 +114,9 @@ func _wanted() -> Vector3:
 	for step: Array in PUNCHES[punching]:
 		var time := float(step[0]) / speed
 		if clock <= time:
-			return from.lerp(step[1], smoothstep(0.0, 1.0, clock / time))
+			return from.lerp((step[1] as Vector3) * MechBody.scale, smoothstep(0.0, 1.0, clock / time))
 		clock -= time
-		from = step[1]
+		from = (step[1] as Vector3) * MechBody.scale
 	return from.lerp(home, smoothstep(0.0, 1.0, clock / (RETURN_TIME / speed)))
 
 
@@ -179,4 +183,5 @@ func _along(way: Vector3) -> Basis:
 ## cuarto de vuelta sobre Z lleva su Y al −X de la pieza y su X al Y, y la palma queda en −side·Y: hacia adentro.
 func _mount_hand(forearm: Node3D) -> void:
 	_hand = MechHand.build(forearm, side)
+	_hand.scale = Vector3.ONE * MechBody.scale
 	_hand.transform = Transform3D(Basis(Vector3.BACK, PI * 0.5), Vector3(0, 0, -MechBody.FOREARM * 0.5))

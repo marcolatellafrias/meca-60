@@ -13,7 +13,7 @@ extends Node3D
 ##     que avanza el cuerpo en medio paso, a lo más `step_reach`: siempre el mismo largo. LO QUE DURA UN PASO es lo que
 ##     tarda el apoyo en recorrer el doble de eso, con topes (`step_fastest`, `step_slowest`): más rápido, más seguido.
 ##   · QUIETA, SE ACOMODA: un pie que quedó lejos de su lugar (`settle_gap`) o girado (`settle_turn`) da un paso.
-##   · NUNCA SE CRUZAN: un pie pisa siempre de su lado del otro, a por lo menos `CROSS_GAP`, contado hacia donde mira; y
+##   · NUNCA SE CRUZAN: un pie pisa siempre de su lado del otro, a por lo menos `MechBody.STANCE_X * 1.2`, contado hacia donde mira; y
 ##     un paso gira el pie a lo más `turn_per_step` de lo que mira el otro: girando en el lugar, gira de a pasos.
 ##   · LA PELVIS, una sola pieza, mira al promedio de los dos pies (va atrás del torso al girar, y lo alcanza). Es un
 ##     tambor redondo y hueco: por adentro pasa el ascensor (PelvisLift).
@@ -25,7 +25,6 @@ extends Node3D
 ##   · EL PIE, NUNCA MÁS LEJOS DE LO QUE LA PIERNA ALCANZA: en el aire cuelga de la cadera.
 
 ## Lo mínimo entre los dos pies, de costado, contado hacia donde mira el que pisa (m).
-const CROSS_GAP := MechBody.STANCE_X * 1.2
 ## Más lento que esto (m/s) está quieta: los pies sólo se acomodan.
 const STILL := 0.4
 
@@ -162,10 +161,10 @@ func _target(k: BodySettings, index: int, yaw: float, left: float) -> Dictionary
 		lead = body.support_speed / speed * minf(k.step_reach, speed * whole * 0.5)
 	var basis := Basis(Vector3.UP, facing)
 	var at := body.support + body.support_speed * left + basis * Vector3(side * MechBody.STANCE_X, 0.0, 0.0) + lead
-	# NUNCA CRUZADO: de su lado del otro pie, a por lo menos CROSS_GAP.
+	# NUNCA CRUZADO: de su lado del otro pie, a por lo menos MechBody.STANCE_X * 1.2.
 	var local := basis.inverse() * (at - _feet[other])
-	if local.x * side < CROSS_GAP:
-		local.x = side * CROSS_GAP
+	if local.x * side < MechBody.STANCE_X * 1.2:
+		local.x = side * MechBody.STANCE_X * 1.2
 		at = _feet[other] + basis * local
 	at.y = body.support.y
 	return {"at": at, "yaw": facing}

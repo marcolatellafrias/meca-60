@@ -21,7 +21,7 @@ const NAMES := ["Meca de práctica", "Meca discreta", "Meca física"]
 ## adelante, y el usuario lo volvió («estaban bien los brazos a la mitad, no me gusta el sacrificio en rango»).* Y cuánto
 ## pesan los físicos, en partes de lo que pesa el brazo solo (ver MuscleArm.weight).
 static func shoulder() -> Vector3:
-	return Vector3(CabinGrid.SIZE * 0.5 + 1.0, 1.9, -0.4)
+	return Vector3(CabinGrid.SIZE * 0.5 + 1.0 * MechBody.scale, 1.9 * MechBody.scale, -0.4 * MechBody.scale)
 
 
 const ARM_WEIGHT := 0.4
