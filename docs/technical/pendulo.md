@@ -42,6 +42,25 @@ de fuerza y su inclinación son huesos; la meca tiene colisión 1:1 con su caja 
   adelante y un poco afuera; agachada, más afuera. **La caja no sube ni baja con los pasos**: lo absorben las rodillas.
   **La pelvis**, una sola pieza, mira al promedio de los dos pies. Caído se pliegan; al enderezarse, se estiran. Para
   mirarlas: `tests/mech_legs_look.tscn` (unos 40 s).
+- **LOS PASOS NUEVOS, el sistema clásico de piernas de meca con IK** (13/11/2026, a prueba: el interruptor del F4,
+  `LegSettings.new_steps`, elige entre éstos y los de arriba; cuando convenzan se borran los de arriba). El usuario: «el
+  sistema actual es uno derivado de los personajes y es medio rebuscado… es un trope bastante común el de piernas para
+  mecas con IK». Las perillas son de todas las mecas (`LegSettings`, panel `LegsPanel`, F4 en las filas de la meca, el
+  Laboratorio y el jefe bola).
+  - **Cada pie tiene su lugar**, debajo de su cadera, pegado a la caja, **en el piso de verdad** (un rayo que saltea lo
+    que se mueve). Pisa escalones y techos, cada pie a su altura; la caja no sube ni baja y lo absorben las rodillas.
+  - **Sale el pie que quedó un tercio de paso atrás** de su lugar, y pisa un tercio adelante de donde va a estar su
+    lugar al pisar; en el aire dura lo que la caja tarda en recorrer el otro tercio (con topes). Así **recorre siempre
+    el largo del paso**: más rápido, más seguido.
+  - **Girar es lo mismo**: el lugar gira con la caja y el pie queda lejos. Como cada lugar está de su lado, **no se
+    cruzan**. No hay reglas de giro ni de cruce. **Se turnan**: no sale uno con el otro en el aire.
+  - **Quieta, se acomoda**: frenada, después de `settle_wait`, trae el pie corrido o girado.
+  - **Medido** (`tests/mech_steps_look.tscn`; con `-- --fisica`, la física): el paso de 6 m de piernas medianas da
+    4,5 m con las piernas cortas, y caminando a 8 m/s mide 4,4 m en promedio. Frenada, los pies vuelven justo a su
+    lugar. Un giro de 90° en el lugar, 3 o 4 pasos. **Al lado de un escalón de 1,5 m** (la física), el pie de ese
+    lado pisa arriba, a 1,5 m, y el otro abajo.
+  - **La cinemática no llega a un escalón**: su cilindro contra lo fijo va del piso al techo, así que lo frena antes
+    de que el pie lo pise. Para que suba escalones el cilindro tendría que empezar más arriba (falta decidir).
 - Pasado el ángulo, **o sin piso bajo su apoyo** (un borde, un pozo), cae, suelto del todo, y se recupera con las
   toberas del [[cubo]].
 - Poseído ([[poseer]]: mirándolo, **O**): W/S hacia donde mira el torso, A/D de costado, el mouse gira.

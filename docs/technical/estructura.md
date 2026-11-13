@@ -10,7 +10,7 @@ su archivo.
 | Archivo | Clase | Qué es |
 |---|---|---|
 | `balance_body.gd` | `BalanceBody` | La caja (`size`, la masa) y **su equilibrio, el péndulo**: el apoyo, caerse, volver. Lo que se le pide (`move`, `sprint`, `crouch`, `jump`, `aim_yaw`). Arma sus piezas y las llama en orden; cada uno agrega lo suyo con tres ganchos: `_build` (sus piezas), `_think` (escribe lo que se le pide) y `_after_step`. |
-| `body_legs.gd` | `BodyLegs` | Dos piernas desde una pelvis debajo de la caja: dibujo que pisa por radio alrededor del apoyo. Otro medio de moverse es otra pieza. |
+| `body_legs.gd` | `BodyLegs` | Dos piernas desde una pelvis debajo de la caja: dibujo. Los pasos nuevos (el sistema clásico, `LegSettings`, F4) o los de largo fijo de antes. Otro medio de moverse es otra pieza. |
 | `body_nozzles.gd` | `BodyNozzles` | Las toberas: levantarse cuando se cae, y el propulsor. |
 | `body_moves.gd` | `BodyMoves` | Caminar, correr, agacharse, el salto cargado, el propulsor. **Acá van los dashes y los propulsores de costado.** |
 | `body_settings.gd` | `BodySettings` | Todas sus perillas, en un recurso (`BalanceBody.knobs`; por defecto el de la meca). |
