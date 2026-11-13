@@ -111,6 +111,11 @@ func barrage(k: BallBossSettings, targets: Array[Vector3]) -> void:
 	_gap = 0.0
 
 
+## Deja de tirar los del cielo que le quedaban.
+func cancel() -> void:
+	_queue.clear()
+
+
 ## Por dónde sale un tiro (mundo): la boca, mirando hacia afuera (su −Z).
 func muzzle() -> Transform3D:
 	return global_transform * Transform3D(Basis(), Vector3(0.0, 0.0, -_tip))

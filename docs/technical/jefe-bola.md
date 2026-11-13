@@ -144,13 +144,56 @@ posee al jefe, la cabeza no hace nada.
   con la meca quieta, la ráfaga le pega los tres tiros y los del cielo los cinco. Moviéndose, varía de una corrida a
   otra: en una eligió la ráfaga 3 veces, la carga 2, el barrido 1 y los del cielo 3, y le pegó 10 veces en total.
 
+## Paso 7 (13/11/2026): la vida, los cuatro tipos de meca y el choque
+**Cambia el diseño: ahora hay vida.** El usuario: «un sistema de vida que por ahora sea todo vía código, no vía
+choques… si toca un área de un misil, o si toca la bola cuando está yendo… le hace daño; bien simple por ahora». *Hasta
+acá la regla era «todo es equilibrio, no hay vida».*
+- **La vida** (`Health`): una pieza chica que se cuelga como hijo («Vida») del jefe (400) y de la meca (100). La baja
+  quien decide que algo pegó, nunca un choque.
+- **Las barras** (`FightBars`): la del jefe, ancha arriba al medio; la de la meca, abajo a la izquierda. Con lo último
+  que les pegó. Se ven con la cámara cerca del jefe.
+- **Cuánto saca cada cosa** (`BallBrain.DAMAGE`), de las 100 de la meca:
+
+| Golpe | Vida |
+|---|---|
+| El tiro | 6 |
+| Cada uno de los del cielo | 10 |
+| El barrido | 20 |
+| La carga | 25 |
+| Una piña de la meca al jefe | 12 |
+
+  La piña cuenta si el puño (`MechHand`), pegando, pasa a menos de 2 m de la bola; una por piña.
+- **Sin vida el jefe** queda quieto («derrotado»); **sin vida la meca**, el jefe deja de pelear («ganó»). La **R** vuelve
+  a armar todo.
+- **La K cambia la meca** entre los cuatro tipos, con los nombres del usuario (`BallBossArchetype.Kind`):
+
+| Tipo | Torso | Brazos | Cabina | En el código |
+|---|---|---|---|---|
+| Física | simulado | simulados (músculos) | sí | `Mech.Arms.MUSCLE` |
+| Mixta | simulado | cinemáticos (de pose) | sí | `Mech.Arms.POSE` |
+| Cinemática | cinemático (el motor) | cinemáticos | sí | `Mech.Arms.POSE`, `kinematic` |
+| Simplificada | cinemático | ninguno | no | `Mech.Arms.NONE`, `kinematic`, sin cabina |
+
+  La nueva nace donde estaba la otra, con la vida entera, recién cuando la vieja ya no está. Lo suelto que haya ahí se
+  saca: una meca física que nacía encimada con algo salía volando a 340 m.
+- **Las reglas según la naturaleza de la meca** (la cinemática y la simplificada son lo mismo):
+  - **Choque**: la bola va también en la capa de lo fijo del mundo, así que para las cinemáticas es una pared. No pueden
+    meterse, y si la bola se les mete encima, su motor las saca (el jefe gana). Las físicas chocan con la bola como
+    cuerpos que son. El jefe no se choca con su propia bola, y sus rayos a lo fijo la saltean.
+  - **Golpe**: a todas, la vida. A las físicas, además, el empujón de siempre (los misiles, el barrido y la bola rodando
+    empujan lo suelto), y su péndulo decide si caen. A las cinemáticas, sólo la vida.
+- Medido (`ball_brain_look`, la segunda parte): las cuatro chocan con la bola y quedan a 16 a 18 m de su centro (la
+  bola mide 15); dos directos le sacan 24 al jefe con las tres que tienen brazos; peleando 10 s cada una, quedan con 55
+  a 75 de vida.
+
 ### Lo que falta o queda abierto
 - Los tentáculos atraviesan lo fijo: el cilindro sólo cubre la bola, y un tentáculo puede cruzar una pared baja para
   apoyar del otro lado.
 - Los pies no tienen choque: no patean ni achatan lo suelto, como hacen los del cubo.
 - Contra lo fijo sólo choca el cilindro, así que puede salirse de la parcela rodando.
 - El jefe y la meca se atraviesan (los dos miran sólo lo fijo).
-- La meca no tiene cómo pegarle al jefe todavía.
+- La simplificada no tiene con qué pegarle al jefe.
+- A las cinemáticas los golpes no las mueven: sólo les sacan vida.
 - Elige mucho la carga: falta ajustar los pesos jugándolo.
 - Ideas del usuario para más adelante:
   - disparos cargados, rayos;

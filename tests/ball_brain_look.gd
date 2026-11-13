@@ -69,7 +69,7 @@ func _ready() -> void:
 		clock += 1.0 / Engine.physics_ticks_per_second
 		if clock > STILL:
 			# En círculo, de costado, mirando al jefe; cada 3 s, un dash para atrás.
-			var to_boss := _boss.global_position - _mech.mover.global_position
+			var to_boss := _boss.global_position - _mech_ground()
 			_mech.aim_yaw = atan2(-to_boss.x, -to_boss.z)
 			_mech.move = Vector2(1.0, 0.0)
 			_mech.dash = fmod(clock - STILL, 3.0) < 0.1
@@ -85,19 +85,72 @@ func _ready() -> void:
 			print("%5.1f s · le pegó: %s" % [clock, _brain.last_hit])
 		if clock >= next_shot:
 			next_shot += 4.0
-			var middle := (_boss.global_position + _mech.mover.global_position) * 0.5
-			var side := (_mech.mover.global_position - _boss.global_position).cross(Vector3.UP).normalized()
+			var middle := (_boss.global_position + _mech_ground()) * 0.5
+			var side := (_mech_ground() - _boss.global_position).cross(Vector3.UP).normalized()
 			await _shot("%s · %s (la meca %s)" % [_brain.stage, "le pegó %d" % _brain.landed,
 				"quieta" if clock < STILL else "moviéndose"], middle + side * 110.0 + Vector3.UP * 60.0, middle)
 	var names := []
 	for act: int in acts:
 		names.append("%s %d" % [BallBrain.ACT_NAMES[act], acts[act]])
-	print("en %.0f s: %s · le pegó %d veces" % [STILL + MOVING, ", ".join(names), _brain.landed])
+	print("en %.0f s: %s · le pegó %d veces · la meca quedó con %.0f de vida" % [STILL + MOVING, ", ".join(names),
+		_brain.landed, Health.of(_mech).left])
+	await _kinds()
 	get_tree().quit()
 
 
+## LOS CUATRO TIPOS DE MECA: con el jefe quieto, cada una camina contra la bola (¿choca?) y le tira dos directos (¿le
+## saca vida?); después el jefe pelea 10 s.
+func _kinds() -> void:
+	for kind in BallBossArchetype.Kind.size():
+		_brain.awake = false
+		await _wait(0.2)
+		await BallBossArchetype.swap_mech(_brain, kind as BallBossArchetype.Kind)
+		_mech = _brain.target as Mech
+		_mech.scripted = true
+		_boss.put(Transform3D(Basis(Vector3.UP, PI), BallBossArchetype.TARGET_AT + Vector3(0.0, 0.0, 45.0)))
+		await _wait(2.0)
+		var closest := 999.0
+		var clock := 0.0
+		while clock < 8.0:
+			await get_tree().physics_frame
+			clock += 1.0 / Engine.physics_ticks_per_second
+			var to_boss := _boss.global_position - _mech.global_position
+			_mech.aim_yaw = atan2(-to_boss.x, -to_boss.z)
+			_mech.move = Vector2(0.0, 1.0)
+			closest = minf(closest, _gap())
+		_mech.move = Vector2.ZERO
+		var before := Health.of(_boss).left
+		for arm in _mech.arms:
+			arm.punch(MechArm.Punch.STRAIGHT)
+		await _wait(1.6)
+		print("meca %s: lo más cerca de la bola, %.1f m del centro (la bola mide %.0f) · dos directos le sacaron %.0f" % [
+			BallBossArchetype.KIND_NAMES[kind], closest, BallBoss.RADIUS, before - Health.of(_boss).left])
+		await _shot("la meca %s contra la bola" % BallBossArchetype.KIND_NAMES[kind],
+			_mech.global_position + Vector3(60, 30, 20), (_mech.global_position + _boss.global_position) * 0.5)
+		_brain.awake = true
+		await _wait(10.0)
+		print("   peleando 10 s: la meca quedó con %.0f de vida, el jefe con %.0f" % [Health.of(_mech).left,
+			Health.of(_boss).left])
+		await _shot("la meca %s peleando: barras de vida" % BallBossArchetype.KIND_NAMES[kind],
+			_mech.global_position + Vector3(60, 30, 20), (_mech.global_position + _boss.global_position) * 0.5)
+
+
+func _wait(seconds: float) -> void:
+	var clock := 0.0
+	while clock < seconds:
+		await get_tree().physics_frame
+		clock += 1.0 / Engine.physics_ticks_per_second
+
+
+## El punto del piso de la meca (cinemática: lo que la mueve; física: debajo de su caja).
+func _mech_ground() -> Vector3:
+	if _mech.mover != null:
+		return _mech.mover.global_position
+	return Vector3(_mech.global_position.x, 0.0, _mech.global_position.z)
+
+
 func _gap() -> float:
-	return Vector2(_boss.global_position.x - _mech.mover.global_position.x, _boss.global_position.z - _mech.mover.global_position.z).length()
+	return Vector2(_boss.global_position.x - _mech_ground().x, _boss.global_position.z - _mech_ground().z).length()
 
 
 func _shot(title: String, from: Vector3, at: Vector3) -> void:

@@ -13,8 +13,9 @@ extends Node
 ##   · EN EL MEDIO: la RÁFAGA (apunta y tira tres derechos), la CARGA (se hace bola y rueda hacia vos, corrigiendo poco)
 ##     o los DEL CIELO.
 ##   · LEJOS (más de `FAR`): los DEL CIELO (uno donde estás y los otros adonde vas) o la ráfaga; si no, se acerca.
-## SIN VIDA (todo es equilibrio): lo que agarra al blanco se cuenta («te pegó») y se ve arriba del jefe; a lo suelto lo
-## empuja como siempre. *El blanco de hoy es la meca simplificada, cinemática, que no se empuja: por eso sólo se cuenta.*
+## LA VIDA (Health), TODO POR CÓDIGO: lo que agarra al blanco le saca vida según `DAMAGE` (y se cuenta, «te pegó»);
+## las piñas del blanco que tocan la bola le sacan `PUNCH_DAMAGE` al jefe. A lo suelto lo empuja como siempre. Sin vida
+## el jefe, se queda quieto; sin vida el blanco, deja de pelear. *El blanco de hoy es la meca simplificada, cinemática, que no se empuja: por eso sólo se cuenta.*
 ## Mientras alguien lo posee, la cabeza no hace nada.
 
 enum Act { STALK, SHOTS, SKY, SWEEP, CHARGE }
@@ -42,6 +43,11 @@ const SWEEP_RECOVER := 1.3
 const CHARGE_TIME := 3.5
 const CHARGE_HOMING := 0.12
 const CHARGE_RECOVER := 1.8
+## CUÁNTA VIDA SACA cada cosa (de 100 que tiene la meca).
+const DAMAGE := {"el tiro": 6.0, "los del cielo": 10.0, "el barrido": 20.0, "la carga": 25.0}
+## Lo que le saca al jefe una piña de la meca que toca la bola, y a cuánto de la bola cuenta (m).
+const PUNCH_DAMAGE := 12.0
+const PUNCH_REACH := 2.0
 ## El blanco, si no dice el suyo: su radio y su alto (m).
 const TARGET_RADIUS := 4.0
 const TARGET_HEIGHT := 18.0
@@ -67,6 +73,8 @@ var _target_was := Vector3.ZERO
 var _target_velocity := Vector3.ZERO
 var _hit_this_act := false
 var _label: Label3D = null
+## Las piñas que ya pegaron (para contar una por piña): el brazo y su piña de ahora.
+var _punched := {}
 var _stalk_time := 1.0
 
 
@@ -87,14 +95,26 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_show()
-	if target == null or not is_instance_valid(target) or _driven():
+	if target == null or not is_instance_valid(target):
+		return
+	# Las piñas de la meca cuentan aunque el jefe no piense o lo posea alguien.
+	_check_punches()
+	if _driven():
 		return
 	if not awake:
 		# Al apagarse, lo deja quieto UNA vez: después no escribe nada (así lo puede manejar otro, como un test).
 		if stage != "quieto":
 			_still()
 		return
-	if stage == "quieto":
+	var own := Health.of(_boss)
+	if own != null and own.dead():
+		_end("derrotado")
+		return
+	var theirs := Health.of(target)
+	if theirs != null and theirs.dead():
+		_end("ganó")
+		return
+	if stage == "quieto" or stage == "derrotado" or stage == "ganó":
 		_begin(Act.STALK)
 	_track(delta)
 	_clock += delta
@@ -312,6 +332,7 @@ func _sky_targets() -> Array[Vector3]:
 			_random.randf_range(-4.0, 4.0)) * float(mini(i, 1))
 		var ray := PhysicsRayQueryParameters3D.create(point + Vector3.UP * 100.0, point + Vector3.DOWN * 100.0,
 			PhysicsLayers.FIXED)
+		ray.exclude = [_boss.ball().get_rid()]
 		var hit := space.intersect_ray(ray)
 		out.append(hit["position"] if not hit.is_empty() else point)
 	return out
@@ -322,6 +343,13 @@ func _ground() -> Vector3:
 	var body := target as BalanceBody
 	if body != null and body.mover != null:
 		return body.mover.global_position
+	if body != null:
+		# Una meca física: el piso debajo de su caja.
+		var from := body.global_position
+		var ray := PhysicsRayQueryParameters3D.create(from, from + Vector3.DOWN * 60.0, PhysicsLayers.FIXED)
+		var hit := body.get_world_3d().direct_space_state.intersect_ray(ray)
+		if not hit.is_empty():
+			return hit["position"]
 	return target.global_position
 
 
@@ -377,12 +405,47 @@ func _check_touch() -> void:
 func _hit(what: String) -> void:
 	landed += 1
 	last_hit = what
+	var theirs := Health.of(target)
+	if theirs != null:
+		theirs.hurt(float(DAMAGE.get(what, 10.0)), what)
+
+
+## LAS PIÑAS DEL BLANCO: el puño (su MechHand) pegando, a menos de `PUNCH_REACH` de la bola, le saca vida al jefe. Una
+## vez por piña.
+func _check_punches() -> void:
+	var mech := target as Mech
+	var own := Health.of(_boss)
+	if mech == null or own == null:
+		return
+	var ball := _boss.global_position + Vector3.UP * _boss.center_height
+	for arm in mech.arms:
+		var key := arm.get_instance_id()
+		var stage_now := arm.stage()
+		if stage_now == MechArm.Stage.IDLE or stage_now == MechArm.Stage.WINDUP:
+			_punched.erase(key)
+			continue
+		if _punched.has(key) or (stage_now != MechArm.Stage.STRIKE and stage_now != MechArm.Stage.HOLD):
+			continue
+		for hand: Node3D in arm.find_children("*", "MechHand", true, false):
+			if hand.global_position.distance_to(ball) < BallBoss.RADIUS + PUNCH_REACH:
+				_punched[key] = true
+				own.hurt(PUNCH_DAMAGE, "una piña (%s)" % MechArm.NAMES[arm.punching])
+				break
 
 
 ## ── LO DEMÁS ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
 func _driven() -> bool:
 	return _boss.driven()
+
+
+## SE TERMINÓ LA PELEA (`why`): lo deja quieto y abierto, una vez.
+func _end(why: String) -> void:
+	if stage == why:
+		return
+	_still()
+	_boss.cannon.cancel()
+	stage = why
 
 
 func _still() -> void:
@@ -394,7 +457,7 @@ func _still() -> void:
 
 func _show() -> void:
 	_label.position = Vector3.UP * (_boss.center_height + BallBoss.RADIUS + 6.0)
-	var head := stage if awake else "quieto (P lo despierta)"
+	var head := stage if awake or stage == "derrotado" else "quieto (P lo despierta)"
 	_label.text = "%s\nte pegó %d%s" % [head, landed, (" · %s" % last_hit) if landed > 0 else ""]
 	_label.modulate = Color(1.0, 0.55, 0.3) if stage.ends_with("apunta") or stage.ends_with("se hunde") \
 		or stage.ends_with("se pliega") else Color(1, 1, 1)

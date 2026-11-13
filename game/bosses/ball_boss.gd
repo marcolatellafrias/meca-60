@@ -96,6 +96,11 @@ func _ready() -> void:
 	add_child(_ball)
 	_ball.sync_to_physics = true
 	_dress(_ball)
+	# PARA LAS MECAS CINEMÁTICAS, LA BOLA ES PARED: ellas chocan sólo con lo fijo del mundo, así que la bola va también en
+	# esa capa. No pueden meterse en ella, y si la bola se les mete encima, su motor las saca hacia afuera (el jefe gana:
+	# es el doble). Él no se choca con su propia bola.
+	PhysicsLayers.mark_fixed(_ball)
+	add_collision_exception_with(_ball)
 	cannon = BallCannon.new()
 	cannon.name = "Cañón"
 	_ball.add_child(cannon)
@@ -224,6 +229,7 @@ func _barrage_targets(k: BallBossSettings) -> Array[Vector3]:
 		var point := global_position + ahead * (k.barrage_distance + i * k.barrage_spacing)
 		var ray := PhysicsRayQueryParameters3D.create(point + Vector3.UP * 100.0, point + Vector3.DOWN * 100.0,
 			PhysicsLayers.FIXED)
+		ray.exclude = [_ball.get_rid()]
 		var hit := get_world_3d().direct_space_state.intersect_ray(ray)
 		out.append(hit["position"] if not hit.is_empty() else point)
 	return out
@@ -269,6 +275,11 @@ func _unhandled_input(event: InputEvent) -> void:
 	aim_yaw -= motion.relative.x * 0.0025 * GameOptions.mouse_sensitivity
 	aim_pitch = wrapf(aim_pitch - motion.relative.y * 0.0025 * GameOptions.mouse_sensitivity, -PI, PI)
 	get_viewport().set_input_as_handled()
+
+
+## La bola (el cuerpo que se ve y choca): los rayos a lo fijo la saltean, porque también está en esa capa.
+func ball() -> AnimatableBody3D:
+	return _ball
 
 
 ## Si alguien la posee (entonces su cabeza, BallBrain, no hace nada).
