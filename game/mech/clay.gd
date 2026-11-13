@@ -2,7 +2,7 @@ class_name Clay
 extends RefCounted
 
 ## LA ARCILLA DE LOS BOCETOS: cajas, cilindros y esferas de un color, con o sin su caja de choque. Todo el boceto de la
-## meca, el bicho y la arena se arma con esto; el modelado de verdad viene después.
+## meca, las mecas enemigas y la arena se arma con esto; el modelado de verdad viene después.
 
 const METAL := Color(0.52, 0.54, 0.57)
 const DARK := Color(0.2, 0.21, 0.23)
