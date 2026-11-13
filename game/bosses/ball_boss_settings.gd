@@ -4,7 +4,9 @@ extends Resource
 ## LAS PERILLAS DEL JEFE BOLA (ver BallBoss): una sola copia (`current`), la que muestra su panel F1, una pestaña por
 ## grupo. Todo en metros y segundos, como el cubo cinemático: cada movimiento se define por lo que hace.
 
-static var current := BallBossSettings.new()
+## Se carga de lo guardado con «Guardar» en el F1 (KnobsFile). El archivo es del usuario: no va al repositorio.
+const SAVED := "res://game/bosses/ball_boss_settings.tres"
+static var current := KnobsFile.load_into(BallBossSettings.new(), SAVED) as BallBossSettings
 
 @export_group("Moverse")
 ## Una velocidad y el tiempo para llegar a ella y para frenar (0: al instante). En el aire no se mueve de costado.

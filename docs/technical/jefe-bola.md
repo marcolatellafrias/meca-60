@@ -41,7 +41,9 @@ posee (la **O**). La computadora todavía no.
   - El piso se busca con un rayo a lo fijo del mundo, así que sobre un edificio pisa el techo.
   - Cuando un pie queda a más de 6 m de su lugar, sale **con el de su diagonal**, en arco.
   - En el aire, los pies cuelgan; al caer, apoyan donde estén.
-- **F1**: las perillas (`BallBossPanel`), con una pestaña por grupo: Moverse, Girar, Saltar, Agacharse y Tentáculos.
+- **F1**: las perillas (`BallBossPanel`), con una pestaña por grupo: Moverse, Girar, Saltar, Agacharse, Cañón y
+  Tentáculos. **Guardar** las deja en `game/bosses/ball_boss_settings.tres` (`KnobsFile`), que se carga al arrancar; el
+  archivo es del usuario y no va al repositorio.
 
 ### Lo medido (`ball_boss_look`)
 | Prueba | Resultado |

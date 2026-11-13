@@ -1,7 +1,8 @@
 class_name BallBossPanel
 extends TunerPanel
 
-## EL PANEL DEL JEFE BOLA (F1 en su fila): sus perillas (BallBossSettings), una pestaña por grupo.
+## EL PANEL DEL JEFE BOLA (F1 en su fila): sus perillas (BallBossSettings), una pestaña por grupo, con «Guardar» y
+## «Volver a lo guardado» (KnobsFile).
 
 const PANEL_WIDTH := 400.0
 const LABELS := {
@@ -13,12 +14,21 @@ const LABELS := {
 	"tentacle_length": "largo de cada tentáculo (m)", "spread": "el pie, a cuánto del centro (m)",
 	"step_radius": "un pie sale a más de (m)", "step_time": "el paso tarda (s)", "step_lift": "el pie sube (m)",
 }
+var _state: Label = null
+
 const TABS: Array[String] = ["Moverse", "Girar", "Saltar", "Agacharse", "Cañón", "Tentáculos"]
 
 
 func setup_panel() -> void:
 	panel_width = PANEL_WIDTH
-	setup("jefe_bola", "JEFE BOLA")
+	setup("jefe_bola", "JEFE BOLA", KnobsFile.buttons(BallBossSettings.current,
+		func() -> BallBossSettings: return BallBossSettings.new(), BallBossSettings.SAVED, rebuild, _say))
+	_state = state_label()
+
+
+func _say(text: String) -> void:
+	if _state != null:
+		_state.text = text
 
 
 func sections() -> Array[Dictionary]:
