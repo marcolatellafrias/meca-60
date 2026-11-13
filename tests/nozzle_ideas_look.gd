@@ -13,6 +13,8 @@ const STEEL := Color(0.3, 0.31, 0.34)
 const SIDE_TILT := 35.0
 
 var _folder := ""
+## Qué hoja: `direccion`, `volar` o `esquinas`; vacío, todas.
+var _sheet := ""
 var _mech: Mech = null
 var _eye: Camera3D = null
 var _title: Label = null
@@ -24,6 +26,8 @@ func _ready() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--salida="):
 			_folder = argument.trim_prefix("--salida=")
+		if argument.begins_with("--hoja="):
+			_sheet = argument.trim_prefix("--hoja=")
 	get_window().size = VIEW
 	var ground := StaticBody3D.new()
 	Clay.solid(ground, Vector3(900, 1, 900), Vector3(0, -0.5, 0), Color(0.82, 0.80, 0.76))
@@ -69,8 +73,12 @@ func _ready() -> void:
 	for part in _mech.look.get_children():
 		if part.get_class() == "Node3D" and not part.find_children("*", "GPUParticles3D", true, false).is_empty():
 			(part as Node3D).visible = false
-	await _direction_sheet()
-	await _flight_sheet()
+	if _sheet.is_empty() or _sheet == "direccion":
+		await _direction_sheet()
+	if _sheet.is_empty() or _sheet == "volar":
+		await _flight_sheet()
+	if _sheet.is_empty() or _sheet == "esquinas":
+		await _corner_sheet()
 	get_tree().quit()
 
 
@@ -156,6 +164,76 @@ func _flight_sheet() -> void:
 		_look(Vector3(19.0, -7.0, 9.0), Vector3(0.0, -4.0, 0.0), 36.0)
 		shots.append(await _grab())
 	_save(shots, "toberas_volar")
+
+
+## ── LAS CUATRO DE LAS ESQUINAS, QUE HACEN TODO (13/11/2026) ─────────────────────────────────────────────────────
+## El usuario: «el de las cuatro en las esquinas, pero más chunky y que no sobresalgan tanto para abajo… en varias
+## posiciones… adelante… atrás… al costado, porque tal vez con eso ya se entiende y no hagan falta los otros sets». Las
+## cuatro giran juntas en su rótula: echan para abajo y, para empujar a un lado, se inclinan hacia el otro.
+
+## Cuánto se inclinan para empujar de costado (grados desde abajo).
+const PUSH_TILT := 40.0
+
+
+func _corner_sheet() -> void:
+	for arm in _mech.arms:
+		arm.visible = false
+	var h := CabinGrid.HALF
+	var corner := h - 0.95
+	# Hacia dónde empujan, en el espacio de la caja (−Z adelante); vacío, sólo para arriba.
+	var pushes := [["volar (sólo para arriba)", Vector3.ZERO], ["impulso adelante", Vector3.FORWARD],
+		["impulso para atrás", Vector3.BACK], ["impulso a la derecha", Vector3.RIGHT],
+		["adelante y a la izquierda", (Vector3.FORWARD + Vector3.LEFT).normalized()]]
+	var shots: Array = []
+	for push: Array in pushes:
+		_clear()
+		var way: Vector3 = push[1]
+		# Echan para abajo y hacia el lado contrario del empuje.
+		var out := (Vector3.DOWN * cos(deg_to_rad(PUSH_TILT)) - way * sin(deg_to_rad(PUSH_TILT))).normalized() 			if way != Vector3.ZERO else Vector3.DOWN
+		for sx: float in [-1.0, 1.0]:
+			for sz: float in [-1.0, 1.0]:
+				var at := Vector3(sx * corner, -h, sz * corner)
+				# La base, ancha y baja, pegada a la caja: casi no baja.
+				_mount(at + Vector3(0, -0.15, 0), Vector3(1.7, 0.3, 1.7))
+				_chunky(at + Vector3(0, -0.55, 0), out)
+		_title.text = "Las cuatro de las esquinas · %s" % push[0]
+		_look(Vector3(-21.0, -5.0, -6.0), Vector3(0.0, -4.5, -0.5), 34.0)
+		shots.append(await _grab())
+		# De atrás y abajo: la derecha de la meca es la derecha de la foto.
+		_look(Vector3(3.0, -7.5, 21.0), Vector3(0.0, -4.5, 0.0), 34.0)
+		shots.append(await _grab())
+	for arm in _mech.arms:
+		arm.visible = true
+	_save(shots, "toberas_esquinas")
+
+
+## UNA TOBERA CHUNKY: una rótula grande y una campana corta y ancha que echa hacia `out`, con su llama.
+func _chunky(at: Vector3, out: Vector3) -> void:
+	var mount := Node3D.new()
+	var up := Vector3.FORWARD if absf(out.y) > 0.9 else Vector3.UP
+	mount.transform = Transform3D(Basis.looking_at(out, up), at)
+	_mock.add_child(mount)
+	Clay.sphere(mount, 0.55, Vector3.ZERO, STEEL)
+	var bell := MeshInstance3D.new()
+	var cone := CylinderMesh.new()
+	cone.top_radius = 0.72
+	cone.bottom_radius = 0.5
+	cone.height = 0.7
+	bell.mesh = cone
+	bell.material_override = Clay.material(Clay.DARK)
+	bell.rotation_degrees = Vector3(-90, 0, 0)
+	bell.position = Vector3(0, 0, -0.55)
+	mount.add_child(bell)
+	var flame := MeshInstance3D.new()
+	var tongue := CylinderMesh.new()
+	tongue.top_radius = 0.0
+	tongue.bottom_radius = 0.6
+	tongue.height = 2.2
+	flame.mesh = tongue
+	flame.material_override = _flame
+	flame.rotation_degrees = Vector3(-90, 0, 0)
+	flame.position = Vector3(0, 0, -0.9 - 1.1)
+	mount.add_child(flame)
 
 
 ## ── LAS PIEZAS ────────────────────────────────────────────────────────────────────────────────────────────────────
