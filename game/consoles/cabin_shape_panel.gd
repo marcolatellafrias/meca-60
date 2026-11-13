@@ -17,15 +17,18 @@ const LABELS := {
 	"floors": "pisos",
 	"floor_cells": "alto de cada piso, de losa a losa (celdas de 3,9 cm)",
 	"glass_out": "el vidrio sobresale (celdas de 3,9 cm)",
-	"eye_height": "sillas: altura de los ojos que buscan (m)",
-	"seat_gap": "sillas: distancia al vidrio (celdas)",
-	"arm_floor": "hombros: piso",
-	"arm_along": "hombros: módulo del costado",
-	"arm_length": "brazos: largo",
-	"leg_length": "piernas: largo",
-	"thickness": "brazos y piernas: ancho",
-	"leg_stretch": "piernas: cuánto se estiran paradas",
+	"eye_height": "altura de los ojos que buscan (m)",
+	"seat_gap": "distancia al vidrio (celdas)",
+	"arm_floor": "piso",
+	"arm_along": "módulo del costado",
+	"arm_length": "largo de los brazos",
+	"leg_length": "largo de las piernas",
+	"thickness": "ancho (de los dos)",
+	"leg_stretch": "cuánto se estiran las piernas paradas",
 }
+
+## Las partes del panel: los grupos de CabinShape, en orden.
+const PARTS := ["La caja", "Las sillas", "Los hombros", "Brazos y piernas"]
 
 var _draft := CabinGrid.current()
 var _state: Label = null
@@ -43,8 +46,13 @@ func setup_panel() -> void:
 
 
 func sections() -> Array[Dictionary]:
-	return [{"title": "CabinShape (game/consoles/cabin_shape.gd)", "target": _draft, "labels": LABELS,
-		"defaults": CabinShape.new(), "on_change": _measure}]
+	# UNA SECCIÓN POR PARTE, con su título (el usuario, 13/11/2026: «separada por partes con labels»): los grupos de
+	# CabinShape.
+	var all: Array[Dictionary] = []
+	for part: String in PARTS:
+		all.append({"title": part.to_upper(), "target": _draft, "labels": LABELS, "include": PackedStringArray([part]),
+			"headers": false, "defaults": CabinShape.new(), "on_change": _measure})
+	return all
 
 
 ## Lo que sale de los números, sin rearmar nada.
