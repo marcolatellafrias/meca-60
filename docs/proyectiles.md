@@ -40,10 +40,11 @@ Para probar con algo real cómo se siente mover la meca (el usuario: «lo tengo 
 esquivar»). Un redondel de 95 m de radio con un muro de 12 m (más alto que donde empieza la caja: un muro bajo le
 pasaría por abajo), **una torre al medio** que no es un jefe, y la Meca discreta.
 
-- **F3 elige el ataque** (`MissileTurret`): lluvia de misiles (cada 3,2 s, uno donde está la meca, uno donde va a
+- **K cambia de ataque** (`MissileTurret`; una tecla del panel chico de la parcela, ver [[sandbox]]): lluvia de misiles (cada 3,2 s, uno donde está la meca, uno donde va a
   estar y tres al azar), círculo gigante (4,5 s de aviso), dona (acercarse), ondas (saltarlas), lanza (un paso al
   costado), alfombra de misiles (caen en fila) y pared que cruza (saltarla), o todos de a uno. Decide sólo el host.
-- **P** prende y apaga la torre; **U** sube al jugador; **O** posee la meca; **F1** y **F2**, los de la meca.
+- **P** prende y apaga la torre; **U** sube al jugador; **O** posee la meca; **N**, **M** y **L** (pegarle y el
+  ascensor), como en las otras filas de la meca; **F1**, las perillas.
 - Medido con la meca quieta: cada ataque la inclina entre 10° y 21°; el círculo gigante (14 m/s) la tira.
 
 Medido (13/11/2026): quieta, de cinco la agarran uno o dos; corriendo en círculo, de veinte la agarran entre dos y
