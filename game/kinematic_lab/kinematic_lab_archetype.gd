@@ -6,7 +6,7 @@ extends SeededArchetype
 ##   · LAS CAJAS, UNA CONFIGURACIÓN POR VEZ (la K las cambia): chicas y livianas sueltas, una pila alta de medianas,
 ##     grandes y pesadas como autos, o una pared de medianas. El usuario: «no las quiero mezcladas, pero sí un toggle con
 ##     varias configuraciones».
-##   · LA FORMA DE INTERACTUAR del cubo con lo suelto (la L): ver KinematicPillar.
+##   · LA FORMA DE INTERACTUAR del cubo con lo suelto: en el F1 (por defecto, la topadora con tope; ver KinematicPillar).
 ##   · LA LLUVIA (la N): cajas de la configuración de ahora caen encima del cubo, donde esté. El usuario: «así vemos como
 ##     es cuando saltas y te das cosas encima o cuando te agachas y te desagachas».
 ## Mirándolo, O lo posee.
@@ -44,8 +44,8 @@ func max_footprint() -> Vector2:
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"EXPERIMENTO: un cubo cinemático hasta el piso, contra cajas sueltas",
-		"K las cajas · L cómo trata lo suelto · N lluvia de cajas encima · O poseerlo",
-		"poseído: WASD, mouse gira, Shift corre, Ctrl se agacha, espacio salta",
+		"K las cajas · N lluvia de cajas encima · O poseerlo · F1 las perillas (y cómo trata lo suelto)",
+		"poseído: WASD, mouse gira, Q dash, Ctrl se agacha, espacio salta y, en el aire, vuela",
 	])
 
 
@@ -56,7 +56,6 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	var pillar := KinematicPillar.new()
 	pillar.name = "Cubo"
 	pillar.position = START
-	pillar.mode = _mode_now as KinematicPillar.Mode
 	root.add_child(pillar)
 	var holder := Node3D.new()
 	holder.name = "Cajas"
@@ -122,31 +121,12 @@ func keys() -> Array[SandboxKey]:
 				boxes = index as Boxes
 				for holder in _holders(parcel):
 					KinematicLabArchetype.lay_out(holder, boxes)),
-		SandboxKey.cycle(KEY_L, SandboxKey.Weight.MAIN, "con lo suelto", KinematicPillar.MODE_NAMES, _mode,
-			func(parcel: SandboxParcel, index: int) -> void:
-				_mode_now = index
-				for pillar: KinematicPillar in parcel.find_children("*", "KinematicPillar", true, false):
-					pillar.mode = index as KinematicPillar.Mode),
 		SandboxKey.action(KEY_N, SandboxKey.Weight.MAIN, "lluvia de cajas encima del cubo",
 			func(parcel: SandboxParcel) -> void:
 				for pillar: KinematicPillar in parcel.find_children("*", "KinematicPillar", true, false):
 					for holder in _holders(parcel):
 						KinematicLabArchetype.rain(holder, pillar, boxes)),
 	]
-
-
-static var _mode_now := 0
-
-
-func _mode() -> int:
-	return _mode_now
-
-
-func entered(parcel: SandboxParcel, inside: bool) -> void:
-	if not inside:
-		return
-	for pillar: KinematicPillar in parcel.find_children("*", "KinematicPillar", true, false):
-		_mode_now = int(pillar.mode)
 
 
 static func _holders(parcel: SandboxParcel) -> Array[Node3D]:

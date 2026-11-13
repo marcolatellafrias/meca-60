@@ -1,8 +1,8 @@
 extends Node
 
 ## EL LABORATORIO CINEMÁTICO, MEDIDO (unos 3 minutos, sin el sandbox). Para cada forma de tratar lo suelto
-## (KinematicPillar.Mode) y cada configuración de cajas: el cubo entra corriendo, salta y se agacha y se para. Después,
-## con la pila, la lluvia de cajas encima mientras se agacha, se para y salta. Imprime una tabla: lo más rápido que salió
+## (KinematicPillar.Mode) y cada configuración de cajas: el cubo entra caminando, salta y se agacha y se para. Después,
+## con la pila, la lluvia de cajas encima mientras se agacha, se para y salta. Con lo que diga el F1 para moverse. Imprime una tabla: lo más rápido que salió
 ## una caja, cuántas pasaron de 15 m/s, la caja más metida adentro del cubo (m) y cuánto avanzó el cubo.
 ## Con ventana y --salida, capturas de cada forma contra la pila.
 ##   tools/godot_ventana.sh res://tests/kinematic_lab_look.tscn -- --salida=C:/carpeta
@@ -72,7 +72,6 @@ func _reset(mode: KinematicPillar.Mode, which: KinematicLabArchetype.Boxes) -> v
 	KinematicLabArchetype.lay_out(_holder, which)
 	_pillar.mode = mode
 	_pillar.move = Vector2.ZERO
-	_pillar.sprint = false
 	_pillar.crouch = false
 	_pillar.jump = false
 	_pillar.velocity = Vector3.ZERO
@@ -83,13 +82,12 @@ func _reset(mode: KinematicPillar.Mode, which: KinematicLabArchetype.Boxes) -> v
 	_deepest = -100.0
 
 
-## ENTRA CORRIENDO: corre 4 s hacia las cajas, salta, se agacha y se para.
+## ENTRA CAMINANDO: camina 4 s hacia las cajas, salta, se agacha y se para.
 func _walk_in(mode: KinematicPillar.Mode, which: KinematicLabArchetype.Boxes) -> void:
 	await _reset(mode, which)
 	var start := _pillar.global_position
 	_phase = "corriendo"
 	_pillar.move = Vector2(0.0, 1.0)
-	_pillar.sprint = true
 	await _wait(4.0)
 	if which == KinematicLabArchetype.Boxes.PILE:
 		_look(Vector3(-24.0, 14.0, 18.0))

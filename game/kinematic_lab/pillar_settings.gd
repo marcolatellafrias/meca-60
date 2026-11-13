@@ -7,13 +7,13 @@ extends Resource
 static var current := PillarSettings.new()
 
 @export_group("Moverse")
+## MOVERSE, LO MÁS SIMPLE (13/11/2026; el usuario: «quiero dejar el sistema lo más simple que se pueda… que sea una
+## sola velocidad»): UNA velocidad, y el TIEMPO PARA LLEGAR a ella, el mismo para arrancar y para frenar (0: al
+## instante). Sin correr: para esquivar está el dash. Las configuraciones de un toque, en el F1 (PillarPanel).
 @export_range(1.0, 30.0, 0.5) var walk_speed := 8.0
-## Arrancar y frenar (m/s²). Frenar es lo que hace de roce: el cubo no tiene fricción con el piso.
-@export_range(1.0, 60.0, 0.5) var walk_accel := 8.0
-@export_range(1.0, 60.0, 0.5) var walk_brake := 10.0
-@export_range(1.0, 3.0, 0.05) var sprint_multiplier := 1.8
-## En el aire, cuánto de arrancar y frenar le queda (parte).
-@export_range(0.0, 1.0, 0.05) var air_control := 0.3
+@export_range(0.0, 2.0, 0.05) var reach_time := 0.0
+## En el aire, cuánto se controla, en partes del piso (1: igual; 0: nada).
+@export_range(0.0, 1.0, 0.05) var air_control := 1.0
 
 @export_group("Girar")
 ## Velocidad tope (grados por segundo) y aceleración tope (grados por segundo al cuadrado).
@@ -45,6 +45,9 @@ static var current := PillarSettings.new()
 @export_range(0.1, 3.0, 0.05) var crouch_rate := 0.5
 
 @export_group("Con lo suelto")
+## CÓMO TRATA LO SUELTO (ver KinematicPillar): la topadora con tope, por defecto (el usuario: «sí, la topadora por
+## defecto, y las otras opciones de física las pondría en el panel F»).
+@export_enum("Jolt puro", "topadora con tope", "atraviesa y empuja", "lo suelto lo frena") var loose_mode := 1
 ## TOPADORA CON TOPE: lo más que lo suelto sale hacia afuera más rápido que el cubo (m/s).
 @export_range(0.0, 10.0, 0.25) var cap_extra := 1.5
 ## ATRAVIESA Y EMPUJA: cuánto más rápido que el cubo sale lo que empuja (m/s).

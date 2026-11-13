@@ -16,7 +16,8 @@ extends AnimatableBody3D
 ##   · EL VUELO (espacio otra vez, en el aire): empuja para arriba mientras le quede su barra (`fly_fuel`), que se llena
 ##     apoyado. Las dos barras, separadas («por ahora las vamos a dejar separadas»).
 ##   · LAS TOBERAS (PillarNozzles): placeholder, sólo se ven.
-## LO FIJO (paredes, el piso) SIEMPRE LO FRENA. CON LO SUELTO, cuatro formas (`mode`, la L de la parcela):
+## LO FIJO (paredes, el piso) SIEMPRE LO FRENA. CON LO SUELTO, cuatro formas (`mode`: lo elige el F1, por defecto la
+## topadora con tope):
 ##   · JOLT: lo que hace el motor solo. Para él la caja tiene masa infinita.
 ##   · TOPADORA CON TOPE: lo mismo, pero nada suelto cerca sale hacia afuera más rápido que la caja en ese punto (más
 ##     `cap_extra`).
@@ -34,12 +35,16 @@ const NEAR := 2.0
 
 ## ── LO QUE SE LE PIDE ──
 var move := Vector2.ZERO
-var sprint := false
 var crouch := false
 var jump := false
 var dash := false
 var aim_yaw := 0.0
-var mode := Mode.JOLT
+## Cómo trata lo suelto: el de las perillas (PillarSettings.loose_mode).
+var mode: Mode:
+	get:
+		return PillarSettings.current.loose_mode as Mode
+	set(value):
+		PillarSettings.current.loose_mode = value
 
 ## ── LO QUE MIDE ──
 var velocity := Vector3.ZERO
@@ -105,15 +110,21 @@ func _physics_process(delta: float) -> void:
 		crouched = next_crouch
 		_resize()
 	# CAMINAR: hacia la velocidad pedida, con tope; en el aire, poco.
-	var walk := k.walk_speed * (k.sprint_multiplier if sprint and move.y > 0.0 else 1.0)
-	var wanted := Basis(Vector3.UP, _yaw) * Vector3(move.x, 0.0, -move.y).limit_length(1.0) * walk
+	# MOVERSE (ver PillarSettings): hacia la velocidad pedida, en `reach_time` (0: al instante); en el aire, con su
+	# parte de control.
+	var wanted := Basis(Vector3.UP, _yaw) * Vector3(move.x, 0.0, -move.y).limit_length(1.0) * k.walk_speed
 	var flat := Vector3(velocity.x, 0.0, velocity.z)
-	var most := (k.walk_accel if wanted.length_squared() > 0.01 else k.walk_brake) * (1.0 if grounded else k.air_control)
+	var control := 1.0 if grounded else k.air_control
 	_dash_clock = maxf(_dash_clock - delta, 0.0)
-	# Recién salido de un dash, caminar sólo suma: no lo frena.
+	# Recién salido de un dash, moverse no lo frena.
 	if _dash_clock > 0.0 and flat.length() > wanted.length():
-		most = 0.0
-	flat = flat.move_toward(wanted, most * delta)
+		control = 0.0
+	if control > 0.0:
+		if k.reach_time <= 0.0 and control >= 1.0:
+			flat = wanted
+		else:
+			var rate := k.walk_speed / maxf(k.reach_time, 0.05) * control
+			flat = flat.move_toward(wanted, rate * delta)
 	velocity = Vector3(flat.x, velocity.y, flat.z)
 	# EL DASH: al apretar, con una dirección y con barra.
 	dash_fuel = minf(dash_fuel + delta / k.dash_refill, 1.0)
@@ -368,7 +379,6 @@ func _read() -> void:
 	if not mine:
 		return
 	move = Vector2(MechKeys.axis(KEY_D, KEY_A), MechKeys.axis(KEY_W, KEY_S))
-	sprint = Input.is_physical_key_pressed(KEY_SHIFT)
 	crouch = Input.is_physical_key_pressed(KEY_CTRL)
 	jump = Input.is_physical_key_pressed(KEY_SPACE)
 	dash = Input.is_physical_key_pressed(KEY_Q)
@@ -389,7 +399,7 @@ func possess_name() -> String:
 func possess_controls() -> PackedStringArray:
 	return PackedStringArray([
 		"W/S adelante y atrás · A/D de costado · mouse gira (con tope)",
-		"Shift corre · Ctrl se agacha (baja de a poco) · espacio salta",
+		"Ctrl se agacha (baja de a poco) · espacio salta",
 		"en el aire, espacio otra vez: vuela (su barra se llena apoyado)",
 		"Q con una dirección: dash, en el piso y en el aire (su barra se llena sola)",
 	])
@@ -409,7 +419,6 @@ func possess_begin() -> void:
 func possess_end() -> void:
 	_driving = false
 	move = Vector2.ZERO
-	sprint = false
 	crouch = false
 	jump = false
 	dash = false

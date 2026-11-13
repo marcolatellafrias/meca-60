@@ -6,8 +6,8 @@ extends TunerPanel
 
 const PANEL_WIDTH := 400.0
 const LABELS := {
-	"walk_speed": "caminar: velocidad (m/s)", "walk_accel": "arrancar (m/s²)", "walk_brake": "frenar: el roce (m/s²)",
-	"sprint_multiplier": "correr: veces la caminata", "air_control": "en el aire, arrancar y frenar (parte)",
+	"walk_speed": "velocidad (m/s)", "reach_time": "tiempo para llegar a ella y para frenar (s; 0: al instante)",
+	"air_control": "en el aire, cuánto se controla (parte)", "loose_mode": "cómo trata lo suelto",
 	"turn_speed": "velocidad tope (°/s)", "turn_accel": "aceleración tope (°/s²)",
 	"jump_height": "salto (m)", "air_gravity": "en el aire pesa (veces)",
 	"thrust": "vuelo: empuje (m/s²)", "thrust_time": "vuelo: la barra dura (s)",
@@ -22,9 +22,29 @@ const LABELS := {
 const TABS: Array[String] = ["Moverse", "Girar", "Saltar y volar", "Dash", "Agacharse", "Con lo suelto"]
 
 
+## LAS CONFIGURACIONES DE UN TOQUE (el usuario: «quiero probar varias combinaciones… pero no un millón de opciones…
+## pensá configuraciones posibles»): cada botón ESCRIBE las tres perillas de moverse; lo que manda son las perillas
+## (después se ajustan a mano).
+const PRESETS := [
+	{"name": "Instantánea", "walk_speed": 8.0, "reach_time": 0.0, "air_control": 1.0},
+	{"name": "Casi instantánea", "walk_speed": 8.0, "reach_time": 0.15, "air_control": 1.0},
+	{"name": "Pesada", "walk_speed": 6.0, "reach_time": 0.6, "air_control": 0.5},
+	{"name": "Sin control en el aire", "walk_speed": 8.0, "reach_time": 0.0, "air_control": 0.0},
+]
+
+
 func setup_panel() -> void:
 	panel_width = PANEL_WIDTH
-	setup("cubo_cinematico", "CUBO CINEMÁTICO")
+	var buttons: Array[Button] = []
+	for preset: Dictionary in PRESETS:
+		buttons.append(new_button("Moverse: %s" % preset["name"], _apply.bind(preset)))
+	setup("cubo_cinematico", "CUBO CINEMÁTICO", buttons)
+
+
+func _apply(preset: Dictionary) -> void:
+	for name: String in ["walk_speed", "reach_time", "air_control"]:
+		PillarSettings.current.set(name, preset[name])
+	rebuild()
 
 
 func sections() -> Array[Dictionary]:
