@@ -38,7 +38,7 @@ func _ready() -> void:
 	_mech.cabin.lift.toggle()
 	await _seconds(3.2)
 	print("BAJÓ: el piso del ascensor a %.2f m (bajado es %.2f) · pies a %.2f m de su piso · en el marco %s · caído %s" % [
-		_mech.cabin.lift.position.y, PelvisLift.LOWERED, _feet() - _mech.cabin.lift.position.y, MotionFrame.frame_of(_body) == _mech.cabin.frame,
+		_mech.cabin.lift.position.y, PelvisLift.lowered(), _feet() - _mech.cabin.lift.position.y, MotionFrame.frame_of(_body) == _mech.cabin.frame,
 		player.ragdoll_util.is_active])
 	await _shot("1a_ascensor_abajo")
 	_mech.cabin.lift.toggle()
@@ -46,12 +46,12 @@ func _ready() -> void:
 	print("SUBIÓ de vuelta: pies a %.2f m del piso de abajo · en el marco %s · caído %s" % [_feet() - lift_top,
 		MotionFrame.frame_of(_body) == _mech.cabin.frame, player.ragdoll_util.is_active])
 	# AFUERA (ver MechExterior): parado en la pasarela, en el balcón y en un tramo; y del balcón al piso por la puerta.
-	var half := Mech.SIZE * 0.5
+	var half := CabinGrid.SIZE * 0.5
 	var floors := [MechCabin.floor_y(0) + MechCabin.SLAB * 0.5, MechCabin.floor_y(1) + MechCabin.SLAB * 0.5]
 	var spots := [
 		["la pasarela, al costado", Vector3(half + 0.55, floors[0], 1.5), floors[0]],
 		["la pasarela, atrás", Vector3(0.0, floors[0], half + 0.55), floors[0]],
-		["el medio del primer tramo", Vector3(0.0, (floors[0] + floors[1]) * 0.5, (MechExterior.HALF + MechExterior.WALK + MechExterior.LANE * 0.5)), (floors[0] + floors[1]) * 0.5],
+		["el medio del primer tramo", Vector3(0.0, (floors[0] + floors[1]) * 0.5, (CabinGrid.HALF + MechExterior.WALK + MechExterior.LANE * 0.5)), (floors[0] + floors[1]) * 0.5],
 		["el balcón del segundo piso", Vector3(1.2, floors[1], half + 0.55), floors[1]],
 	]
 	for spot: Array in spots:
@@ -109,7 +109,7 @@ func _ready() -> void:
 	await _seconds(3.0)
 	var inside := _local()
 	print("SE CAYÓ y se recuperó (%.1f s): el de adentro quedó %s (en la cabina: %.1f, %.1f, %.1f) · en el marco %s · caído %s" % [
-		clock, "ADENTRO" if maxf(absf(inside.x), maxf(absf(inside.y), absf(inside.z))) < Mech.SIZE * 0.5 else "AFUERA",
+		clock, "ADENTRO" if maxf(absf(inside.x), maxf(absf(inside.y), absf(inside.z))) < CabinGrid.SIZE * 0.5 else "AFUERA",
 		inside.x, inside.y, inside.z, MotionFrame.frame_of(_body) == _mech.cabin.frame, player.ragdoll_util.is_active])
 	await _shot("3_despues_de_caerse")
 	get_tree().quit()

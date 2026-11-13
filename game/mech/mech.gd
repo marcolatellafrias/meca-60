@@ -14,14 +14,16 @@ extends BalanceBody
 ## Los brazos que lleva: ninguno (la de práctica, para pegarle), discretos o físicos.
 enum Arms { NONE, POSE, MUSCLE }
 
-const SIZE := CabinGrid.SIZE
 const MASS := 50000.0
 const NAMES := ["Meca de práctica", "Meca discreta", "Meca física"]
 ## LOS BRAZOS: el hombro, en el espacio de la caja (`x` del lado derecho), casi en el medio del costado. *El 12/11/2026
 ## se probó en el último tercio, hacia atrás: la postura era más natural, pero el brazo alcanzaba 2,6 m menos hacia
 ## adelante, y el usuario lo volvió («estaban bien los brazos a la mitad, no me gusta el sacrificio en rango»).* Y cuánto
 ## pesan los físicos, en partes de lo que pesa el brazo solo (ver MuscleArm.weight).
-const SHOULDER := Vector3(SIZE * 0.5 + 1.0, 1.9, -0.4)
+static func shoulder() -> Vector3:
+	return Vector3(CabinGrid.SIZE * 0.5 + 1.0, 1.9, -0.4)
+
+
 const ARM_WEIGHT := 0.4
 
 ## Qué brazos lleva. Se pone antes de agregarla al árbol.
@@ -37,7 +39,7 @@ var arms: Array[MechArm] = []
 func _init() -> void:
 	super()
 	mass = MASS
-	size = Vector3.ONE * SIZE
+	size = Vector3.ONE * CabinGrid.SIZE
 
 
 func _ready() -> void:
@@ -72,7 +74,8 @@ func _build_arms() -> void:
 			arm = PoseArm.new()
 		arm.side = side
 		arm.anchor = self
-		arm.shoulder_local = Vector3(side * SHOULDER.x, SHOULDER.y, SHOULDER.z)
+		var at := shoulder()
+		arm.shoulder_local = Vector3(side * at.x, at.y, at.z)
 		arm.stance = MechArm.Stance.NORMAL
 		add_child(arm)
 		arms.append(arm)

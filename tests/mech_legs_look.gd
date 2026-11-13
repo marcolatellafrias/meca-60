@@ -46,7 +46,7 @@ func _ready() -> void:
 	var knobs := BodySettings.current
 	_mech = Mech.new()
 	_mech.arms_kind = Mech.Arms.NONE
-	_mech.position = Vector3(0.0, knobs.hover_height + Mech.SIZE * 0.5, 0.0)
+	_mech.position = Vector3(0.0, knobs.hover_height + CabinGrid.SIZE * 0.5, 0.0)
 	add_child(_mech)
 	_eye = Camera3D.new()
 	_eye.far = 2000.0

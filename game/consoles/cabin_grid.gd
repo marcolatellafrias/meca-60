@@ -15,53 +15,98 @@ extends RefCounted
 ##   · LOS PISOS: `FLOORS`, de `FLOOR_CELLS` cada uno, de losa a losa.
 ##   · LA CAJA ES UN CUBO: el ancho, el fondo y el alto dan lo mismo (204 celdas, 8,03 m). Es la caja de la meca (ver
 ##     `SIZE`).
-##   · QUÉ VA EN CADA PISO (`SEATS`): la planta baja es DE SERVICIO, sin asientos (la munición, las baterías, los
-##     tableros eléctricos, el ascensor en los 2 × 2 del medio); los dos de arriba, DOS ASIENTOS cada uno, en los
-##     módulos del medio del frente (el usuario, 13/11/2026: el caso de 4 jugadores, «planta baja de servicio»).
-##   · LOS HUECOS SON RECTÁNGULOS DE CELDAS, sin marcos: al frente, el vidrio de cada piso de losa a losa (con o sin un
-##     parante en cada línea entre módulos); atrás, la puerta de cada piso, en el medio.
+##   · QUÉ VA EN CADA PISO (`seat_floors`): la planta baja es DE SERVICIO, sin asientos (la munición, las baterías, los
+##     tableros eléctricos, el ascensor en el medio); los de arriba, DOS ASIENTOS cada uno, a los dos lados del medio
+##     del frente (el usuario, 13/11/2026: el caso de 4 jugadores, «planta baja de servicio»).
+##   · EL FRENTE ES UNA CAJA DE VIDRIO QUE SOBRESALE (`GLASS_OUT_CELLS`): vidrio al frente, a los costados, arriba y
+##     abajo, sin parantes; lo único que la corta son las losas del medio. Atrás, la puerta de cada piso, en el medio.
+##   · LA FORMA SE CAMBIA JUGANDO (`shape`, el panel F2 de las filas de la meca, CabinShapePanel): cuántos módulos por
+##     lado, cuántos pisos y cuánto sobresale el vidrio. La caja sigue siendo un cubo: el alto de un piso sale de
+##     repartir el lado entre los pisos. Lo guardado (`SAVED`) es la forma de todas las mecas.
 ##
 ## Ejes: X a la derecha, Y arriba, −Z al frente; el origen en el centro de la caja.
 
 const CELL := SupplyLook.U / 16.0
 const MODULE_CELLS := 48
-const COLUMNS := 4
-const ROWS := 4
-const FLOORS := 3
-const FLOOR_CELLS := 68
 ## El espesor de las paredes y de las losas.
 const WALL_CELLS := 6
 const SLAB_CELLS := 5
-
-## EL FRENTE ES TODO VIDRIO (el usuario, 13/11/2026: «toda vidriada por ahora… con las divisiones propias de los
-## pisos»): de losa a losa, sin antepecho ni dintel, para ver bien abajo. Los parantes, uno en cada línea entre
-## módulos, son de quita y pon (`FRONT_POSTS`): todavía no se eligió.
-const FRONT_POSTS := false
-const POST_CELLS := 6
 ## LA ALTURA DE REFERENCIA DE LOS TABLEROS: hasta donde llegaba el antepecho (y el primer tablero, un bloque que tapaba
 ## la vista para abajo y se sacó). No arma nada: es de donde se empiezan a ubicar los controles.
 const DESK_CELLS := 19
 ## La puerta de atrás de cada piso: ancho y alto.
 const DOOR_CELLS := Vector2i(28, 52)
-## Los asientos: por piso, las columnas de la fila del frente que llevan uno.
-const SEATS := {1: [1, 2], 2: [1, 2]}
 ## Dónde va el asiento, desde la pared del frente: lo que ocupaba el tablero de adelante (otra referencia, como
 ## `DESK_CELLS`) y lo que queda hasta el centro de la silla.
 const CONSOLE_CELLS := 13
 const SEAT_CELLS := 33
+## EL ASCENSOR, en celdas sueltas (el usuario: «más en términos de celdas sueltas en vez de módulos»): el radio del hueco
+## es un cuarto del ancho de adentro, menos `LIFT_MARGIN_CELLS`. Con 4 × 4 módulos, los 2 × 2 del medio.
+const LIFT_MARGIN_CELLS := 3
 
 const MODULE := MODULE_CELLS * CELL
 const WALL := WALL_CELLS * CELL
 const SLAB := SLAB_CELLS * CELL
-const FLOOR_HEIGHT := FLOOR_CELLS * CELL
-const WIDTH_CELLS := COLUMNS * MODULE_CELLS + WALL_CELLS * 2
-const DEPTH_CELLS := ROWS * MODULE_CELLS + WALL_CELLS * 2
-const HEIGHT_CELLS := FLOORS * FLOOR_CELLS
+
+## Dónde se guarda la forma de todas las mecas (la escribe el panel F2; no se sube al repositorio).
+const SAVED := "res://game/consoles/cabin_shape.tres"
+
+## ── LA FORMA (ver `shape`): lo que cambia el panel, y lo que sale de ahí ─────────────────────────────────────────
+## Módulos por lado (las columnas y las filas, iguales: la caja es un cubo), pisos y cuánto sobresale el vidrio.
+static var COLUMNS := 4
+static var ROWS := 4
+static var FLOORS := 3
+static var GLASS_OUT_CELLS := 12
+static var FLOOR_CELLS := 68
+static var FLOOR_HEIGHT := 0.0
+static var WIDTH_CELLS := 0
+static var DEPTH_CELLS := 0
+static var HEIGHT_CELLS := 0
 ## EL LADO DE LA CAJA (la caja de la meca es un cubo: ver `cube_ok`).
-const SIZE := WIDTH_CELLS * CELL
-const HALF := SIZE * 0.5
+static var SIZE := 0.0
+static var HALF := 0.0
 ## Lo de adentro, desde el centro hasta la cara de adentro de la pared.
-const INNER := HALF - WALL
+static var INNER := 0.0
+static var GLASS_OUT := 0.0
+## El radio del hueco del ascensor.
+static var LIFT_HOLE := 0.0
+
+
+static func _static_init() -> void:
+	var saved := load(SAVED) as CabinShape if ResourceLoader.exists(SAVED) else null
+	if saved != null:
+		shape(saved.modules, saved.floors, saved.glass_out)
+	else:
+		shape(COLUMNS, FLOORS, GLASS_OUT_CELLS)
+
+
+## CAMBIA LA FORMA: `modules` por lado, `floors` pisos y el vidrio que sobresale `glass_out` celdas. El lado sale de
+## los módulos, y el alto de un piso, de repartir ese lado entre los pisos (lo que no da justo queda en el de arriba).
+## Las mecas que ya estaban no cambian: hay que rearmarlas (ver CabinShapePanel).
+static func shape(modules: int, floors: int, glass_out: int) -> void:
+	COLUMNS = maxi(modules, 1)
+	ROWS = COLUMNS
+	FLOORS = maxi(floors, 1)
+	GLASS_OUT_CELLS = maxi(glass_out, 0)
+	WIDTH_CELLS = COLUMNS * MODULE_CELLS + WALL_CELLS * 2
+	DEPTH_CELLS = ROWS * MODULE_CELLS + WALL_CELLS * 2
+	HEIGHT_CELLS = WIDTH_CELLS
+	FLOOR_CELLS = HEIGHT_CELLS / FLOORS
+	FLOOR_HEIGHT = FLOOR_CELLS * CELL
+	SIZE = WIDTH_CELLS * CELL
+	HALF = SIZE * 0.5
+	INNER = HALF - WALL
+	GLASS_OUT = GLASS_OUT_CELLS * CELL
+	LIFT_HOLE = (COLUMNS * MODULE_CELLS / 4 - LIFT_MARGIN_CELLS) * CELL
+
+
+## La forma de hoy, para guardarla.
+static func current() -> CabinShape:
+	var now := CabinShape.new()
+	now.modules = COLUMNS
+	now.floors = FLOORS
+	now.glass_out = GLASS_OUT_CELLS
+	return now
 
 
 ## Si el ancho, el fondo y el alto dan lo mismo: la caja de la meca es un cubo. Lo mira tests/load_all.
@@ -72,7 +117,7 @@ static func cube_ok() -> bool:
 ## La línea del piso `index` (0 el de abajo, `FLOORS` el techo): el medio de su losa, salvo las de las puntas, que
 ## quedan adentro de la caja.
 static func floor_line(index: int) -> float:
-	return -HALF + index * FLOOR_HEIGHT
+	return HALF if index >= FLOORS else -HALF + index * FLOOR_HEIGHT
 
 
 ## Dónde está la losa `index`: su medio, ya adentro de la caja.
@@ -104,14 +149,24 @@ static func module_center(column: int, row: int, y := 0.0) -> Vector3:
 	return Vector3(column_x(column) + MODULE * 0.5, y, row_z(row) + MODULE * 0.5)
 
 
-## LOS ASIENTOS: dónde va cada uno (en el piso), mirando al frente.
-static func seats() -> Array[Vector3]:
-	var all: Array[Vector3] = []
-	for index: int in SEATS:
-		for column: int in SEATS[index]:
-			all.append(seat(index, column))
+## LOS PISOS CON ASIENTOS: todos menos la planta baja, que es de servicio; con un solo piso, ése.
+static func seat_floors() -> Array[int]:
+	var all: Array[int] = []
+	for index in range(1 if FLOORS > 1 else 0, FLOORS):
+		all.append(index)
 	return all
 
 
-static func seat(index: int, column: int) -> Vector3:
-	return Vector3(column_x(column) + MODULE * 0.5, ground(index), -INNER + SEAT_CELLS * CELL)
+## LOS ASIENTOS: dónde va cada uno (en el piso), mirando al frente. Dos por piso con asientos.
+static func seats() -> Array[Vector3]:
+	var all: Array[Vector3] = []
+	for index in seat_floors():
+		for side: float in [-1.0, 1.0]:
+			all.append(seat(index, side))
+	return all
+
+
+## El asiento del piso `index` del lado `side` (−1 el izquierdo, 1 el derecho): medio módulo a ese lado del medio, a
+## `SEAT_CELLS` de la pared del frente.
+static func seat(index: int, side: float) -> Vector3:
+	return Vector3(side * MODULE * 0.5, ground(index), -INNER + SEAT_CELLS * CELL)

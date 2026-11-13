@@ -84,9 +84,9 @@ func _on_exploded(at: Vector3, kind: Missile.Kind) -> void:
 	_landed += 1
 	var far := Vector2(at.x - _mech.global_position.x, at.z - _mech.global_position.z).length()
 	var radius: float = Missile.KINDS[kind]["radius"]
-	if far < radius + Mech.SIZE * 0.5:
+	if far < radius + CabinGrid.SIZE * 0.5:
 		_caught += 1
-	print("  cae a %.1f m de la meca%s · inclinación %.0f°" % [far, " · LA AGARRA" if far < radius + Mech.SIZE * 0.5
+	print("  cae a %.1f m de la meca%s · inclinación %.0f°" % [far, " · LA AGARRA" if far < radius + CabinGrid.SIZE * 0.5
 		else "", _mech.tilt])
 
 

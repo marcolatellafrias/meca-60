@@ -42,7 +42,7 @@ func _ready() -> void:
 	_view()
 	await _shot("Parado", "1_parado")
 	# LA ESCALA: golpes en el centro y arriba.
-	for at: float in [0.0, Mech.SIZE * 0.5]:
+	for at: float in [0.0, CabinGrid.SIZE * 0.5]:
 		for change: float in [3.0, 5.0, 8.0, 11.0, 14.0, 18.0]:
 			await _fresh()
 			_cube.apply_impulse(_cube.global_basis.x * Mech.MASS * change, Vector3(0, at, 0))
@@ -97,7 +97,7 @@ func _ready() -> void:
 	# UN GOLPE DESCENTRADO: cuánto lo gira, y si vuelve.
 	await _fresh()
 	from = _cube.yaw()
-	_cube.apply_impulse(_cube.global_basis.x * Mech.MASS * 6.0, _cube.global_basis * Vector3(0, 0, -Mech.SIZE * 0.5))
+	_cube.apply_impulse(_cube.global_basis.x * Mech.MASS * 6.0, _cube.global_basis * Vector3(0, 0, -CabinGrid.SIZE * 0.5))
 	var most_turn := 0.0
 	clock = 0.0
 	while clock < 4.0:

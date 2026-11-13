@@ -29,7 +29,6 @@ extends RefCounted
 
 ## LAS MEDIDAS, EN CELDAS DE LA GRILLA (ver CabinGrid).
 const C := CabinGrid.CELL
-const HALF := CabinGrid.HALF
 ## El ancho de un carril (la pasarela, los balcones, los tramos) y el alto de la baranda.
 const WALK := 28 * C
 const LANE := 23 * C
@@ -55,8 +54,8 @@ static func build(holder: Node3D, solid: PhysicsBody3D) -> void:
 	_rails(holder, solid, all)
 	# Dos tableros para reparar, uno en cada costado, a la altura de la pasarela.
 	for side: float in [-1.0, 1.0]:
-		Clay.box(holder, Vector3(0.18, 1.1, 0.9), Vector3(side * (HALF + 0.09), _floor_y(0) + 1.25, 1.2), Clay.RED)
-		Clay.box(holder, Vector3(0.2, 0.2, 0.2), Vector3(side * (HALF + 0.12), _floor_y(0) + 1.25, 1.2), Clay.YELLOW)
+		Clay.box(holder, Vector3(0.18, 1.1, 0.9), Vector3(side * (CabinGrid.HALF + 0.09), _floor_y(0) + 1.25, 1.2), Clay.RED)
+		Clay.box(holder, Vector3(0.2, 0.2, 0.2), Vector3(side * (CabinGrid.HALF + 0.12), _floor_y(0) + 1.25, 1.2), Clay.YELLOW)
 	var free := headroom(all)
 	if free < CLEAR:
 		push_warning("MechExterior: la escalera deja %.2f m de altura libre (hacen falta %.2f)" % [free, CLEAR])
@@ -64,9 +63,9 @@ static func build(holder: Node3D, solid: PhysicsBody3D) -> void:
 
 ## Hasta dónde llega todo esto, en el espacio del cubo: para el volumen del marco.
 static func bounds() -> AABB:
-	var outer := HALF + WALK + 0.25
+	var outer := CabinGrid.HALF + WALK + 0.25
 	var back := _lane(1).y + 0.3
-	return AABB(Vector3(-outer, -HALF - 0.3, SIDE_END - 0.3), Vector3(outer * 2.0, CabinGrid.SIZE + 2.4, back - SIDE_END + 0.3))
+	return AABB(Vector3(-outer, -CabinGrid.HALF - 0.3, SIDE_END - 0.3), Vector3(outer * 2.0, CabinGrid.SIZE + 2.4, back - SIDE_END + 0.3))
 
 
 ## LA ESCALERA SE ARMA CON `Stairs` (la regla del usuario, ver docs/technical/escaleras.md): escalones para los pies y una
@@ -87,8 +86,8 @@ static func _floor_y(index: int) -> float:
 ## El carril `index` (0, el de la pasarela y los balcones, pegado a la pared): de dónde a dónde va, en z.
 static func _lane(index: int) -> Vector2:
 	if index == 0:
-		return Vector2(HALF, HALF + WALK)
-	return Vector2(HALF + WALK + LANE * (index - 1), HALF + WALK + LANE * index)
+		return Vector2(CabinGrid.HALF, CabinGrid.HALF + WALK)
+	return Vector2(CabinGrid.HALF + WALK + LANE * (index - 1), CabinGrid.HALF + WALK + LANE * index)
 
 
 ## ── LAS SUPERFICIES ──────────────────────────────────────────────────────────────────────────────────────────────
@@ -101,16 +100,16 @@ static func _s(x0: float, x1: float, lane0: int, lane1: int, ya: float, yb: floa
 ## Todas las superficies pisables: la pasarela y la escalera.
 static func surfaces() -> Array[Dictionary]:
 	var ground := _floor_y(0)
-	var outer := HALF + WALK
+	var outer := CabinGrid.HALF + WALK
 	var all: Array[Dictionary] = [_s(-outer, outer, 0, 0, ground, ground)]
 	for side: float in [-1.0, 1.0]:
-		all.append({"x0": minf(side * HALF, side * outer), "x1": maxf(side * HALF, side * outer), "z0": SIDE_END, "z1": HALF,
+		all.append({"x0": minf(side * CabinGrid.HALF, side * outer), "x1": maxf(side * CabinGrid.HALF, side * outer), "z0": SIDE_END, "z1": CabinGrid.HALF,
 			"ya": ground, "yb": ground})
 	# Por piso: el descanso de abajo, el tramo, el descanso de arriba (los tres en el carril de afuera) y el balcón.
 	var start := stair_start()
 	var foot := start + LANDING
 	var head := foot + flight_run()
-	for index in 2:
+	for index in CabinGrid.FLOORS - 1:
 		var low := _floor_y(index)
 		var high := _floor_y(index + 1)
 		all.append(_s(start, foot, 1, 1, low, low))
@@ -217,7 +216,7 @@ static func _rails(holder: Node3D, solid: PhysicsBody3D, all: Array[Dictionary])
 ## pared del cubo.
 static func _drops(all: Array[Dictionary], surface: Dictionary, at: Vector3, out: Vector3) -> bool:
 	var beyond := at + out * 0.2
-	if absf(beyond.x) < HALF and absf(beyond.z) < HALF:
+	if absf(beyond.x) < CabinGrid.HALF and absf(beyond.z) < CabinGrid.HALF:
 		return false
 	var here := _height(surface, at.x)
 	for other: Dictionary in all:

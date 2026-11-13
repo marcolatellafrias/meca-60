@@ -20,16 +20,28 @@ extends Node3D
 ## SE VIAJA EN ÉL: su piso tiene forma de choque en `solid` (las formas de adentro de la meca, de las que su marco copia
 ## la sombra), y se mueve con él. `down` lo manda abajo o arriba; `toggle` lo cambia.
 
-const HALF := CabinGrid.HALF
 ## El hueco (el recorte de la losa y el de la pelvis), la pelvis por fuera y el piso del ascensor: sus radios. Casi
-## iguales: se leen como una sola forma. EN CELDAS (ver CabinGrid): el hueco ocupa los 2 × 2 módulos del medio de la
-## planta baja, tres celdas adentro de sus bordes.
-const HOLE := CabinGrid.MODULE - 3 * CabinGrid.CELL
-const DRUM := HOLE + 2 * CabinGrid.CELL
-const PLATFORM := HOLE - CabinGrid.CELL
-## El alto de los parantes (y de la jaula), dónde queda el piso bajado (en el espacio del cubo) y a qué velocidad viaja.
-const CAGE := 56 * CabinGrid.CELL
-const LOWERED := -7.05
+## iguales: se leen como una sola forma. EN CELDAS (ver CabinGrid.LIFT_HOLE): el hueco es un cuarto del ancho de adentro
+## (con 4 × 4 módulos, los 2 × 2 del medio de la planta baja), tres celdas adentro de sus bordes; cambia con la forma.
+static func hole() -> float:
+	return CabinGrid.LIFT_HOLE
+
+
+static func drum() -> float:
+	return hole() + 2 * CabinGrid.CELL
+
+
+static func platform() -> float:
+	return hole() - CabinGrid.CELL
+
+
+## El alto de los parantes (y de la jaula): el de un piso menos un poco, sin pasarse del de siempre.
+static func cage() -> float:
+	return minf(56 * CabinGrid.CELL, CabinGrid.FLOOR_HEIGHT - 12 * CabinGrid.CELL)
+
+
+## Dónde queda el piso bajado (en el espacio del cubo; la meca agachada, a un salto del suelo) y a qué velocidad viaja.
+const LOWERED_BELOW := 3.03
 const SPEED := 1.6
 const RAIL := 1.05
 ## Cuánto se abre la baranda del recorte hacia la puerta (grados, a cada lado).
@@ -48,19 +60,24 @@ var _shape: CollisionShape3D = null
 func _ready() -> void:
 	name = "Ascensor"
 	position.y = raised_y()
-	Clay.cylinder(self, PLATFORM, 0.1, Vector3(0, -0.05, 0), GRATE)
+	Clay.cylinder(self, platform(), 0.1, Vector3(0, -0.05, 0), GRATE)
 	for index in 4:
 		var angle := PI * 0.5 + TAU * (index + 0.5) / 4.0
-		var at := Vector3(cos(angle), 0, sin(angle)) * (PLATFORM - 0.08)
-		_bar(self, at, at + Vector3.UP * CAGE, 0.09)
-	_ring(self, CAGE, PLATFORM - 0.06)
+		var at := Vector3(cos(angle), 0, sin(angle)) * (platform() - 0.08)
+		_bar(self, at, at + Vector3.UP * cage(), 0.09)
+	_ring(self, cage(), platform() - 0.06)
 	_shape = CollisionShape3D.new()
 	var disc := CylinderShape3D.new()
-	disc.radius = PLATFORM
+	disc.radius = platform()
 	disc.height = 0.12
 	_shape.shape = disc
 	solid.add_child(_shape)
 	_place()
+
+
+## Su piso bajado: a la misma distancia debajo del cubo que con la caja de siempre.
+static func lowered() -> float:
+	return -CabinGrid.HALF - LOWERED_BELOW
 
 
 ## Su piso subido: al ras del piso de abajo.
@@ -74,13 +91,13 @@ func toggle() -> void:
 
 ## Si está viajando.
 func moving() -> bool:
-	return not is_equal_approx(position.y, LOWERED if down else raised_y())
+	return not is_equal_approx(position.y, lowered() if down else raised_y())
 
 
 func _physics_process(delta: float) -> void:
 	if not moving():
 		return
-	position.y = move_toward(position.y, LOWERED if down else raised_y(), SPEED * delta)
+	position.y = move_toward(position.y, lowered() if down else raised_y(), SPEED * delta)
 	_place()
 
 
@@ -93,13 +110,13 @@ func _place() -> void:
 ## La losa de abajo del cubo, a la altura `y`, de `thickness`: se ve con su recorte redondo, y se pisa alrededor (cuatro
 ## piezas en torno al hueco). Y la baranda del recorte, con el paso hacia la puerta de atrás (+Z).
 static func build_floor(holder: Node3D, body: PhysicsBody3D, y: float, thickness: float, color: Color) -> void:
-	holder.add_child(holed(square(HALF), HOLE, y - thickness * 0.5, y + thickness * 0.5, color))
-	var beside := HALF - HOLE
+	holder.add_child(holed(square(CabinGrid.HALF), hole(), y - thickness * 0.5, y + thickness * 0.5, color))
+	var beside := CabinGrid.HALF - hole()
 	for way: float in [-1.0, 1.0]:
-		Clay.shape_box(body, Vector3(CabinGrid.SIZE, thickness, beside), Vector3(0, y, way * (HOLE + beside * 0.5)))
-		Clay.shape_box(body, Vector3(beside, thickness, HOLE * 2.0), Vector3(way * (HOLE + beside * 0.5), y, 0))
+		Clay.shape_box(body, Vector3(CabinGrid.SIZE, thickness, beside), Vector3(0, y, way * (hole() + beside * 0.5)))
+		Clay.shape_box(body, Vector3(beside, thickness, hole() * 2.0), Vector3(way * (hole() + beside * 0.5), y, 0))
 	var top := y + thickness * 0.5
-	var rim := HOLE + 0.16
+	var rim := hole() + 0.16
 	var before := Vector3.ZERO
 	for step in 13:
 		var angle := deg_to_rad(90.0 + GATE + (360.0 - GATE * 2.0) * step / 12.0)
@@ -118,13 +135,13 @@ static func build_floor(holder: Node3D, body: PhysicsBody3D, y: float, thickness
 ## El volumen del hueco por donde viaja, en el espacio del cubo: para el marco de la meca. Empieza un poco arriba del
 ## piso bajado: el que camina por el suelo debajo de la meca agachada no entra; el que se para en el ascensor, sí.
 static func shaft() -> AABB:
-	var bottom := LOWERED + 0.55
-	return AABB(Vector3(-DRUM, bottom, -DRUM), Vector3(DRUM * 2.0, -HALF - bottom + 0.3, DRUM * 2.0))
+	var bottom := lowered() + 0.55
+	return AABB(Vector3(-drum(), bottom, -drum()), Vector3(drum() * 2.0, -CabinGrid.HALF - bottom + 0.3, drum() * 2.0))
 
 
 ## LA PELVIS: el tambor hueco, centrado en su medio (como la caja de siempre).
 static func tube(color: Color) -> MeshInstance3D:
-	return holed(circle(DRUM), HOLE, -MechBody.PELVIS_SIZE.y * 0.5, MechBody.PELVIS_SIZE.y * 0.5, color)
+	return holed(circle(drum()), hole(), -MechBody.PELVIS_SIZE.y * 0.5, MechBody.PELVIS_SIZE.y * 0.5, color)
 
 
 static func _ring(holder: Node3D, y: float, radius: float) -> void:

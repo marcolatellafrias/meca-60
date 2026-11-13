@@ -47,7 +47,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	arm.side = -1.0
 	arm.standalone = true
 	arm.anchor = torso
-	arm.shoulder_local = Vector3(arm.side * Mech.SHOULDER.x, Mech.SHOULDER.y, Mech.SHOULDER.z)
+	arm.shoulder_local = Vector3(arm.side * Mech.shoulder().x, Mech.shoulder().y, Mech.shoulder().z)
 	root.add_child(arm)
 	# Adelante del brazo: el pedestal y el bloque suelto, donde llega el directo.
 	var ahead := Vector3(arm.shoulder_local.x + 1.8, 0.0, arm.shoulder_local.z - 13.3)

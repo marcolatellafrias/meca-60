@@ -1,10 +1,10 @@
 extends Node3D
 
-## LA CABINA SOBRE SU GRILLA, PARA MIRAR (unos 10 segundos, sin el sandbox): una meca discreta parada, cortada por el
-## costado izquierdo y sin techo, con las líneas de los módulos dibujadas en cada piso (ver CabinGrid); y de frente y
-## desde un asiento, con y sin los parantes del frente.
+## LA CABINA SOBRE SU GRILLA, PARA MIRAR (unos 10 segundos por forma, sin el sandbox): por cada forma, una meca
+## discreta parada de frente, cortada por el costado izquierdo y sin techo, desde un asiento y mirando abajo desde el
+## vidrio (ver CabinGrid).
 ## Imprime las medidas que salen de la grilla.
-##   tools/godot_ventana.sh res://tests/cabin_grid_look.tscn -- --salida=C:/carpeta
+##   tools/godot_ventana.sh res://tests/cabin_grid_look.tscn -- --salida=C:/carpeta --formas=4x3x12,2x2x12
 
 const VIEW := Vector2i(1280, 720)
 
@@ -13,15 +13,19 @@ var _mech: Mech = null
 var _eye: Camera3D = null
 var _title: Label = null
 var _cut: Array[Node3D] = []
+## Las formas que mira (módulos por lado, pisos, vidrio en celdas): `--formas=4x3x12,2x2x12`; sin eso, la guardada.
+var _shapes: Array[Vector3i] = [Vector3i(CabinGrid.COLUMNS, CabinGrid.FLOORS, CabinGrid.GLASS_OUT_CELLS)]
 
 
 func _ready() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--salida="):
 			_folder = argument.trim_prefix("--salida=")
-	print("GRILLA: celda %.4f m · módulo %.3f m · caja %.4f m (cubo %s) · piso %.3f m, libre %.3f m · asientos %d" % [
-		CabinGrid.CELL, CabinGrid.MODULE, CabinGrid.SIZE, CabinGrid.cube_ok(), CabinGrid.FLOOR_HEIGHT,
-		CabinGrid.clear_height(1), CabinGrid.seats().size()])
+		if argument.begins_with("--formas="):
+			_shapes.clear()
+			for each in argument.trim_prefix("--formas=").split(","):
+				var parts := each.split("x")
+				_shapes.append(Vector3i(int(parts[0]), int(parts[1]), int(parts[2])))
 	get_window().size = VIEW
 	var ground := StaticBody3D.new()
 	Clay.solid(ground, Vector3(900, 1, 900), Vector3(0, -0.5, 0), Color(0.82, 0.80, 0.76))
@@ -38,10 +42,6 @@ func _ready() -> void:
 	world.environment.ambient_light_color = Color(0.85, 0.86, 0.9)
 	world.environment.ambient_light_energy = 1.0
 	add_child(world)
-	_mech = Mech.new()
-	_mech.arms_kind = Mech.Arms.POSE
-	_mech.position = Vector3(0.0, BodySettings.current.hover_height + Mech.SIZE * 0.5, 0.0)
-	add_child(_mech)
 	_eye = Camera3D.new()
 	_eye.far = 2000.0
 	add_child(_eye)
@@ -50,31 +50,47 @@ func _ready() -> void:
 	add_child(layer)
 	_title = Label.new()
 	_title.position = Vector2(24, 10)
-	_title.add_theme_font_size_override("font_size", 40)
+	_title.add_theme_font_size_override("font_size", 44)
 	_title.add_theme_color_override("font_color", Color.BLACK)
 	_title.add_theme_color_override("font_outline_color", Color.WHITE)
 	_title.add_theme_constant_override("outline_size", 10)
 	layer.add_child(_title)
-	await get_tree().create_timer(2.0).timeout
-	_mech.freeze = true
-	_lines()
-	_find_cut()
-	_set_cut(true)
-	_title.text = "1. De costado, cortada: el frente todo vidrio"
-	_look(Vector3(-30.0, 0.2, 12.0), Vector3(0.3, -0.5, -0.4), 27.0)
-	var side := await _grab()
-	_set_cut(false)
-	var shots: Array = [side]
-	for on: bool in [true, false]:
-		_set_posts(on)
-		var label := "con parantes" if on else "sin parantes"
-		_title.text = "%d. De frente, %s" % [shots.size() + 1, label]
-		_look(Vector3(-9.0, 1.0, -22.0), Vector3(0.0, -0.5, 0.0), 38.0)
+	var shots: Array = []
+	for shape: Vector3i in _shapes:
+		CabinGrid.shape(shape.x, shape.y, shape.z)
+		var name_of := "%d × %d módulos, %d pisos, vidrio %d celdas" % [shape.x, shape.x, shape.y, shape.z]
+		print("GRILLA %s: caja %.2f m (cubo %s) · piso %.2f m, libre %.2f m · asientos %d · ascensor %.2f m" % [
+			name_of, CabinGrid.SIZE, CabinGrid.cube_ok(), CabinGrid.FLOOR_HEIGHT, CabinGrid.clear_height(0),
+			CabinGrid.seats().size(), PelvisLift.hole()])
+		_mech = Mech.new()
+		_mech.arms_kind = Mech.Arms.POSE
+		_mech.position = Vector3(0.0, BodySettings.current.hover_height + CabinGrid.SIZE * 0.5, 0.0)
+		add_child(_mech)
+		await get_tree().create_timer(2.5).timeout
+		_mech.freeze = true
+		_cut.clear()
+		_find_cut()
+		var k := CabinGrid.SIZE / 8.0
+		_title.text = name_of
+		_look(Vector3(-11.0, 1.5, -15.0) * k + Vector3(0, 0, -4), Vector3(0.0, -0.5 * k, 0.0), 42.0)
 		shots.append(await _grab())
-		_title.text = "%d. Desde el asiento de la izquierda del medio, %s" % [shots.size() + 1, label]
-		var chair := CabinGrid.seat(1, CabinGrid.SEATS[1][0])
-		_look_cabin(chair + Vector3(0.0, 1.25, 0.05), chair + Vector3(0.0, 0.2, -3.0), 75.0)
+		_set_cut(true)
+		_title.text = "De costado, cortada"
+		_look(Vector3(-30.0, 0.2, 12.0) * k, Vector3(0.3, -0.5, -0.4) * k, 27.0)
 		shots.append(await _grab())
+		_set_cut(false)
+		_dummies(false)
+		_title.text = "Desde el asiento de la izquierda"
+		var chair := MechCabin.seat()
+		_look_cabin(chair + Vector3(0.0, 1.15, -0.1), chair + Vector3(0.0, 0.3, -3.0), 80.0)
+		shots.append(await _grab())
+		_title.text = "Mirando abajo, desde el vidrio"
+		var edge := Vector3(chair.x, CabinGrid.ground(0) + 1.5, -CabinGrid.HALF + 0.2)
+		_look_cabin(edge, edge + Vector3(0.0, -1.6, -1.2), 80.0)
+		shots.append(await _grab())
+		for dummy in find_children("*", "BoneInstantiator", true, false):
+			dummy.free()
+		_mech.free()
 	_save(shots, "cabina_grilla")
 	get_tree().quit()
 
@@ -114,9 +130,9 @@ func _set_cut(on: bool) -> void:
 		part.visible = not on
 
 
-func _set_posts(on: bool) -> void:
-	for bar in _mech.cabin.posts:
-		bar.visible = on
+func _dummies(on: bool) -> void:
+	for dummy in find_children("*", "BoneInstantiator", true, false):
+		(dummy as Node3D).visible = on
 
 
 ## Como `_look`, en el espacio de la cabina.
@@ -132,14 +148,18 @@ func _look(from: Vector3, to: Vector3, fov: float) -> void:
 	_eye.look_at(_mech.global_transform * to, Vector3.UP)
 
 
+## Dos columnas, a la mitad: cada forma, dos filas.
 func _save(shots: Array, file: String) -> void:
 	if _folder.is_empty() or DisplayServer.get_name() == "headless":
 		return
 	var first: Image = shots[0]
-	var sheet := Image.create(first.get_width(), first.get_height() * shots.size(), false, first.get_format())
+	var w := first.get_width() / 2
+	var h := first.get_height() / 2
+	var sheet := Image.create(w * 2, h * ceili(shots.size() / 2.0), false, first.get_format())
 	for index in shots.size():
 		var shot: Image = shots[index]
-		sheet.blit_rect(shot, Rect2i(Vector2i.ZERO, shot.get_size()), Vector2i(0, first.get_height() * index))
+		shot.resize(w, h, Image.INTERPOLATE_BILINEAR)
+		sheet.blit_rect(shot, Rect2i(Vector2i.ZERO, shot.get_size()), Vector2i(w * (index % 2), h * (index / 2)))
 	var path := "%s/%s.png" % [_folder, file]
 	sheet.save_png(path)
 	print("CAPTURA ", path)

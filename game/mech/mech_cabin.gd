@@ -2,9 +2,12 @@ class_name MechCabin
 extends Node3D
 
 ## LA CABINA DE LA MECA: lo que se ve de la caja y por donde se camina. Este nodo es EL DIBUJO (va con la caja).
-##   · TRES PISOS de paredes de verdad, no una caja pintada (el usuario, 12/11/2026): las losas, los costados, al frente
-##     TODO VIDRIO de losa a losa (con o sin parantes, ver CabinGrid.FRONT_POSTS), atrás la pared con el HUECO de la
-##     puerta, y los asientos. Por los huecos se ve del otro lado. Las medidas, de la grilla (CabinGrid).
+##   · LOS PISOS de paredes de verdad, no una caja pintada (el usuario, 12/11/2026): las losas, los costados, atrás la
+##     pared con el HUECO de la puerta, y los asientos. Las medidas, de la grilla (CabinGrid), que se cambia jugando.
+##   · AL FRENTE, UNA CAJA DE VIDRIO QUE SOBRESALE (`_glass`): vidrio al frente, a los costados, arriba y abajo, sin
+##     parantes; la cortan sólo las losas del medio, que siguen hasta el vidrio. El de más arriba ve para arriba y el de
+##     más abajo, para abajo (el usuario, 13/11/2026: «que también se doble en la parte de arriba y de abajo… así
+##     efectivamente logramos una parte más sobresalida»).
 ##   · EL AFUERA (MechExterior): la pasarela de planta baja y la escalera de atrás.
 ##   · EL ASCENSOR DE LA PELVIS (PelvisLift): por donde se sube desde el suelo, con la meca agachada.
 ##   · EL MARCO (MotionFrame): ADENTRO Y AFUERA SE CAMINA. Las losas, las paredes, la pasarela y la escalera tienen sus
@@ -14,11 +17,11 @@ extends Node3D
 
 ## LAS MEDIDAS SALEN DE LA GRILLA (CabinGrid, 13/11/2026): todo es celdas enteras, y cambiar un número de la grilla
 ## cambia los pisos, las paredes, los huecos y los asientos.
-const FLOORS := CabinGrid.FLOORS
-const FLOOR_HEIGHT := CabinGrid.FLOOR_HEIGHT
 const SLAB := CabinGrid.SLAB
 const WALL := CabinGrid.WALL
 const DOOR := Vector2(CabinGrid.DOOR_CELLS) * CabinGrid.CELL
+## El vidrio, bien transparente (el usuario: «haría más transparente el vidrio»).
+const GLASS := Color(0.6, 0.8, 0.92, 0.12)
 const SEAT_SCENE := "res://game/interactables/activatable/working_seat.tscn"
 const DUMMY_SCENE := "res://game/character/player.tscn"
 const DUMMY_BODIES: Array[EntityArchetype.Archetype] = [EntityArchetype.Archetype.fat_athletic,
@@ -30,8 +33,6 @@ var lift: PelvisLift = null
 var interior: StaticBody3D = null
 ## Las sillas (ver `_seats`).
 var chairs: Array[SeatInteractable] = []
-## Los parantes del frente, para mostrarlos o no (ver CabinGrid.FRONT_POSTS).
-var posts: Array[MeshInstance3D] = []
 
 var _riders := {}
 
@@ -41,9 +42,9 @@ static func floor_y(index: int) -> float:
 	return CabinGrid.slab_y(index)
 
 
-## El asiento desde el que se mira en primera persona: el de la izquierda del piso del medio.
+## El asiento desde el que se mira en primera persona: el de la izquierda del primer piso con asientos.
 static func seat() -> Vector3:
-	return CabinGrid.seat(1, CabinGrid.SEATS[1][0])
+	return CabinGrid.seat(CabinGrid.seat_floors()[0], -1.0)
 
 
 func _ready() -> void:
@@ -54,52 +55,79 @@ func _ready() -> void:
 	interior.collision_mask = 0
 	add_child(interior)
 	var size := CabinGrid.SIZE
+	var out := CabinGrid.GLASS_OUT
 	var metal := Clay.METAL
 	var half := CabinGrid.HALF - WALL * 0.5
-	for index in FLOORS + 1:
+	for index in CabinGrid.FLOORS + 1:
 		var y := floor_y(index)
 		if index == 0:
 			# La losa de abajo, con el recorte redondo del ascensor y su baranda (ver PelvisLift).
 			PelvisLift.build_floor(self, interior, y, SLAB, metal.darkened(0.12))
-			continue
-		_solid(Vector3(size, SLAB, size), Vector3(0, y, 0), metal.darkened(0.12))
-	for index in FLOORS:
+		else:
+			_solid(Vector3(size, SLAB, size), Vector3(0, y, 0), metal.darkened(0.12))
+		# ADELANTE, EN LA CAJA DE VIDRIO: abajo y arriba, vidrio que se pisa; las del medio siguen la losa.
+		if out > 0.0:
+			var ahead := Vector3(size, SLAB, out)
+			var at := Vector3(0, y, -CabinGrid.HALF - out * 0.5)
+			if index == 0 or index == CabinGrid.FLOORS:
+				Clay.box(self, ahead, at, GLASS)
+				Clay.shape_box(interior, ahead, at)
+			else:
+				_solid(ahead, at, metal.darkened(0.12))
+	for index in CabinGrid.FLOORS:
 		var base := CabinGrid.ground(index)
 		var wall_h := CabinGrid.clear_height(index)
 		var mid := base + wall_h * 0.5
+		# Los costados llegan hasta el frente de la caja: de ahí en adelante, el vidrio.
 		for side: float in [-1.0, 1.0]:
-			_solid(Vector3(WALL, wall_h, size - WALL * 2.0), Vector3(side * half, mid, 0), metal)
-		# EL FRENTE, TODO VIDRIO de losa a losa (que no se atraviesa), y un parante en cada línea entre módulos.
-		Clay.shape_box(interior, Vector3(size, wall_h, WALL * 0.5), Vector3(0, mid, -half))
-		var post := CabinGrid.POST_CELLS * CabinGrid.CELL
-		for line in range(1, CabinGrid.COLUMNS):
-			var bar := Clay.box(self, Vector3(post, wall_h, WALL), Vector3(CabinGrid.column_x(line), mid, -half),
-				metal.darkened(0.2))
-			bar.visible = CabinGrid.FRONT_POSTS
-			posts.append(bar)
-		Clay.box(self, Vector3(size - WALL * 2.0, wall_h, 0.04), Vector3(0, mid, -half), Clay.GLASS)
+			_solid(Vector3(WALL, wall_h, size - WALL), Vector3(side * half, mid, -WALL * 0.5), metal)
 		# Atrás: la pared a los costados y arriba del hueco de la puerta, en el medio.
 		var beside := (size - DOOR.x) * 0.5
 		for side: float in [-1.0, 1.0]:
 			_solid(Vector3(beside, wall_h, WALL), Vector3(side * (DOOR.x + beside) * 0.5, mid, half), metal)
-		_solid(Vector3(DOOR.x, wall_h - DOOR.y, WALL), Vector3(0, base + DOOR.y + (wall_h - DOOR.y) * 0.5, half), metal)
+		# La puerta, no más alta que el piso (con pisos bajos, llega hasta el techo).
+		var door_h := minf(DOOR.y, wall_h)
+		if wall_h - door_h > 0.01:
+			_solid(Vector3(DOOR.x, wall_h - door_h, WALL), Vector3(0, base + door_h + (wall_h - door_h) * 0.5, half), metal)
 		_seats(index)
+	_glass(size, out)
 	MechExterior.build(self, interior)
 	lift = PelvisLift.new()
 	lift.solid = interior
 	add_child(lift)
 
 
-## LOS ASIENTOS DEL PISO `index` (ver CabinGrid.SEATS): LAS SILLAS DE VERDAD, las de las consolas (`SEAT_SCENE`),
+## LA CAJA DE VIDRIO DEL FRENTE, de `out` de fondo (sin fondo, el vidrio plano en la cara del cubo): el frente y los
+## dos costados, de punta a punta, con formas que no dejan atravesarlos; sus aristas de afuera, en metal fino, para que
+## se lea la forma. El vidrio de arriba y de abajo es la punta de las losas (ver `_ready`).
+func _glass(size: float, out: float) -> void:
+	var front := -CabinGrid.HALF - out + 0.02 if out > 0.0 else -CabinGrid.HALF + WALL * 0.5
+	Clay.box(self, Vector3(size, size, 0.04), Vector3(0, 0, front), GLASS)
+	Clay.shape_box(interior, Vector3(size, size, 0.1), Vector3(0, 0, front - 0.03))
+	if out <= 0.0:
+		return
+	var edge := Clay.METAL.darkened(0.25)
+	for side: float in [-1.0, 1.0]:
+		var x := side * (CabinGrid.HALF - 0.02)
+		Clay.box(self, Vector3(0.04, size, out), Vector3(x, 0, -CabinGrid.HALF - out * 0.5), GLASS)
+		Clay.shape_box(interior, Vector3(0.1, size, out), Vector3(x, 0, -CabinGrid.HALF - out * 0.5))
+		Clay.box(self, Vector3(0.06, size, 0.06), Vector3(side * CabinGrid.HALF, 0, -CabinGrid.HALF - out), edge)
+		Clay.box(self, Vector3(size, 0.06, 0.06), Vector3(0, side * CabinGrid.HALF, -CabinGrid.HALF - out), edge)
+		for y_side: float in [-1.0, 1.0]:
+			Clay.box(self, Vector3(0.06, 0.06, out), Vector3(side * CabinGrid.HALF, y_side * CabinGrid.HALF,
+				-CabinGrid.HALF - out * 0.5), edge)
+
+
+## LOS ASIENTOS DEL PISO `index` (ver CabinGrid.seat_floors): LAS SILLAS DE VERDAD, las de las consolas (`SEAT_SCENE`),
 ## mirando al frente. Sin tablero adelante: el bloque bajo que había tapaba la vista para abajo (el usuario,
 ## 13/11/2026). Los controles vienen después.
 func _seats(index: int) -> void:
-	if not CabinGrid.SEATS.has(index):
+	if not CabinGrid.seat_floors().has(index):
 		return
-	for column: int in CabinGrid.SEATS[index]:
+	for side: float in [-1.0, 1.0]:
 		var chair := (load(SEAT_SCENE) as PackedScene).instantiate() as SeatInteractable
-		chair.name = "Asiento %d-%d" % [index, column]
-		chair.position = CabinGrid.seat(index, column)
+		chair.name = "Asiento %d %s" % [index, "izquierdo" if side < 0.0 else "derecho"]
+		chair.position = CabinGrid.seat(index, side)
 		add_child(chair)
 		chairs.append(chair)
 
@@ -136,7 +164,9 @@ func build_frame() -> void:
 	frame = MotionFrame.new()
 	mech.add_child(frame)
 	frame.floor_height = CabinGrid.ground(0)
-	frame.add_volume(AABB(Vector3.ONE * -CabinGrid.HALF, Vector3.ONE * CabinGrid.SIZE))
+	var out := CabinGrid.GLASS_OUT
+	frame.add_volume(AABB(Vector3(-CabinGrid.HALF, -CabinGrid.HALF, -CabinGrid.HALF - out),
+		Vector3(CabinGrid.SIZE, CabinGrid.SIZE, CabinGrid.SIZE + out)))
 	frame.add_volume(MechExterior.bounds())
 	frame.add_volume(PelvisLift.shaft())
 	interior.collision_layer = 1
@@ -178,5 +208,5 @@ func board() -> void:
 		SandboxPossession.of(get_tree()).release()
 	if player.is_seated and player.current_seat is SeatInteractable:
 		(player.current_seat as SeatInteractable).release_occupant_in_place()
-	player.place_at(mech.global_transform * (Vector3(0.0, CabinGrid.ground(1) + 0.05, CabinGrid.row_z(2))),
+	player.place_at(mech.global_transform * (Vector3(0.0, CabinGrid.ground(mini(1, CabinGrid.FLOORS - 1)) + 0.05, CabinGrid.row_z(2))),
 		mech.yaw())

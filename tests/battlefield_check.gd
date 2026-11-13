@@ -236,7 +236,7 @@ func _floor_below(from: Vector3, mask: int) -> float:
 func _touching() -> void:
 	var query := PhysicsShapeQueryParameters3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3.ONE * (Mech.SIZE + 1.0)
+	box.size = Vector3.ONE * (CabinGrid.SIZE + 1.0)
 	query.shape = box
 	query.transform = _mech.global_transform
 	var own: Array[RID] = [_mech.get_rid()]

@@ -16,23 +16,45 @@ pisos o de jugadores (de 1 a 4) sin rehacer nada a mano.
   sus paredes. La columna 0 es la de la izquierda y la fila 0, la del frente.
 - **Tres pisos de 68 celdas** (2,68 m de losa a losa; quedan 2,48 m libres), paredes de 6 celdas y losas de 5.
 - **La caja es un cubo**: 204 celdas de ancho, de fondo y de alto, **8,03 m** (`CabinGrid.SIZE`). `cube_ok()` lo
-  comprueba. **La caja física de la meca es esa**: `Mech.SIZE` es `CabinGrid.SIZE` (lo aceptó el módulo Meca el
-  13/11/2026).
+  comprueba. **La caja física de la meca es esa**: `Mech` toma su tamaño de `CabinGrid.SIZE` (lo aceptó el módulo
+  Meca el 13/11/2026; desde que la forma cambia jugando, ya no hay `Mech.SIZE`).
+
+## La forma se cambia jugando: el panel F2
+En las filas de la meca (Meca discreta, Meca física y la Arena de esquivar), **F2** (`CabinShapePanel`) cambia
+**cuántos módulos por lado** (1 a 6), **cuántos pisos** (1 a 5) y **cuánto sobresale el vidrio** (celdas). Lo pidió
+el usuario el 13/11/2026, para probar configuraciones («tal vez podremos ver una versión de 2x2 o una de 3x3, siempre
+manteniendo el aspect ratio de cubo por ahora»).
+- **La caja sigue siendo un cubo**: el lado sale de los módulos, y el alto de un piso, de repartir ese lado entre los
+  pisos (lo que no da justo queda en el de arriba). El panel avisa si un piso queda tan bajo que no se pasa parado.
+- **Probar** rearma todas las mecas con esa forma, sin guardar; **Guardar** la escribe en
+  `game/consoles/cabin_shape.tres` (no se sube al repositorio) y es la forma de todas las mecas, también al reiniciar.
+- **El ascensor va en celdas sueltas**, no en módulos: su hueco es un cuarto del ancho de adentro menos tres celdas
+  (con 4 × 4, los 2 × 2 del medio). Su jaula no pasa de un piso.
+- **El afuera sale de reglas**: un tramo de escalera y un balcón por cada piso de arriba; lo largo de un tramo, de la
+  altura del piso. Con pisos bajos avisa si queda poca altura libre.
+- **Los asientos**: dos por piso, a los dos lados del medio del frente, en todos los pisos menos la planta baja (con un
+  solo piso, en ése).
+- **Las piernas y los brazos todavía no cambian con la caja** (la idea del usuario: achicarlos en proporción). Son del
+  módulo Meca.
 
 ## Qué va en cada piso (el caso de 4 jugadores)
 - **La planta baja es de servicio**: no tiene asientos ni controles fijos. Ahí van la munición, las baterías y los
   tableros eléctricos (todavía no están), y el **ascensor** ocupa los 2 × 2 módulos del medio: su hueco tiene el radio
-  de un módulo menos tres celdas.
-- **Los dos pisos de arriba tienen dos asientos cada uno**, en los dos módulos del medio del frente (`SEATS`). **No
+  de un módulo menos tres celdas (ver el panel F2).
+- **Los dos pisos de arriba tienen dos asientos cada uno**, en los dos módulos del medio del frente (`seat_floors`, `seat`). **No
   tienen tablero adelante**: el primero, un bloque bajo hasta el antepecho, tapaba la vista para abajo y se sacó (el
   usuario, 13/11/2026). Su altura y su fondo quedan en la grilla como **referencia** para ubicar los controles
   (`DESK_CELLS`, `CONSOLE_CELLS`).
 - **Las sillas son las de verdad** (las de las consolas, `working_seat.tscn`) y en la meca con brazos se sientan
   **cuatro maniquíes**, para ver la escala de adentro (`MechCabin.seat_dummies`). La caja maciza no choca con el
   cuerpo de las sillas ni con los maniquíes: los empujaba y se volteaba.
-- **El frente es todo vidrio**, de losa a losa: lo único que lo corta son los pisos (el usuario: «toda vidriada por
-  ahora… con las divisiones propias de los pisos»). Los parantes, uno en cada línea entre módulos, son de quita y pon
-  (`FRONT_POSTS`): **sin parantes** (el usuario, 13/11/2026).
+- **El frente es una caja de vidrio que sobresale** (`GLASS_OUT_CELLS`, 12 celdas, 47 cm): vidrio al frente, a los
+  costados, arriba y abajo, **sin parantes**, más transparente. La cortan sólo las losas del medio, que siguen hasta
+  el vidrio; abajo y arriba, la punta es de vidrio y se pisa. Así **el de más arriba ve para arriba y el de más abajo,
+  para abajo**, y los de adentro ven de costado por las caras del vidrio (el usuario, 13/11/2026: «el vidrio se dobla…
+  más visión periférica… que también se doble en la parte de arriba y de abajo»; el fondo, chico, «así está igualado a
+  los costados y arriba y abajo»). Los costados de la caja llegan hasta su frente. *Antes: el frente plano todo
+  vidrio de losa a losa; y antes, una ventana por módulo con antepecho, dintel y parantes.*
 - **Atrás**: la puerta de cada piso (28 × 52 celdas), en el medio.
 - **El afuera** (la pasarela, los balcones, la escalera) también se mide en celdas. **La escalera de atrás se arma con
   `Stairs`** (la regla del usuario para toda escalera, ver [[escaleras]]): escalones de unos 15 cm con pisada de 8
@@ -52,6 +74,7 @@ pisos o de jugadores (de 1 a 4) sin rehacer nada a mano.
   frente, y lo de los costados queda lejos. Hay que ver si el ancho, la cantidad de asientos o los tableros lo
   resuelven. Los jugadores siempre van con vista al frente.
 
-Test para mirar: `tests/cabin_grid_look.tscn` (unos 10 segundos, sin el sandbox). Muestra la meca cortada de costado
-con las líneas de los módulos, desde arriba y de frente, y escribe las medidas. Caminar adentro y afuera sigue en
+Test para mirar: `tests/cabin_grid_look.tscn` (unos 10 segundos por forma, sin el sandbox; `--formas=4x3x12,2x2x12`).
+Por cada forma: de frente, cortada de costado, desde un asiento y mirando abajo desde el vidrio; escribe las medidas.
+El panel: `tests/cabin_shape_check.tscn` (una parcela con la meca, pasa a 2 × 2 y 2 pisos con «Probar»). Caminar adentro y afuera sigue en
 `tests/mech_ride_check.tscn`.
