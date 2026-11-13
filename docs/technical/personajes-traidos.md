@@ -42,7 +42,10 @@ las manos son las del jugador (un `InteractionController` con un ojo en la cabez
 de la parcela «Experimentos de locomoción» y de `ExhibitOperator` de character-parametric (unas 3.500 líneas entre los
 dos), sin los pasillos de obstáculos, los botones, las sillas de la nave ni los controles.* Sus paneles, traídos de
 allá: **F1** lo de todos los arquetipos (`LocomotionPanel`: caerse, llevar, tirar, el aire) y **F3** lo de cada arquetipo
-(`LocomotionTuner`: caminata, pose, movimiento, equilibrio, salto y cuerpo, que también está en la fila Personajes).
+(`LocomotionTuner`: caminata, pose, movimiento, equilibrio, salto y cuerpo). Los dos están en las filas Personajes y
+Locomoción (el usuario, 13/11/2026, entre uno solo como el de la meca y los dos: «los dos, en Personajes»), con
+«Guardar» y **«Volver a lo guardado»**, que deshace lo probado sin borrar nada (`LocomotionCommon.restore`,
+`BlockShapes.restore`); el F3 además «Olvidar lo guardado», que vuelve al código.
 
 Pruebas:
 - `tests/people_look.tscn` (con ventana, unos 12 segundos): los seis en fila, sus cabezas de cerca, y caminando 3

@@ -38,6 +38,15 @@ static func forget(archetype: int) -> void:
 	live.erase(archetype)
 
 
+## VUELVE A LA GUARDADA de `archetype` (o a la de antes, si no tiene).
+static func restore(archetype: int) -> void:
+	var saved := _saved()
+	if saved.has(archetype):
+		live[archetype] = (saved[archetype] as BlockShape).copy()
+	else:
+		live.erase(archetype)
+
+
 ## GUARDA todas las que están puestas. Verdadero si salió bien.
 static func store() -> bool:
 	var out := BlockShapes.new()

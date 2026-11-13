@@ -175,6 +175,19 @@ static func base() -> LocomotionCommon:
 	return _base
 
 
+## VUELVE A LO GUARDADO (o a lo de siempre, si no hay nada guardado), en la misma instancia: el panel la sigue editando.
+static func restore() -> void:
+	var saved: LocomotionCommon = null
+	if ResourceLoader.exists(PATH):
+		saved = ResourceLoader.load(PATH, "LocomotionCommon", ResourceLoader.CACHE_MODE_IGNORE) as LocomotionCommon
+	if saved == null:
+		saved = LocomotionCommon.new()
+	var live := base()
+	for property in live.get_property_list():
+		if int(property["usage"]) & PROPERTY_USAGE_SCRIPT_VARIABLE:
+			live.set(property["name"], saved.get(property["name"]))
+
+
 static func store() -> bool:
 	var err := ResourceSaver.save(base(), PATH)
 	if err != OK:

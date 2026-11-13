@@ -12,8 +12,8 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 | Mapa de pelea | `BattlefieldArchetype` | `game/battlefield/` (`Battlefield`) | — | `battlefield_check` | la meca, `PackageArchetype`, `Clay`, `Stairs` |
 | Brazo | `MuscleArmArchetype` | `game/muscle_arm/` entero | `MuscleArmPanel` (F1) | `muscle_arm_look` | `MechArm`, `MechBody.arm`, `MechHand`, `TestBall`, `Mech.SHOULDER` |
 | Cubo con piernas (archivada) | `LeggedCubeArchetype` | `game/archive/line_cube/` entero | `LeggedCubePanel` (F1) | `legged_check` | `MechBody`, `MechLeg`, `Clay`, `TestBall` |
-| Personajes | `PeopleArchetype` | `CharacterGetUp` | `LocomotionTuner` (F3, de la fila Locomoción) | `people_look`, `sizes_check` | el personaje |
-| Locomoción | `LocomotionLabArchetype` | `game/locomotion_lab/` entero (`LocomotionLab`, `CharacterActions`, los dos paneles) | `LocomotionPanel` (F1), `LocomotionTuner` (F3, también en Personajes) | `locomotion_look` | el personaje, `PeopleArchetype`, `PackageArchetype`, `Clay` |
+| Personajes | `PeopleArchetype` | `CharacterGetUp` | `LocomotionPanel` (F1) y `LocomotionTuner` (F3), los de la fila Locomoción | `people_look`, `sizes_check` | el personaje |
+| Locomoción | `LocomotionLabArchetype` | `game/locomotion_lab/` entero (`LocomotionLab`, `CharacterActions`, los dos paneles) | `LocomotionPanel` (F1) y `LocomotionTuner` (F3), también en Personajes | `locomotion_look` | el personaje, `PeopleArchetype`, `PackageArchetype`, `Clay` |
 | Recursos | `ObjectLotArchetype` | `game/supplies/` (`SupplyLook`) | — | `supplies_look` | `PackageArchetype`, el agarre |
 | Multijugador | `MultiplayerArchetype` | `SandboxSession` | — | `net_check` | `game/net/` |
 | Partículas | `ParticleArchetype` | — | — | — | `game/particles/` |

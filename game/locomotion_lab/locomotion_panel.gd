@@ -107,7 +107,13 @@ func setup_panel() -> void:
 	var save := TunerPanel.new_button("Guardar todo el panel", func() -> void:
 		if _state != null:
 			_state.text = "guardado" if LocomotionCommon.store() else "NO SE PUDO GUARDAR")
-	setup(UIState.LOCOMOTION, "LO DE TODOS LOS ARQUETIPOS", [save] as Array[Button])
+	var restore := TunerPanel.new_button("Volver a lo guardado", func() -> void:
+		LocomotionCommon.restore()
+		rebuild()
+		_changed_rebuilding()
+		if _state != null:
+			_state.text = "como lo guardado")
+	setup(UIState.LOCOMOTION, "LO DE TODOS LOS ARQUETIPOS", [save, restore] as Array[Button])
 	_state = state_label()
 
 

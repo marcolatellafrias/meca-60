@@ -162,8 +162,9 @@ const SETTLE_S := 0.15
 
 func setup_panel() -> void:
 	var save := new_button("Guardar este arquetipo", _save)
+	var restore := new_button("Volver a lo guardado", _restore)
 	var forget := new_button("Olvidar lo guardado (volver al código)", _forget)
-	setup(UIState.LOCOMOTION_TUNING, "LOCOMOCIÓN", [save, forget] as Array[Button])
+	setup(UIState.LOCOMOTION_TUNING, "LOCOMOCIÓN", [save, restore, forget] as Array[Button])
 	_state = state_label()
 	_adopt()
 
@@ -370,6 +371,15 @@ func _save() -> void:
 		ok = BlockShapes.store() and ok
 		_block_dirty = false
 	_refresh_state("guardado" if ok else "NO SE PUDO GUARDAR")
+
+
+## DESHACE LO PROBADO: el arquetipo vuelve a lo guardado (la caminata, la pose y el cuerpo), sin borrar nada.
+func _restore() -> void:
+	PoseShapes.preview.erase(int(_archetype))
+	BlockShapes.restore(int(_archetype))
+	_adopt()
+	_rebuild_characters()
+	rebuild()
 
 
 func _forget() -> void:
