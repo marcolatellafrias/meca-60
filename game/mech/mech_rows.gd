@@ -10,6 +10,7 @@ static func rows() -> Array[SandboxRow]:
 		SandboxRow.new(SandboxSuper.Id.MECH, "Meca discreta") 			.add(SandboxRow.Build.NEAR, [MechArchetype.new(Mech.Arms.POSE)]) 			.panel(KEY_F1, MECH_PANEL, MechPanel.new()) 			.panel(KEY_F2, CABIN_PANEL, CabinShapePanel.new()),
 		SandboxRow.new(SandboxSuper.Id.MECH, "Meca física") 			.add(SandboxRow.Build.NEAR, [MechArchetype.new(Mech.Arms.MUSCLE)]) 			.panel(KEY_F1, MECH_PANEL, MechPanel.new()) 			.panel(KEY_F2, CABIN_PANEL, CabinShapePanel.new()),
 		SandboxRow.new(SandboxSuper.Id.MECH, "Arena de esquivar") 			.add(SandboxRow.Build.NEAR, [arena]) 			.panel(KEY_F1, MECH_PANEL, MechPanel.new()) 			.panel(KEY_F2, CABIN_PANEL, CabinShapePanel.new()),
+		SandboxRow.new(SandboxSuper.Id.MECH, "Arena del jefe") 			.add(SandboxRow.Build.NEAR, [BossArenaArchetype.new()]) 			.panel(KEY_F1, MECH_PANEL, MechPanel.new()) 			.panel(KEY_F2, CABIN_PANEL, CabinShapePanel.new()),
 		SandboxRow.new(SandboxSuper.Id.MECH, "Brazo") 			.add(SandboxRow.Build.NEAR, [MuscleArmArchetype.new()]) 			.panel(KEY_F1, "el brazo con músculos: el resorte, el freno y la fuerza", MuscleArmPanel.new()),
 		SandboxRow.new(SandboxSuper.Id.MECH, "Cubo con piernas").archive() 			.add(SandboxRow.Build.NEAR, [LeggedCubeArchetype.new()]) 			.panel(KEY_F1, "el cubo y sus piernas: los pasos por radio", LeggedCubePanel.new()),
 	]
