@@ -1,8 +1,8 @@
 class_name BallBossPanel
-extends TunerPanel
+extends KnobsPanel
 
-## EL PANEL DEL JEFE BOLA (F1 en su fila): sus perillas (BallBossSettings), una pestaña por grupo, con «Guardar» y
-## «Volver a lo guardado» (KnobsFile).
+## EL PANEL DEL JEFE BOLA (F1 en su fila): sus perillas (BallBossSettings), una pestaña por grupo. Como todos los
+## paneles de perillas (KnobsPanel): se mueve un borrador, y «Guardar» lo guarda y lo aplica.
 
 const PANEL_WIDTH := 400.0
 const LABELS := {
@@ -23,26 +23,35 @@ const LABELS := {
 	"tentacle_length": "largo de cada tentáculo (m)", "spread": "el pie, a cuánto del centro (m)",
 	"step_radius": "un pie sale a más de (m)", "step_time": "el paso tarda (s)", "step_lift": "el pie sube (m)",
 }
-var _state: Label = null
-
 const TABS: Array[String] = ["Moverse", "Girar", "Saltar", "Agacharse", "Cañón", "Disparos", "Bola", "Barrido", "Tentáculos"]
 
 
 func setup_panel() -> void:
 	panel_width = PANEL_WIDTH
-	setup("jefe_bola", "JEFE BOLA", KnobsFile.buttons(BallBossSettings.current,
-		func() -> BallBossSettings: return BallBossSettings.new(), BallBossSettings.SAVED, rebuild, _say))
-	_state = state_label()
+	setup_knobs("jefe_bola", "JEFE BOLA")
 
 
-func _say(text: String) -> void:
-	if _state != null:
-		_state.text = text
+func knobs() -> Resource:
+	return BallBossSettings.current
+
+
+func fresh() -> Resource:
+	return BallBossSettings.new()
+
+
+func saved_path() -> String:
+	return BallBossSettings.SAVED
+
+
+## Nada que rearmar: el jefe lee sus perillas en cada paso (lo que cambia de forma, como la altura o los tentáculos, va
+## de a poco hacia lo nuevo).
+func applied() -> void:
+	pass
 
 
 func sections() -> Array[Dictionary]:
 	var all: Array[Dictionary] = []
 	for tab in TABS:
-		all.append({"title": tab.to_upper(), "tab": tab, "target": BallBossSettings.current, "labels": LABELS,
+		all.append({"title": tab.to_upper(), "tab": tab, "target": draft(), "labels": LABELS,
 			"include": PackedStringArray([tab]), "headers": false, "defaults": BallBossSettings.new()})
 	return all
