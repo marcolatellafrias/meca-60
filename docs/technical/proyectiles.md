@@ -17,6 +17,8 @@ a reusar… que soporte sincronización online, y también podrías usar las par
 - **El de mortero** (`Missile.Kind.MORTAR`): sube derecho, se va alto y cae de arriba sobre su punto. **La marca**: un
   círculo en el piso desde que sale, y adentro otro que crece hasta llenarlo justo cuando cae. La estela es el humo
   de propulsor de la fila Partículas; la explosión, su destello, sus chispas y su polvo.
+- **El derecho** (`Missile.Kind.SHELL`, 13/11/2026, del módulo Jefes: el tiro simple del jefe bola): va en línea
+  recta de la salida a la llegada; la misma marca y la misma explosión, más chicas.
 - **El empujón**: a todo lo suelto en la columna sobre el círculo le cambia la velocidad hacia afuera (10 m/s en el
   centro, nada en el borde). No hay daño: a la meca, su péndulo decide si se inclina o se cae.
 

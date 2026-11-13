@@ -37,6 +37,9 @@ var jump := false
 var aim_yaw := 0.0
 ## Hacia dónde apunta el cañón por la rendija (radianes: 0 adelante, positivo para arriba, da la vuelta entera).
 var aim_pitch := 0.0
+## Los tiros (de a un toque): el simple, derecho adonde apunta, y los del cielo, uno tras otro (ver BallCannon).
+var fire := false
+var barrage := false
 
 ## ── LO QUE MIDE ──
 var grounded := false
@@ -49,6 +52,8 @@ var cannon: BallCannon = null
 var _yaw := 0.0
 var _yaw_speed := 0.0
 var _jump_was := false
+var _fire_was := false
+var _barrage_was := false
 var _cylinder := CylinderShape3D.new()
 var _holder: CollisionShape3D = null
 var _ball: AnimatableBody3D = null
@@ -130,7 +135,13 @@ func _physics_process(delta: float) -> void:
 	var flat := get_real_velocity()
 	flat.y = 0.0
 	_ball.global_transform = _ball_place()
-	cannon.follow(aim_pitch, k.pitch_speed, delta)
+	cannon.step(k, aim_pitch, delta)
+	if fire and not _fire_was:
+		cannon.shoot(k)
+	if barrage and not _barrage_was:
+		cannon.barrage(k, _barrage_targets(k))
+	_fire_was = fire
+	_barrage_was = barrage
 	legs.step(k, delta, _ball_place().origin, _yaw, flat, grounded, RADIUS)
 
 
@@ -171,6 +182,20 @@ func _turn(k: BallBossSettings, delta: float) -> void:
 	_yaw += _yaw_speed * delta
 
 
+## DÓNDE CAEN LOS DEL CIELO: en fila hacia adelante, en el piso. *Cuando la maneje la computadora: al jugador y adonde
+## va.*
+func _barrage_targets(k: BallBossSettings) -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	var ahead := Basis(Vector3.UP, _yaw) * Vector3.FORWARD
+	for i in k.barrage_count:
+		var point := global_position + ahead * (k.barrage_distance + i * k.barrage_spacing)
+		var ray := PhysicsRayQueryParameters3D.create(point + Vector3.UP * 100.0, point + Vector3.DOWN * 100.0,
+			PhysicsLayers.FIXED)
+		var hit := get_world_3d().direct_space_state.intersect_ray(ray)
+		out.append(hit["position"] if not hit.is_empty() else point)
+	return out
+
+
 ## LA PONE en `where` (el punto del piso debajo de su centro), quieta, con los pies en su lugar.
 func put(where: Transform3D) -> void:
 	global_position = where.origin
@@ -194,6 +219,9 @@ func _read() -> void:
 	move = Vector2(MechKeys.axis(KEY_D, KEY_A), MechKeys.axis(KEY_W, KEY_S))
 	crouch = Input.is_physical_key_pressed(KEY_CTRL)
 	jump = Input.is_physical_key_pressed(KEY_SPACE)
+	var aiming := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
+	fire = aiming and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
+	barrage = aiming and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -213,6 +241,7 @@ func possess_controls() -> PackedStringArray:
 	return PackedStringArray([
 		"W/S adelante y atrás · A/D de costado · mouse gira (con tope)",
 		"mouse arriba y abajo: el cañón corre por la rendija (da la vuelta entera)",
+		"clic izquierdo: el tiro simple, adonde apunta · clic derecho: misiles del cielo, uno tras otro",
 		"Ctrl se agacha (baja la bola) · espacio salta (sólo para arriba)",
 	])
 
@@ -232,6 +261,8 @@ func possess_end() -> void:
 	move = Vector2.ZERO
 	crouch = false
 	jump = false
+	fire = false
+	barrage = false
 
 
 func possess_camera(first: bool, delta: float) -> Transform3D:

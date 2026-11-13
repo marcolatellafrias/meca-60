@@ -34,6 +34,18 @@ static var current := KnobsFile.load_into(BallBossSettings.new(), SAVED) as Ball
 ## A qué velocidad corre el cañón por la rendija (grados por segundo).
 @export_range(10.0, 360.0, 5.0) var pitch_speed := 60.0
 
+@export_group("Disparos")
+## EL SIMPLE: a qué velocidad va (m/s). Entre un tiro y otro (de cualquier clase), `shot_cooldown` (s).
+@export_range(20.0, 400.0, 5.0) var shell_speed := 120.0
+@export_range(0.1, 5.0, 0.05) var shot_cooldown := 0.8
+## LOS DEL CIELO: cuántos, cada cuánto sale uno (s) y cuánto tarda cada uno en caer (s). Caen en fila hacia adelante: el
+## primero a `barrage_distance` (m) y cada uno `barrage_spacing` (m) más lejos.
+@export_range(1, 12, 1) var barrage_count := 5
+@export_range(0.05, 2.0, 0.05) var barrage_gap := 0.35
+@export_range(0.5, 6.0, 0.1) var barrage_flight := 2.5
+@export_range(10.0, 200.0, 1.0) var barrage_distance := 50.0
+@export_range(2.0, 40.0, 0.5) var barrage_spacing := 12.0
+
 @export_group("Tentáculos")
 ## El largo de cada tentáculo (m) y a cuánto del centro, de costado, apoya su pie.
 @export_range(10.0, 80.0, 0.5) var tentacle_length := 24.0

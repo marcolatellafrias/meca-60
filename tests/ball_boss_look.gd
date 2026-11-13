@@ -10,6 +10,7 @@ var _boss: BallBoss = null
 var _eye: Camera3D = null
 var _title: Label = null
 var _shots := 0
+var _blasts: Array[String] = []
 
 
 func _ready() -> void:
@@ -45,6 +46,9 @@ func _ready() -> void:
 	add_child(parent)
 	var root := BallBossArchetype.new().build(0, parent)
 	_boss = root.get_node("Bola") as BallBoss
+	(root.get_node("Proyectiles") as ProjectileField).exploded.connect(func(at: Vector3, kind: Missile.Kind) -> void:
+		_blasts.append("%s a %.0f m" % [Missile.Kind.keys()[kind], Vector2(at.x - _boss.global_position.x,
+			at.z - _boss.global_position.z).length()]))
 	# Un cubo de 18 m, el alto de la meca, para comparar.
 	Clay.box(root, Vector3(6.0, 18.0, 6.0), Vector3(-22.0, 9.0, 50.0), Clay.RED.lightened(0.2))
 	_eye = Camera3D.new()
@@ -104,6 +108,32 @@ func _ready() -> void:
 		print("cañón: pedido %.0f°, llegó a %.0f°" % [angle, rad_to_deg(_boss.cannon.pitch)])
 		await _shot("el cañón a %.0f° (0 adelante, 90 al cielo)" % angle, _boss.global_position
 			+ Basis(Vector3.UP, _boss.rotation.y) * Vector3(75, 25, 0), _boss.global_position + Vector3.UP * 20)
+	# LOS TIROS: el simple, un poco para abajo, y los del cielo, uno tras otro.
+	_boss.aim_pitch = deg_to_rad(-20.0)
+	await _wait(2.0)
+	_blasts.clear()
+	_boss.fire = true
+	await _wait(0.15)
+	_boss.fire = false
+	await _shot("el tiro simple, derecho adonde apunta", _boss.global_position
+		+ Basis(Vector3.UP, _boss.rotation.y) * Vector3(70, 30, -30), _boss.global_position + Basis(Vector3.UP,
+		_boss.rotation.y) * Vector3(0, 10, -30))
+	await _wait(1.5)
+	print("tiro simple: ", _blasts)
+	_blasts.clear()
+	_boss.barrage = true
+	await _wait(0.15)
+	_boss.barrage = false
+	await _wait(3.2)
+	await _shot("los del cielo: el cañón arriba, salen uno tras otro", _boss.global_position
+		+ Basis(Vector3.UP, _boss.rotation.y) * Vector3(110, 45, -40), _boss.global_position + Basis(Vector3.UP,
+		_boss.rotation.y) * Vector3(0, 25, -55))
+	await _wait(1.2)
+	await _shot("los del cielo: caen en fila, cada uno con su marca", _boss.global_position
+		+ Basis(Vector3.UP, _boss.rotation.y) * Vector3(110, 45, -40), _boss.global_position + Basis(Vector3.UP,
+		_boss.rotation.y) * Vector3(0, 10, -75))
+	await _wait(4.0)
+	print("del cielo: ", _blasts, " · salieron %d tiros en total" % _boss.cannon.fired)
 	_boss.aim_pitch = 0.0
 	# CONTRA LA PARED (en x = 50, de 2 m): camina de costado hacia ella.
 	_boss.put(Transform3D(Basis(), Vector3(20.0, 0.0, 0.0)))

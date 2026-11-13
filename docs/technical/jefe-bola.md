@@ -59,20 +59,31 @@ posee (la **O**). La computadora todavía no.
 - **El cañón** (`BallCannon`), como de tanque: un carro metido en la rendija, un caño amarillo de 12 m y, en la punta,
   una boca más gruesa y larga (5,5 m) con el hueco oscuro bien a la vista (el usuario: «así parece más un cañón de
   tanque»; «más larga la parte ensanchada… y volvamos a los anchos antes de la exageración»). Cuelga del centro de la bola
-  y gira sobre el eje de la rendija: a 0° mira adelante, a 90° al cielo, a 180° atrás, y **da la vuelta entera**. Todavía
-  no dispara; `muzzle()` dice desde dónde y hacia dónde saldría el tiro.
+  y gira sobre el eje de la rendija: a 0° mira adelante, a 90° al cielo, a 180° atrás, y **da la vuelta entera**.
+  `muzzle()` dice desde dónde y hacia dónde sale el tiro.
 - **Lo que se le pide**: `aim_pitch`, como `aim_yaw` para girar. El cañón va hacia ahí por el camino más corto, con tope
   de velocidad (60°/s; la pestaña Cañón del F1).
 - **Poseída, el mouse arriba y abajo mueve el cañón**; de costado, el mouse gira la bola entera.
 - Medido: pedido a 0°, 45°, 90°, 180° y −45°, llega a cada uno.
 
+## Paso 3 (13/11/2026): los tiros
+Van por `ProjectileField` (por red, como los de la arena de esquivar), que es un hijo fijo de la parcela.
+- **El simple** (clic izquierdo; `fire`): derecho adonde apunta el cañón, hasta lo primero que encuentra (400 m como
+  mucho), a 120 m/s. Es un proyectil nuevo de `Missile`, `Kind.SHELL`: va en línea recta, con su marca y su explosión.
+- **Los del cielo** (clic derecho; `barrage`): **una sucesión, no una lluvia**, porque es un solo cañón (el usuario:
+  «tendría más sentido que no sea una lluvia sino una sucesión de misiles del cielo»). El cañón sube solo a 90°, tira
+  cinco morteros, uno cada 0,35 s, y vuelve adonde apuntaba. Caen en fila hacia adelante, el primero a 50 m y cada uno
+  12 m más lejos, con su marca en el piso. Cuando la maneje la computadora, van a caer sobre el jugador y adonde va.
+- Entre tiro y tiro, 0,8 s. Todo en la pestaña **Disparos** del F1.
+- Medido: el simple, apuntando a −20°, pega en el edificio a 35 m; los del cielo caen a 50, 62, 74, 86 y 98 m.
+- Todavía no hace daño: empujan lo suelto, como los misiles de la arena.
+
 ### Lo que falta o queda abierto
 - Los tentáculos atraviesan lo fijo: el cilindro sólo cubre la bola, y un tentáculo puede cruzar una pared baja para
   apoyar del otro lado.
 - Los pies no tienen choque: no patean ni achatan lo suelto, como hacen los del cubo.
+- Lo próximo, acordado con el usuario: **moverse hecha bola** (que también pegue) y **pegar con las paletas de los
+  tentáculos**.
 - Ideas del usuario para más adelante:
-  - disparar adelante o al cielo, para que caiga una lluvia de misiles;
-  - hacerse bola y rodar más rápido, con las patas retraídas;
-  - las hélices como melee;
   - disparos cargados, rayos;
   - dos cañoncitos al costado.

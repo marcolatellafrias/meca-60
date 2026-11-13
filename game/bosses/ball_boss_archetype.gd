@@ -22,10 +22,11 @@ func far_height() -> float:
 
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
-		"la bola con su rendija, el cañón que corre por ella (todavía no dispara) y cuatro tentáculos",
+		"la bola con su rendija, el cañón que corre por ella y cuatro tentáculos",
 		"más del doble de la meca; contra lo fijo es un cilindro, como el cubo cinemático",
 		"O poseerla · F1 las perillas",
 		"poseída: WASD, el mouse gira y sube o baja el cañón, Ctrl se agacha, espacio salta (sólo para arriba)",
+		"clic izquierdo el tiro simple, clic derecho misiles del cielo uno tras otro",
 	])
 
 
@@ -36,7 +37,12 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	var boss := BallBoss.new()
 	boss.name = "Bola"
 	boss.position = START
+	# Por donde salen sus tiros: un hijo fijo de la parcela, igual en todas las máquinas (ver ProjectileField).
+	var field := ProjectileField.new()
+	field.name = "Proyectiles"
+	root.add_child(field)
 	root.add_child(boss)
+	boss.cannon.field = field
 	# LO FIJO: un edificio a la izquierda (se puede pisar el techo) y una pared larga a la derecha.
 	var fixed := StaticBody3D.new()
 	fixed.name = "Fijo"
