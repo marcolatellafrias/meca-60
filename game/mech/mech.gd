@@ -123,3 +123,29 @@ func possess_end() -> void:
 
 func possess_camera(first: bool, delta: float) -> Transform3D:
 	return keys.camera(first, delta)
+
+
+## REARMA TODAS LAS MECAS, Y NADA MÁS: cada una se cambia por una nueva igual —sus brazos, si es cinemática, su lugar en
+## el piso, hacia dónde mira, parada sobre el piso de su parcela— con la forma y las perillas de ahora. Lo usan los dos
+## paneles de la meca al probar y al guardar (el F2, la forma; el F1, las perillas). *Al principio se rearmaba la parcela
+## entera, como la R, y lo demás volvía a como nace: en la arena de esquivar, la torre volvía a tirar aunque el panel
+## chico dijera que no (lo vio el usuario).* Si se la estaba poseyendo, se la suelta antes; el que iba adentro queda
+## donde estaba. *Vivía en el panel del F2 (CabinShapePanel); pasó acá el 13/11/2026, cuando el F1 también lo necesitó.*
+static func rebuild_all(tree: SceneTree) -> void:
+	for found in tree.root.find_children("*", "Mech", true, false):
+		var old := found as Mech
+		if old == null or old.is_queued_for_deletion():
+			continue
+		if old.keys != null and old.keys.driving:
+			SandboxPossession.of(tree).release()
+		var holder := old.get_parent()
+		var fresh := Mech.new()
+		fresh.arms_kind = old.arms_kind
+		fresh.kinematic = old.kinematic
+		# Parada sobre el piso de su parcela (la altura 0 de lo que la tiene, como la arman sus arquetipos).
+		fresh.transform = Transform3D(Basis(Vector3.UP, old.yaw()), Vector3(old.position.x,
+			BodySettings.current.hover_height + CabinGrid.HALF_HEIGHT, old.position.z))
+		old.cabin.free_dummies()
+		holder.remove_child(old)
+		old.queue_free()
+		holder.add_child(fresh)

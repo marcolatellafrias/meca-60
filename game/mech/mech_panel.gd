@@ -2,8 +2,8 @@ class_name MechPanel
 extends TunerPanel
 
 ## EL PANEL DE LA MECA (F1 en sus filas): todas sus perillas (BodySettings), y vuelven a lo del código con el botón de
-## cada una. «Guardar» y «Volver a lo guardado», como el F2; lo que pone la forma de la meca (el F2) no se guarda acá
-## (ver BodySettings.FROM_BODY).
+## cada una. COMO EL F2: se mueve un borrador, y «Probar» (sin guardar), «Guardar» y «Volver a lo guardado» rearman
+## las mecas con eso. Lo que pone la forma de la meca (el F2) no cambia acá (ver BodySettings.FROM_BODY).
 
 const PANEL_WIDTH := 420.0
 const LABELS := {
@@ -44,23 +44,56 @@ const LABELS := {
 }
 
 
+## EL BORRADOR (como el F2): lo que se mueve en el panel no toca las mecas hasta «Probar» o «Guardar», que las rearman
+## con eso. *Hasta el 13/11/2026 el F1 cambiaba las perillas en vivo, con la meca en movimiento: quedaba a mitad de
+## camino y se rompía, y había que reiniciar para verlo bien (lo vio el usuario: «hace que cambien a la mitad y hace que
+## se bugeen»).*
+var _draft := BodySettings.new()
 var _state: Label = null
 
 
 func setup_panel() -> void:
 	panel_width = PANEL_WIDTH
-	setup("meca", "MECA", KnobsFile.buttons(BodySettings.current, func() -> BodySettings: return BodySettings.new(),
-		BodySettings.SAVED, rebuild, _say, BodySettings.FROM_BODY))
+	KnobsFile.copy(_draft, BodySettings.current)
+	setup("meca", "MECA", [
+		new_button("Probar en todas las mecas (sin guardar)", _try),
+		new_button("Guardar (las perillas de todas las mecas)", _save),
+		new_button("Volver a lo guardado", _restore),
+	])
 	_state = state_label()
-	_state.text = "lo que dice «sale del F2» lo pone la forma de la meca (F2) y no se guarda acá"
+	_state.text = "lo que dice «sale del F2» lo pone la forma de la meca (F2): acá no cambia nada"
 
 
 func sections() -> Array[Dictionary]:
 	var labels := LABELS.duplicate()
 	for name: String in BodySettings.FROM_BODY:
 		labels[name] = "%s · sale del F2" % str(LABELS.get(name, name))
-	return [{"title": "BodySettings (game/balance_body/body_settings.gd)", "target": BodySettings.current, "labels": labels,
+	return [{"title": "BodySettings (game/balance_body/body_settings.gd)", "target": _draft, "labels": labels,
 		"defaults": BodySettings.new()}]
+
+
+## PROBAR: el borrador pasa a las perillas de todas (menos lo que pone el F2) y las mecas se rearman con eso.
+func _try() -> void:
+	KnobsFile.copy(BodySettings.current, _draft, BodySettings.FROM_BODY)
+	# Lo que pone el F2, en el borrador, como está: así el panel muestra lo de verdad.
+	for name: String in BodySettings.FROM_BODY:
+		_draft.set(name, BodySettings.current.get(name))
+	Mech.rebuild_all(get_tree())
+	_say("probando en todas las mecas, sin guardar (al reiniciar vuelve lo guardado)")
+
+
+func _save() -> void:
+	_try()
+	var error := KnobsFile.save(BodySettings.current, BodySettings.new(), BodySettings.SAVED, BodySettings.FROM_BODY)
+	_say("guardado: son las perillas de todas las mecas" if error == OK else "no se pudo guardar (%d)" % error)
+
+
+func _restore() -> void:
+	KnobsFile.copy(_draft, KnobsFile.load_into(BodySettings.new(), BodySettings.SAVED, BodySettings.FROM_BODY),
+		BodySettings.FROM_BODY)
+	rebuild()
+	_try()
+	_say("volvió a lo guardado")
 
 
 func _say(text: String) -> void:

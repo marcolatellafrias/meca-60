@@ -97,20 +97,4 @@ func _restore() -> void:
 ## la R, y lo demás volvía a como nace: en la arena de esquivar, la torre volvía a tirar aunque el panel chico dijera
 ## que no (lo vio el usuario).* Si se la estaba poseyendo, se la suelta antes; el que iba adentro queda donde estaba.
 func _rebuild_mechs() -> void:
-	for found in get_tree().root.find_children("*", "Mech", true, false):
-		var old := found as Mech
-		if old == null or old.is_queued_for_deletion():
-			continue
-		if old.keys != null and old.keys.driving:
-			SandboxPossession.of(get_tree()).release()
-		var holder := old.get_parent()
-		var fresh := Mech.new()
-		fresh.arms_kind = old.arms_kind
-		fresh.kinematic = old.kinematic
-		# Parada sobre el piso de su parcela (la altura 0 de lo que la tiene, como la arman sus arquetipos).
-		fresh.transform = Transform3D(Basis(Vector3.UP, old.yaw()), Vector3(old.position.x,
-			BodySettings.current.hover_height + CabinGrid.HALF_HEIGHT, old.position.z))
-		old.cabin.free_dummies()
-		holder.remove_child(old)
-		old.queue_free()
-		holder.add_child(fresh)
+	Mech.rebuild_all(get_tree())

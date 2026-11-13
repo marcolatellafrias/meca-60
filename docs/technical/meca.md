@@ -121,7 +121,11 @@ El cartel de poseer muestra la carga del salto y lo que le queda al propulsor.
 
 Perillas: `BodySettings` (F1). Test para mirar: `tests/mech_look.tscn` (unos 25 s, sin el sandbox).
 
-**El F1 se guarda, como el F2** (13/11/2026; el usuario: «no entiendo por qué este panel no tiene opción de guardado»):
+**El F1 funciona como el F2** (13/11/2026): se mueve un borrador, que no toca las mecas hasta «Probar en todas las
+mecas» o «Guardar»; los dos las rearman con eso (`Mech.rebuild_all`, el mismo rearmado del F2). *Antes cambiaba las
+perillas en vivo, con la meca en movimiento: quedaba a mitad de camino y se rompía (el usuario: «hace que cambien a la
+mitad y hace que se bugeen, y tengo que reiniciar el juego»).* **Y se guarda** (el usuario: «no entiendo por qué este
+panel no tiene opción de guardado»):
 «Guardar» lo escribe en `game/balance_body/body_settings.tres` y «Volver a lo guardado» lo trae de vuelta (`KnobsFile`, la
 misma pieza para todos los paneles que guardan perillas); al arrancar
 se carga solo. El archivo es del usuario: no se sube al repositorio. **Menos cuatro perillas, que pone la forma de la
