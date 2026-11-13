@@ -33,6 +33,11 @@ manteniendo el aspect ratio de cubo por ahora»).
   `game/consoles/cabin_shape.tres` (no se sube al repositorio) y es la forma de todas las mecas, también al reiniciar.
 - **El ascensor va en celdas sueltas**, no en módulos: su hueco es un cuarto del ancho de adentro menos tres celdas
   (con 4 × 4, los 2 × 2 del medio). Su jaula no pasa de un piso.
+- **El ascensor va con dos teclas, en todas las estructuras** (el usuario: «en todos los modos sean dos teclas y que
+  simplemente la de subir… cuando es solamente de planta baja no haga nada»): **sube una parada** y **baja una
+  parada**. Las paradas: bajado (debajo de la meca), y los pisos, de la planta baja hasta el último con el ascensor
+  entre pisos, o sólo la planta baja con las otras (ahí, subir desde la planta baja no hace nada). Teclas: Y / H en el
+  panel chico de las filas de la meca, G / X para el que la posee.
 - **El afuera sale de reglas**: un tramo de escalera y un balcón por cada piso de arriba; lo largo de un tramo, de la
   altura del piso. Con pisos bajos avisa si queda poca altura libre.
 - **La estructura** (pestaña La estructura, 13/11/2026, hecha por la sesión de la Meca: «es como la estructura», no toca
@@ -45,6 +50,10 @@ manteniendo el aspect ratio de cubo por ahora»).
     barandas dejan abierto el final de cada tramo, del ancho del carril (1,1 m). *Con 3 módulos por lado adentro hay
     5,7 m y un tramo mide 5,67 (la pisada de toda escalera del juego): va de pared a pared y no queda losa en las
     puntas.* Altura libre sobre los escalones: un piso menos la losa y un escalón (2,33 m con pisos de 68 celdas).
+  - **Ascensor entre pisos** (`PelvisLift`, 13/11/2026: «el ascensor no solamente va hasta el piso, sino que sirve
+    como para subir entre pisos. Y la escalera la eliminamos por completo»): nada afuera, sin puertas y sin escalera.
+    El ascensor de la pelvis sube hasta el último piso; cada losa menos el techo tiene el recorte redondo y la baranda
+    de la de abajo, con el paso abierto hacia atrás.
   - Las otras variantes que el usuario tiene pensadas (las pasarelas de los costados, con puertas a los costados)
     vienen después.
 - **Los asientos**: dos por piso, a los dos lados del medio del frente, en todos los pisos menos la planta baja (con un

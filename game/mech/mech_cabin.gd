@@ -10,7 +10,8 @@ extends Node3D
 ##     efectivamente logramos una parte más sobresalida»).
 ##   · LA ESTRUCTURA (CabinGrid.STRUCTURE, el F2): AFUERA, la pasarela de planta baja, la escalera de atrás y una
 ##     puerta atrás en cada piso (MechExterior); o ADENTRO, sin nada afuera ni puertas, la escalera contra la pared de
-##     atrás y un hueco en cada losa por donde se sube (MechInsideStairs).
+##     atrás y un hueco en cada losa por donde se sube (MechInsideStairs); o EL ASCENSOR ENTRE PISOS, sin nada afuera,
+##     ni puertas, ni escalera: el ascensor sube hasta el último piso y cada losa tiene su recorte y su baranda.
 ##   · EL ASCENSOR DE LA PELVIS (PelvisLift): por donde se sube desde el suelo, con la meca agachada.
 ##   · EL MARCO (MotionFrame): ADENTRO Y AFUERA SE CAMINA. Las losas, las paredes, la pasarela y la escalera tienen sus
 ##     formas de choque en `interior`, un cuerpo que NO choca con nada: es de donde el marco copia su SOMBRA. El que
@@ -61,13 +62,17 @@ func _ready() -> void:
 	var out := CabinGrid.GLASS_OUT
 	var metal := Clay.METAL
 	var half := CabinGrid.HALF - WALL * 0.5
-	var inside := CabinGrid.STRUCTURE == CabinGrid.Structure.INSIDE
+	# Sin nada afuera (la escalera adentro, o el ascensor entre pisos): sin puertas atrás.
+	var inside := CabinGrid.STRUCTURE != CabinGrid.Structure.OUTSIDE
+	var stairs := CabinGrid.STRUCTURE == CabinGrid.Structure.INSIDE
+	var lift_floors := CabinGrid.STRUCTURE == CabinGrid.Structure.LIFT
 	for index in CabinGrid.FLOORS + 1:
 		var y := floor_y(index)
-		if index == 0:
-			# La losa de abajo, con el recorte redondo del ascensor y su baranda (ver PelvisLift).
+		if index == 0 or (lift_floors and index < CabinGrid.FLOORS):
+			# La losa de abajo (con el ascensor entre pisos, todas menos el techo), con el recorte redondo del ascensor y
+			# su baranda (ver PelvisLift).
 			PelvisLift.build_floor(self, interior, y, SLAB, metal.darkened(0.12))
-		elif inside:
+		elif stairs:
 			# Con la escalera adentro, el hueco por donde se sube (ver MechInsideStairs).
 			MechInsideStairs.slab(self, interior, index, metal.darkened(0.12))
 		else:
@@ -86,7 +91,7 @@ func _ready() -> void:
 		# Los costados llegan hasta el frente de la caja: de ahí en adelante, el vidrio.
 		for side: float in [-1.0, 1.0]:
 			_solid(Vector3(WALL, wall_h, size - WALL), Vector3(side * half, mid, -WALL * 0.5), metal)
-		# Atrás: con la escalera adentro, la pared entera; si no, a los costados y arriba del hueco de la puerta.
+		# Atrás: sin nada afuera, la pared entera; si no, a los costados y arriba del hueco de la puerta.
 		if inside:
 			_solid(Vector3(size, wall_h, WALL), Vector3(0, mid, half), metal)
 			_seats(index)
@@ -100,9 +105,9 @@ func _ready() -> void:
 			_solid(Vector3(DOOR.x, wall_h - door_h, WALL), Vector3(0, base + door_h + (wall_h - door_h) * 0.5, half), metal)
 		_seats(index)
 	_glass(size, out)
-	if inside:
+	if stairs:
 		MechInsideStairs.build(self, interior)
-	else:
+	elif not inside:
 		MechExterior.build(self, interior)
 	lift = PelvisLift.new()
 	lift.solid = interior

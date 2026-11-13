@@ -14,8 +14,11 @@ extends Resource
 ## POR DÓNDE SE ANDA Y SE SUBE (13/11/2026, el usuario: «variantes de la base… que podría cambiar en un panel F de forma
 ## de la meca»): AFUERA, la pasarela de planta baja, la escalera de atrás y una puerta atrás en cada piso (MechExterior);
 ## ADENTRO, sin nada afuera ni puertas, y la escalera adentro, contra la pared de atrás (MechInsideStairs). En las dos se
-## entra también por el ascensor.
-@export_enum("afuera: pasarela y escalera de atrás", "adentro: escalera contra la pared de atrás") var structure := 0
+## entra también por el ascensor. O EL ASCENSOR ENTRE PISOS, sin escalera ni nada afuera: el ascensor de la pelvis sube
+## hasta el último piso, con un hueco y su baranda en cada losa (el usuario, 13/11/2026: «el ascensor no solamente va
+## hasta el piso, sino que sirve como para subir entre pisos. Y la escalera la eliminamos por completo»).
+@export_enum("afuera: pasarela y escalera de atrás", "adentro: escalera contra la pared de atrás", "ascensor entre pisos y sin escalera")
+var structure := 0
 @export_group("Las sillas")
 ## La altura que buscan igualar las sillas: la de los ojos del que se sienta, sobre el piso (m).
 @export_range(0.9, 1.6, 0.01) var eye_height := 1.15

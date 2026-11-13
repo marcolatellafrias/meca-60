@@ -79,8 +79,10 @@ static func knock_keys() -> Array[SandboxKey]:
 			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: mech.knock(false))),
 		SandboxKey.action(KEY_M, SandboxKey.Weight.NORMAL, "pegarle fuerte",
 			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: mech.knock(true))),
-		SandboxKey.action(KEY_L, SandboxKey.Weight.NORMAL, "ascensor: bajar / subir",
-			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: mech.cabin.lift.toggle())),
+		SandboxKey.action(KEY_Y, SandboxKey.Weight.NORMAL, "ascensor: subir una parada",
+			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: mech.cabin.lift.up())),
+		SandboxKey.action(KEY_H, SandboxKey.Weight.NORMAL, "ascensor: bajar una parada",
+			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: mech.cabin.lift.lower())),
 	]
 
 

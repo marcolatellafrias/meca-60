@@ -18,7 +18,11 @@ extends Node3D
 ##     piso de abajo y los parantes son su jaula.
 ##
 ## SE VIAJA EN ÉL: su piso tiene forma de choque en `solid` (las formas de adentro de la meca, de las que su marco copia
-## la sombra), y se mueve con él. `down` lo manda abajo o arriba; `toggle` lo cambia.
+## la sombra), y se mueve con él. DOS TECLAS, en todas las estructuras (el usuario, 13/11/2026: «en todos los modos sean
+## dos teclas y que simplemente la de subir el ascensor cuando es solamente de planta baja no haga nada»): `up` lo sube
+## una parada y `lower` lo baja una. Las paradas (`stop`): bajado (-1), y los pisos, de 0 a `top`. Con la estructura del
+## ASCENSOR ENTRE PISOS (CabinGrid.Structure.LIFT) llega hasta el último piso, y cada losa tiene su recorte y su baranda
+## (ver `build_floor`); con las otras, sólo hasta el de abajo.
 
 ## El hueco (el recorte de la losa y el de la pelvis), la pelvis por fuera y el piso del ascensor: sus radios. Casi
 ## iguales: se leen como una sola forma. EN CELDAS (ver CabinGrid.LIFT_HOLE): el hueco es un cuarto del ancho de adentro
@@ -51,8 +55,8 @@ const GRATE := Color(0.36, 0.38, 0.41)
 
 ## Las formas de choque de adentro de la meca: ahí va la del piso del ascensor. Se pone antes de agregarlo al árbol.
 var solid: PhysicsBody3D = null
-## Adónde va: abajo, o arriba.
-var down := false
+## Adónde va: -1 bajado, o el piso (0 el de abajo, hasta `top`).
+var stop := 0
 
 var _shape: CollisionShape3D = null
 
@@ -85,19 +89,35 @@ static func raised_y() -> float:
 	return CabinGrid.ground(0)
 
 
-func toggle() -> void:
-	down = not down
+## La parada de más arriba: el último piso con el ascensor entre pisos; si no, el de abajo.
+static func top() -> int:
+	return CabinGrid.FLOORS - 1 if CabinGrid.STRUCTURE == CabinGrid.Structure.LIFT else 0
+
+
+## Sube una parada (en la de más arriba, nada).
+func up() -> void:
+	stop = mini(stop + 1, top())
+
+
+## Baja una parada (bajado, nada).
+func lower() -> void:
+	stop = maxi(stop - 1, -1)
+
+
+## La altura de su piso en la parada de ahora.
+func target() -> float:
+	return lowered() if stop < 0 else CabinGrid.ground(stop)
 
 
 ## Si está viajando.
 func moving() -> bool:
-	return not is_equal_approx(position.y, lowered() if down else raised_y())
+	return not is_equal_approx(position.y, target())
 
 
 func _physics_process(delta: float) -> void:
 	if not moving():
 		return
-	position.y = move_toward(position.y, lowered() if down else raised_y(), SPEED * delta)
+	position.y = move_toward(position.y, target(), SPEED * delta)
 	_place()
 
 
@@ -107,7 +127,7 @@ func _place() -> void:
 
 ## ── LO FIJO: LA LOSA CON EL RECORTE Y SU BARANDA ─────────────────────────────────────────────────────────────────
 
-## La losa de abajo del cubo, a la altura `y`, de `thickness`: se ve con su recorte redondo, y se pisa alrededor (cuatro
+## La losa de abajo del cubo (y, con el ascensor entre pisos, todas menos la de arriba), a la altura `y`, de `thickness`: se ve con su recorte redondo, y se pisa alrededor (cuatro
 ## piezas en torno al hueco). Y la baranda del recorte, con el paso hacia la puerta de atrás (+Z).
 static func build_floor(holder: Node3D, body: PhysicsBody3D, y: float, thickness: float, color: Color) -> void:
 	holder.add_child(holed(square(CabinGrid.HALF), hole(), y - thickness * 0.5, y + thickness * 0.5, color))

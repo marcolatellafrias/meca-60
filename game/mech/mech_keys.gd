@@ -8,7 +8,7 @@ extends Node
 ##   espacio: mantener carga el salto, soltar salta; en el aire, el propulsor
 ##   mouse: hacia dónde mirar. LA CABEZA del que va sentado mira ahí YA, y el torso la alcanza con su demora (el
 ##     usuario: «que con delay se gire la meca, pero que yo pueda mirar normalmente»).
-##   clic izq. / der.: directo · Q / E: gancho · Z / C: uppercut · 1 / 3: desde arriba · F: la postura · G: el ascensor
+##   clic izq. / der.: directo · Q / E: gancho · Z / C: uppercut · 1 / 3: desde arriba · F: la postura · G / X: el ascensor sube / baja
 ## Y LA CÁMARA de poseerla: en primera persona, la del que va sentado en el piso del medio; en tercera, atrás y arriba.
 
 ## Las teclas de las piñas: para el brazo izquierdo y para el derecho.
@@ -63,7 +63,9 @@ func _unhandled_input(event: InputEvent) -> void:
 	if key.physical_keycode == KEY_F:
 		mech.covering = not mech.covering
 	elif key.physical_keycode == KEY_G:
-		mech.cabin.lift.toggle()
+		mech.cabin.lift.up()
+	elif key.physical_keycode == KEY_X:
+		mech.cabin.lift.lower()
 	elif PUNCH_KEYS.has(key.physical_keycode):
 		var pick: Array = PUNCH_KEYS[key.physical_keycode]
 		_punch(int(pick[0]), pick[1] as MechArm.Punch)

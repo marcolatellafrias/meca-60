@@ -35,13 +35,13 @@ func _ready() -> void:
 	print("EN EL ASCENSOR, arriba: en el marco %s · pies a %.2f m de su piso · caído %s" % [
 		MotionFrame.frame_of(_body) == _mech.cabin.frame, _feet() - lift_top, player.ragdoll_util.is_active])
 	await _shot("1a_ascensor_arriba")
-	_mech.cabin.lift.toggle()
+	_mech.cabin.lift.lower()
 	await _seconds(3.2)
 	print("BAJÓ: el piso del ascensor a %.2f m (bajado es %.2f) · pies a %.2f m de su piso · en el marco %s · caído %s" % [
 		_mech.cabin.lift.position.y, PelvisLift.lowered(), _feet() - _mech.cabin.lift.position.y, MotionFrame.frame_of(_body) == _mech.cabin.frame,
 		player.ragdoll_util.is_active])
 	await _shot("1a_ascensor_abajo")
-	_mech.cabin.lift.toggle()
+	_mech.cabin.lift.up()
 	await _seconds(3.2)
 	print("SUBIÓ de vuelta: pies a %.2f m del piso de abajo · en el marco %s · caído %s" % [_feet() - lift_top,
 		MotionFrame.frame_of(_body) == _mech.cabin.frame, player.ragdoll_util.is_active])

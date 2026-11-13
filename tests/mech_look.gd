@@ -110,12 +110,12 @@ func _ready() -> void:
 	print("AGACHADA: el centro baja %.1f m (de %.1f a %.1f) · inclinación %.0f°" % [standing - _mech.global_position.y,
 		standing, _mech.global_position.y, _mech.tilt])
 	# EL ASCENSOR, agachada: baja hasta quedar a un salto del suelo.
-	_mech.cabin.lift.toggle()
+	_mech.cabin.lift.lower()
 	await _seconds(2.6)
 	_from(Vector3(-15.0, -4.5, 14.0), Vector3(0.0, -5.5, 0.0))
 	await _shot("Agachada, con el ascensor bajado: su piso a %.1f m del suelo" % (_mech.global_transform * Vector3(0,
 		_mech.cabin.lift.position.y, 0)).y, "5b_ascensor")
-	_mech.cabin.lift.toggle()
+	_mech.cabin.lift.up()
 	_press(KEY_CTRL, false)
 	await _seconds(2.4)
 	_from(Vector3(-15.0, -6.5, 14.0), Vector3(0.0, -5.0, 0.0))

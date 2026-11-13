@@ -83,7 +83,7 @@ static var SEAT_GAP_CELLS := 26
 static var ARM_FLOOR := 1
 static var ARM_ALONG := 1
 ## LA ESTRUCTURA (ver CabinShape.structure): por dónde se anda y se sube.
-enum Structure { OUTSIDE, INSIDE }
+enum Structure { OUTSIDE, INSIDE, LIFT }
 static var STRUCTURE := Structure.OUTSIDE
 
 
