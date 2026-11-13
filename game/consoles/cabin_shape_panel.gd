@@ -46,12 +46,12 @@ func setup_panel() -> void:
 
 
 func sections() -> Array[Dictionary]:
-	# UNA SECCIÓN POR PARTE, con su título (el usuario, 13/11/2026: «separada por partes con labels»): los grupos de
-	# CabinShape.
+	# UNA PESTAÑA POR PARTE (el usuario, 13/11/2026: «separada por partes con labels… como tabs arriba»): los grupos
+	# de CabinShape.
 	var all: Array[Dictionary] = []
 	for part: String in PARTS:
-		all.append({"title": part.to_upper(), "target": _draft, "labels": LABELS, "include": PackedStringArray([part]),
-			"headers": false, "defaults": CabinShape.new(), "on_change": _measure})
+		all.append({"title": part.to_upper(), "tab": part, "target": _draft, "labels": LABELS,
+			"include": PackedStringArray([part]), "headers": false, "defaults": CabinShape.new(), "on_change": _measure})
 	return all
 
 
@@ -91,11 +91,24 @@ func _restore() -> void:
 	_try()
 
 
-## REARMA LAS PARCELAS QUE TIENEN UNA MECA, con su misma semilla: así todas toman la forma nueva.
+## REARMA LAS MECAS, Y NADA MÁS: cada una se cambia por una nueva igual —sus brazos, su lugar en el piso, hacia dónde
+## mira, parada sobre el piso de su parcela— con la forma de ahora. *Al principio se rearmaba la parcela entera, como
+## la R, y lo demás volvía a como nace: en la arena de esquivar, la torre volvía a tirar aunque el panel chico dijera
+## que no (lo vio el usuario).* Si se la estaba poseyendo, se la suelta antes; el que iba adentro queda donde estaba.
 func _rebuild_mechs() -> void:
-	for node in get_tree().root.find_children("*", "Node3D", true, false):
-		var parcel := node as SandboxParcel
-		if parcel != null and parcel.root() != null \
-				and not parcel.root().find_children("*", "RigidBody3D", true, false).filter(
-					func(body: Node) -> bool: return body is Mech).is_empty():
-			parcel.regenerate(parcel.seed_value)
+	for found in get_tree().root.find_children("*", "Mech", true, false):
+		var old := found as Mech
+		if old == null or old.is_queued_for_deletion():
+			continue
+		if old.keys != null and old.keys.driving:
+			SandboxPossession.of(get_tree()).release()
+		var holder := old.get_parent()
+		var fresh := Mech.new()
+		fresh.arms_kind = old.arms_kind
+		# Parada sobre el piso de su parcela (la altura 0 de lo que la tiene, como la arman sus arquetipos).
+		fresh.transform = Transform3D(Basis(Vector3.UP, old.yaw()), Vector3(old.position.x,
+			BodySettings.current.hover_height + CabinGrid.HALF_HEIGHT, old.position.z))
+		old.cabin.free_dummies()
+		holder.remove_child(old)
+		old.queue_free()
+		holder.add_child(fresh)

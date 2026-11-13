@@ -1,7 +1,8 @@
 extends Node3D
 
-## EL PANEL DE LA FORMA DE LA CABINA (CabinShapePanel), sin el sandbox: una parcela con la meca, el panel pasa a 2 × 2
-## módulos y 2 pisos con «Probar», y se mira que la meca de la parcela se rearmó con esa forma. No guarda nada.
+## EL PANEL DE LA FORMA DE LA MECA (CabinShapePanel), sin el sandbox: una parcela con la meca y otra con la arena de
+## esquivar (con la torre apagada); el panel pasa a 2 × 2 módulos y 2 pisos con «Probar», y se mira que las mecas se
+## rearmaron con esa forma y que la torre sigue apagada (sólo se cambian las mecas). No guarda nada.
 ##   tools/godot_ventana.sh res://tests/cabin_shape_check.tscn -- --salida=C:/carpeta
 
 var _folder := ""
@@ -23,6 +24,15 @@ func _ready() -> void:
 	add_child(parcel)
 	parcel.setup(MechArchetype.new(Mech.Arms.POSE), row, "", SandboxRow.Build.NEAR, Vector2(120, 120), 0)
 	parcel.regenerate(0)
+	var arena := SandboxParcel.new()
+	arena.position = Vector3(300, 0, 0)
+	add_child(arena)
+	arena.setup(DodgeArenaArchetype.new(), SandboxRow.new(SandboxSuper.Id.MECH, "Arena de prueba"), "",
+		SandboxRow.Build.NEAR, Vector2(240, 240), 0)
+	arena.regenerate(0)
+	await get_tree().process_frame
+	for turret: MissileTurret in arena.find_children("*", "MissileTurret", true, false):
+		turret.firing = false
 	var eye := Camera3D.new()
 	add_child(eye)
 	eye.make_current()
@@ -35,7 +45,9 @@ func _ready() -> void:
 	panel._draft.floors = 2
 	panel._try()
 	await get_tree().create_timer(3.0).timeout
-	print("DESPUÉS: ", _sizes(), " · ", panel._state.text)
+	var firing := arena.find_children("*", "MissileTurret", true, false).map(
+		func(turret: Node) -> bool: return (turret as MissileTurret).firing)
+	print("DESPUÉS: ", _sizes(), " · la torre tira: ", firing, " · ", panel._state.text)
 	var mech := _mechs()[0] as Mech
 	eye.global_position = mech.global_transform * Vector3(-14, 2, 22)
 	eye.look_at(mech.global_position + Vector3(0, -3, 0))

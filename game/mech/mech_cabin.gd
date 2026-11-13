@@ -31,8 +31,9 @@ var mech: Mech = null
 var frame: MotionFrame = null
 var lift: PelvisLift = null
 var interior: StaticBody3D = null
-## Las sillas (ver `_seats`).
+## Las sillas (ver `_seats`) y los maniquíes sentados en ellas (ver `seat_dummies`).
 var chairs: Array[SeatInteractable] = []
+var dummies: Array[Node3D] = []
 
 var _riders := {}
 
@@ -140,10 +141,19 @@ func seat_dummies() -> void:
 		dummy.kind = CharacterKind.npc()
 		dummy.master_seed = EntityInstantiation.debug_seed(DUMMY_BODIES[i % DUMMY_BODIES.size()], i)
 		holder.add_child(dummy)
+		dummies.append(dummy)
 		# Aparece adentro de la caja maciza: que no la empuje antes de que el marco lo lleve (ver `ride`).
 		mech.add_collision_exception_with(dummy.char_rigidbody)
 		dummy.place_at(chairs[i].global_position + chairs[i].global_basis.z * 0.8, chairs[i].heading())
 		dummy.intent.seat = chairs[i]
+
+
+## Saca a los maniquíes (van al lado de la meca en el árbol, no adentro): para cuando la meca se cambia por otra.
+func free_dummies() -> void:
+	for dummy in dummies:
+		if is_instance_valid(dummy):
+			dummy.queue_free()
+	dummies.clear()
 
 
 ## Una pieza de la cabina que se ve y que, adentro, se choca.
