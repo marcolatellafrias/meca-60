@@ -44,6 +44,8 @@ func _ready() -> void:
 			_build_catch()
 		LocomotionLabArchetype.Scene.CLASH:
 			_build_clash()
+		LocomotionLabArchetype.Scene.SLALOM:
+			_build_slalom()
 	for bi in _people:
 		var tag := Label3D.new()
 		tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
@@ -276,3 +278,50 @@ func _build_clash() -> void:
 			var through := other + (other - me).normalized() * 3.0
 			a.go_to(Vector3(through.x, me.y, through.z), _row.sprint)),
 		_all(func(a: CharacterActions) -> bool: return not a.moving()))
+
+
+## ── ESQUIVAR BARRILES: cada uno en su carril, en zigzag a un costado y al otro de cada barril, por un camino fijo (no
+## los ve: si no le da el giro, se lo lleva puesto).
+const SLALOM_LANE := 4.0
+const SLALOM_SIDE := 1.8
+const SLALOM_FIRST := 5.0
+const SLALOM_START := -11.0
+const SLALOM_END := 11.0
+const BARREL_R := 0.45
+const BARREL_H := 1.0
+const BARREL_COLOR := Color(0.62, 0.42, 0.3)
+
+
+func _build_slalom() -> void:
+	var gap: float = LocomotionLabArchetype.SLALOM_STEPS[_row.option_j][1]
+	var barrels: Array[float] = []
+	var z := SLALOM_START + SLALOM_FIRST
+	while z < SLALOM_END - 2.0:
+		barrels.append(z)
+		z += gap
+	var paths: Array[PackedVector3Array] = []
+	for i in PEOPLE.size():
+		var x := _lane_x(i, PEOPLE.size(), SLALOM_LANE)
+		_person(PEOPLE[i], Vector3(x, 0.0, SLALOM_START))
+		var path := PackedVector3Array([to_global(Vector3(x, 0.0, SLALOM_START))])
+		for b in barrels.size():
+			_barrel(Vector3(x, 0.0, barrels[b]))
+			path.append(to_global(Vector3(x + (SLALOM_SIDE if b % 2 == 0 else -SLALOM_SIDE), 0.0, barrels[b])))
+		path.append(to_global(Vector3(x, 0.0, SLALOM_END)))
+		paths.append(path)
+	_wait(SETTLE_S)
+	_step(_each(func(i: int, a: CharacterActions) -> void: a.follow_path(paths[i], _row.sprint, true)),
+		_all(func(a: CharacterActions) -> bool: return not a.moving()))
+
+
+func _barrel(at_local: Vector3) -> void:
+	var body := StaticBody3D.new()
+	add_child(body)
+	body.position = at_local + Vector3.UP * BARREL_H * 0.5
+	var shape := CollisionShape3D.new()
+	var cylinder := CylinderShape3D.new()
+	cylinder.radius = BARREL_R
+	cylinder.height = BARREL_H
+	shape.shape = cylinder
+	body.add_child(shape)
+	Clay.cylinder(body, BARREL_R, BARREL_H, Vector3.ZERO, BARREL_COLOR)

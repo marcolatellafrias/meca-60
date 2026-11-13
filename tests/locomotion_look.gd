@@ -3,7 +3,7 @@ extends Node3D
 ## LA FILA LOCOMOCIÓN, ESCENA POR ESCENA (con ventana, unos 80 segundos, sin el sandbox): arma cada escena sola (ver
 ## LocomotionLabArchetype), la deja correr y saca tres capturas; imprime de cada personaje la velocidad máxima, cuánto
 ## anduvo, si se cayó y si terminó con el cubo en las manos.
-##   tools/godot_ventana.sh res://tests/locomotion_look.tscn -- --salida=C:/carpeta [--escena=3] [--j=1] [--u=1]
+##   tools/godot_ventana.sh res://tests/locomotion_look.tscn -- --salida=C:/carpeta [--escena=3] [--j=1] [--u=1] [--caminando]
 ## Con la variable de entorno LOCO_TRACE, cada medio segundo imprime de cada uno dónde está, a qué velocidad, si va a
 ## algún lado (M) y si aprieta saltar (J).
 
@@ -12,6 +12,7 @@ var _folder := ""
 var _only := -1
 var _j := 0
 var _u := 0
+var _walk := false
 
 
 func _ready() -> void:
@@ -24,6 +25,8 @@ func _ready() -> void:
 			_j = int(argument.trim_prefix("--j="))
 		elif argument.begins_with("--u="):
 			_u = int(argument.trim_prefix("--u="))
+		elif argument == "--caminando":
+			_walk = true
 	var ground := StaticBody3D.new()
 	Clay.solid(ground, Vector3(200, 1, 200), Vector3(0, -0.5, 0), Color(0.82, 0.80, 0.76))
 	add_child(ground)
@@ -45,12 +48,16 @@ func _ready() -> void:
 	eye.make_current()
 	eye.global_position = Vector3(9.0, 5.0, 15.0)
 	eye.look_at(Vector3(0.0, 0.6, 0.0))
+	if _only == LocomotionLabArchetype.Scene.SLALOM:
+		eye.global_position = Vector3(0.0, 6.5, -17.0)
+		eye.look_at(Vector3(0.0, 0.0, -1.0))
 	for row in LocomotionLabArchetype.catalogue():
 		var lab_row := row as LocomotionLabArchetype
 		if _only >= 0 and int(lab_row.scene) != _only:
 			continue
 		lab_row.option_j = _j
 		lab_row.option_u = _u
+		lab_row.sprint = not _walk
 		var holder := Node3D.new()
 		add_child(holder)
 		var lab := lab_row.build(0, holder) as LocomotionLab
@@ -85,7 +92,7 @@ func _ready() -> void:
 				var row_txt := PackedStringArray()
 				for bi in people:
 					var a := CharacterActions.of(bi)
-					row_txt.append("%s z%.1f v%.1f %s%s" % [bi.name.left(4), bi.char_rigidbody.global_position.z,
+					row_txt.append("%s x%.1f z%.1f v%.1f %s%s" % [bi.name.left(4), bi.char_rigidbody.global_position.x, bi.char_rigidbody.global_position.z,
 						Vector2(bi.char_rigidbody.get_motion_velocity().x, bi.char_rigidbody.get_motion_velocity().z).length(),
 						"M" if a.moving() else "-", "J" if bi.intent.jump else ""])
 				print("t%.1f %s" % [elapsed, " | ".join(row_txt)])

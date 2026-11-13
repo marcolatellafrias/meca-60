@@ -8,11 +8,10 @@ extends Node
 ## controlador de interacción con un ojo en la cabeza (ver `_hands_ready`)—, así que levantar, llevar, tirar y atajar son
 ## lo mismo que hace uno con el mouse.
 ##
-## Los verbos: `go_to` (caminando o corriendo, y al llegar suelta o frena apretando para atrás), `stop`, `jump`,
+## Los verbos: `go_to` (caminando o corriendo, y al llegar suelta o frena apretando para atrás), `follow_path`, `stop`, `jump`,
 ## `jump_over`, `look_at`, `carry`, `throw`, `catch`, `drop`. Simple a propósito: no busca camino ni esquiva nada.
 ##
-## *Viene de ExhibitOperator de character-parametric (1.308 líneas), que además manejaba controles, seguía caminos,
-## esquivaba, se destrababa y apretaba teclas en el tiempo. Acá queda lo que se usa para mirar a los personajes moverse.*
+## *Viene de ExhibitOperator de character-parametric (1.308 líneas), que además manejaba controles, esquivaba, se destrababa y apretaba teclas en el tiempo. Acá queda lo que se usa para mirar a los personajes moverse.*
 
 ## Qué tan rápido gira la mirada (rad/s): la de una persona.
 const LOOK_RATE := 2.5
@@ -64,8 +63,24 @@ func go_to(point: Vector3, sprint := false, brake := false) -> void:
 	_braking = false
 
 
+## QUE SIGA EL CAMINO `points` (mundo, en orden), con la persecución pura de antes: va hacia un punto `LOOK_AHEAD` más
+## adelante sobre el camino, y cerca del final, al final (como `go_to`). Cuánto se ciñe lo decide su cuerpo —su
+## aceleración, su frenada, el giro de su mirada—; no ve lo que hay al costado.
+func follow_path(points: PackedVector3Array, sprint := false, brake := false) -> void:
+	go_to(points[points.size() - 1], sprint, brake)
+	_path = points
+	_path_at = 0
+
+
+## Cuánto más adelante sobre el camino va (m).
+const LOOK_AHEAD := 2.5
+var _path := PackedVector3Array()
+var _path_at := 0
+
+
 func stop() -> void:
 	_walk_to = Vector3.INF
+	_path = PackedVector3Array()
 	_braking = false
 	if is_instance_valid(bi):
 		bi.intent.move = Vector2.ZERO
@@ -90,8 +105,13 @@ func _walk() -> void:
 		return
 	if not _walk_to.is_finite():
 		return
-	var local := rb.global_basis.orthonormalized().inverse() * (_walk_to - rb.global_position)
+	var target := _pursue() if _path.size() >= 2 else _walk_to
+	var local := rb.global_basis.orthonormalized().inverse() * (target - rb.global_position)
 	var flat := Vector2(local.x, local.z)
+	if _path.size() >= 2:
+		bi.intent.move = flat.normalized()
+		bi.intent.sprint = _sprint
+		return
 	# LLEGAR SE DECIDE EN EL PISO: en el aire no hay roce y lo que tarda en frenar sale enorme (al saltar una valla daba
 	# por llegado cinco metros antes).
 	if rb.is_grounded and flat.length() < ARRIVED + rb.stop_distance(_brake):
@@ -101,6 +121,36 @@ func _walk() -> void:
 		return
 	bi.intent.move = flat.normalized()
 	bi.intent.sprint = _sprint
+
+
+## LA PERSECUCIÓN: el punto del camino más cercano (desde el tramo en que va) y de ahí `LOOK_AHEAD` más adelante. Cuando
+## lo que queda es menos que eso, suelta el camino y va al final como `go_to`.
+func _pursue() -> Vector3:
+	var pos := _flat(bi.char_rigidbody.global_position)
+	var best_i := _path_at
+	var best_t := 0.0
+	var best_d := INF
+	for i in range(_path_at, mini(_path_at + 8, _path.size() - 1)):
+		var a := _flat(_path[i])
+		var ab := _flat(_path[i + 1]) - a
+		var t := clampf((pos - a).dot(ab) / maxf(ab.length_squared(), 0.0001), 0.0, 1.0)
+		var d := (a + ab * t).distance_to(pos)
+		if d < best_d:
+			best_d = d
+			best_i = i
+			best_t = t
+	_path_at = best_i
+	var at := _flat(_path[best_i]).lerp(_flat(_path[best_i + 1]), best_t)
+	var left := LOOK_AHEAD
+	for i in range(best_i, _path.size() - 1):
+		var step := _flat(_path[i + 1]) - at
+		if step.length() >= left:
+			var ahead := at + step.normalized() * left
+			return Vector3(ahead.x, _path[i + 1].y, ahead.y)
+		left -= step.length()
+		at = _flat(_path[i + 1])
+	_path = PackedVector3Array()
+	return _walk_to
 
 
 ## ── SALTAR ─────────────────────────────────────────────────────────────────────────────────────────────────────────

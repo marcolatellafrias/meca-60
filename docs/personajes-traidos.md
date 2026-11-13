@@ -25,7 +25,7 @@ números de juego (peso, fuerza, velocidad). **Nada más**: sin trajes, sombrero
   ragdoll son del ancho de la caja o el miembro de cada hueso.*
 
 ## La fila Locomoción (13/11/2026)
-Para mirar cómo se mueven: seis parcelas con los seis arquetipos en carriles, que arrancan solas al entrar (K otra vez,
+Para mirar cómo se mueven: siete parcelas con los seis arquetipos en carriles, que arrancan solas al entrar (K otra vez,
 J y U la variante; arriba de cada uno, su velocidad):
 1. **Correr y frenar**: aceleran y al final sueltan, frenan apretando para atrás o se dan contra una pared.
 2. **Saltar**: una valla de 0,3, 0,6 o 0,9 m, o una viga a la altura de la cabeza que no ven.
@@ -34,9 +34,12 @@ J y U la variante; arriba de cada uno, su velocidad):
 5. **Atajar**: les tiran un cubo a 5, 8 u 11 m/s, de frente, alto o al costado.
 6. **Chocar**: de a dos (gordo y chico, musculoso y flaco alto, gordo atlético y viejo), de frente, en ángulo o contra
    uno quieto, con o sin cubo (Y).
+7. **Esquivar barriles**: en zigzag a un costado y al otro de barriles en fila, separados (6,5 m) o juntos (4,5 m), por
+   un camino fijo que no ve los barriles (la versión más simple de character-parametric, del 04/11). Corriendo casi
+   todos se los llevan puestos; caminando, separados, pasan los seis.
 
 Los maneja **`CharacterActions`**: aprieta los mismos botones que un jugador (moverse, correr, saltar, agarrar, tirar) y
-las manos son las del jugador (un `InteractionController` con un ojo en la cabeza). No busca camino ni esquiva. *Viene
+las manos son las del jugador (un `InteractionController` con un ojo en la cabeza). Sigue un camino dado (`follow_path`, persecución pura) pero no lo busca ni esquiva nada. *Viene
 de la parcela «Experimentos de locomoción» y de `ExhibitOperator` de character-parametric (unas 3.500 líneas entre los
 dos), sin los pasillos de obstáculos, los botones, las sillas de la nave ni los controles.* Sus paneles, traídos de
 allá: **F1** lo de todos los arquetipos (`LocomotionPanel`: caerse, llevar, tirar, el aire) y **F3** lo de cada arquetipo

@@ -12,10 +12,13 @@ extends SeededArchetype
 ## botones, sillas de la nave y quince escenas): acá quedan seis escenas y lo mínimo.* Sus paneles: F1 lo de todos los
 ## arquetipos (LocomotionPanel), F3 lo de cada arquetipo (LocomotionTuner).
 
-enum Scene { RUN, JUMP, DROP, CARRY, CATCH, CLASH }
-const NAMES := ["Correr y frenar", "Saltar", "Caer de alto", "Llevar y tirar", "Atajar", "Chocar"]
+enum Scene { RUN, JUMP, DROP, CARRY, CATCH, CLASH, SLALOM }
+const NAMES := ["Correr y frenar", "Saltar", "Caer de alto", "Llevar y tirar", "Atajar", "Chocar",
+	"Esquivar barriles"]
 
 const FOOTPRINT := Vector2(12.0, 24.0)
+## Esquivar barriles necesita carriles más anchos: el zigzag se abre a cada costado del barril.
+const SLALOM_FOOTPRINT := Vector2(26.0, 24.0)
 
 ## LAS VARIANTES DE CADA ESCENA: [nombre de la J, sus valores], [de la U, sus valores].
 const RUN_ENDS := ["suelta y frena sola", "frena apretando para atrás", "contra una pared"]
@@ -26,6 +29,9 @@ const THROW_CHARGES := [0.3, 0.6, 1.0]
 const CATCH_SPEEDS := [5.0, 8.0, 11.0]
 const CATCH_FROM := ["de frente", "alto", "al costado"]
 const CLASH_WAYS := ["de frente", "en ángulo", "contra uno quieto"]
+## ESQUIVAR BARRILES (la de character-parametric del 04/11/2026, la más simple): un zigzag fijo alrededor de barriles
+## en fila, sin ver nada; los barriles cada tantos m (la J: separados o juntos).
+const SLALOM_STEPS := [["separados", 6.5], ["juntos", 4.5]]
 
 var scene := Scene.RUN
 ## La variante de la J y de la U, y si corren (o caminan).
@@ -45,7 +51,7 @@ static func catalogue() -> Array[SeededArchetype]:
 
 
 func max_footprint() -> Vector2:
-	return FOOTPRINT
+	return SLALOM_FOOTPRINT if scene == Scene.SLALOM else FOOTPRINT
 
 
 func describe(_seed_value: int) -> PackedStringArray:
@@ -67,6 +73,8 @@ func _what() -> String:
 			return "atajan un cubo a %.0f m/s, %s" % [CATCH_SPEEDS[option_j], CATCH_FROM[option_u]]
 		Scene.CLASH:
 			return "de a dos, %s, %s%s" % [CLASH_WAYS[option_j], pace, ", con un cubo" if option_u == 1 else ""]
+		Scene.SLALOM:
+			return "zigzag entre barriles %s, %s" % [SLALOM_STEPS[option_j][0], pace]
 	return ""
 
 
@@ -97,6 +105,8 @@ func parcel_options() -> Array[Dictionary]:
 			j_names = CATCH_SPEEDS.map(func(v: float) -> String: return "a %.0f m/s" % v)
 		Scene.CLASH:
 			j_names = CLASH_WAYS
+		Scene.SLALOM:
+			j_names = SLALOM_STEPS.map(func(o: Array) -> String: return "barriles " + o[0])
 	out.append({"key": KEY_J, "label": func() -> String: return str(j_names[option_j]),
 		"apply": func(parcel: SandboxParcel) -> void:
 			option_j = (option_j + 1) % j_names.size()
