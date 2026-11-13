@@ -50,11 +50,11 @@ también»). Nada queda huérfano.
   de la meca).*
 
 ## Cómo se prueba hoy
-**El jugador es el personaje de character-parametric**: arranca como ente (sin cuerpo, movimiento directo, **V** vuela)
-y la **B** lo vuelve cuerpo (el gordo atlético: se cae, agarra con el clic izquierdo, se sienta con la **E**, empuja con
+**El jugador es el personaje de character-parametric**: arranca como ente (sin cuerpo, movimiento directo, **V** o la
+**B** corta vuelan) y la **B** larga lo vuelve cuerpo (el gordo atlético: se cae, agarra con el clic izquierdo, se sienta con la **E**, empuja con
 la **R**). Sus teclas son las de allá (WASD, espacio, Ctrl, shift, E, R, V); Escape la pausa, que no frena el mundo.
-Las teclas **F** son de los **paneles de fila** (TunerPanel): abren parado en su fila, a la izquierda, y el panel de la
-parcela los anota con su tecla.
+Las teclas **F** son de los **paneles** (TunerPanel): de parcela y de fila F1–F7, globales F9–F12. **Antes de agregar una
+fila, una tecla o un panel, leé `docs/sandbox.md`** (las reglas se chequean al arrancar).
 
 **Poseer** (`SandboxPossession`): para probar de a uno lo que en el juego se maneja desde adentro. **Mirando** una meca
 o un cubo, la **O** lo posee (las teclas pasan a él y el jugador se apaga donde está); **O** otra vez lo suelta, y **se
@@ -70,12 +70,11 @@ brazos, y una **meca de práctica adelante, sin brazos, para pegarle**. Poseída
 se agacha** (acorta el palo del péndulo), **espacio** carga y suelta el **salto** y, en el aire, el **propulsor**. **F**
 cambia la postura de los brazos (normal, a los costados; cubriéndose, los puños cerrados adelante), y las piñas van por
 brazo: clic izquierdo / derecho el directo, Q / E el gancho, Z / C el uppercut, 1 / 3 desde arriba. Caída, se recogen.
-**F1** su panel, **F2** pegarle arriba y el ascensor, **J/K** los tiros.
+**F1** su panel; **N/M** pegarle arriba suave o fuerte, **L** el ascensor, **J/K** los tiros.
 **Afuera** (`MechExterior`): la pasarela en U de planta baja y, atrás, dos tramos paralelos con un balcón por piso
 (armado de superficies pisables, con la altura libre medida y las barandas donde hay caída). **El ascensor de la
 pelvis** (`PelvisLift`): la pelvis es un tambor redondo, la losa de abajo tiene un recorte con su baranda, y un piso
-redondo con cuatro parantes baja hasta quedar a un salto del suelo con la meca agachada; **G** poseída o el botón del
-**F2** lo mueven. **Adentro y afuera se camina** (**U** sube al piso del medio): es un marco (`MotionFrame`, en `MechCabin`); sus losas
+redondo con cuatro parantes baja hasta quedar a un salto del suelo con la meca agachada; **G** poseída o la **L** lo mueven. **Adentro y afuera se camina** (**U** sube al piso del medio): es un marco (`MotionFrame`, en `MechCabin`); sus losas
 y paredes no chocan con el mundo (eso es de la caja 1:1), son de donde el marco copia su sombra, y la caja deja de
 chocar con los que van adentro. **El rayo al piso saltea lo que se mueve** (una persona en el ascensor no es piso).
 
@@ -89,7 +88,7 @@ el espejo de la otra, montada por regla (el pulgar hacia donde dobla el codo, la
 **Cubo con piernas** (`LeggedCube`, en `game/line_cube/`, hereda de `HoverCube`): **la otra variante de equilibrio, la línea** (no el péndulo), que
 se guarda por si se vuelve a ella. El cubo flota con un resorte vertical y parado no gira; un golpe lo corre y aparte lo
 inclina con la línea de equilibrio; al pasarla tropieza, cae con física y se recupera con toberas. Con pelvis, dos
-piernas de dibujo (pasos por radio) y el torso que gira aparte. **F1** su panel, **F2** volcarlo, **J/K** las bolas.
+piernas de dibujo (pasos por radio) y el torso que gira aparte. **F1** su panel, **N/M** volcarlo, **J/K** las bolas. Archivada.
 
 **Las parcelas tienen paredes invisibles** (`SandboxParcel`): las ve lo que se mueve con física y vive en una parcela;
 el jugador y la bola pasan.
@@ -118,7 +117,7 @@ ordenan y lo que todavía se le critica, en [docs/estructura.md](docs/estructura
   `Mech` (hereda de `BalanceBody`; agrega cabina, teclas y brazos), `MechCabin` (los pisos, el marco;
   con `MechExterior` y `PelvisLift`), `MechLeg` (una pierna), `MechKeys` (**el
   único lugar que lee teclas**, y la cámara de poseer), `MechArm` (lo que se le pide a un brazo), `MechHand`,
-  `MechBody` (medidas e IK), `MechPanel` y `MechKnockPanel` (F1 y F2),
+  `MechBody` (medidas e IK), `MechPanel` (F1),
   `MechArchetype` (la parcela de las dos filas) y `Clay` (la arcilla de los bocetos).
   **Lo que se le pide a la meca son variables** (`move`, `sprint`, `crouch`, `jump`, `aim_yaw`, `covering`, y `punch()`
   en sus brazos): hoy las escribe `MechKeys`; mañana, las consolas o un jefe. Nada más lee teclas.
@@ -132,10 +131,10 @@ ordenan y lo que todavía se le critica, en [docs/estructura.md](docs/estructura
   cuerpo que se agarra lo arma `PackageArchetype` (`game/objects/`), cuyo catálogo son hoy esos cinco cubos.
 - `game/arena/` — `TestBall` (la bola de la J), `PeopleArchetype` (las personas de allá) con `CharacterGetUp` (que se
   levanten solas) y `ObjectLotArchetype` (el lote de recursos).
-- `game/sandbox/` — el sandbox de parcelas (`DesignSandbox.categories()` agrega filas, `_mount_tuners` sus paneles F;
-  crea al jugador), poseer (`SandboxPossession`) y la sesión de red del sandbox (`SandboxSession`,
-  `MultiplayerArchetype`). Teclas del sandbox y del jugador: WASD, espacio, shift, Ctrl, E, R, C, V, B, O, T, F1–F6,
-  Escape; no repetirlas. Poseyendo sólo valen las de lo poseído.
+- `game/sandbox/` — el sandbox de parcelas (ver `docs/sandbox.md`: cada módulo declara sus filas en su archivo de
+  filas; `SandboxCatalogue` las junta y chequea las reglas; crea al jugador), poseer (`SandboxPossession`) y la sesión de
+  red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Las teclas reservadas, en `SandboxKey.RESERVED`. Poseyendo
+  sólo valen las de lo poseído.
 - `game/ui/` — la pausa (autoload `PauseMenu`, Escape), el menú de inicio (`main_menu.tscn`), las Opciones
   (`GameOptions`, `user://opciones.cfg`), `UIState` y la consola.
 - Lo traído de character-parametric: `game/character/`, `game/interactables/`, `game/net/`, `game/objects/`,
@@ -153,7 +152,7 @@ ordenan y lo que todavía se le critica, en [docs/estructura.md](docs/estructura
   pie de su lugar; con ventana, capturas.
 - `tests/mech_balance_check.tscn` (headless o con ventana, unos 5 minutos): el equilibrio de la meca, sola en su parcela; la escala de golpes en el
   centro y arriba, contra la pared a 8, 14 y 20 m/s (no tiene que caer), arrancar y frenar, el giro, un golpe
-  descentrado, sus tiros, el F2 y la recuperación.
+  descentrado, sus tiros, el volcarlo (N/M) y la recuperación.
 - `tests/mech_look.tscn` (con ventana, unos 100 segundos, sin el sandbox): la meca física de frente, de atrás y
   desde el asiento; agacharse, el salto (un toque y cargado), el propulsor y correr, con sus números.
 - `tests/mech_ride_check.tscn` (con ventana, unos 30 segundos): ir adentro y afuera de la meca; el jugador con cuerpo

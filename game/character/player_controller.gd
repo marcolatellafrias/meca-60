@@ -662,6 +662,14 @@ func set_creative(on: bool) -> void:
 	_set_creative(on)
 
 
+## EL MODO CREATIVO DESDE AFUERA (la B corta del sandbox, ver DesignSandbox): lo mismo que la V.
+func toggle_creative() -> void:
+	var bi := _get_bi()
+	if not UIState.gameplay_active() or (is_instance_valid(bi) and bi.is_seated and _direct()):
+		return
+	_set_creative(not _creative)
+
+
 func _set_creative(on: bool) -> void:
 	if on == _creative:
 		return

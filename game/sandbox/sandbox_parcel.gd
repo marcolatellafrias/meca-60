@@ -11,7 +11,18 @@ extends Node3D
 ## equilibrio y sus partes caídas, las personas, los paquetes—, que la suma a lo que choca al aparecer
 ## (`_on_node_added`). El jugador no vive en una parcela: pasa; y la bola que se tira desde afuera se la saca (ver
 ## TestBall). Lo que se mueve por código (las mecas de pelea) le pregunta a su parcela con `holds`. Lo pidió el usuario
-## el 11/11/2026: «las parcelas deberían tener paredes invisibles que eviten que sus contenidos se escapen».
+## el 11/11/2026: «las parcelas deberían tener paredes invisibles que eviten que sus contenidos se escapen». Van en el
+## borde de la parcela y no en el de la zona de interacción: los objetos viven en la parcela; uno, en toda la zona.
+##
+## ── LA ZONA DE INTERACCIÓN (`pad_for`) ───────────────────────────────────────────────────────────────────────────
+## Sale lo mismo en los cuatro lados: una parte del lado más largo, nunca menos de `PAD_MIN` ni más de `PAD_MAX`. Así
+## una parcela grande deja alejarse para mirar lo que hace una tecla sin salirse (el usuario, 13/11/2026: «me quiero
+## alejar para apretar una tecla… pero se me sale de la zona de interacción»). Era 2 m fijos.
+##
+## ── CUÁNDO SE ARMA Y LO DE LEJOS (ver SandboxRow.Build) ──────────────────────────────────────────────────────────
+## Nace sin armar: su piso, su marco y su nombre. Se arma la primera vez que uno se acerca (NEAR) o sólo con la R
+## parado en ella (ON_KEY). De lejos (`set_far`), lo armado se esconde y se pausa —deja de procesar y sale de la física—
+## y en su lugar va un cubo gris de la medida de lo que había; de cerca vuelve igual que estaba.
 
 const PLANE_LIFT := 0.002
 const FRAME_LIFT := 0.01
@@ -21,28 +32,92 @@ const FRAME_COLOR := Color(0.55, 0.53, 0.5)
 const LABEL_COLOR := Color(0.3, 0.29, 0.27)
 const BOUND_H := 20.0
 const BOUND_THICK := 0.5
+const PAD_SHARE := 0.2
+const PAD_MIN := 3.0
+const PAD_MAX := 15.0
+## El cubo de una parcela lejana (ver `set_far`).
+const FAR_COLOR := Color(0.6, 0.6, 0.62)
+## El cartel de una parcela que se arma con la R y todavía no se armó.
+const ON_KEY_HINT := "R: armarla"
 
 var archetype: SeededArchetype = null
 var category := ""
+## La fila que la declaró (sus teclas, sus paneles, sus hermanas) y su subcategoría (vacía si va suelta).
+var row: SandboxRow = null
+var group := ""
+var build_mode := SandboxRow.Build.NEAR
+## Si ya armó su individuo (ver CUÁNDO SE ARMA).
+var built := false
+## Sus hermanas de fila, ella incluida: las escribe el sandbox al armar las filas.
+var siblings_list: Array[SandboxParcel] = []
 var seed_value := 0
 var size := Vector2.ZERO
 ## Cuánto sale la zona de interacción alrededor de la parcela, igual en los cuatro lados.
 var interact_pad := 0.0
 
 var _root: Node3D = null
+var _keys: Array[SandboxKey] = []
+var _far := false
+var _proxy: MeshInstance3D = null
+var _proxy_for: Node3D = null
+var _hint_label: Label3D = null
 ## Cuántas parcelas hay en el árbol: mientras haya alguna, el árbol avisa de cada nodo nuevo (ver `_on_node_added`).
 static var _alive := 0
 
 
-func setup(p_archetype: SeededArchetype, p_category: String, p_size: Vector2, p_pad: float, p_seed: int) -> void:
+func setup(p_archetype: SeededArchetype, p_row: SandboxRow, p_group: String, p_build: SandboxRow.Build,
+		p_size: Vector2, p_seed: int) -> void:
 	archetype = p_archetype
-	category = p_category
+	row = p_row
+	category = p_row.name
+	group = p_group
+	build_mode = p_build
 	size = p_size
-	interact_pad = p_pad
+	interact_pad = pad_for(p_size)
+	seed_value = p_seed
 	name = "%s · %s" % [category, archetype.display_name]
 	_draw()
 	_build_bounds()
-	regenerate(p_seed)
+	# Las teclas, una vez: las que chocan con el sandbox o se repiten no se montan (las avisa SandboxCatalogue.check).
+	var taken := {}
+	for made in archetype.keys():
+		if made.problems().is_empty() and not taken.has(made.key):
+			taken[made.key] = true
+			_keys.append(made)
+
+
+## LA ZONA DE INTERACCIÓN de una parcela de `p_size` (ver arriba).
+static func pad_for(p_size: Vector2) -> float:
+	return clampf(maxf(p_size.x, p_size.y) * PAD_SHARE, PAD_MIN, PAD_MAX)
+
+
+## Las teclas propias de esta parcela que se pueden usar.
+func own_keys() -> Array[SandboxKey]:
+	return _keys
+
+
+## Las de su fila que se pueden usar acá (sin las que choquen con las propias).
+func row_keys() -> Array[SandboxKey]:
+	var out: Array[SandboxKey] = []
+	var mine := {}
+	for made in _keys:
+		mine[made.key] = true
+	for made in row.keys:
+		if made.problems().is_empty() and not mine.has(made.key):
+			mine[made.key] = true
+			out.append(made)
+	return out
+
+
+## Sus hermanas de fila, ella incluida (para las teclas de fila).
+func siblings() -> Array[SandboxParcel]:
+	return siblings_list
+
+
+## La arma, si todavía no lo hizo.
+func build() -> void:
+	if not built:
+		regenerate(seed_value)
 
 
 func _enter_tree() -> void:
@@ -110,6 +185,70 @@ func regenerate(p_seed: int, _flash := true) -> void:
 	if is_instance_valid(_root):
 		_root.queue_free()
 	_root = archetype.build(seed_value, self)
+	built = true
+	if is_instance_valid(_hint_label):
+		_hint_label.visible = false
+	if _far:
+		_far = false
+		set_far(true)
+
+
+## ── LO DE LEJOS ──────────────────────────────────────────────────────────────────────────────────────────────────
+func is_far() -> bool:
+	return _far
+
+
+func set_far(far: bool) -> void:
+	if far == _far:
+		return
+	_far = far
+	if not is_instance_valid(_root):
+		return
+	if far:
+		if _proxy_for != _root:
+			_measure_proxy()
+		_root.visible = false
+		_root.process_mode = Node.PROCESS_MODE_DISABLED
+		if _proxy != null:
+			_proxy.visible = true
+	else:
+		_root.process_mode = Node.PROCESS_MODE_INHERIT
+		_root.visible = true
+		if _proxy != null:
+			_proxy.visible = false
+
+
+## El cubo de lo que armó: la caja de todo lo que se ve, en el espacio de la parcela, sin pasarse de su borde.
+func _measure_proxy() -> void:
+	_proxy_for = _root
+	var to_parcel := global_transform.affine_inverse()
+	var box := AABB()
+	var first := true
+	for node in _root.find_children("*", "GeometryInstance3D", true, false):
+		var view := node as GeometryInstance3D
+		if not view.is_visible_in_tree():
+			continue
+		var bounds := to_parcel * view.global_transform * view.get_aabb()
+		if bounds.size == Vector3.ZERO:
+			continue
+		box = bounds if first else box.merge(bounds)
+		first = false
+	if is_instance_valid(_proxy):
+		_proxy.queue_free()
+	_proxy = null
+	if first:
+		return
+	var low := Vector3(maxf(box.position.x, -size.x * 0.5), maxf(box.position.y, 0.0), maxf(box.position.z, -size.y * 0.5))
+	var high := Vector3(minf(box.end.x, size.x * 0.5), maxf(box.end.y, 0.1), minf(box.end.z, size.y * 0.5))
+	_proxy = MeshInstance3D.new()
+	_proxy.name = "De lejos"
+	var cube := BoxMesh.new()
+	cube.size = (high - low).max(Vector3.ONE * 0.1)
+	_proxy.mesh = cube
+	_proxy.material_override = _flat(FAR_COLOR)
+	_proxy.position = (low + high) * 0.5
+	_proxy.visible = false
+	add_child(_proxy)
 
 
 ## La zona de interacción, en el plano XZ del mundo.
@@ -163,6 +302,17 @@ func _draw() -> void:
 	label.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
 	label.position = Vector3(0.0, FRAME_LIFT + 0.01, size.y * 0.5 + interact_pad * 0.5)
 	add_child(label)
+
+	if build_mode == SandboxRow.Build.ON_KEY:
+		_hint_label = Label3D.new()
+		_hint_label.text = ON_KEY_HINT
+		_hint_label.font_size = 96
+		_hint_label.pixel_size = 0.004
+		_hint_label.modulate = LABEL_COLOR
+		_hint_label.outline_size = 0
+		_hint_label.rotation_degrees = Vector3(-90.0, 0.0, 0.0)
+		_hint_label.position = Vector3(0.0, FRAME_LIFT + 0.01, 0.0)
+		add_child(_hint_label)
 
 
 static func _flat(color: Color) -> StandardMaterial3D:

@@ -87,9 +87,9 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 
 
 ## LAS TECLAS: K otra vez; J y U, la variante (y otra vez); en las que tienen paso, U camina o corre.
-func parcel_options() -> Array[Dictionary]:
-	var out: Array[Dictionary] = [
-		{"key": KEY_K, "label": "otra vez", "apply": func(parcel: SandboxParcel) -> void: _restart(parcel)},
+func keys() -> Array[SandboxKey]:
+	var out: Array[SandboxKey] = [
+		SandboxKey.action(KEY_K, SandboxKey.Weight.MAIN, "otra vez", func(parcel: SandboxParcel) -> void: _restart(parcel)),
 	]
 	var j_names: Array = []
 	match scene:
@@ -107,25 +107,25 @@ func parcel_options() -> Array[Dictionary]:
 			j_names = CLASH_WAYS
 		Scene.SLALOM:
 			j_names = SLALOM_STEPS.map(func(o: Array) -> String: return "barriles " + o[0])
-	out.append({"key": KEY_J, "label": func() -> String: return str(j_names[option_j]),
-		"apply": func(parcel: SandboxParcel) -> void:
-			option_j = (option_j + 1) % j_names.size()
-			_restart(parcel)})
+	out.append(SandboxKey.cycle(KEY_J, SandboxKey.Weight.MAIN, "prueba", j_names, func() -> int: return option_j,
+		func(parcel: SandboxParcel, index: int) -> void:
+			option_j = index
+			_restart(parcel)))
 	if scene == Scene.CATCH:
-		out.append({"key": KEY_U, "label": func() -> String: return "desde: %s" % CATCH_FROM[option_u],
-			"apply": func(parcel: SandboxParcel) -> void:
-				option_u = (option_u + 1) % CATCH_FROM.size()
-				_restart(parcel)})
+		out.append(SandboxKey.cycle(KEY_U, SandboxKey.Weight.NORMAL, "desde", CATCH_FROM, func() -> int: return option_u,
+			func(parcel: SandboxParcel, index: int) -> void:
+				option_u = index
+				_restart(parcel)))
 	else:
-		out.append({"key": KEY_U, "label": func() -> String: return "corriendo" if sprint else "caminando",
-			"apply": func(parcel: SandboxParcel) -> void:
-				sprint = not sprint
-				_restart(parcel)})
+		out.append(SandboxKey.toggle(KEY_U, SandboxKey.Weight.NORMAL, "corriendo", func() -> bool: return sprint,
+			func(parcel: SandboxParcel, on: bool) -> void:
+				sprint = on
+				_restart(parcel)))
 	if scene == Scene.CLASH:
-		out.append({"key": KEY_Y, "label": func() -> String: return "con un cubo" if option_u == 1 else "sin cubo",
-			"apply": func(parcel: SandboxParcel) -> void:
-				option_u = 1 - option_u
-				_restart(parcel)})
+		out.append(SandboxKey.toggle(KEY_Y, SandboxKey.Weight.NORMAL, "con un cubo", func() -> bool: return option_u == 1,
+			func(parcel: SandboxParcel, on: bool) -> void:
+				option_u = 1 if on else 0
+				_restart(parcel)))
 	return out
 
 

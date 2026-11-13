@@ -1,17 +1,17 @@
 # Las filas del sandbox y su código
 
-Las filas salen de `DesignSandbox.categories()` y sus paneles de `DesignSandbox._mount_tuners()`
-(`game/sandbox/design_sandbox.gd`). **Borrar una fila es borrar todo lo de su renglón** (lo compartido, en la última
-columna, se queda). Cómo está armado el código, en [[estructura]].
+Cada módulo declara sus filas y sus paneles en su archivo de filas (`MechRows`, `CharacterRows`, `WorldRows`,
+`ArtRows`, `SupplyRows`, `NetworkRows`; ver [[sandbox]]). **Borrar una fila es borrar todo lo de su renglón** (lo
+compartido, en la última columna, se queda). Cómo está armado el código, en [[estructura]].
 
 | Fila | Arquetipo | Código propio | Paneles | Tests | Usa (compartido) |
 |---|---|---|---|---|---|
-| Meca discreta | `MechArchetype` (`Mech.Arms.POSE`) | `game/pose_arm/` | `MechPanel` (F1), `MechKnockPanel` (F2) | `mech_fork_look` | la meca (abajo) |
-| Meca física | `MechArchetype` (`Mech.Arms.MUSCLE`) | — (sus brazos son los de la fila Brazo) | `MechPanel` (F1), `MechKnockPanel` (F2) | `mech_look`, `mech_hands_look` | la meca (abajo), `game/muscle_arm/` |
-| Arena de esquivar | `DodgeArenaArchetype` | `game/dodge_arena/` entero | `MechPanel` (F1), `MechKnockPanel` (F2), `AttackPanel` (F3) | `dodge_arena_look` | la meca, `game/projectiles/` |
+| Meca discreta | `MechArchetype` (`Mech.Arms.POSE`) | `game/pose_arm/` | `MechPanel` (F1) | `mech_fork_look` | la meca (abajo) |
+| Meca física | `MechArchetype` (`Mech.Arms.MUSCLE`) | — (sus brazos son los de la fila Brazo) | `MechPanel` (F1) | `mech_look`, `mech_hands_look` | la meca (abajo), `game/muscle_arm/` |
+| Arena de esquivar | `DodgeArenaArchetype` | `game/dodge_arena/` entero | `MechPanel` (F1) | `dodge_arena_look` | la meca, `game/projectiles/` |
 | Mapa de pelea | `BattlefieldArchetype` | `game/battlefield/` (`Battlefield`) | — | `battlefield_check` | la meca, `PackageArchetype`, `Clay`, `Stairs` |
 | Brazo | `MuscleArmArchetype` | `game/muscle_arm/` entero | `MuscleArmPanel` (F1) | `muscle_arm_look` | `MechArm`, `MechBody.arm`, `MechHand`, `TestBall`, `Mech.SHOULDER` |
-| Cubo con piernas | `LeggedCubeArchetype` | `game/line_cube/` entero | `LeggedCubePanel` (F1), `HoverKnockPanel` (F2) | `legged_check` | `MechBody`, `MechLeg`, `Clay`, `TestBall` |
+| Cubo con piernas (archivada) | `LeggedCubeArchetype` | `game/line_cube/` entero | `LeggedCubePanel` (F1) | `legged_check` | `MechBody`, `MechLeg`, `Clay`, `TestBall` |
 | Personajes | `PeopleArchetype` | `CharacterGetUp` | `LocomotionTuner` (F3, de la fila Locomoción) | `people_look`, `sizes_check` | el personaje |
 | Locomoción | `LocomotionLabArchetype` | `game/locomotion_lab/` entero (`LocomotionLab`, `CharacterActions`, los dos paneles) | `LocomotionPanel` (F1), `LocomotionTuner` (F3, también en Personajes) | `locomotion_look` | el personaje, `PeopleArchetype`, `PackageArchetype`, `Clay` |
 | Recursos | `ObjectLotArchetype` | `game/supplies/` (`SupplyLook`) | — | `supplies_look` | `PackageArchetype`, el agarre |

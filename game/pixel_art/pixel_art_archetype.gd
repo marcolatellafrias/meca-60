@@ -29,10 +29,12 @@ func describe(_seed_value: int) -> PackedStringArray:
 	])
 
 
-func parcel_options() -> Array[Dictionary]:
-	return [{"key": KEY_N, "label": "N: otra versión de la caja (misma pintura)", "apply": func(parcel: SandboxParcel) -> void:
-		options[SECOND_VERSION] = not bool(options.get(SECOND_VERSION, false))
-		parcel.regenerate(parcel.seed_value, false)}]
+func keys() -> Array[SandboxKey]:
+	return [SandboxKey.toggle(KEY_N, SandboxKey.Weight.NORMAL, "otra versión de la caja (misma pintura)",
+		func() -> bool: return bool(options.get(SECOND_VERSION, false)),
+		func(parcel: SandboxParcel, on: bool) -> void:
+			options[SECOND_VERSION] = on
+			parcel.regenerate(parcel.seed_value, false))]
 
 
 func build(_seed_value: int, parent: Node3D) -> Node3D:

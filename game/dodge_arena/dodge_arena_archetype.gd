@@ -8,7 +8,7 @@ extends SeededArchetype
 ##   · EL REDONDEL: una línea en el piso y un muro alrededor, más alto que donde empieza la caja de la meca (lo único que
 ##     choca: un muro bajo le pasaría por abajo).
 ##   · LA MECA DISCRETA, adentro, mirando a la torre. Mirándola, O la posee.
-##   · F3 elige el ataque de la torre (ver MissileTurret); P la prende y la apaga; U sube al jugador a la meca.
+##   · K elige el ataque de la torre (ver MissileTurret); P la prende y la apaga; U sube al jugador a la meca.
 
 ## El radio del redondel (m), el alto del muro y cuántos tramos tiene.
 const RADIUS := 95.0
@@ -30,7 +30,7 @@ func max_footprint() -> Vector2:
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"TRABAJO EN CURSO: una torre al medio tira ataques de área; la marca del piso se llena justo antes de pegar",
-		"F3 elige el ataque: lluvia, círculo gigante, dona, ondas, lanza, alfombra, pared que cruza, o todos de a uno",
+		"K elige el ataque: lluvia, círculo gigante, dona, ondas, lanza, alfombra, pared que cruza, o todos de a uno",
 		"mirando la meca, O la posee · P prende y apaga la torre · U subirse",
 	])
 
@@ -75,14 +75,47 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	return root
 
 
-func parcel_options() -> Array[Dictionary]:
-	return [
-		{"key": KEY_P, "label": "prender o apagar la torre",
-			"apply": func(parcel: SandboxParcel) -> void:
-				for turret: MissileTurret in parcel.find_children("*", "MissileTurret", true, false):
-					turret.firing = not turret.firing},
-		{"key": KEY_U, "label": "subirse a la meca (al piso del medio)",
-			"apply": func(parcel: SandboxParcel) -> void:
+## La torre (prenderla y qué ataque tira: era el panel F3, AttackPanel; el usuario había pedido «un toggle de panel
+## chico»), subirse, y pegarle y el ascensor como en las otras filas de la meca.
+func keys() -> Array[SandboxKey]:
+	var out: Array[SandboxKey] = [
+		SandboxKey.toggle(KEY_P, SandboxKey.Weight.MAIN, "la torre tira", _turret_firing,
+			func(parcel: SandboxParcel, on: bool) -> void:
+				for turret in _turrets(parcel):
+					turret.firing = on),
+		SandboxKey.cycle(KEY_K, SandboxKey.Weight.MAIN, "ataque", MissileTurret.NAMES, _turret_attack,
+			func(parcel: SandboxParcel, index: int) -> void:
+				for turret in _turrets(parcel):
+					turret.choose(index as MissileTurret.Attack)),
+		SandboxKey.action(KEY_U, SandboxKey.Weight.NORMAL, "subirse a la meca (al piso del medio)",
+			func(parcel: SandboxParcel) -> void:
 				for mech: Mech in parcel.find_children("*", "Mech", true, false):
-					mech.cabin.board()},
+					mech.cabin.board()),
 	]
+	out.append_array(MechArchetype.knock_keys())
+	return out
+
+
+var _parcel_seen: SandboxParcel = null
+
+
+func entered(parcel: SandboxParcel, inside: bool) -> void:
+	if inside:
+		_parcel_seen = parcel
+
+
+func _turrets(parcel: SandboxParcel) -> Array[MissileTurret]:
+	var out: Array[MissileTurret] = []
+	for turret: MissileTurret in parcel.find_children("*", "MissileTurret", true, false):
+		out.append(turret)
+	return out
+
+
+func _turret_firing() -> bool:
+	var turrets := _turrets(_parcel_seen) if is_instance_valid(_parcel_seen) else ([] as Array[MissileTurret])
+	return not turrets.is_empty() and turrets[0].firing
+
+
+func _turret_attack() -> int:
+	var turrets := _turrets(_parcel_seen) if is_instance_valid(_parcel_seen) else ([] as Array[MissileTurret])
+	return int(turrets[0].attack) if not turrets.is_empty() else 0

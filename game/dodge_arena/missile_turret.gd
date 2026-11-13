@@ -6,7 +6,7 @@ extends StaticBody3D
 ## simple… para ir viendo cómo se siente el movimiento de la mecha… que es esquivar»). No es un jefe: no se mueve, no
 ## tiene equilibrio ni se rompe; los jefes de verdad, y qué ataques tienen, son de su módulo.
 ##
-## UN ATAQUE A LA VEZ (`attack`, el panel F3 de la fila; `ALL` los pasa de a uno). Cada uno, cada tanto (`EVERY`):
+## UN ATAQUE A LA VEZ (`attack`, la K de su parcela; `ALL` los pasa de a uno). Cada uno, cada tanto (`EVERY`):
 ##   · LLUVIA: misiles de mortero, uno donde está la meca, uno donde va a estar si sigue igual y tres al azar.
 ##   · CÍRCULO GIGANTE: uno enorme donde está, con mucho aviso: correr afuera.
 ##   · DONA: todo menos cerca de la torre: acercarse.

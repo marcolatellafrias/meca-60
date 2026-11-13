@@ -26,7 +26,8 @@ tocan. Cómo está armado el código por dentro, en [[estructura]].
 - **Arte ↔ todos**: cuando el flujo de píxeles esté, cada módulo pinta lo suyo con él.
 
 ## Los archivos compartidos
-- `game/sandbox/design_sandbox.gd`: cada módulo agrega su fila en `categories()` y su panel en `_mount_tuners()`. Tocar
-  sólo la línea propia y commitear enseguida.
+- El sandbox: **cada módulo declara sus filas y sus paneles F en su propio archivo de filas** (`MechRows`, `SupplyRows`,
+  `CharacterRows`, `WorldRows`, `ArtRows`, `NetworkRows`; ver [[sandbox]]). `game/sandbox/` es del generalista; un
+  módulo nuevo agrega una línea en `SandboxCatalogue.rows()`.
 - `docs/filas.md`, `docs/00-indice.md`: cada módulo agrega su renglón.
 - `project.godot`: lo reescribe el editor solo; no commitearlo salvo que el cambio sea a propósito.

@@ -56,8 +56,11 @@ resorte, la línea, tropezar) y `LeggedCube` (con pelvis y piernas), con sus per
 piernas**. No comparte nada con la meca salvo `MechBody`, `MechLeg` y `Clay`. Ver [[cubo]] y [[cubo-con-piernas]].
 
 ## El sandbox — `game/sandbox/`, `game/arena/`
-`DesignSandbox` (las filas y sus paneles), `SandboxParcel`, `SeededArchetype`, `SandboxPossession` (poseer),
-`TestBall` (la bola), las parcelas de personajes y objetos. Ver [[sandbox]], [[poseer]], [[filas]].
+`DesignSandbox` (el que camina, en qué parcela está, sus teclas y qué panel F abre dónde), `SandboxCatalogue` (las
+filas de cada módulo y el chequeo de las reglas), `SandboxRow` (una fila declarada), `SandboxSuper` (las
+supercategorías), `SandboxKey` (una tecla del panel chico), `SandboxLayout` (dónde va cada fila en el piso),
+`SandboxParcel`, `SandboxPanel` (el panel chico), `SeededArchetype`, `SandboxPossession` (poseer), `TestBall` (la bola).
+Ver [[sandbox]], [[poseer]], [[filas]].
 
 ## Lo que vino de character-parametric
 `game/character/`, `game/interactables/`, `game/net/`, `game/objects/`, `game/common/`, `game/debug/`… El personaje,

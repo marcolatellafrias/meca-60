@@ -154,6 +154,9 @@ func state_label(into: Node = null) -> Label:
 
 ## Si abre parado donde está el jugador de `world` (ver `category`).
 func serves(world: Node) -> bool:
+	# EN EL SANDBOX, lo decide él: de parcela, de fila o global (ver DesignSandbox.serves_panel).
+	if is_instance_valid(world) and world.has_method("serves_panel"):
+		return bool(world.call("serves_panel", self))
 	if category.is_empty():
 		return true
 	return is_instance_valid(world) and world.has_method("current_category") \

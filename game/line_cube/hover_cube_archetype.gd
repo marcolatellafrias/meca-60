@@ -2,7 +2,7 @@ class_name HoverCubeArchetype
 extends SeededArchetype
 
 ## LA PARCELA DEL CUBO (ver HoverCube): el cubo flotando en el medio, para tirarle bolas (J tira, K pasa por los cuatro
-## tiros: lenta o rápida, que lo voltea o no) y volcarlo con el panel chico (F2). F1 abre su panel (HoverPanel). Mirándolo, O lo posee. R lo
+## tiros: lenta o rápida, que lo voltea o no) y volcarlo con N/M. F1 abre su panel (HoverPanel). Mirándolo, O lo posee. R lo
 ## vuelve a poner, flotando.
 
 ## Grande: el cubo cae y se corre (el usuario: «aumentar el tamaño de la parcela de la caja»).
@@ -41,8 +41,20 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	return root
 
 
-func parcel_options() -> Array[Dictionary]:
-	return TestBall.parcel_options(self)
+## La bola y volcarlo sin bola, suave o fuerte (ver HoverCube.knock; era el panel F2, HoverKnockPanel: acciones de
+## prueba, van en el panel chico).
+func keys() -> Array[SandboxKey]:
+	var out := TestBall.keys(self)
+	out.append(SandboxKey.action(KEY_N, SandboxKey.Weight.NORMAL, "volcarlo suave",
+		func(parcel: SandboxParcel) -> void: _knock(parcel, false)))
+	out.append(SandboxKey.action(KEY_M, SandboxKey.Weight.NORMAL, "volcarlo fuerte",
+		func(parcel: SandboxParcel) -> void: _knock(parcel, true)))
+	return out
+
+
+static func _knock(parcel: SandboxParcel, strong: bool) -> void:
+	for cube: HoverCube in parcel.find_children("*", "HoverCube", true, false):
+		cube.knock(strong)
 
 
 ## LOS CUATRO TIROS (lo pidió el usuario: «lento que no voltee, lento que voltee, rápido que no voltee y rápido que

@@ -4,7 +4,7 @@ extends SeededArchetype
 ## LA PARCELA DE LA MECA (ver Mech): la meca en el medio y, adelante, UNA MECA DE PRÁCTICA sin brazos para pegarle. DOS
 ## FILAS LA USAN, una por camino (`arms`): la Meca discreta, con brazos de pose, y la Meca física, con brazos de
 ## músculos. Mirándola, O la posee; U sube al jugador; J tira una bola y K pasa por los cuatro tiros; F1 sus perillas,
-## F2 pegarle arriba y el ascensor; R la vuelve a poner.
+## N/M pegarle arriba, L el ascensor; R la vuelve a poner.
 
 ## Grande: corre y salta.
 const FOOTPRINT := 120.0
@@ -56,14 +56,34 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	return root
 
 
-func parcel_options() -> Array[Dictionary]:
-	var options := TestBall.parcel_options(self)
-	options.append({"key": KEY_U, "label": "subirse a la meca (al piso del medio)",
-		"apply": func(parcel: SandboxParcel) -> void:
+## La bola, subirse, y pegarle arriba suave o fuerte y el ascensor (eran el panel F2, MechKnockPanel: acciones de
+## prueba, van en el panel chico; el usuario, 13/11/2026: «empuje liviano, empuje fuerte… deberían ir en panel chico»).
+func keys() -> Array[SandboxKey]:
+	var out := TestBall.keys(self)
+	out.append(SandboxKey.action(KEY_U, SandboxKey.Weight.MAIN, "subirse a la meca (al piso del medio)",
+		func(parcel: SandboxParcel) -> void:
 			for mech: Mech in parcel.find_children("*", "Mech", true, false):
 				if mech.arms_kind != Mech.Arms.NONE:
-					mech.cabin.board()})
-	return options
+					mech.cabin.board()))
+	out.append_array(MechArchetype.knock_keys())
+	return out
+
+
+## PEGARLE Y EL ASCENSOR, para toda parcela con mecas (la Arena de esquivar también las usa).
+static func knock_keys() -> Array[SandboxKey]:
+	return [
+		SandboxKey.action(KEY_N, SandboxKey.Weight.NORMAL, "pegarle suave",
+			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: mech.knock(false))),
+		SandboxKey.action(KEY_M, SandboxKey.Weight.NORMAL, "pegarle fuerte",
+			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: mech.knock(true))),
+		SandboxKey.action(KEY_L, SandboxKey.Weight.NORMAL, "ascensor: bajar / subir",
+			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: mech.cabin.lift.toggle())),
+	]
+
+
+static func _each(parcel: SandboxParcel, action: Callable) -> void:
+	for mech: Mech in parcel.find_children("*", "Mech", true, false):
+		action.call(mech)
 
 
 func ball_shots() -> Array[Dictionary]:

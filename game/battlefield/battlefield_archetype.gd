@@ -47,8 +47,8 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	return root
 
 
-func parcel_options() -> Array[Dictionary]:
-	return _mech_rules.parcel_options()
+func keys() -> Array[SandboxKey]:
+	return _mech_rules.keys()
 
 
 func ball_shots() -> Array[Dictionary]:

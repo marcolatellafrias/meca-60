@@ -25,7 +25,7 @@ El golpe se mide igual (el cambio de velocidad), pero el cubo mira los **contact
   Caminando a toda velocidad contra una pared, se tambalea y no cae.
 - Contra algo **que se mueve** (la bola): golpe entero. Inclina según la **altura** del contacto sobre el piso (arriba
   vuelca más; a la altura del centro, como siempre) y lo corre ×2,5.
-- Sin contacto (el F2): golpe entero en el centro.
+- Sin contacto (N/M en el panel chico): golpe entero en el centro.
 
 Al tropezar cae con su velocidad física, sin el ×2,5: el retroceso de más es para verlo correrse parado.
 
@@ -51,7 +51,7 @@ persona al [[poseer]]lo.
 
 ## Cómo se prueba
 - **J** tira la bola, **K** pasa por los cuatro tiros: lenta (30 m/s) o rápida (100 m/s), que lo voltea o no.
-- **F1** las perillas (`HoverCubeSettings`), **F2** volcarlo suave o fuerte.
+- **F1** las perillas (`HoverCubeSettings`), **N/M** volcarlo suave o fuerte.
 - `tests/hover_check.tscn`.
 
 ## Historia

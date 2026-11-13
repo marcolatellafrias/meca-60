@@ -85,19 +85,20 @@ static func push_for(mass: float, delta_v: float, speed := SPEED) -> float:
 	return mass * reachable * speed / (speed - reachable)
 
 
-## Las teclas de la bola, con los tiros de `target` (el arquetipo de la parcela: ver SeededArchetype.ball_shots).
-static func parcel_options(target: SeededArchetype) -> Array[Dictionary]:
+## Las teclas de la bola, con los tiros de `target` (el arquetipo de la parcela: ver SeededArchetype.ball_shots): J
+## tira (la principal), K pasa al tiro siguiente.
+static func keys(target: SeededArchetype) -> Array[SandboxKey]:
+	var names: Array = target.ball_shots().map(func(chosen: Dictionary) -> String: return str(chosen["name"]))
 	return [
-		{"key": KEY_J, "label": func() -> String:
+		SandboxKey.action(KEY_J, SandboxKey.Weight.MAIN, func() -> String:
 				var chosen := TestBall.shot_at(target, level)
-				return "tirar una bola (%s: %s N·s a %d m/s)" % [chosen["name"],
-					String.num_int64(roundi(float(chosen["push"]))), roundi(float(chosen["speed"]))],
-			"apply": func(parcel: SandboxParcel) -> void:
+				return "tirar una bola (%s N·s a %d m/s)" % [String.num_int64(roundi(float(chosen["push"]))),
+					roundi(float(chosen["speed"]))],
+			func(parcel: SandboxParcel) -> void:
 				var chosen := TestBall.shot_at(target, level)
-				TestBall.throw_from_camera(parcel, float(chosen["push"]), float(chosen["speed"]))},
-		{"key": KEY_K, "label": func() -> String: return "otro tiro (%d de %d)" % [
-				posmod(level, maxi(target.ball_shots().size(), 1)) + 1, target.ball_shots().size()],
-			"apply": func(_parcel: SandboxParcel) -> void: level = posmod(level + 1, maxi(target.ball_shots().size(), 1))},
+				TestBall.throw_from_camera(parcel, float(chosen["push"]), float(chosen["speed"]))),
+		SandboxKey.cycle(KEY_K, SandboxKey.Weight.NORMAL, "tiro", names, func() -> int: return level,
+			func(_parcel: SandboxParcel, index: int) -> void: level = index),
 	]
 
 

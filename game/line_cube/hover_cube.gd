@@ -39,7 +39,7 @@ extends RigidBody3D
 ## *Antes subía hasta poder girar entero (la esfera que lo contiene) y recién ahí se enderezaba.* Derecho otra vez, se
 ## traba y vuelve a la línea, mirando hacia donde miraba.
 ##
-## Las perillas, en HoverCubeSettings (el panel F1 de su fila); el F2 lo vuelca (`knock`).
+## Las perillas, en HoverCubeSettings (el panel F1 de su fila); N/M lo vuelcan (`knock`).
 
 enum State { HOVER, LIMP, LIFT, RIGHT }
 
@@ -58,7 +58,7 @@ const RIGHT_BAND := 1.0
 const LAST_STRETCH := 45.0
 ## Un cambio de velocidad de costado más chico que esto no es un golpe (m/s).
 const HIT_NOISE := 0.3
-## Volcarlo (el F2): cuánto más allá de su caerse lo lleva el empujón, suave y fuerte.
+## Volcarlo (N/M): cuánto más allá de su caerse lo lleva el empujón, suave y fuerte.
 const KNOCK_SOFT := 1.2
 const KNOCK_STRONG := 2.5
 
@@ -480,7 +480,7 @@ func _fire_nozzles(knobs: HoverCubeSettings) -> void:
 		apply_force(-(global_basis * (nozzle["out"] as Vector3)) * most * throttle, at)
 
 
-## ── VOLCARLO (el panel chico, F2; el usuario: «un botón… que la vuelque, una más suavemente otra más fuerte») ─────
+## ── VOLCARLO (N/M en el panel chico; el usuario: «un botón… que la vuelque, una más suavemente otra más fuerte») ─────
 ## Un empujón de costado, como un golpe —lo mide la línea—: SUAVE, apenas pasado su caerse; FUERTE, mucho más.
 func knock(strong: bool) -> void:
 	if state != State.HOVER:

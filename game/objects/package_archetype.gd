@@ -300,34 +300,6 @@ func _breaks() -> String:
 		PackageDamage.FALL_REFERENCE_M]
 
 
-# ── Teclas de la fila ────────────────────────────────────────────────────────────────────────────
-
-## Las dos cosas que se mira de un paquete: CÓMO ESTÁ ARMADO (los gizmos) y CÓMO SE VE (el bosquejo).
-## Ninguna reconstruye nada — prender esferas y cambiar una transparencia es gratis.
-func category_options() -> Array[Dictionary]:
-	return [
-		{
-			"key": KEY_K,
-			"label": func() -> String:
-				return "gizmos de creación: %s" % ("sí" if options.get("gizmos", GIZMOS_DEFAULT) else "no"),
-			"apply": func(parcels: Array) -> void:
-				options["gizmos"] = not bool(options.get("gizmos", GIZMOS_DEFAULT))
-				for p: SandboxParcel in parcels:
-					PackageArchetype.set_gizmos(p, options["gizmos"]),
-		},
-		{
-			"key": KEY_M,
-			"label": func() -> String:
-				return "bosquejo: %s" % SKETCH_NAMES[int(options.get("bosquejo", SKETCH_DEFAULT))],
-			"apply": func(parcels: Array) -> void:
-				options["bosquejo"] = (int(options.get("bosquejo", SKETCH_DEFAULT)) + 1) \
-					% SKETCH_NAMES.size()
-				for p: SandboxParcel in parcels:
-					PackageArchetype.set_sketch(p, options["bosquejo"]),
-		},
-	]
-
-
 ## TODOS LOS GIZMOS DE CREACIÓN de los paquetes que cuelguen de `root`: los puntos de agarre (cian) y
 ## de mano (amarillos), que no se escriben acá —los genera el agarrable del juego desde las celdas—, y
 ## la grilla de celdas sobre la caja, que es contra lo que se ajusta un bosquejo.

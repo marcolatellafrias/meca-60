@@ -57,20 +57,21 @@ func describe(_seed_value: int) -> PackedStringArray:
 		SandboxSession.status_line()])
 
 
-func parcel_options() -> Array[Dictionary]:
+func keys() -> Array[SandboxKey]:
 	return [
-		{"key": KEY_H, "label": "abrir sesión en esta compu (ENet)", "apply": func(_parcel: Node) -> void:
-			SessionManager.host_local()},
-		{"key": KEY_J, "label": "unirse a la sesión de esta compu", "apply": func(_parcel: Node) -> void:
-			SessionManager.join_local()},
-		{"key": KEY_G, "label": func() -> String:
-			return "abrir sesión por Steam" + (" (código %s)" % SessionManager.lobby_code
-				if not SessionManager.lobby_code.is_empty() else ""),
-			"apply": func(_parcel: Node) -> void: SessionManager.host()},
-		{"key": KEY_K, "label": "ir al menú de inicio (unirse por código de Steam)", "apply": func(_parcel: Node) -> void:
-			SessionManager.return_to_menu()},
-		{"key": KEY_L, "label": "salir de la sesión", "apply": func(_parcel: Node) -> void:
-			var session := SandboxSession.find(_parcel.get_tree())
-			if session != null:
-				session.leave()},
+		SandboxKey.action(KEY_H, SandboxKey.Weight.MAIN, "abrir sesión en esta compu (ENet)",
+			func(_parcel: SandboxParcel) -> void: SessionManager.host_local()),
+		SandboxKey.action(KEY_J, SandboxKey.Weight.MAIN, "unirse a la sesión de esta compu",
+			func(_parcel: SandboxParcel) -> void: SessionManager.join_local()),
+		SandboxKey.action(KEY_G, SandboxKey.Weight.NORMAL, func() -> String:
+				return "abrir sesión por Steam" + (" (código %s)" % SessionManager.lobby_code
+					if not SessionManager.lobby_code.is_empty() else ""),
+			func(_parcel: SandboxParcel) -> void: SessionManager.host()),
+		SandboxKey.action(KEY_K, SandboxKey.Weight.NORMAL, "ir al menú de inicio (unirse por código de Steam)",
+			func(_parcel: SandboxParcel) -> void: SessionManager.return_to_menu()),
+		SandboxKey.action(KEY_L, SandboxKey.Weight.NORMAL, "salir de la sesión",
+			func(parcel: SandboxParcel) -> void:
+				var session := SandboxSession.find(parcel.get_tree())
+				if session != null:
+					session.leave()),
 	]

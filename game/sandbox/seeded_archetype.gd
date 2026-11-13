@@ -7,8 +7,7 @@ extends RefCounted
 
 ## Cómo se llama en el panel y en la parcela.
 var display_name := "sin nombre"
-## Las opciones de su fila, compartidas por los arquetipos de una fila (como allá, en character-parametric: los paquetes
-## de allá las usan).
+## Las opciones de su fila, compartidas por los arquetipos de una fila (ver SandboxRow.options).
 var options: Dictionary = {}
 
 
@@ -28,16 +27,9 @@ func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray()
 
 
-## LAS TECLAS DE SU FILA (como allá): las de la primera parcela de la fila valen para toda la fila; `apply(parcels)` recibe
-## sus parcelas. Leen y escriben `options`, que la fila comparte.
-func category_options() -> Array[Dictionary]:
-	return []
-
-
-## Las teclas propias de esta parcela: `{"key": KEY_X, "label": String o Callable, "apply": Callable(parcel)}`. No
-## pueden repetir las del sandbox (WASD, espacio, shift, ctrl, R, C, T, Enter, Escape). Con `"seated": true` la tecla
-## vale también sentado (manejando): sentado, las demás no andan (ver DesignSandbox._input).
-func parcel_options() -> Array[Dictionary]:
+## LAS TECLAS DEL PANEL CHICO de esta parcela (ver SandboxKey: acciones, interruptores y ciclos, con su peso). Las de
+## toda la fila no van acá sino en su SandboxRow. Nada que se guarde: eso va en un panel F (ver docs/sandbox.md).
+func keys() -> Array[SandboxKey]:
 	return []
 
 

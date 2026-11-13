@@ -50,8 +50,8 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	return root
 
 
-func parcel_options() -> Array[Dictionary]:
-	return TestBall.parcel_options(self)
+func keys() -> Array[SandboxKey]:
+	return TestBall.keys(self)
 
 
 ## LAS TRES FUERZAS PARA ESTA PERSONA, con el equilibrio de character-parametric (CharacterRigidBody3D): un golpe de

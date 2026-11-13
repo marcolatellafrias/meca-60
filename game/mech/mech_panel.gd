@@ -39,7 +39,7 @@ const LABELS := {
 	"nozzle_push": "empuje de cada tobera (m/s²)", "lift_share": "sube hasta esta parte de la altura",
 	"lift_kp": "resorte de subir", "lift_kd": "freno de subir", "right_kp": "resorte de enderezarse",
 	"right_kd": "freno de enderezarse", "upright_done": "derecha con menos de (°)",
-	"knock_soft": "F2 suave (m/s arriba)", "knock_strong": "F2 fuerte (m/s arriba)",
+	"knock_soft": "pegarle suave, N (m/s arriba)", "knock_strong": "pegarle fuerte, M (m/s arriba)",
 }
 
 

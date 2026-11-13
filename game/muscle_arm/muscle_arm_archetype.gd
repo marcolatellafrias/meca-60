@@ -89,26 +89,36 @@ static func _arm_of(parcel: SandboxParcel) -> MuscleArm:
 	return found[0] as MuscleArm if not found.is_empty() else null
 
 
-func parcel_options() -> Array[Dictionary]:
-	var options := TestBall.parcel_options(self)
-	var keys := [KEY_1, KEY_2, KEY_3, KEY_4]
-	for index in keys.size():
+func keys() -> Array[SandboxKey]:
+	var out := TestBall.keys(self)
+	var punch_keys := [KEY_1, KEY_2, KEY_3, KEY_4]
+	for index in punch_keys.size():
 		var kind := (index + 1) as MechArm.Punch
-		options.append({"key": keys[index], "label": "piña: %s" % MechArm.NAMES[kind], "seated": true,
-			"apply": func(parcel: SandboxParcel) -> void:
-				var arm := MuscleArmArchetype._arm_of(parcel)
-				if arm != null:
-					arm.punch(kind)})
-	options.append({"key": KEY_5, "label": "postura: normal / cubriéndose", "seated": true,
-		"apply": func(parcel: SandboxParcel) -> void:
-			var arm := MuscleArmArchetype._arm_of(parcel)
-			if arm != null:
-				arm.stance = MechArm.Stance.NORMAL if arm.stance == MechArm.Stance.COVER else MechArm.Stance.COVER})
-	options.append({"key": KEY_N, "label": "poner / sacar la pared de adelante", "seated": true,
-		"apply": func(parcel: SandboxParcel) -> void:
-			for wall: StaticBody3D in parcel.find_children("Pared", "StaticBody3D", true, false):
-				MuscleArmArchetype._show_wall(wall, not wall.visible)})
-	return options
+		out.append(SandboxKey.action(punch_keys[index], SandboxKey.Weight.MAIN if index == 0 else SandboxKey.Weight.NORMAL,
+			"piña: %s" % MechArm.NAMES[kind],
+			MuscleArmArchetype._punch.bind(kind)).while_seated())
+	out.append(SandboxKey.action(KEY_5, SandboxKey.Weight.NORMAL, "postura: normal / cubriéndose",
+		MuscleArmArchetype._toggle_cover).while_seated())
+	out.append(SandboxKey.action(KEY_N, SandboxKey.Weight.NORMAL, "poner / sacar la pared de adelante",
+		MuscleArmArchetype._toggle_wall).while_seated())
+	return out
+
+
+static func _punch(parcel: SandboxParcel, kind: MechArm.Punch) -> void:
+	var arm := MuscleArmArchetype._arm_of(parcel)
+	if arm != null:
+		arm.punch(kind)
+
+
+static func _toggle_cover(parcel: SandboxParcel) -> void:
+	var arm := MuscleArmArchetype._arm_of(parcel)
+	if arm != null:
+		arm.stance = MechArm.Stance.NORMAL if arm.stance == MechArm.Stance.COVER else MechArm.Stance.COVER
+
+
+static func _toggle_wall(parcel: SandboxParcel) -> void:
+	for wall: StaticBody3D in parcel.find_children("Pared", "StaticBody3D", true, false):
+		MuscleArmArchetype._show_wall(wall, not wall.visible)
 
 
 ## DOS BOLAS para tirarle al brazo: una que lo mueve apenas y una que se lo lleva (cede y vuelve).

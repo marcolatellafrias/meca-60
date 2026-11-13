@@ -81,8 +81,11 @@ func _growth(process: ParticleProcessMaterial) -> String:
 	return ", se infla y se desinfla"
 
 
-func category_options() -> Array[Dictionary]:
-	return [{"key": KEY_M, "label": _mesh_label, "apply": _cycle_mesh}]
+## LA TECLA DE LA FILA (ver ArtRows): con qué malla se dibujan todas. `first`, una de la fila (comparten `options`).
+static func row_keys(first: ParticleArchetype) -> Array[SandboxKey]:
+	return [SandboxKey.action(KEY_M, SandboxKey.Weight.NORMAL,
+		func() -> String: return "malla: %s" % ParticleMeshes.NAMES[first._kind()],
+		func(parcel: SandboxParcel) -> void: first._cycle_mesh(parcel.siblings()))]
 
 
 ## Con qué malla se está dibujando: la del sistema, o la que eligió la fila.
@@ -94,10 +97,6 @@ func _kind() -> ParticleMeshes.Kind:
 func _make() -> GPUParticles3D:
 	var make: Callable = system.get("make", Callable())
 	return make.call(_kind(), 1.0) if make.is_valid() else ParticleSystems.thruster_smoke(_kind())
-
-
-func _mesh_label() -> String:
-	return "malla: %s" % ParticleMeshes.NAMES[_kind()]
 
 
 ## La siguiente de las tres mallas, para toda la fila.

@@ -73,7 +73,7 @@ el ascensor casi del radio de la pelvis, para que se lean como una sola forma (l
   viaje: bajado, sus puntas siguen dentro de la pelvis (nada se estira); subido, el piso queda al ras del piso de abajo
   y los parantes son su jaula.
 - Bajado, su piso queda a **0,7 m del suelo con la meca agachada** (un salto) y a 4,4 m parada.
-- **G**, poseída, lo baja y lo sube; el **F2** tiene un botón para lo mismo. Tarda unos 2 s.
+- **G**, poseída, lo baja y lo sube; la **L** del panel chico hace lo mismo. Tarda unos 2 s.
 
 **Se viaja en él**: su piso es parte del marco. Medido: el jugador parado en su piso baja y sube con él, sin caerse.
 

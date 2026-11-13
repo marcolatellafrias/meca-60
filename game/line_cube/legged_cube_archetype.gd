@@ -1,7 +1,7 @@
 class_name LeggedCubeArchetype
 extends HoverCubeArchetype
 
-## LA PARCELA DEL CUBO CON PIERNAS (ver LeggedCube): la del cubo (los cuatro tiros con J/K, volcarlo con F2, manejarlo
+## LA PARCELA DEL CUBO CON PIERNAS (ver LeggedCube): la del cubo (los cuatro tiros con J/K, volcarlo con N/M, manejarlo
 ## con la O) con el cubo con piernas y sus perillas. F1 abre su panel (LeggedCubePanel). Manejándolo, el mouse gira el
 ## torso aparte de las piernas.
 
