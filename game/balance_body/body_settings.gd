@@ -5,8 +5,20 @@ extends Resource
 ## de la meca propia; un jefe puede llevar la suya (`BalanceBody.knobs`), que arma el panel de sus
 ## filas (MechPanel, F1) leyendo estas propiedades —lo que el recurso exporta es lo que se ve—. Las fuerzas van como
 ## ACELERACIONES (m/s²): la masa de la caja no las cambia.
+##
+## SE GUARDAN, COMO LA FORMA DEL F2 (13/11/2026; el usuario: «no entiendo por qué este panel no tiene opción de
+## guardado»): `current` arranca con lo guardado en `SAVED` (si hay), y el F1 tiene «Guardar» y «Volver a lo guardado».
+## MENOS LAS QUE PONE EL CUERPO (`FROM_BODY`): la altura de la caja sale del largo y lo estirado de las piernas, y el
+## paso, del largo de la pierna; las pone MechBody.dress, con la forma del F2. Ésas no se guardan ni se vuelven a lo
+## guardado: si no, el F1 y el F2 pelearían por el mismo número. EL ORDEN: lo guardado se carga al tocar `current` por
+## primera vez, y dress (CabinGrid._static_init) escribe después, encima.
+## El archivo guardado es del usuario: no se sube al repositorio (como el del F2, game/consoles/cabin_shape.tres).
 
-static var current := BodySettings.new()
+const SAVED := "res://game/balance_body/body_settings.tres"
+## Las que pone el cuerpo (MechBody.dress, el F2): no se guardan.
+const FROM_BODY: Array[String] = ["hover_height", "step_reach", "step_height", "settle_gap"]
+
+static var current := BodySettings.saved()
 
 @export_group("Caminar")
 ## A qué altura del piso va la cara de abajo de la caja (m): de ahí sale el largo del palo del péndulo.
@@ -138,3 +150,33 @@ static var current := BodySettings.new()
 ## El golpe arriba, suave y fuerte (m/s que le cambiaría la velocidad suelta).
 @export_range(0.5, 40.0, 0.5) var knock_soft := 5.0
 @export_range(0.5, 40.0, 0.5) var knock_strong := 14.0
+
+
+## LO GUARDADO, en uno nuevo (sin lo guardado, los valores del código). Las que pone el cuerpo quedan las del código:
+## dress las escribe encima.
+static func saved() -> BodySettings:
+	var made := BodySettings.new()
+	var stored := load(SAVED) as BodySettings if ResourceLoader.exists(SAVED) else null
+	if stored != null:
+		made.copy_from(stored)
+	return made
+
+
+## Copia de `other` todas las perillas MENOS las que pone el cuerpo (`FROM_BODY`).
+func copy_from(other: BodySettings) -> void:
+	for property in get_property_list():
+		var name := str(property["name"])
+		if int(property["usage"]) & PROPERTY_USAGE_SCRIPT_VARIABLE and not FROM_BODY.has(name):
+			set(name, other.get(name))
+
+
+## GUARDA `current` en `SAVED`, sin las que pone el cuerpo (van las del código, que dress escala al cargar).
+static func save_current() -> Error:
+	var copy := BodySettings.new()
+	copy.copy_from(current)
+	return ResourceSaver.save(copy, SAVED)
+
+
+## VUELVE A LO GUARDADO (o a los valores del código, si no hay), menos lo que pone el cuerpo.
+static func restore_current() -> void:
+	current.copy_from(BodySettings.saved())

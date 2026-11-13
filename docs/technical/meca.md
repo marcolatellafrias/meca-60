@@ -120,3 +120,11 @@ El cartel de poseer muestra la carga del salto y lo que le queda al propulsor.
 - Camina a 8 m/s y corre a 14,4; al soltar Shift tarda unos 3 s en volver a 8.
 
 Perillas: `BodySettings` (F1). Test para mirar: `tests/mech_look.tscn` (unos 25 s, sin el sandbox).
+
+**El F1 se guarda, como el F2** (13/11/2026; el usuario: «no entiendo por qué este panel no tiene opción de guardado»):
+«Guardar» lo escribe en `game/balance_body/body_settings.tres` y «Volver a lo guardado» lo trae de vuelta; al arrancar
+se carga solo. El archivo es del usuario: no se sube al repositorio. **Menos cuatro perillas, que pone la forma de la
+meca (el F2)** con `MechBody.dress`: la altura de la caja (sale del largo y lo estirado de las piernas) y el paso
+(`step_reach`, `step_height`, `settle_gap`, que se escalan con el largo de la pierna). En el F1 dicen «sale del F2» y no
+se guardan, para que los dos paneles no peleen por el mismo número. El orden: lo guardado se carga al tocar
+`BodySettings.current` por primera vez, y `dress` escribe después, encima.

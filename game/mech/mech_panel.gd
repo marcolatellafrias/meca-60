@@ -2,7 +2,8 @@ class_name MechPanel
 extends TunerPanel
 
 ## EL PANEL DE LA MECA (F1 en sus filas): todas sus perillas (BodySettings), y vuelven a lo del código con el botón de
-## cada una.
+## cada una. «Guardar» y «Volver a lo guardado», como el F2; lo que pone la forma de la meca (el F2) no se guarda acá
+## (ver BodySettings.FROM_BODY).
 
 const PANEL_WIDTH := 420.0
 const LABELS := {
@@ -43,11 +44,37 @@ const LABELS := {
 }
 
 
+var _state: Label = null
+
+
 func setup_panel() -> void:
 	panel_width = PANEL_WIDTH
-	setup("meca", "MECA")
+	setup("meca", "MECA", [
+		new_button("Guardar", _save),
+		new_button("Volver a lo guardado", _restore),
+	])
+	_state = state_label()
+	_state.text = "lo que dice «sale del F2» lo pone la forma de la meca (F2) y no se guarda acá"
 
 
 func sections() -> Array[Dictionary]:
-	return [{"title": "BodySettings (game/balance_body/body_settings.gd)", "target": BodySettings.current, "labels": LABELS,
+	var labels := LABELS.duplicate()
+	for name: String in BodySettings.FROM_BODY:
+		labels[name] = "%s · sale del F2" % str(LABELS.get(name, name))
+	return [{"title": "BodySettings (game/balance_body/body_settings.gd)", "target": BodySettings.current, "labels": labels,
 		"defaults": BodySettings.new()}]
+
+
+func _save() -> void:
+	var error := BodySettings.save_current()
+	if error != OK:
+		push_warning("MechPanel: no se pudo guardar %s (%d)" % [BodySettings.SAVED, error])
+	elif _state != null:
+		_state.text = "guardado (menos lo que sale del F2)"
+
+
+func _restore() -> void:
+	BodySettings.restore_current()
+	rebuild()
+	if _state != null:
+		_state.text = "volvió a lo guardado (menos lo que sale del F2)"
