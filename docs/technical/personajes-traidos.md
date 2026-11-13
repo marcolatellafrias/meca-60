@@ -79,6 +79,15 @@ prueba; `SoundEntity` declara en `SOUNDS` qué clave suena en cada evento: golpe
 guardada, las variantes, las listas, las notas, los estados y transiciones, y el archivo que seguía a la mano. Test:
 `tests/sound_check.tscn`.
 
-**Falta** (de la sesión de Personajes): partir `BoneInstantiator`, separar en `PlayerController` lo del jugador de lo de
-prueba, y la pose de sostener algo con la mano (quedó a medias).
+**La animación, ordenada** (13/11/2026, con el usuario): se sacó lo que no es núcleo —los modificadores de caminata, el
+de exhibición, la figura y el peatón, lo largo al llevar, lo guardado del agarre, la pose congelada— y `BoneInstantiator`
+se partió en piezas (`game/character/pose/`): `CharacterSeating` (sentado y plantado), `CharacterJump` (el salto, agacharse,
+echarse atrás al llevar), `CharacterPelvis` (la pelvis y la hundida al pisar) y `CharacterFall` (el ragdoll). La conducta
+quedó igual, comparada contra el código de antes (locomoción, andar en la meca, sentarse: `tests/seat_check.tscn`).
+Quedan, a pedido: el ragdoll en el aire, el hombro adentro, la respiración y el temblor, la caminata de cada arquetipo,
+el agarre del volante y la válvula, y el freno al aterrizar.
+
+**Falta** (de la sesión de Personajes): separar en `PlayerController` lo del jugador de lo de prueba, y la pose de
+sostener algo con la mano (quedó a medias). *Un problema que ya estaba*: a veces, al levantarse del ragdoll, cientos de
+errores «Basis must be normalized» (`RagdollUtil._update_recovery`); intermitente.
 

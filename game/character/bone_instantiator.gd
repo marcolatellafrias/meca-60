@@ -1,12 +1,18 @@
 class_name BoneInstantiator
 extends Node3D
 
-## Emitida cuando el jugador activo (re)crea su cámara en initialize_skeleton, para
-## que quien la consuma (CharacterSpawner → AreaInstantiator) la reenganche.
-signal active_camera_changed(camera: Camera3D)
-## Un personaje que no se simula se cayó (ver EL RAGDOLL DE QUIEN NO SE SIMULA): quien lo armó lo rearma.
+## UN PERSONAJE: lo arma desde su semilla (tamaños, rig, cápsula, cuerpo visible) y resuelve su pose en cada cuadro.
+## Desde el 13/11/2026 lo que no es armar ni el camino de la pose está en piezas (`game/character/pose/`):
+##   · CharacterSeating   las piernas sentado (los ejes de la silla) y los pies clavados en un piso que se mueve.
+##   · CharacterJump      el salto cargado, agacharse y echarse atrás al llevar.
+##   · CharacterPelvis    cuánto baja la pelvis para que lleguen las piernas, la hundida al pisar, el piso que se mueve.
+##   · CharacterFall      el ragdoll: armarlo, tirarse en el aire, el golpe que lo tumba.
+## Lo que leen otros (`is_seated`, `crouch_t`, `jump_squat_t`, `carry_lean`, `taking_off`…) sigue acá.
 
-## QUÉ CLASE DE PERSONAJE ES (ver CharacterKind: el jugador, un compañero de red, uno de exhibición, una figura, el ente).
+## Emitida cuando el jugador activo (re)crea su cámara en initialize_skeleton.
+signal active_camera_changed(camera: Camera3D)
+
+## QUÉ CLASE DE PERSONAJE ES (ver CharacterKind: el jugador, un compañero de red, uno de la calle, el ente).
 ## Se pone ANTES de agregarlo al árbol; sin poner, uno de la calle (`npc`). Reemplaza a `is_active`, `is_puppet`, `is_display` y
 ## `looks_around` (03/11/2026).
 var kind: CharacterKind = CharacterKind.npc()
@@ -57,6 +63,11 @@ var arms_controller: ArmsController
 var player_controller: PlayerController
 ## Solo en proxies remotos: lo setea el CharacterSpawner. Se llama al inicio del frame para aplicar
 ## el transform sincronizado ANTES del solve del esqueleto.
+## LAS PIEZAS (ver game/character/pose/): lo sentado, el salto, la pelvis, caerse.
+var seating: CharacterSeating = null
+var jump: CharacterJump = null
+var pelvis: CharacterPelvis = null
+var fall: CharacterFall = null
 var net_sync: CharacterNetSync
 ## ── QUIEN PONE ESTA CÁPSULA DESDE AFUERA (05/11/2026) ─────────────────────────────────────────────────────────────
 ## La red a un compañero (CharacterNetSync), su camino a un peatón (Pedestrian): un objeto con `apply_to_puppet()`, que
@@ -91,12 +102,14 @@ var character_hidden: bool = false
 
 var is_seated:    bool = false
 var current_seat: Node = null
-## Targets de las piernas sentadas, cacheados por _pose_legs_seated para que _repin_legs_seated
-## re-resuelva contra los MISMOS. Ver _solve_frame.
-var _seated_left_foot:  Vector3 = Vector3.ZERO
-var _seated_right_foot: Vector3 = Vector3.ZERO
-var _seated_left_pole:  Vector3 = Vector3.ZERO
-var _seated_right_pole: Vector3 = Vector3.ZERO
+
+## Las piezas nacen con el personaje, antes de que nadie lo use.
+func _init() -> void:
+	seating = CharacterSeating.new(self)
+	jump = CharacterJump.new(self)
+	pelvis = CharacterPelvis.new(self)
+	fall = CharacterFall.new(self)
+
 
 func _ready() -> void:
 	if kind.is_local():
@@ -166,7 +179,7 @@ func _initialize_skeleton() -> void:
 	# CharacterRigidBody3D._freeze_for_driver).
 	char_rigidbody  = CharacterRigidBody3D.create(charRb, skel_sizes_util.distance_from_ground,
 		skel_sizes_util.leg_height, kind, intent, entity_instantiation)
-	char_rigidbody.fall_triggered.connect(_on_fall_triggered)
+	char_rigidbody.fall_triggered.connect(fall.on_fall_triggered)
 	char_rigidbody.add_child(custom_bones_util.lower_spine)
 	add_child(char_rigidbody)
 
@@ -272,7 +285,7 @@ func _initialize_skeleton() -> void:
 	# No es un caso especial que haya que recordar: TODO lo que usa `ragdoll_util` ya pregunta por
 	# `is_instance_valid` antes de tocarlo, así que no tenerlo es un estado que el personaje ya soportaba.
 	if kind.has_ragdoll() and (kind.simulates() or kind.driver == CharacterKind.Driver.NETWORK):
-		_make_ragdoll()
+		fall.make_ragdoll()
 
 	# LOS GIZMOS DE MARCHA, APAGADOS (ver IkUtil.gizmos_visible): sus mallas nacen visibles, y los apagaba la vista de
 	# debug del personaje, borrada el 13/11/2026.
@@ -347,69 +360,6 @@ func place_facing(ground_pos: Vector3, direction: Vector3) -> void:
 static func yaw_facing(direction: Vector3) -> float:
 	return atan2(-direction.x, -direction.z)
 
-
-## EL RAGDOLL EN EL AIRE (ver AirStyle): cayendo más rápido que lo pedido, se tira en el aire con la velocidad que traía
-## y un giro chico al azar, por la entrada de todos (RagdollUtil.knock_down). Sólo quien se simula acá.
-func _maybe_ragdoll_in_air() -> void:
-	if not kind.simulates() or is_seated or not is_instance_valid(ragdoll_util) or ragdoll_util.is_active 			or ragdoll_util.is_recovering or not AirStyle.should_ragdoll(self):
-		return
-	var rng := RandomNumberGenerator.new()
-	rng.seed = master_seed + Engine.get_physics_frames()
-	var axis := Vector3(rng.randf_range(-1.0, 1.0), 0.0, rng.randf_range(-1.0, 1.0))
-	var spin := axis.normalized() * AirStyle.RAGDOLL_SPIN if axis.length_squared() > 0.0001 else Vector3.ZERO
-	char_rigidbody.is_snapshot_active = false
-	ragdoll_util.knock_down(char_rigidbody, custom_bones_util.lower_spine, Vector3.ZERO, spin)
-
-
-func _on_fall_triggered(world_dir: Vector3) -> void:
-	if is_seated:
-		return
-	if not kind.simulates() and not is_instance_valid(ragdoll_util):
-		return
-	# No re-disparar si ya estoy ragdolleando NI levantándome: un impacto espurio durante la
-	# recuperación (p.ej. la cápsula asentándose) reiniciaría el ragdoll a mitad de camino y dejaría
-	# los huesos desarmados. Ver character-parametric:docs/technical/characters.md.
-	if not is_instance_valid(ragdoll_util) or ragdoll_util.is_active or ragdoll_util.is_recovering:
-		return
-	char_rigidbody.is_snapshot_active = false
-	ragdoll_util.activate_with_impact(char_rigidbody, custom_bones_util.lower_spine, world_dir)
-	if not kind.simulates():
-		# LOS HUESOS ARRANCAN CON LA VELOCIDAD DEL MARCO en su punto, y el golpe encima: la cápsula de quien no se simula
-		# está congelada y no tiene velocidad que pasarles, así que arrancaban quietos en el mundo y la meca se les iba
-		# —salían volando para atrás, lo vio la meca—.
-		var frame := char_rigidbody.frame
-		if is_instance_valid(frame):
-			for body: RigidBody3D in ragdoll_util._bodies.values():
-				if is_instance_valid(body):
-					body.linear_velocity += frame.velocity_at(body.global_position)
-
-
-## LOS 19 CUERPOS DEL RAGDOLL, uno por hueso. VAN EN EL MUNDO, no colgados del personaje: si el personaje cuelga de algo
-## que se mueve a mano —la meca de las maquetas—, un cuerpo rígido que cuelga de eso se teletransporta con él en cada
-## paso; iba con la meca dos veces —por su velocidad y por el arrastre— y, como un teletransporte no choca, atravesaba el
-## piso y las paredes (02/11/2026). Lo lleva el marco (ver RagdollUtil.follow_frame); con la detección continua, rápidos
-## y finos no cruzan el piso.
-func _make_ragdoll() -> void:
-	ragdoll_util = RagdollUtil.create(custom_bones_util, skel_rigidbodies, joints)
-	ragdoll_util.ik_util = ik_util  # para que el IK de recuperación use el mismo pole que la locomoción
-	# Los cuerpos del ragdoll dejan de ser lo visible: quedan invisibles y el cuerpo los sigue vía
-	# _sync_body_visual. Solo se muestran si no hay cuerpo que dibujar.
-	ragdoll_util.show_bodies = not is_instance_valid(body_visual)
-	skel_rigidbodies.top_level = true
-	joints.top_level = true
-	for body: RigidBody3D in ragdoll_util._bodies.values():
-		if is_instance_valid(body):
-			body.collision_layer = ragdoll_util.layer
-			body.collision_mask = ragdoll_util.mask | SandboxParcel.bound_mask(self)
-			body.continuous_cd = true
-
-
-
-
-## Tirado, el ragdoll va en el marco de la cápsula, que va con la pelvis (ver RagdollUtil.follow_frame).
-func _follow_ragdoll_frame() -> void:
-	if is_instance_valid(ragdoll_util) and ragdoll_util.is_active and is_instance_valid(char_rigidbody):
-		ragdoll_util.follow_frame(char_rigidbody.frame)
 
 func _clear_prior_generations() -> void:
 	if is_instance_valid(ragdoll_util):
@@ -497,12 +447,12 @@ func _physics_process(delta: float) -> void:
 	if is_instance_valid(puppeteer):
 		puppeteer.call("apply_to_puppet")
 	_update_ragdoll_ext_state()
-	_follow_ragdoll_frame()
+	fall.follow_ragdoll_frame()
 	_follow_seat()
 	_apply_look()
-	_update_jump(delta)
-	_update_crouch()
-	_maybe_ragdoll_in_air()
+	jump.update_jump(delta)
+	jump.update_crouch()
+	fall.maybe_ragdoll_in_air()
 
 	# RAGDOLL Y RECUPERACIÓN, EN CADA PASO, COMO SIEMPRE: ahí la cápsula sigue a los cuerpos y el blend de
 	# recuperación cuenta tiempo; a menos tasa tardaría más y _update_active se atrasaría. El solve pesado ya
@@ -515,7 +465,7 @@ func _physics_process(delta: float) -> void:
 	# Sentado, la cápsula va clavada en XZ al asiento en cada paso, no sólo al resolver: la meca se mueve en
 	# cada paso, y de la cápsula cuelgan la cámara y el rayo de interacción.
 	if is_seated and is_instance_valid(current_seat):
-		_pin_capsule_to_seat()
+		seating.pin_capsule_to_seat()
 	# Los cuerpos del ragdoll son cinemáticos y empujan lo que tocan (también lo que se tiene agarrado):
 	# siguen a los huesos —que cuelgan de la cápsula— a la tasa de antes y no sólo cuando se resuelve la
 	# pose: el jugador local en cada paso, un proxy en uno de cada dos (medido: 19 cuerpos cinemáticos por
@@ -596,7 +546,7 @@ static func _ticks_at(hz: float) -> int:
 ## en ellos a media velocidad.
 func _solve_pose(solve_delta: float) -> void:
 	_update_animation_inputs(solve_delta)  # productor: llena animation_inputs desde la cápsula
-	_update_carry_lean(solve_delta)
+	jump.update_carry_lean(solve_delta)
 	var aloft := 0.0 if animation_inputs.grounded or is_seated else 1.0
 	var air := LocomotionCommon.base()
 	air_t = move_toward(air_t, aloft, solve_delta / maxf(air.blend_s, 0.01))
@@ -605,7 +555,7 @@ func _solve_pose(solve_delta: float) -> void:
 	takeoff_vy = 0.0 if aloft <= 0.0 else maxf(takeoff_vy, air_vy)
 	# EL TORSO EN EL AIRE, hacia lo que pide su regla a su ritmo (ver LocomotionCommon).
 	air_lean = lerpf(air_lean, air.torso_target(self), 1.0 - exp(-solve_delta / maxf(air.torso_follow_s, 0.01)))
-	_ride_floor(solve_delta)
+	pelvis.ride_floor(solve_delta)
 	_update_local_targets_positions()   # consumidor: lee animation_inputs (ya no la cápsula)
 
 	if is_instance_valid(ragdoll_util):
@@ -642,7 +592,6 @@ func _solve_pose(solve_delta: float) -> void:
 	_solve_frame(solve_delta)
 
 
-
 func _update_ragdoll_ext_state() -> void:
 	if not is_instance_valid(char_rigidbody) or not is_instance_valid(ragdoll_util):
 		return
@@ -671,24 +620,24 @@ func _update_ragdoll_ext_state() -> void:
 func _solve_frame(delta: float) -> void:
 	var seated := is_seated and is_instance_valid(current_seat)
 	# PARADO A BORDO, COMO SENTADO (ver PLANTADO EN LA NAVE): los pies, clavados al final; ni marcha ni bajada de pelvis.
-	var planted := not seated and _is_planted()
+	var planted := not seated and seating.is_planted()
 
 	if planted:
 		# Los pies, a sus puntos de la meca; y la pelvis baja lo que haga falta para alcanzarlos, como en tierra.
-		_place_planted_targets()
-		_update_pelvis_drop(delta)
+		seating.place_planted_targets()
+		pelvis.update_pelvis_drop(delta)
 	elif not seated:
-		_pose_legs_standing()
+		pelvis.pose_legs_standing()
 		# Con los pies ya colocados se puede medir si las piernas llegan. Va acá, entre colocarlos y la
 		# capa procedural: el resultado lo aplica _apply_root_offsets, que corre dentro de _pose_procedural.
-		_update_pelvis_drop(delta)
+		pelvis.update_pelvis_drop(delta)
 
 	_pose_root(seated)
 	_pose_procedural(delta)
 	_pose_root(seated)         # el procedural mueve el spine: re-anclarlo al asiento
 
 	if seated:
-		_pose_legs_seated()
+		seating.pose_legs_seated()
 
 	_pose_arms(delta)
 
@@ -703,11 +652,11 @@ func _solve_frame(delta: float) -> void:
 	# no estuviera apoyado. Sentado el bug no aparecía porque el caso sentado sí re-clava después de los
 	# brazos (era este mismo comentario, dos líneas más abajo).
 	if seated:
-		_repin_legs_seated()
+		seating.repin_legs_seated()
 	elif planted:
-		_pose_legs_planted()
+		seating.pose_legs_planted()
 	else:
-		_repin_legs_standing()
+		pelvis.repin_legs_standing()
 
 	_sync_ragdoll_bodies()
 	_sync_body_visual()
@@ -719,161 +668,9 @@ func _pose_root(seated: bool) -> void:
 	if not seated:
 		return
 	current_seat.update_seated_visual(self, char_rigidbody.global_rotation.y)
-	custom_bones_util.lower_spine.global_position = _seat_pelvis_point()
-	_pin_capsule_to_seat()
+	custom_bones_util.lower_spine.global_position = seating.seat_pelvis_point()
+	seating.pin_capsule_to_seat()
 
-## Sentado, la cápsula va clavada sobre el asiento, en la línea de su arriba (ver LOS EJES DE LA SILLA). Corre en cada
-## paso de física, no sólo al resolver la pose (ver «Cuándo se resuelve la pose»): la altura la lleva el asiento
-## (SeatInteractable._carry_occupant).
-func _pin_capsule_to_seat() -> void:
-	var seat_pos : Vector3 = current_seat.global_position
-	var up := _seat_up()
-	char_rigidbody.global_position = seat_pos + up * (char_rigidbody.global_position - seat_pos).dot(up)
-
-## ── LOS EJES DE LA SILLA (02/11/2026) ─────────────────────────────────────────────────────────────────────────────
-## Sentado, todo se arma en los ejes del asiento y no en los del mundo: su arriba, y adelante —para donde mira el que
-## está sentado, sobre el plano del asiento—. La meca cabecea y se ladea, y con la vertical del mundo la pelvis se
-## despegaba de la silla (medido: 12 cm para atrás con 20° de cabeceo, 11 cm de costado con 20° de alabeo) y las piernas
-## y los pies quedaban armados para un piso derecho. Lo vio el usuario cuando la tripulación dejó de congelarse.
-func _seat_up() -> Vector3:
-	return current_seat.global_basis.y.normalized()
-
-func _seat_forward() -> Vector3:
-	var up := _seat_up()
-	var forward := -char_rigidbody.global_transform.basis.z
-	forward -= up * forward.dot(up)
-	return forward.normalized() if forward.length() > 0.001 else -current_seat.global_basis.z.normalized()
-
-## Donde va la base de la columna: arriba del asiento su alto, y atrás lo que dice la silla.
-func _seat_pelvis_point() -> Vector3:
-	return current_seat.global_position + _seat_up() * current_seat.height \
-		- _seat_forward() * current_seat.pelvis_back_of_centre()
-
-## Piernas paradas: la marcha (target aéreo + raycast al piso + IK). Ver el modelo de gait en
-## character-parametric:docs/technical/character-animation.md.
-func _pose_legs_standing() -> void:
-	var tuck := LocomotionCommon.base().leg_tuck(self)
-	ik_util.update_airborne_target(true, tuck)
-	ik_util.update_airborne_target(false, tuck)
-
-	ik_util.update_ik_raycast(true,  custom_bones_util, skel_sizes_util, animation_inputs)
-	ik_util.update_ik_raycast(false, custom_bones_util, skel_sizes_util, animation_inputs)
-
-	if _reset_feet_after_recovery:
-		# Ya corrió el raycast (next_target fresco bajo el cuerpo): plantamos ahí el pie, sin catch-up.
-		ik_util.reset_step_targets_to_ground()
-		_reset_feet_after_recovery = false
-
-## Cuánto de la tibia llega el pie sentado: casi entera (ver `_pose_legs_seated`).
-const SEATED_SHIN_REACH := 0.995
-## Lo más que se mete la pantorrilla para atrás, sentado (ver `_pose_legs_seated`).
-const SEATED_MAX_TUCK := deg_to_rad(55.0)
-## Cuánto baja la punta de los pies, sentado (ver `_repin_legs_seated`).
-const SEATED_FOOT_POINT := deg_to_rad(18.0)
-
-## Piernas sentadas: plegadas hacia adelante, sin piso ni marcha. Cachea los targets porque
-## _repin_legs_seated re-resuelve contra los mismos — recalcularlos después de que los overrides de
-## brazos inclinaron el spine arrastraría los pies con el torso.
-func _pose_legs_seated() -> void:
-	var forward := _seat_forward()
-	var down := -_seat_up()
-
-	# ── SENTADO DERECHO (22/10/2026, lo pidió el usuario): el muslo recto hacia adelante, horizontal, desde donde
-	# nace (el hueso del muslo), y la pantorrilla a 90°, recta para abajo. Antes la pantorrilla iba un poco para atrás y
-	# el pie quedaba corto (0,85 de la tibia). Un pelo menos que la tibia entera, para que la IK no quede en el borde.
-	var left_hip  := custom_bones_util.left_higher_leg.global_position
-	var right_hip := custom_bones_util.right_higher_leg.global_position
-	var left_knee  := left_hip  + forward * skel_sizes_util.higher_leg_size.y
-	var right_knee := right_hip + forward * skel_sizes_util.higher_leg_size.y
-	# LOS PIES ADENTRO (28/10/2026, lo pidió el usuario: «que los pies los meta un poquito para adentro de la
-	# silla, como en la vida real»): si las rodillas quedan más adelante que lo de siempre, la pantorrilla se va para
-	# atrás justo eso, y el pie vuelve a caer donde caía, bajo el borde del asiento.
-	var shin_length := skel_sizes_util.lower_leg_size.y * SEATED_SHIN_REACH
-	var past: float = current_seat.knees_past_edge(skel_sizes_util.higher_leg_size.y)
-	var tuck := asin(clampf(past / shin_length, 0.0, sin(SEATED_MAX_TUCK)))
-	var shin := (down * cos(tuck) - forward * sin(tuck)) * shin_length
-	_seated_left_foot  = left_knee  + shin
-	_seated_right_foot = right_knee + shin
-	_seated_left_pole  = left_knee  + forward
-	_seated_right_pole = right_knee + forward
-
-	_repin_legs_seated()
-	ik_util.left_leg_current_target.global_position  = _seated_left_foot
-	ik_util.right_leg_current_target.global_position = _seated_right_foot
-
-## ── PLANTADO EN LA NAVE (02/11/2026) ──────────────────────────────────────────────────────────────────────────────
-## Parado a bordo de exhibición ES IGUAL QUE SENTADO, sólo que las piernas van al piso en vez de a la silla (el dios del
-## juego: «la inclinación del root bone por inercia o por impacto sucede también cuando están parados; la única
-## diferencia es que están con las piernas en el piso en vez de la silla»). La cápsula va fija en su punto de la meca y
-## girada con ella (ver CharacterRigidBody3D.ride); los pies, CLAVADOS en dos puntos del piso de la meca guardados en el
-## marco de la cápsula (`plant_feet`), así nada de lo que recuerda queda en el mundo. Sin rayos contra el casco —que en
-## las maquetas se mueve a mano y salta de a pasos— y sin pasos: el piso lo dice la meca. La pelvis sí baja lo que haga
-## falta para alcanzarlos (la respiración la sube unos centímetros), como en tierra. Lo de arriba —la inclinación por inercia o por golpes, la respiración, los brazos— es lo de siempre.
-var _planted_feet: Array[Vector3] = []
-
-
-func _is_planted() -> bool:
-	return _planted_feet.size() == 2 and is_instance_valid(char_rigidbody) and char_rigidbody._riding
-
-
-## CLAVA LOS PIES en el piso que pasa por `floor_point` (un punto del mundo), cada uno bajo su cadera, separados como su
-## marcha (`raycast_stance_offset`) y con el tobillo a su alto sobre el piso (`ankle_height`). Se guardan en el marco de
-## la cápsula.
-func plant_feet(floor_point: Vector3) -> void:
-	_planted_feet.clear()
-	if not is_instance_valid(char_rigidbody):
-		return
-	var body := char_rigidbody.global_transform
-	var ankle_local := body.affine_inverse() * (floor_point + body.basis.y.normalized() * skel_sizes_util.ankle_height)
-	for left: bool in [true, false]:
-		var side := -1.0 if left else 1.0
-		_planted_feet.append(Vector3(side * skel_sizes_util.raycast_stance_offset, ankle_local.y, 0.0))
-
-
-## Los blancos de los pies, en sus puntos de la meca: de ellos mide la bajada de pelvis y a ellos van las piernas.
-func _place_planted_targets() -> void:
-	var body := char_rigidbody.global_transform.orthonormalized()
-	ik_util.left_leg_current_target.global_position = body * _planted_feet[0]
-	ik_util.right_leg_current_target.global_position = body * _planted_feet[1]
-
-
-## Las piernas a sus pies clavados, con la rodilla adelante y los pies planos sobre el piso de la meca.
-func _pose_legs_planted() -> void:
-	_place_planted_targets()
-	var body := char_rigidbody.global_transform.orthonormalized()
-	var forward := -body.basis.z
-	var up := body.basis.y
-	var tilt := Basis(Quaternion(Vector3.UP, up))
-	var flat := tilt.inverse() * forward
-	var yaw := atan2(-flat.x, -flat.z)
-	for left: bool in [true, false]:
-		var foot := body * _planted_feet[0 if left else 1]
-		var upper := custom_bones_util.left_higher_leg if left else custom_bones_util.right_higher_leg
-		var lower := custom_bones_util.left_lower_leg if left else custom_bones_util.right_lower_leg
-		ik_util.solve_two_bone_ik(upper, lower, foot, foot + up * skel_sizes_util.leg_height * 0.5 + forward)
-		var bone: CustomBone = custom_bones_util.left_foot if left else custom_bones_util.right_foot
-		if is_instance_valid(bone):
-			bone.global_basis = tilt * IkUtil.level_basis(left, yaw)
-
-
-## Re-resuelve el IK de las piernas sentadas contra los targets ya cacheados (los huesos se movieron
-## porque algo tocó el spine después de plantarlas).
-func _repin_legs_seated() -> void:
-	ik_util.solve_two_bone_ik(custom_bones_util.left_higher_leg,  custom_bones_util.left_lower_leg,  _seated_left_foot,  _seated_left_pole)
-	ik_util.solve_two_bone_ik(custom_bones_util.right_higher_leg, custom_bones_util.right_lower_leg, _seated_right_foot, _seated_right_pole)
-	# LOS PIES, NIVELADOS (22/10/2026: el usuario los vio en posiciones raras al sentarse): sentado nadie los
-	# nivelaba (ver IkUtil._level_foot) y colgaban rígidos de la tibia, con su inclinación. Planos, mirando adonde mira.
-	# CON LA PUNTA UN POCO PARA ABAJO (29/10/2026, lo pidió el usuario: «ahora están como muy rígidos y es medio
-	# poco natural la pose»): `SEATED_FOOT_POINT`, girados sobre el eje de costado del cuerpo.
-	# Nivelados con el asiento (ver LOS EJES DE LA SILLA): armados como en un piso derecho y llevados a su inclinación.
-	var tilt := Basis(Quaternion(Vector3.UP, _seat_up()))
-	var flat := tilt.inverse() * _seat_forward()
-	var yaw := atan2(-flat.x, -flat.z)
-	var point := Basis(Basis(Vector3.UP, yaw) * Vector3.RIGHT, -SEATED_FOOT_POINT)
-	for left: bool in [true, false]:
-		var foot: CustomBone = custom_bones_util.left_foot if left else custom_bones_util.right_foot
-		if is_instance_valid(foot):
-			foot.global_basis = tilt * point * IkUtil.level_basis(left, yaw)
 
 ## Capa procedural + modificadores de raíz. Igual en los dos modos: sentado, `anim_mod.is_seated`
 ## hace que _apply_root_offsets no toque el spine y el procedural saltea POS_Y/POS_Z de la raíz, así
@@ -1006,67 +803,8 @@ func _apply_look() -> void:
 	char_rigidbody.global_rotation.y = CharacterIntent.world_yaw(char_rigidbody.frame, intent.look_yaw)
 
 
-## ── EL SALTO CARGADO (03/11/2026: era del PlayerController, pasó al cuerpo con la intención) ──────────────────────────
-## Al apretar el salto (`intent.jump`) parado en el piso, sin agacharse ni sentarse, empieza a cargar —la pelvis baja,
-## `jump_squat_t`— hasta `time_to_max_jump`; al soltarlo salta, de 30 % a 100 % de su `jump_height` según lo cargado (la
-## carga interpola ALTURA, no impulso: así la barra es lineal con lo que se ve saltar, y un toque sin cargar sigue siendo
-## un saltito útil). Si en el medio deja de poder (en el aire, agachado), se cancela. El mismo para el teclado y el guion.
-## Con movimiento directo (el ente) no hay carga: salta ya (ver PlayerController).
-var _jump_charge := 0.0
-var _jump_charging := false
+## ── EL SALTO CARGADO (ver CharacterJump): lo que de él se lee afuera o se comparte ─────────────────────────────────
 var _jump_was := false
-
-
-## Lo cargado, de 0 a 1 (la barra del HUD).
-## LO QUE SE ECHA ATRÁS CON LO QUE LLEVA, ahora (ver LocomotionCommon, EL CUERPO SE ECHA ATRÁS): hacia `carry_lean`, a su
-## ritmo. Lleva algo si su agarre es una caja que alguien sostiene.
-func _update_carry_lean(delta: float) -> void:
-	var tuning := LocomotionCommon.base()
-	var want := Vector2.ZERO
-	var grab := intent.grab as GrabbableInteractable if intent != null else null
-	var holding := is_instance_valid(grab) and grab.box_half != Vector3.ZERO and grab.hold_count() > 0 \
-		and not is_seated and is_instance_valid(char_rigidbody)
-	# EL TIRO (ver LocomotionCommon, TIRAR): al cargar se echa atrás, al empujar se va adelante, alejándose del paquete y hacia
-	# él; más rápido que llevar.
-	var throwing := holding and is_instance_valid(anim_mod) and anim_mod.throw_with_box
-	if throwing:
-		var away_box := Vector2(0.0, 1.0)
-		var from := grab.get_parent() as Node3D
-		if is_instance_valid(from):
-			var local := char_rigidbody.global_basis.orthonormalized().inverse() * (char_rigidbody.global_position - from.global_position)
-			if Vector2(local.x, local.z).length() > 0.05:
-				away_box = Vector2(local.x, local.z).normalized()
-		want += away_box * tuning.throw_lean(anim_mod)
-	if tuning.carry_lean_mode != 0 and holding:
-		var body := grab.get_parent() as RigidBody3D
-		var share := 1.0
-		if tuning.carry_lean_by_weight and is_instance_valid(body):
-			share = clampf(GrabbableInteractable.load_of(body.mass, maxf(grab.total_strength(),
-				entity_archetype.strength if entity_archetype != null else 1.0)), 0.0, 1.0)
-		if tuning.carry_lean_mode == 2:
-			var v := char_rigidbody.linear_velocity
-			var top: float = maxf(entity_archetype.speed * entity_archetype.sprint_multiplier \
-				* CharacterRigidBody3D.SPEED_SCALE, 0.01) if entity_archetype != null else 1.0
-			share *= clampf(Vector2(v.x, v.z).length() / top, 0.0, 1.0)
-		# Alejándose del paquete: del paquete hacia el cuerpo, en los ejes de la cápsula; si no, hacia atrás.
-		var away := Vector2(0.0, 1.0)
-		if tuning.carry_lean_away and is_instance_valid(body):
-			var local := char_rigidbody.global_basis.orthonormalized().inverse() * (char_rigidbody.global_position - body.global_position)
-			if Vector2(local.x, local.z).length() > 0.05:
-				away = Vector2(local.x, local.z).normalized()
-		want += away * deg_to_rad(tuning.carry_lean_deg) * share
-	var pace := minf(tuning.carry_lean_s, THROW_LEAN_S) if throwing else tuning.carry_lean_s
-	carry_lean = carry_lean.lerp(want, 1.0 - exp(-delta / maxf(pace, 0.01) * 3.0))
-	carry_lean_share = clampf(carry_lean.length() / maxf(deg_to_rad(tuning.carry_lean_deg), 0.001), 0.0, 1.0)
-
-
-## Lo que tarda en echarse atrás o adelante con el tiro (s): rápido, es un golpe.
-const THROW_LEAN_S := 0.06
-
-
-func jump_charge() -> float:
-	var arch := entity_archetype
-	return _jump_charge / maxf(arch.time_to_max_jump, 0.001) if arch != null else 0.0
 
 
 ## EL SALTO SALE AL TERMINAR DE SOLTAR LA CARGA (05/11/2026, el usuario: «que empiece a estar en el aire recién
@@ -1077,87 +815,11 @@ func jump_charge() -> float:
 ## agachada todavía se deshacía.*
 const JUMP_RELEASE_S := 0.08
 var _jump_pending := -1.0
-var _jump_release_left := 0.0
 ## DESPEGANDO: desde que suelta el salto hasta que deja el piso (como mucho `TAKE_OFF_MAX_S`). Mientras, la marcha no
 ## arranca un paso nuevo y los dos pies despegan juntos (05/11/2026, el usuario: en el salto «un pie empezaba
 ## antes que el otro»; medido en «caer en loop»: los seis salían con la izquierda ya en el aire, porque arrancaban a
 ## correr entre soltar el salto y despegar). Ver IkUtil.advance_gait.
 var taking_off := false
-var _taking_off_t := 0.0
-const TAKE_OFF_MAX_S := 0.3
-
-
-func _update_jump(delta: float) -> void:
-	if taking_off:
-		_taking_off_t += delta
-		if not is_instance_valid(char_rigidbody) or not char_rigidbody.is_grounded or _taking_off_t > TAKE_OFF_MAX_S:
-			taking_off = false
-	if _jump_pending >= 0.0:
-		_jump_release_left -= delta
-		if _jump_release_left <= 0.0:
-			if is_instance_valid(char_rigidbody) and char_rigidbody.is_grounded:
-				char_rigidbody.jump_to_height(_jump_pending)
-				taking_off = true
-				_taking_off_t = 0.0
-			_jump_pending = -1.0
-	var want := intent.jump
-	var pressed := want and not _jump_was
-	_jump_was = want
-	if not is_instance_valid(char_rigidbody) or not kind.simulates() or entity_archetype == null:
-		return
-	var rb := char_rigidbody
-	# Con un salto pendiente (ver EL SALTO SALE AL TERMINAR DE SOLTAR LA CARGA) no carga otro: si no, volver a apretar en
-	# esos 0,08 s reiniciaba el pendiente y el salto nunca salía (medido: el dummy de «subir y bajar» apretaba y soltaba
-	# un cuadro sí y uno no hasta chocar el escalón).
-	var can := rb.is_grounded and not is_seated and crouch_t < 0.5 and not rb.creative_mode \
-		and kind.motion == CharacterKind.Motion.PHYSICAL and rb.input_enabled and _jump_pending < 0.0
-	if pressed and can:
-		_jump_charging = true
-	if not _jump_charging:
-		return
-	if not can:
-		_cancel_jump()
-		return
-	var arch := entity_archetype
-	if want:
-		_jump_charge = minf(_jump_charge + delta, arch.time_to_max_jump)
-		jump_squat_t = jump_charge()
-		return
-	_jump_pending = lerpf(arch.jump_height * 0.3, arch.jump_height, jump_charge())
-	_jump_release_left = JUMP_RELEASE_S
-	_cancel_jump()
-
-
-## AGACHARSE (ver CharacterIntent.crouch): baja en `AnimationModifiers.CROUCH_S` y achica la cápsula al terminar de bajar;
-## al pararse, la cápsula vuelve ya. Agachado camina más lento —con movimiento directo, `DIRECT_CROUCH_SPEED`—. Sentado
-## o volando libre no se agacha. Un proxy de red no: le llega `crouch_t`.
-const DIRECT_CROUCH_SPEED := 0.45
-const CROUCH_SPEED := 0.6
-var _crouched := false
-
-
-func _update_crouch() -> void:
-	if not is_instance_valid(char_rigidbody) or not kind.simulates():
-		return
-	var rb := char_rigidbody
-	var want := intent.crouch and not is_seated and not rb.creative_mode
-	if want == _crouched:
-		return
-	_crouched = want
-	var tw := create_tween()
-	tw.tween_property(self, "crouch_t", 1.0 if want else 0.0, AnimationModifiers.CROUCH_S)
-	if want:
-		tw.tween_callback(func() -> void: rb.set_crouched(true))
-	else:
-		rb.set_crouched(false)
-	var slow := DIRECT_CROUCH_SPEED if kind.motion == CharacterKind.Motion.DIRECT else CROUCH_SPEED
-	rb.crouch_speed_factor = slow if want else 1.0
-
-
-func _cancel_jump() -> void:
-	_jump_charging = false
-	_jump_charge = 0.0
-	create_tween().tween_property(self, "jump_squat_t", 0.0, JUMP_RELEASE_S)
 
 
 ## QUÉ SE VE DE ÉL, según su clase (ver CharacterKind.shown): entero, o nada —salvo las manos sentado, si las usa—.
@@ -1205,7 +867,7 @@ func get_interaction_origin() -> Vector3:
 	var ground_y    := char_rigidbody.global_position.y + (char_rigidbody._capsule_stand_y_offset - full_height * 0.5)
 
 	if is_seated and is_instance_valid(current_seat):
-		return _seat_pelvis_point() + _seat_up() \
+		return seating.seat_pelvis_point() + seating.seat_up() \
 			* (sizes.lower_spine_size.y + sizes.higher_spine_size.y + sizes.chest_size.y)
 
 	var chest_tip_y := ground_y + sizes.leg_height \
@@ -1272,39 +934,11 @@ func set_character_visible(value: bool) -> void:
 	body_visual.set_first_person(first_person)
 	refresh_shown()
 
-# ── AJUSTE DE PELVIS ──────────────────────────────────────────────────────────────────────────────
-# La pelvis baja SOLO lo que haga falta para que las piernas lleguen a sus pies. Es el patrón estándar
-# de foot IK (pelvis adjustment): se mide la distancia cadera↔pie de cada pierna y, si supera lo que
-# la pierna estira, se baja la raíz por el peor déficit de las dos.
-#
-# Es geométrico, no predictivo: no adivina por velocidad, mide. Por eso funciona igual en escaleras,
-# pendientes, agachado o cuando te empujan — casos donde una fórmula por velocidad se equivoca.
-#
-# Y reemplaza a la derivación vieja `stride → altura de pelvis → alcance del pie`, que iba al revés:
-# ahora `stride` significa literalmente el largo del paso, y la pelvis es una consecuencia.
-
-## ── LA PELVIS, EN DOS CAPAS (07/11/2026, el usuario eligió, entre varias a prueba, «curva: se hunde al pisar» con
-## el suavizado de cadera al 50 %; «dejar el código limpio») ─────────────────────────────────────────────────────────
-## 1. LA NECESIDAD, SUAVE Y ATADA AL PASO: lo que la pierna apoyada pide para llegar a su pie (ver `_leg_drop`), seguido
-##    sin saltos. Tarda `PELVIS_STEP_SHARE` de lo que dura el paso de un pie (ver IkUtil.step_time): corriendo, los pasos
-##    duran menos y la cadera reacciona más rápido, así que llega a bajar. Nunca tarda más de `PELVIS_DROP_MAX_S`
-##    —caminando, ya es eso— y parado, `PELVIS_DROP_STILL_S`. *Hasta entonces bajaba de golpe en el cuadro y subía
-##    suave: la pelvis se caía de repente. Un suavizado fijo en segundos, en cambio, la dejaba plana corriendo.*
-## 2. LA HUNDIDA AL PISAR, encima: una forma fija sobre el paso, NO suavizada (ver `_sink`). Cuánto, por arquetipo: su
-##    `root_bounciness` (1 es la de referencia) por el `bounce_down` del estilo.
-## *A prueba hubo un selector con otras: sin rebote, el rebote de antes (la necesidad multiplicada por
-## `root_bounciness`), otra curva y cuatro resortes; se fueron.*
-const PELVIS_STEP_SHARE := 0.5
-const PELVIS_DROP_STILL_S := 0.1
-const PELVIS_DROP_MAX_S := 0.25
 
 var _pelvis_drop_smooth: float = 0.0
 ## El estilo de caminar de este personaje (ver WalkStyle): el de su arquetipo.
 var walk_style: WalkStyle = WalkStyle.plain()
 
-## Mide el déficit de alcance de las dos piernas y deja el resultado suavizado en anim_mod. Corre
-## DESPUÉS de colocar los pies (necesita sus targets) y ANTES de la capa procedural (que es la que
-## aplica el offset de raíz).
 ## Avanza el reloj pasivo y el esfuerzo. El esfuerzo sale de la VELOCIDAD, no de la stamina, y eso es
 ## deliberado: la velocidad ya viaja por la red, así que un proxy lo calcula solo y **los NPC lo tienen
 ## gratis con el mismo código**. Ver PassiveState.
@@ -1322,140 +956,6 @@ func _update_passive_state(delta: float) -> void:
 	passive_state.update(delta, effort)
 
 
-## LOS PIES VAN CON EL PISO QUE SE MUEVE (ver CharacterRigidBody3D.floor_velocity): parado en la meca en vuelo, los
-## puntos donde el paso dejó los pies viajan con ella (ver IKUtil.ground_velocity), lo que pasó desde el último solve
-## (`step`: la pose se resuelve una vez por cuadro, y los de lejos menos). Sólo mientras pisa algo que se mueve, y a cero una vez al bajarse: la cinta
-## del sandbox escribe lo mismo para caminar en el lugar, y no hay que pisarla.
-var _on_moving_floor := false
-
-func _ride_floor(step: float) -> void:
-	if not is_instance_valid(ik_util) or not is_instance_valid(char_rigidbody):
-		return
-	var floor_velocity := char_rigidbody.floor_velocity
-	if floor_velocity != Vector3.ZERO:
-		ik_util.ground_velocity = floor_velocity
-		ik_util.ground_step = step
-		_on_moving_floor = true
-	elif _on_moving_floor:
-		ik_util.ground_velocity = Vector3.ZERO
-		ik_util.ground_step = 0.0
-		_on_moving_floor = false
-
-
-func _update_pelvis_drop(delta: float) -> void:
-	if not is_instance_valid(anim_mod):
-		return
-	if is_seated or (is_instance_valid(ragdoll_util) and (ragdoll_util.is_active or ragdoll_util.is_recovering)):
-		_pelvis_drop_smooth = 0.0
-		anim_mod.pelvis_drop = 0.0
-		return
-
-	var max_len: float = skel_sizes_util.leg_height * SkeletonSizesUtil.MAX_EXTENSION
-	# NUNCA MÁS QUE UNA PIERNA: un pie que quedó lejos —un piso que se fue de abajo— hacía bajar la pelvis, la cadera
-	# bajada quedaba más lejos todavía, y en cada cuadro bajaba más, sin fin (02/11/2026, lo vio la nave a bordo).
-	# DESDE LA CADERA SIN BAJAR, Y EN VERTICAL (05/11/2026, el usuario: «se supone que yo la zancada la puedo
-	# aumentar y que la pelvis se va a bajar para machear la caminata»): la cadera de este momento todavía tiene puesta la
-	# bajada del cuadro anterior, así que se le devuelve (`pelvis_drop`) antes de medir; y lo que se pide es cuánto bajar
-	# la cadera derecho para abajo para que el pie, a la distancia horizontal que está, quede al alcance (ver
-	# `_leg_drop`). *Hasta entonces se medía desde la cadera ya bajada y se pedía lo que faltaba en distancia: la cuenta
-	# se equilibraba a mitad de camino —medido corriendo, al final del apoyo la pelvis bajaba 14 cm y a la pierna le
-	# seguían faltando 15—, y la pierna de atrás quedaba corta, derecha, con el pie despegado antes de tiempo.*
-	# Y SÓLO POR LOS PIES APOYADOS: el que vuela no tiene que llegar a ningún lado. *Medido el 05/11/2026: la pelvis más
-	# baja del nene corriendo la pedía un pie recién despegado, todavía al 96 % de la pierna atrás.*
-	var applied: float = anim_mod.pelvis_drop
-	var deficit: float = minf(maxf(
-		0.0 if ik_util.leg_is_swinging(true) else
-			_leg_drop(custom_bones_util.left_higher_leg, ik_util.left_leg_current_target, max_len, applied),
-		0.0 if ik_util.leg_is_swinging(false) else
-			_leg_drop(custom_bones_util.right_higher_leg, ik_util.right_leg_current_target, max_len, applied)),
-		skel_sizes_util.leg_height)
-	# LA QUE SUBE AL DESPEGAR (ver WalkStyle.bounce_up, la usan modificadores como los saltarines): con un pie en el aire
-	# la pelvis se empuja hacia arriba, lo que deje la pierna que apoya sin estirarse de más —si no, el pie apoyado se
-	# despegaría del piso—.
-	if walk_style.bounce_up > 0.0 and deficit <= 0.0:
-		var lift := maxf(ik_util.swing_lift(true, skel_sizes_util), ik_util.swing_lift(false, skel_sizes_util))
-		var room := minf(_leg_room(custom_bones_util.left_higher_leg, ik_util.left_leg_current_target, max_len,
-				not ik_util.leg_is_swinging(true)),
-			_leg_room(custom_bones_util.right_higher_leg, ik_util.right_leg_current_target, max_len,
-				not ik_util.leg_is_swinging(false)))
-		deficit = -minf(walk_style.bounce_up * skel_sizes_util.leg_height * lift, room)
-
-	# CAPA 1, LA NECESIDAD SUAVE Y ATADA AL PASO (ver arriba). Con `1 − e^(−dt/τ)`: igual con cualquier paso de tiempo.
-	var tau := PELVIS_DROP_STILL_S
-	if ik_util.step_time() < INF:
-		tau = minf(PELVIS_STEP_SHARE * ik_util.step_time(), PELVIS_DROP_MAX_S)
-	_pelvis_drop_smooth = lerpf(_pelvis_drop_smooth, deficit, 1.0 - exp(-delta / maxf(tau, 0.001)))
-	# CAPA 2, LA HUNDIDA AL PISAR, encima.
-	anim_mod.pelvis_drop = _pelvis_drop_smooth + _sink(delta)
-
-
-## ── LA HUNDIDA AL PISAR (ver LA PELVIS, EN DOS CAPAS) ───────────────────────────────────────────────────────────────
-## Cada vez que un pie pisa arranca un reloj, `s`, que cuenta qué parte del paso pasó (0 al pisar, 1 un paso después).
-## Con él la pelvis dibuja una loma para abajo (`_bump`, un coseno al cuadrado), honda `SINK_DEPTH` largos de pierna:
-##   · EL GOLPE: en el cuadro en que el pie toca, ya está a la MITAD de lo hondo, de una vez. Es a propósito —se lee
-##     como el impacto del pie— y sale de dónde está la loma: el fondo a `SINK_BOTTOM` del paso y medio ancho
-##     `SINK_HALF_WIDTH`, así que al pisar está a 0,15 / 0,3 = medio medio ancho del fondo, y cos²(45°) = 0,5.
-##     ⚠ Mover el fondo o el ancho cambia el golpe: con el fondo en 0 no hay golpe, y la hundida arranca en lo hondo.
-##   · EL FONDO, a `SINK_BOTTOM` del paso.
-##   · VUELVE a cero a `SINK_BOTTOM + SINK_HALF_WIDTH` (0,45) y el resto del paso no suma nada.
-## Parado no hay hundida.
-const SINK_DEPTH := 0.04
-const SINK_BOTTOM := 0.15
-const SINK_HALF_WIDTH := 0.3
-var _since_land := 0.0
-var _was_swinging := [false, false]
-
-
-## LO QUE SE HUNDE este cuadro (m, positivo es abajo).
-func _sink(delta: float) -> float:
-	var landed := false
-	for i in 2:
-		var swinging := ik_util.leg_is_swinging(i == 0)
-		if bool(_was_swinging[i]) and not swinging:
-			landed = true
-		_was_swinging[i] = swinging
-	_since_land = 0.0 if landed else _since_land + delta
-	var step := ik_util.step_time()
-	if step == INF:
-		return 0.0
-	var depth := SINK_DEPTH * skel_sizes_util.leg_height * entity_instantiation.root_bounciness * walk_style.bounce_down
-	return depth * _bump(_since_land / step, SINK_BOTTOM, SINK_HALF_WIDTH)
-
-
-## Una loma de 0 a 1 y de vuelta, centrada en `at`, de medio ancho `width`.
-static func _bump(s: float, at: float, width: float) -> float:
-	var u := clampf((s - at) / maxf(width, 0.001), -1.0, 1.0)
-	return pow(cos(u * PI * 0.5), 2.0)
-
-
-## Cuánto le falta a esta pierna para llegar a su pie, o 0 si llega.
-## Cuánto más puede subir la cadera sin que la pierna que apoya en `foot` se estire de más (las que no apoyan no
-## cuentan: el infinito).
-func _leg_room(hip: CustomBone, foot: Node3D, max_len: float, planted: bool) -> float:
-	if not planted or not is_instance_valid(hip) or not is_instance_valid(foot):
-		return INF
-	return maxf(max_len - hip.global_position.distance_to(foot.global_position), 0.0)
-
-
-## CUÁNTO BAJAR LA CADERA, DERECHO PARA ABAJO, PARA QUE ESTA PIERNA LLEGUE A `target`: medido desde la cadera sin la
-## bajada que ya tiene (`applied`, ver `_update_pelvis_drop`). Con el pie a `x` de la cadera en el plano, la pierna llega
-## a `max_len` si la cadera queda a `√(max_len² − x²)` sobre él. Si el pie está más lejos que la pierna en el plano, no
-## hay bajada que lo alcance: no se baja nada (un teleport, un pie que quedó en otro lado; el paso lo trae).
-func _leg_drop(hip: CustomBone, target: Node3D, max_len: float, applied: float) -> float:
-	if not (is_instance_valid(hip) and is_instance_valid(target)):
-		return 0.0
-	var from := hip.global_position + Vector3.UP * applied
-	var to := target.global_position
-	var x := Vector2(from.x - to.x, from.z - to.z).length()
-	if x >= max_len:
-		return 0.0
-	return maxf(from.y - to.y - sqrt(max_len * max_len - x * x), 0.0)
-
-## Re-resuelve la IK de las piernas contra los MISMOS targets de piso, después de que los offsets de
-## raíz movieron la pelvis. Sin esto los pies se despegan del suelo exactamente lo que bajó la
-## pelvis. Mismo patrón que _repin_legs_seated. Ver character-parametric:docs/technical/character-animation.md.
-func _repin_legs_standing() -> void:
-	ik_util.solve_two_bone_ik(custom_bones_util.left_higher_leg, custom_bones_util.left_lower_leg,
-		ik_util.left_leg_current_target.global_position, ik_util.left_leg_pole.global_position)
-	ik_util.solve_two_bone_ik(custom_bones_util.right_higher_leg, custom_bones_util.right_lower_leg,
-		ik_util.right_leg_current_target.global_position, ik_util.right_leg_pole.global_position)
+## Cuánto lleva cargado el salto, de 0 a 1 (ver CharacterJump): lo lee el HUD.
+func jump_charge() -> float:
+	return jump.jump_charge()
