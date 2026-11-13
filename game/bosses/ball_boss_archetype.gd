@@ -17,7 +17,7 @@ func max_footprint() -> Vector2:
 
 
 func far_height() -> float:
-	return 37.0
+	return 35.0
 
 
 func describe(_seed_value: int) -> PackedStringArray:

@@ -13,16 +13,17 @@ extends Node3D
 ## modo de cruz, pero cuando son en modo hélice empiezan a girar»: la cruz es el `rotor`, que mañana gira.
 
 ## Cuántos tramos se dibujan, y el grueso del tentáculo en la bola y en el pie (radio, m).
-const SEGMENTS := 12
-const ROOT_RADIUS := 1.5
-const TIP_RADIUS := 0.7
+## Gruesos y cortos (el usuario: «hacé las piernas mucho más chunky y cortas»).
+const SEGMENTS := 8
+const ROOT_RADIUS := 3.2
+const TIP_RADIUS := 2.2
 ## Cuántas muestras mide la curva y cuántas vueltas da la búsqueda.
 const SAMPLES := 16
 const SEARCHES := 14
 ## El pie: el cubo del medio (radio y alto, m) y cada paleta (ancho de la base, largo y grueso, m).
-const HUB_RADIUS := 1.3
-const HUB_HEIGHT := 1.2
-const BLADE := Vector3(2.6, 5.0, 0.45)
+const HUB_RADIUS := 2.8
+const HUB_HEIGHT := 2.0
+const BLADE := Vector3(4.5, 7.0, 0.9)
 
 ## La cruz del pie: gira sobre su eje (mañana, la hélice).
 var rotor: Node3D = null

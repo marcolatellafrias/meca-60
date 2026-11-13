@@ -15,15 +15,19 @@ extends CharacterBody3D
 ##   · SALTAR (espacio): sólo para arriba.
 ##   · AGACHARSE (Ctrl): SÓLO BAJA LA BOLA; los tentáculos se doblan solos (el usuario: «lo único que hace en realidad es
 ##     bajar la bola, porque el IK de los tentáculos es como que actúa solo»).
-## Es MÁS DEL DOBLE DE LA MECA («quiero que sea más grande que la meca… por lo menos el doble»): la bola mide 22 m y su
-## techo queda a 37 m (el cubo de la meca, 18 m).
+## Es MÁS DEL DOBLE DE LA MECA («quiero que sea más grande que la meca… por lo menos el doble»): la bola mide 30 m y su
+## techo queda a 35 m (el cubo de la meca, 18 m). Las patas son gruesas y cortas, para que vaya cerca del piso.
+##
+## LA RENDIJA VA DE ARRIBA A ABAJO, de adelante hacia atrás por arriba: el cañón va a subir y bajar por ella (adelante, al
+## cielo). Para apuntar de costado gira la bola entera, con las patas (el usuario: «la rendija es en la otra dirección, si
+## quiere rotar en y, va a usar las piernas»).
 
 ## El radio de la bola, el alto de la rendija y su fondo (m).
-const RADIUS := 11.0
-const SLIT := 1.6
-const SLIT_DEPTH := 1.2
+const RADIUS := 15.0
+const SLIT := 2.2
+const SLIT_DEPTH := 1.6
 ## El cilindro contra lo fijo: un poco más ancho que la bola (m).
-const REACH := 12.0
+const REACH := 16.0
 
 ## ── LO QUE SE LE PIDE ──
 var move := Vector2.ZERO
@@ -35,7 +39,7 @@ var aim_yaw := 0.0
 var grounded := false
 ## Cuánto está agachado (0 a 1) y a qué altura va el centro de la bola.
 var crouched := 0.0
-var center_height := 26.0
+var center_height := 20.0
 var legs: BallLegs = null
 
 var _yaw := 0.0
@@ -79,15 +83,15 @@ func _ready() -> void:
 	add_to_group(SandboxPossession.GROUP)
 
 
-## LA BOLA DE ARCILLA: dos medias esferas separadas por la rendija, que le da toda la vuelta, con su fondo oscuro; y en la
-## rendija, adelante, una marca amarilla: ahí va a ir el cañón.
+## LA BOLA DE ARCILLA: dos medias esferas, la izquierda y la derecha, separadas por la rendija, que le da toda la vuelta
+## de arriba a abajo, con su fondo oscuro; y en la rendija, adelante, una marca amarilla: ahí va a ir el cañón.
 static func _dress(ball: AnimatableBody3D) -> void:
 	var shape := CollisionShape3D.new()
 	var sphere := SphereShape3D.new()
 	sphere.radius = RADIUS
 	shape.shape = sphere
 	ball.add_child(shape)
-	for up in [1.0, -1.0]:
+	for side: float in [1.0, -1.0]:
 		var half := SphereMesh.new()
 		half.radius = RADIUS
 		half.height = RADIUS
@@ -95,11 +99,11 @@ static func _dress(ball: AnimatableBody3D) -> void:
 		var part := MeshInstance3D.new()
 		part.mesh = half
 		part.material_override = Clay.material(Clay.METAL.darkened(0.05))
-		part.position = Vector3.UP * SLIT * 0.5 * up
-		if up < 0.0:
-			part.rotation = Vector3(PI, 0.0, 0.0)
+		# La media esfera mira a su +Y: se la acuesta para que mire a un costado.
+		part.position = Vector3.RIGHT * SLIT * 0.5 * side
+		part.rotation = Vector3(0.0, 0.0, -PI * 0.5 * side)
 		ball.add_child(part)
-	Clay.cylinder(ball, RADIUS - SLIT_DEPTH, SLIT + 0.2, Vector3.ZERO, Clay.DARK.darkened(0.4))
+	Clay.cylinder(ball, RADIUS - SLIT_DEPTH, SLIT + 0.2, Vector3.ZERO, Clay.DARK.darkened(0.4), Vector3(0.0, 0.0, 90.0))
 	Clay.box(ball, Vector3(2.4, SLIT * 0.7, 1.0), Vector3(0.0, 0.0, -(RADIUS - SLIT_DEPTH)), Clay.YELLOW)
 
 

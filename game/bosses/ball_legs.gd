@@ -11,7 +11,7 @@ extends Node3D
 
 ## Dónde salen de la bola: en diagonal (la pata 0 adelante a la derecha, y de ahí a la vuelta) y cuánto debajo del
 ## ecuador (grados).
-const ROOT_LATITUDE := -28.0
+const ROOT_LATITUDE := -22.0
 ## En el aire, a qué velocidad van las puntas a colgar (m/s).
 const DANGLE := 25.0
 
