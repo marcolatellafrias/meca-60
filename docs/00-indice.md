@@ -29,6 +29,7 @@ El detalle, en [[partida]].
 | [[estructura]] | **Cómo está armado el código**: la meca y sus piezas, los dos caminos, lo congelado, lo traído. |
 | [[meca]] | La meca péndulo: la caja con tres pisos, correr, agacharse, saltar y volar, y los dos caminos. |
 | [[pendulo]] | El modelo de equilibrio: el torso es un péndulo y los pies lo siguen. |
+| [[meca-cinematica]] | La maqueta cinemática: el péndulo escrito a mano, los de adentro en su marco, lo medido y los caveats. |
 | [[base-comun]] | Lo que comparten la meca propia y los jefes (`BalanceBody`), y el resto en piezas. |
 | [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto. |
 | [[cabina]] | La cabina sobre su grilla (módulo Interior): celdas, módulos, pisos y asientos. |
