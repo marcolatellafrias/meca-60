@@ -10,7 +10,7 @@ por donde pasa el puño, con sus tiempos: se arma, pega, se queda, vuelve), **la
 ## El brazo discreto — `PoseArm` (`game/pose_arm/`) · fila **Meca discreta**
 Se dibuja en la pose pedida, sin cuerpos: va exacto, no se traba y atraviesa lo que haya. **Mientras pega**, el puño
 barre su camino en el mundo (la regla del puño de la vieja meca de pelea) y a cada cuerpo suelto que toca le da, una vez
-por piña, **un impulso** en el punto del golpe: su velocidad por `HIT_MASS` (7 t). A otra meca la empuja en su caja y su
+por piña, **un impulso** en el punto del golpe: su velocidad por lo que pesa el puño (7 t; perilla de `PoseArmSettings`, F3). A otra meca la empuja en su caja y su
 péndulo decide. Medido: un directo conecta a 42 m/s e inclina al cubo 7°, sin tirarlo. Lo fijo no lo frena.
 
 ## El brazo con músculos — `MuscleArm` (`game/muscle_arm/`) · filas **Brazo** y **Meca física**

@@ -10,15 +10,12 @@ extends MechArm
 ##     haya. Lo que choca de la meca es su caja.
 ##   · AL CONECTAR, EMPUJA: mientras PEGA (ver MechArm.stage), el puño barre su camino en el mundo —la regla del puño de
 ##     la vieja meca de pelea: desde donde estaba el paso anterior, así cuenta lo que se movió la meca—, y a cada cuerpo
-##     suelto que toca le da, una vez por piña, UN IMPULSO en el punto del golpe: la velocidad del puño por `HIT_MASS`.
+##     suelto que toca le da, una vez por piña, UN IMPULSO en el punto del golpe: la velocidad del puño por lo que pesa (PoseArmSettings).
 ##     A otra meca la empuja en su caja, y su péndulo decide si se inclina o se cae: la misma regla de equilibrio de
 ##     siempre (el usuario: sí, que el golpe empuje al que lo recibe).
 ##   · Lo que no se mueve (una pared, el piso) no lo frena ni recibe nada.
 
-## Lo que pesa el puño al pegar (kg): el impulso es esto por su velocidad. Con la caja de 50 t, un directo (unos 35 m/s)
-## le cambia la velocidad unos 5 m/s: la inclina sin tirarla.
-const HIT_MASS := 7000.0
-const FIST_RADIUS := 1.2
+## Lo que pesa el puño al pegar, su radio y lo rápido de las piñas: perillas (PoseArmSettings, F3).
 ## Con qué choca el puño: el mundo (la capa 1).
 const HIT_MASK := 1
 ## Más que esto en un paso no es un puño que se mueve: es la meca que reapareció (m).
@@ -40,7 +37,7 @@ func _ready() -> void:
 	# Sus piezas van en el mundo: la pose ya viene en el mundo.
 	top_level = true
 	global_transform = Transform3D()
-	_sphere.radius = FIST_RADIUS * MechBody.thick
+	_sphere.radius = PoseArmSettings.current.fist_radius * MechBody.thick
 	_rest = stance_at(stance)
 	_upper = Clay.limb(self, MechBody.LEG_THICKNESS * 0.5, MechBody.UPPER_ARM, Vector3.ZERO, Clay.METAL.darkened(0.1))
 	_forearm = Clay.limb(self, MechBody.LEG_THICKNESS * 0.5, MechBody.FOREARM, Vector3.ZERO, Clay.METAL.darkened(0.2))
@@ -58,6 +55,10 @@ func punch(kind: Punch) -> bool:
 	last_hit_speed = 0.0
 	last_hit = null
 	return true
+
+
+func _punch_speed() -> float:
+	return PoseArmSettings.current.punch_speed
 
 
 func _physics_process(delta: float) -> void:
@@ -108,6 +109,6 @@ func _sweep(pose: Dictionary, delta: float) -> void:
 ## LE PEGA a `body` en `at` con el puño yendo a `velocity` (mundo): un impulso, una vez por piña.
 func _hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> void:
 	_struck[body.get_instance_id()] = true
-	BalanceBody.hit(body, velocity * HIT_MASS, at - body.global_position)
+	BalanceBody.hit(body, velocity * PoseArmSettings.current.hit_mass, at - body.global_position)
 	last_hit_speed = velocity.length()
 	last_hit = body

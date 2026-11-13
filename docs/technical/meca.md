@@ -134,3 +134,16 @@ solamente guardar. Y que cuando guarde se regeneren las mecas… un solo sistema
   piernas lo escalan con su largo al leerlo. *Antes el F2 escribía esos números encima de los del F1, y la altura del F1
   no hacía nada (el usuario: «la pongo en 0.5 y la pongo en 15 y no cambia nada»).*
 - **Dónde nace parada** una meca lo dice un solo lugar, `Mech.standing_height()`. *Estaba copiado en cuatro.*
+
+**Un panel por tema, cada variante lo suyo** (13/11/2026, paso 3 del orden; el usuario: «cada una lo suyo físico, pero en
+estructura y visuales puede ser compartido»). Test para mirarlos: `tests/mech_panels_look.tscn`.
+
+| | Meca discreta y Arena | Meca física | Meca cinemática y Laboratorio |
+|---|---|---|---|
+| **F1, moverse** | `MechPanel`: `BodySettings.current` | `MechPanel(MUSCLE)`: `BodySettings.physical`, su archivo (`body_settings_fisica.tres`); sin archivo arranca con lo de la discreta | `KinematicPanel`: `KinematicSettings` |
+| **F2, la forma** | `CabinShapePanel`, el mismo para todas | ← | ← |
+| **F3, los brazos** | `PoseArmPanel`: `PoseArmSettings` (lo rápido de las piñas, lo que pesa y el radio del puño; eran constantes) | `MuscleArmPanel`: `MuscleArmSettings` | `PoseArmPanel` (la simplificada no tiene brazos) |
+
+- **El F1 de la meca va en pestañas**: Moverse, Equilibrio, Piernas, Saltar y Caerse. Están las 60 perillas.
+- **Qué perillas usa cada meca** lo dice un solo lugar: `Mech.knobs_for(arms)`. Las piernas de la cinemática usan las de
+  la discreta.

@@ -1,9 +1,10 @@
 class_name MechPanel
 extends KnobsPanel
 
-## EL PANEL DE LA MECA (F1 en sus filas): todas sus perillas (BodySettings), y vuelven a lo del código con el botón de
-## cada una. Como todos los paneles de perillas (KnobsPanel): se mueve un borrador, y «Guardar» o «Volver a lo
-## guardado» rearman las mecas con eso. La altura de la caja no está acá: sale del cuerpo (el F2).
+## EL PANEL DE LA MECA (F1 en sus filas): las perillas del cuerpo (BodySettings) DE UNA VARIANTE —la física tiene las
+## suyas; la discreta y la arena comparten—, en pestañas por tema, y vuelven a lo del código con el botón de cada una.
+## Como todos los paneles de perillas (KnobsPanel): se mueve un borrador, y «Guardar» o «Volver a lo guardado» rearman
+## las mecas con eso. La altura de la caja no está acá: sale del cuerpo (el F2).
 
 const PANEL_WIDTH := 420.0
 const LABELS := {
@@ -43,13 +44,33 @@ const LABELS := {
 }
 
 
+## LAS PESTAÑAS: cada una, los grupos de BodySettings que muestra.
+const TABS := {
+	"Moverse": ["Caminar", "El giro", "Correr", "Agacharse"],
+	"Equilibrio": ["El péndulo", "Los pies (el punto de apoyo)"],
+	"Piernas": ["Las piernas (pasos de largo fijo)"],
+	"Saltar": ["Saltar", "Dash (en el aire)", "El propulsor"],
+	"Caerse": ["Caída", "Levantarse (las toberas)", "El F2"],
+}
+
+## De qué meca son las perillas: la física (brazos con músculos) o la discreta.
+var arms := Mech.Arms.POSE
+
+
+func _init(arms_kind := Mech.Arms.POSE) -> void:
+	arms = arms_kind
+
+
 func setup_panel() -> void:
 	panel_width = PANEL_WIDTH
-	setup_knobs("meca", "MECA")
+	if arms == Mech.Arms.MUSCLE:
+		setup_knobs("meca_fisica", "MECA FÍSICA")
+	else:
+		setup_knobs("meca", "MECA DISCRETA")
 
 
 func knobs() -> Resource:
-	return BodySettings.current
+	return Mech.knobs_for(arms)
 
 
 func fresh() -> Resource:
@@ -57,7 +78,7 @@ func fresh() -> Resource:
 
 
 func saved_path() -> String:
-	return BodySettings.SAVED
+	return BodySettings.SAVED_PHYSICAL if arms == Mech.Arms.MUSCLE else BodySettings.SAVED
 
 
 ## Rearma todas las mecas con las perillas nuevas.
@@ -70,5 +91,8 @@ func note() -> String:
 
 
 func sections() -> Array[Dictionary]:
-	return [{"title": "BodySettings (game/balance_body/body_settings.gd)", "target": draft(), "labels": LABELS,
-		"defaults": BodySettings.new()}]
+	var all: Array[Dictionary] = []
+	for tab: String in TABS:
+		all.append({"title": tab.to_upper(), "tab": tab, "target": draft(), "labels": LABELS,
+			"include": PackedStringArray(TABS[tab]), "defaults": BodySettings.new()})
+	return all

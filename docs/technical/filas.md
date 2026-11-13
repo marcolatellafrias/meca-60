@@ -6,10 +6,10 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 
 | Fila | Arquetipo | Código propio | Paneles | Tests | Usa (compartido) |
 |---|---|---|---|---|---|
-| Meca discreta | `MechArchetype` (`Mech.Arms.POSE`) | `game/pose_arm/` | `MechPanel` (F1) | `mech_fork_look` | la meca (abajo) |
-| Meca física | `MechArchetype` (`Mech.Arms.MUSCLE`) | — (sus brazos son los de la fila Brazo) | `MechPanel` (F1) | `mech_look`, `mech_hands_look` | la meca (abajo), `game/muscle_arm/` |
-| Arena de esquivar | `DodgeArenaArchetype` | `game/dodge_arena/` entero | `MechPanel` (F1) | `dodge_arena_look` | la meca, `game/projectiles/` |
-| Meca cinemática | `MechArchetype` (`Mech.Arms.POSE`, cinemática) | `KinematicMover`, `StompFeet` | `KinematicPanel` (F1), `CabinShapePanel` (F2) | `mech_kinematic_look` | la meca entera |
+| Meca discreta | `MechArchetype` (`Mech.Arms.POSE`) | `game/pose_arm/` | `MechPanel` (F1), `CabinShapePanel` (F2), `PoseArmPanel` (F3) | `mech_fork_look` | la meca (abajo) |
+| Meca física | `MechArchetype` (`Mech.Arms.MUSCLE`) | — (sus brazos son los de la fila Brazo) | `MechPanel(MUSCLE)` (F1, sus perillas), `CabinShapePanel` (F2), `MuscleArmPanel` (F3) | `mech_look`, `mech_hands_look` | la meca (abajo), `game/muscle_arm/` |
+| Arena de esquivar | `DodgeArenaArchetype` | `game/dodge_arena/` entero | `MechPanel` (F1), `CabinShapePanel` (F2), `PoseArmPanel` (F3) | `dodge_arena_look` | la meca, `game/projectiles/` |
+| Meca cinemática | `MechArchetype` (`Mech.Arms.POSE`, cinemática) | `KinematicMover`, `StompFeet` | `KinematicPanel` (F1), `CabinShapePanel` (F2), `PoseArmPanel` (F3) | `mech_kinematic_look` | la meca entera |
 | Laboratorio cinemático | `KinematicLabArchetype` | la meca simplificada (`Mech` cinemática, sin brazos ni cabina) | `KinematicPanel` (F1), `CabinShapePanel` (F2) | `kinematic_lab_look`, `kinematic_lab_moves_look` | `AreaStrike.loose_in`, `MechKeys.axis` |
 | Mapa de pelea | `BattlefieldArchetype` | `game/battlefield/` (`Battlefield`) | — | `battlefield_check` | la meca, `PackageArchetype`, `Clay`, `Stairs` |
 | Brazo | `MuscleArmArchetype` | `game/muscle_arm/` entero | `MuscleArmPanel` (F1) | `muscle_arm_look` | `MechArm`, `MechBody.arm`, `MechHand`, `TestBall`, `Mech.SHOULDER` |

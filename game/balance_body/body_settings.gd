@@ -18,6 +18,11 @@ extends Resource
 
 const SAVED := "res://game/balance_body/body_settings.tres"
 static var current := KnobsFile.load_into(BodySettings.new(), SAVED) as BodySettings
+## LA MECA FÍSICA (brazos con músculos) GUARDA LAS SUYAS APARTE (13/11/2026; el usuario: «cada una lo suyo físico, pero
+## en estructura y visuales puede ser compartido»): `current` es la de la discreta, la arena y las piernas de la
+## cinemática. Sin archivo propio todavía, arranca con lo guardado de la discreta.
+const SAVED_PHYSICAL := "res://game/balance_body/body_settings_fisica.tres"
+static var physical := KnobsFile.load_into(KnobsFile.load_into(BodySettings.new(), SAVED), SAVED_PHYSICAL) as BodySettings
 
 @export_group("Caminar")
 ## A qué velocidad va (m/s), cuánto tarda en llegar (m/s²) y cómo frena al soltar (m/s²: poco, frena de a poco).

@@ -32,7 +32,7 @@ el cubo péndulo, la meca péndulo); ese día se aplanaron y después se separó
 | `mech_hand.gd` | `MechHand` | La mano (izquierda o derecha, en espejo). |
 | `mech_body.gd` | `MechBody` | Las medidas del cuerpo y la IK de una pierna y de un brazo. |
 | `mech_leg.gd` | `MechLeg` | Una pierna (dibujo). |
-| `mech_panel.gd` | `MechPanel` | El F1 (perillas). Pegarle y el ascensor son teclas del panel chico (`MechArchetype.knock_keys()`). |
+| `mech_panel.gd` | `MechPanel` | El F1 (perillas, en pestañas; la física tiene las suyas). Pegarle y el ascensor son teclas del panel chico (`MechArchetype.knock_keys()`). |
 | `mech_rows.gd` | `MechRows` | Las filas de la meca en el sandbox (Meca discreta, Meca física, Arena de esquivar). |
 | `mech_archetype.gd` | `MechArchetype` | La parcela: la meca y una de práctica adelante. La usan las dos filas. |
 | `clay.gd` | `Clay` | La arcilla de los bocetos: cajas, cilindros, esferas, miembros. |

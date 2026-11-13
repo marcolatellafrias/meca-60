@@ -57,6 +57,8 @@ func _ready() -> void:
 	name = NAMES[arms_kind] if has_cabin else "Meca simplificada"
 	# El cilindro de la cinemática envuelve también el vidrio de adelante.
 	outline_extra = CabinGrid.GLASS_OUT if has_cabin else 0.0
+	if knobs == null:
+		knobs = Mech.knobs_for(arms_kind)
 	super()
 	add_to_group(SandboxPossession.GROUP)
 
@@ -170,6 +172,11 @@ static func rebuild_all(tree: SceneTree) -> void:
 		holder.remove_child(old)
 		old.queue_free()
 		holder.add_child(fresh)
+
+
+## LAS PERILLAS DEL CUERPO de una meca con estos brazos: la física tiene las suyas (ver BodySettings.physical).
+static func knobs_for(arms: Arms) -> BodySettings:
+	return BodySettings.physical if arms == Arms.MUSCLE else BodySettings.current
 
 
 ## A QUÉ ALTURA NACE PARADA (el centro de la caja sobre el piso, m): sus piernas más media caja. Un solo lugar para
