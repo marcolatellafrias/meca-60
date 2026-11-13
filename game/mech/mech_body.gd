@@ -72,11 +72,10 @@ const ELBOW_HINT := Vector3(1.0, -0.8, 0.5)
 
 ## PONE LAS MEDIDAS: el ancho (`thickness`), el largo de los brazos y de las piernas (0 chico, 1 mediano, 2 grande) y
 ## cuánto se estiran las piernas paradas. LA CINTURA SALE DE AHÍ —el tobillo, la caída de la cadera y lo estirada que
-## está la pierna—, y es la altura de la caja sobre el piso de las perillas (`hover_height`); el paso y lo que sube el
-## pie van con el largo de la pierna. Lo que se armó antes no cambia (ver CabinShapePanel, que rearma las mecas).
+## está la pierna—, y es la altura de la caja sobre el piso (Mech la toma al armarse: BalanceBody.hover); el paso del F1
+## lo escalan las piernas con `stride` al leerlo. NO ESCRIBE NINGUNA PERILLA (cada número, un solo dueño). Lo que se armó
+## antes no cambia (ver Mech.rebuild_all).
 static func dress(thickness: int, arm_length: int, leg_length: int, leg_stretch: float) -> void:
-	var knobs := BodySettings.current
-	var old_leg := stride
 	thick_size = clampi(thickness, 0, SIZES.size() - 1)
 	arm_size = clampi(arm_length, 0, SIZES.size() - 1)
 	leg_size = clampi(leg_length, 0, SIZES.size() - 1)
@@ -84,8 +83,6 @@ static func dress(thickness: int, arm_length: int, leg_length: int, leg_stretch:
 	thick = SIZES[thick_size]
 	reach = SIZES[arm_size]
 	stride = SIZES[leg_size]
-	for name: String in ["step_reach", "step_height", "settle_gap"]:
-		knobs.set(name, float(knobs.get(name)) * stride / old_leg)
 	HIP_X = BASE["HIP_X"] * thick
 	HIP_DROP = BASE["HIP_DROP"] * thick
 	LEG_THICKNESS = BASE["LEG_THICKNESS"] * thick
@@ -99,8 +96,14 @@ static func dress(thickness: int, arm_length: int, leg_length: int, leg_stretch:
 	SHIN = BASE["SHIN"] * stride
 	UPPER_ARM = BASE["UPPER_ARM"] * reach
 	FOREARM = BASE["FOREARM"] * reach
-	WAIST = ANKLE + HIP_DROP + (THIGH + SHIN) * stretch
-	knobs.hover_height = WAIST
+	WAIST = MechBody.waist_for(thickness, leg_length, leg_stretch)
+
+
+## LA CINTURA que sale de un ancho, un largo de pierna y un estirado (sin ponerlos): para mostrarla antes de guardar.
+static func waist_for(thickness: int, leg_length: int, leg_stretch: float) -> float:
+	var t := SIZES[clampi(thickness, 0, SIZES.size() - 1)]
+	var l := SIZES[clampi(leg_length, 0, SIZES.size() - 1)]
+	return float(BASE["ANKLE"]) * t + float(BASE["HIP_DROP"]) * t + (float(BASE["THIGH"]) + float(BASE["SHIN"])) * l * leg_stretch
 
 
 ## LA INCLINACIÓN: `lean` es el ángulo (radianes) hacia cada lado, x a la derecha e y adelante, en el espacio de la

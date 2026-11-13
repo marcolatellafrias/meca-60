@@ -6,9 +6,10 @@ extends TunerPanel
 ## módulo de los hombros, el largo de brazos y piernas, el ancho y cuánto se estiran las piernas). Ver CabinGrid.apply. Lo pidió el usuario el 13/11/2026 («un panel F que podamos usar en
 ## cualquiera de las parcelas que tienen la meca… cambiar la cantidad de pisos y el tamaño de cada piso… tiene que tener
 ## botón de guardado, y si guardo algo… se va a actualizar en todas las mecas»).
-##   · Los números se mueven sin rearmar nada: abajo dicen qué medidas salen.
-##   · PROBAR rearma todas las mecas con esa forma, sin guardar (al reiniciar, vuelve la guardada).
-##   · GUARDAR la escribe en `CabinGrid.SAVED` y rearma todas las mecas: es la forma de todas, también al reiniciar.
+##   · Los números se mueven sin rearmar nada: abajo dicen qué medidas salen, también LA ALTURA DE LA CAJA SOBRE EL PISO,
+##     que no es una perilla: sale del largo y lo estirado de las piernas.
+##   · GUARDAR (el único: «Probar» se sacó el 13/11/2026) la escribe en `CabinGrid.SAVED` y rearma todas las mecas: es
+##     la forma de todas, también al reiniciar.
 ## La planta es cuadrada y el alto, libre. Las piernas y los brazos no dependen de la caja.
 
 const PANEL_WIDTH := 380.0
@@ -37,8 +38,9 @@ var _state: Label = null
 
 func setup_panel() -> void:
 	panel_width = PANEL_WIDTH
+	# Un solo «Guardar», que aplica y rearma (el usuario, 13/11/2026: «borraría lo de probar y dejaría solamente
+	# guardar»; ver KnobsPanel, que hace lo mismo para las perillas).
 	setup("cabina", "FORMA DE LA MECA", [
-		new_button("Probar en todas las mecas (sin guardar)", _try),
 		new_button("Guardar (la forma de todas las mecas)", _save),
 		new_button("Volver a lo guardado", _restore),
 	])
@@ -62,9 +64,10 @@ func _measure() -> void:
 		return
 	var side := _draft.modules * CabinGrid.MODULE_CELLS + CabinGrid.WALL_CELLS * 2
 	var free := (_draft.floor_cells - CabinGrid.SLAB_CELLS) * CabinGrid.CELL
-	_state.text = "caja de %.2f × %.2f m de planta y %.2f de alto · piso de %.2f m (%.2f libres)%s · ahora: %d × %d, %d pisos de %d" % [
+	_state.text = "caja de %.2f × %.2f m de planta y %.2f de alto · piso de %.2f m (%.2f libres)%s · la caja va a %.2f m del piso (sale de las piernas) · ahora: %d × %d, %d pisos de %d" % [
 		side * CabinGrid.CELL, side * CabinGrid.CELL, _draft.floors * _draft.floor_cells * CabinGrid.CELL,
 		_draft.floor_cells * CabinGrid.CELL, free, " · ¡no se pasa parado!" if free < 1.9 else "",
+		MechBody.waist_for(_draft.thickness, _draft.leg_length, _draft.leg_stretch),
 		CabinGrid.COLUMNS, CabinGrid.COLUMNS, CabinGrid.FLOORS, CabinGrid.FLOOR_CELLS]
 
 

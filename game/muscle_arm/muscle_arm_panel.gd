@@ -1,5 +1,5 @@
 class_name MuscleArmPanel
-extends TunerPanel
+extends KnobsPanel
 
 ## EL PANEL DEL BRAZO CON MÚSCULOS (F1 en la fila Brazo): sus perillas (MuscleArmSettings).
 
@@ -11,21 +11,28 @@ const LABELS := {
 }
 
 
-var _state: Label = null
-
-
 func setup_panel() -> void:
 	panel_width = HoverPanel.PANEL_WIDTH
-	setup("brazo con músculos", "BRAZO CON MÚSCULOS", KnobsFile.buttons(MuscleArmSettings.current,
-		func() -> MuscleArmSettings: return MuscleArmSettings.new(), MuscleArmSettings.SAVED, rebuild, _say))
-	_state = state_label()
+	setup_knobs("brazo con músculos", "BRAZO CON MÚSCULOS")
 
 
-func _say(text: String) -> void:
-	if _state != null:
-		_state.text = text
+func knobs() -> Resource:
+	return MuscleArmSettings.current
+
+
+func fresh() -> Resource:
+	return MuscleArmSettings.new()
+
+
+func saved_path() -> String:
+	return MuscleArmSettings.SAVED
+
+
+## Los brazos con músculos de las mecas se arman con sus perillas: se rearman.
+func applied() -> void:
+	Mech.rebuild_all(get_tree())
 
 
 func sections() -> Array[Dictionary]:
-	return [{"title": "MuscleArmSettings (game/muscle_arm/muscle_arm_settings.gd)", "target": MuscleArmSettings.current,
+	return [{"title": "MuscleArmSettings (game/muscle_arm/muscle_arm_settings.gd)", "target": draft(),
 		"labels": LABELS, "defaults": MuscleArmSettings.new()}]

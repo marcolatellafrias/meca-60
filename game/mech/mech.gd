@@ -45,6 +45,7 @@ func _init() -> void:
 	super()
 	mass = MASS
 	size = CabinGrid.box()
+	hover = MechBody.WAIST
 
 
 func _ready() -> void:
@@ -143,9 +144,15 @@ static func rebuild_all(tree: SceneTree) -> void:
 		fresh.arms_kind = old.arms_kind
 		fresh.kinematic = old.kinematic
 		# Parada sobre el piso de su parcela (la altura 0 de lo que la tiene, como la arman sus arquetipos).
-		fresh.transform = Transform3D(Basis(Vector3.UP, old.yaw()), Vector3(old.position.x,
-			BodySettings.current.hover_height + CabinGrid.HALF_HEIGHT, old.position.z))
+		fresh.transform = Transform3D(Basis(Vector3.UP, old.yaw()), Vector3(old.position.x, Mech.standing_height(),
+			old.position.z))
 		old.cabin.free_dummies()
 		holder.remove_child(old)
 		old.queue_free()
 		holder.add_child(fresh)
+
+
+## A QUÉ ALTURA NACE PARADA (el centro de la caja sobre el piso, m): sus piernas más media caja. Un solo lugar para
+## todas las parcelas que la arman. *Estaba copiado en cuatro.*
+static func standing_height() -> float:
+	return MechBody.WAIST + CabinGrid.HALF_HEIGHT

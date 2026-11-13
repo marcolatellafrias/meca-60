@@ -9,21 +9,17 @@ extends Resource
 ## SE GUARDAN, COMO LA FORMA DEL F2 (13/11/2026; el usuario: «no entiendo por qué este panel no tiene opción de
 ## guardado»): `current` arranca con lo guardado en `SAVED` (si hay), y el F1 tiene «Guardar» y «Volver a lo guardado»
 ## (ver KnobsFile).
-## MENOS LAS QUE PONE EL CUERPO (`FROM_BODY`): la altura de la caja sale del largo y lo estirado de las piernas, y el
-## paso, del largo de la pierna; las pone MechBody.dress, con la forma del F2. Ésas no se guardan ni se vuelven a lo
-## guardado: si no, el F1 y el F2 pelearían por el mismo número. EL ORDEN: lo guardado se carga al tocar `current` por
-## primera vez, y dress (CabinGrid._static_init) escribe después, encima.
+## CADA NÚMERO TIENE UN SOLO DUEÑO (13/11/2026): la ALTURA DE LA CAJA no es una perilla —sale del cuerpo, del largo y
+## lo estirado de las piernas del F2: ver BalanceBody.hover—; y el PASO de acá (`step_reach`, `step_height`,
+## `settle_gap`) es el de piernas medianas, que las piernas escalan con su largo al leerlo (BodyLegs). *Hasta entonces
+## MechBody.dress los escribía encima de estas perillas y la altura del F1 no hacía nada (lo vio el usuario: «la pongo
+## en 0.5 y la pongo en 15 y no cambia nada»).*
 ## El archivo guardado es del usuario: no se sube al repositorio (como el del F2, game/consoles/cabin_shape.tres).
 
 const SAVED := "res://game/balance_body/body_settings.tres"
-## Las que pone el cuerpo (MechBody.dress, el F2): no se guardan.
-const FROM_BODY: Array[String] = ["hover_height", "step_reach", "step_height", "settle_gap"]
-
-static var current := KnobsFile.load_into(BodySettings.new(), SAVED, FROM_BODY) as BodySettings
+static var current := KnobsFile.load_into(BodySettings.new(), SAVED) as BodySettings
 
 @export_group("Caminar")
-## A qué altura del piso va la cara de abajo de la caja (m): de ahí sale el largo del palo del péndulo.
-@export_range(0.5, 15.0, 0.1) var hover_height := 7.4
 ## A qué velocidad va (m/s), cuánto tarda en llegar (m/s²) y cómo frena al soltar (m/s²: poco, frena de a poco).
 @export_range(0.5, 30.0, 0.5) var walk_speed := 8.0
 @export_range(0.5, 40.0, 0.5) var walk_accel := 6.0

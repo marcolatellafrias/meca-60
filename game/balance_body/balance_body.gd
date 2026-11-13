@@ -59,6 +59,9 @@ var knobs: BodySettings = null
 ## Se pone antes de agregarlo al árbol.
 var kinematic := false
 var kin: BodyKinematic = null
+## A QUÉ ALTURA DEL PISO VA LA CARA DE ABAJO DE LA CAJA, parada (m): de ahí sale el largo del palo del péndulo. NO ES UNA
+## PERILLA: la da el cuerpo (la meca propia, el de sus piernas: MechBody.WAIST, del F2). Se pone antes de agregarla.
+var hover := 7.4
 
 ## ── LO QUE SE LE PIDE ──
 ## Caminar (x a la derecha, y adelante, de −1 a 1), correr, agacharse, el salto (mantenido carga, soltarlo salta; en el
@@ -240,7 +243,7 @@ func _standing(k: BodySettings, delta: float) -> void:
 
 ## EL LARGO DEL PALO, del centro de la caja al apoyo: de la altura a la que va, por lo agachado que esté.
 func rod(k: BodySettings) -> float:
-	return (size.y * 0.5 + k.hover_height) * moves.rod_scale
+	return (size.y * 0.5 + hover) * moves.rod_scale
 
 
 ## QUEDA EN EL AIRE (un salto, un borde): sin apoyo hasta que la punta del palo vuelva a tocar.

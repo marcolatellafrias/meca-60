@@ -29,8 +29,10 @@ el usuario el 13/11/2026, para probar configuraciones («tal vez podremos ver un
 manteniendo el aspect ratio de cubo por ahora»).
 - **El alto es libre**: pisos por alto de cada uno; la planta, cuadrada. *Hasta el 13/11/2026 la caja era siempre un
   cubo y el alto de un piso salía de repartir el lado.* El panel avisa si un piso queda tan bajo que no se pasa parado.
-- **Probar** rearma todas las mecas con esa forma, sin guardar; **Guardar** la escribe en
-  `game/consoles/cabin_shape.tres` (no se sube al repositorio) y es la forma de todas las mecas, también al reiniciar.
+- **Un solo Guardar** (13/11/2026: «Probar» se sacó, como en todos los paneles de perillas; ver [[meca]]): la escribe en
+  `game/consoles/cabin_shape.tres` (no se sube al repositorio), rearma todas las mecas y es la forma de todas, también
+  al reiniciar. Abajo, las medidas que salen, también **la altura de la caja sobre el piso**, que no es una perilla: sale
+  del largo y lo estirado de las piernas.
 - **El ascensor va en celdas sueltas**, no en módulos: su hueco es un cuarto del ancho de adentro menos tres celdas
   (con 4 × 4, los 2 × 2 del medio). Su jaula no pasa de un piso.
 - **El ascensor va con dos teclas, en todas las estructuras** (el usuario: «en todos los modos sean dos teclas y que

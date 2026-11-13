@@ -48,14 +48,14 @@ func _ready() -> void:
 		CabinGrid.apply(shape)
 		var mech := Mech.new()
 		mech.arms_kind = Mech.Arms.POSE
-		mech.position = Vector3(0.0, BodySettings.current.hover_height + CabinGrid.HALF_HEIGHT, 0.0)
+		mech.position = Vector3(0.0, Mech.standing_height(), 0.0)
 		add_child(mech)
 		await get_tree().create_timer(3.0).timeout
 		mech.freeze = true
 		if mech.label != null:
 			mech.label.visible = false
-		var far := maxf(CabinGrid.HEIGHT + BodySettings.current.hover_height, CabinGrid.SIZE) * 1.9
-		var middle := (BodySettings.current.hover_height + CabinGrid.HEIGHT) * 0.5
+		var far := maxf(CabinGrid.HEIGHT + MechBody.WAIST, CabinGrid.SIZE) * 1.9
+		var middle := (MechBody.WAIST + CabinGrid.HEIGHT) * 0.5
 		_title.text = "%s · de costado" % each[0]
 		_look(Vector3(-far, middle, -far * 0.15), Vector3(0, middle, 0), 40.0)
 		shots.append(await _grab())

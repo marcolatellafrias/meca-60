@@ -81,7 +81,7 @@ func _ready() -> void:
 
 ## Su piso bajado: a la misma distancia debajo del cubo que con la caja de siempre.
 static func lowered() -> float:
-	return -CabinGrid.HALF_HEIGHT - LOWERED_BELOW * BodySettings.current.hover_height / MechBody.BASE["WAIST"]
+	return -CabinGrid.HALF_HEIGHT - LOWERED_BELOW * MechBody.WAIST / MechBody.BASE["WAIST"]
 
 
 ## Su piso subido: al ras del piso de abajo.

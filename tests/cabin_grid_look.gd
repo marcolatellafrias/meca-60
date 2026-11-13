@@ -64,7 +64,7 @@ func _ready() -> void:
 			CabinGrid.seats().size(), PelvisLift.hole()])
 		_mech = Mech.new()
 		_mech.arms_kind = Mech.Arms.POSE
-		_mech.position = Vector3(0.0, BodySettings.current.hover_height + CabinGrid.HALF_HEIGHT, 0.0)
+		_mech.position = Vector3(0.0, Mech.standing_height(), 0.0)
 		add_child(_mech)
 		await get_tree().create_timer(2.5).timeout
 		_mech.freeze = true

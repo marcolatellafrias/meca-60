@@ -119,7 +119,7 @@ func get_up(k: BodySettings) -> void:
 ## SUBIR: las que empujan para arriba (las de la cara que mira al piso) llevan el centro a la altura de ir parada, con
 ## un resorte y la gravedad compensada.
 func _lift(k: BodySettings) -> void:
-	var target := k.hover_height * k.lift_share + _body.size.y * 0.5
+	var target := _body.hover * k.lift_share + _body.size.y * 0.5
 	_body.height = _body.ground_distance(_body.global_position)
 	var accel := k.lift_kp * (target - _body.height) - k.lift_kd * _body.velocity().y + BalanceBody.gravity()
 	push(Vector3.UP * maxf(accel, 0.0) * _body.mass, Vector3.ZERO, k)

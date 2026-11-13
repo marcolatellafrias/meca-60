@@ -60,7 +60,7 @@ func _ready() -> void:
 	_mech = Mech.new()
 	_mech.arms_kind = Mech.Arms.POSE
 	_mech.kinematic = true
-	_mech.position = Vector3(0.0, BodySettings.current.hover_height + CabinGrid.HALF_HEIGHT, 0.0)
+	_mech.position = Vector3(0.0, Mech.standing_height(), 0.0)
 	holder.add_child(_mech)
 	# LA PILA, alta: la caja va a la altura de la cintura (7 m) y pasa por arriba de lo bajo.
 	for i in 16:

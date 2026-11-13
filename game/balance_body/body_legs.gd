@@ -123,7 +123,7 @@ func _stepping(k: BodySettings, delta: float, yaw: float) -> void:
 	var moving := speed > STILL
 	var time := k.step_slowest
 	if moving:
-		time = clampf(2.0 * k.step_reach / speed, k.step_fastest, k.step_slowest)
+		time = clampf(2.0 * _reach(k) / speed, k.step_fastest, k.step_slowest)
 	var worst := -1
 	var farthest := 0.0
 	for i in 2:
@@ -131,7 +131,7 @@ func _stepping(k: BodySettings, delta: float, yaw: float) -> void:
 		var at: Vector3 = spot["at"]
 		var gap := Vector2(at.x - _feet[i].x, at.z - _feet[i].z).length()
 		var turned := rad_to_deg(absf(angle_difference(_feet_yaw[i], float(spot["yaw"]))))
-		var due := gap > 0.05 if moving else (gap > k.settle_gap or turned > k.settle_turn)
+		var due := gap > 0.05 if moving else (gap > _settle(k) or turned > k.settle_turn)
 		var score := gap + turned * 0.05
 		if due and score > farthest:
 			worst = i
@@ -158,7 +158,7 @@ func _target(k: BodySettings, index: int, yaw: float, left: float) -> Dictionary
 	var lead := Vector3.ZERO
 	if speed > 0.01:
 		var whole := _swing_time if _swing == index else left
-		lead = body.support_speed / speed * minf(k.step_reach, speed * whole * 0.5)
+		lead = body.support_speed / speed * minf(_reach(k), speed * whole * 0.5)
 	var basis := Basis(Vector3.UP, facing)
 	var at := body.support + body.support_speed * left + basis * Vector3(side * MechBody.STANCE_X, 0.0, 0.0) + lead
 	# NUNCA CRUZADO: de su lado del otro pie, a por lo menos MechBody.STANCE_X * 1.2.
@@ -179,8 +179,8 @@ func _foot_ground(k: BodySettings, index: int) -> Vector3:
 	var to: Vector3 = spot["at"]
 	var eased := smoothstep(0.0, 1.0, share)
 	_feet_yaw[index] = lerp_angle(_swing_yaw, float(spot["yaw"]), eased)
-	var lift := clampf(Vector2(to.x - _swing_from.x, to.z - _swing_from.z).length() / (2.0 * k.step_reach), 0.35, 1.0)
-	return _swing_from.lerp(to, eased) + Vector3.UP * sin(share * PI) * k.step_height * lift
+	var lift := clampf(Vector2(to.x - _swing_from.x, to.z - _swing_from.z).length() / (2.0 * _reach(k)), 0.35, 1.0)
+	return _swing_from.lerp(to, eased) + Vector3.UP * sin(share * PI) * _lift(k) * lift
 
 
 ## UNA PIERNA RECOGIDA, en el espacio de la cintura: el muslo adelante y casi horizontal, la canilla de vuelta abajo y
@@ -206,3 +206,16 @@ static func _blend(from: Dictionary, to: Dictionary, share: float) -> Dictionary
 		"foot": (from["foot"] as Transform3D).interpolate_with(to["foot"], share),
 		"knee": (from["knee"] as Vector3).lerp(to["knee"], share),
 	}
+
+
+## EL PASO DE ESTAS PIERNAS: el del F1 es el de piernas medianas; se escala con su largo (MechBody.stride, del F2).
+func _reach(k: BodySettings) -> float:
+	return k.step_reach * MechBody.stride
+
+
+func _lift(k: BodySettings) -> float:
+	return k.step_height * MechBody.stride
+
+
+func _settle(k: BodySettings) -> float:
+	return k.settle_gap * MechBody.stride

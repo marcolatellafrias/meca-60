@@ -121,15 +121,16 @@ El cartel de poseer muestra la carga del salto y lo que le queda al propulsor.
 
 Perillas: `BodySettings` (F1). Test para mirar: `tests/mech_look.tscn` (unos 25 s, sin el sandbox).
 
-**El F1 funciona como el F2** (13/11/2026): se mueve un borrador, que no toca las mecas hasta «Probar en todas las
-mecas» o «Guardar»; los dos las rearman con eso (`Mech.rebuild_all`, el mismo rearmado del F2). *Antes cambiaba las
-perillas en vivo, con la meca en movimiento: quedaba a mitad de camino y se rompía (el usuario: «hace que cambien a la
-mitad y hace que se bugeen, y tengo que reiniciar el juego»).* **Y se guarda** (el usuario: «no entiendo por qué este
-panel no tiene opción de guardado»):
-«Guardar» lo escribe en `game/balance_body/body_settings.tres` y «Volver a lo guardado» lo trae de vuelta (`KnobsFile`, la
-misma pieza para todos los paneles que guardan perillas); al arrancar
-se carga solo. El archivo es del usuario: no se sube al repositorio. **Menos cuatro perillas, que pone la forma de la
-meca (el F2)** con `MechBody.dress`: la altura de la caja (sale del largo y lo estirado de las piernas) y el paso
-(`step_reach`, `step_height`, `settle_gap`, que se escalan con el largo de la pierna). En el F1 dicen «sale del F2» y no
-se guardan, para que los dos paneles no peleen por el mismo número. El orden: lo guardado se carga al tocar
-`BodySettings.current` por primera vez, y `dress` escribe después, encima.
+**Los paneles de perillas, todos iguales** (`KnobsPanel`, 13/11/2026; el usuario: «borraría lo de probar y dejaría
+solamente guardar. Y que cuando guarde se regeneren las mecas… un solo sistema robusto»):
+- **Se mueve un borrador.** Nada cambia en vivo con la meca en movimiento. *Antes el F1 cambiaba las perillas en vivo:
+  la meca quedaba a mitad de camino y se rompía.*
+- **Un solo «Guardar»**: el borrador pasa a las perillas, se escribe al archivo (`game/balance_body/body_settings.tres`,
+  del usuario, no se sube) y **se aplica**: el F1 rearma todas las mecas (`Mech.rebuild_all`, el mismo rearmado del F2).
+  «Volver a lo guardado» hace lo mismo con lo del archivo. No hay más «Probar».
+- **Cada número, un solo dueño.** **La altura de la caja no es una perilla**: sale del cuerpo, del largo y lo estirado
+  de las piernas (el F2), y la meca la toma al armarse (`BalanceBody.hover`, de `MechBody.WAIST`); el F2 la muestra
+  como medida. **El paso** (`step_reach`, `step_height`, `settle_gap`) es el de piernas medianas, en el F1, y las
+  piernas lo escalan con su largo al leerlo. *Antes el F2 escribía esos números encima de los del F1, y la altura del F1
+  no hacía nada (el usuario: «la pongo en 0.5 y la pongo en 15 y no cambia nada»).*
+- **Dónde nace parada** una meca lo dice un solo lugar, `Mech.standing_height()`. *Estaba copiado en cuatro.*

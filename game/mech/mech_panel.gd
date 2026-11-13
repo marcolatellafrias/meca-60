@@ -1,13 +1,12 @@
 class_name MechPanel
-extends TunerPanel
+extends KnobsPanel
 
 ## EL PANEL DE LA MECA (F1 en sus filas): todas sus perillas (BodySettings), y vuelven a lo del código con el botón de
-## cada una. COMO EL F2: se mueve un borrador, y «Probar» (sin guardar), «Guardar» y «Volver a lo guardado» rearman
-## las mecas con eso. Lo que pone la forma de la meca (el F2) no cambia acá (ver BodySettings.FROM_BODY).
+## cada una. Como todos los paneles de perillas (KnobsPanel): se mueve un borrador, y «Guardar» o «Volver a lo
+## guardado» rearman las mecas con eso. La altura de la caja no está acá: sale del cuerpo (el F2).
 
 const PANEL_WIDTH := 420.0
 const LABELS := {
-	"hover_height": "altura de la caja sobre el piso (m)",
 	"walk_speed": "caminar: velocidad (m/s)", "walk_accel": "caminar: cuánto tarda en arrancar (m/s²)",
 	"walk_brake": "caminar: freno al soltar (m/s²)",
 	"pivot_kp": "agarre al apoyo: resorte", "pivot_kd": "agarre al apoyo: freno",
@@ -18,9 +17,9 @@ const LABELS := {
 	"feet_catch": "pies: cuánto buscan ponerse debajo (1/s)",
 	"turn_speed": "giro: velocidad tope (°/s)", "yaw_force": "giro: fuerza para girar (rad/s²)",
 	"yaw_hold": "giro: freno contra que la giren (rad/s²)", "yaw_grip": "giro: qué tan firme sigue al mouse",
-	"step_reach": "el pie pisa adelante de su lugar (m)", "step_fastest": "el paso más rápido (s)",
-	"step_slowest": "el paso más lento (s)", "step_height": "cuánto sube el pie (m)",
-	"settle_gap": "quieta, acomoda un pie a más de (m)", "settle_turn": "o girado más de (°)",
+	"step_reach": "el pie pisa adelante de su lugar (m, piernas medianas)", "step_fastest": "el paso más rápido (s)",
+	"step_slowest": "el paso más lento (s)", "step_height": "cuánto sube el pie (m, piernas medianas)",
+	"settle_gap": "quieta, acomoda un pie a más de (m, piernas medianas)", "settle_turn": "o girado más de (°)",
 	"turn_per_step": "lo más que gira un paso (°)", "knee_out": "rodillas hacia afuera (parte)",
 	"knee_out_crouched": "agachada, rodillas hacia afuera (parte)",
 	"fold_time": "se recogen al caer en (s)", "unfold_time": "se estiran al enderezarse en (s)",
@@ -44,58 +43,32 @@ const LABELS := {
 }
 
 
-## EL BORRADOR (como el F2): lo que se mueve en el panel no toca las mecas hasta «Probar» o «Guardar», que las rearman
-## con eso. *Hasta el 13/11/2026 el F1 cambiaba las perillas en vivo, con la meca en movimiento: quedaba a mitad de
-## camino y se rompía, y había que reiniciar para verlo bien (lo vio el usuario: «hace que cambien a la mitad y hace que
-## se bugeen»).*
-var _draft := BodySettings.new()
-var _state: Label = null
-
-
 func setup_panel() -> void:
 	panel_width = PANEL_WIDTH
-	KnobsFile.copy(_draft, BodySettings.current)
-	setup("meca", "MECA", [
-		new_button("Probar en todas las mecas (sin guardar)", _try),
-		new_button("Guardar (las perillas de todas las mecas)", _save),
-		new_button("Volver a lo guardado", _restore),
-	])
-	_state = state_label()
-	_state.text = "lo que dice «sale del F2» lo pone la forma de la meca (F2): acá no cambia nada"
+	setup_knobs("meca", "MECA")
+
+
+func knobs() -> Resource:
+	return BodySettings.current
+
+
+func fresh() -> Resource:
+	return BodySettings.new()
+
+
+func saved_path() -> String:
+	return BodySettings.SAVED
+
+
+## Rearma todas las mecas con las perillas nuevas.
+func applied() -> void:
+	Mech.rebuild_all(get_tree())
+
+
+func note() -> String:
+	return "el paso es el de piernas medianas: se escala con el largo de las piernas (F2)"
 
 
 func sections() -> Array[Dictionary]:
-	var labels := LABELS.duplicate()
-	for name: String in BodySettings.FROM_BODY:
-		labels[name] = "%s · sale del F2" % str(LABELS.get(name, name))
-	return [{"title": "BodySettings (game/balance_body/body_settings.gd)", "target": _draft, "labels": labels,
+	return [{"title": "BodySettings (game/balance_body/body_settings.gd)", "target": draft(), "labels": LABELS,
 		"defaults": BodySettings.new()}]
-
-
-## PROBAR: el borrador pasa a las perillas de todas (menos lo que pone el F2) y las mecas se rearman con eso.
-func _try() -> void:
-	KnobsFile.copy(BodySettings.current, _draft, BodySettings.FROM_BODY)
-	# Lo que pone el F2, en el borrador, como está: así el panel muestra lo de verdad.
-	for name: String in BodySettings.FROM_BODY:
-		_draft.set(name, BodySettings.current.get(name))
-	Mech.rebuild_all(get_tree())
-	_say("probando en todas las mecas, sin guardar (al reiniciar vuelve lo guardado)")
-
-
-func _save() -> void:
-	_try()
-	var error := KnobsFile.save(BodySettings.current, BodySettings.new(), BodySettings.SAVED, BodySettings.FROM_BODY)
-	_say("guardado: son las perillas de todas las mecas" if error == OK else "no se pudo guardar (%d)" % error)
-
-
-func _restore() -> void:
-	KnobsFile.copy(_draft, KnobsFile.load_into(BodySettings.new(), BodySettings.SAVED, BodySettings.FROM_BODY),
-		BodySettings.FROM_BODY)
-	rebuild()
-	_try()
-	_say("volvió a lo guardado")
-
-
-func _say(text: String) -> void:
-	if _state != null:
-		_state.text = text

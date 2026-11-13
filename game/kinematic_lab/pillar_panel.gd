@@ -1,12 +1,11 @@
 class_name PillarPanel
-extends TunerPanel
+extends KnobsPanel
 
 ## EL PANEL DEL CUBO CINEMÁTICO (F1 en el Laboratorio cinemático): sus perillas (PillarSettings), una pestaña por
 ## grupo (el usuario: «organices mejor el panel F con tabs»).
 
 const PANEL_WIDTH := 400.0
 
-var _state: Label = null
 const LABELS := {
 	"walk_speed": "velocidad (m/s)", "reach_time": "tiempo para llegar a ella y para frenar (s; 0: al instante)",
 	"turn_speed": "velocidad tope (°/s)", "turn_accel": "aceleración tope (°/s²)",
@@ -38,26 +37,35 @@ func setup_panel() -> void:
 	var buttons: Array[Button] = []
 	for preset: Dictionary in PRESETS:
 		buttons.append(new_button("Moverse: %s" % preset["name"], _apply.bind(preset)))
-	buttons.append_array(KnobsFile.buttons(PillarSettings.current, func() -> PillarSettings: return PillarSettings.new(),
-		PillarSettings.SAVED, rebuild, _say))
-	setup("cubo_cinematico", "CUBO CINEMÁTICO", buttons)
-	_state = state_label()
+	setup_knobs("cubo_cinematico", "CUBO CINEMÁTICO", buttons)
 
 
-func _say(text: String) -> void:
-	if _state != null:
-		_state.text = text
+func knobs() -> Resource:
+	return PillarSettings.current
 
 
+func fresh() -> Resource:
+	return PillarSettings.new()
+
+
+func saved_path() -> String:
+	return PillarSettings.SAVED
+
+
+func note() -> String:
+	return "los botones de moverse escriben el borrador: se aplica al guardar"
+
+
+## Una configuración de un toque: escribe el borrador (se aplica al guardar).
 func _apply(preset: Dictionary) -> void:
 	for name: String in ["walk_speed", "reach_time"]:
-		PillarSettings.current.set(name, preset[name])
+		draft().set(name, preset[name])
 	rebuild()
 
 
 func sections() -> Array[Dictionary]:
 	var all: Array[Dictionary] = []
 	for tab in TABS:
-		all.append({"title": tab.to_upper(), "tab": tab, "target": PillarSettings.current, "labels": LABELS,
+		all.append({"title": tab.to_upper(), "tab": tab, "target": draft(), "labels": LABELS,
 			"include": PackedStringArray([tab]), "headers": false, "defaults": PillarSettings.new()})
 	return all
