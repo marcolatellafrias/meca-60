@@ -2,7 +2,7 @@ class_name DesignSandbox
 extends Node3D
 
 ## EL SANDBOX DE DISEÑO: un piso neutro con FILAS DE PARCELAS y alguien que camina entre ellas, para probar una cosa
-## por vez sin armar el juego. Las reglas para agregar filas, teclas y paneles, en docs/sandbox.md. Las piezas:
+## por vez sin armar el juego. Las reglas para agregar filas, teclas y paneles, en docs/technical/sandbox.md. Las piezas:
 ##   · SandboxCatalogue   las filas de cada módulo (SandboxRow), los paneles globales y el chequeo de las reglas.
 ##   · SandboxLayout      dónde va cada fila en el piso: supercategorías, subcategorías, archivados.
 ##   · SandboxParcel      una parcela: su zona, sus bordes, cuándo se arma y su cubo de lejos.

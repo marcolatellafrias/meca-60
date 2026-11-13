@@ -1,6 +1,6 @@
 extends Node3D
 
-## EL FLUJO DE PÍXELES, PARA MIRAR (unos 15 segundos, sin el sandbox; ver docs/pixel-art.md): el cubo de 63 cm armado en
+## EL FLUJO DE PÍXELES, PARA MIRAR (unos 15 segundos, sin el sandbox; ver docs/technical/pixel-art.md): el cubo de 63 cm armado en
 ## código y la caja de Blender; cuántas caras recta detecta en cada uno; los pinta con un dibujo que depende de la
 ## posición en el modelo (una franja que da la vuelta, para ver las costuras), guarda, los vuelve a armar desde el
 ## archivo, cambia la caja por su versión 2 con la misma pintura (cuánto sobrevivió), abre el panel plano y compara

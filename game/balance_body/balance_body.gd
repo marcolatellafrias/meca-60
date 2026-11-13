@@ -2,7 +2,7 @@ class_name BalanceBody
 extends RigidBody3D
 
 ## EL CUERPO CON EQUILIBRIO: lo que comparten la meca propia (Mech) y las mecas enemigas, los jefes (13/11/2026; ver
-## docs/base-comun.md). El usuario: «los jefes van a heredar una clase abstracta que comparten con la meca propia, que es
+## docs/technical/base-comun.md). El usuario: «los jefes van a heredar una clase abstracta que comparten con la meca propia, que es
 ## todo el sistema de equilibrio… un cuerpo físico que se inclina y pierde equilibrio»; y a la vez «no quiero correr el
 ## riesgo de limitarme por compartir demasiado».
 ##
@@ -32,7 +32,7 @@ extends RigidBody3D
 ##         a alcanzarlo y, si no llegan antes de `fall_tilt`, se cae. Arriba vuelca más que abajo.
 ##       – una PARED frena al torso y los pies se plantan debajo: no se cae, a ninguna velocidad.
 ##       – ARRANCAR la inclina un poco hacia adelante (los pies reaccionan con demora, `feet_react`) y se nivela al
-##         llegar a velocidad (la opción «B» del usuario; ver docs/pendulo.md para las otras).
+##         llegar a velocidad (la opción «B» del usuario; ver docs/technical/pendulo.md para las otras).
 ##   · UN MÚSCULO la quiere derecha sobre su apoyo (`upright_*`), chico.
 ##   · EL GIRO EN Y es un motor con fuerza tope hacia `aim_yaw`: si algo la traba, no gira; un golpe la gira poco y
 ##     vuelve.

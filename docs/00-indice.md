@@ -1,29 +1,55 @@
 # Meca — índice
 
-Bóveda de Obsidian, simple: lo básico de cada sistema, para orientarse. El detalle está en el código (cada clase
-empieza con su comentario largo).
+Juego cooperativo de **1 a 4 jugadores** que manejan **una meca gigante desde adentro**, cada uno desde su puesto,
+contra **mecas enemigas** que maneja la computadora. Los personajes y la meca tienen **una sola vida**: si se pierden,
+se pierden para siempre. Hecho en Godot 4.5 con Jolt. Todo es tentativo: lo abierto está marcado en cada nota.
 
+## El loop
+1. En **la base subterránea** se elige un **contrato**: qué meca enemiga matar. Más riesgo, más paga.
+2. Un **elevador** sube la meca a la arena, y se pelea. A veces se suma **otra tripulación**, que ayuda… o traiciona.
+3. Hay cuatro finales: **ganar**; **escapar** con la meca rota y sin plata; **eyectarse** antes de que explote y escapar a
+   pie; o **morir todos**.
+4. Un cartel dice cómo les fue, y se vuelve a la base: mejorar, reparar y practicar.
+
+El detalle, en [[partida]].
+
+## Conceptual (el diseño)
+| Nota | Qué tiene |
+|---|---|
+| [[partida]] | El loop, los cuatro finales, la traición y el fuego amigo. |
+| [[tripulacion]] | Cuántos jugadores; personajes de una sola vida, por semilla; la billetera (abierta). |
+| [[la-meca]] | La meca como diseño: equilibrio y no estadísticas, una versión por cantidad de jugadores, una sola vida, eyectarse, los dos caminos. |
+| [[contratos]] | Las mecas enemigas (dificultad y paga, arquetipos con partes y afijos) y la otra tripulación. |
+| [[base]] | La compañía bajo tierra: contratos, mejoras, práctica, reparación (abierta), carga. |
+| [[recursos]] | Los cubos de 63 cm (batería, componente, munición, bomba) y cómo se van a enchufar. |
+
+## Técnico (el código de hoy)
+| Nota | Qué tiene |
+|---|---|
+| [[estructura]] | **Cómo está armado el código**: la meca y sus piezas, los dos caminos, lo congelado, lo traído. |
+| [[meca]] | La meca péndulo: la caja con tres pisos, correr, agacharse, saltar y volar, y los dos caminos. |
+| [[pendulo]] | El modelo de equilibrio: el torso es un péndulo y los pies lo siguen. |
+| [[base-comun]] | Lo que comparten la meca propia y los jefes (`BalanceBody`), y el resto en piezas. |
+| [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto. |
+| [[cabina]] | La cabina sobre su grilla (módulo Interior): celdas, módulos, pisos y asientos. |
+| [[proyectiles]] | Los proyectiles por red y la arena de esquivar. |
+| [[mapa]] | El mapa de pelea: una arena circular con barrios, escaleras y recursos en el borde. |
+| [[escaleras]] | La regla de toda escalera (`Stairs`). |
+| [[pixel-art]] | Pintar con píxeles (experimento), cara por cara. |
+| [[sandbox]] | **Las buenas prácticas del sandbox**: supercategorías, filas, panel chico o panel F, teclas reservadas. |
+| [[filas]] | Cada fila del sandbox y su código (qué borrar si se borra una parcela). |
+| [[poseer]] | La O posee lo que mirás, la T cambia la vista. |
+| [[red]] | El multijugador. |
+| [[personajes-traidos]] | Lo traído de character-parametric: el jugador, agarrar, sentarse. |
+| [[analisis-personaje]] | Qué de lo traído necesita la meca y qué no. |
+| [[cubo]] · [[cubo-con-piernas]] | La otra variante de equilibrio (la línea), archivada. |
+
+## Organización
 - [[modulos]] — **quién es dueño de qué**: las sesiones por módulo, sus carpetas y por dónde se tocan.
-- [[estructura]] — **cómo está armado el código**: la meca y sus piezas, los dos caminos, lo congelado, lo traído.
-- [[filas]] — **cada fila del sandbox y su código** (qué borrar si se borra una parcela).
-- [[cubo]] — la base de la variante de la línea (sin fila): flotar, la línea, tropezar, caer y recuperarse con toberas.
-- [[meca]] — **donde se sigue puliendo**: la caja con tres pisos, correr, agacharse, saltar y volar, **bifurcada en dos caminos** por sus brazos (discretos o físicos).
-- [[cabina]] — **la cabina sobre su grilla** (módulo Interior): una celda de 1/16 de cubo, módulos de 3 cubos, planta baja de servicio y dos asientos por piso arriba.
-- [[base-comun]] — **lo que van a compartir la meca propia y los jefes** (pendiente): un cuerpo con equilibrio, y el resto en piezas.
-- [[pendulo]] — **el modelo de equilibrio de la meca**: el torso es un péndulo y los pies lo siguen.
-- [[brazo]] — los brazos: lo que se les pide (una vez), el físico con músculos y el discreto.
-- [[cubo-con-piernas]] — **la otra variante de equilibrio (la línea)**, guardada: el cubo con pelvis, dos piernas, torso aparte y pasos por radio.
-- [[proyectiles]] — **los proyectiles, por red** (el misil de mortero con su marca) y **la arena de esquivar**, con una torre que se los tira a la meca.
-- [[mapa]] — **el mapa de pelea**: una arena circular de Ø 260 m, libre al medio, con barrios, escaleras y recursos en el borde.
-- [[escaleras]] — **la regla de toda escalera**: escalones que ven los pies y una rampa que ve la cápsula (`Stairs`).
-- [[recursos]] — los recursos de la meca: cubos de 63 cm (batería, componente eléctrico, munición, bomba) y cómo se van a enchufar.
-- [[pixel-art]] — **pintar con píxeles** (experimento): de Blender al sandbox, cara por cara; la densidad, las costuras y cómo se remodela sin repintar.
-- [[poseer]] — la O posee lo que mirás, la T cambia la vista, y un cartel con sus controles.
-- [[sandbox]] — **las buenas prácticas del sandbox**: supercategorías, filas, panel chico o panel F, teclas reservadas.
-- [[analisis-personaje]] — **qué de lo traído necesita la meca y qué no** (sólo lectura; para la segunda etapa de limpieza).
-- [[personajes-traidos]] — lo traído de character-parametric: el jugador, agarrar, sentarse.
-- [[red]] — el multijugador.
 
-## La regla
-**Borrar una parcela borra su código**: su arquetipo, lo que sólo ella usa, sus paneles, sus perillas, sus tests y su
-fila en [[filas]]. Nada queda huérfano.
+## Las reglas de la documentación
+- **Conceptual** es el diseño del juego, en `docs/conceptual/`. **Técnico** es cómo está hecho hoy, en
+  `docs/technical/`. Una nota nueva va en una de las dos y se anota en esta tabla.
+- **Un cambio a un sistema actualiza su nota.** Si un cambio contradice una nota conceptual, se avisa antes.
+- **Borrar una parcela borra su código**: su arquetipo, lo que sólo ella usa, sus paneles, sus perillas, sus tests y su
+  fila en [[filas]]. Nada queda huérfano.

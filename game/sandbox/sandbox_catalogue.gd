@@ -22,7 +22,7 @@ static func global_panels() -> Array[Dictionary]:
 	return []
 
 
-## ── LAS REGLAS (ver docs/sandbox.md) ─────────────────────────────────────────────────────────────────────────────
+## ── LAS REGLAS (ver docs/technical/sandbox.md) ─────────────────────────────────────────────────────────────────────────────
 ## Lo que está mal en el catálogo, una línea por problema; vacío si está todo bien. El sandbox lo muestra al arrancar y
 ## no monta lo que choca; `tests/sandbox_check.tscn` falla si hay algo.
 static func check(all_rows: Array[SandboxRow], globals: Array[Dictionary]) -> PackedStringArray:

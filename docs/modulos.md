@@ -29,5 +29,5 @@ tocan. Cómo está armado el código por dentro, en [[estructura]].
 - El sandbox: **cada módulo declara sus filas y sus paneles F en su propio archivo de filas** (`MechRows`, `SupplyRows`,
   `CharacterRows`, `WorldRows`, `ArtRows`, `NetworkRows`; ver [[sandbox]]). `game/sandbox/` es del generalista; un
   módulo nuevo agrega una línea en `SandboxCatalogue.rows()`.
-- `docs/filas.md`, `docs/00-indice.md`: cada módulo agrega su renglón.
+- `docs/technical/filas.md`, `docs/00-indice.md`: cada módulo agrega su renglón.
 - `project.godot`: lo reescribe el editor solo; no commitearlo salvo que el cambio sea a propósito.

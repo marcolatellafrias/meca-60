@@ -7,7 +7,7 @@ extends RefCounted
 ## fila, y una fila que nadie anotaba ahí no aparecía donde se la buscaba.*
 ##
 ## Cada bloque es contiguo, en el orden de este enum, con su piso apenas teñido y su nombre a la izquierda. Reglas en
-## docs/sandbox.md.
+## docs/technical/sandbox.md.
 
 enum Id { MECH, INTERIOR, CHARACTERS, WORLD, ART, NETWORK }
 

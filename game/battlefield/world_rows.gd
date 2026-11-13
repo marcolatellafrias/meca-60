@@ -1,7 +1,7 @@
 class_name WorldRows
 extends RefCounted
 
-## LAS FILAS DEL SANDBOX DEL MUNDO (ver SandboxRow, docs/sandbox.md): el mapa de pelea.
+## LAS FILAS DEL SANDBOX DEL MUNDO (ver SandboxRow, docs/technical/sandbox.md): el mapa de pelea.
 
 static func rows() -> Array[SandboxRow]:
 	return [

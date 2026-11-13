@@ -1,7 +1,7 @@
 class_name PixelArtArchetype
 extends SeededArchetype
 
-## LA PARCELA DE PINTAR CON PÍXELES (fila «Píxeles», ver docs/pixel-art.md): sobre un banco, un cubo de 63 cm armado
+## LA PARCELA DE PINTAR CON PÍXELES (fila «Píxeles», ver docs/technical/pixel-art.md): sobre un banco, un cubo de 63 cm armado
 ## en código y una caja traída de Blender (`models/caja.glb`), cada uno un PixelModel. Mirando una cara, **F1** abre el
 ## panel plano de pintar (PixelPaintPanel). **N** cambia la caja por su versión 2 (`caja_v2.glb`: la manija más larga y
 ## una chapa al frente) CON LA MISMA PINTURA: para ver qué sobrevive a remodelar.

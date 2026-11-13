@@ -4,7 +4,7 @@ extends Node3D
 ## LA PELVIS Y LAS PIERNAS DE UN CUERPO CON EQUILIBRIO (ver BalanceBody), DOS, DESDE UNA PELVIS DEBAJO DE LA CAJA: DIBUJO
 ## (IK, MechBody; cada pierna, un MechLeg). No sostienen nada: siguen al apoyo del péndulo (ver BalanceBody). Es la pieza
 ## de piernas de la meca propia; un cuerpo con otro medio de moverse —cuatro patas, patas que salen de los costados de la
-## caja y no de abajo, ruedas— arma otra (ver docs/base-comun.md). El usuario: «las piernas van a seguir siendo IK».
+## caja y no de abajo, ruedas— arma otra (ver docs/technical/base-comun.md). El usuario: «las piernas van a seguir siendo IK».
 ##
 ## LOS PASOS, DE LARGO FIJO (13/11/2026; reemplazan a los pasos por radio). El usuario: «mientras más rápido van a dar
 ## más rápido los pasos, pero no va a cambiar el largo».

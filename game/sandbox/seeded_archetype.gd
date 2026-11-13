@@ -28,7 +28,7 @@ func describe(_seed_value: int) -> PackedStringArray:
 
 
 ## LAS TECLAS DEL PANEL CHICO de esta parcela (ver SandboxKey: acciones, interruptores y ciclos, con su peso). Las de
-## toda la fila no van acá sino en su SandboxRow. Nada que se guarde: eso va en un panel F (ver docs/sandbox.md).
+## toda la fila no van acá sino en su SandboxRow. Nada que se guarde: eso va en un panel F (ver docs/technical/sandbox.md).
 func keys() -> Array[SandboxKey]:
 	return []
 

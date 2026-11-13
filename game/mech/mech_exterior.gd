@@ -12,7 +12,7 @@ extends RefCounted
 ##     una persona (`CLEAR`). *El primer zigzag (12/11/2026) tenía los dos tramos en el mismo carril, uno encima del
 ##     otro: donde se daban vuelta quedaba 1,1 m de altura (lo vio el usuario: «son imposibles»). Se había armado a ojo,
 ##     sin medir.*
-##   · LA ESCALERA, CON `Stairs` (13/11/2026, la regla del usuario para toda escalera: ver docs/escaleras.md): los
+##   · LA ESCALERA, CON `Stairs` (13/11/2026, la regla del usuario para toda escalera: ver docs/technical/escaleras.md): los
 ##     escalones para los pies y una rampa invisible para la cápsula. *Hasta entonces los tramos eran rampas.*
 ##   · LAS BARANDAS VAN DONDE HAY CAÍDA: en cada borde de cada superficie, salvo donde del otro lado sigue otra
 ##     superficie a la misma altura o está la pared del cubo.
@@ -69,7 +69,7 @@ static func bounds() -> AABB:
 	return AABB(Vector3(-outer, -HALF - 0.3, SIDE_END - 0.3), Vector3(outer * 2.0, CabinGrid.SIZE + 2.4, back - SIDE_END + 0.3))
 
 
-## LA ESCALERA SE ARMA CON `Stairs` (la regla del usuario, ver docs/escaleras.md): escalones para los pies y una
+## LA ESCALERA SE ARMA CON `Stairs` (la regla del usuario, ver docs/technical/escaleras.md): escalones para los pies y una
 ## rampa invisible para la cápsula. Lo largo de un tramo: el de los escalones que suben un piso.
 static func flight_run() -> float:
 	return Stairs.run_for(CabinGrid.FLOOR_HEIGHT)

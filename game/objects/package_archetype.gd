@@ -5,7 +5,7 @@ extends SeededArchetype
 ## acá sale el cuerpo real del juego: un `RigidBody3D` con su masa, su collider cúbico, un `GrabbableInteractable` que
 ## le genera los puntos de agarre desde las celdas, y su daño (`PackageDamage`).
 ##
-## EN LA MECA SON SUS RECURSOS (13/11/2026; ver docs/recursos.md): todos UN CUBO DE 63 cm, y su dibujo lo hace
+## EN LA MECA SON SUS RECURSOS (13/11/2026; ver docs/conceptual/recursos.md): todos UN CUBO DE 63 cm, y su dibujo lo hace
 ## SupplyLook. *Vino de character-parametric con los paquetes de una ciudad —un televisor, un sillón de dos metros, un
 ## cajón de botellas— de varios tamaños, cada uno con su bosquejo de primitivas y su ida y vuelta a Blender; se borraron
 ## el 13/11/2026.*

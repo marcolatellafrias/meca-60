@@ -1,4 +1,4 @@
-# LOS MODELOS DE PRUEBA DEL FLUJO DE PÍXELES (ver docs/pixel-art.md): una caja con la tapa en chanfle y una manija,
+# LOS MODELOS DE PRUEBA DEL FLUJO DE PÍXELES (ver docs/technical/pixel-art.md): una caja con la tapa en chanfle y una manija,
 # modelada en quads SOBRE LA GRILLA DE PÍXELES (un píxel = 63 cm / 16), y su versión 2 con «un detallito» cambiado (la
 # manija más larga y una chapa al frente) para probar que lo pintado sobrevive a remodelar. Sin UVs: Godot se arregla.
 #

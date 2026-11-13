@@ -9,7 +9,7 @@ extends RefCounted
 ##         .panel(KEY_F1, "la meca: el péndulo…", MechPanel.new())
 ##
 ## Cada módulo declara las suyas en un archivo propio (`MechRows.rows()`, `CharacterRows.rows()`…) y SandboxCatalogue
-## las junta. Las reglas, en docs/sandbox.md.
+## las junta. Las reglas, en docs/technical/sandbox.md.
 
 ## CUÁNDO SE ARMA CADA PARCELA (obligatorio al agregarla):
 ##   · NEAR    sola, la primera vez que uno se acerca. Es lo normal.

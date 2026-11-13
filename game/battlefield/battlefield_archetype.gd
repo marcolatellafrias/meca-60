@@ -1,7 +1,7 @@
 class_name BattlefieldArchetype
 extends SeededArchetype
 
-## LA PARCELA DEL MAPA DE PELEA (ver Battlefield y docs/mapa.md): el mapa entero, una meca para manejar (la discreta)
+## LA PARCELA DEL MAPA DE PELEA (ver Battlefield y docs/technical/mapa.md): el mapa entero, una meca para manejar (la discreta)
 ## donde nace, mirando al centro, y una meca de práctica sin brazos más allá del medio, de jefe quieto. Sus teclas son
 ## las de la meca (U subirse, J/K la bola: ver MechArchetype). R lo vuelve a armar (los recursos vuelven a su lugar).
 

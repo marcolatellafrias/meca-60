@@ -1,7 +1,7 @@
 # Meca
 
-Juego cooperativo (de 1 a 4 jugadores) de una **meca gigante manejada desde adentro** contra jefes (bichos) en una
-arena. Cada jugador maneja una parte de la meca desde su puesto (piernas, brazos…); cuando algo se rompe hay que
+Juego cooperativo (de 1 a 4 jugadores) de una **meca gigante manejada desde adentro** contra **mecas enemigas** (los
+jefes, que maneja la computadora) en una arena. Cada jugador maneja una parte de la meca desde su puesto (piernas, brazos…); cuando algo se rompe hay que
 reacomodarse, salir afuera a reparar o ir a buscar recursos. Entre peleas, un hangar con oficina: contratos,
 reparaciones con plata y cargar la meca. Hecho en **Godot 4.5** (GDScript), física con **Jolt**. Empezado el 11/11/2026;
 hoy es un **boceto para probar la idea**, de a uno.
@@ -12,12 +12,15 @@ la red** (con la pausa y el menú de inicio de allá): el jugador es el personaj
 dónde se cortó (la ciudad, el tránsito, la nave), en `game/character_port/LEEME.md`.
 
 ## La documentación: `docs/`
-Una bóveda de Obsidian, simple: una nota por sistema y **una nota con cada fila del sandbox y su código**
-([docs/filas.md](docs/filas.md)). Empezar por [docs/00-indice.md](docs/00-indice.md). Un cambio a un sistema actualiza
-su nota.
+Una bóveda de Obsidian, separada en **conceptual** (`docs/conceptual/`: el diseño del juego —el loop, la tripulación, la
+meca, los contratos, la base—, tentativo) y **técnico** (`docs/technical/`: cómo está hecho hoy, una nota por sistema y
+**una nota con cada fila del sandbox y su código**, [docs/technical/filas.md](docs/technical/filas.md)). **Empezar por
+[docs/00-indice.md](docs/00-indice.md)**: el pitch, el loop y la tabla de qué hay en cada nota. **Antes de cambiar una
+feature, leer su nota conceptual y la técnica**; si el cambio contradice el diseño, avisar antes. Un cambio a un sistema
+actualiza su nota.
 
 **Borrar una parcela borra su código**: su arquetipo, lo que sólo ella usa, sus paneles, sus perillas, sus tests y su
-fila en `docs/filas.md` (lo pidió el usuario el 12/11/2026: «me gusta que si borro algo, una parcela, que borra el código
+fila en `docs/technical/filas.md` (lo pidió el usuario el 12/11/2026: «me gusta que si borro algo, una parcela, que borra el código
 también»). Nada queda huérfano.
 
 ## Decisiones tomadas
@@ -36,7 +39,7 @@ también»). Nada queda huérfano.
     se traban y ceden.
   Lo que se le pide a un brazo (posturas, piñas, la pose) está una sola vez, en `MechArm`. Los límites de cada camino
   moldean sus features; lo común (consolas, reparación, energía) se hace una vez.
-- **Toda escalera se arma con `Stairs`** (13/11/2026; ver docs/escaleras.md): los escalones de 15 cm los ven sólo los
+- **Toda escalera se arma con `Stairs`** (13/11/2026; ver docs/technical/escaleras.md): los escalones de 15 cm los ven sólo los
   pies (capa Escalones) y la cápsula pisa una rampa invisible por los rincones de abajo (capa Rampa). Nunca una rampa
   sola ni escalones sólidos para la cápsula.
 - **El cuerpo de la meca se define una sola vez** (`MechBody`: medidas, piernas, brazos). Sin cabeza.
@@ -54,7 +57,7 @@ también»). Nada queda huérfano.
 **B** corta vuelan) y la **B** larga lo vuelve cuerpo (el gordo atlético: se cae, agarra con el clic izquierdo, se sienta con la **E**, empuja con
 la **R**). Sus teclas son las de allá (WASD, espacio, Ctrl, shift, E, R, V); Escape la pausa, que no frena el mundo.
 Las teclas **F** son de los **paneles** (TunerPanel): de parcela y de fila F1–F7, globales F9–F12. **Antes de agregar una
-fila, una tecla o un panel, leé `docs/sandbox.md`** (las reglas se chequean al arrancar).
+fila, una tecla o un panel, leé `docs/technical/sandbox.md`** (las reglas se chequean al arrancar).
 
 **Poseer** (`SandboxPossession`): para probar de a uno lo que en el juego se maneja desde adentro. **Mirando** una meca
 o un cubo, la **O** lo posee (las teclas pasan a él y el jugador se apaga donde está); **O** otra vez lo suelta, y **se
@@ -63,7 +66,7 @@ acuerda**: **O** sin mirar nada lo retoma. Poseyendo, la **T** pasa por tres vis
 puede poseer lo que está en el grupo `possessable` y contesta `possess_name`, `possess_controls`, `possess_begin`,
 `possess_end` y `possess_camera(first, delta)`. Los personajes, todavía no.
 
-Las filas del sandbox (el detalle, en `docs/filas.md`):
+Las filas del sandbox (el detalle, en `docs/technical/filas.md`):
 
 **Meca discreta** y **Meca física** (`Mech`; una fila por camino, misma parcela con otros brazos, `Mech.Arms`): el péndulo con **tres pisos** de paredes de verdad (vidrio y parantes al frente, la puerta atrás),
 brazos, y una **meca de práctica adelante, sin brazos, para pegarle**. Poseída: W/S y A/D, el mouse gira el torso; **Shift corre**, **Ctrl
@@ -93,13 +96,13 @@ piernas de dibujo (pasos por radio) y el torso que gira aparte. **F1** su panel,
 **Las parcelas tienen paredes invisibles** (`SandboxParcel`): las ve lo que se mueve con física y vive en una parcela;
 el jugador y la bola pasan.
 
-**Recursos** (13/11/2026, `SupplyLook`; ver docs/recursos.md): lo que se trae a la meca, sueltos para agarrarlos. **Todos son
+**Recursos** (13/11/2026, `SupplyLook`; ver docs/conceptual/recursos.md): lo que se trae a la meca, sueltos para agarrarlos. **Todos son
 un cubo de 63 cm** que se agarra igual: la batería, el componente eléctrico, la caja de misiles, la caja de balas y la
 bomba (dinamita); al fondo, fijos, los cubos de la meca que muestran la munición que queda. Todavía no se enchufan en
 nada: la mecánica acordada (el indicador, acomodarse solo, un tipo por hueco, sacar el viejo antes, el gastado se
 desvanece) está en la nota.
 
-Más filas: **Personajes** (los seis arquetipos de allá, que se caen y se levantan; también con la bola), **Locomoción** (los seis corriendo, saltando, cayendo, llevando, tirando, atajando y chocando, solos; ver docs/personajes-traidos.md), **Multijugador** (la red de allá: **H** abre sesión en esta
+Más filas: **Personajes** (los seis arquetipos de allá, que se caen y se levantan; también con la bola), **Locomoción** (los seis corriendo, saltando, cayendo, llevando, tirando, atajando y chocando, solos; ver docs/technical/personajes-traidos.md), **Multijugador** (la red de allá: **H** abre sesión en esta
 compu y otra instancia se une con **J**, **G** abre por Steam, **K** va al menú de inicio para unirse por código, **L**
 sale) y **Partículas** (cada sistema en su poste; **M** cambia la malla de toda la fila). Por la red van los personajes
 y los objetos de esa parcela; **las mecas todavía no**.
@@ -109,8 +112,8 @@ y los objetos de esa parcela; **las mecas todavía no**.
 se tocan, en [docs/modulos.md](docs/modulos.md). Tocar sólo lo propio; commitear sólo los archivos propios.
 
 Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`. La tabla completa, con las reglas que la
-ordenan y lo que todavía se le critica, en [docs/estructura.md](docs/estructura.md).
-- `game/balance_body/` — **el cuerpo con equilibrio, la base común de la meca y los jefes** (ver docs/base-comun.md):
+ordenan y lo que todavía se le critica, en [docs/technical/estructura.md](docs/technical/estructura.md).
+- `game/balance_body/` — **el cuerpo con equilibrio, la base común de la meca y los jefes** (ver docs/technical/base-comun.md):
   `BalanceBody` (la caja, el péndulo, caerse y volver, lo que se le pide; ganchos `_build`, `_think`, `_after_step`),
   `BodyLegs`, `BodyNozzles`, `BodyMoves` (acá van los dashes) y `BodySettings` (las perillas).
 - `game/mech/` — **la meca, una clase con sus piezas aparte** (aplanada el 13/11/2026; antes eran tres clases apiladas):
@@ -131,7 +134,7 @@ ordenan y lo que todavía se le critica, en [docs/estructura.md](docs/estructura
   cuerpo que se agarra lo arma `PackageArchetype` (`game/objects/`), cuyo catálogo son hoy esos cinco cubos.
 - `game/arena/` — `TestBall` (la bola de la J), `PeopleArchetype` (las personas de allá) con `CharacterGetUp` (que se
   levanten solas) y `ObjectLotArchetype` (el lote de recursos).
-- `game/sandbox/` — el sandbox de parcelas (ver `docs/sandbox.md`: cada módulo declara sus filas en su archivo de
+- `game/sandbox/` — el sandbox de parcelas (ver `docs/technical/sandbox.md`: cada módulo declara sus filas en su archivo de
   filas; `SandboxCatalogue` las junta y chequea las reglas; crea al jugador), poseer (`SandboxPossession`) y la sesión de
   red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Las teclas reservadas, en `SandboxKey.RESERVED`. Poseyendo
   sólo valen las de lo poseído.
@@ -164,7 +167,7 @@ ordenan y lo que todavía se le critica, en [docs/estructura.md](docs/estructura
   cuatro piñas (velocidad de la mano, cuánto corre el bloque), la pared (se traba y vuelve) y un empujón (cede y vuelve).
 - `tests/supplies_look.tscn` (con ventana, unos 5 segundos, sin el sandbox): el lote de recursos; imprime de cada cubo su
   caja, su peso y sus seis puntos de agarre.
-- `tests/pixel_art_look.tscn` (con ventana, unos 15 segundos, sin el sandbox): pintar con píxeles (ver docs/pixel-art.md);
+- `tests/pixel_art_look.tscn` (con ventana, unos 15 segundos, sin el sandbox): pintar con píxeles (ver docs/technical/pixel-art.md);
   las caras que detecta en el cubo y en la caja de Blender, pintar, releer, la versión 2 con la misma pintura, el panel
   tres resoluciones y los dos modos de cara (cuadrícula y estirada) en la caja, la cuña y el chanfle. Guarda en user://.
 - `tests/hand_look.tscn` (con ventana, unos 5 segundos): la mano abierta y en puño, de tres lados.

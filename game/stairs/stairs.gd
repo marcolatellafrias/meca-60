@@ -1,7 +1,7 @@
 class_name Stairs
 extends RefCounted
 
-## TODA ESCALERA SE ARMA CON ESTO (13/11/2026; ver docs/escaleras.md). El usuario: «las escaleras… para que funcionen
+## TODA ESCALERA SE ARMA CON ESTO (13/11/2026; ver docs/technical/escaleras.md). El usuario: «las escaleras… para que funcionen
 ## bien con los personajes actuales… tienen dos zonas, actúa como rampa para la cápsula, pero para los pies actúa como
 ## escalones… siempre que se usen escaleras tienen que ser de esta forma». Es la escalera de «bajar la escalera» del
 ## laboratorio de locomoción de character-parametric, en su versión de escalones de 15 cm.

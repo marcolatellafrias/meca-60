@@ -1,7 +1,7 @@
 class_name NetworkRows
 extends RefCounted
 
-## LAS FILAS DEL SANDBOX DE LA RED (ver SandboxRow, docs/sandbox.md): abrir y unirse a una sesión.
+## LAS FILAS DEL SANDBOX DE LA RED (ver SandboxRow, docs/technical/sandbox.md): abrir y unirse a una sesión.
 
 static func rows() -> Array[SandboxRow]:
 	return [

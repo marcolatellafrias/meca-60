@@ -1,7 +1,7 @@
 class_name ArtRows
 extends RefCounted
 
-## LAS FILAS DEL SANDBOX DEL ARTE (ver SandboxRow, docs/sandbox.md): pintar con píxeles y las partículas.
+## LAS FILAS DEL SANDBOX DEL ARTE (ver SandboxRow, docs/technical/sandbox.md): pintar con píxeles y las partículas.
 
 static func rows() -> Array[SandboxRow]:
 	var particles := ParticleArchetype.catalogue()

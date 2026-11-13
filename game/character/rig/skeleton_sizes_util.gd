@@ -12,7 +12,7 @@ class_name SkeletonSizesUtil
 ## *Hasta el 13/11/2026 esto calculaba un cuerpo entero a la manera vieja —del rig de Blender (`ReferenceRig`), la
 ## forma del torso con sus loop cuts (`TorsoShape`) y una escala horneada— y después la forma de bloques pisaba casi
 ## todo. Se rehízo para que salga sólo de la forma de bloques; los seis personajes quedaron iguales (medido con
-## tests/sizes_check.tscn, ver docs/analisis-personaje.md).*
+## tests/sizes_check.tscn, ver docs/technical/analisis-personaje.md).*
 
 ## CUÁNTO MÁS GRANDE ES ESTE PERSONAJE, como múltiplo de lo que pide su forma: la lupa del sandbox por el tamaño del
 ## arquetipo (ver EntityArchetype.body_scale). Escalar el nodo no sirve —la IK planta los pies en metros del mundo y el

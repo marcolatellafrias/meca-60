@@ -6,7 +6,7 @@ extends CanvasLayer
 ##   · gris claro   una tecla normal;
 ##   · ámbar        una principal (`SandboxKey.Weight.MAIN`), primero en su bloque;
 ##   · celeste      una F, que abre un panel.
-## El alcance de una F lo dice el bloque donde está, no un color (ver docs/sandbox.md). Las teclas del sandbox van
+## El alcance de una F lo dice el bloque donde está, no un color (ver docs/technical/sandbox.md). Las teclas del sandbox van
 ## al final, apagadas.
 ##
 ## Arriba a la izquierda, en rojo, lo que esté mal en el catálogo (ver SandboxCatalogue.check), en cualquier lado.
@@ -76,7 +76,7 @@ func _ready() -> void:
 
 ## LO QUE ESTÁ MAL EN EL CATÁLOGO: queda arriba a la izquierda hasta que se arregle.
 func show_errors(problems: PackedStringArray) -> void:
-	_errors.text = "El sandbox tiene %d problema%s (ver docs/sandbox.md):\n· %s" % [problems.size(),
+	_errors.text = "El sandbox tiene %d problema%s (ver docs/technical/sandbox.md):\n· %s" % [problems.size(),
 		"" if problems.size() == 1 else "s", "\n· ".join(problems)]
 	_errors.visible = not problems.is_empty()
 

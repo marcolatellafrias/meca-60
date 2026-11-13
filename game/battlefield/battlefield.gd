@@ -1,7 +1,7 @@
 class_name Battlefield
 extends RefCounted
 
-## EL MAPA DE PELEA (13/11/2026; ver docs/mapa.md): una arena circular de Ø 260 m, PLANA Y MAYORMENTE LIBRE para que
+## EL MAPA DE PELEA (13/11/2026; ver docs/technical/mapa.md): una arena circular de Ø 260 m, PLANA Y MAYORMENTE LIBRE para que
 ## las mecas peleen, se muevan y esquiven. Lo de la gente va JUNTO, EN EL BORDE: cuatro barrios chicos contra el muro,
 ## con casas de 11 m, edificios de 30 y uno de 44 de hito, ESCALERAS DE AFUERA para subir a los techos (un mejor ángulo,
 ## tirar la bomba, esconderse), autos y los RECURSOS en la calle de adelante de cada barrio (y unos arriba de un edificio alto). Al medio, sólo TRES RUINAS
@@ -23,7 +23,7 @@ const TALL := 30.0
 const LANDMARK := 44.0
 ## LA ESCALERA DE INCENDIO: en zigzag (dos carriles pegados a una fachada), UN TRAMO POR PISO de unos `STORY` m, con un
 ## descanso de los dos carriles en cada vuelta. Los tramos y los descansos son los de `Stairs` (escalones de 15 cm para
-## los pies, rampa para la cápsula: ver docs/escaleras.md).
+## los pies, rampa para la cápsula: ver docs/technical/escaleras.md).
 const STORY := 3.0
 const LANE := 1.4
 const LANDING := 1.6

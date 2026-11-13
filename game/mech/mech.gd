@@ -9,7 +9,7 @@ extends BalanceBody
 ##   · los brazos   MechArm: PoseArm (discretos) o MuscleArm (físicos), según `arms_kind`: los dos caminos. Sin brazos
 ##                  es la meca de práctica, para pegarle.
 ## *Hasta el 13/11/2026 el cuerpo y el equilibrio vivían acá; se separaron para compartirlos con los jefes (ver
-## docs/base-comun.md).*
+## docs/technical/base-comun.md).*
 
 ## Los brazos que lleva: ninguno (la de práctica, para pegarle), discretos o físicos.
 enum Arms { NONE, POSE, MUSCLE }

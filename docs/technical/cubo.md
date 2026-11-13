@@ -14,7 +14,7 @@ caminata.
 - **Dos velocidades de costado, aparte**: la propia (manejándolo con la **O**: arranca con *cuánto tarda en arrancar* y, al soltar, frena de a poco con *freno al soltar*) y la del retroceso que le dejan los golpes (*freno del retroceso*). Un golpe puede correrlo mucho sin que manejarlo se vuelva resbaloso.
 - **La línea de equilibrio**: el mismo golpe (lo que cambió la velocidad sin que él lo pidiera) suma a la velocidad de la
   inclinación; un resorte la devuelve. Golpes seguidos se suman. Se dibuja inclinando el dibujo sobre el canto de abajo.
-  Ver [[equilibrio]].
+  (La nota del equilibrio viejo se borró el 13/11/2026, con su meca; está en el historial de git.)
 
 Corrimiento e inclinación salen del **mismo golpe medido**, pero se escalan aparte: *retroceso* (×2,5) y *freno del
 retroceso* (cuánto se corre) e *inclinación por m/s de golpe* (cuánto se inclina).
@@ -29,7 +29,7 @@ El golpe se mide igual (el cambio de velocidad), pero el cubo mira los **contact
 
 Al tropezar cae con su velocidad física, sin el ×2,5: el retroceso de más es para verlo correrse parado.
 
-Es el punto medio entre la línea y la física pura; la física pura está en [[cubo-fisico]].
+Es el punto medio entre la línea y la física pura; la física pura era el cubo físico, borrado el 13/11/2026 (en el historial de git).
 
 ## Tropezar y caer
 Al pasar *se cae en*, el cuerpo toma la inclinación del dibujo y queda suelto, con un giro de una vez: el justo para que

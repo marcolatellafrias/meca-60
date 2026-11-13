@@ -4,7 +4,7 @@ extends SeededArchetype
 ## EL LOTE DE RECURSOS: los recursos de la meca SUELTOS (ver SupplyLook y PackageArchetype.catalogue), para agarrarlos,
 ## llevarlos y tirarlos (clic izquierdo), cada uno el cuerpo que arma `PackageArchetype.build_body`. Al fondo, FIJOS, los
 ## dos cubos que van en la meca y muestran la munición que les queda: los misiles y las balas. Y una silla para sentarse
-## (E). R los vuelve a poner en su lugar. *Todavía no se enchufan en nada: eso es lo que sigue (ver docs/recursos.md).*
+## (E). R los vuelve a poner en su lugar. *Todavía no se enchufan en nada: eso es lo que sigue (ver docs/conceptual/recursos.md).*
 
 const FOOTPRINT := Vector2(10.0, 9.0)
 const CHAIR_SCENE := "res://game/ship/working_seat.tscn"

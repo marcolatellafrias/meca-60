@@ -2,7 +2,7 @@ class_name SandboxKey
 extends RefCounted
 
 ## UNA TECLA DEL PANEL CHICO: lo que se aprieta parado en una parcela para probar algo. Se arma con una de tres formas,
-## y la forma ya dice la buena práctica (ver docs/sandbox.md):
+## y la forma ya dice la buena práctica (ver docs/technical/sandbox.md):
 ##   · `action`  hace algo una vez (tirar una bola, pegarle, subirse).
 ##   · `toggle`  prende o apaga algo; el panel muestra «nombre: sí / no» solo.
 ##   · `cycle`   pasa por POCOS estados (hasta `MAX_CYCLE`); el panel muestra «nombre: el que está».

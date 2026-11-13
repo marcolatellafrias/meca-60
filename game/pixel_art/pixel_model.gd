@@ -1,7 +1,7 @@
 class_name PixelModel
 extends Node3D
 
-## UN MODELO PINTADO CON PÍXELES, cara por cara (ver docs/pixel-art.md). Toma triángulos —de un `.glb` traído de Blender
+## UN MODELO PINTADO CON PÍXELES, cara por cara (ver docs/technical/pixel-art.md). Toma triángulos —de un `.glb` traído de Blender
 ## (`from_scene`) o de una malla armada en código (`from_mesh`, el cubo de 63 cm)—, detecta sus caras rectas
 ## (PixelFaces), les da un rectángulo a cada una en un atlas y se dibuja con esa textura, en píxeles duros.
 ##

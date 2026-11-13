@@ -1,7 +1,7 @@
 class_name CharacterRows
 extends RefCounted
 
-## LAS FILAS DEL SANDBOX DE LOS PERSONAJES (ver SandboxRow, docs/sandbox.md): los seis arquetipos y los experimentos de
+## LAS FILAS DEL SANDBOX DE LOS PERSONAJES (ver SandboxRow, docs/technical/sandbox.md): los seis arquetipos y los experimentos de
 ## locomoción. El afinador de cada arquetipo (F3) está en las dos.
 
 static func rows() -> Array[SandboxRow]:

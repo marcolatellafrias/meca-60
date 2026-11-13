@@ -1,6 +1,6 @@
 extends Node
 
-## LAS REGLAS DEL SANDBOX (ver docs/sandbox.md, SandboxCatalogue.check): el catálogo entero sin problemas. Imprime cada
+## LAS REGLAS DEL SANDBOX (ver docs/technical/sandbox.md, SandboxCatalogue.check): el catálogo entero sin problemas. Imprime cada
 ## uno y, al final, «SANDBOX OK» o cuántos hay.
 
 func _ready() -> void:

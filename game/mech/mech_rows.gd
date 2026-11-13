@@ -1,7 +1,7 @@
 class_name MechRows
 extends RefCounted
 
-## LAS FILAS DEL SANDBOX DE LA MECA (ver SandboxRow, docs/sandbox.md): sus dos caminos, la arena, el brazo suelto y,
+## LAS FILAS DEL SANDBOX DE LA MECA (ver SandboxRow, docs/technical/sandbox.md): sus dos caminos, la arena, el brazo suelto y,
 ## archivado, el cubo con piernas (la otra variante de equilibrio, congelada).
 
 static func rows() -> Array[SandboxRow]:
