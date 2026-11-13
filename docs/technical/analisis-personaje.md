@@ -104,7 +104,7 @@ Unas **9.000 líneas**, pero enganchado:
 - **`HeldInteractable`** (212): el manual y el teléfono de la nave. **El manual se queda** (va a tener uso); el
   teléfono se borró (eran sólo sus sonidos). ⚠ **La pose con que el personaje sostiene la pieza quedó a medias** (lo
   dijo el usuario el 13/11/2026): ese código no es final, hay que revisarlo antes de construir encima.
-- **El catálogo de sonidos** (`SoundCatalog`, 405): tiene las claves de la nave y de la ciudad.
+- *Hecho el 13/11/2026:* **el sonido** se simplificó entero (ver [[personajes-traidos]]).
 - **`WorldSeeds`, `WorldSettings`** (90): las semillas del día y la niebla de la ciudad.
 - **`game/character_port/`**: 13 archivos de **una o dos líneas** que existen sólo para que lo traído compile sin la
   ciudad, el tránsito, el clima ni la nave. Cada uno es un cable a cortar: al sacar quien lo nombra, se va.

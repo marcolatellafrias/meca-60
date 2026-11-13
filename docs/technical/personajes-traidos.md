@@ -72,6 +72,13 @@ la ciudad del catálogo, y los paquetes de ciudad que pedía la fila Multijugado
 **Los comentarios** dicen «el usuario» donde allá decían «el dios del juego», y «la meca» donde describían estar adentro
 de algo que se mueve (allá, la nave). Las notas de allá que nombran se citan como `character-parametric:docs/…`.
 
+**El sonido, simple** (13/11/2026, el usuario: «sonido simplificalo»): de unas 1.750 líneas a unas 230. `Sounds` busca
+el archivo `assets/audio/<carpeta>/<clave>….ogg` (varios con la misma clave se sortean) y, sin archivo, suena un clic de
+prueba; `SoundEntity` declara en `SOUNDS` qué clave suena en cada evento: golpes, loops, y el movimiento de un control
+(MOVE_UP, MOVE_DOWN, MOVE_SELF), que se apaga solo al quedar quieto. Se fueron el catálogo, los buses, la mezcla
+guardada, las variantes, las listas, las notas, los estados y transiciones, y el archivo que seguía a la mano. Test:
+`tests/sound_check.tscn`.
+
 **Falta** (de la sesión de Personajes): partir `BoneInstantiator`, separar en `PlayerController` lo del jugador de lo de
 prueba, y la pose de sostener algo con la mano (quedó a medias).
 

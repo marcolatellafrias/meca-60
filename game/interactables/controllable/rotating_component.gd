@@ -50,24 +50,17 @@ var _tilt_axis := Vector3.RIGHT
 
 
 
-## UN TIC POR PASO DE LA RUEDITA, y al girarla, UN SONIDO PARA CADA LADO cuyo archivo recorre el giro (`scrub`, ver
-## SoundEntity.move_sound): de tope a tope si tiene tope —el volante—, o una vuelta entera si no —la válvula—. Así el
-## sonido es continuo y sigue a la mano. Y GIRANDO SOLA —la inercia, un reloj—, otro, en loop y con continuidad.
+## UN TIC POR PASO DE LA RUEDITA, y al girarla, UN LOOP PARA CADA LADO (ver SoundEntity.move_sound). Y GIRANDO SOLA
+## —la inercia, un reloj—, otro.
 const SOUNDS := {
 	CLICK: &"perilla",
-	MOVE_UP: {"keys": &"rueda_derecha", "scrub": true},
-	MOVE_DOWN: {"keys": &"rueda_izquierda", "scrub": true},
-	MOVE_SELF: {"keys": &"rueda_sola", "resume": true},
+	MOVE_UP: &"rueda_derecha",
+	MOVE_DOWN: &"rueda_izquierda",
+	MOVE_SELF: &"rueda_sola",
 }
 
 func sounds() -> Dictionary:
 	return SOUNDS
-
-## Lo que recorre el archivo de la rueda: el giro de tope a tope, o una vuelta.
-func sound_range(_event: StringName) -> Vector2:
-	if max_rotation <= 0.0:
-		return Vector2(0.0, TAU)
-	return Vector2(0.0 if one_way else -max_rotation, max_rotation)
 
 ## UNA MANO SI EL ARO ES CHICO —una perilla, una válvula chica—, DOS SI ES GRANDE —el volante, una válvula grande—
 ## (lo decidió el usuario, 11/10/2026): por el radio de sus puntos. Medidos: volante y rueda 0,25 m, válvula

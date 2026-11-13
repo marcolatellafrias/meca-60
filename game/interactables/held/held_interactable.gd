@@ -18,17 +18,11 @@ extends Interactable
 ## Las manos llegan por IK a los handle points de la PIEZA (los arma cada objeto como hijos de ella), con el
 ## mismo ArmsController que maneja un control; como la pieza viaja con la cámara, las manos la siguen solas.
 ##
-## SUENA (ver SoundEntity) con eventos y estados que pone esta base, así cada objeto sólo declara su `SOUNDS`: TAKE al
-## alzarla, DROP al soltarla —en el punto del viaje de vuelta que elija su clave en el panel, del clic a la llegada
-## (ver SoundEntity, EL MOMENTO); si no se tocó, al llegar—, y los estados RESTING (en su
-## lugar), HELD (en la mano) y RETURNING (volviendo), para los loops que suenan mientras (`while`). Todo suena en la
-## pieza (`sound_anchor`), que es lo que va y viene.
+## SUENA (ver SoundEntity) con dos eventos que pone esta base, así cada objeto sólo declara su `SOUNDS`: TAKE al
+## alzarla y DROP cuando vuelve a su lugar. Suena en la pieza (`sound_anchor`), que es lo que va y viene.
 ##
 ## ⚠ FALTA LA RED: quién la tiene pasa por un ExclusiveClaim (uno solo a la vez, arbitrado por el host), pero en
 ## las otras máquinas la pieza no se mueve de su lugar.
-
-## SOLTAR es un pedido y un viaje: suena en el punto del viaje que elija su clave (ver SoundEntity, EL MOMENTO).
-const SOUND_MOMENTS := [DROP]
 
 ## Qué tan rápido viaja la pieza entre su lugar y la mano (fracción por segundo, como un lerp).
 const TRAVEL_SPEED := 10.0
@@ -46,8 +40,6 @@ var _holder_cam: Node3D = null  # el ojo de quien la tiene (ver InteractionContr
 var hold_side := 1.0
 var _returning: bool = false
 var _claim: ExclusiveClaim = null
-## Cuánto tenía que viajar la pieza de vuelta al soltarla: el avance de la transición de DROP sale de lo que le falta.
-var _drop_span := 0.0
 ## DÓNDE ESTÁ LA PIEZA RESPECTO DE LA BASE mientras viaja (ver `_process`): se guarda de un cuadro al otro, así la pieza
 ## —que va suelta del árbol, `top_level`— se mueve con la base aunque la base se mueva.
 var _piece_local := Transform3D()
@@ -78,7 +70,6 @@ func _ready() -> void:
 	_claim.name = "Claim"  # nombre estable → mismo path en todas las máquinas
 	add_child(_claim)
 	_claim.revoked.connect(release)
-	set_sound_state(RESTING)
 
 
 ## Suena en la pieza, que es lo que va a la mano.
@@ -159,13 +150,10 @@ func take(cam: Node3D) -> bool:
 	_holder_cam = cam
 	var from_cam := cam.global_transform.affine_inverse() * global_position
 	hold_side = -1.0 if from_cam.x < 0.0 else 1.0
-	if _returning:
-		cancel_sound_transition(DROP)  # la agarraron de nuevo a mitad de camino
 	if not _returning:
 		_piece_local = piece.transform
 	_returning = false
 	piece.top_level = true
-	set_sound_state(HELD)
 	play_sound(TAKE)
 	_on_taken()
 	taken.emit()
@@ -179,9 +167,6 @@ func release() -> void:
 	_returning = true
 	if _claim.is_mine():
 		_claim.release()
-	set_sound_state(RETURNING)
-	_drop_span = _piece_local.origin.distance_to(_rest.origin)
-	begin_sound_transition(DROP)
 	_on_dropped()
 	dropped.emit()
 
@@ -206,12 +191,8 @@ func _process(delta: float) -> void:
 	elif _returning:
 		_piece_local = _piece_local.interpolate_with(_rest, k)
 		piece.global_transform = base * _piece_local
-		var left := _piece_local.origin.distance_to(_rest.origin)
-		if _drop_span > 0.0:
-			sound_transition(DROP, 1.0 - left / _drop_span)
-		if left < SETTLE_DISTANCE:
+		if _piece_local.origin.distance_to(_rest.origin) < SETTLE_DISTANCE:
 			piece.top_level = false
 			piece.transform = _rest
 			_returning = false
-			set_sound_state(RESTING)
-			end_sound_transition(DROP)
+			play_sound(DROP)
