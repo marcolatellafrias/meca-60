@@ -22,12 +22,12 @@ const NAMES := ["conos con degradé", "bandas toon", "ruido que corre", "diamant
 ## La de todas las toberas (se lee al armarlas).
 static var style := Style.GRADIENT
 
-## El largo con todo (m), cuánto queda con poco, el ancho en la boca, los lados de los conos y cuánto tiembla.
-const LENGTH := 2.4
+## El largo con todo (m; elegida la de conos con degradé, «más sutiles y bajos»), cuánto queda con poco, el ancho en la boca, los lados de los conos y cuánto tiembla.
+const LENGTH := 1.4
 const LEAST := 0.35
 const RADIUS := 0.62
 const SIDES := 8
-const FLICKER := 0.14
+const FLICKER := 0.08
 
 ## Lo que comparten los shaders: `along` (0 en la boca, 1 en la punta), el ruido y los tres colores.
 const COMMON := """
@@ -112,9 +112,10 @@ func _ready() -> void:
 	var seed := randf() * 100.0
 	match shape:
 		Style.GRADIENT:
-			_cone(GRADIENT_CODE, 1.0, 1.0, Color(1.0, 0.75, 0.3, 0.85), Color(1.0, 0.45, 0.12, 0.6),
-				Color(0.9, 0.2, 0.05, 0.0), seed)
-			_cone(GRADIENT_CODE, 0.55, 0.6, Color(1.0, 1.0, 0.9, 1.0), Color(1.0, 0.85, 0.45, 0.85),
+			# Sutil (el usuario, 13/11/2026: «más sutiles y bajos»): corta y bastante transparente.
+			_cone(GRADIENT_CODE, 0.9, 1.0, Color(1.0, 0.75, 0.3, 0.5), Color(1.0, 0.5, 0.15, 0.3),
+				Color(0.9, 0.25, 0.05, 0.0), seed)
+			_cone(GRADIENT_CODE, 0.5, 0.6, Color(1.0, 1.0, 0.9, 0.75), Color(1.0, 0.85, 0.45, 0.5),
 				Color(1.0, 0.6, 0.2, 0.0), seed)
 		Style.TOON:
 			_cone(TOON_CODE, 1.0, 1.0, Color(1.0, 0.97, 0.8), Color(1.0, 0.78, 0.25), Color(0.95, 0.4, 0.1), seed)
