@@ -36,6 +36,7 @@ hacemos que funcione con paquetes y con el giro».
   - **Las toberas** (`PillarNozzles`), de placeholder: cuatro abajo al volar y cuatro a los costados en el dash.
   - Las dos barras se ven en el cartel de poseer. El F1 tiene pestañas: Moverse, Girar, Saltar y volar, Dash,
     Agacharse y Pies.
+  - **El F1 se guarda** («Guardar», «Volver a lo guardado»; ver `KnobsFile`), en un archivo del usuario que no se sube.
 - **La K elige las cajas, una configuración por vez:**
   1. Chicas y livianas sueltas (60 cm, 30 kg).
   2. Una pila alta de medianas (1,6 m, 300 kg).

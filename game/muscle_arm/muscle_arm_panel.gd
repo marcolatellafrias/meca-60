@@ -11,9 +11,19 @@ const LABELS := {
 }
 
 
+var _state: Label = null
+
+
 func setup_panel() -> void:
 	panel_width = HoverPanel.PANEL_WIDTH
-	setup("brazo con músculos", "BRAZO CON MÚSCULOS")
+	setup("brazo con músculos", "BRAZO CON MÚSCULOS", KnobsFile.buttons(MuscleArmSettings.current,
+		func() -> MuscleArmSettings: return MuscleArmSettings.new(), MuscleArmSettings.SAVED, rebuild, _say))
+	_state = state_label()
+
+
+func _say(text: String) -> void:
+	if _state != null:
+		_state.text = text
 
 
 func sections() -> Array[Dictionary]:

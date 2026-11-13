@@ -5,6 +5,8 @@ extends TunerPanel
 ## grupo (el usuario: «organices mejor el panel F con tabs»).
 
 const PANEL_WIDTH := 400.0
+
+var _state: Label = null
 const LABELS := {
 	"walk_speed": "velocidad (m/s)", "reach_time": "tiempo para llegar a ella y para frenar (s; 0: al instante)",
 	"turn_speed": "velocidad tope (°/s)", "turn_accel": "aceleración tope (°/s²)",
@@ -36,7 +38,15 @@ func setup_panel() -> void:
 	var buttons: Array[Button] = []
 	for preset: Dictionary in PRESETS:
 		buttons.append(new_button("Moverse: %s" % preset["name"], _apply.bind(preset)))
+	buttons.append_array(KnobsFile.buttons(PillarSettings.current, func() -> PillarSettings: return PillarSettings.new(),
+		PillarSettings.SAVED, rebuild, _say))
 	setup("cubo_cinematico", "CUBO CINEMÁTICO", buttons)
+	_state = state_label()
+
+
+func _say(text: String) -> void:
+	if _state != null:
+		_state.text = text
 
 
 func _apply(preset: Dictionary) -> void:

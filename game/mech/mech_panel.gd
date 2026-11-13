@@ -49,10 +49,8 @@ var _state: Label = null
 
 func setup_panel() -> void:
 	panel_width = PANEL_WIDTH
-	setup("meca", "MECA", [
-		new_button("Guardar", _save),
-		new_button("Volver a lo guardado", _restore),
-	])
+	setup("meca", "MECA", KnobsFile.buttons(BodySettings.current, func() -> BodySettings: return BodySettings.new(),
+		BodySettings.SAVED, rebuild, _say, BodySettings.FROM_BODY))
 	_state = state_label()
 	_state.text = "lo que dice «sale del F2» lo pone la forma de la meca (F2) y no se guarda acá"
 
@@ -65,16 +63,6 @@ func sections() -> Array[Dictionary]:
 		"defaults": BodySettings.new()}]
 
 
-func _save() -> void:
-	var error := BodySettings.save_current()
-	if error != OK:
-		push_warning("MechPanel: no se pudo guardar %s (%d)" % [BodySettings.SAVED, error])
-	elif _state != null:
-		_state.text = "guardado (menos lo que sale del F2)"
-
-
-func _restore() -> void:
-	BodySettings.restore_current()
-	rebuild()
+func _say(text: String) -> void:
 	if _state != null:
-		_state.text = "volvió a lo guardado (menos lo que sale del F2)"
+		_state.text = text

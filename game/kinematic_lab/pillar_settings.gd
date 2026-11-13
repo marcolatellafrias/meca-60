@@ -5,7 +5,10 @@ extends Resource
 ## pestaña por grupo. TODO EN METROS Y SEGUNDOS: cada movimiento se define por lo que hace, no por fuerzas (13/11/2026;
 ## el usuario: «movimiento más discreto y menos físico»).
 
-static var current := PillarSettings.new()
+## Se guarda (ver KnobsFile): el F1 tiene «Guardar» y «Volver a lo guardado». El archivo es del usuario.
+const SAVED := "res://game/kinematic_lab/pillar_settings.tres"
+
+static var current := KnobsFile.load_into(PillarSettings.new(), SAVED) as PillarSettings
 
 @export_group("Moverse")
 ## UNA velocidad, y el TIEMPO PARA LLEGAR a ella, el mismo para arrancar y para frenar (0: al instante). Sin correr: para

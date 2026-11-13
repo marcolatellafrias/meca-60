@@ -4,7 +4,10 @@ extends Resource
 ## LAS PERILLAS DEL BRAZO CON MÚSCULOS (ver MuscleArm): una sola copia para todos (`current`), que arma su panel
 ## (MuscleArmPanel, F1 en la fila Brazo).
 
-static var current := MuscleArmSettings.new()
+## Se guarda (ver KnobsFile): el F1 tiene «Guardar» y «Volver a lo guardado». El archivo es del usuario.
+const SAVED := "res://game/muscle_arm/muscle_arm_settings.tres"
+
+static var current := KnobsFile.load_into(MuscleArmSettings.new(), SAVED) as MuscleArmSettings
 
 @export_group("Los músculos")
 ## Cada músculo gira su pieza hacia donde la pide la pose: cuánto tira por radián que le falta (1/s²) y cuánto frena

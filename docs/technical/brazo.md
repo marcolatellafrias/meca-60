@@ -37,7 +37,7 @@ brazo. La idea es la de PuppetMaster: **la IK dice la pose; el cuerpo físico la
 - **1** directo · **2** gancho · **3** uppercut · **4** desde arriba. Cada piña son unos puntos por los que se pide
   que pase el puño, con sus tiempos (se arma atrás, pega, se queda un instante y vuelve a la guardia).
 - **N** pone una pared donde está el bloque (y lo guarda), o la saca. **J/K**, una bola liviana o pesada contra el brazo. **R** vuelve a armar todo.
-- **F1** las perillas (`MuscleArmSettings`): el resorte, el freno y la fuerza del músculo; cuánto más rápidas las piñas.
+- **F1** las perillas (`MuscleArmSettings`): el resorte, el freno y la fuerza del músculo; cuánto más rápidas las piñas. Se guardan («Guardar», «Volver a lo guardado»; ver `KnobsFile`), en un archivo del usuario que no se sube.
 - **A mano** ([[poseer]]: mirándolo, **O**): el mouse lleva la mano de costado y arriba y abajo, W/S adelante y atrás.
 - `tests/muscle_arm_look.tscn` (unos 30 s, sin el sandbox).
 
