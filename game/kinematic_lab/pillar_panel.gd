@@ -7,19 +7,19 @@ extends TunerPanel
 const PANEL_WIDTH := 400.0
 const LABELS := {
 	"walk_speed": "velocidad (m/s)", "reach_time": "tiempo para llegar a ella y para frenar (s; 0: al instante)",
-	"air_control": "en el aire, cuánto se controla (parte)", "loose_mode": "cómo trata lo suelto",
+	"air_control": "en el aire, cuánto se controla (parte)",
 	"turn_speed": "velocidad tope (°/s)", "turn_accel": "aceleración tope (°/s²)",
 	"jump_height": "salto (m)", "air_gravity": "en el aire pesa (veces)",
 	"thrust": "vuelo: empuje (m/s²)", "thrust_time": "vuelo: la barra dura (s)",
 	"thrust_refill": "vuelo: se llena apoyado en (s)",
 	"dash_speed": "suma (m/s)", "dash_lift": "en el aire, sube a (m/s)", "dash_hold": "un rato sin frenar (s)",
 	"dash_cost": "gasta de la barra (parte)", "dash_refill": "la barra se llena en (s)",
-	"crouch_share": "agachado: alto que queda (parte)", "crouch_rate": "ritmo (partes por s)",
-	"cap_extra": "topadora: sale como mucho tanto más rápido (m/s)",
-	"ghost_extra": "atraviesa: empuja tanto más rápido (m/s)",
+	"crouch_share": "agachado: pierna que queda (parte)", "crouch_rate": "ritmo (partes por s)",
+	"leg_height": "alto de las piernas (m)", "stance": "separación de los pies, del medio (m)",
+	"step_length": "largo del paso (m)", "step_time": "el paso tarda (s)", "step_height": "el pie sube (m)",
 }
 ## Una pestaña por grupo de PillarSettings.
-const TABS: Array[String] = ["Moverse", "Girar", "Saltar y volar", "Dash", "Agacharse", "Con lo suelto"]
+const TABS: Array[String] = ["Moverse", "Girar", "Saltar y volar", "Dash", "Agacharse", "Pies"]
 
 
 ## LAS CONFIGURACIONES DE UN TOQUE (el usuario: «quiero probar varias combinaciones… pero no un millón de opciones…

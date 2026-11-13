@@ -40,15 +40,16 @@ static var current := PillarSettings.new()
 @export_range(0.2, 20.0, 0.1) var dash_refill := 3.0
 
 @export_group("Agacharse")
-## Agachado, el alto que le queda (parte) y a qué ritmo cambia (partes por segundo).
+## Agachado, el largo de pierna que le queda (parte) y a qué ritmo cambia (partes por segundo).
 @export_range(0.3, 1.0, 0.05) var crouch_share := 0.6
 @export_range(0.1, 3.0, 0.05) var crouch_rate := 0.5
 
-@export_group("Con lo suelto")
-## CÓMO TRATA LO SUELTO (ver KinematicPillar): la topadora con tope, por defecto (el usuario: «sí, la topadora por
-## defecto, y las otras opciones de física las pondría en el panel F»).
-@export_enum("Jolt puro", "topadora con tope", "atraviesa y empuja", "lo suelto lo frena") var loose_mode := 1
-## TOPADORA CON TOPE: lo más que lo suelto sale hacia afuera más rápido que el cubo (m/s).
-@export_range(0.0, 10.0, 0.25) var cap_extra := 1.5
-## ATRAVIESA Y EMPUJA: cuánto más rápido que el cubo sale lo que empuja (m/s).
-@export_range(0.0, 10.0, 0.25) var ghost_extra := 0.5
+@export_group("Pies")
+## LAS PIERNAS: su alto (m: a cuánto del piso va la cara de abajo de la caja) y cuánto se separan los pies del medio.
+@export_range(2.0, 12.0, 0.5) var leg_height := 6.0
+@export_range(0.5, 4.0, 0.1) var stance := 1.8
+## LOS PASOS: un pie sale cuando quedó a más de medio `step_length` de su lugar, tarda `step_time` y sube `step_height`.
+## Con pasos más cortos en el tiempo, el pie va más rápido y patea más fuerte.
+@export_range(1.0, 10.0, 0.25) var step_length := 4.0
+@export_range(0.1, 1.5, 0.05) var step_time := 0.3
+@export_range(0.0, 4.0, 0.1) var step_height := 1.5

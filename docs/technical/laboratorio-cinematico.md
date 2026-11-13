@@ -7,7 +7,7 @@ interacción de cinemático con físico… vamos por partes. Primero definimos c
 hacemos que funcione con paquetes y con el giro».
 
 ## Qué hay
-- **El cubo** (`KinematicPillar`): una caja de 6 × 18 × 6 m apoyada en el piso, cinemática y poseíble con la O.
+- **El cubo** (`KinematicPillar`): una caja de 6 × 12 × 6 m sobre dos pies (piernas de 6 m), cinemática y poseíble con la O.
   - Se mueve con WASD, gira con el mouse (con tope de velocidad y de aceleración), salta con espacio y hace dash con
     Shift. **No corre**: para esquivar está el dash.
   - **Moverse, lo más simple** (el usuario: «quiero dejar el sistema lo más simple que se pueda… que sea una sola
@@ -34,11 +34,19 @@ hacemos que funcione con paquetes y con el giro».
   - **El F1 tiene pestañas**: Moverse, Girar, Saltar y volar, Dash, Agacharse y Con lo suelto.
   - Medido (`kinematic_lab_moves_look`), con el movimiento de antes (arrancar y frenar con tope): el dash en el piso
     lo corría 21,6 m y en lo alto de un salto 29,4 m. Sin dirección no hace nada. Volando con la barra entera sube hasta 34 m en 2 s.
-- **El F1 elige cómo trata lo suelto** (pestaña Con lo suelto; **por defecto, la topadora con tope**):
-  1. **Jolt puro**: masa infinita.
-  2. **Topadora con tope**: nada suelto cercano sale hacia afuera más rápido que la caja, más 1,5 m/s.
-  3. **Atraviesa y empuja**: no choca por Jolt con lo suelto cercano; lo saca él, por la cara más cercana.
-  4. **Lo suelto lo frena**: como una pared. Al bajar, se apoya encima.
+- **Con qué choca cada cosa** (13/11/2026, lo charlado con el usuario):
+  - **Contra lo fijo del mundo** (edificios, paredes, el piso), **un cilindro** de 4,6 m de radio, más grande que el
+    cubo, del piso al techo. Girar nunca lo traba y en las esquinas se desliza. Se prueba sólo contra lo fijo: lo
+    suelto no lo frena nunca. En la parcela hay un edificio y una pared larga para probarlo.
+  - **Contra lo suelto, lo que se ve, por el motor y sin reglas extra**: la caja de arriba empuja lo alto, y **los pies**
+    (`PillarFeet`), que tienen choque de verdad, **patean** de costado.
+  - **Lo que queda debajo de algo suyo que baja se achata** (un pie, o la caja al agacharse o al caer): suena, larga polvo
+    y desaparece. No se aprieta contra el piso: eso era lo que hacía explotar al motor. Para un pie, «debajo» es más
+    abajo que su medio. **Los personajes todavía no se achatan**: falta ver cómo muere uno.
+  - **Entre los pies queda libre.**
+  - *Las cuatro reglas a mano que se probaron antes (Jolt puro, topadora con tope, atraviesa y empuja, lo suelto lo
+    frena) se sacaron. La del tope arrastraba las cajas como un imán y las hacía saltar con el cubo: medía la velocidad
+    de la caja respecto del cubo, y un cubo que se aleja es lo mismo que una caja que se aleja.*
 - **La K elige las cajas, una configuración por vez:**
   1. Chicas y livianas sueltas (60 cm, 30 kg).
   2. Una pila alta de medianas (1,6 m, 300 kg).
@@ -46,22 +54,35 @@ hacemos que funcione con paquetes y con el giro».
   4. Una pared de medianas.
 - **La N**: una lluvia de seis cajas de la configuración de ahora, encima del cubo.
 
-## Lo medido (13/11/2026)
-Corriendo a 14 m/s contra las cajas, después salta, se agacha y se para. Se mide la caja que sale más rápido **de
-costado** (lo que gana cayendo no cuenta), en m/s, y en qué momento.
+## Lo medido (13/11/2026, `kinematic_lab_look`)
+El cubo camina a 8 m/s entre las cajas, salta, se agacha y se para. Se mide la caja que sale más rápido **de costado**
+(lo que gana cayendo no cuenta).
 
-| | chicas | pila | autos | pared |
-|---|---|---|---|---|
-| Jolt puro | 16,6 corriendo | 17,3 saltando | 16,2 corriendo | 14,5 saltando |
-| Topadora con tope | 17,6 saltando | **7,2** | 16,4 corriendo | **8,8** |
-| Atraviesa y empuja | 17,6 corriendo | 18,4 saltando | 15,2 corriendo | 19,1 saltando |
-| Lo suelto lo frena | 10,2 | **30,7 corriendo** | 7,9 | **27,3 corriendo** |
+| Cajas | La más rápida de costado | Achatadas |
+|---|---|---|
+| Chicas y livianas | 9,0 m/s | 13 de 42 |
+| Una pila alta de medianas | 29,7 m/s | 7 de 24 |
+| Autos | ninguno se movió de costado | 2 de 6 |
+| Una pared de medianas | 23,0 m/s | 6 de 40 |
 
-- **Nada quedó metido adentro del cubo**, en ninguna forma.
-- **La lluvia encima**, en las cuatro formas: las cajas quedan arriba o caen al costado, y nada sale despedido de costado
-  más de 9,4 m/s, ni agachándose ni parándose ni saltando.
-- **El cubo frena** contra la pila y la pared en la topadora (avanza 23–24 m en vez de 85) y en la pared (12–16 m).
+- **Las patadas**: lo chico sale más o menos a la velocidad del cubo; las medianas, hasta 30 m/s, casi cuatro veces.
+  Un pie recorre su paso en 0,3 s, así que va bastante más rápido que el cubo.
+- **La lluvia encima**: nada sale de costado a más de 8,2 m/s. No acható ninguna (caen sobre el techo).
+- **Contra lo fijo**: el eje del cubo queda a 4,61 m del edificio y de la pared (el radio del cilindro); pegado al
+  edificio gira los 180° enteros; yendo en diagonal contra la pared se desliza 17 m a lo largo.
+- El cubo nunca se frena con lo suelto: avanza lo mismo (49 m) con cualquier configuración.
 
 ## Lo que encontré armándolo
 Con la física sincronizada, poner la posición del cuerpo desde afuera no alcanza: el cuerpo la pisa con la suya. Por eso
 el cubo guarda dónde está y se lo pone con `put`.
+- **Un cuerpo cinemático que se pone en otro lugar barre lo que hay en el medio**, a la velocidad de ese salto. Los pies
+  cruzaban 22 m en un paso y las cajas salían a 430 m/s. Por eso, para ponerlos en un lugar, se apaga la sincronización
+  un instante (`place_now`, `put`); y en el aire los pies se juntan debajo del cubo de a poco.
+- **Un cuerpo entra a la física donde está al agregarlo al árbol.** Los pies nacían en el origen del mundo y estaban ahí
+  un paso entero: una caja que estuviera justo ahí salía a 143 m/s. Ahora nacen en su lugar.
+- **Una prueba de movimiento que arranca tocando algo no lo cuenta como choque.** Con el cilindro apoyado justo en el
+  piso, lo atravesaba y caía sin fin. Se prueba levantado 5 cm.
+- **Las cajas nuevas no pueden nacer encimadas**, ni con las viejas ni entre sí: el motor las separa a lo bruto (una
+  caja a 500 m/s con el cubo quieto). Las viejas se sacan antes y las chicas van en una grilla.
+- **Saltear lo suelto de a uno con pocas vueltas** hacía que una pila de más cajas que vueltas frenara al cubo como una
+  pared.

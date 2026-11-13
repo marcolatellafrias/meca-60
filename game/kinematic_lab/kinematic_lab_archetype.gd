@@ -6,7 +6,8 @@ extends SeededArchetype
 ##   · LAS CAJAS, UNA CONFIGURACIÓN POR VEZ (la K las cambia): chicas y livianas sueltas, una pila alta de medianas,
 ##     grandes y pesadas como autos, o una pared de medianas. El usuario: «no las quiero mezcladas, pero sí un toggle con
 ##     varias configuraciones».
-##   · LA FORMA DE INTERACTUAR del cubo con lo suelto: en el F1 (por defecto, la topadora con tope; ver KinematicPillar).
+##   · DOS OBSTÁCULOS FIJOS, a los costados: un edificio y una pared larga, para girar y deslizarse contra ellos (el
+##     cubo choca con lo fijo con un cilindro; ver KinematicPillar).
 ##   · LA LLUVIA (la N): cajas de la configuración de ahora caen encima del cubo, donde esté. El usuario: «así vemos como
 ##     es cuando saltas y te das cosas encima o cuando te agachas y te desagachas».
 ## Mirándolo, O lo posee.
@@ -43,8 +44,8 @@ func max_footprint() -> Vector2:
 
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
-		"EXPERIMENTO: un cubo cinemático hasta el piso, contra cajas sueltas",
-		"K las cajas · N lluvia de cajas encima · O poseerlo · F1 las perillas (y cómo trata lo suelto)",
+		"EXPERIMENTO: un cubo cinemático sobre dos pies; contra lo fijo es un cilindro, los pies patean y achatan",
+		"K las cajas · N lluvia de cajas encima · O poseerlo · F1 las perillas",
 		"poseído: WASD, mouse gira, Shift dash, Ctrl se agacha, espacio salta y, en el aire, vuela",
 	])
 
@@ -57,6 +58,12 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	pillar.name = "Cubo"
 	pillar.position = START
 	root.add_child(pillar)
+	# LO FIJO: un edificio a la izquierda y una pared larga a la derecha.
+	var fixed := StaticBody3D.new()
+	fixed.name = "Fijo"
+	root.add_child(fixed)
+	Clay.solid(fixed, Vector3(12.0, 26.0, 12.0), Vector3(-24.0, 13.0, 6.0), Clay.METAL.lightened(0.2))
+	Clay.solid(fixed, Vector3(2.0, 14.0, 40.0), Vector3(24.0, 7.0, 4.0), Clay.METAL.lightened(0.1))
 	var holder := Node3D.new()
 	holder.name = "Cajas"
 	root.add_child(holder)
@@ -66,7 +73,10 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 
 ## LAS CAJAS de la configuración `which`, en `holder` (borra las que había).
 static func lay_out(holder: Node3D, which: Boxes) -> void:
+	# Las viejas se sacan YA del árbol: borradas recién al final del cuadro, las nuevas aparecían encimadas con ellas y
+	# el motor las separaba a lo bruto (medido el 13/11/2026: una caja a 500 m/s con el cubo quieto).
 	for old in holder.get_children():
+		holder.remove_child(old)
 		old.queue_free()
 	var kind: Dictionary = BOX_KINDS[which]
 	var size: Vector3 = kind["size"]
@@ -74,9 +84,12 @@ static func lay_out(holder: Node3D, which: Boxes) -> void:
 	random.seed = 7
 	match which:
 		Boxes.SMALL:
-			for i in 40:
-				KinematicLabArchetype.box(holder, BOXES_AT + Vector3(random.randf_range(-8, 8), size.y * 0.5,
-					random.randf_range(-8, 8)), which, random.randf() * TAU)
+			# En una grilla, corridas un poco: al azar del todo, dos nacían encimadas y el motor las separaba a lo bruto
+			# (medido el 13/11/2026: una caja a 500 m/s con el cubo quieto).
+			for i in 42:
+				var cell := Vector3((i % 7 - 3) * 2.5, 0.0, (floori(i / 7.0) - 2.5) * 2.5)
+				KinematicLabArchetype.box(holder, BOXES_AT + cell + Vector3(random.randf_range(-0.7, 0.7), size.y * 0.5,
+					random.randf_range(-0.7, 0.7)), which, random.randf() * TAU)
 		Boxes.PILE:
 			for i in 24:
 				var x := (i % 2) * (size.x + 0.05) - size.x * 0.5
