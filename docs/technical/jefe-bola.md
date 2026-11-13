@@ -165,6 +165,8 @@ acá la regla era «todo es equilibrio, no hay vida».*
   La piña cuenta si el puño (`MechHand`), pegando, pasa a menos de 2 m de la bola; una por piña.
 - **Sin vida el jefe** queda quieto («derrotado»); **sin vida la meca**, el jefe deja de pelear («ganó»). La **R** vuelve
   a armar todo.
+- **Los paneles de la fila**: el F1 es el del jefe; el F2 (moverse), el F3 (la forma) y el F4 (las piernas) son los de
+  la meca que pelea, de la Meca. Los del jefe que vengan van del F5 en adelante.
 - **La K cambia la meca** entre los cuatro tipos, con los nombres del usuario (`BallBossArchetype.Kind`):
 
 | Tipo | Torso | Brazos | Cabina | En el código |
