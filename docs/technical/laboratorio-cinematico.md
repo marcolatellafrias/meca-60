@@ -8,8 +8,8 @@ hacemos que funcione con paquetes y con el giro».
 
 ## Qué hay
 - **El cubo** (`KinematicPillar`): una caja de 6 × 18 × 6 m apoyada en el piso, cinemática y poseíble con la O.
-  - Se mueve con WASD, gira con el mouse (con tope de velocidad y de aceleración), salta con espacio y hace dash con la
-    Q. **No corre**: para esquivar está el dash.
+  - Se mueve con WASD, gira con el mouse (con tope de velocidad y de aceleración), salta con espacio y hace dash con
+    Shift. **No corre**: para esquivar está el dash.
   - **Moverse, lo más simple** (el usuario: «quiero dejar el sistema lo más simple que se pueda… que sea una sola
     velocidad»): una velocidad y el **tiempo para llegar** a ella, el mismo para arrancar y frenar (0: al instante), y
     cuánto se controla en el aire.
@@ -23,7 +23,7 @@ hacemos que funcione con paquetes y con el giro».
   - Las perillas están en el F1 (`PillarSettings`).
 - **La locomoción de la meca futura** se prueba con el cubo (el usuario: «empezar a trabajar en todo lo de locomoción de
   la meca futura, pero con este cubo»):
-  - **El dash, con la Q**: un impulso hacia donde apretás, el mismo en el piso y en el aire. **Sin dirección no pasa
+  - **El dash, con Shift** (era la Q mientras Shift corría): un impulso hacia donde apretás, el mismo en el piso y en el aire. **Sin dirección no pasa
     nada.** Tiene su barra, que se llena sola.
   - **Lo que hace de roce**: el cubo no tiene fricción con el piso. Lo frena moverse, que lleva la velocidad a la
     pedida. Por eso, durante `dash_hold` (0,25 s) después del dash, moverse no lo frena.
@@ -33,7 +33,7 @@ hacemos que funcione con paquetes y con el giro».
     echan un fogonazo del lado contrario al dash.
   - **El F1 tiene pestañas**: Moverse, Girar, Saltar y volar, Dash, Agacharse y Con lo suelto.
   - Medido (`kinematic_lab_moves_look`), con el movimiento de antes (arrancar y frenar con tope): el dash en el piso
-    lo corría 21,6 m y en lo alto de un salto 29,4 m. La Q sin dirección no hace nada. Volando con la barra entera sube hasta 34 m en 2 s.
+    lo corría 21,6 m y en lo alto de un salto 29,4 m. Sin dirección no hace nada. Volando con la barra entera sube hasta 34 m en 2 s.
 - **El F1 elige cómo trata lo suelto** (pestaña Con lo suelto; **por defecto, la topadora con tope**):
   1. **Jolt puro**: masa infinita.
   2. **Topadora con tope**: nada suelto cercano sale hacia afuera más rápido que la caja, más 1,5 m/s.

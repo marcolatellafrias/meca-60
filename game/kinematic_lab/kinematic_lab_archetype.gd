@@ -45,7 +45,7 @@ func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"EXPERIMENTO: un cubo cinemático hasta el piso, contra cajas sueltas",
 		"K las cajas · N lluvia de cajas encima · O poseerlo · F1 las perillas (y cómo trata lo suelto)",
-		"poseído: WASD, mouse gira, Q dash, Ctrl se agacha, espacio salta y, en el aire, vuela",
+		"poseído: WASD, mouse gira, Shift dash, Ctrl se agacha, espacio salta y, en el aire, vuela",
 	])
 
 

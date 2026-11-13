@@ -31,7 +31,7 @@ static var current := PillarSettings.new()
 @export_range(0.2, 10.0, 0.1) var thrust_refill := 3.0
 
 @export_group("Dash")
-## EL DASH (la Q, con una dirección): suma `dash_speed` (m/s) hacia allá; en el aire, además, sube a `dash_lift`.
+## EL DASH (Shift, con una dirección): suma `dash_speed` (m/s) hacia allá; en el aire, además, sube a `dash_lift`.
 ## Durante `dash_hold` (s) caminar no lo frena. Gasta `dash_cost` de su barra, que se llena sola en `dash_refill` (s).
 @export_range(2.0, 60.0, 0.5) var dash_speed := 18.0
 @export_range(0.0, 20.0, 0.5) var dash_lift := 3.0

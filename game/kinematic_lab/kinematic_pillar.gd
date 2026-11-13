@@ -10,7 +10,7 @@ extends AnimatableBody3D
 ## (el alto cambia de a poco). Jolt no lo mueve: cada paso se pone donde calculó (el motor sabe su velocidad).
 ## LA LOCOMOCIÓN DE LA MECA FUTURA se prueba acá (el usuario, 13/11/2026: «empezar a trabajar en todo lo de locomoción de
 ## la meca futura, pero con este cubo»):
-##   · EL DASH (la Q): un impulso hacia donde apretás, EN EL PISO Y EN EL AIRE, el mismo («que sea un solo sistema que
+##   · EL DASH (Shift; hasta el 13/11/2026 la Q, mientras Shift corría): un impulso hacia donde apretás, EN EL PISO Y EN EL AIRE, el mismo («que sea un solo sistema que
 ##     lo puedo usar siempre»). SIN DIRECCIÓN NO PASA NADA. Tiene su barra (`dash_fuel`), que se llena sola. Un rato
 ##     (`dash_hold`) caminar no lo frena: frenar es lo que hace de roce, y sin eso en el piso duraba nada.
 ##   · EL VUELO (espacio otra vez, en el aire): empuja para arriba mientras le quede su barra (`fly_fuel`), que se llena
@@ -381,7 +381,7 @@ func _read() -> void:
 	move = Vector2(MechKeys.axis(KEY_D, KEY_A), MechKeys.axis(KEY_W, KEY_S))
 	crouch = Input.is_physical_key_pressed(KEY_CTRL)
 	jump = Input.is_physical_key_pressed(KEY_SPACE)
-	dash = Input.is_physical_key_pressed(KEY_Q)
+	dash = Input.is_physical_key_pressed(KEY_SHIFT)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -401,7 +401,7 @@ func possess_controls() -> PackedStringArray:
 		"W/S adelante y atrás · A/D de costado · mouse gira (con tope)",
 		"Ctrl se agacha (baja de a poco) · espacio salta",
 		"en el aire, espacio otra vez: vuela (su barra se llena apoyado)",
-		"Q con una dirección: dash, en el piso y en el aire (su barra se llena sola)",
+		"Shift con una dirección: dash, en el piso y en el aire (su barra se llena sola)",
 	])
 
 
