@@ -29,6 +29,9 @@ const PICKUP_LIFT_S := 1.0
 const PICKUP_PITCH := 1.2
 
 var bi: BoneInstantiator
+## A MANO: lo maneja alguien con las teclas (ver CharacterPossession) y el guion no camina, no salta ni mueve la mirada;
+## quedan las manos.
+var manual := false
 
 
 ## EL DE `who`, creado la primera vez. Desde ahí lo maneja un guion: mira hacia donde el guion le pide.
@@ -463,12 +466,13 @@ func _physics_process(delta: float) -> void:
 	_was_fallen = fallen
 	if fallen:
 		return
-	var lifting := hands and _carry_step(delta)
-	_throw_step(delta)
-	if not lifting:
-		_walk()
-	_jump_step(delta)
-	_look(delta)
+	if not manual:
+		var lifting := hands and _carry_step(delta)
+		_throw_step(delta)
+		if not lifting:
+			_walk()
+		_jump_step(delta)
+		_look(delta)
 	if hands:
 		_place_eye()
 		_hands.update(delta)

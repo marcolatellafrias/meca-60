@@ -237,6 +237,12 @@ func sit(bi: Node) -> bool:
 	return true
 
 
+## QUIÉN ESTÁ SENTADO, o null. Sentado no tiene colisión (ver `_sit`): para apuntarle, se apunta a su silla (ver
+## SandboxPossession._look).
+func occupant() -> Node:
+	return _seated_bi if is_instance_valid(_seated_bi) else null
+
+
 ## Lo para en el lugar, si estaba sentado acá.
 func release(bi: Node) -> void:
 	if _seated_bi == bi:

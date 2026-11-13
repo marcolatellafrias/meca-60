@@ -28,12 +28,26 @@ Lo que está en el grupo `possessable` y contesta, por nombre:
 | `possess_camera(first, delta)` | dónde va la cámara, en primera o en tercera persona |
 | `possess_status()` (si quiere) | lo que le pasa ahora: una carga, un combustible |
 
-Hoy: la [[meca]] (las dos filas y la de práctica), el [[cubo-con-piernas]] y el [[brazo]] físico.
-Pendiente: los personajes (hay que pasarles el control del jugador).
+Hoy: la [[meca]] (las dos filas y la de práctica), el [[cubo-con-piernas]], el [[brazo]] físico y **los personajes**:
+cualquiera que no sea el jugador y se simule (los maniquíes de las sillas de la meca, la gente de la fila Locomoción).
 
-Test: `tests/possess_check.tscn`.
+## Poseer a un personaje
+`game/character/character_possession.gd` (`CharacterPossession`). Simple a propósito: **no se le cambia la clase** ni
+se le pasa el control del jugador. El teclado y el mouse aprietan los botones de su intención, como un guion, y las
+manos son las de `CharacterActions`. Por eso sigue siendo lo que era: va en el marco de la meca, se choca y se cae
+igual (poseído se levanta solo, como el jugador). **Al soltarlo queda como quedó** —parado, tirado o sentado— y no
+vuelve solo a su silla.
+
+- **E**: sentado, se para; mirando una silla, se sienta (por su intención, sin el pedido al host del jugador); si no,
+  usa lo que mira. WASD, shift, espacio y Ctrl como el jugador; clic izquierdo agarra, R tira.
+- **Mirando una silla ocupada se posee al que está sentado**, no a la meca: sentado no tiene colisión.
+- El rayo de poseer no ve **la sombra de un marco** (`MotionFrame.LAYER`, la copia de la meca para los de adentro),
+  que tapaba las sillas.
+
+Test: `tests/possess_check.tscn`; los personajes, `tests/possess_character.tscn`.
 
 ## Historia
+- 13/11/2026: se poseen personajes, empezando por los maniquíes de las sillas de la meca.
 - 12/11/2026: la primera persona pasa del frente de la caja al asiento de adentro, con la cabeza libre; los cubos
   ganan una cabina por dentro (un piso con vidrio y parantes, como los de la meca).
 - 12/11/2026: nace, y reemplaza al «manejar desde afuera» que tenían por separado la meca (O, T, E) y los cubos (O, E).

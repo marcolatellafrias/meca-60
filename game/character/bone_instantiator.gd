@@ -115,7 +115,33 @@ func _ready() -> void:
 	if kind.is_local():
 		player_controller = PlayerController.new()
 		add_child(player_controller)
+	elif CharacterPossession.allowed(self):
+		add_to_group(SandboxPossession.GROUP)
 	initialize_skeleton()
+
+
+## ── POSEERLO (la O del sandbox, ver SandboxPossession y CharacterPossession) ────────────────────────────────────────
+## Su nombre, o su arquetipo (los maniquíes se llaman como la escena).
+func possess_name() -> String:
+	if entity_instantiation != null and (name == &"player_root" or str(name).begins_with("@")):
+		return String(EntityArchetype.Archetype.keys()[entity_instantiation.archetype_type]).capitalize()
+	return str(name)
+
+
+func possess_controls() -> PackedStringArray:
+	return CharacterPossession.of(self).controls()
+
+
+func possess_begin() -> void:
+	CharacterPossession.of(self).begin()
+
+
+func possess_end() -> void:
+	CharacterPossession.of(self).end()
+
+
+func possess_camera(first: bool, delta: float) -> Transform3D:
+	return CharacterPossession.of(self).camera(first, delta)
 
 ## CONSTRUYE (O RECONSTRUYE) EL PERSONAJE ENTERO desde la seed: tamaños, rig, cápsula, cuerpo visible,
 ## animación y ragdoll.

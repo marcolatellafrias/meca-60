@@ -175,14 +175,22 @@ func _look() -> Node3D:
 		return null
 	var from := camera.global_position
 	var query := PhysicsRayQueryParameters3D.create(from, from - camera.global_basis.z * REACH)
-	query.collision_mask = 0xFFFFFFFF & ~PhysicsLayers.PARCEL_BOUND
+	# Ni las paredes de las parcelas ni la sombra de un marco (ver MotionFrame.LAYER: una copia de la meca para los que
+	# van adentro, que tapaba las sillas de la cabina; la meca de verdad sigue en su capa).
+	query.collision_mask = 0xFFFFFFFF & ~PhysicsLayers.PARCEL_BOUND & ~MotionFrame.LAYER
 	var hit := camera.get_world_3d().direct_space_state.intersect_ray(query)
 	var node := hit.get("collider") as Node
 	while node != null:
+		# UNA SILLA OCUPADA: el que está sentado (sentado no tiene colisión: se le apunta a la silla). Antes que la meca
+		# de la silla.
+		var seat := node as SeatInteractable
+		if seat != null and seat.occupant() != null and seat.occupant().is_in_group(GROUP):
+			return seat.occupant() as Node3D
 		if node.is_in_group(GROUP):
 			return node as Node3D
 		node = node.get_parent()
 	return null
+
 
 
 ## EL CARTEL (poseyendo) y LA PISTA (sin poseer: qué poseería la O).
