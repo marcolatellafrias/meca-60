@@ -20,6 +20,10 @@ cualquiera, y lo que se elige es **qué usar en qué momento**, no qué equipar 
 ## Los puestos
 - **Cada brazo es de una persona**: su punta y lo montado en él son una sola unidad que maneja ella.
 - **Otra maneja el movimiento y otra, la espalda.**
+- **Dónde se sienta cada uno, con cuatro** (14/11/2026, lo definió el usuario con la sesión Interior; ver [[cabina]]): la
+  cabina es de 3 × 3 módulos y un piso alto, con un entrepiso al fondo. **Adelante, a la izquierda, el brazo izquierdo; a
+  la derecha, el derecho; al medio, el movimiento. Arriba, en el entrepiso, la espalda.** El movimiento y la espalda
+  podrían intercambiarse. Bajo el entrepiso, a nivel del piso, la carga de munición y el cambio de batería.
 - **Con dos** (14/11/2026): **el que mueve la meca dispara también lo de la espalda**, y el otro maneja los dos brazos. Los
   dos brazos, con todo lo que pueden hacer, ya son bastante.
 - Con menos jugadores, cada uno maneja más cosas, pero más simples; con más, menos cosas, con más libertad.
