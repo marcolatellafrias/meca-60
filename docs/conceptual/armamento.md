@@ -19,9 +19,28 @@ cualquiera, y lo que se elige es **qué usar en qué momento**, no qué equipar 
 
 ## Los puestos
 - **Cada brazo es de una persona**: su punta y lo montado en él son una sola unidad que maneja ella.
-- **Otra maneja el movimiento.** Podría partirse en dos, si moverse resulta complejo.
-- **El cuarto puesto está abierto.** No vale que sea sólo de servicio: tiene que influir tanto como los otros.
-- Falta ver **cómo se maneja con tres o con dos**. Con uno, no se puede.
+- **Otra maneja el movimiento y otra, la espalda.**
+- **Con dos** (14/11/2026): **el que mueve la meca dispara también lo de la espalda**, y el otro maneja los dos brazos. Los
+  dos brazos, con todo lo que pueden hacer, ya son bastante.
+- Con menos jugadores, cada uno maneja más cosas, pero más simples; con más, menos cosas, con más libertad.
+- **El automático**, lo que nadie maneja y anda solo, queda como **último recurso**: si hace falta, sólo para los
+  misiles de la espalda.
+
+## Energía y munición: dos dinámicas
+**Los brazos gastan energía; la espalda gasta munición** (el usuario, 14/11/2026: «hace que los distintos armamentos
+tengan una especie de dinámica distinta»).
+- **La munición se gasta y hay que ir a buscarla al mapa.**
+- **La energía es la estamina de la meca, una sola para todos**: se gasta, se vacía y se recarga sola. **Coordinarse en
+  cómo se usa es la idea básica del juego**: no se pueden hacer muchos dashes y todos los ataques a la vez.
+- **Sin energía, la meca queda aturdida un rato.**
+- **El máximo baja de a poco con el uso**, como una batería de auto o de celular que pierde capacidad: es el cardio de
+  una pelea larga.
+- **Cambiar la batería** le devuelve el máximo y además **la llena al instante**: también se usa como estrategia.
+
+## El tablero mínimo: lo que tienen todos los puestos
+- **El nivel de la energía** (y su máximo).
+- **Un dibujo de la meca en su posición de ese momento**: adentro, sentado, se pierde la noción de cómo está la meca en el
+  espacio.
 
 ## Primera versión
 **La punta del brazo** (es la mano, o la reemplaza):
