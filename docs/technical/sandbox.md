@@ -60,7 +60,8 @@ En el panel chico, el alcance lo dice el bloque donde aparece (ESTA PARCELA, EST
 total: gris para lo normal, ámbar para lo principal y celeste para las F.
 
 ## Teclas reservadas (`SandboxKey.RESERVED`)
-- WASD, espacio, shift, Ctrl, E y Escape.
+- WASD, espacio, shift, Ctrl, E y Escape. Con el ente, shift corre; dos toques seguidos dan el turbo (×4) y tres el
+  segundo turbo (×16), para cruzar el sandbox (`CharacterRigidBody3D.turbo_factor`).
 - **R** regenera (o arma) y **C** copia.
 - **V** prende el modo creativo; la **B** corta también, y la **B** larga cambia entre ente y cuerpo.
 - **I** el inspector, **O** poseer y **T** la vista de lo poseído.

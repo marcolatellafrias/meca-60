@@ -37,8 +37,9 @@ var turn_held := false
 var hand_motion := Vector2.ZERO
 var reach_steps := 0.0
 var activate := false
-## EL TURBO del ente (ver CharacterRigidBody3D, MOVIMIENTO DIRECTO): corriendo, cuatro veces más.
-var turbo := false
+## EL TURBO del ente (ver CharacterRigidBody3D, MOVIMIENTO DIRECTO): 0 sin turbo, 1 con dos toques de shift (cuatro
+## veces más), 2 con tres (otras cuatro veces más, para cruzar el sandbox).
+var turbo := 0
 ## QUÉ AGARRA (un Interactable: lo que lleva, el control que maneja) o null; y, si quien lo maneja lo eligió, a qué punto
 ## de agarre va (si no, al más cercano al agarrar). Los brazos van por un solo camino (ArmsController.drive_grab).
 var grab: Node = null

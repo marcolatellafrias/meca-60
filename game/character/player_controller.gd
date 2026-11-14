@@ -191,14 +191,16 @@ func _input(event: InputEvent) -> void:
 		_set_creative(not _creative)
 		return
 
-	# EL TURBO (ver CharacterRigidBody3D, MOVIMIENTO DIRECTO): dos toques de shift en menos de `TURBO_TAP` y mientras se lo
-	# mantiene. Sólo con movimiento directo, el del ente.
+	# EL TURBO (ver CharacterRigidBody3D, MOVIMIENTO DIRECTO): dos toques de shift seguidos (cada uno a menos de
+	# `TURBO_TAP` del anterior) dan el turbo, tres el segundo turbo; dura mientras se mantiene. Sólo con movimiento
+	# directo, el del ente.
 	if is_instance_valid(bi) and event.is_action_pressed("sprint") and not event.is_echo():
 		var now := Time.get_ticks_msec() / 1000.0
-		bi.intent.turbo = _direct() and now - _last_sprint_tap < TURBO_TAP
+		_sprint_taps = _sprint_taps + 1 if now - _last_sprint_tap < TURBO_TAP else 1
 		_last_sprint_tap = now
+		bi.intent.turbo = clampi(_sprint_taps - 1, 0, 2) if _direct() else 0
 	elif is_instance_valid(bi) and event.is_action_released("sprint"):
-		bi.intent.turbo = false
+		bi.intent.turbo = 0
 
 	# ── Mouse motion ─────────────────────────────────────────────────────────
 	if event is InputEventMouseMotion:
@@ -498,6 +500,7 @@ func _switch_to(target: BoneInstantiator) -> void:
 const TURBO_TAP := 0.3
 const SEAT_LOOK := Vector2(2.4, 1.3)
 var _last_sprint_tap := -1.0
+var _sprint_taps := 0
 
 
 ## Las teclas de depuración del juego (F, G, P, H, el numpad): sólo con depuración.

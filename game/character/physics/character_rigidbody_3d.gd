@@ -729,8 +729,9 @@ func _update_impact_pd(delta: float) -> void:
 
 ## ── MOVIMIENTO DIRECTO (el ente, ver CharacterKind.Motion) ────────────────────────────────────────────────────────
 ## Para recorrer y probar cómodo: la velocidad que pide es la que tiene, al instante, sin aceleración, frenada ni golpes.
-## Camina a `DIRECT_WALK`, corre `DIRECT_SPRINT` veces más y con turbo (dos toques de shift, ver PlayerController) otras
-## `DIRECT_TURBO`; salta a `DIRECT_JUMP` con su propia gravedad, `DIRECT_GRAVITY`. Los números del ente del sandbox.
+## Camina a `DIRECT_WALK`, corre `DIRECT_SPRINT` veces más, con turbo (dos toques de shift, ver PlayerController) otras
+## `DIRECT_TURBO` y con el segundo turbo (tres toques) otras `DIRECT_TURBO` encima; salta a `DIRECT_JUMP` con su propia
+## gravedad, `DIRECT_GRAVITY`. Los números del ente del sandbox.
 const DIRECT_WALK := 4.5
 const DIRECT_SPRINT := 1.8
 const DIRECT_TURBO := 4.0
@@ -822,7 +823,7 @@ func _apply_movement_force() -> void:
 	if kind.motion == CharacterKind.Motion.DIRECT:
 		var pace := DIRECT_WALK * crouch_speed_factor
 		if intent.sprint and crouch_speed_factor >= 1.0:
-			pace *= DIRECT_SPRINT * (DIRECT_TURBO if intent.turbo else 1.0)
+			pace *= DIRECT_SPRINT * turbo_factor()
 		linear_velocity += direction * pace * minf(total_input, 1.0) - horizontal_vel
 		return
 	var is_changing_direction := horizontal_vel.dot(direction) < 0.0
@@ -947,8 +948,11 @@ func set_creative_mode(enabled: bool) -> void:
 		is_snapshot_active = true
 
 func _apply_creative_fly() -> void:
-	linear_velocity = CreativeFlight.velocity(global_transform.basis) \
-		* (DIRECT_TURBO if intent != null and intent.turbo else 1.0)
+	linear_velocity = CreativeFlight.velocity(global_transform.basis) * turbo_factor()
+
+## Cuánto multiplica el turbo que pide (ver MOVIMIENTO DIRECTO): 1, `DIRECT_TURBO` o `DIRECT_TURBO` al cuadrado.
+func turbo_factor() -> float:
+	return pow(DIRECT_TURBO, intent.turbo) if intent != null else 1.0
 
 const CROUCH_CAPSULE := 0.42
 
