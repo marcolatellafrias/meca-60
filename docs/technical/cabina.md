@@ -121,3 +121,31 @@ Test para mirar: `tests/cabin_grid_look.tscn` (unos 10 segundos por forma, sin e
 Por cada forma: de frente, cortada de costado, desde un asiento y mirando abajo desde el vidrio; escribe las medidas.
 El panel: `tests/cabin_shape_check.tscn` (una parcela con la meca, pasa a 2 × 2 y 2 pisos con «Probar»). Caminar adentro y afuera sigue en
 `tests/mech_ride_check.tscn`.
+
+## La cabina que viene: redonda, de 4 × 4 y un piso (en diseño, 14/11/2026)
+
+Todavía no está en el código: se está dibujando en 2D y en arcilla, separada de la meca. Lo decidido hasta ahora:
+
+- **La forma:** 4 × 4 módulos de planta (7,56 m por dentro) y un solo piso de 5,04 m (128 celdas). Por fuera, un
+  cilindro liso. Por dentro, un polígono regular de 16 caras inscripto en ese cilindro: la diferencia con el círculo
+  son 7 cm y queda dentro de la pared.
+- **Una sola trama:** 16 zonas iguales de 22,5° y tres anillos alrededor del ascensor (el borde del paso a 2,6 m, el
+  de los tableros a 3,1 m y la pared). Cada cosa ocupa zonas enteras y tiene su forma, sin rincones sobrantes ni topes
+  (el usuario: «espacios continuos… evitar espacios residuales o topes»).
+  - **Adelante:** un tablero corrido de tres zonas, con una división por puesto.
+  - **A cada lado:** una zona libre, que es el paso a la escalera.
+  - **Después, la escalera:** dos zonas de la banda (45° dan justo un tramo de 1,2 m), siguiendo las caras.
+  - **Atrás, la media luna a 1,2 m:** siete zonas. En el frente de las cinco del medio, de cara al ascensor, van los
+    cuatro kits de reparación y la batería, cada brazo de su lado. Las zonas de las puntas quedan libres porque ahí
+    llega la escalera.
+  - **Arriba, en la pared:** la munición, metida de modo que hacia afuera sólo sobresalga el cubo.
+- **Los puestos:**
+  - **Con cuatro:** tres adelante (el brazo izquierdo, el movimiento y el brazo derecho) y la espalda arriba, en la
+    media luna, con los mandos en los apoyabrazos.
+  - **Con tres:** falta decidir entre dos adelante y uno arriba, o los tres adelante con el del medio centrado.
+  - **Con dos:** los dos adelante, cada uno en su zona, con la zona del medio en el medio. Falta resolver qué va en esa
+    zona; se va a ver al hacer los tableros.
+- **El ascensor** sigue en el centro, del suelo a la planta, con 1,3 m de radio.
+
+Las plantas y las maquetas son pruebas sueltas: `tests/bridge_ideas_look.tscn`, `tests/crew_cabin_look.tscn` y
+`tests/round_cabin_outside_look.tscn` (las de afuera).
