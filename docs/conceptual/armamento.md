@@ -46,6 +46,28 @@ tengan una especie de dinámica distinta»).
 - **Un dibujo de la meca en su posición de ese momento**: adentro, sentado, se pierde la noción de cómo está la meca en el
   espacio.
 
+## El movimiento: te conectás (14/11/2026)
+**El que maneja se conecta** (un casco, unos guantes) y **sus controles de a pie pasan a la meca**: WASD, el mouse,
+Shift el dash, y agacharse y saltar con las mismas teclas que a pie. Su cuerpo queda quieto mientras está conectado
+(el usuario: «todos los mismos controles que te dan cuando estás a pie, pero en la meca… uno ya los aprende
+instintivamente»). Con controles físicos se haría una cosa a la vez y no sería fluido. Cómo se ve, todavía tentativo.
+- **Secundarios del puesto**: **el ascensor** y **eyectarse**. Eyectarse no puede estar libre siempre: sería la forma
+  rápida de bajar, en vez del ascensor. Abierto: cuándo se habilita.
+- **El dibujo de la meca va en una pantalla**, no en un holograma, y **la energía en un tablero inclinado** hacia el que
+  va sentado.
+- **Descartado**: repartir la energía entre piernas y brazos (el gasto ya lo reparte solo: un ataque fuerte te deja
+  sin dash; es la estamina de un juego de a pie), avisar a la tripulación, anclarse, agacharse aparte.
+
+## El casco y las roturas (abierto)
+- **El estado del casco** es la salud de la meca: por debajo de un nivel, explota. *Cambia lo que decía [[la-meca]]
+  («no hay vida»), como ya lo cambió el jefe bola.*
+- **Además se rompe cada sistema** (un brazo, el lanzamisiles…), **a medias**: rinde peor siendo **más difícil de
+  manejar o más lento**, no haciendo menos daño (con menos daño se lo deja de usar). Que se vea.
+- **Romperse del todo no**: dejaría al que lo maneja sin nada que hacer más que arreglarlo.
+- Quizá **los dos brazos tengan que ser distintos**: si uno se rompe, cambia la estrategia. Decisión para después.
+- La reparación, abierta: con un recurso del mapa, afuera en la fachada (pide algo caminable afuera, que se había dejado
+  por la caja simple), o con **un minijuego adentro**, que obliga a dejar el control propio mientras.
+
 ## La base mínima para empezar (14/11/2026)
 **Un arma por puesto**, y sobre eso se diseñan los tableros, **de a uno** (el usuario: «prefiero empezar de a uno»),
 empezando por el del movimiento.
