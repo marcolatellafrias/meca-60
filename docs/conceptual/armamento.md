@@ -69,7 +69,9 @@ instintivamente»). Con controles físicos se haría una cosa a la vez y no ser�
 - **La espalda no se rompe**: ya tiene su límite, la munición, y arreglar algo en el techo no se entiende. Su munición
   también se carga desde un módulo.
 - **La batería es de toda la meca**: la energía (ver arriba).
-- Quizá **los dos brazos tengan que ser distintos**: si uno se rompe, cambia la estrategia. Decisión para después.
+- **Los brazos los elige la tripulación**, iguales o distintos (dos sierras, por ejemplo): no es obligatorio que sean
+  distintos. Lo que hay que buscar es que **dos brazos iguales o parecidos se potencien** y no sean dos controles para
+  lo mismo.
 - **El casco, aparte y también reparable** (14/11/2026): la salud de la meca; por debajo de un nivel, explota. Se
   repara con su kit, como los sistemas. *Cambia lo que decía [[la-meca]] («no hay vida»), como ya lo cambió el jefe bola.*
 
@@ -83,6 +85,15 @@ recursos**, cubos de 63 cm (ver [[recursos]]):
   dónde ponerlo. Es la única excepción a «cada hueco acepta sólo su tipo».
 - **Un golpe daña donde pega**: un brazo, ese brazo; las piernas o una caída, el movimiento; la caja, el casco. Nada
   se cuenta dos veces, y cubrirse con un brazo cuida el casco a costa del brazo.
+
+## Los brazos: cómo se manejan (14/11/2026, abierto)
+- **Botones discretos para las acciones** (cargar más fuerte, y más habilidades), **y un solo modo que captura el
+  mouse: apuntar**. El brazo no se conecta como el movimiento: con controles sueltos no es tedioso.
+- **Expresión del jugador**: que haya más que «liviano o fuerte»; apuntar, timing, el gesto de tirar lo agarrado.
+- **El camino que se prueba: un híbrido**. Las acciones son discretas; las ejecuta el brazo con músculos (la inercia, el
+  peso; roto, los músculos más flojos: apunta peor). Hoy es demasiado lento: un experimento de la sesión Meca lo hace más
+  rápido **sin que deje de sentirse físico**. **Sin topes al impulso que le da a lo suelto** (ya se probó y se
+  descartó: «empezamos a pelear con el motor de físicas y nunca termina bien»).
 
 ## La base mínima para empezar (14/11/2026)
 **Un arma por puesto**, y sobre eso se diseñan los tableros, **de a uno** (el usuario: «prefiero empezar de a uno»),
