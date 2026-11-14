@@ -17,6 +17,11 @@ static var current := KnobsFile.load_into(MuscleArmSettings.new(), SAVED) as Mus
 ## LA FUERZA: lo más que puede acelerar su pieza (rad/s²). Es lo que decide si puede con lo que tiene adelante: con
 ## poca, algo pesado lo frena o lo traba.
 @export_range(10.0, 2000.0, 10.0) var muscle_max := 420.0
+## SEGUIR LA VELOCIDAD PEDIDA (14/11/2026; el usuario: «se mueven muy lento… es muy clunky y no se siente responsive»,
+## pero que siga sintiéndose físico): el freno del músculo no frena contra quedarse quieto sino contra la velocidad a la
+## que se mueve la pose pedida (una piña), así que arranca a tiempo en vez de esperar a quedarse atrás. 0: como antes
+## (frena todo movimiento); 1: sigue la velocidad entera. La fuerza tope es la misma: no empuja más fuerte.
+@export_range(0.0, 1.0, 0.05) var follow := 1.0
 
 @export_group("Las piñas")
 ## Cuánto más rápido (o más lento) se piden las piñas: los tiempos de cada una, divididos por esto.

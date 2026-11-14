@@ -50,6 +50,13 @@ var manual := false
 
 var _label: Label3D = null
 var _chase_yaw := 0.0
+## La pose pedida el paso anterior (de cada pieza): de ahí sale a qué velocidad gira la pose (ver `follow`).
+var _last_upper := Basis()
+var _last_forearm := Basis()
+var _has_last := false
+
+## Lo más rápido que se le pide girar a una pieza por seguir la pose (rad/s): un salto de la IK no es una velocidad.
+const FOLLOW_MOST := 40.0
 
 
 func _ready() -> void:
@@ -153,8 +160,17 @@ func _physics_process(delta: float) -> void:
 	var beside := out - length_axis * out.dot(length_axis)
 	# Empuja contra lo que lo sostiene: si es un cuerpo suelto (la meca), lo gira para el otro lado.
 	var holder := anchor as RigidBody3D
-	var asked := _asked(upper, (pose["upper"] as Transform3D).basis,
-		holder.angular_velocity if holder != null else Vector3.ZERO, k)
+	# LA VELOCIDAD DE LA POSE PEDIDA (ver MuscleArmSettings.follow): cuánto giró cada pieza pedida desde el paso
+	# anterior. El freno frena contra eso: así el músculo arranca con la piña y no detrás de ella.
+	var upper_wanted := (pose["upper"] as Transform3D).basis
+	var forearm_wanted := (pose["forearm"] as Transform3D).basis
+	var upper_spin := MuscleArm._spin(_last_upper, upper_wanted, delta) if _has_last else Vector3.ZERO
+	var forearm_spin := MuscleArm._spin(_last_forearm, forearm_wanted, delta) if _has_last else Vector3.ZERO
+	_last_upper = upper_wanted
+	_last_forearm = forearm_wanted
+	_has_last = true
+	var holder_spin := holder.angular_velocity if holder != null else Vector3.ZERO
+	var asked := _asked(upper, upper_wanted, holder_spin.lerp(upper_spin, k.follow), k)
 	var rolling := length_axis * asked.dot(length_axis)
 	var shoulder_torque := rolling * (float(upper.get_meta("along")) + forearm.mass * beside.length_squared()) \
 		+ (asked - rolling) * (float(upper.get_meta("across")) + forearm.mass * out.length_squared())
@@ -163,7 +179,7 @@ func _physics_process(delta: float) -> void:
 		holder.apply_torque(-shoulder_torque)
 	# EL CODO sólo dobla: sobre el eje de su bisagra, y empujando al brazo para el otro lado.
 	var hinge_axis := forearm.global_basis.y.normalized()
-	var bend := _asked(forearm, (pose["forearm"] as Transform3D).basis, upper.angular_velocity, k)
+	var bend := _asked(forearm, forearm_wanted, upper.angular_velocity.lerp(forearm_spin, k.follow), k)
 	var torque := hinge_axis * bend.dot(hinge_axis) * float(forearm.get_meta("across"))
 	forearm.apply_torque(torque)
 	upper.apply_torque(-torque)
@@ -180,8 +196,8 @@ func _physics_process(delta: float) -> void:
 
 
 ## LO QUE PIDE UN MÚSCULO: la aceleración de giro (rad/s², ejes del mundo) que lleva a `body` hacia `wanted` (la
-## orientación que pide la pose), con su resorte y su freno —medido contra el giro `against` de la pieza anterior—, hasta
-## su fuerza tope.
+## orientación que pide la pose), con su resorte y su freno —medido contra el giro `against`: el de la pieza anterior o,
+## siguiendo la pose (`follow`), el de la pose pedida—, hasta su fuerza tope.
 func _asked(body: RigidBody3D, wanted: Basis, against: Vector3, k: MuscleArmSettings) -> Vector3:
 	var turn := (wanted.orthonormalized() * body.global_basis.orthonormalized().inverse()).get_rotation_quaternion()
 	if turn.w < 0.0:
@@ -190,6 +206,17 @@ func _asked(body: RigidBody3D, wanted: Basis, against: Vector3, k: MuscleArmSett
 	var angle := 2.0 * acos(clampf(turn.w, -1.0, 1.0))
 	var pull := (axis.normalized() * angle if axis.length() > 0.00001 else Vector3.ZERO) * k.muscle_kp
 	return (pull - (body.angular_velocity - against) * k.muscle_kd).limit_length(k.muscle_max)
+
+
+## A QUÉ VELOCIDAD GIRA (rad/s, ejes del mundo) una orientación que pasó de `from` a `to` en `delta` segundos; con tope.
+static func _spin(from: Basis, to: Basis, delta: float) -> Vector3:
+	var turn := (to.orthonormalized() * from.orthonormalized().inverse()).get_rotation_quaternion()
+	if turn.w < 0.0:
+		turn = -turn
+	var axis := Vector3(turn.x, turn.y, turn.z)
+	if axis.length() < 0.000001 or delta <= 0.0:
+		return Vector3.ZERO
+	return (axis.normalized() * 2.0 * acos(clampf(turn.w, -1.0, 1.0)) / delta).limit_length(FOLLOW_MOST)
 
 
 ## ── POSEERLO (ver SandboxPossession): llevarlo a mano ────────────────────────────────────────────────────────────

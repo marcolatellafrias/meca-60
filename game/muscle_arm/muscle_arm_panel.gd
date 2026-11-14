@@ -6,6 +6,7 @@ extends KnobsPanel
 const LABELS := {
 	"muscle_kp": "músculo: resorte (cuánto tira)", "muscle_kd": "músculo: freno",
 	"muscle_max": "músculo: fuerza tope (rad/s²)",
+	"follow": "músculo: sigue la velocidad pedida (0 no, 1 entera)",
 	"punch_speed": "piñas: cuánto más rápidas (×)",
 	"mouse_reach": "a mano: m por cada 100 px del mouse", "depth_speed": "a mano: W/S adelante y atrás (m/s)",
 }
