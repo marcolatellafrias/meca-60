@@ -149,5 +149,6 @@ Todavía no está en el código: se está dibujando en 2D y en arcilla, separada
     zona; se va a ver al hacer los tableros.
 - **El ascensor** sigue en el centro, del suelo a la planta, con 1,3 m de radio.
 
-Las plantas y las maquetas son pruebas sueltas: `tests/bridge_ideas_look.tscn`, `tests/crew_cabin_look.tscn` y
-`tests/round_cabin_outside_look.tscn` (las de afuera).
+Las dos en prueba (la cuadrada, sobre una trama de celdas de 63 cm, el tamaño del cubo, y la redonda) están en una
+sola maqueta de arcilla, separada de la meca: `tests/two_cabins_look.tscn`. Se pasan a la meca de verdad cuando se elija
+una. La cuadrada encaja en la grilla de hoy: una celda de 63 cm son 16 celdas de la grilla, y un módulo, tres cubos.
