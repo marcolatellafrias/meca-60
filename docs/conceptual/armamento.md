@@ -46,6 +46,17 @@ tengan una especie de dinámica distinta»).
 - **Un dibujo de la meca en su posición de ese momento**: adentro, sentado, se pierde la noción de cómo está la meca en el
   espacio.
 
+## La base mínima para empezar (14/11/2026)
+**Un arma por puesto**, y sobre eso se diseñan los tableros, **de a uno** (el usuario: «prefiero empezar de a uno»),
+empezando por el del movimiento.
+- **Brazo izquierdo**: la sierra.
+- **Brazo derecho**: el puño, con un cañón de energía.
+- **La espalda**: una ametralladora y un lanzamisiles. **La ametralladora pasa a la espalda**: los brazos son sólo de
+  energía (láser y cosas así), y lo de munición va atrás.
+- **El movimiento**: sólo andar, girar y los dashes.
+- **Todos los tableros** llevan el nivel de energía y **la meca dibujada en 3D, sólo su contorno** (el holograma de líneas
+  de la ciencia ficción).
+
 ## Primera versión
 **La punta del brazo** (es la mano, o la reemplaza):
 1. **Puño**: pega y **agarra** (un poste, un auto, un jugador para subirlo). La mano que agarra es el mismo puño.
