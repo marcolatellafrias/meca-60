@@ -89,7 +89,17 @@ recursos**, cubos de 63 cm (ver [[recursos]]):
 ## Los brazos: cómo se manejan (14/11/2026, abierto)
 - **Botones discretos para las acciones** (cargar más fuerte, y más habilidades), **y un solo modo que captura el
   mouse: apuntar**. El brazo no se conecta como el movimiento: con controles sueltos no es tedioso.
-- **Expresión del jugador**: que haya más que «liviano o fuerte»; apuntar, timing, el gesto de tirar lo agarrado.
+- **El control es poco y en 2D** (14/11/2026; el usuario: «difícil de controlar algo en 3 dimensiones moviendo un mouse
+  en 2»): el mouse elige **adónde** (adónde va la piña, el tiro, lo que se arroja), y el jugador elige **cuándo** y
+  **cuánto carga**. Nada de seguir trayectorias o costuras con el mouse. **La habilidad es manejar un brazo físico difícil
+  y sincronizarse con los otros.**
+- **Un solo tipo de piña**: el daño sale del contacto y del impulso que lleva; con una animación más simple o más
+  compleja según la carga. Varias piñas de un mismo puño no tienen gracia.
+- **Los ataques tocan el equilibrio y la energía**: además de gastar, pueden desequilibrar a la meca un momento (más
+  expuesta) o moverla (el cañón muy fuerte la tira para atrás).
+- **Agarrar al jefe y a los jugadores, todavía no**; agarrar objetos del mapa y arrojarlos, quizás para empezar.
+- **El orden** (el usuario): primero el brainstorm de armas; después cómo se manejan; recién después los controles de
+  las cabinas.
 - **El camino que se prueba: un híbrido**. Las acciones son discretas; las ejecuta el brazo con músculos (la inercia, el
   peso; roto, los músculos más flojos: apunta peor). Hoy es demasiado lento: un experimento de la sesión Meca lo hace más
   rápido **sin que deje de sentirse físico**. **Sin topes al impulso que le da a lo suelto** (ya se probó y se
