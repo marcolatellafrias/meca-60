@@ -79,6 +79,10 @@ recursos**, cubos de 63 cm (ver [[recursos]]):
 - **Cuatro de reparación**: el casco, el movimiento, el brazo izquierdo y el derecho.
 - **Dos de munición**, uno por cada arma de la espalda.
 - **Uno de batería**, la de toda la meca.
+- **El kit de reparación es uno solo** y sirve en cualquiera de los cuatro huecos de reparación: lo que se decide es
+  dónde ponerlo. Es la única excepción a «cada hueco acepta sólo su tipo».
+- **Un golpe daña donde pega**: un brazo, ese brazo; las piernas o una caída, el movimiento; la caja, el casco. Nada
+  se cuenta dos veces, y cubrirse con un brazo cuida el casco a costa del brazo.
 
 ## La base mínima para empezar (14/11/2026)
 **Un arma por puesto**, y sobre eso se diseñan los tableros, **de a uno** (el usuario: «prefiero empezar de a uno»),
