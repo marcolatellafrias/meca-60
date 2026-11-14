@@ -105,6 +105,19 @@ recursos**, cubos de 63 cm (ver [[recursos]]):
   rápido **sin que deje de sentirse físico**. **Sin topes al impulso que le da a lo suelto** (ya se probó y se
   descartó: «empezamos a pelear con el motor de físicas y nunca termina bien»).
 
+## Las armas de brazo: lo que quedó del segundo brainstorm (14/11/2026)
+- **El puño es uno**, con **modificadores**: de resorte (más alcance), cohete (más velocidad), eléctrico. Siguen
+  funcionando como un puño.
+- **La maza**: reemplaza a la mano.
+- **Sierra circular, motosierra y taladro.**
+- **La hoja**, con variantes de la misma hoja: caliente, en llamas, eléctrica, con sierra.
+- **A distancia, con energía**: el cañón de energía, el rayo, el arco eléctrico y **el lanzallamas** (en el brazo, con
+  energía: en la espalda se sentiría peor).
+- **Quizás**: la garra, el imán (potencial, pero un gimmick), el gancho con cable (hace lo mismo que el resorte).
+- **No**: el martillo neumático (quizás un puño neumático, más adelante), la lanza retráctil.
+- **Cada tipo ataca con su animación**: una espada no pega como un puño.
+- **Cubrirse no es de todos los brazos**: depende del brazo. Ver los escudos (abierto).
+
 ## La base mínima para empezar (14/11/2026)
 **Un arma por puesto**, y sobre eso se diseñan los tableros, **de a uno** (el usuario: «prefiero empezar de a uno»),
 empezando por el del movimiento.
