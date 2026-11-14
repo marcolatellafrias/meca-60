@@ -22,8 +22,9 @@ cualquiera, y lo que se elige es **qué usar en qué momento**, no qué equipar 
 - **Otra maneja el movimiento y otra, la espalda.**
 - **Dónde se sienta cada uno, con cuatro** (14/11/2026, lo definió el usuario con la sesión Interior; ver [[cabina]]): la
   cabina es de 3 × 3 módulos y un piso alto, con un entrepiso al fondo. **Adelante, a la izquierda, el brazo izquierdo; a
-  la derecha, el derecho; al medio, el movimiento. Arriba, en el entrepiso, la espalda.** El movimiento y la espalda
-  podrían intercambiarse. Bajo el entrepiso, a nivel del piso, la carga de munición y el cambio de batería.
+  la derecha, el derecho; al medio, la espalda. Arriba, en el entrepiso, el movimiento** (el usuario, 14/11/2026: el de
+  atrás, con las escaleras, se lee con más jerarquía, y el que mueve es el que ve lo global, así que va más lejos del
+  vidrio; antes iba al revés). Bajo el entrepiso, a nivel del piso, la carga de munición y el cambio de batería.
 - **Con dos** (14/11/2026): **el que mueve la meca dispara también lo de la espalda**, y el otro maneja los dos brazos. Los
   dos brazos, con todo lo que pueden hacer, ya son bastante.
 - Con menos jugadores, cada uno maneja más cosas, pero más simples; con más, menos cosas, con más libertad.
@@ -123,6 +124,8 @@ recursos**, cubos de 63 cm (ver [[recursos]]):
 timing**: prenderlo **gasta un golpe de energía**, y mantenerlo gasta un poco más por cada segundo.
 - *Descartado*: cubrirse apuntando un brazo (muy finicky, y ningún brazo cubre todas las zonas); escudos por zonas o
   parry por zonas (desde adentro de la cabina no se lee si un misil va al torso o al brazo).
+- **El parry**: prendido justo antes del impacto, el golpe de energía del arranque es menor o no se cobra. Así no castiga
+  tanto.
 - Abierto: quién lo maneja.
 
 ## La base mínima para empezar (14/11/2026)
