@@ -24,11 +24,16 @@ extends CharacterBody3D
 ## cielo). Para apuntar de costado gira la bola entera, con las patas (el usuario: «la rendija es en la otra dirección, si
 ## quiere rotar en y, va a usar las piernas»).
 
-## El radio de la bola, el alto de la rendija y su fondo (m).
+## El radio de la bola (m).
 const RADIUS := 15.0
 ## Ancha y poco hundida (el usuario: «la rendija más gruesa y menos indentada»).
-const SLIT := 4.0
 const SLIT_DEPTH := 0.6
+## EL CASCO LOW POLY (BallShell): franjas de polo a polo, cuántas del medio son la rendija, y caras alrededor. El ancho de
+## la rendija sale de ahí (2·radio·sen de media rendija).
+const SHELL_BANDS := 16
+const SLIT_BANDS := 2
+const SHELL_SIDES := 18
+const SLIT := 2.0 * RADIUS * 0.19509
 ## El cilindro contra lo fijo: un poco más ancho que la bola (m).
 const REACH := 16.0
 
@@ -119,19 +124,11 @@ static func _dress(ball: AnimatableBody3D) -> void:
 	sphere.radius = RADIUS
 	shape.shape = sphere
 	ball.add_child(shape)
-	for side: float in [1.0, -1.0]:
-		var half := SphereMesh.new()
-		half.radius = RADIUS
-		half.height = RADIUS
-		half.is_hemisphere = true
-		var part := MeshInstance3D.new()
-		part.mesh = half
-		part.material_override = Clay.material(Clay.METAL.darkened(0.05))
-		# La media esfera mira a su +Y: se la acuesta para que mire a un costado.
-		part.position = Vector3.RIGHT * SLIT * 0.5 * side
-		part.rotation = Vector3(0.0, 0.0, -PI * 0.5 * side)
-		ball.add_child(part)
-	Clay.cylinder(ball, RADIUS - SLIT_DEPTH, SLIT + 0.2, Vector3.ZERO, Clay.DARK.darkened(0.4), Vector3(0.0, 0.0, 90.0))
+	var shell := MeshInstance3D.new()
+	shell.mesh = BallShell.mesh(RADIUS, SHELL_BANDS, SLIT_BANDS, SHELL_SIDES, SLIT_DEPTH)
+	shell.set_surface_override_material(0, Clay.material(Clay.METAL.darkened(0.05)))
+	shell.set_surface_override_material(1, Clay.material(Clay.DARK.darkened(0.4)))
+	ball.add_child(shell)
 
 
 func _physics_process(delta: float) -> void:

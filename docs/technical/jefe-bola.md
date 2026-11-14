@@ -14,8 +14,12 @@ posee (la **O**). La computadora todavía no.
 - **La bola** (`BallBoss`): mide 30 m y su centro va a 20 m del piso, así que el techo queda a 35 m. Es **casi el
   doble de la meca**, que mide 18 m («por lo menos el doble… después podemos cambiar las escalas»), y va **cerca del
   piso**: la panza, a 5 m.
-- **La rendija va de arriba a abajo**: da toda la vuelta de adelante, por arriba, hacia atrás. Separa dos medias
-  esferas, la izquierda y la derecha, y mide 4 m de ancho y se hunde 0,6 m, con el fondo oscuro. El cañón va a subir y bajar por ella:
+- **El casco es una esfera low poly** (`BallShell`, 14/11/2026): 16 franjas de polo a polo, con los polos a los
+  costados, y 18 caras alrededor. Las 2 franjas del medio no están: en su lugar va **la rendija**, hundida 0,6 m, con el
+  fondo oscuro (mide 5,9 m de ancho). La silueta sigue siendo una esfera, como la hitbox. El usuario: «una esfera más o
+  menos low poly, agarrar una cierta cantidad de segmentos del medio y reemplazarlos por una rendija». *Antes eran dos
+  medias esferas separadas por la rendija, y quedaba raro.* Es provisorio a propósito («no hagas código tan permanente»).
+- **La rendija va de arriba a abajo**: da toda la vuelta de adelante, por arriba, hacia atrás. El cañón va a subir y bajar por ella:
   disparar adelante o al cielo. **Para apuntar de costado, la bola gira con las patas** (el usuario, 13/11/2026: «la
   rendija es en la otra dirección, si quiere rotar en y, va a usar las piernas»). El cañón va metido en ella (paso 2).
 - **Se mueve como el cubo cinemático** (hoy, la meca simplificada): con el controlador de personaje del motor (`CharacterBody3D`). Contra lo fijo
