@@ -22,6 +22,7 @@ El detalle, en [[partida]].
 | [[contratos]] | Las mecas enemigas (dificultad y paga, arquetipos con partes y afijos) y la otra tripulación. |
 | [[base]] | La compañía bajo tierra: contratos, mejoras, práctica, reparación (abierta), carga. |
 | [[recursos]] | Los cubos de 63 cm (batería, componente, munición, bomba) y cómo se van a enchufar. |
+| [[armamento]] | Las armas y agregados de la primera versión (puntas de brazo, montadas, espalda, propulsores), los efectos universales y la munición que los elige. |
 
 ## Técnico (el código de hoy)
 | Nota | Qué tiene |
