@@ -133,6 +133,23 @@ timing**: prenderlo **gasta un golpe de energía**, y mantenerlo gasta un poco m
   tanto.
 - **Lo maneja quien ve lo global**: la espalda con cuatro, el movimiento con tres y con dos.
 
+## Los paneles de la silla (14/11/2026)
+Los brazos y la espalda **no se manejan agarrando controles de un tablero** (como en character-parametric: mirar el
+volante, agarrarlo y levantar la vista al parabrisas). **Se manejan con paneles que se traen**:
+- **Clic en un panel lo abre** delante del que está sentado y le toma el mouse; **Escape lo cierra**. Sin teclas para
+  cambiar de brazo ni la ruedita.
+- **Los paneles están en una zona fija adelante**, no pegados a la silla: si el sentado se da vuelta a mirar la cabina,
+  no lo persiguen ni le tapan la vista. Pueden seguir un poco la vista, con poca sensibilidad.
+- **Con un panel abierto se mira al frente**, adonde va el brazo; la vista apenas acompaña (con tope), nunca termina
+  mirando para el otro lado.
+- **Cómo son**: un brazo articulado y, al medio, un cristal (con marco o sin bordes) donde se ve, superpuesta, la
+  información de ese sistema: la carga, las balas, lo caliente.
+- **Botones discretos** para cosas como cambiar el modo de un brazo, o teclas reservadas como las del movimiento.
+- **La espalda también tiene su física**: el mega misil que tira la meca para atrás, el misil guiado que se lleva con el
+  mouse.
+- **El movimiento** quizás no sea un panel: otro sabor (la silla misma, el casco). Abierto.
+- *Se pierde* que alguien de pie te toque los controles.
+
 ## La base mínima para empezar (14/11/2026)
 **Un arma por puesto**, y sobre eso se diseñan los tableros, **de a uno** (el usuario: «prefiero empezar de a uno»),
 empezando por el del movimiento.
