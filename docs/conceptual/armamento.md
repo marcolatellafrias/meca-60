@@ -25,11 +25,16 @@ cualquiera, y lo que se elige es **qué usar en qué momento**, no qué equipar 
   la derecha, el derecho; al medio, la espalda. Arriba, en el entrepiso, el movimiento** (el usuario, 14/11/2026: el de
   atrás, con las escaleras, se lee con más jerarquía, y el que mueve es el que ve lo global, así que va más lejos del
   vidrio; antes iba al revés). Bajo el entrepiso, a nivel del piso, la carga de munición y el cambio de batería.
-- **Con dos** (14/11/2026): **el que mueve la meca dispara también lo de la espalda**, y el otro maneja los dos brazos. Los
-  dos brazos, con todo lo que pueden hacer, ya son bastante.
+- **El reparto por cantidad** (14/11/2026; las tareas de pie —recargar, la batería, los kits— las hace el que se levanta):
+  - **Con cuatro**: el movimiento (arriba) con el ascensor y eyectarse; la espalda (adelante, al medio) con sus dos armas
+    y el escudo; un jugador por brazo.
+  - **Con tres**: el movimiento con el ascensor, eyectarse **y el escudo** (elige entre esquivar y aguantar); cada brazo
+    suma un arma de la espalda (el izquierdo la ametralladora, el derecho el lanzamisiles). El usuario: con el
+    movimiento cargando también la espalda, los brazos quedaban «medios deshilachados».
+  - **Con dos**: el movimiento con el ascensor, eyectarse y el escudo; **el otro, los dos brazos y la espalda**: cuando
+    tira un misil deja los brazos, mientras el otro sigue moviendo. *Antes la espalda iba con el que mueve, que tendría
+    que dejar de moverse para tirar. La espalda en automático se descartó: le quita expresión.*
 - Con menos jugadores, cada uno maneja más cosas, pero más simples; con más, menos cosas, con más libertad.
-- **El automático**, lo que nadie maneja y anda solo, queda como **último recurso**: si hace falta, sólo para los
-  misiles de la espalda.
 
 ## Energía y munición: dos dinámicas
 **Los brazos gastan energía; la espalda gasta munición** (el usuario, 14/11/2026: «hace que los distintos armamentos
@@ -126,7 +131,7 @@ timing**: prenderlo **gasta un golpe de energía**, y mantenerlo gasta un poco m
   parry por zonas (desde adentro de la cabina no se lee si un misil va al torso o al brazo).
 - **El parry**: prendido justo antes del impacto, el golpe de energía del arranque es menor o no se cobra. Así no castiga
   tanto.
-- Abierto: quién lo maneja.
+- **Lo maneja quien ve lo global**: la espalda con cuatro, el movimiento con tres y con dos.
 
 ## La base mínima para empezar (14/11/2026)
 **Un arma por puesto**, y sobre eso se diseñan los tableros, **de a uno** (el usuario: «prefiero empezar de a uno»),
