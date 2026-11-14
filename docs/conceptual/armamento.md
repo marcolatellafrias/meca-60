@@ -70,7 +70,15 @@ instintivamente»). Con controles físicos se haría una cosa a la vez y no ser�
   también se carga desde un módulo.
 - **La batería es de toda la meca**: la energía (ver arriba).
 - Quizá **los dos brazos tengan que ser distintos**: si uno se rompe, cambia la estrategia. Decisión para después.
-- **Abierto: el casco**, si la meca muy rota explota, y cómo se lleva con las roturas de los sistemas.
+- **El casco, aparte y también reparable** (14/11/2026): la salud de la meca; por debajo de un nivel, explota. Se
+  repara con su kit, como los sistemas. *Cambia lo que decía [[la-meca]] («no hay vida»), como ya lo cambió el jefe bola.*
+
+## Los huecos de la cabina (14/11/2026)
+Aparte de los tableros de los puestos y sus secundarios (el ascensor, eyectarse), la cabina tiene **siete huecos de
+recursos**, cubos de 63 cm (ver [[recursos]]):
+- **Cuatro de reparación**: el casco, el movimiento, el brazo izquierdo y el derecho.
+- **Dos de munición**, uno por cada arma de la espalda.
+- **Uno de batería**, la de toda la meca.
 
 ## La base mínima para empezar (14/11/2026)
 **Un arma por puesto**, y sobre eso se diseñan los tableros, **de a uno** (el usuario: «prefiero empezar de a uno»),
