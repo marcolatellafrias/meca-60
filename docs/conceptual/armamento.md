@@ -116,7 +116,14 @@ recursos**, cubos de 63 cm (ver [[recursos]]):
 - **Quizás**: la garra, el imán (potencial, pero un gimmick), el gancho con cable (hace lo mismo que el resorte).
 - **No**: el martillo neumático (quizás un puño neumático, más adelante), la lanza retráctil.
 - **Cada tipo ataca con su animación**: una espada no pega como un puño.
-- **Cubrirse no es de todos los brazos**: depende del brazo. Ver los escudos (abierto).
+- **Los brazos no se cubren**: eso lo hace el escudo (abajo).
+
+## El escudo de fuerza (14/11/2026)
+**Uno solo, global**: un campo semitransparente que envuelve a toda la meca y se prende de a momentos. **Depende del
+timing**: prenderlo **gasta un golpe de energía**, y mantenerlo gasta un poco más por cada segundo.
+- *Descartado*: cubrirse apuntando un brazo (muy finicky, y ningún brazo cubre todas las zonas); escudos por zonas o
+  parry por zonas (desde adentro de la cabina no se lee si un misil va al torso o al brazo).
+- Abierto: quién lo maneja.
 
 ## La base mínima para empezar (14/11/2026)
 **Un arma por puesto**, y sobre eso se diseñan los tableros, **de a uno** (el usuario: «prefiero empezar de a uno»),
