@@ -58,15 +58,19 @@ instintivamente»). Con controles físicos se haría una cosa a la vez y no ser�
 - **Descartado**: repartir la energía entre piernas y brazos (el gasto ya lo reparte solo: un ataque fuerte te deja
   sin dash; es la estamina de un juego de a pie), avisar a la tripulación, anclarse, agacharse aparte.
 
-## El casco y las roturas (abierto)
-- **El estado del casco** es la salud de la meca: por debajo de un nivel, explota. *Cambia lo que decía [[la-meca]]
-  («no hay vida»), como ya lo cambió el jefe bola.*
-- **Además se rompe cada sistema** (un brazo, el lanzamisiles…), **a medias**: rinde peor siendo **más difícil de
-  manejar o más lento**, no haciendo menos daño (con menos daño se lo deja de usar). Que se vea.
-- **Romperse del todo no**: dejaría al que lo maneja sin nada que hacer más que arreglarlo.
+## Las roturas y los recursos (14/11/2026)
+**La versión más simple**: se reparan **tres sistemas** (el movimiento y cada brazo), y aparte están **la batería** y
+**la munición**.
+- **Cada sistema se rompe a medias**: rinde peor siendo **más difícil de manejar o más lento**, no haciendo menos daño
+  (con menos daño se lo deja de usar). Que se vea. **Romperse del todo no**: dejaría al que lo maneja sin nada que
+  hacer más que arreglarlo.
+- **Se repara con un kit de reparación**, un recurso del mapa, **uno por sistema**: se pone en **el módulo de ese
+  sistema**, en las paredes de los costados (los brazos y el movimiento). **Sin minijuegos** y sin salir a la fachada.
+- **La espalda no se rompe**: ya tiene su límite, la munición, y arreglar algo en el techo no se entiende. Su munición
+  también se carga desde un módulo.
+- **La batería es de toda la meca**: la energía (ver arriba).
 - Quizá **los dos brazos tengan que ser distintos**: si uno se rompe, cambia la estrategia. Decisión para después.
-- La reparación, abierta: con un recurso del mapa, afuera en la fachada (pide algo caminable afuera, que se había dejado
-  por la caja simple), o con **un minijuego adentro**, que obliga a dejar el control propio mientras.
+- **Abierto: el casco**, si la meca muy rota explota, y cómo se lleva con las roturas de los sistemas.
 
 ## La base mínima para empezar (14/11/2026)
 **Un arma por puesto**, y sobre eso se diseñan los tableros, **de a uno** (el usuario: «prefiero empezar de a uno»),
