@@ -140,8 +140,10 @@ Todavía no está en el código: se está dibujando en 2D y en arcilla, separada
     llega la escalera.
   - **Arriba, en la pared:** la munición, metida de modo que hacia afuera sólo sobresalga el cubo.
 - **Los puestos:**
-  - **Con cuatro:** tres adelante (el brazo izquierdo, el movimiento y el brazo derecho) y la espalda arriba, en la
-    media luna, con los mandos en los apoyabrazos.
+  - **Con cuatro:** tres adelante (el brazo izquierdo, la espalda al medio y el brazo derecho) y el movimiento arriba,
+    en la media luna, con los mandos en los apoyabrazos. *Primero iba al revés; el usuario los cambió: el puesto de
+    atrás, con las escaleras, se lee con más jerarquía, y el que mueve la meca es el que ve todo, así que va más lejos
+    del vidrio.*
   - **Con tres:** falta decidir entre dos adelante y uno arriba, o los tres adelante con el del medio centrado.
   - **Con dos:** los dos adelante, cada uno en su zona, con la zona del medio en el medio. Falta resolver qué va en esa
     zona; se va a ver al hacer los tableros.
