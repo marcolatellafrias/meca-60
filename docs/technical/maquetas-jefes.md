@@ -33,6 +33,12 @@ cuando le rompe las alas se cae y va caminando… modo frenzy»; ataques «menos
 ## Lo que se repite (para pensar el sistema)
 - **Un punto débil es un lugar del cuerpo, no un número**: se llega a pie (subiéndose, tirándose de lo alto, metiéndose
   debajo) o con la meca. Cerca de él hay un ataque que castiga quedarse (el riesgo).
+- **Se abre un momento** (15/11/2026; el usuario: «también puede ser algo que se abra momentáneamente, que es lo que
+  pasa generalmente»): casi siempre está tapado, y se destapa en una ventana corta, que es cuando hay que estar ahí.
+  Propuesta para cada maqueta, sin hacer: la escotilla del Trípode se abre para ventilar después de barrer con el faro; las
+  alas de la Polilla se despliegan del todo al tirar las columnas; la chimenea del Caracol se destapa para soltar vapor
+  después de los anillos; los nodos del Relicario bajan y se quedan quietos mientras carga los círculos; los enganches del
+  Ciempiés se estiran y se ven al doblar; la bolsa de la Colmena se abre para soltar las gotas.
 - **Las fases cambian por algo que se rompe** (una pata, las alas, la bolsa, los nodos) o por la vida, y cambian cómo se
   mueve y qué queda expuesto.
 - **El frenesí** es una fase más: más rápido, más ataques, y se ve (brilla, se pone rojo).
