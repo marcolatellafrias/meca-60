@@ -14,12 +14,28 @@ extends CharacterBody3D
 ##   · LA CINTURA gira aparte, sobre el aro, hacia `aim_yaw`, con tope de giro: puede andar para un lado y mirarte.
 ##   · LA ARENA (BossArena): no sale del círculo; contra el borde se desliza.
 ##   · EL HORNO (`furnace`): la puerta se abre para arriba; es el punto débil (mañana, antes de embestir).
+##   · LAS POSES (`pose`, Pose): cómo se para lo de arriba (el torso inclinado, los brazos, el temblor); las pone la
+##     cabeza, y el cuerpo va hacia ellas en su tiempo (POSES).
 ##   · LA IRA (`rage`): otro color, el visor rojo, humo negro por las chimeneas, y anda y gira más rápido.
 
 ## Lo que mide su caja contra lo fijo (m): el ancho de las orugas, el alto y el largo.
 const BOX := Vector3(24.0, 30.0, 20.0)
 ## Cuánto cae (m/s²) si no hay piso.
 const GRAVITY := 30.0
+
+## LAS POSES: parado; agachado para embestir (los brazos atrás, temblando); embistiendo (los puños adelante); los
+## brazos arriba para el golpe al piso; el golpe (los puños al piso); aturdido (desplomado).
+enum Pose { REST, CHARGE_READY, CHARGING, SLAM_READY, SLAM, STUNNED }
+## De cada pose: cuánto se inclina el torso (°, adelante), cuánto giran los brazos en el hombro (°, adelante y arriba),
+## cuánto tiembla (m) y en cuánto llega a ella (s).
+const POSES := {
+	Pose.REST: [0.0, 0.0, 0.0, 0.5],
+	Pose.CHARGE_READY: [14.0, -35.0, 0.35, 0.6],
+	Pose.CHARGING: [22.0, 70.0, 0.0, 0.25],
+	Pose.SLAM_READY: [-14.0, 165.0, 0.2, 0.8],
+	Pose.SLAM: [32.0, 50.0, 0.0, 0.1],
+	Pose.STUNNED: [28.0, 10.0, 0.0, 0.4],
+}
 
 ## ── LO QUE SE LE PIDE ──
 ## Las orugas: y adelante (positivo) o atrás; x gira (positivo, a la derecha).
@@ -30,6 +46,7 @@ var furnace := false
 var rage := false
 ## EMBISTIENDO: las orugas van a la velocidad de la embestida (BrawlerSettings), con su rampa corta.
 var charging := false
+var pose := Pose.REST
 
 ## ── LO QUE MIDE ──
 ## A cuánto va adelante (m/s; atrás, negativo).
@@ -53,6 +70,9 @@ var _driving := false
 var _chase_yaw := 0.0
 var _furnace_was := false
 var _rage_was := false
+var _lean := 0.0
+var _raise := 0.0
+var _shake := 0.0
 
 
 func _init() -> void:
@@ -132,6 +152,12 @@ func _physics_process(delta: float) -> void:
 	fury = move_toward(fury, 1.0 if rage else 0.0, delta / maxf(k.rage_time, 0.01))
 	_place_upper()
 	body.show(opened, k.door_angle, fury)
+	var wanted_pose: Array = POSES[pose]
+	var follow := 1.0 - exp(-4.0 * delta / maxf(float(wanted_pose[3]), 0.01))
+	_lean = lerpf(_lean, float(wanted_pose[0]), follow)
+	_raise = lerpf(_raise, float(wanted_pose[1]), follow)
+	_shake = lerpf(_shake, float(wanted_pose[2]), follow)
+	body.pose(_lean, _raise, _shake)
 
 
 func _place_upper() -> void:

@@ -67,11 +67,31 @@ frente le faltan 8 a 45 m (solo, seguido de caminar, o dos seguidos). Acepta `--
   meca (12 m) solo no alcanza nunca.**
 - **Ahora** (5 s, 6°/s): quieta o caminando, te alcanza siempre; **dos dashes seguidos cuando le faltan 24 a 32 m (un
   segundo antes) esquivan** desde cualquier distancia; antes, corrige; después, no llegás.
-- **Si el dash de la meca fuera de 18 m** (es del módulo Meca; no lo toqué): uno solo esquiva cuando le faltan 16 a 24
-  m; antes o después, no.
+- **El dash de la meca, a 18 m** (del módulo Meca; con el sí del usuario, commit aparte): **uno solo esquiva cuando le
+  faltan 16 a 24 m** (medio segundo antes), desde cualquier distancia; antes corrige, después no llegás. Dash y después
+  caminar, o dos dashes, esquivan desde que le faltan 16 a 45 m.
 - `tests/brawler_charge_movie.tscn`: el video de la pelea (con `--write-movie`, de costado a los dos).
 
+## Paso 3 (15/11/2026): las poses y el golpe doble al piso
+El usuario: «estaría bueno que tenga alguna animación… cuando se preparan para embestir y cuando embiste… diría que sigas
+con las otras habilidades».
+- **Las poses** (`Brawler.Pose`; `BrawlerBody.pose`): el torso se inclina y los brazos giran enteros en el hombro, y
+  puede temblar. Cada una llega en su tiempo. **Preparando la embestida**, agachado, los brazos atrás, temblando;
+  **embistiendo**, inclinado y los puños adelante; **aturdido**, desplomado; **el golpe al piso**, los brazos arriba
+  (echado atrás, temblando) y los puños al piso.
+- **El golpe doble al piso** (`BrawlerBrain._slam`, `BrawlerWave`): **aviso** (1,3 s), levanta los brazos y en el piso
+  aparece **una franja roja** por donde va a salir la onda (sigue a la cintura, que te mira); **golpe**, los puños al
+  piso y sale **la onda**: un lomo de tierra de 14 m de ancho y 5 de alto que corre derecho a 45 m/s hasta 140 m. Si te
+  pasa por debajo te saca 20 (a la meca física la levanta). Se queda 1,4 s. Sus perillas, en la pestaña «Golpe al
+  piso» del F1.
+- **Cuál ataque**: al terminar de rodear, uno de los que tengan tu distancia a tiro (la embestida entre 35 y 140 m, el
+  golpe entre 25 y 120), al azar. **La L** de la parcela deja uno solo (todos, sólo la embestida, sólo el golpe).
+- **Esquivarlo** (`brawler_dodge_check`, con la meca cinemática): quieta, te alcanza siempre; **caminando de costado,
+  sólo de lejos** (80 m o más); **el dash, si lo hacés con anticipación** (cuando a la onda le faltan 15 m o más);
+  **saltar, en su momento**: cuenta si vas más alto que el lomo cuando pasa, o sea, saltando cuando le faltan 15 a 25 m
+  (antes ya estás bajando; después todavía no subiste).
+
 ## Lo que sigue
-Los poderes, de a uno (propuestos, sin confirmar): el golpe doble al piso (onda en línea), el agarre y revoleo, el gancho al cielo, arrancar el piso y
+Los poderes, de a uno (propuestos, sin confirmar): el agarre y revoleo, el gancho al cielo, arrancar el piso y
 tirarlo, la guardia con contraataque y el trompo; con ira, combos más largos y el humo como zona que tapa la vista. Sin
 ametralladora por ahora.

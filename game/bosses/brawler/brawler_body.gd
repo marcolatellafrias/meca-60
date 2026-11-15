@@ -9,6 +9,9 @@ extends RefCounted
 ##   · EL HORNO (el usuario: «que las furnace no sean dos cosas separadas, sino una sola al medio, abajo, y que se note
 ##     que es como un horno… una puerta que se abra… hacia arriba, porque si se abre hacia un costado la puerta va a
 ##     tapar el punto débil»): un solo horno al medio del pecho, abajo, con la bisagra arriba (`door`).
+##   · LAS POSES (15/11/2026; el usuario: «estaría bueno que tenga alguna animación… cuando se preparan para embestir y
+##     cuando embiste»): `pose()` inclina el torso (adelante, positivo) y gira los dos brazos en el hombro (para
+##     adelante y arriba, positivo), y lo sacude (el temblor de cargar). Las pone el Luchador (Brawler.Pose).
 ##   · LA IRA (`fury`, de 0 a 1): el color pasa al de la ira, el visor se pone rojo, el horno brilla más y las chimeneas
 ##     echan humo negro (el usuario: «los tubos de atrás son los perfectos para que tiren humo cuando está enojado»).
 
@@ -37,6 +40,9 @@ var hull: Node3D = null
 var upper: Node3D = null
 var door: Node3D = null
 var smoke: Array[GPUParticles3D] = []
+## LAS POSES: lo encorvado (el nodo que se inclina) y los dos hombros (giran el brazo entero, para adelante).
+var bent: Node3D = null
+var shoulders: Array[Node3D] = []
 
 var _paint := StandardMaterial3D.new()
 var _trim := StandardMaterial3D.new()
@@ -82,6 +88,24 @@ func show(opened: float, angle: float, fury: float) -> void:
 		emitter.emitting = fury > 0.5
 
 
+## LA POSE: el torso inclinado `lean` grados adelante, los brazos girados `raise` grados en el hombro (adelante y
+## arriba) y el temblor `shake` (m, de lo de arriba).
+func pose(lean: float, raise: float, shake: float) -> void:
+	bent.basis = Basis(Vector3.RIGHT, -deg_to_rad(HUNCH + lean))
+	for shoulder in shoulders:
+		shoulder.basis = Basis(Vector3.RIGHT, deg_to_rad(raise))
+	var time := Time.get_ticks_msec() * 0.001
+	bent.position = Vector3(sin(time * 41.0), sin(time * 53.0) * 0.5, sin(time * 37.0)) * shake
+
+
+## Dónde están los dos puños (mundo).
+func fists() -> Array[Vector3]:
+	var out: Array[Vector3] = []
+	for shoulder in shoulders:
+		out.append((shoulder.get_child(shoulder.get_child_count() - 1) as Node3D).global_position)
+	return out
+
+
 ## Dónde está la boca del horno (mundo): el punto débil.
 func furnace() -> Vector3:
 	return (door.get_parent() as Node3D).global_transform * (door.position + Vector3(0.0, -FURNACE.y * 0.5, 0.4))
@@ -107,7 +131,8 @@ func _treads() -> void:
 func _torso() -> void:
 	_paint_part(Clay.box(upper, Vector3(WAIST.x + 6.0, 6.0, WAIST.z), Vector3.ZERO, COLOR), _trim)
 	# Encorvado desde la cintura.
-	var bent := Node3D.new()
+	bent = Node3D.new()
+	bent.name = "Encorvado"
 	bent.basis = Basis(Vector3.RIGHT, -deg_to_rad(HUNCH))
 	upper.add_child(bent)
 	_paint_part(Clay.box(bent, WAIST, Vector3(0.0, WAIST.y * 0.5 + 0.5, 0.0), COLOR), _trim)
@@ -136,18 +161,18 @@ func _torso() -> void:
 
 
 ## EL HORNO: un marco, la boca que brilla (más abierta o con ira) y la puerta con la bisagra arriba.
-func _furnace(bent: Node3D, front: Vector3) -> void:
+func _furnace(at: Node3D, front: Vector3) -> void:
 	var mouth := front + Vector3(0.0, -FURNACE.y * 0.5, 0.0)
-	Clay.box(bent, Vector3(FURNACE.x + 1.2, FURNACE.y + 1.2, 0.5), mouth + Vector3(0.0, 0.0, -0.1), Clay.DARK)
-	_paint_part(Clay.box(bent, Vector3(FURNACE.x, FURNACE.y, 0.3), mouth + Vector3(0.0, 0.0, -0.3), FIRE), _fire)
+	Clay.box(at, Vector3(FURNACE.x + 1.2, FURNACE.y + 1.2, 0.5), mouth + Vector3(0.0, 0.0, -0.1), Clay.DARK)
+	_paint_part(Clay.box(at, Vector3(FURNACE.x, FURNACE.y, 0.3), mouth + Vector3(0.0, 0.0, -0.3), FIRE), _fire)
 	# Unas barras, para que se lea como horno.
 	for i in 4:
-		Clay.box(bent, Vector3(0.3, FURNACE.y, 0.3), mouth + Vector3(-FURNACE.x * 0.375 + i * FURNACE.x * 0.25, 0.0, -0.5),
+		Clay.box(at, Vector3(0.3, FURNACE.y, 0.3), mouth + Vector3(-FURNACE.x * 0.375 + i * FURNACE.x * 0.25, 0.0, -0.5),
 			Clay.DARK.darkened(0.3))
 	var hinge := Node3D.new()
 	hinge.name = "Bisagra"
 	hinge.position = front + Vector3(0.0, 0.0, -0.75)
-	bent.add_child(hinge)
+	at.add_child(hinge)
 	door = Node3D.new()
 	door.name = "Puerta"
 	hinge.add_child(door)
@@ -159,20 +184,25 @@ func _furnace(bent: Node3D, front: Vector3) -> void:
 
 
 ## LOS BRAZOS, en guardia: la hombrera, el brazo, el codo, el antebrazo y el puño, cuadrados. Cuelgan derecho (contra lo
-## encorvado), un poco adelante.
-func _arms(bent: Node3D, chest_at: Vector3) -> void:
+## encorvado), un poco adelante. Cada uno, de su hombro (gira entero; el puño es el último hijo).
+func _arms(at: Node3D, chest_at: Vector3) -> void:
 	var straight := Basis(Vector3.RIGHT, deg_to_rad(HUNCH))
 	for side: float in [-1.0, 1.0]:
 		var joint := chest_at + Vector3(side * (CHEST.x * 0.5 + SHOULDER.x * 0.35), CHEST.y * 0.3, 0.0)
-		_paint_part(Clay.box(bent, SHOULDER, joint + Vector3(side * SHOULDER.x * 0.1, SHOULDER.y * 0.2, 0.0), COLOR),
+		_paint_part(Clay.box(at, SHOULDER, joint + Vector3(side * SHOULDER.x * 0.1, SHOULDER.y * 0.2, 0.0), COLOR),
 			_paint)
-		var elbow := joint + straight * Vector3(side * 0.8, -UPPER_ARM, -UPPER_ARM * REACH)
+		var shoulder := Node3D.new()
+		shoulder.name = "Hombro"
+		shoulder.position = joint
+		at.add_child(shoulder)
+		shoulders.append(shoulder)
+		var elbow := straight * Vector3(side * 0.8, -UPPER_ARM, -UPPER_ARM * REACH)
 		var wrist := elbow + straight * Vector3(0.0, -FOREARM * (1.0 - REACH), -FOREARM * REACH * 2.0)
 		var arm := SHOULDER.x * 0.45
-		_paint_part(_beam(bent, joint, elbow, arm), _trim)
-		_paint_part(Clay.box(bent, Vector3.ONE * arm * 1.25, elbow, COLOR), _trim)
-		_paint_part(_beam(bent, elbow, wrist, arm * 1.25), _paint)
-		_paint_part(Clay.box(bent, Vector3.ONE * FIST, wrist + (wrist - elbow).normalized() * FIST * 0.5, COLOR), _trim)
+		_paint_part(_beam(shoulder, Vector3.ZERO, elbow, arm), _trim)
+		_paint_part(Clay.box(shoulder, Vector3.ONE * arm * 1.25, elbow, COLOR), _trim)
+		_paint_part(_beam(shoulder, elbow, wrist, arm * 1.25), _paint)
+		_paint_part(Clay.box(shoulder, Vector3.ONE * FIST, wrist + (wrist - elbow).normalized() * FIST * 0.5, COLOR), _trim)
 
 
 func _beam(p: Node3D, from: Vector3, to: Vector3, width: float) -> MeshInstance3D:

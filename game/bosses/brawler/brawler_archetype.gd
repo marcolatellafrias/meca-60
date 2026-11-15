@@ -6,7 +6,7 @@ extends SeededArchetype
 ## (Health) y sus barras (FightBars). Mirándolos, la O posee a cualquiera de los dos.
 ##   · LA K CAMBIA LA MECA entre los cuatro tipos: física (torso y brazos simulados), mixta (torso simulado, brazos de
 ##     pose), cinemática (todo cinemático, con brazos y cabina) y simplificada (sin brazos ni cabina: no puede pegar).
-##   · LA J: si el jefe piensa.
+##   · LA J: si el jefe piensa. LA L: qué ataques usa (todos, o uno solo, para probarlo).
 
 ## Lo que ocupa: la arena más grande del F1 y los edificios de afuera.
 const FOOTPRINT := 500.0
@@ -46,9 +46,10 @@ func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"el jefe humanoide: el Luchador (ancho, la cabeza hundida) sobre orugas de tanque",
 		"te rodea mirándote y TE EMBISTE: antes abre el horno (la ventana para pegarle)",
+		"o GOLPEA EL PISO: la franja roja dice por dónde sale la onda (saltala o corréte)",
 		"si llega al borde de la arena se estrella y queda aturdido, con el horno abierto",
 		"el horno es el punto débil: una piña ahí le saca mucho; en el cuerpo, poco",
-		"J el jefe piensa · K el tipo de meca · O poseer la meca (o al jefe) · F1 las perillas",
+		"J el jefe piensa · K el tipo de meca · L los ataques · O poseer la meca (o al jefe) · F1 las perillas",
 		"poseído: W/S orugas, A/D girarlas, el mouse la cintura, Q el horno, G la ira",
 	])
 
@@ -69,6 +70,9 @@ func keys() -> Array[SandboxKey]:
 					var brain := brawler.get_node_or_null("Cabeza") as BrawlerBrain
 					if brain != null:
 						BrawlerArchetype.swap_mech(brain, mech_kind)),
+		SandboxKey.cycle(KEY_L, SandboxKey.Weight.MAIN, "los ataques", BrawlerBrain.MOVES_NAMES,
+			func() -> int: return int(BrawlerBrain.moves),
+			func(_parcel: SandboxParcel, index: int) -> void: BrawlerBrain.moves = index as BrawlerBrain.Moves),
 		SandboxKey.toggle(KEY_H, SandboxKey.Weight.NORMAL, "el horno abierto", func() -> bool: return _all(func(b: Brawler) -> bool: return b.furnace),
 			func(_parcel: SandboxParcel, on: bool) -> void: _each(func(b: Brawler) -> void: b.furnace = on)),
 		SandboxKey.toggle(KEY_P, SandboxKey.Weight.NORMAL, "con ira", func() -> bool: return _all(func(b: Brawler) -> bool: return b.rage),

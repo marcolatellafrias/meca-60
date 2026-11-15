@@ -21,7 +21,7 @@ const LABELS := {
 	"punch_damage": "una piña en el cuerpo le saca", "furnace_damage": "una piña en el horno abierto le saca",
 	"arena_radius": "radio de la arena (m; los edificios, con R)",
 }
-const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Ira", "Embestida", "Golpes", "Arena"]
+const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Ira", "Embestida", "Golpe al piso", "Golpes", "Arena"]
 
 
 func setup_panel() -> void:

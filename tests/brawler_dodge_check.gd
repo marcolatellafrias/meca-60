@@ -6,6 +6,7 @@ extends Node
 ##   godot --headless --path . res://tests/brawler_dodge_check.tscn
 
 const GAPS := [50.0, 80.0, 110.0]
+## Sólo el golpe al piso (--solo-piso) o sólo la embestida (--solo-embestida).
 const DASH_AT := [8.0, 16.0, 24.0, 32.0, 45.0]
 
 var _boss: Brawler = null
@@ -42,7 +43,8 @@ func _ready() -> void:
 	print("la embestida: aviso %.2f s, %.0f m/s, corrige %.0f°/s · la meca: camina %.0f m/s, dash %.0f m en %.2f s" % [
 		k.charge_windup, k.charge_speed, k.charge_homing, KinematicSettings.current.walk_speed,
 		KinematicSettings.current.dash_distance, KinematicSettings.current.dash_time])
-	for gap: float in GAPS:
+	var args := OS.get_cmdline_user_args()
+	for gap: float in ([] if args.has("--solo-piso") else GAPS):
 		var line := "a %3.0f m:" % gap
 		line += " quieta %s" % await _try(gap, "still", 0.0)
 		line += " · camina desde el aviso %s" % await _try(gap, "walk_early", 0.0)
@@ -53,7 +55,88 @@ func _ready() -> void:
 			dash += " %2.0f m %s/%s/%s" % [at, await _try(gap, "dash", at), await _try(gap, "dash_walk", at),
 				await _try(gap, "dash_twice", at)]
 		print(dash + "   (sólo el dash / el dash y después camina / dos dashes seguidos)")
+	if args.has("--solo-embestida"):
+		get_tree().quit()
+		return
+	print("el golpe al piso: aviso %.2f s, la onda a %.0f m/s, %.0f de ancho · la meca salta %.0f m en %.2f s" % [
+		k.slam_windup, k.wave_speed, k.wave_width, KinematicSettings.current.jump_height,
+		KinematicSettings.current.jump_time])
+	for gap: float in [40.0, 80.0, 115.0]:
+		var line := "a %3.0f m:" % gap
+		line += " quieta %s" % await _try_slam(gap, "still", 0.0)
+		line += " · camina desde el aviso %s" % await _try_slam(gap, "walk_early", 0.0)
+		line += " · camina desde el golpe %s" % await _try_slam(gap, "walk_late", 0.0)
+		print(line)
+		for how: String in ["jump", "dash"]:
+			var row := "        %s cuando la onda está a:" % ("salta" if how == "jump" else "dash ")
+			for at: float in [3.0, 8.0, 15.0, 25.0, 40.0]:
+				row += " %2.0f m %s" % [at, await _try_slam(gap, how, at)]
+			print(row)
 	get_tree().quit()
+
+
+## Un golpe al piso desde `gap`; devuelve «X» si la onda la alcanzó, «·» si no.
+func _try_slam(gap: float, how: String, at: float) -> String:
+	await _place(gap)
+	var waved := _brain.waved
+	var slams := _brain.slams
+	_brain.awake = true
+	await get_tree().physics_frame
+	_brain._begin(BrawlerBrain.Act.SLAM)
+	var done := false
+	var clock := 0.0
+	while clock < 8.0 and _brain.waved == waved and (_brain.act == BrawlerBrain.Act.SLAM or _live_waves()):
+		await get_tree().physics_frame
+		clock += 1.0 / Engine.physics_ticks_per_second
+		var ground := _mech.mover.global_position
+		var to_boss := _boss.global_position - ground
+		to_boss.y = 0.0
+		_mech.aim_yaw = atan2(-to_boss.x, -to_boss.z)
+		var slammed := _brain.slams > slams
+		_mech.move = Vector2(1.0, 0.0) if how == "walk_early" or (how == "walk_late" and slammed) else Vector2.ZERO
+		_mech.jump = false
+		_mech.dash = false
+		if _brain._waves.is_empty() or done or not is_instance_valid(_brain._waves[0]):
+			continue
+		var wave: BrawlerWave = _brain._waves[0]
+		if not wave.launched:
+			continue
+		var left := wave.way.dot(ground - wave.origin) - wave.front - BrawlerWave.RIDGE.y * 0.5 - 4.0
+		if left <= at:
+			done = true
+			if how == "jump":
+				_mech.jump = true
+			elif how == "dash":
+				_mech.move = Vector2(1.0, 0.0)
+				_mech.dash = true
+	_mech.move = Vector2.ZERO
+	_mech.jump = false
+	_mech.dash = false
+	if OS.get_cmdline_user_args().has("--ver") and _brain.waved > waved:
+		print("   %s %.0f a %.0f m: a los %.2f s; la meca, a %.1f del medio de la onda; dash %s" % [how, at, gap, clock,
+			_mech.mover.global_position.x, "usado" if (_mech.mover as KinematicMover).dash_fuel < 0.9 else "no"])
+	return "X" if _brain.waved > waved else "·"
+
+
+func _live_waves() -> bool:
+	for wave in _brain._waves:
+		if is_instance_valid(wave):
+			return true
+	return false
+
+
+func _place(gap: float) -> void:
+	_brain.awake = false
+	for wave in _brain._waves:
+		if is_instance_valid(wave):
+			wave.queue_free()
+	_brain._waves.clear()
+	await _wait(0.1)
+	_boss.put(Transform3D(Basis(), Vector3(0.0, 0.0, gap * 0.5)))
+	_mech.put(Transform3D(Basis(Vector3.UP, PI), Vector3(0.0, Mech.standing_height(), -gap * 0.5)))
+	Health.of(_mech).left = BrawlerArchetype.MECH_HEALTH
+	(_mech.mover as KinematicMover).dash_fuel = 1.0
+	await _wait(0.6)
 
 
 ## Una embestida desde `gap`; devuelve «X» si la alcanzó, «·» si no.
@@ -61,7 +144,7 @@ func _try(gap: float, how: String, dash_at: float) -> String:
 	_brain.awake = false
 	await _wait(0.1)
 	_boss.put(Transform3D(Basis(), Vector3(0.0, 0.0, gap * 0.5)))
-	_mech.put(Transform3D(Basis(), Vector3(0.0, Mech.standing_height(), -gap * 0.5)))
+	_mech.put(Transform3D(Basis(Vector3.UP, PI), Vector3(0.0, Mech.standing_height(), -gap * 0.5)))
 	Health.of(_mech).left = BrawlerArchetype.MECH_HEALTH
 	(_mech.mover as KinematicMover).dash_fuel = 1.0
 	await _wait(0.3)

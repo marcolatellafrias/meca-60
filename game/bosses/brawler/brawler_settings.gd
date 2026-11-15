@@ -56,6 +56,19 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 @export_range(0.0, 100.0, 1.0) var charge_damage := 25.0
 @export_range(0.0, 60.0, 0.5) var charge_push := 18.0
 
+@export_group("Golpe al piso")
+## EL GOLPE DOBLE AL PISO (ver BrawlerBrain, BrawlerWave): cuánto tiene los brazos arriba (s: el aviso, con la franja en
+## el piso que sigue a la cintura), cuánto se queda después (s), y la onda: a qué velocidad corre (m/s), hasta dónde
+## (m) y qué ancho tiene (m). Si te alcanza apoyada (saltando, no), cuánta vida te saca y cuánto te levanta (m/s; a la
+## meca física).
+@export_range(0.3, 4.0, 0.05) var slam_windup := 1.3
+@export_range(0.2, 4.0, 0.05) var slam_recover := 1.4
+@export_range(5.0, 120.0, 1.0) var wave_speed := 45.0
+@export_range(20.0, 250.0, 5.0) var wave_reach := 140.0
+@export_range(2.0, 40.0, 0.5) var wave_width := 14.0
+@export_range(0.0, 100.0, 1.0) var wave_damage := 20.0
+@export_range(0.0, 40.0, 0.5) var wave_push := 10.0
+
 @export_group("Golpes")
 ## LO QUE LE SACA UNA PIÑA DE LA MECA: en el cuerpo, y en el horno abierto (el punto débil).
 @export_range(0.0, 100.0, 1.0) var punch_damage := 6.0

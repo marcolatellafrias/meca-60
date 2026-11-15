@@ -9,14 +9,27 @@ extends Node
 ##     window antes de que empiece a embestir que… se abre la puerta»); GOLPE, arranca derecho, corrigiendo poco; si te
 ##     alcanza, te saca vida (y a la meca física la empuja). Si llega al BORDE DE LA ARENA, SE ESTRELLA y queda aturdido
 ##     con el horno abierto (otra ventana). Si no, frena y se recupera, y cierra el horno.
+##   · EL GOLPE DOBLE AL PISO (15/11/2026): AVISO, levanta los dos brazos y en el piso aparece la franja por donde va a
+##     salir la onda (sigue a la cintura, que te mira); GOLPE, los puños al piso y sale LA ONDA (BrawlerWave), un lomo
+##     de tierra que corre derecho; si te alcanza, te saca vida (si la saltás más alto que el lomo o te corrés de costado, no).
+##   · CUÁL: al terminar de rodear, uno de los que tengan tu distancia a tiro, al azar (la L de la parcela deja uno).
 ## LA VIDA, POR CÓDIGO (Health): las piñas de la meca que tocan el cuerpo le sacan poco; en el horno abierto, mucho.
 ## Mientras alguien lo posee, la cabeza no hace nada.
 
-enum Act { STALK, CHARGE }
+enum Act { STALK, CHARGE, SLAM }
+## QUÉ ATAQUES USA (la L de la parcela): todos, o uno solo.
+enum Moves { ALL, CHARGE, SLAM }
+const MOVES_NAMES := ["todos", "sólo la embestida", "sólo el golpe al piso"]
+static var moves := Moves.ALL
 
 ## Las distancias que deciden (m, del medio del Luchador al blanco): se queda entre `KEEP`; embiste entre `CHARGE_RANGE`.
 const KEEP := Vector2(45.0, 80.0)
 const CHARGE_RANGE := Vector2(35.0, 140.0)
+## El golpe al piso, entre estas (m).
+const SLAM_RANGE := Vector2(25.0, 120.0)
+## Cuánto tarda el golpe en llegar al piso (s) y a cuánto adelante de él sale la onda (m, desde su frente).
+const SLAM_FALL := 0.15
+const WAVE_AHEAD := 4.0
 ## Rodeando: cuánto (s, entre los dos).
 const STALK_TIME := Vector2(2.0, 4.0)
 ## La embestida: cuánto tiene que estar de frente para arrancar (radianes) y la recuperación (s).
@@ -45,6 +58,8 @@ var landed := 0
 var crashes := 0
 var body_hits := 0
 var furnace_hits := 0
+var slams := 0
+var waved := 0
 
 var _boss: Brawler = null
 var _clock := 0.0
@@ -55,6 +70,8 @@ var _hit_this_act := false
 var _random := RandomNumberGenerator.new()
 var _punched := {}
 var _label: Label3D = null
+var _wave: BrawlerWave = null
+var _waves: Array[BrawlerWave] = []
 
 
 func _ready() -> void:
@@ -77,6 +94,7 @@ func _physics_process(delta: float) -> void:
 		return
 	# Las piñas de la meca cuentan aunque no piense o lo posea alguien.
 	_check_punches()
+	_check_waves()
 	if _boss.driven():
 		return
 	if not awake:
@@ -100,6 +118,8 @@ func _physics_process(delta: float) -> void:
 			_stalk()
 		Act.CHARGE:
 			_charge()
+		Act.SLAM:
+			_slam()
 
 
 ## ── LOS ACTOS ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -115,8 +135,15 @@ func _stalk() -> void:
 	elif gap < KEEP.y:
 		way = toward.rotated(Vector3.UP, _side * deg_to_rad(70.0))
 	_drive(way, 0.8)
-	if _clock >= _stalk_time and gap > CHARGE_RANGE.x and gap < CHARGE_RANGE.y:
-		_begin(Act.CHARGE)
+	if _clock < _stalk_time:
+		return
+	var can: Array[Act] = []
+	if moves != Moves.SLAM and gap > CHARGE_RANGE.x and gap < CHARGE_RANGE.y:
+		can.append(Act.CHARGE)
+	if moves != Moves.CHARGE and gap > SLAM_RANGE.x and gap < SLAM_RANGE.y:
+		can.append(Act.SLAM)
+	if not can.is_empty():
+		_begin(can[_random.randi() % can.size()])
 
 
 ## LA EMBESTIDA, por tiempos (`_step`): 0 el aviso, 1 arranca, 2 frena, 3 aturdido, 4 se recupera.
@@ -126,6 +153,7 @@ func _charge() -> void:
 		0:
 			stage = "embestida: abre el horno"
 			_boss.furnace = true
+			_boss.pose = Brawler.Pose.CHARGE_READY
 			# Se da vuelta hacia vos, quieto.
 			var error := _error_to(_to_target())
 			_boss.move = Vector2(clampf(-error * 3.0, -1.0, 1.0), 0.0)
@@ -135,6 +163,7 @@ func _charge() -> void:
 		1:
 			stage = "embestida: ¡arranca!"
 			_boss.charging = true
+			_boss.pose = Brawler.Pose.CHARGING
 			var error := _error_to(_to_target())
 			var correct := k.charge_homing / maxf(k.turn_speed, 1.0)
 			_boss.move = Vector2(clampf(-error * 3.0, -correct, correct), 1.0)
@@ -152,6 +181,7 @@ func _charge() -> void:
 				_next(2)
 		2:
 			stage = "embestida: frena"
+			_boss.pose = Brawler.Pose.REST
 			_boss.move = Vector2(0.0, -1.0) if _boss.speed > 1.0 else Vector2.ZERO
 			if _boss.speed <= 1.0:
 				_boss.charging = false
@@ -159,15 +189,76 @@ func _charge() -> void:
 				_next(4)
 		3:
 			stage = "¡se estrelló! aturdido"
+			_boss.pose = Brawler.Pose.STUNNED
 			_boss.move = Vector2.ZERO
 			if _clock >= k.stun_time:
 				_boss.furnace = false
 				_next(4)
 		_:
 			stage = "embestida: se recupera"
+			_boss.pose = Brawler.Pose.REST
 			_boss.move = Vector2.ZERO
 			if _clock >= RECOVER:
 				_begin(Act.STALK)
+
+
+## EL GOLPE AL PISO, por tiempos (`_step`): 0 los brazos arriba y la franja, 1 el golpe (sale la onda), 2 se queda.
+func _slam() -> void:
+	var k := BrawlerSettings.current
+	var waist := Basis(Vector3.UP, _boss.waist_yaw) * Vector3.FORWARD
+	var mouth := _boss.global_position + waist * (Brawler.BOX.z * 0.5 + WAVE_AHEAD)
+	match _step:
+		0:
+			stage = "golpe al piso: levanta los brazos"
+			_boss.pose = Brawler.Pose.SLAM_READY
+			# Las orugas, de frente a vos, quietas; la franja sigue a la cintura.
+			_boss.move = Vector2(clampf(-_error_to(_to_target()) * 3.0, -1.0, 1.0), 0.0)
+			if _wave == null:
+				_wave = BrawlerWave.new()
+				_wave.name = "Onda"
+				_boss.get_parent().add_child(_wave)
+				_wave.setup(k.wave_width, k.wave_reach)
+			_wave.aim(mouth, waist)
+			if _clock >= k.slam_windup:
+				slams += 1
+				_boss.pose = Brawler.Pose.SLAM
+				_next(1)
+		1:
+			stage = "¡golpe al piso!"
+			_boss.move = Vector2.ZERO
+			if _clock >= SLAM_FALL:
+				_wave.launch(k.wave_speed)
+				_waves.append(_wave)
+				_wave = null
+				_next(2)
+		_:
+			stage = "golpe al piso: se recupera"
+			_boss.move = Vector2.ZERO
+			if _clock >= k.slam_recover:
+				_begin(Act.STALK)
+
+
+## LAS ONDAS QUE CORREN: si una te pasa por debajo apoyada, te saca vida (una vez cada una).
+func _check_waves() -> void:
+	var k := BrawlerSettings.current
+	var body := target as BalanceBody
+	for wave in _waves.duplicate():
+		if not is_instance_valid(wave):
+			_waves.erase(wave)
+			continue
+		# SALTANDO, la pasa si va más alto que el lomo (la cinemática: lo que la mueve está en el piso de sus pies).
+		var over := body != null and not body.grounded
+		if over and body.mover != null:
+			over = body.mover.global_position.y - wave.origin.y > BrawlerWave.RIDGE.x
+		if over or not wave.covers(_ground(), _target_half_width()):
+			continue
+		_waves.erase(wave)
+		waved += 1
+		var theirs := Health.of(target)
+		if theirs != null:
+			theirs.hurt(k.wave_damage, "el golpe al piso")
+		if body != null and not body.kinematic:
+			BalanceBody.hit(body, (wave.way * 0.3 + Vector3.UP).normalized() * k.wave_push * body.mass)
 
 
 ## SI TE ALCANZA: una vez por embestida, si su frente llega a vos: estás adelante, a menos de `REACH` de su frente, y
@@ -212,6 +303,8 @@ func _begin(next: Act) -> void:
 	_step = 0
 	_hit_this_act = false
 	_boss.charging = false
+	_boss.pose = Brawler.Pose.REST
+	_drop_warning()
 	if next == Act.STALK:
 		_boss.furnace = false
 		_side = -1.0 if _random.randf() < 0.5 else 1.0
@@ -315,7 +408,16 @@ func _end(why: String) -> void:
 	stage = why
 
 
+## Si quedó una franja de aviso sin onda (lo cortaron), se va.
+func _drop_warning() -> void:
+	if _wave != null and is_instance_valid(_wave):
+		_wave.queue_free()
+	_wave = null
+
+
 func _still() -> void:
+	_drop_warning()
+	_boss.pose = Brawler.Pose.REST
 	_boss.move = Vector2.ZERO
 	_boss.charging = false
 	_boss.furnace = false
@@ -324,6 +426,7 @@ func _still() -> void:
 
 func _show() -> void:
 	var head := stage if awake or stage == "derrotado" else "quieto (J lo despierta)"
-	_label.text = "%s\nembistió %d · te alcanzó %d · se estrelló %d" % [head, charges, landed, crashes]
+	_label.text = "%s\nembistió %d · te alcanzó %d · se estrelló %d\ngolpes al piso %d · te alcanzaron %d" % [head,
+		charges, landed, crashes, slams, waved]
 	_label.modulate = Color(1.0, 0.55, 0.3) if stage.ends_with("abre el horno") or stage.begins_with("¡se") \
-		else Color(1, 1, 1)
+		or stage.ends_with("brazos") else Color(1, 1, 1)

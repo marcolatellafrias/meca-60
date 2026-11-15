@@ -1,9 +1,11 @@
 extends Node
 
-## EL VIDEO DE LA EMBESTIDA (temporal, para mandárselo al usuario): la pelea de brawler_fight_look con una cámara que
-## sigue a los dos de costado, y después el choque contra el borde. Se graba con --write-movie.
+## EL VIDEO DE LA PELEA (para mandárselo al usuario): el Luchador contra la meca cinemática, con una cámara que sigue a
+## los dos de costado, y después el choque contra el borde. La meca esquiva un ataque sí y otro no (la embestida con un
+## dash cuando le faltan 20 m; la onda del golpe al piso, saltando cuando le faltan 20 m). Se graba con --write-movie:
+##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/pelea.avi --fixed-fps 30 res://tests/brawler_charge_movie.tscn
 
-const FIGHT := 32.0
+const FIGHT := 42.0
 
 var _boss: Brawler = null
 var _brain: BrawlerBrain = null
@@ -12,6 +14,7 @@ var _title: Label = null
 var _cam_at := Vector3.ZERO
 var _cam_from := Vector3.ZERO
 var _first := true
+var _dodged := -1
 
 
 func _ready() -> void:
@@ -19,7 +22,8 @@ func _ready() -> void:
 	add_child(layer)
 	_title = Label.new()
 	_title.position = Vector2(20, 14)
-	_title.add_theme_font_size_override("font_size", 26)
+	_title.add_theme_font_size_override("font_size", 22)
+	_title.position = Vector2(20, 60)
 	_title.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_title.add_theme_constant_override("outline_size", 8)
 	layer.add_child(_title)
@@ -88,6 +92,12 @@ func _tick(mech: Mech) -> float:
 		var to_boss := _boss.global_position - ground
 		mech.aim_yaw = atan2(-to_boss.x, -to_boss.z)
 		mech.move = Vector2.ZERO
+		mech.dash = false
+		mech.jump = false
+		_dodge(mech, ground, to_boss)
+		# Que no se termine la pelea: con poca vida, vuelve a llenarse.
+		if Health.of(mech).left < 30.0:
+			Health.of(mech).left = BrawlerArchetype.MECH_HEALTH
 	# LA CÁMARA: de costado a la línea entre los dos, más lejos cuanto más separados.
 	var line := ground - _boss.global_position
 	line.y = 0.0
@@ -100,6 +110,25 @@ func _tick(mech: Mech) -> float:
 	_cam_at = _cam_at.lerp(at, follow)
 	_cam_from = _cam_from.lerp(from, follow)
 	_eye.global_transform = Transform3D(Basis(), _cam_from).looking_at(_cam_at, Vector3.UP)
-	_title.text = "%s · a %.0f m · %.0f m/s\nla meca: %.0f de vida · embistió %d, te alcanzó %d, se estrelló %d" % [
-		_brain.stage, gap, absf(_boss.speed), Health.of(mech).left, _brain.charges, _brain.landed, _brain.crashes]
+	_title.text = "a %.0f m · el jefe a %.0f m/s · la meca %s este ataque" % [gap, absf(_boss.speed),
+		"esquiva" if _dodging() else "no esquiva"]
 	return delta
+
+
+## Un ataque sí y otro no.
+func _dodging() -> bool:
+	return (_brain.charges + _brain.slams) % 2 == 0
+
+
+func _dodge(mech: Mech, ground: Vector3, to_boss: Vector3) -> void:
+	var attack := _brain.charges + _brain.slams
+	if not _dodging() or _dodged == attack:
+		return
+	if _brain.stage.contains("arranca") and to_boss.length() - Brawler.BOX.z * 0.5 < 20.0:
+		_dodged = attack
+		mech.move = Vector2(1.0, 0.0)
+		mech.dash = true
+	for wave in _brain._waves:
+		if is_instance_valid(wave) and wave.launched and wave.way.dot(ground - wave.origin) - wave.front < 24.0:
+			_dodged = attack
+			mech.jump = true
