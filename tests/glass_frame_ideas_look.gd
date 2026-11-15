@@ -6,10 +6,13 @@ extends Node3D
 ## barras de arcilla encima del vidrio. Dos hojas numeradas: de afuera (el vidrio oscuro, para que se lea) y desde la
 ## silla del movimiento, arriba atrás (lo que tapa).
 ##   tools/godot_ventana.sh res://tests/glass_frame_ideas_look.tscn -- --salida=C:/carpeta
+## `--claro`: sólo la 1 y la 2, con el vidrio claro y sin lo de adentro (el usuario: «enclarecer un poco el vidrio y tal
+## vez ocultar temporalmente el interior»), de frente, del otro costado y de adentro: una fila por idea.
 
 const VIEW := Vector2i(1280, 720)
 const FRAME := Color(0.36, 0.38, 0.41)
 const GLASS_OUTSIDE := Color(0.16, 0.24, 0.3, 0.72)
+const GLASS_CLEAR := Color(0.7, 0.85, 0.95, 0.18)
 const IDEAS := [
 	"Sólo las aristas",
 	"Aristas y parantes entre puestos",
@@ -23,6 +26,7 @@ const IDEAS := [
 ]
 
 var _folder := ""
+var _clear := false
 var _mech: Mech = null
 var _eye: Camera3D = null
 var _title: Label = null
@@ -43,6 +47,8 @@ func _ready() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--salida="):
 			_folder = argument.trim_prefix("--salida=")
+		if argument == "--claro":
+			_clear = true
 	get_window().size = VIEW
 	var ground := StaticBody3D.new()
 	Clay.solid(ground, Vector3(900, 1, 900), Vector3(0, -0.5, 0), Color(0.82, 0.80, 0.76))
@@ -90,6 +96,10 @@ func _ready() -> void:
 	for part in _mech.cabin.get_children():
 		if part is MeshInstance3D and part.name.begins_with("Vidrio"):
 			_glass.append(part)
+	if _clear:
+		await _clear_sheet()
+		get_tree().quit()
+		return
 	var outside: Array = []
 	var inside: Array = []
 	for index in IDEAS.size():
@@ -110,6 +120,32 @@ func _ready() -> void:
 	_save(outside, "estructura_afuera")
 	_save(inside, "estructura_adentro")
 	get_tree().quit()
+
+
+## La 1 y la 2, claras y sin lo de adentro: de frente, del otro costado y de adentro.
+func _clear_sheet() -> void:
+	for part in _mech.cabin.get_children():
+		if part is Node3D and not _glass.has(part) and not part is PelvisLift:
+			(part as Node3D).visible = false
+	_show_dummies(false)
+	_paint_glass(GLASS_CLEAR)
+	var shots: Array = []
+	for index in 2:
+		_holder = Node3D.new()
+		_mech.cabin.add_child(_holder)
+		call("_idea_%d" % (index + 1))
+		_title.text = "%d. %s" % [index + 1, IDEAS[index]]
+		_look(Vector3(-7.5, 1.0, -9.5), Vector3(0.0, -0.2, -0.5), 38.0)
+		shots.append(await _grab())
+		_title.text = "%d. de frente, del otro lado" % (index + 1)
+		_look(Vector3(5.5, 0.2, -10.0), Vector3(0.0, 0.0, -1.0), 40.0)
+		shots.append(await _grab())
+		_title.text = "%d. de adentro" % (index + 1)
+		var top := CabinGrid.top_seat()
+		_look(top + Vector3(0.6, 1.3, 0.3), Vector3(-0.8, y0 + 1.6, f), 80.0)
+		shots.append(await _grab())
+		_holder.free()
+	_save(shots, "estructura_1_y_2")
 
 
 ## ── LAS IDEAS ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -253,9 +289,10 @@ func _side_post(side: float, z: float, thick: float) -> void:
 	_bar(Vector3(side * h, y0, z), Vector3(side * h, top, z), thick)
 
 
-## Una barra cuadrada de `a` a `b`.
+## Una barra cuadrada de `a` a `b`. (Su arriba, cualquiera que no sea a lo largo: con UP, las barras paradas no se veían.)
 func _bar(a: Vector3, b: Vector3, thick: float) -> void:
-	_piece(a, b, Vector3(thick, thick, a.distance_to(b) + thick), (a + b) * 0.5, Vector3.UP)
+	var up := Vector3.UP if absf((b - a).normalized().y) < 0.9 else Vector3.FORWARD
+	_piece(a, b, Vector3(thick, thick, a.distance_to(b) + thick), (a + b) * 0.5, up)
 
 
 ## Una costilla: una placa de `deep` parada hacia `out`, de `a` a `b`.
