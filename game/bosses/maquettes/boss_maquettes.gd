@@ -35,6 +35,7 @@ const ALL: Array[Dictionary] = [
 	{"kind": "humanoid", "spec": 3},
 	{"kind": "humanoid", "spec": 4},
 	{"kind": "humanoid", "spec": 5},
+	{"kind": "humanoid", "spec": 6},
 	{"kind": "armed", "spec": 0},
 	{"kind": "armed", "spec": 1},
 	{"kind": "armed", "spec": 2},

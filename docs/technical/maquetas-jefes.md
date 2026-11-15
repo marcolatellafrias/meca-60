@@ -28,8 +28,22 @@ del 15/11/2026; todavía no está confirmada.
   desde ningún lado, pero es complicado»).
 - **Dos estados**: normal y hecho bola.
 - **Los poderes** (de la lista del 15/11/2026; fuera la succión, la erupción en línea y el pulso desde abajo): el pisotón
-  con onda, el agarre con un tentáculo, el láser de los ojos, el modo bola (embestir), el remolino de los tentáculos y el
-  salto aplastante.
+  con onda, el agarre con un tentáculo, el láser de los ojos, el remolino de los tentáculos, el salto aplastante y el modo
+  bola. La cantidad, la propuesta: unos cinco más el modo bola (un jefe de Souls tiene unos cinco ataques a mano por fase).
+- **El modo bola, con variantes de movimiento** (el usuario: «una que rebote en el piso y salte, otra más tipo pinball,
+  otra más tipo pinball pero con furia… que deje zona de fuego en el piso cuando pasa»): **rebotando** (salta y cae
+  pegando), **pinball** (rebota en las paredes) y **pinball furioso** (lo mismo, dejando fuego en el piso). Cada pelea
+  usa algunas: es la variación de un jefe hecho a mano.
+
+## El jefe humanoide: el Luchador de orugas (15/11/2026; elegido)
+El usuario: «iría con la de luchador, pero en vez de piernas les haría las huellas de un tanque… y los tubos de atrás son
+los perfectos para que tiren humo cuando está enojado». Ancho, la cabeza hundida, sobre dos orugas con un aro donde gira
+la cintura; con ira, humo negro por las chimeneas. Es el primero de la fila. **Cantidad**: de 5 a 6 poderes normales y
+2 o 3 más con ira. **Sin patas no salta ni pisa**, así que de la lista caen el pisotón y la picada; la propuesta, sin
+confirmar: el golpe doble al piso (onda en línea), la embestida en orugas (el hombrazo, larga), el agarre y revoleo, el
+gancho al cielo, arrancar el piso y tirarlo, la guardia con contraataque, y en vez del pisotón **el trompo** (gira la
+cintura con los brazos abiertos: lo de cerca sale despedido). Con ira: combos más largos, derrapes, y el humo negro como
+una zona que tapa la vista.
 
 ## Las siluetas del humanoide (15/11/2026)
 `HumanoidMaquettes`, primeras en la fila: seis siluetas de meca, de cajas (los miembros cuadrados, con cabeza), normales y

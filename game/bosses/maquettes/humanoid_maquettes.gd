@@ -18,6 +18,17 @@ const FLAME := Color(1.0, 0.5, 0.1, 0.5)
 ## del antebrazo; `reach`: cuánto adelanta los brazos (0 a 1); `fist`: lado del puño. `head`: crest, mono, sunk, dome o
 ## visor. `back`: thrusters, stacks o fins. `skirt`: placas en la cadera. `blades`: hojas en los antebrazos.
 const ALL: Array[Dictionary] = [
+	# EL ELEGIDO (15/11/2026; el usuario: «iría con la de luchador, pero en vez de piernas les haría las huellas de un
+	# tanque… y los tubos de atrás son los perfectos para que tiren humo cuando está enojado»).
+	{"name": "Luchador de orugas", "hip": 9.0, "leg": 5.0, "reverse": false, "treads": true,
+		"chest": Vector3(22, 13, 13), "waist": Vector3(12, 5, 10),
+		"hunch": 12.0, "shoulder": Vector3(7, 7, 7), "upper": 8.0, "fore": 9.0, "reach": 0.35, "fist": 4.8,
+		"head": "sunk", "back": "stacks", "skirt": false, "blades": false,
+		"color": Color(0.62, 0.2, 0.18), "rage_color": Color(0.2, 0.2, 0.22),
+		"states": ["normal", "con ira: humo negro"], "lines": [
+		"el Luchador (ancho, la cabeza hundida) sobre orugas de tanque en vez de patas",
+		"no salta ni pisa: embiste, derrapa y gira en el lugar; la cintura gira sobre las orugas",
+		"con ira, las chimeneas de atrás echan humo negro"]},
 	{"name": "Gorila", "hip": 11.0, "leg": 3.6, "reverse": false, "chest": Vector3(20, 12, 12), "waist": Vector3(8, 4, 7),
 		"hunch": 28.0, "shoulder": Vector3(8, 7, 8), "upper": 11.0, "fore": 13.0, "reach": 0.25, "fist": 5.5,
 		"head": "mono", "back": "thrusters", "skirt": false, "blades": false,
@@ -80,8 +91,10 @@ static func build(index: int, p: Node3D, rage: bool) -> void:
 	var chest: Vector3 = k["chest"]
 	var waist: Vector3 = k["waist"]
 	var hip_x := waist.x * 0.5 + leg * 0.4
+	if k.get("treads", false):
+		_treads(p, hip, waist, color, trim)
 	# LAS PATAS, de la cadera al piso.
-	for side: float in [-1.0, 1.0]:
+	for side: float in ([] if k.get("treads", false) else [-1.0, 1.0]):
 		var top := Vector3(side * hip_x, hip, 0.0)
 		var ankle := Vector3(side * hip_x * 1.1, leg * 0.7, 0.0)
 		var knee := Vector3(side * hip_x * 1.05, hip * 0.5, (hip * 0.15) if k["reverse"] else -hip * 0.12)
@@ -149,11 +162,14 @@ static func build(index: int, p: Node3D, rage: bool) -> void:
 				if rage:
 					_cone(upper, nozzle + Vector3.DOWN * 1.5, nozzle + Vector3(0.0, -8.0, 2.0), 1.3, FLAME)
 		"stacks":
+			# Las chimeneas: con ira, humo negro que sube y se abre.
 			for side: float in [-1.0, 1.0]:
 				var stack := back + Vector3(side * chest.x * 0.25, chest.y * 0.3, 1.5)
 				Clay.cylinder(upper, 1.2, 7.0, stack + Vector3.UP * 3.0, Clay.DARK)
-				var puff := Clay.sphere(upper, 2.0, stack + Vector3.UP * 8.0, FLAME if rage else Color(0.35, 0.35, 0.37, 0.45))
-				puff.scale = Vector3.ONE * (1.4 if rage else 1.0)
+				if rage:
+					for i in 5:
+						Clay.sphere(upper, 2.0 + i * 0.9, stack + Vector3(side * i * 0.8, 8.0 + i * 3.2, 1.5 + i * 2.0),
+							Color(0.08, 0.08, 0.09, 0.75 - i * 0.1))
 		"fins":
 			for side: float in [-1.0, 1.0]:
 				var fin := Clay.box(upper, Vector3(0.6, chest.y * 1.4, 4.0), back + Vector3(side * chest.x * 0.35, chest.y * 0.5, 2.0),
@@ -163,6 +179,20 @@ static func build(index: int, p: Node3D, rage: bool) -> void:
 					var edge := Clay.box(upper, Vector3(0.3, chest.y * 1.4, 0.3), fin.position + Vector3(side * 0.4, 0.0, 1.8), FIRE)
 					edge.rotation_degrees = fin.rotation_degrees
 					edge.material_override = _glow(FIRE)
+
+
+## LAS ORUGAS en vez de patas: dos orugas con sus ruedas, el chasis entre ellas y un aro donde gira la cintura.
+static func _treads(p: Node3D, hip: float, waist: Vector3, color: Color, trim: Color) -> void:
+	var track := Vector3(5.0, 5.5, 24.0)
+	for side: float in [-1.0, 1.0]:
+		var x := side * (waist.x * 0.5 + track.x * 0.5 + 1.5)
+		Clay.box(p, track, Vector3(x, track.y * 0.5, 0.0), Clay.DARK)
+		Clay.box(p, Vector3(track.x + 0.3, 1.0, track.z * 0.85), Vector3(x, track.y + 0.2, 0.0), color.darkened(0.15))
+		for i in 5:
+			Clay.cylinder(p, 2.0, track.x + 0.4, Vector3(x, 2.4, -track.z * 0.4 + i * track.z * 0.2), Clay.METAL.darkened(0.2),
+				Vector3(0.0, 0.0, 90.0))
+	Clay.box(p, Vector3(waist.x + 3.0, 3.5, track.z * 0.7), Vector3(0.0, 4.5, 0.0), trim)
+	Clay.cylinder(p, waist.x * 0.45, hip - 6.0, Vector3(0.0, 6.0 + (hip - 6.0) * 0.5, 0.0), Clay.METAL.darkened(0.3))
 
 
 static func _head(upper: Node3D, kind: String, neck: Vector3, color: Color, trim: Color, eye: Color, rage: bool) -> void:
