@@ -5,7 +5,8 @@ extends Node3D
 ## medidas salen de la trama (CabinGrid), que se cambia jugando (el F2).
 ##   · UN SOLO PISO, con el recorte del ascensor en el medio (PelvisLift), y el techo.
 ##   · ADELANTE, EL VIDRIO, SIN MARCOS (`_glass`): el frente y los costados (hasta CabinGrid.SIDE_GLASS), de piso a
-##     techo, la arista de arriba del frente cortada a 45° y el techo hasta CabinGrid.ROOF_GLASS, también de vidrio. Paños planos que se tocan justo en las aristas (el usuario,
+##     techo, la arista de arriba del frente cortada a 45° y el techo hasta CabinGrid.ROOF_GLASS, también de vidrio.
+##     Paños planos que se tocan justo en las aristas (el usuario,
 ##     14/11/2026: «toda esa zona de cristal… el suelo no… en la esquina superior delantera, tenga un chamfer»). Lo
 ##     demás, de metal: la pared de atrás, los costados y el techo desde donde termina el vidrio.
 ##   · ADELANTE, EL TABLERO CORRIDO con sus tres puestos (un brazo a cada lado y la espalda al medio).
@@ -21,8 +22,6 @@ extends Node3D
 
 const SLAB := CabinGrid.SLAB
 const WALL := CabinGrid.WALL
-## El vidrio, bien transparente (el usuario: «haría más transparente el vidrio»).
-const GLASS := Color(0.6, 0.8, 0.92, 0.12)
 const KIT := Color(0.78, 0.27, 0.27)
 const BATTERY := Color(0.93, 0.75, 0.16)
 const AMMO := Color(0.47, 0.53, 0.32)
@@ -129,7 +128,8 @@ func _pane(corners: Array) -> void:
 	pane.name = "Vidrio"
 	pane.mesh = tool.commit()
 	var paint := StandardMaterial3D.new()
-	paint.albedo_color = GLASS
+	# Su color y cuánto se ve, de la forma (el F2).
+	paint.albedo_color = CabinGrid.GLASS_COLOR
 	paint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	paint.cull_mode = BaseMaterial3D.CULL_DISABLED
 	paint.roughness = 0.2

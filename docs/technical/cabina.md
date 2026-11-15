@@ -59,7 +59,8 @@ Probado (`tests/mech_ride_check.tscn`): subir, el ascensor abajo y arriba, parar
 caminando** y que la meca se corra, salte y se caiga con uno adentro.
 
 ## La forma se cambia jugando: el panel F2
-En las filas de la meca, **F2** (`CabinShapePanel`), en tres pestañas:
+En las filas de la meca, **F2** (`CabinShapePanel`), en cuatro pestañas (el corte y el vidrio, en **El vidrio**, con
+**su color y cuánto se ve**):
 - **La caja**: la celda de trama (en celdas chicas; es **el tamaño general**), cuántas celdas por lado (desde 12: menos,
   no entran los tres puestos), el alto libre (en celdas chicas), el corte del vidrio, **hasta dónde llega el vidrio de
   los costados** y **hasta dónde el del techo** (cada uno aparte, en celdas de trama desde el frente; los dos, por lo

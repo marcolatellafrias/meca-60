@@ -62,6 +62,8 @@ static var SIDE_GLASS := 6
 static var ROOF_GLASS := 2
 ## El alto de la tarima de atrás (m).
 static var PLATFORM_HEIGHT := 1.2
+## EL COLOR DEL VIDRIO, con cuánto se ve en el alfa.
+static var GLASS_COLOR := Color(0.6, 0.8, 0.92, 0.12)
 ## Una celda de trama (m).
 static var TRAMA := 0.0
 ## Lo de adentro, desde el centro hasta la cara de adentro de la pared.
@@ -105,6 +107,7 @@ static func shape(saved: CabinShape) -> void:
 	ROOF_GLASS = clampi(saved.roof_glass, CHAMFER, ACROSS)
 	LIFT_CELLS = clampi(saved.lift_cells, 1, ACROSS / 4)
 	PLATFORM_HEIGHT = clampf(saved.platform_height, 0.3, HEIGHT_CELLS * CELL - 1.0)
+	GLASS_COLOR = Color(saved.glass_color, saved.glass_opacity)
 	TRAMA = TRAMA_CELLS * CELL
 	INNER = ACROSS * 0.5 * TRAMA
 	HALF = INNER + WALL
@@ -126,6 +129,8 @@ static func current() -> CabinShape:
 	now.side_glass = SIDE_GLASS
 	now.roof_glass = ROOF_GLASS
 	now.platform_height = PLATFORM_HEIGHT
+	now.glass_color = Color(GLASS_COLOR, 1.0)
+	now.glass_opacity = GLASS_COLOR.a
 	now.eye_height = EYE_HEIGHT
 	now.arm_length = MechBody.arm_size
 	now.leg_length = MechBody.leg_size

@@ -19,6 +19,8 @@ const LABELS := {
 	"side_glass": "vidrio de los costados, hasta (celdas de la trama)",
 	"roof_glass": "vidrio del techo, hasta (celdas de la trama)",
 	"lift_cells": "radio del ascensor (celdas de la trama)",
+	"glass_color": "color del vidrio",
+	"glass_opacity": "cuánto se ve el vidrio (0 nada, 1 opaco)",
 	"platform_height": "alto de la tarima de atrás (m)",
 	"eye_height": "altura de los ojos que buscan (m)",
 	"arm_length": "largo de los brazos",
@@ -28,7 +30,7 @@ const LABELS := {
 }
 
 ## Las partes del panel: los grupos de CabinShape, en orden.
-const PARTS := ["La caja", "Las sillas", "Brazos y piernas"]
+const PARTS := ["La caja", "El vidrio", "Las sillas", "Brazos y piernas"]
 
 var _draft := CabinGrid.current()
 var _state: Label = null
