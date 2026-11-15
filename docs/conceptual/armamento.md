@@ -133,7 +133,60 @@ timing**: prenderlo **gasta un golpe de energía**, y mantenerlo gasta un poco m
   tanto.
 - **Lo maneja quien ve lo global**: la espalda con cuatro, el movimiento con tres y con dos.
 
-## Los paneles de la silla (14/11/2026)
+## El puesto: holograma, botones y estado (15/11/2026)
+**Reemplaza a los paneles que se traen** (abajo). Probado el primero, el usuario: «no es el camino este». Cada silla
+tiene **módulos fijos**, que no van atados a la silla, y se arma con los que le tocan:
+- **El holograma, adelante**, sube desde el tablero del frente. **Es uno solo y es la mira**: un vidrio de luz entre el
+  sentado y el parabrisas, con la mira dibujada encima. Lo que muestra cambia según el sistema elegido (el alcance del
+  brazo, lo que está a tiro, la carga, la munición de la espalda).
+- **Los botones, a los costados**, en paneles inclinados hacia el sentado: un módulo más rectangular. Cambian **qué**
+  maneja el holograma y **cómo** (el modo); todo lo que no sea mover el mouse y hacer clic.
+- **La pantalla de estado**, un módulo más cúbico: **el estado de todos los subsistemas de esa silla juntos**, para no
+  tener que cambiar de sistema para ver cómo está cada uno. La del movimiento muestra el estado general de la meca: el
+  casco, el movimiento y los dos brazos, la energía y su máximo, y la meca en contorno con su inclinación.
+- **Cómo se usa**: sentado, el mouse para los costados gira el cuerpo entero sobre la silla, y para arriba o abajo
+  inclina la cabeza y un poco la columna. **Mirar un botón y hacer clic lo aprieta; mirar el holograma y hacer clic toma
+  el control** (el mouse apunta); **E lo suelta**. **El clic derecho es el escudo**, apuntando o no: el parry es reflejo
+  y no se puede soltar la mira para ir a buscar un botón.
+- **Los casos**:
+  - **El puño**: el holograma muestra el alcance y resalta lo que está a tiro; mantener el clic carga. **Un solo tipo de
+    piña** (el agachado y dónde pega ya hacen de uppercut); a lo sumo, la piña fuerte con otra animación.
+  - **El agarre**: los objetos agarrables, en otro color en el holograma; se resaltan al mirarlos si están a tiro.
+  - **El cañón de energía, con modos en botones**: tiros cortos y rayo que barre se sostienen con el clic (cuánto se
+    aprieta no carga); **el súper tiro sí carga**. Es el que mejor encaja con los botones.
+  - **La espalda**: un botón elige entre las dos armas; la munición se ve en el holograma. **El misil guiado como en
+    Half-Life**: se sigue mirando por el holograma y el misil va adonde apunta la mira.
+  - **Con dos jugadores**, el que tiene los dos brazos y la espalda elige con botones qué maneja el holograma: es el caso
+    que más justifica el sistema.
+  - **El movimiento**, aparte: es el único que mueve su silla arriba y abajo (la meca mira para arriba o para abajo),
+    así que su silla acepta esa inclinación. Después.
+- **Botones extra, sólo el ascensor** (en la silla del movimiento). **Eyectarse lo tienen todos, bajo un vidrio.**
+  *Descartados*: el gatillo de la batería, el selector de munición, el cambio de herramienta, la flecha al enemigo en la
+  pantalla de estado, la sierra con botón de encendido (una sierra con el brazo retraído no tiene sentido), arrojar el
+  disco (ir a buscarlo complica; que se recargue invita al abuso), y que el holograma de un brazo roto titile: alcanza
+  con que el brazo tenga menos fuerza, y su estado se ve en la pantalla de estado.
+
+## Los brazos: la mano de base y una herramienta (15/11/2026)
+**Cada brazo tiene la mano de base** (empujar, arrojar cosas) **y una herramienta** (sierra, taladro, hoja, cañón,
+garra…). **Las herramientas no se repiten**: la tienda vende un solo ejemplar de cada una y la tripulación elige en qué
+brazo va (lo de la tienda es de [[progresion]]). La sierra sola era monotemática: el que la manejaba se aburría.
+
+## La progresión: física, con la alternativa anotada (15/11/2026)
+**Se va por la física**: la progresión está en la habilidad, en qué tan bien se pelea y en los cosméticos; **cada
+herramienta es una forma distinta de jugar**. La variedad va hacia los costados: herramientas distintas, una de cada
+una, la meca por semilla, los enemigos y las arenas. Mejoras, a lo sumo chicas y que cambien la física (un puño más
+pesado pega más pero llega más lento), en un rango corto para no volver a pelear con el motor. El «especial» de cada
+herramienta sale del uso (la carga, el taladro que se clava si se sostiene), no de un botón de habilidad.
+
+**La alternativa, por si se pivotea** (el usuario: «deja anotada la alternativa por si en un futuro quiero pivotear»):
+- **Mejoras por arma**: cada herramienta sube de nivel. Aprovecha que no es contra jugadores sino contra máquinas.
+- **Ataques discretos, tipo hechizos**: muchas variantes de cada arma con ataques propios (el taladro común y un súper
+  taladro que arma un aura alrededor). Da más progresión y más horas, y se vuelve más estratégico, pero deja de ser
+  físico. Los roles se pisan (el daño en área de los brazos le quita lugar al artillero) y la coordinación pasa a ser
+  manejar tiempos de recarga. **Mezclar los dos, no**: el hechizo siempre convendría más y la física quedaría de adorno.
+
+## Los paneles de la silla (14/11/2026, reemplazado)
+*Reemplazado por el puesto con holograma y botones (arriba); queda como registro de lo probado.*
 Los brazos y la espalda **no se manejan agarrando controles de un tablero** (como en character-parametric: mirar el
 volante, agarrarlo y levantar la vista al parabrisas). **Se manejan con paneles que se traen**:
 - **Clic en un panel lo abre** delante del que está sentado y le toma el mouse; **Escape lo cierra**. Sin teclas para
