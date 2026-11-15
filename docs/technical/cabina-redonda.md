@@ -26,7 +26,8 @@ Sale de la maqueta de arcilla (`tests/round_cabin_look.tscn`), donde se decidió
 ## La forma se cambia jugando: el F2 de la fila
 `RoundShapePanel`, en tres pestañas: **La caja** (lados, radio, alto libre, alto del disco), **La tarima y el ascensor**
 (radio y alto de la tarima, radio del ascensor y cuánto va corrido atrás) y **El vidrio** (cuántos lados, color, cuánto
-se ve). **Guardar** la escribe en `game/mech/round/round_shape.tres` (no se sube) y rearma las mecas; la cuadrada tiene
+se ve) y **Brazos y piernas**, la misma de la cuadrada: el cuerpo es uno solo para todas las mecas, y se guarda con
+la forma de la cuadrada (cambiarlo acá lo cambia allá). **Guardar** la escribe en `game/mech/round/round_shape.tres` (no se sube) y rearma las mecas; la cuadrada tiene
 la suya aparte. Las sillas, la tarima, el ascensor y los recursos se acomodan solos.
 
 ## Los tests
