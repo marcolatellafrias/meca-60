@@ -33,7 +33,8 @@ const STAIR_FROM := PI / 3.0
 const STAIR_TO := PI * 25.0 / 18.0
 const STEPS := 14
 const STAIR_OUT := WALK - 0.05
-const STAIR_IN := STAIR_OUT - 1.1
+## El ancho de la escalera caracol: 1,8 m (el usuario: «más ancha la escalera caracol»; era 1,1).
+const STAIR_IN := STAIR_OUT - 1.8
 const HOLE_FROM_STEP := 3
 ## La puerta del tubo, en la planta baja (ángulo desde el frente, hacia la derecha) y su medio ancho.
 const DOOR_AT := PI * 11.0 / 6.0
@@ -251,7 +252,8 @@ func _rooms() -> void:
 		var lever := Clay.cylinder(panel, 0.03, 0.4, Vector3((i - 1) * 0.3, (i - 1) * 0.12, 0.22), YELLOW, Vector3(90, 0, 0))
 		lever.name = "Palanca %d" % i
 	for i in 4:
-		var angle := 265.0 - i * 9.0
+		# Fuera de la escalera (que termina a los 250°): la cuarta, encima de la segunda.
+		var angle := 262.0 + (i if i < 3 else 1) * 8.0
 		var crate := Clay.box(self, Vector3(0.6, 0.45, 0.45), at.call(angle, OUTER - 0.65, 0.225 + (0.45 if i == 3 else 0.0)), AMMO)
 		crate.rotation.y = -deg_to_rad(angle)
 
