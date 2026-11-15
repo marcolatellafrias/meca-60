@@ -6,6 +6,8 @@ extends Node3D
 ##   tools/godot_ventana.sh res://tests/cabin_grid_look.tscn -- --salida=C:/carpeta --celdas=13,11
 ## `--celdas=13,11`: las celdas de trama (en celdas chicas) que mira; sin eso, la guardada. Y, si se quiere, la misma
 ## forma con otro vidrio, tarima o marco: `--costados=9 --techo=6 --tarima=1.8 --marco=2 --ascensor_cuadrado=1` (ver CabinShape).
+## La cabeza: `--cabeza=1` (en rampa) `--frente=73 --alto=96` (los altos libres, en celdas chicas) y `--zocalo=12`.
+## Afuera, además del de frente, de perfil y de tres cuartos de atrás.
 
 const VIEW := Vector2i(1280, 720)
 
@@ -24,7 +26,9 @@ func _ready() -> void:
 		if argument.begins_with("--celdas="):
 			for each in argument.trim_prefix("--celdas=").split(","):
 				_cells.append(int(each))
-		for knob: String in ["costados:side_glass", "techo:roof_glass", "tarima:platform_height", "marco:frame_kind", "ascensor_cuadrado:lift_square"]:
+		for knob: String in ["costados:side_glass", "techo:roof_glass", "tarima:platform_height", "marco:frame_kind",
+				"ascensor_cuadrado:lift_square", "cabeza:head", "frente:front_height_cells", "alto:height_cells", "zocalo:sill_cells",
+				"chanfle:chamfer"]:
 			var parts := knob.split(":")
 			if argument.begins_with("--%s=" % parts[0]):
 				_changes[parts[1]] = float(argument.trim_prefix("--%s=" % parts[0]))
@@ -82,6 +86,15 @@ func _ready() -> void:
 		var k := CabinGrid.SIZE / 6.6
 		_title.text = name_of
 		_look(Vector3(-11.0, 1.5, -15.0) * k, Vector3(0.0, -0.5 * k, 0.0), 42.0)
+		shots.append(await _grab())
+		_title.text = "De perfil"
+		_look(Vector3(-20.0, 0.5, 0.0) * k, Vector3(0.0, -0.5 * k, 0.0), 42.0)
+		shots.append(await _grab())
+		_title.text = "De tres cuartos, de atrás"
+		_look(Vector3(-12.0, 4.0, 14.0) * k, Vector3(0.0, -0.5 * k, 0.0), 42.0)
+		shots.append(await _grab())
+		_title.text = "De frente, de cerca"
+		_look(Vector3(-3.0, 1.0, -11.0) * k, Vector3(0.0, 0.0, 0.0), 42.0)
 		shots.append(await _grab())
 		var cut := _hide_left_and_roof()
 		_title.text = "De costado, cortada"

@@ -61,6 +61,12 @@ static var TRAMA_CELLS := 13
 static var ACROSS := 12
 static var HEIGHT_CELLS := 96
 static var CHAMFER := 2
+## LA CABEZA (ver CabinShape.head): 0 plana, con el corte; 1 en rampa (ver `ramp`). En rampa, el alto libre del frente
+## en celdas chicas (`FRONT_CELLS`); el de atrás es `HEIGHT_CELLS`.
+static var HEAD := 0
+static var FRONT_CELLS := 73
+## EL ZÓCALO abajo del vidrio, en celdas chicas.
+static var SILL_CELLS := 0
 static var LIFT_CELLS := 26
 ## Hasta dónde llega el vidrio, desde el frente de adentro, en celdas de trama: el de los costados y el del techo.
 static var SIDE_GLASS := 6
@@ -120,7 +126,11 @@ static func shape(saved: CabinShape) -> void:
 	ACROSS = maxi(saved.across, MIN_ACROSS) / 2 * 2
 	HEIGHT_CELLS = maxi(saved.height_cells, 60)
 	CHAMFER = clampi(saved.chamfer, 0, ACROSS / 2)
-	SIDE_GLASS = clampi(saved.side_glass, CHAMFER, ACROSS - PLATFORM_ROWS)
+	HEAD = clampi(saved.head, 0, 1)
+	FRONT_CELLS = clampi(saved.front_height_cells, 40, HEIGHT_CELLS)
+	SILL_CELLS = clampi(saved.sill_cells, 0, (FRONT_CELLS if HEAD == 1 else HEIGHT_CELLS) - 30)
+	# En rampa, el vidrio de los costados llega por lo menos a una celda (es donde termina la rampa).
+	SIDE_GLASS = clampi(saved.side_glass, 1 if HEAD == 1 else CHAMFER, ACROSS - PLATFORM_ROWS)
 	ROOF_GLASS = clampi(saved.roof_glass, CHAMFER, ACROSS)
 	LIFT_CELLS = clampi(saved.lift_radius, 4, ACROSS * TRAMA_CELLS / 4)
 	PLATFORM_HEIGHT = clampf(saved.platform_height, 0.3, HEIGHT_CELLS * CELL - 1.0)
@@ -146,6 +156,9 @@ static func current() -> CabinShape:
 	now.across = ACROSS
 	now.height_cells = HEIGHT_CELLS
 	now.chamfer = CHAMFER
+	now.head = HEAD
+	now.front_height_cells = FRONT_CELLS
+	now.sill_cells = SILL_CELLS
 	now.lift_radius = LIFT_CELLS
 	now.lift_square = LIFT_SQUARE
 	now.side_glass = SIDE_GLASS
@@ -163,6 +176,21 @@ static func current() -> CabinShape:
 	now.leg_stretch = MechBody.stretch
 	now.shoulder_out = SHOULDER_OUT
 	return now
+
+
+## Si la cabeza va en rampa (ver CabinShape.head).
+static func ramp() -> bool:
+	return HEAD == 1
+
+
+## El zócalo abajo del vidrio (m).
+static func sill() -> float:
+	return SILL_CELLS * CELL
+
+
+## En rampa, el alto libre del frente (m); plana, el de todo.
+static func front_clear() -> float:
+	return FRONT_CELLS * CELL if ramp() else CLEAR
 
 
 ## La caja entera: el lado en planta y el alto.

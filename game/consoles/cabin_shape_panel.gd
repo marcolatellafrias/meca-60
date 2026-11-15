@@ -12,7 +12,10 @@ extends TunerPanel
 
 const PANEL_WIDTH := 380.0
 const LABELS := {
+	"head": "la cabeza",
 	"cell": "celda de la trama (celdas de 3,9 cm)",
+	"front_height_cells": "alto del frente, el de vidrio (celdas de 3,9 cm)",
+	"sill_cells": "zócalo abajo del vidrio (celdas de 3,9 cm)",
 	"across": "celdas por lado",
 	"height_cells": "alto libre (celdas de 3,9 cm)",
 	"chamfer": "corte del vidrio de arriba (celdas de la trama)",
@@ -37,8 +40,16 @@ const LABELS := {
 ## Las partes del panel: los grupos de CabinShape, en orden.
 const PARTS := ["La caja", "El vidrio", "Las sillas", "Brazos y piernas"]
 
+## LO QUE CADA CABEZA NO USA (ver CabinShape.head): plana, el alto del frente; en rampa, el corte y el vidrio del techo
+## (la rampa llega hasta donde termina el de los costados). Y lo que se llama distinto.
+const SKIP_BY_HEAD := [["front_height_cells"], ["chamfer", "roof_glass"]]
+const LABELS_BY_HEAD := [{}, {"height_cells": "alto de atrás, el de metal (celdas de 3,9 cm)",
+	"side_glass": "vidrio de los costados y la rampa, hasta (celdas de la trama)"}]
+
 var _draft := CabinGrid.current()
 var _state: Label = null
+## La cabeza con la que se armaron las perillas: si cambia, se rearman (otras perillas).
+var _shown_head := -1
 
 
 func setup_panel() -> void:
@@ -56,10 +67,15 @@ func setup_panel() -> void:
 func sections() -> Array[Dictionary]:
 	# UNA PESTAÑA POR PARTE (el usuario, 13/11/2026: «separada por partes con labels… como tabs arriba»): los grupos
 	# de CabinShape.
+	# LAS PERILLAS SON LAS DE LA CABEZA ELEGIDA (el usuario, 15/11/2026: «cuando cambie la opción cambien los sliders»).
+	_shown_head = clampi(_draft.head, 0, 1)
+	var labels := LABELS.duplicate()
+	labels.merge(LABELS_BY_HEAD[_shown_head], true)
 	var all: Array[Dictionary] = []
 	for part: String in PARTS:
-		all.append({"title": part.to_upper(), "tab": part, "target": _draft, "labels": LABELS,
-			"include": PackedStringArray([part]), "headers": false, "defaults": CabinShape.new(), "on_change": _measure})
+		all.append({"title": part.to_upper(), "tab": part, "target": _draft, "labels": labels,
+			"include": PackedStringArray([part]), "skip": PackedStringArray(SKIP_BY_HEAD[_shown_head]), "headers": false,
+			"defaults": CabinShape.new(), "on_change": _measure})
 	return all
 
 
@@ -67,6 +83,10 @@ func sections() -> Array[Dictionary]:
 func _measure() -> void:
 	if _state == null:
 		return
+	# Cambió la cabeza: otras perillas. Diferido: no se puede rearmar desde el control que está avisando.
+	if _shown_head >= 0 and _draft.head != _shown_head:
+		_shown_head = _draft.head
+		rebuild.call_deferred()
 	var trama := _draft.cell * CabinGrid.CELL
 	var inner := _draft.across * trama
 	var clear := _draft.height_cells * CabinGrid.CELL

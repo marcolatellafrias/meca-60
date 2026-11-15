@@ -29,6 +29,14 @@ limpio»).*
   del frente cortada a 45° (**dos celdas de trama**), también de vidrio. Paños planos que se tocan justo en las aristas
   (el usuario: «toda esa zona de cristal… el suelo no… en la esquina superior delantera, tenga un chamfer»). Atrás,
   la pared y la mitad de atrás de los costados, de metal.
+- **O la cabeza en rampa** (`CabinGrid.ramp`, a elegir en el F2; el usuario, 15/11/2026, de la maqueta de los chanfles:
+  «me gusta la segunda… como una opción más, no como reemplazo»): sin el corte; **el frente más bajo** (su alto libre,
+  aparte) y **el techo de vidrio que sube** desde él hasta donde termina el vidrio de los costados; de ahí hacia atrás, el
+  techo de metal, con el alto de siempre (el de atrás). Los costados de vidrio, con el borde de arriba inclinado. La
+  caja (la que choca con el mundo) es la del alto de atrás.
+- **El zócalo** (`CabinGrid.sill`, con las dos cabezas): chapa llena abajo del vidrio del frente y de los costados, en
+  celdas chicas; en 0, el vidrio llega al piso (el usuario: «que la base del vidrio tenga como un marco lleno también…
+  subirlo o bajarlo»). El marco de abajo va sobre él.
 - **El marco del vidrio** (`MechCabin._frame`), a elegir en el F2: **sin nada**, **sólo las aristas** o **las aristas y
   los parantes entre puestos**, con el grosor de las aristas y el de los parantes aparte. La regla de las aristas:
   **todo borde de un paño lleva marco**, también donde el vidrio se junta con la chapa o con el piso (el usuario,
@@ -76,7 +84,10 @@ En las filas de la meca, **F2** (`CabinShapePanel`), en cuatro pestañas (el cor
   no entran los tres puestos), el alto libre (en celdas chicas), el corte del vidrio, **hasta dónde llega el vidrio de
   los costados** y **hasta dónde el del techo** (cada uno aparte, en celdas de trama desde el frente; los dos, por lo
   menos hasta el corte), el radio del ascensor (en celdas chicas: de a 3,9 cm), **si es cuadrado** (el hueco, la plataforma y la pelvis; si no, redondos) y **el alto de
-  la tarima** (de a un escalón; las escaleras lo siguen).
+  la tarima** (de a un escalón; las escaleras lo siguen). Arriba, **la cabeza**: plana con el corte, o en rampa.
+  **Cada cabeza muestra sus perillas** (el usuario: «cuando cambie la opción cambien los sliders»): en rampa no están
+  el corte ni el vidrio del techo (la rampa llega hasta donde el de los costados) y aparece **el alto del frente**; el
+  alto libre pasa a ser **el de atrás**. El zócalo, en **El vidrio**.
   Las sillas, los kits, la batería y la munición se acomodan solos (los kits, de 1,2 celdas de trama o menos si no
   entran; la munición, de 1,6).
 - **Las sillas**: la altura de los ojos que buscan.
@@ -89,7 +100,8 @@ medidas que salen y la altura de la caja sobre el piso, que sale de las piernas.
 
 ## Los tests
 - `tests/cabin_grid_look.tscn` (unos 10 s por forma, sin el sandbox; `--celdas=13,11`): de frente, cortada de costado,
-  desde la silla del movimiento y desde arriba sin techo; escribe las medidas.
+  desde la silla del movimiento y desde arriba sin techo; escribe las medidas. Afuera, también de perfil, de tres cuartos
+  de atrás y de frente de cerca. La cabeza: `--cabeza=1 --frente=73 --alto=96 --zocalo=12`.
 - `tests/cabin_shape_check.tscn`: el panel rearma las mecas sin tocar el resto de las parcelas.
 - `tests/mech_ride_check.tscn`: caminar adentro, el ascensor, la tarima y la escalera, con la meca en movimiento.
 - `tests/two_cabins_look.tscn`: la maqueta de arcilla de la cabina, en cuatro escalas (de donde salió esta).

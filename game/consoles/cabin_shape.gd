@@ -6,12 +6,20 @@ extends Resource
 ## de todo y cuánto se estiran las piernas paradas—.
 
 @export_group("La caja")
+## LA CABEZA: plana, con el corte arriba del frente (la de siempre), o EN RAMPA: el frente más bajo y el techo de vidrio
+## que sube desde él hasta donde termina el vidrio de los costados; de ahí hacia atrás, el techo de metal, alto (el
+## usuario, 15/11/2026, de la maqueta de los chanfles, la cabeza 2: «me gusta la segunda… como una opción más, no como
+## reemplazo»). Cada una muestra sus perillas en el F2.
+@export_enum("plana con el corte", "en rampa") var head := 0
 ## Una celda de la trama, en celdas chicas de 3,9 cm (13: 51 cm).
 @export_range(8, 20, 1) var cell := 13
 ## Cuántas celdas de trama por lado (la planta es cuadrada; siempre par; los tres puestos de adelante piden 12).
 @export_range(12, 20, 2) var across := 12
 ## El alto libre, del piso al techo, en celdas chicas (96: 3,78 m).
 @export_range(70, 140, 1) var height_cells := 96
+## EN RAMPA: el alto libre del frente, la parte de vidrio rebajada, en celdas chicas (73: 2,88 m). El de atrás, el de
+## metal, es `height_cells`. No pasa del de atrás.
+@export_range(40, 140, 1) var front_height_cells := 73
 ## El radio del hueco del ascensor, en celdas chicas de 3,9 cm (26: 1,02 m; cuadrado: la mitad del lado). *Hasta el
 ## 15/11/2026 iba en celdas de trama (`lift_cells`, de 1 a 3): de a 51 cm, muy grueso (el usuario: «¿por qué no puedo
 ## controlarlo mediante celdas?»).*
@@ -27,6 +35,9 @@ extends Resource
 @export_range(0, 18, 1) var side_glass := 6
 ## Hasta dónde llega el vidrio del techo, desde el frente, en celdas de trama (lo mismo que el corte: sólo el corte).
 @export_range(0, 20, 1) var roof_glass := 2
+## EL ZÓCALO: chapa llena abajo del vidrio, del frente y de los costados, en celdas chicas (0: el vidrio llega al piso).
+## El usuario, 15/11/2026: «que la base del vidrio tenga como un marco lleno también… subirlo o bajarlo».
+@export_range(0, 40, 1) var sill_cells := 0
 ## El color del vidrio y cuánto se ve (0, nada; 1, opaco).
 @export var glass_color := Color(0.6, 0.8, 0.92)
 @export_range(0.02, 0.9, 0.01) var glass_opacity := 0.12

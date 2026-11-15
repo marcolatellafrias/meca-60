@@ -9,6 +9,9 @@ extends Node3D
 ##     Paños planos que se tocan justo en las aristas (el usuario,
 ##     14/11/2026: «toda esa zona de cristal… el suelo no… en la esquina superior delantera, tenga un chamfer»). Lo
 ##     demás, de metal: la pared de atrás, los costados y el techo desde donde termina el vidrio.
+##   · O LA CABEZA EN RAMPA (CabinGrid.ramp): sin el corte; el frente más bajo (CabinGrid.front_clear) y el techo de
+##     vidrio que sube desde él hasta donde termina el de los costados; de ahí atrás, el techo de metal, alto.
+##   · ABAJO DEL VIDRIO, EL ZÓCALO (CabinGrid.sill): chapa llena, del frente y de los costados; en 0, no hay.
 ##   · ADELANTE, EL TABLERO CORRIDO con sus tres puestos (un brazo a cada lado y la espalda al medio).
 ##   · ATRÁS, LA TARIMA de pared a pared, con el movimiento arriba al medio, y una escalera recta contra cada costado. En
 ##     el frente de la tarima, de cara al ascensor, los cuatro kits y la batería; arriba, en la pared de atrás, la
@@ -67,10 +70,11 @@ func _ready() -> void:
 	var ceiling := CabinGrid.ceiling()
 	var half := CabinGrid.HALF
 	var trama := CabinGrid.TRAMA
-	var cut := CabinGrid.CHAMFER * trama
+	# En rampa, sin corte, y el vidrio del techo (la rampa) llega hasta donde el de los costados.
+	var cut := 0.0 if CabinGrid.ramp() else CabinGrid.CHAMFER * trama
 	# Hasta dónde llega el vidrio de los costados y el del techo (el del techo, por lo menos hasta el corte).
 	var side_to := CabinGrid.line(CabinGrid.SIDE_GLASS)
-	var roof_to := maxf(CabinGrid.line(CabinGrid.ROOF_GLASS), -half + cut)
+	var roof_to := side_to if CabinGrid.ramp() else maxf(CabinGrid.line(CabinGrid.ROOF_GLASS), -half + cut)
 	# El piso, con el recorte del ascensor; el techo de metal, de donde termina el vidrio hasta atrás.
 	PelvisLift.build_floor(self, interior, floor_top - SLAB * 0.5, SLAB, metal.darkened(0.12))
 	_solid(Vector3(CabinGrid.SIZE, SLAB, half - roof_to), Vector3(0, ceiling + SLAB * 0.5, (roof_to + half) * 0.5), metal)
@@ -82,8 +86,20 @@ func _ready() -> void:
 		for side: float in [-1.0, 1.0]:
 			_solid(Vector3(WALL, CabinGrid.CLEAR, back - side_to), Vector3(side * (half - WALL * 0.5), mid, (side_to + back) * 0.5),
 				metal)
-	_glass(cut, side_to, roof_to)
-	_frame(cut, side_to, roof_to)
+	# EL ZÓCALO: del frente y de cada costado, en el espesor de la pared, hasta donde llega el vidrio.
+	var sill := CabinGrid.sill()
+	if sill > 0.0:
+		var low := floor_top + sill * 0.5
+		_solid(Vector3(CabinGrid.SIZE, sill, WALL), Vector3(0, low, -half + WALL * 0.5), metal)
+		for side: float in [-1.0, 1.0]:
+			_solid(Vector3(WALL, sill, side_to + half - WALL), Vector3(side * (half - WALL * 0.5), low, (side_to - half + WALL) * 0.5),
+				metal)
+	if CabinGrid.ramp():
+		_ramp_glass(side_to)
+		_ramp_frame(side_to)
+	else:
+		_glass(cut, side_to, roof_to)
+		_frame(cut, side_to, roof_to)
 	_desk()
 	_platform()
 	_seats()
@@ -97,7 +113,7 @@ func _ready() -> void:
 ## caja y se tocan justo en las aristas.
 func _glass(cut: float, side_to: float, roof_to: float) -> void:
 	var half := CabinGrid.HALF
-	var y0 := CabinGrid.floor_top()
+	var y0 := CabinGrid.floor_top() + CabinGrid.sill()
 	var y1 := CabinGrid.HALF_HEIGHT
 	var yc := y1 - cut
 	var front := -half + 0.02
@@ -134,7 +150,7 @@ func _frame(cut: float, side_to: float, roof_to: float) -> void:
 	if CabinGrid.FRAME_KIND == 0:
 		return
 	var h := CabinGrid.HALF
-	var y0 := CabinGrid.floor_top()
+	var y0 := CabinGrid.floor_top() + CabinGrid.sill()
 	var y1 := CabinGrid.HALF_HEIGHT
 	var yc := y1 - cut
 	var f := -h
@@ -165,6 +181,58 @@ func _frame(cut: float, side_to: float, roof_to: float) -> void:
 			_bar(Vector3(x, yc, f), Vector3(x, y1, roof_from), post)
 		if roof_to - roof_from > 0.01:
 			_bar(Vector3(x, y1, roof_from), Vector3(x, y1, roof_to), post)
+
+
+## EL VIDRIO DE LA CABEZA EN RAMPA (ver CabinGrid.ramp): el frente, del zócalo al alto del frente; la rampa, de ahí
+## hasta `side_to` arriba de todo; cada costado, con el borde de arriba inclinado. Como en `_glass`, en la cara de
+## afuera de la caja, y adentro se choca.
+func _ramp_glass(side_to: float) -> void:
+	var half := CabinGrid.HALF
+	var y0 := CabinGrid.floor_top() + CabinGrid.sill()
+	var yf := CabinGrid.floor_top() + CabinGrid.front_clear() + SLAB
+	var yb := CabinGrid.HALF_HEIGHT
+	var front := -half + 0.02
+	var side_x := half - 0.02
+	_pane([Vector3(-side_x, y0, front), Vector3(side_x, y0, front), Vector3(side_x, yf, front), Vector3(-side_x, yf, front)])
+	Clay.shape_box(interior, Vector3(CabinGrid.SIZE, yf - y0, 0.1), Vector3(0, (y0 + yf) * 0.5, front - 0.03))
+	_pane([Vector3(-side_x, yf, front), Vector3(side_x, yf, front), Vector3(side_x, yb, side_to), Vector3(-side_x, yb, side_to)])
+	var along := Vector3(0.0, yb - yf, side_to - front)
+	var slope := along.normalized()
+	Clay.shape_box(interior, Vector3(CabinGrid.SIZE, 0.1, along.length()), Vector3(0, (yf + yb) * 0.5, (front + side_to) * 0.5),
+		Basis(Vector3.RIGHT, slope.cross(Vector3.RIGHT), slope))
+	for side: float in [-1.0, 1.0]:
+		var x := side * side_x
+		_pane([Vector3(x, y0, front), Vector3(x, y0, side_to), Vector3(x, yb, side_to), Vector3(x, yf, front)])
+		Clay.shape_box(interior, Vector3(0.1, yb - y0, side_to - front), Vector3(x, (y0 + yb) * 0.5, (front + side_to) * 0.5))
+
+
+## EL MARCO DE LA CABEZA EN RAMPA, con las reglas de `_frame`: todo borde de un paño (abajo, sobre el zócalo; el pliegue
+## del frente con la rampa; la punta de la rampa contra el techo de metal; las esquinas y los bordes de los costados) y,
+## si van, los parantes entre puestos, que suben por el frente y siguen por la rampa.
+func _ramp_frame(side_to: float) -> void:
+	if CabinGrid.FRAME_KIND == 0:
+		return
+	var h := CabinGrid.HALF
+	var y0 := CabinGrid.floor_top() + CabinGrid.sill()
+	var yf := CabinGrid.floor_top() + CabinGrid.front_clear() + SLAB
+	var yb := CabinGrid.HALF_HEIGHT
+	var f := -h
+	var edge := CabinGrid.EDGE_THICKNESS
+	_bar(Vector3(-h, y0, f), Vector3(h, y0, f), edge)
+	_bar(Vector3(-h, yf, f), Vector3(h, yf, f), edge)
+	_bar(Vector3(-h, yb, side_to), Vector3(h, yb, side_to), edge)
+	for side: float in [-1.0, 1.0]:
+		var x := side * h
+		_bar(Vector3(x, y0, f), Vector3(x, yf, f), edge)
+		_bar(Vector3(x, yf, f), Vector3(x, yb, side_to), edge)
+		_bar(Vector3(x, y0, f), Vector3(x, y0, side_to), edge)
+		_bar(Vector3(x, y0, side_to), Vector3(x, yb, side_to), edge)
+	if CabinGrid.FRAME_KIND < 2:
+		return
+	var post := CabinGrid.POST_THICKNESS
+	for x in CabinGrid.post_lines():
+		_bar(Vector3(x, y0, f), Vector3(x, yf, f), post)
+		_bar(Vector3(x, yf, f), Vector3(x, yb, side_to), post)
 
 
 ## Una barra cuadrada del marco, de `a` a `b`, centrada en la línea.
