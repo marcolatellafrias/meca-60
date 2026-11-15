@@ -300,6 +300,12 @@ func _seats_here() -> void:
 		chairs.append(chair)
 
 
+## LOS PUESTOS, en las tres sillas (ver SeatStation, sesión Tableros: una repisa recta, hija de cada silla, en el orden
+## brazo izquierdo, movimiento y brazo derecho). *Estaban desconectados desde que se fue el tablero corrido.*
+func _stations() -> void:
+	SeatStation.attach(self)
+
+
 ## EL MARCO: la caja y el hueco del ascensor, por debajo del piso hasta su parada de abajo.
 func build_frame() -> void:
 	frame = MotionFrame.new()

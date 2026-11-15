@@ -33,10 +33,6 @@ const WALL_CELLS := 6
 const SLAB_CELLS := 5
 const WALL := WALL_CELLS * CELL
 const SLAB := SLAB_CELLS * CELL
-## LO DE LOS PUESTOS (SeatStation, sesión Tableros), que se apoyaban en el tablero de la cuadrada de antes: el alto del
-## tablero, el ancho de los divisores y el hueco de cada puesto. *Quedan hasta que los puestos pasen a la silla.*
-const DESK_HEIGHT := 0.8
-const DIVIDER_CELLS := 1.0
 ## Menos de `MIN_ACROSS` celdas de trama por lado, no se puede.
 const MIN_ACROSS := 12
 ## EL HOMBRO: a qué parte del alto libre, en el medio del costado.
@@ -70,9 +66,6 @@ static var ROOF_GLASS := 2
 ## brazos, a cada costado de ella, en la misma línea.
 static var SEAT_FRONT_CELLS := 16
 static var SEAT_SPREAD_CELLS := 48
-## Qué puestos de adelante tienen su puesto (SeatStation), de izquierda a derecha. *Todavía no lo cambia nada: con dos
-## jugadores, sólo el del medio (el usuario, 15/11/2026).*
-static var OPEN_POSTS: Array[bool] = [true, true, true]
 ## EL COLOR DEL VIDRIO, con cuánto se ve en el alfa.
 static var GLASS_COLOR := Color(0.6, 0.8, 0.92, 0.12)
 ## EL MARCO DEL VIDRIO (ver SquareCabin._edge, _posts): 0 nada, 1 sólo las aristas, 2 las aristas y los parantes entre puestos;
@@ -219,11 +212,6 @@ static func front_seats() -> Array[Vector3]:
 	var middle := -INNER + SEAT_FRONT_CELLS * CELL
 	var spread := minf(SEAT_SPREAD_CELLS * CELL, INNER - 0.4)
 	return [Vector3(-spread, y, middle), Vector3(0.0, y, middle), Vector3(spread, y, middle)]
-
-
-## El ancho de cada hueco de los puestos de adelante (celdas de trama; ver SeatStation).
-static func hole_cells() -> float:
-	return (ACROSS - DIVIDER_CELLS * 4.0) / 3.0
 
 
 ## EL HOMBRO, en el espacio de la caja, sin lo que lo corre hacia afuera (ver Mech.shoulder): en el medio del costado,
