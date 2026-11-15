@@ -1,6 +1,6 @@
 # La base: la compañía
 
-**Borrador** (13/11/2026). Ver [[partida]], [[la-meca]].
+**Borrador** (13/11/2026). Ver [[partida]], [[la-meca]]. Lo que se compra y lo que vuelve de la arena, en [[progresion]].
 
 ## Qué es
 La compañía es **subterránea**. Ahí empieza todo y ahí se vuelve después de cada pelea. Para ir a pelear, la meca entra

@@ -21,6 +21,7 @@ El detalle, en [[partida]].
 | [[la-meca]] | La meca como diseño: equilibrio y no estadísticas, una versión por cantidad de jugadores, una sola vida, eyectarse, los dos caminos. |
 | [[contratos]] | Las mecas enemigas (dificultad y paga, arquetipos con partes y afijos) y la otra tripulación. |
 | [[base]] | La compañía bajo tierra: contratos, mejoras, práctica, reparación (abierta), carga. |
+| [[progresion]] | Lo que pasa entre partidas: la plata como lo único continuo, qué vuelve de la arena, el acorazado, la meca nueva, el capitán, los tres puestos de compra. |
 | [[recursos]] | Los cubos de 63 cm (batería, componente, munición, bomba) y cómo se van a enchufar. |
 | [[armamento]] | Las armas y agregados de la primera versión (puntas de brazo, montadas, espalda, propulsores), los efectos universales y la munición que los elige. |
 
