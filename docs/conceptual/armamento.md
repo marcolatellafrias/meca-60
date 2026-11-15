@@ -18,6 +18,11 @@ tipo, este boss es de tal elemento… quiero que… sean como universales»). Ca
 cualquiera, y lo que se elige es **qué usar en qué momento**, no qué equipar antes de salir.
 
 ## Los puestos
+- **Tres pasajeros, sin espalda (15/11/2026, lo último; manda sobre lo de abajo):** la meca cuadrada tiene tres
+  sillas, las tres adelante. **Izquierda, el brazo izquierdo; derecha, el derecho; al medio, el movimiento.** Se fue la
+  silla de la tarima. **Las armas de la espalda desaparecen** (la ametralladora y los misiles; el usuario: «desaparecen»).
+  Los puestos dejan de ir en un tablero en el piso y pasan a la silla (cómo, sin decidir: el anillo de la maqueta de
+  Interior o los módulos de ahora sostenidos por la silla). Lo de abajo sobre la espalda y el reparto queda como historia.
 - **Cada brazo es de una persona**: su punta y lo montado en él son una sola unidad que maneja ella.
 - **Otra maneja el movimiento y otra, la espalda.**
 - **Dónde se sienta cada uno, con cuatro** (14/11/2026, lo definió el usuario con la sesión Interior; ver [[cabina]]): la
