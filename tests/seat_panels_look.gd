@@ -52,9 +52,12 @@ func _ready() -> void:
 	mech.freeze = true
 	if mech.label != null:
 		mech.label.visible = false
-	SeatPanels.attach(mech.cabin)
 	var panels := mech.cabin.find_children("*", "SeatPanels", false, false)[0] as SeatPanels
 	var chair := panels.chair
+	# La silla del panel queda libre para el jugador: acá se sienta uno de los maniquíes.
+	var sitter := mech.cabin.dummies[0]
+	sitter.intent.seat = chair
+	await get_tree().create_timer(1.5).timeout
 	var eye := chair.global_transform * Vector3(0, chair.eye_height, -0.12)
 	print("SILLA ", chair.name, " ocupada: ", chair.occupant() != null)
 	# 1. Desde atrás y arriba: el panel plegado y la tira.

@@ -22,9 +22,10 @@ y la tira que tienen todos los puestos.
   de atrás para adelante. Sólo se queda con la E si el panel está abierto o mirado, y con el mouse si está abierto.
 - **La piña**: `MechArm.punch_at(punto)` (de la sesión Meca): un directo hacia el punto, recortado a lo que alcanza. El punto es
   lo primero que encuentra el rayo de la mira (sin la meca), o un punto a 18 m.
-- **Se arma con** `SeatPanels.attach(cabin)`, que la cabina llama al armar las sillas.
+- **Se arma con** `SeatPanels.attach(cabin)`, que la cabina llama en `seat_dummies` (sólo la meca con brazos); esa silla
+  queda sin maniquí, para sentarse con E (lo hizo la sesión Interior).
 
-Test para mirar: `tests/seat_panels_look.tscn` (unos 10 s, sin el sandbox): plegado, mirado, abierto con la mira, la
+Test para mirar: `tests/seat_panels_look.tscn` (unos 12 s, sin el sandbox; sienta un maniquí en la silla): plegado, mirado, abierto con la mira, la
 piña desde adentro y desde afuera.
 
 ## Falta
