@@ -9,18 +9,25 @@ extends MechCabin
 ##     los costados hasta CabinGrid.SIDE_GLASS, con el zócalo abajo; el techo de vidrio hasta donde diga la cabeza.
 ##     Atrás, metal. LA CABEZA ES UN PERFIL (`_top`): el alto de arriba de la caja según qué tan adelante; las paredes
 ##     y el techo se parten donde el perfil dobla, así cada paño es plano.
-##   · AL MEDIO, LA TARIMA OCTOGONAL con escalones alrededor (de 15 cm de alto y una pisada de escalera, Stairs.TREAD);
-##     para la cápsula, una rampa (como las escaleras). Adentro, corrido atrás, el ascensor (atraviesa la pelvis, como
-##     en la redonda: después se arregla). Arriba, delante del ascensor, el movimiento.
-##   · ADELANTE, TRES SILLAS SIN TABLERO (lo que aprendió la redonda), donde diga CabinGrid.front_seats (tres perillas:
-##     la del medio del vidrio, los brazos a los costados y atrás), mirando al frente. Sin puestos, por ahora (los de
-##     SeatStation se apoyaban en el tablero, que ya no está).
-##   · ATRÁS: los kits en los chanfles de atrás, dos en cada uno; las municiones y la batería en la pared de atrás (por
-##     ahora, sólo se ven).
+##   · AL MEDIO DEL PISO, EL ASCENSOR REDONDO GRANDE, al ras del piso (CabinGrid.LIFT_HOLE), centrado con la pelvis.
+##   · TRES PASAJEROS (el usuario, 15/11/2026: «tenga 3 pasajeros en vez de 4… sacamos el del medio, al lado del
+##     ascensor, sacamos la tarima y la reemplazamos por la versión más vieja del ascensor, que era un círculo más
+##     grande. Y hacemos que los 3 de adelante estén los 3 alineados»): TRES SILLAS SIN TABLERO, ADELANTE, EN LÍNEA
+##     (`seat_places`: la del medio a CabinGrid.SEAT_FRONT_CELLS del vidrio, los brazos a SEAT_SPREAD_CELLS a cada
+##     costado, a la misma distancia del vidrio), mirando al frente: el brazo izquierdo, EL MOVIMIENTO AL MEDIO (ahí
+##     mira el que posee la meca) y el brazo derecho. Sin puestos, por ahora (los de SeatStation se apoyaban en el
+##     tablero, que ya no está).
+##   · LOS SIETE RECURSOS (cuatro kits, dos municiones, la batería) EN LAS TRES PAREDES LIBRES, A UNA SOLA ALTURA (el
+##     usuario: «los desparramamos mejor en las 3 paredes que nos quedan libres a una sola altura»; por ahora, sólo se
+##     ven).
+## *Hasta el 15/11/2026, al medio iba la tarima octogonal con escalones, el ascensor adentro corrido atrás y arriba,
+## delante de él, la silla del movimiento (cuatro pasajeros); los brazos, más atrás que la del medio; los kits en los
+## chanfles de atrás y las municiones arriba de la batería, en la pared de atrás.*
 
-const DECK := Color(0.7, 0.71, 0.73)
-## El alto de cada escalón de la tarima.
-const STEP_TALL := 0.15
+## Los nombres de las tres sillas, de izquierda a derecha.
+const SEAT_NAMES := ["brazo izquierdo", "movimiento", "brazo derecho"]
+## La altura del centro de los siete recursos, sobre el piso.
+const SUPPLY_HEIGHT := 1.1
 ## En cuántos tramos se parte cada lado de los bordes que llevan el hueco del ascensor (para emparejarlos con él).
 const PER_EDGE := 4
 
@@ -39,34 +46,24 @@ static func corner() -> float:
 	return CabinGrid.CORNER_CELLS * CabinGrid.CELL
 
 
-## La tarima: de su centro a cada lado (m), cuántos escalones (con ella) y su alto.
-static func deck_reach() -> float:
-	return CabinGrid.DECK_CELLS * CabinGrid.CELL
-
-
-static func deck_tall() -> float:
-	return CabinGrid.DECK_STEPS * STEP_TALL
-
-
-## Hasta dónde llegan los escalones, del centro (m).
-static func deck_foot() -> float:
-	return deck_reach() + (CabinGrid.DECK_STEPS - 1) * Stairs.TREAD
-
-
-## EL ASCENSOR, adentro de la tarima: su centro, corrido atrás, y su radio (el de la forma, o menos si no entra: deja
-## por lo menos 12 cm de tarima detrás).
+## EL ASCENSOR, al medio del piso: su centro y su radio (el de la forma, CabinGrid.LIFT_HOLE, sin pasarse de las sillas
+## de adelante: deja 45 cm de paso detrás de ellas).
 static func lift_center() -> Vector2:
-	return Vector2(0.0, minf(CabinGrid.LIFT_BACK_CELLS * CabinGrid.CELL, deck_reach() - 0.42))
+	return Vector2.ZERO
 
 
 static func lift_radius() -> float:
-	return clampf(CabinGrid.LIFT_HOLE, 0.3, deck_reach() - lift_center().y - 0.12)
+	return clampf(CabinGrid.LIFT_HOLE, 0.3, -seat_places()[1].z - 0.45 - 0.35)
 
 
-## LA SILLA DEL MOVIMIENTO: en la tarima, delante del ascensor, adentro de su borde.
+## LAS TRES SILLAS, EN LÍNEA (CabinGrid.front_seats).
+static func seat_places() -> Array[Vector3]:
+	return CabinGrid.front_seats()
+
+
+## LA SILLA DEL MOVIMIENTO: la del medio.
 static func top_seat_at() -> Vector3:
-	var z := maxf(lift_center().y - lift_radius() - 0.45, -deck_reach() + 0.35)
-	return Vector3(0.0, CabinGrid.floor_top() + deck_tall(), z)
+	return seat_places()[1]
 
 
 func top_seat() -> Vector3:
@@ -134,13 +131,12 @@ func _ready() -> void:
 	_roof()
 	if CabinGrid.FRAME_KIND == 2:
 		_posts()
-	_deck(center, hole)
 	_supplies()
 	_seats_here()
 	lift = PelvisLift.new()
 	lift.solid = interior
 	lift.hole_radius = hole
-	lift.raised_at = floor_top + deck_tall()
+	lift.raised_at = floor_top
 	lift.lowered_at = PelvisLift.lowered()
 	lift.center = center
 	add_child(lift)
@@ -267,68 +263,37 @@ func _posts() -> void:
 		if z > -half and z < _roof_to:
 			stops.append(z)
 	stops.append(_roof_to)
-	var seats := CabinGrid.front_seats()
+	var seats := seat_places()
 	for x: float in [seats[0].x * 0.5, seats[2].x * 0.5]:
 		_bar(Vector3(x, low, -half), Vector3(x, _top(-half), -half), post)
 		for k in stops.size() - 1:
 			_bar(Vector3(x, _top(stops[k]), stops[k]), Vector3(x, _top(stops[k + 1]), stops[k + 1]), post)
 
 
-## LA TARIMA OCTOGONAL: arriba, la placa con el hueco del ascensor (de piso a arriba, así el hueco tiene su pared); los
-## escalones, anillos de octógono alrededor, cada uno un escalón más bajo. Para la cápsula, una rampa de cada lado: del
-## piso, un poco afuera del último escalón, al borde de la tarima (los pies pisan los escalones).
-func _deck(center: Vector2, hole: float) -> void:
-	var floor_top := CabinGrid.floor_top()
-	var steps := CabinGrid.DECK_STEPS
-	var reach := deck_reach()
-	var top_edge := _fine(octagon(reach))
-	var gap := _gap(top_edge, center, hole)
-	add_child(_plate(top_edge, gap, floor_top, floor_top + deck_tall(), DECK))
-	_ring_shapes(top_edge, gap, floor_top, floor_top + deck_tall())
-	for k in range(1, steps):
-		var tall := (steps - k) * STEP_TALL
-		add_child(_plate(octagon(reach + k * Stairs.TREAD), octagon(reach + (k - 1) * Stairs.TREAD), floor_top, floor_top + tall,
-			DECK.darkened(0.05 * k)))
-	var deck := octagon(reach)
-	var foot := octagon(deck_foot() + 0.15)
-	for i in 8:
-		var j := (i + 1) % 8
-		_convex(PackedVector3Array([_v(deck[i], floor_top + deck_tall()), _v(deck[j], floor_top + deck_tall()),
-			_v(deck[i], floor_top), _v(deck[j], floor_top), _v(foot[i], floor_top), _v(foot[j], floor_top)]))
-
-
-## LOS RECURSOS (sólo se ven): dos kits en cada chanfle de atrás; las dos municiones arriba y la batería al medio en la
-## pared de atrás.
+## LOS SIETE RECURSOS (sólo se ven), todos a la misma altura: dos kits en cada costado, en la parte de metal (detrás
+## del vidrio de los costados y antes del chanfle de atrás), y en la pared de atrás las dos municiones con la batería al
+## medio.
 func _supplies() -> void:
 	var inner := CabinGrid.INNER
-	var floor_top := CabinGrid.floor_top()
-	var cut := corner()
-	var kit := minf(0.5, cut * sqrt(2.0) * 0.45)
-	# SIN LUGAR EN LOS CHANFLES (el corte chico o cero; el usuario, 15/11/2026, eligió que el corte llegue a 0): los
-	# cuatro kits en la pared de atrás, a los costados de las municiones.
-	if kit < 0.3:
-		for x: float in [-1.8, -1.2, 1.2, 1.8]:
-			Clay.box(self, Vector3(0.5, 0.5, 0.12), Vector3(x, floor_top + 0.7, inner - 0.06), KIT)
-	for side: float in ([] if kit < 0.3 else [-1.0, 1.0]):
-		var middle := Vector2(side * (inner - cut * 0.5), inner - cut * 0.5)
-		var out := Vector2(side, 1.0).normalized()
-		var along := Vector2(-out.y, out.x)
-		for shift: float in [-0.55, 0.55]:
-			var spot := middle + along * shift * kit - out * 0.06
-			var box := Clay.box(self, Vector3(kit, kit, 0.12), _v(spot, floor_top + 0.7), KIT)
-			box.basis = Basis(Vector3.UP, atan2(-along.y, along.x))
-	for x: float in [-0.6, 0.6]:
-		Clay.box(self, Vector3(0.6, 0.6, 0.12), Vector3(x, floor_top + 1.4, inner - 0.06), AMMO)
-	Clay.box(self, Vector3(0.4, 0.5, 0.12), Vector3(0.0, floor_top + 0.6, inner - 0.06), BATTERY)
+	var height := CabinGrid.floor_top() + SUPPLY_HEIGHT
+	var free_from := maxf(_side_to, -inner) + 0.4
+	var free_to := inner - corner() - 0.4
+	for side: float in [-1.0, 1.0]:
+		for k: float in [1.0, 2.0]:
+			var z := lerpf(free_from, free_to, k / 3.0)
+			Clay.box(self, Vector3(0.12, 0.5, 0.5), Vector3(side * (inner - 0.06), height, z), KIT)
+	var back := minf(1.1, inner - corner() - 0.5)
+	for x: float in [-back, back]:
+		Clay.box(self, Vector3(0.6, 0.6, 0.12), Vector3(x, height, inner - 0.06), AMMO)
+	Clay.box(self, Vector3(0.4, 0.5, 0.12), Vector3(0.0, height, inner - 0.06), BATTERY)
 
 
-## LAS SILLAS, las de verdad, en el orden de `POSTS`, mirando al frente.
+## LAS TRES SILLAS, las de verdad, de izquierda a derecha, mirando al frente.
 func _seats_here() -> void:
-	var places := CabinGrid.front_seats()
-	places.append(top_seat_at())
+	var places := seat_places()
 	for index in places.size():
 		var chair := (load(SEAT_SCENE) as PackedScene).instantiate() as SeatInteractable
-		chair.name = "Asiento %s" % POSTS[index]
+		chair.name = "Asiento %s" % SEAT_NAMES[index]
 		chair.position = places[index]
 		chair.eye_height = CabinGrid.EYE_HEIGHT
 		add_child(chair)
@@ -354,7 +319,7 @@ func build_frame() -> void:
 		mech.add_collision_exception_with(body as RigidBody3D)
 
 
-## LA U: al piso, entre la silla del medio y los escalones, mirando al frente.
+## LA U: al piso, entre la silla del medio y el ascensor, mirando al frente.
 func board() -> void:
 	var player := DesignSandbox.player_of(get_tree())
 	if player == null:
@@ -363,7 +328,7 @@ func board() -> void:
 		SandboxPossession.of(get_tree()).release()
 	if player.is_seated and player.current_seat is SeatInteractable:
 		(player.current_seat as SeatInteractable).release_occupant_in_place()
-	var spot := Vector3(0.0, CabinGrid.floor_top() + 0.05, (CabinGrid.front_seats()[1].z - deck_foot()) * 0.5)
+	var spot := Vector3(0.0, CabinGrid.floor_top() + 0.05, (seat_places()[1].z - lift_radius()) * 0.5)
 	player.place_at(mech.global_transform * spot, mech.yaw())
 
 

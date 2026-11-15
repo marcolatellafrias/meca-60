@@ -7,7 +7,7 @@ extends Node3D
 ## `--celdas=13,11`: las celdas de trama (en celdas chicas) que mira; sin eso, la guardada. Y, si se quiere, la misma
 ## forma con otro vidrio, tarima o marco: `--costados=9 --techo=6 --marco=2` (ver CabinShape).
 ## La cabeza: `--cabeza=1` (en rampa) `--frente=73 --alto=96` (los altos libres, en celdas chicas) y `--zocalo=12`.
-## La planta: `--esquinas=0 --pelvis=25`. Las sillas: `--silla_medio=16 --silla_brazos=48 --silla_atras=13`.
+## La planta: `--esquinas=0 --pelvis=25`. Las sillas: `--silla_medio=16 --silla_brazos=48`.
 ## Afuera, además del de frente, de perfil y de tres cuartos de atrás.
 
 const VIEW := Vector2i(1280, 720)
@@ -29,7 +29,7 @@ func _ready() -> void:
 				_cells.append(int(each))
 		for knob: String in ["costados:side_glass", "techo:roof_glass", "marco:frame_kind", "cabeza:head", "frente:front_height_cells", "alto:height_cells", "zocalo:sill_cells",
 				"chanfle:chamfer", "pelvis:base_cells", "esquinas:corner_cells", "silla_medio:seat_front_cells",
-				"silla_brazos:seat_spread_cells", "silla_atras:seat_back_cells"]:
+				"silla_brazos:seat_spread_cells"]:
 			var parts := knob.split(":")
 			if argument.begins_with("--%s=" % parts[0]):
 				_changes[parts[1]] = float(argument.trim_prefix("--%s=" % parts[0]))
@@ -74,7 +74,7 @@ func _ready() -> void:
 		var name_of := "celda de %d cm · %.2f m por dentro · %.2f m libres" % [roundi(CabinGrid.TRAMA * 100.0),
 			CabinGrid.INNER * 2.0, CabinGrid.CLEAR]
 		print("TRAMA %s · caja de %.2f × %.2f m · ascensor de %.2f m de radio · sillas: %d" % [name_of, CabinGrid.SIZE,
-			CabinGrid.HEIGHT, SquareCabin.lift_radius(), CabinGrid.front_seats().size() + 1])
+			CabinGrid.HEIGHT, SquareCabin.lift_radius(), CabinGrid.front_seats().size()])
 		_mech = Mech.new()
 		_mech.arms_kind = Mech.Arms.POSE
 		_mech.position = Vector3(0.0, Mech.standing_height(), 0.0)

@@ -3,7 +3,6 @@ extends Node
 ## IR ADENTRO DE LA MECA PÉNDULO, PROBADO POR CÓDIGO (unos 30 segundos): el jugador con cuerpo sube (la U), queda parado
 ## en el piso del medio, y se mira qué le pasa mientras la meca se corre, salta y se cae. Con ventana, capturas.
 ##   tools/godot_ventana.sh res://tests/pendulum_ride_check.tscn -- --salida=C:/carpeta
-## La tarima y su escalera son la tarima del medio y sus escalones (ver SquareCabin).
 
 var _folder := ""
 var _mech: Mech = null
@@ -17,7 +16,11 @@ func _ready() -> void:
 	var sandbox := (load("res://game/sandbox/sandbox.tscn") as PackedScene).instantiate() as DesignSandbox
 	add_child(sandbox)
 	await _frames(10)
-	_mech = sandbox.find_children("*", "Mech", true, false)[0] as Mech
+	# La primera meca con la cabina cuadrada (la del vórtice, primera del sandbox, no tiene ascensor).
+	for found in sandbox.find_children("*", "Mech", true, false):
+		if (found as Mech).cabin is SquareCabin:
+			_mech = found as Mech
+			break
 	sandbox.toggle_body()
 	await _seconds(0.8)
 	var player := sandbox.local_player
@@ -46,34 +49,6 @@ func _ready() -> void:
 	await _seconds(3.2)
 	print("SUBIÓ de vuelta: pies a %.2f m del piso de abajo · en el marco %s · caído %s" % [_feet() - lift_top,
 		MotionFrame.frame_of(_body) == _mech.cabin.frame, player.ragdoll_util.is_active])
-	# LA TARIMA Y SU ESCALERA (ver MechCabin): parado arriba de la tarima; y desde el pie de la escalera de la derecha,
-	# caminando hacia atrás, sube a la tarima.
-	var top_at := CabinGrid.floor_top() + SquareCabin.deck_tall()
-	var on_top := Vector3(SquareCabin.deck_reach() * 0.6, top_at + 0.1, 0.0)
-	player.place_at(_mech.global_transform * on_top, _mech.yaw())
-	await _seconds(1.5)
-	print("ARRIBA DE LA TARIMA: en el marco %s · pies a %.2f m de la tarima · caído %s" % [
-		MotionFrame.frame_of(_body) == _mech.cabin.frame, _feet() - top_at, player.ragdoll_util.is_active])
-	await _shot("1b_tarima")
-	var foot := Vector3(0.5, CabinGrid.floor_top() + 0.1, -SquareCabin.deck_foot() - 0.4)
-	player.place_at(_mech.global_transform * foot, _mech.yaw() + PI)
-	await _seconds(1.0)
-	var key := InputEventKey.new()
-	key.physical_keycode = KEY_W
-	key.keycode = KEY_W
-	key.pressed = true
-	Input.parse_input_event(key)
-	await _seconds(2.6)
-	key = InputEventKey.new()
-	key.physical_keycode = KEY_W
-	key.keycode = KEY_W
-	key.pressed = false
-	Input.parse_input_event(key)
-	await _seconds(0.5)
-	print("SUBIÓ LA ESCALERA caminando: quedó a z = %.1f (la tarima empieza en %.1f) · pies a %.2f m de la tarima · caído %s" % [
-		_local().z, -SquareCabin.deck_reach(), _feet() - top_at,
-		player.ragdoll_util.is_active])
-	await _shot("1c_escalera")
 	_mech.cabin.board()
 	await _seconds(1.5)
 	# LA MECA SE CORRE (empujada 2,5 s): el de adentro va con ella.

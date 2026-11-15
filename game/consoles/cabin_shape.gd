@@ -2,7 +2,7 @@ class_name CabinShape
 extends Resource
 
 ## LA FORMA DE LA MECA QUE SE GUARDA (ver CabinGrid.apply, CabinShapePanel): la cabina —la celda de la trama, cuántas
-## por lado, el alto, el ascensor, la tarima y el vidrio (su corte, hasta dónde llega y su color)—, las sillas y el cuerpo —el largo de brazos y piernas, el ancho
+## por lado, el alto, el ascensor y el vidrio (su corte, hasta dónde llega y su color)—, las sillas y el cuerpo —el largo de brazos y piernas, el ancho
 ## de todo y cuánto se estiran las piernas paradas—.
 
 @export_group("La caja")
@@ -14,11 +14,6 @@ extends Resource
 ## EL CORTE de las cuatro esquinas, de cada lado de la esquina, por dentro, en celdas chicas (18: 71 cm;
 ## 0, sin corte: los kits pasan a la pared de atrás).
 @export_range(0, 40, 1) var corner_cells := 18
-## LA TARIMA, de su centro a cada lado, en celdas chicas (29: 1,14 m); cuántos escalones (de 15 cm de
-## alto y 31 de pisada) suben a ella, contando la tarima; y cuánto atrás del centro va el ascensor (13: 51 cm).
-@export_range(18, 60, 1) var deck_cells := 29
-@export_range(1, 5, 1) var deck_steps := 3
-@export_range(0, 30, 1) var lift_back_cells := 13
 ## LA PELVIS DE ABAJO, una placa chata con la misma planta, debajo del piso; de abajo de ella salen las
 ## piernas. Su alto, en celdas chicas (25: 98 cm; 0, sin). Para maquetar rápido: la pelvis de ahora se va a borrar (el
 ## usuario, 15/11/2026: «una segunda pelvis… un cubo como lo de arriba, pero más chato y con los mismos chamfers… recién
@@ -33,7 +28,7 @@ extends Resource
 ## EN RAMPA: el alto libre del frente, la parte de vidrio rebajada, en celdas chicas (73: 2,88 m). El de atrás, el de
 ## metal, es `height_cells`. No pasa del de atrás.
 @export_range(40, 140, 1) var front_height_cells := 73
-## El radio del hueco del ascensor, en celdas chicas de 3,9 cm (26: 1,02 m; o menos, si no entra en la tarima). *Hasta el
+## El radio del hueco del ascensor, en celdas chicas de 3,9 cm (26: 1,02 m; va al medio del piso, sin pasarse de las sillas de adelante). *Hasta el
 ## 15/11/2026 iba en celdas de trama (`lift_cells`, de 1 a 3): de a 51 cm, muy grueso (el usuario: «¿por qué no puedo
 ## controlarlo mediante celdas?»).*
 @export_range(4, 60, 1) var lift_radius := 26
@@ -60,11 +55,10 @@ extends Resource
 @export_range(0.9, 1.6, 0.01) var eye_height := 1.15
 ## DÓNDE VAN LAS TRES DE ADELANTE, en celdas chicas (ver CabinGrid.front_seats; el usuario, 15/11/2026: «qué tan alejada
 ## está la izquierda y derecha de la del medio, y qué tan offseteada para atrás… así yo lo tuiqueo a mano»): la del
-## medio, del vidrio (16: 63 cm); los brazos, de ella a cada costado (48: 1,89 m); y cuánto más atrás van los brazos
-## (13: 51 cm; negativo, más adelante).
+## medio, del vidrio (16: 63 cm); y los brazos, de ella a cada costado (48: 1,89 m), en la misma línea. *Hasta el
+## 15/11/2026 los brazos podían ir más atrás (`seat_back_cells`); con tres pasajeros, van en línea.*
 @export_range(8, 60, 1) var seat_front_cells := 16
 @export_range(15, 90, 1) var seat_spread_cells := 48
-@export_range(-20, 40, 1) var seat_back_cells := 13
 @export_group("Brazos y piernas")
 @export_enum("chico", "mediano", "grande") var arm_length := 1
 @export_enum("chico", "mediano", "grande") var leg_length := 1

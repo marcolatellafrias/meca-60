@@ -15,12 +15,12 @@ extends RefCounted
 ##   · ADELANTE, EL VIDRIO: el frente y los costados hasta `SIDE_GLASS` celdas de trama, con el zócalo abajo; arriba, LA
 ##     CABEZA: plana, con la arista de arriba del frente cortada a 45° (`CHAMFER`) y el techo de vidrio hasta
 ##     `ROOF_GLASS`, o en rampa (`ramp`). Lo arma SquareCabin.
-##   · LA PLANTA, con las cuatro esquinas cortadas (`CORNER_CELLS`); al medio, la tarima octogonal con el ascensor
-##     adentro, corrido atrás (`DECK_CELLS`, `DECK_STEPS`, `LIFT_BACK_CELLS`); abajo, la pelvis de abajo (`BASE`).
+##   · LA PLANTA, con las cuatro esquinas cortadas (`CORNER_CELLS`); al medio, el ascensor; abajo, la pelvis de abajo
+##     (`BASE`).
 ##   · LAS TRES SILLAS DE ADELANTE (`front_seats`), con tres perillas, para todas las cuadradas: la del medio, del
 ##     vidrio; los brazos, a los costados de ella y atrás (el usuario, 15/11/2026: «qué tan alejada está la izquierda y
 ##     derecha de la del medio, y qué tan offseteada para atrás»).
-##   · EL ASCENSOR: un hueco redondo de `LIFT_CELLS` celdas chicas de radio (o menos, si no entra en la tarima).
+##   · EL ASCENSOR: un hueco redondo de `LIFT_CELLS` celdas chicas de radio (o menos, si no entra entre las sillas).
 ##   · LA FORMA SE CAMBIA JUGANDO (`shape`, el panel F2, CabinShapePanel). Lo guardado (`SAVED`) es la forma de todas.
 ##
 ## *Hasta el 14/11/2026 la cabina era de módulos de 1,89 m, de varios pisos, con una caja de vidrio que sobresalía y una
@@ -56,12 +56,8 @@ static var HEAD := 0
 static var FRONT_CELLS := 73
 ## EL ZÓCALO abajo del vidrio, en celdas chicas.
 static var SILL_CELLS := 0
-## LA PLANTA (ver SquareCabin), en celdas chicas: el corte de las esquinas, la tarima y lo corrido atrás del ascensor;
-## y cuántos escalones.
+## LA PLANTA (ver SquareCabin), en celdas chicas: el corte de las esquinas.
 static var CORNER_CELLS := 18
-static var DECK_CELLS := 29
-static var DECK_STEPS := 3
-static var LIFT_BACK_CELLS := 13
 ## LA PELVIS DE ABAJO (ver CabinShape.base_cells), en celdas chicas, y su alto (m). Es parte de la caja: el piso queda
 ## arriba de ella y las piernas salen de abajo.
 static var BASE_CELLS := 25
@@ -71,10 +67,9 @@ static var LIFT_CELLS := 26
 static var SIDE_GLASS := 6
 static var ROOF_GLASS := 2
 ## LAS SILLAS DE ADELANTE (ver `front_seats`), en celdas chicas: la del medio, de la cara de adentro del vidrio; los
-## brazos, a cada costado de ella; y cuánto más atrás que ella van los brazos.
+## brazos, a cada costado de ella, en la misma línea.
 static var SEAT_FRONT_CELLS := 16
 static var SEAT_SPREAD_CELLS := 48
-static var SEAT_BACK_CELLS := 13
 ## Qué puestos de adelante tienen su puesto (SeatStation), de izquierda a derecha. *Todavía no lo cambia nada: con dos
 ## jugadores, sólo el del medio (el usuario, 15/11/2026).*
 static var OPEN_POSTS: Array[bool] = [true, true, true]
@@ -126,13 +121,9 @@ static func shape(saved: CabinShape) -> void:
 	CHAMFER = clampi(saved.chamfer, 0, ACROSS / 2)
 	HEAD = clampi(saved.head, 0, 1)
 	CORNER_CELLS = clampi(saved.corner_cells, 0, 40)
-	DECK_CELLS = clampi(saved.deck_cells, 18, 60)
-	DECK_STEPS = clampi(saved.deck_steps, 1, 5)
-	LIFT_BACK_CELLS = clampi(saved.lift_back_cells, 0, 30)
 	BASE_CELLS = clampi(saved.base_cells, 0, 60)
 	SEAT_FRONT_CELLS = clampi(saved.seat_front_cells, 8, 60)
 	SEAT_SPREAD_CELLS = clampi(saved.seat_spread_cells, 15, 90)
-	SEAT_BACK_CELLS = clampi(saved.seat_back_cells, -20, 40)
 	FRONT_CELLS = clampi(saved.front_height_cells, 40, HEIGHT_CELLS)
 	SILL_CELLS = clampi(saved.sill_cells, 0, (FRONT_CELLS if HEAD == 1 else HEIGHT_CELLS) - 30)
 	# En rampa, el vidrio de los costados llega por lo menos a una celda (es donde termina la rampa).
@@ -163,13 +154,9 @@ static func current() -> CabinShape:
 	now.chamfer = CHAMFER
 	now.head = HEAD
 	now.corner_cells = CORNER_CELLS
-	now.deck_cells = DECK_CELLS
-	now.deck_steps = DECK_STEPS
-	now.lift_back_cells = LIFT_BACK_CELLS
 	now.base_cells = BASE_CELLS
 	now.seat_front_cells = SEAT_FRONT_CELLS
 	now.seat_spread_cells = SEAT_SPREAD_CELLS
-	now.seat_back_cells = SEAT_BACK_CELLS
 	now.front_height_cells = FRONT_CELLS
 	now.sill_cells = SILL_CELLS
 	now.lift_radius = LIFT_CELLS
@@ -224,15 +211,14 @@ static func line(index: float) -> float:
 	return -INNER + index * TRAMA
 
 
-## LAS TRES SILLAS DE ADELANTE, en el piso, de izquierda a derecha (el brazo izquierdo, la espalda, el brazo derecho),
-## mirando al frente: la del medio a `SEAT_FRONT_CELLS` del vidrio; los brazos a `SEAT_SPREAD_CELLS` de ella a cada
-## costado (sin pasarse de la pared) y `SEAT_BACK_CELLS` más atrás. Para todas las cuadradas.
+## LAS TRES SILLAS DE ADELANTE, en el piso, de izquierda a derecha (el brazo izquierdo, el movimiento, el brazo
+## derecho), EN LÍNEA, mirando al frente: a `SEAT_FRONT_CELLS` del vidrio; los brazos a `SEAT_SPREAD_CELLS` de la del
+## medio a cada costado (sin pasarse de la pared). Para todas las cuadradas.
 static func front_seats() -> Array[Vector3]:
 	var y := floor_top()
 	var middle := -INNER + SEAT_FRONT_CELLS * CELL
 	var spread := minf(SEAT_SPREAD_CELLS * CELL, INNER - 0.4)
-	var arms := middle + SEAT_BACK_CELLS * CELL
-	return [Vector3(-spread, y, arms), Vector3(0.0, y, middle), Vector3(spread, y, arms)]
+	return [Vector3(-spread, y, middle), Vector3(0.0, y, middle), Vector3(spread, y, middle)]
 
 
 ## El ancho de cada hueco de los puestos de adelante (celdas de trama; ver SeatStation).

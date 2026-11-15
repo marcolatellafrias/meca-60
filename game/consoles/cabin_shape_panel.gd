@@ -14,9 +14,6 @@ const PANEL_WIDTH := 380.0
 const LABELS := {
 	"head": "la cabeza",
 	"corner_cells": "corte de las esquinas (celdas de 3,9 cm)",
-	"deck_cells": "tarima, del centro al lado (celdas de 3,9 cm)",
-	"deck_steps": "escalones de la tarima (con ella)",
-	"lift_back_cells": "ascensor corrido atrás (celdas de 3,9 cm)",
 	"base_cells": "pelvis de abajo, alto (celdas de 3,9 cm)",
 	"cell": "celda de la trama (celdas de 3,9 cm)",
 	"front_height_cells": "alto del frente, el de vidrio (celdas de 3,9 cm)",
@@ -34,7 +31,6 @@ const LABELS := {
 	"post_thickness": "grosor de los parantes (m)",
 	"seat_front_cells": "la del medio, del vidrio (celdas de 3,9 cm)",
 	"seat_spread_cells": "los brazos, de la del medio al costado (celdas de 3,9 cm)",
-	"seat_back_cells": "los brazos, más atrás que la del medio (celdas de 3,9 cm)",
 	"eye_height": "altura de los ojos que buscan (m)",
 	"arm_length": "largo de los brazos",
 	"leg_length": "largo de las piernas",

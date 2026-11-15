@@ -48,31 +48,37 @@ maniquíes, ir adentro, las placas con hueco y sus choques) es de `MechCabin`, d
   se junta con la chapa o con el zócalo (el usuario, 15/11/2026: «yo diría que es con el límite, así tenemos más
   consistencia»), una sola barra por arista. Los parantes, entre la silla del medio y cada brazo: suben por el frente
   y siguen por el vidrio del techo. En los costados, ninguno (el usuario: «solamente el del límite»).
-- **Al medio, la tarima octogonal** (`deck_cells`, de su centro a cada lado) con escalones alrededor (`deck_steps`, de
-  15 cm de alto y una pisada de escalera); para la cápsula, una rampa de cada lado. **Adentro, corrido atrás
-  (`lift_back_cells`), el ascensor**: un hueco redondo y **una plataforma lisa**; su radio es el de la forma o menos,
-  si no entra (deja 12 cm de tarima atrás). Dos teclas: **sube** y **baja** (Y / H en el panel chico de las filas de
-  la meca, G / X para el que la posee); subida, al ras de la tarima; bajada, a un salto del suelo con la meca
-  agachada. Atraviesa la pelvis, como en la redonda: después se arregla. Arriba, delante del ascensor, **el
-  movimiento**.
-- **Adelante, tres sillas sin tablero** (lo que aprendió la redonda), mirando al frente, **con tres perillas para todas
-  las cuadradas** (`CabinGrid.front_seats`; el usuario, 15/11/2026: «qué tan alejada está la izquierda y derecha de la
-  del medio, y qué tan offseteada para atrás… así yo lo tuiqueo a mano»): **la del medio, del vidrio**
-  (`seat_front_cells`); **los brazos, de ella a cada costado** (`seat_spread_cells`, sin pasarse de la pared) y
-  **cuánto más atrás van** (`seat_back_cells`; negativo, más adelante). Todas en celdas chicas. Son las de verdad
-  (`working_seat.tscn`), buscan **la altura de los ojos** del que se sienta (`CabinGrid.EYE_HEIGHT`); en la meca con
-  brazos se sientan maniquíes en todas menos la del brazo derecho, libre para sentarse uno con E. **Sin puestos por
-  ahora**: los de `SeatStation` (sesión Tableros, ver [[paneles]]) se apoyaban en el tablero de antes; vuelven cuando
-  pasen a la silla (lo que usan de `CabinGrid`, el alto del tablero y el hueco de cada puesto, queda hasta entonces).
-- **Atrás**: dos kits en cada chanfle de atrás; las municiones arriba y la batería al medio en la pared de atrás. *Por
-  ahora sólo se ven: los huecos de verdad vienen con los recursos.*
+- **Tres pasajeros** (el usuario, 15/11/2026: «tenga 3 pasajeros en vez de 4… sacamos el del medio, al lado del
+  ascensor, sacamos la tarima y la reemplazamos por la versión más vieja del ascensor, que era un círculo más grande. Y
+  hacemos que los 3 de adelante estén los 3 alineados»). Es el camino de la cabina común: los tres en el mismo espacio
+  cerrado, se ven y se hablan (ver [[dos-paradigmas]]).
+- **Al medio del piso, el ascensor redondo grande**, al ras del piso, centrado con la pelvis: un hueco redondo de
+  `CabinGrid.LIFT_HOLE` y **una plataforma lisa** (no se pasa de las sillas: deja 45 cm de paso detrás). Dos teclas:
+  **sube** y **baja** (Y / H en el panel chico de las filas de la meca, G / X para el que la posee); subida, al ras del
+  piso; bajada, a un salto del suelo con la meca agachada.
+- **Adelante, tres sillas sin tablero, en línea** (`SquareCabin.seat_places`), mirando al frente: **el brazo
+  izquierdo, el movimiento al medio** (ahí mira el que posee la meca, `top_seat`) **y el brazo derecho**. La del medio,
+  a `seat_front_cells` del vidrio; los brazos, a `seat_spread_cells` de ella a cada costado (sin pasarse de la pared), a
+  la misma distancia del vidrio. Todas en celdas chicas. Son las de verdad (`working_seat.tscn`), buscan **la altura de
+  los ojos** del que se sienta (`CabinGrid.EYE_HEIGHT`); en la meca con brazos se sientan maniquíes en todas menos la
+  del brazo derecho, libre para sentarse uno con E. **Sin puestos por ahora**: los de `SeatStation` (sesión Tableros,
+  ver [[paneles]]) se apoyaban en el tablero de antes; cuando vuelvan, el de la silla del medio pasa a ser el del
+  movimiento (hoy `SeatStation` le pone el de la espalda).
+- **Los siete recursos, en las tres paredes libres, a una sola altura** (`SUPPLY_HEIGHT`, 1,1 m; el usuario: «los
+  desparramamos mejor en las 3 paredes que nos quedan libres a una sola altura»): dos kits en cada costado, en la parte
+  de metal, y en la pared de atrás las dos municiones con la batería al medio. *Por ahora sólo se ven: los huecos de
+  verdad vienen con los recursos.*
+- *Hasta el 15/11/2026 eran cuatro pasajeros: al medio, la tarima octogonal con escalones (`deck_cells`,
+  `deck_steps`), el ascensor adentro corrido atrás (`lift_back_cells`) y, arriba, delante de él, la silla del
+  movimiento; los brazos, más atrás que la del medio (`seat_back_cells`); los kits en los chanfles de atrás y las
+  municiones arriba de la batería. Esas cuatro perillas se sacaron del F2.*
 - **Abajo, la pelvis de abajo** (`base_cells`, en celdas chicas; 25: 98 cm; 0, sin): una placa chata con la misma
   planta, debajo del piso, con el hueco del ascensor y una franja oscura en la junta. **Es parte de la caja**
   (`CabinGrid.BASE` entra en `HEIGHT` y el piso queda arriba de ella), así que las piernas salen de abajo de ella. Es
   para maquetar rápido: la pelvis de ahora se va a borrar (el usuario, 15/11/2026: «una segunda pelvis… un cubo como lo
   de arriba, pero más chato y con los mismos chamfers»).
 - **Los hombros** van en el medio de cada costado, a 0,6 del alto libre (`CabinGrid.shoulder`).
-- **La U del sandbox** sube al jugador al piso, entre la silla del medio y los escalones.
+- **La U del sandbox** sube al jugador al piso, entre la silla del medio y el ascensor.
 
 *Hasta el 15/11/2026 hubo otro interior: la caja sin chanfles, la tarima atrás de pared a pared (con el movimiento
 arriba) y dos escaleras rectas contra los costados, el tablero corrido con cuatro divisores y una silla en el hueco de
@@ -83,8 +89,8 @@ las sillas sin tablero); con él, las funciones que armaban el vidrio y el marco
 ## El marco
 Adentro se camina: el piso, las paredes, el vidrio, el techo y la tarima (con sus rampas) tienen sus formas de choque
 en un cuerpo que no choca con nada, del que el marco de la meca (`MotionFrame`) copia su sombra. El que entra a la caja (o al hueco del ascensor) va en el marco, que lo lleva con la meca.
-Probado (`tests/mech_ride_check.tscn`): subir, el ascensor abajo y arriba, pararse en la tarima y **subirla
-caminando**. Cuando a la meca la empujan fuerte, el de adentro se cae y queda afuera: pasaba igual con el interior de
+Probado (`tests/mech_ride_check.tscn`, con la primera meca cuadrada del sandbox): subir y el ascensor abajo y
+arriba. Cuando a la meca la empujan fuerte, el de adentro se cae y queda afuera: pasaba igual con el interior de
 antes (lo del empujón, no de la cabina).
 
 ## La forma se cambia jugando: el panel F2
@@ -92,14 +98,14 @@ En las filas de la meca, **F2** (`CabinShapePanel`), en cuatro pestañas (el cor
 **su color y cuánto se ve**):
 - **La caja**: **la cabeza** (plana con el corte, o en rampa), la celda de trama (en celdas chicas; es **el tamaño
   general**), cuántas celdas por lado (desde 12), el alto libre (en celdas chicas, desde 55), el corte de las esquinas,
-  la tarima (su tamaño y sus escalones), el radio del ascensor y lo corrido atrás, y la pelvis de abajo. **Cada cabeza
+  el radio del ascensor y la pelvis de abajo. **Cada cabeza
   muestra sus perillas** (el usuario: «cuando cambie la opción cambien los sliders»): en rampa no están el corte ni el
   vidrio del techo (la rampa llega hasta donde el de los costados) y aparece **el alto del frente**; el alto libre pasa
   a ser **el de atrás**.
 - **El vidrio**: el corte, **hasta dónde llega el vidrio de los costados** y **hasta dónde el del techo** (cada uno
   aparte, en celdas de trama desde el frente), el zócalo, su color y cuánto se ve, y el marco.
-- **Las sillas**: la altura de los ojos que buscan, y **dónde van las tres de adelante** (la del medio, del vidrio; los
-  brazos, a los costados y atrás).
+- **Las sillas**: la altura de los ojos que buscan, y **dónde van las tres de adelante** (del vidrio; los brazos, a los
+  costados).
 - **Brazos y piernas** (`MechBody.current.dress`, que no depende de la caja): el largo de los brazos y el de las
   piernas (chico, mediano o grande), el ancho de los dos, cuánto se estiran las piernas paradas y cuánto salen los
   hombros. Son las medidas de todas las mecas menos las que tienen su propio cuerpo (la del vórtice: ver pendulo.md).
@@ -112,15 +118,15 @@ medidas que salen y la altura de la caja sobre el piso, que sale de las piernas.
 - `tests/cabin_grid_look.tscn` (unos 10 s por forma, sin el sandbox; `--celdas=13,11`): de frente, cortada de costado,
   desde la silla del movimiento y desde arriba sin techo; escribe las medidas. Afuera, también de perfil, de tres cuartos
   de atrás y de frente de cerca. La cabeza: `--cabeza=1 --frente=73 --alto=96 --zocalo=12`; la planta: `--esquinas=0
-  --pelvis=25`; las sillas: `--silla_medio=16 --silla_brazos=48 --silla_atras=13`.
+  --pelvis=25`; las sillas: `--silla_medio=16 --silla_brazos=48`.
 - `tests/cabin_shape_check.tscn`: el panel rearma las mecas sin tocar el resto de las parcelas.
-- `tests/mech_ride_check.tscn`: caminar adentro, el ascensor, la tarima y sus escalones, con la meca en movimiento.
+- `tests/mech_ride_check.tscn`: caminar adentro y el ascensor, con la meca en movimiento.
 - `tests/two_cabins_look.tscn`: la maqueta de arcilla de la cabina, en cuatro escalas (de donde salió esta).
 
 ## Lo que sigue
-- **Los puestos con tres y con dos**: con tres, falta decidir entre dos adelante y uno arriba, o los tres adelante. Con
-  dos, **uno adelante, en el puesto del medio, y otro atrás, en el movimiento** (el usuario, 15/11/2026, por la sesión
-  Tableros; antes eran los dos adelante con el medio vacío).
+- **Los puestos de los tres**: los dos brazos y el movimiento al medio, todos adelante (decidido el 15/11/2026). Un
+  brazo, siempre a distancia (cañón, láser, ametralladora); el otro, cuerpo a cuerpo (mano, taladro, sierra, espada,
+  maza). Falta qué hace fuerte a cada uno y la regla del giro del torso con las piernas.
 - **Los huecos de verdad** (kits, batería, munición), cuando lleguen los recursos.
 - **La artillería en los hombros**, sobre un soporte fijo que no gira con la bola (lo mostró la maqueta; es del cuerpo,
   de la sesión Meca).

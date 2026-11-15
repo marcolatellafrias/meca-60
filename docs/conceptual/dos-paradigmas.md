@@ -48,6 +48,17 @@ jugadores no se ven entre sí, pero **ven todos el mismo lugar, el mismo enemigo
 - Las maquetas de donde sale: `tests/four_cabins_look`, `tests/cabin_pods_look` (cabinas de a uno, sentados, como
   elementos del cuerpo; la de la meca normal, la 1, es la que más se parece).
 
+### Por dónde siguió (15/11/2026): tres en una cabina común
+Después de las maquetas de cabinas separadas (`tests/separated_cabins_look`: la 9, sin cabeza, con el pecho de dos
+cabinas, fue la que más gustó), el usuario lo llevó a **tres jugadores en un mismo espacio cerrado**: «para mantener la
+conexión entre jugadores y un espacio común… que estén todos en el mismo espacio cerrado. Así pueden verse entre ellos y
+comunicarse mejor». **Uno cada brazo y uno las piernas**; un brazo siempre es **a distancia** (cañón, láser,
+ametralladora) y el otro **cuerpo a cuerpo** (mano, taladro, sierra, espada, maza). Sin artillería. La complejidad no
+está en moverse ni en chocarse: está en **decidir quién hace qué** (como las clases de los juegos de grupo: cada uno
+con su fuerte). Se prueba en la cuadrada de verdad: tres sillas en línea adelante, el ascensor redondo al medio y los
+recursos en las paredes (ver [[cabina]]). La arcilla de la cabina común escalonada
+(`tests/shared_cabin_look`) y los planos 2D de dónde van los recursos no convencieron: «los veo medio complicados».
+
 ## Lo que queda de lo anterior
 La cabina cuadrada de un piso con escaleras, sillas y ascensor (`SquareCabin`, [[cabina]]) y la redonda siguen en el
 sandbox; ninguna de las dos es uno de estos caminos.
