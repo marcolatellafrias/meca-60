@@ -29,9 +29,10 @@ static var SIDES := 12
 static var RADIUS := 3.55
 static var CLEAR := 2.3
 static var DISC := 1.0
-## El domo de arriba (ver RoundShape.dome): si va, y su alto sobre el borde de las paredes (una media esfera: el radio
-## de afuera).
+## El domo de arriba (ver RoundShape.dome): si va, cuánto sube en partes del radio de afuera (1: media esfera), y su
+## alto sobre el borde de las paredes.
 static var DOME := false
+static var DOME_RISE := 1.0
 static var DOME_TALL := 0.0
 static var PLATFORM_R := 1.35
 static var PLATFORM_TALL := 0.3
@@ -60,6 +61,7 @@ static func apply(saved: RoundShape) -> void:
 	CLEAR = saved.clear_height
 	DISC = saved.disc_height
 	DOME = saved.dome
+	DOME_RISE = saved.dome_rise
 	APOTHEM = RADIUS * cos(PI / SIDES)
 	OUTER = APOTHEM + WALL
 	PLATFORM_TALL = saved.platform_height
@@ -70,7 +72,7 @@ static func apply(saved: RoundShape) -> void:
 	GLASS_SIDES = clampi(saved.glass_sides, 1, SIDES - 1) / 2 * 2 + 1
 	VISOR = clampf(saved.visor_height, 0.5, CLEAR)
 	GLASS_COLOR = Color(saved.glass_color, saved.glass_opacity)
-	DOME_TALL = OUTER
+	DOME_TALL = OUTER * DOME_RISE
 	# La caja: el disco, el piso, la cabina y, arriba, el techo o el domo.
 	HEIGHT = DISC + SLAB + CLEAR + (DOME_TALL if DOME else SLAB)
 	HALF_HEIGHT = HEIGHT * 0.5
@@ -84,6 +86,7 @@ static func current() -> RoundShape:
 	now.clear_height = CLEAR
 	now.disc_height = DISC
 	now.dome = DOME
+	now.dome_rise = DOME_RISE
 	now.platform_radius = PLATFORM_R
 	now.platform_height = PLATFORM_TALL
 	now.lift_radius = LIFT_R

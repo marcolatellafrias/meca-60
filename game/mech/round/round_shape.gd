@@ -15,8 +15,10 @@ extends Resource
 @export_range(0.0, 3.0, 0.05) var disc_height := 1.0
 ## EL DOMO: el techo termina en una media esfera de metal (sin vidrio), abierta por dentro (el usuario, 15/11/2026:
 ## «que el disco principal termine en forma de domo arriba (sin cristal obvio)… que el interior sea más espacioso»; «lo
-## haría media esfera»). Su alto es el radio de afuera.
+## haría media esfera»). Cuánto sube, en partes del radio de afuera: 1, media esfera; menos, un casquete más chato
+## («una variable con el domo, para que vaya desde… el primer domo y este último»).
 @export var dome := false
+@export_range(0.1, 1.0, 0.01) var dome_rise := 1.0
 @export_group("La tarima y el ascensor")
 ## El radio de la tarima del medio, a un vértice (m), y su alto (m; el escalón de alrededor, la mitad).
 @export_range(0.8, 5.0, 0.05) var platform_radius := 1.35
