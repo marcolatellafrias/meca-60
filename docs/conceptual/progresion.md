@@ -34,6 +34,9 @@ el banderín incluidos.
 - Se lo ve: **otro traje, o una insignia**.
 - **Pesa en la arena**: aparecen **terminales** con recursos que **sólo se abren con la huella del capitán**. Una
   terminal deja **elegir cualquier recurso**.
+- **Si el capitán muere en la arena**, las terminales no se abren hasta la próxima partida: son un extra, no algo
+  fundamental.
+- **Si el host se va, se termina la partida.** Si se va otro, no.
 - *Propuesta:* para usarla, el capitán **deja su puesto y sale a pie**: el resto se queda manejando sin él, y él queda
   expuesto. Cuidar al capitán pasa a ser parte de la pelea.
 
@@ -49,7 +52,4 @@ el banderín incluidos.
 ## Abierto
 - **Cómo se progresa con las armas** (lo está viendo la sesión de los tableros): habilidad y cosméticos con herramientas
   sin mejoras, mejoras por arma, o muchas variantes de ataques.
-- Si el capitán muere en la arena: ¿se cierran las terminales hasta la próxima partida? ¿El host vuelve a ser capitán con
-  su personaje nuevo?
-- Si el host se va de la partida o no está: sin él no hay meca ni capitán.
 - Si la caja de plata se reparte de algún modo con la otra tripulación (ver [[contratos]]).
