@@ -76,7 +76,13 @@ static func _forearm(root: Node3D, heavy: bool, with_hand := true) -> void:
 	hand.transform = Transform3D(Basis(Vector3.BACK, PI * 0.5), Vector3(0, 0, TIP + 0.15))
 	if not heavy:
 		return
-	hand.scale = Vector3.ONE * 1.3
+	make_heavy(hand, 1.0)
+
+
+## EL PUÑO PESADO sobre una mano de la meca ya puesta (`base_scale`, la escala que traía): más grande, con las falanges
+## más gruesas y más largas, y un pinche (un cono) en cada nudillo.
+static func make_heavy(hand: MechHand, base_scale: float) -> void:
+	hand.scale = Vector3.ONE * base_scale * 1.3
 	# las falanges y la palma más gruesas (el usuario, 15/11/2026: «las falanges más grandes, así da la impresión de un
 	# puño más pesado»). Las piezas son de la mano (MechHand): se engordan cuando ya están armadas.
 	if hand.is_node_ready():
@@ -247,6 +253,70 @@ static func _wrap(root: Node3D, frame: Transform3D, length: float) -> void:
 		var turn := Basis(Vector3.BACK, step * PI * 0.25)
 		var face := Clay.box(root, Vector3(width, thickness, length), Vector3.ZERO, PLATE)
 		face.transform = frame * Transform3D(turn, turn * Vector3(0, apothem, 0))
+
+
+## ── PUESTO EN LA MECA ───────────────────────────────────────────────────────────────────────────────────────────
+## Viste una meca armada (con brazos de pose, PoseArm) con lo de `loadout` (los huecos de BaseState: el id de cada uno, o
+## vacío). Lo pidió el usuario el 15/11/2026: «muéstrame cómo queda la meca con todo puesto»; las placas, en los dos tramos
+## de cada miembro (el brazo y el antebrazo, el muslo y la canilla). `tool_out`: el brazo (−1 o 1) que tiene la
+## herramienta afuera y el puño adentro; 0, ninguno.
+## *Es para mirar: toca adentro de los brazos y las piernas (`_upper`, `_forearm`, `_hand`, `_thigh`, `_shin`). Si queda,
+## los brazos y las piernas tienen que saber ponerse esto solos.*
+static func dress(mech: Mech, loadout: Dictionary, tool_out := 0.0) -> void:
+	for arm in mech.arms:
+		var pose_arm := arm as PoseArm
+		if pose_arm == null:
+			continue
+		var side := "left" if arm.side < 0.0 else "right"
+		var forearm: Node3D = pose_arm._forearm
+		# del lado de afuera del brazo
+		var outward := mech.global_basis.x * arm.side
+		if loadout.get("plate_arm_" + side, "") != "":
+			_wrap(pose_arm._upper, Transform3D(_facing(pose_arm._upper, outward), Vector3.ZERO), MechBody.UPPER_ARM * 0.75)
+			_wrap(forearm, Transform3D(_facing(forearm, outward), Vector3(0, 0, 0.3)), MechBody.FOREARM * 0.7)
+		var tip := -MechBody.FOREARM * 0.5 - 0.3
+		Clay.cylinder(forearm, MOUTH, 0.7, Vector3(0, 0, tip + 0.35), FOREARM_COLOR.darkened(0.15), Vector3(90, 0, 0))
+		var tool: String = loadout.get("tool_" + side, "")
+		if is_equal_approx(tool_out, arm.side) and tool != "":
+			pose_arm._hand.visible = false
+			# las herramientas se arman para el antebrazo de la maqueta (FOREARM): se corren a la punta de éste
+			var holder := Node3D.new()
+			holder.position = Vector3(0, 0, tip - TIP)
+			forearm.add_child(holder)
+			match tool:
+				"drill": _drill(holder)
+				"energy_cannon": _energy_cannon(holder)
+				"circular_saw": _saw(holder)
+		elif loadout.get("fist_" + side, "") == "heavy_fist":
+			make_heavy(pose_arm._hand, MechBody.thick)
+	for leg: Node in mech.find_children("*", "MechLeg", true, false):
+		var plated: bool = loadout.get("plate_leg_left", "") != "" or loadout.get("plate_leg_right", "") != ""
+		if not plated:
+			continue
+		# al frente de la meca
+		var ahead := -mech.global_basis.z
+		_wrap(leg._thigh, Transform3D(_facing(leg._thigh, ahead), Vector3.ZERO), MechBody.THIGH * 0.75)
+		_wrap(leg._shin, Transform3D(_facing(leg._shin, ahead), Vector3.ZERO), MechBody.SHIN * 0.8)
+	for side: float in [-1.0, 1.0]:
+		var weapon: String = loadout.get("back_left" if side < 0.0 else "back_right", "")
+		if weapon == "":
+			continue
+		var mount := Node3D.new()
+		mount.position = Vector3(side * mech.size.x * 0.3, mech.size.y * 0.5, mech.size.z * 0.15)
+		mech.add_child(mount)
+		Clay.cylinder(mount, 0.9, 0.4, Vector3(0, 0.2, 0), MechBody.JOINT_COLOR)
+		match weapon:
+			"machine_gun": _machine_gun(mount)
+			"missile_launcher": _missile_launcher(mount)
+			"heavy_cannon": _heavy_cannon(mount)
+
+
+## El giro (sobre el largo de la pieza, de a octavos de vuelta: las caras del prisma) que lleva la cara del medio de una
+## placa (+Y) lo más cerca de `toward` (mundo).
+static func _facing(piece: Node3D, toward: Vector3) -> Basis:
+	var local := piece.global_basis.orthonormalized().inverse() * toward
+	var angle := snappedf(atan2(-local.x, local.y), PI * 0.25)
+	return Basis(Vector3.BACK, angle)
 
 
 ## ── AYUDAS ──────────────────────────────────────────────────────────────────────────────────────────────────────

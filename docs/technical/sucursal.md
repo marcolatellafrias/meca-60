@@ -81,7 +81,14 @@ Lo pidió el usuario: «empecemos a hacer maquetas de clay de todos los componen
 - **Lo de la espalda** va sobre un pedazo del techo con su torreta.
 - **Cada placa** son tres caras del prisma de ocho del miembro, gruesas y bien despegadas (que no se confundan con él): arriba del antebrazo, o al frente de la
   canilla. El torso, por ahora, sin placa.
-- Son maquetas de forma: todavía no se montan en la meca.
+- **`ArmoryParts.dress`** viste una meca armada con un `loadout` (los huecos de `BaseState`), para mirarla con todo
+  puesto. Pone:
+  - las placas en los dos tramos de cada miembro (el brazo y el antebrazo, el muslo y la canilla), giradas de a octavo
+    de vuelta hasta mirar afuera en los brazos y al frente en las piernas;
+  - el puño pesado sobre la mano de la meca, o la herramienta afuera con la mano escondida;
+  - las armas de la espalda sobre el techo.
+
+  Toca adentro de los brazos y las piernas, así que es sólo para mirar: la armería todavía no viste la meca de la base.
 - En el sandbox, en la fila **Componentes de la armería** (`ArmoryPartsArchetype`), numeradas y en tres filas.
 
 ## Para mirarla
@@ -91,3 +98,5 @@ F1 al guardar, sin guardarlas).
 `tests/base_terminals_look.tscn` (con ventana, unos 5 s): la armería con unas compras hechas y lo que dice con el mouse
 encima, y los contratos con uno firmado.
 `tests/armory_parts_look.tscn` (con ventana, unos 10 s): todos los componentes juntos, y después uno por uno, de cerca.
+`tests/armory_dressed_look.tscn` (con ventana, unos 8 s): una meca parada con todo puesto, de adelante, de atrás y de
+costado.
