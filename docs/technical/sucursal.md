@@ -11,8 +11,9 @@ Lo estético de cada cosa lo agrega el usuario después.
   cinco lámparas colgadas (el sol no entra).
 - **El elevador**: un cuadrado del piso con el borde amarillo a rayas. Ahí duerme la meca, mirando al gimnasio.
   Todavía no sube.
-- **La compuerta del techo** (`BaseHatch`), sobre el elevador: dos hojas que se levantan sobre sus bisagras, en los
-  bordes del cuadrado, cuando empieza una partida. Por ahora la abre y la cierra la **G** de la parcela.
+- **La compuerta del techo** (`BaseHatch`), sobre el elevador: dos hojas que **se corren hacia los costados**, como una
+  puerta de ciencia ficción, cuando empieza una partida; cada una se guarda en su bolsillo, una caja sobre el techo (la
+  de afuera, metida en la roca). Por ahora la abre y la cierra la **G** de la parcela.
 - **La línea de peligro**, rayas amarillas y negras en el piso, entre el gimnasio y la franja: no hay pared ni vidrio.
 - **La bolsa**: un cilindro de 5,2 m de diámetro, de 7 a 15 m de alto, colgado de una viga. **Fija por ahora**, con su
   colisión, para pegarle; la física, después.
