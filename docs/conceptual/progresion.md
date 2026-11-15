@@ -40,14 +40,16 @@ el banderín incluidos.
 - *Propuesta:* para usarla, el capitán **deja su puesto y sale a pie**: el resto se queda manejando sin él, y él queda
   expuesto. Cuidar al capitán pasa a ser parte de la pelea.
 
-## La base: tres puestos de compra
+## La base: dos terminales de compra (15/11/2026)
+Juntas, en la zona de customizar la meca (ver [[base]]):
 1. **La armería**: armas de brazo, armas de espalda, las placas del acorazado, la munición básica. **Vende un ejemplar de
    cada herramienta de brazo** (sierra, taladro, cuchilla, cañón, garra…): los dos brazos nunca repiten herramienta;
    cada uno tiene la mano de base y una herramienta, y la tripulación elige en qué brazo va cada una (decidido con la
    sesión de los tableros, 14/11/2026).
-2. **Las latas de pintura**: una máquina expendedora de aerosoles. Se compra uno para un detalle o varios para pintarla
-   entera. Encaja con pintar con píxeles, cara por cara (ver [[pixel-art]]). *Sin definir del todo.*
-3. **Los cosméticos**: el banderín, los efectos de los propulsores, cosas para el interior.
+2. **Los cosméticos y la pintura**: el banderín, los efectos de los propulsores, cosas para el interior, y **la pintura,
+   con una interfaz en la misma terminal**. Por ahora nada de pintar a mano (ni latas, ni pasarelas, ni pistola).
+
+Aparte, **los casilleros**, en la zona de los personajes: la ropa de cada personaje (cosméticos de personaje).
 
 ## Abierto
 - **Cómo se progresa con las armas** (lo está viendo la sesión de los tableros): habilidad y cosméticos con herramientas
