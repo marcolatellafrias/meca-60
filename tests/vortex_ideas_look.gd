@@ -14,9 +14,10 @@ extends Node3D
 ##   6 · proa y popa: adelante un borde bajo con vidrio; atrás, un muro alto (la escalera queda resguardada);
 ##   7 · las costillas del domo: arcos que salen del borde y se juntan arriba (el campo de fuerza, apenas);
 ##   8 · la 2 con los puestos de la 4 (sin costillas: el usuario, «sin costillas»);
-##   9 · la 8 con los puestos sobre el borde (el usuario: «los puestos terminen donde termina el borde, no que hagas
-##       puestos doblando el borde, siguen siendo elementos distintos»): piezas aparte, apoyadas arriba del borde y de su
-##       mismo ancho, sin meterse en el piso por donde se camina. *Primero fue el borde mismo subiendo en cada puesto.*
+##   9 · la 8 con los puestos hasta el borde de afuera (el usuario: «que estén como la primera vez que me la mostraste
+##       pero crecen hasta el borde exterior, nada más»): los de la 4, parados en el piso, con la pieza estirada hacia
+##       afuera, por encima del borde, hasta el canto de afuera del disco. *Antes probé el borde subiendo en cada puesto
+##       y, después, piezas sólo del ancho del borde: ninguna era.*
 ##   tools/godot_ventana.sh res://tests/vortex_ideas_look.tscn -- --salida=C:/carpeta --idea=2
 
 const VIEW := Vector2i(1280, 720)
@@ -47,7 +48,7 @@ const NAMES := {
 	6: "proa baja con vidrio, popa con muro",
 	7: "las costillas del domo",
 	8: "la 2, con los puestos de la 4",
-	9: "la 8, con los puestos sobre el borde",
+	9: "la 8, con los puestos hasta el borde de afuera",
 }
 
 const METAL := Color(0.55, 0.57, 0.6)
@@ -112,7 +113,7 @@ func _back_raised() -> bool:
 
 
 func _raised_consoles() -> bool:
-	return _idea in [4, 8]
+	return _idea in [4, 8, 9]
 
 
 func _ribs() -> bool:
@@ -264,9 +265,7 @@ func _stations(floor1: float) -> void:
 			var tooth := TAU / 16.0
 			angle = (floor(angle / tooth) + (0.0 if int(floor(angle / tooth)) % 2 == 0 else 1.0)) * tooth
 			top = floor1 + _rim_top(angle)
-		if _idea == 9:
-			_rim_piece(angle, kind, top)
-		elif _raised_consoles():
+		if _raised_consoles():
 			_raised_station(angle, kind, floor1)
 		else:
 			_rim_station(angle, kind, top)
@@ -302,6 +301,7 @@ func _raised_station(angle: float, kind: String, floor1: float) -> void:
 		"drive":
 			holder.position = outward * (WALK - 0.45) + Vector3(0, floor1, 0)
 			Clay.box(holder, Vector3(1.6, 1.1, 0.8), Vector3(0, 0.55, 0), METAL.darkened(0.1))
+			_to_outer(holder, WALK - 0.05, Vector2(1.6, 1.1), 0.4)
 			var face := Node3D.new()
 			face.position = Vector3(0, 1.15, 0.05)
 			face.rotation.x = deg_to_rad(35.0)
@@ -314,6 +314,7 @@ func _raised_station(angle: float, kind: String, floor1: float) -> void:
 		"arm":
 			holder.position = outward * (WALK - 0.35) + Vector3(0, floor1, 0)
 			Clay.box(holder, Vector3(0.55, 1.15, 0.55), Vector3(0, 0.575, 0), METAL.darkened(0.1))
+			_to_outer(holder, WALK - 0.075, Vector2(0.55, 1.15), 0.275)
 			var face := Node3D.new()
 			face.position = Vector3(0, 1.2, 0.0)
 			face.rotation.x = deg_to_rad(25.0)
@@ -330,29 +331,13 @@ func _raised_station(angle: float, kind: String, floor1: float) -> void:
 				_gun(holder.position + Vector3(0, 0.72, 0), angle, 0.3)
 
 
-## UN PUESTO SOBRE EL BORDE (la 9): una pieza aparte, del ancho del borde, apoyada arriba de él; su cara de mandos mira
-## hacia adentro, inclinada. El manejo, ancho; los brazos, angostos y un poco más altos; las armas, en un pie corto.
-func _rim_piece(angle: float, kind: String, top: float) -> void:
-	var depth := OUTER - WALK
-	var holder := Node3D.new()
-	holder.position = _out(angle) * (WALK + depth * 0.5) + Vector3(0, top, 0)
-	holder.rotation.y = -angle
-	add_child(holder)
-	if kind == "gun" or kind == "socket":
-		Clay.box(holder, Vector3(0.6, 0.3, depth), Vector3(0, 0.15, 0), METAL.darkened(0.12))
-		Clay.box(holder, Vector3(0.45, 0.06, 0.4), Vector3(0, 0.33, 0), YELLOW.darkened(0.3))
-		if kind == "gun":
-			_gun(holder.global_position + Vector3(0, 0.36, 0), angle, 0.2)
+## LA 9: la pieza sigue hacia afuera, del mismo ancho y alto (`size`), desde su cara de afuera (a radio `from`, a
+## `half` del centro de la pieza) hasta el canto de afuera del disco.
+func _to_outer(holder: Node3D, from: float, size: Vector2, half: float) -> void:
+	if _idea != 9:
 		return
-	var wide := 1.6 if kind == "drive" else 0.7
-	var tall := 0.55 if kind == "drive" else 0.7
-	Clay.box(holder, Vector3(wide, tall, depth), Vector3(0, tall * 0.5, 0), METAL.darkened(0.12))
-	var face := Node3D.new()
-	face.position = Vector3(0, tall + 0.02, 0.0)
-	face.rotation.x = deg_to_rad(-30.0)
-	holder.add_child(face)
-	Clay.box(face, Vector3(wide, 0.05, depth), Vector3.ZERO, DARK_METAL)
-	_controls(face, kind)
+	var length := OUTER - from
+	Clay.box(holder, Vector3(size.x, size.y, length), Vector3(0, size.y * 0.5, -(half + length * 0.5)), METAL.darkened(0.1))
 
 
 func _controls(plate: Node3D, kind: String) -> void:
