@@ -20,7 +20,7 @@ y la tira que tienen todos los puestos.
   jugador sentado o para un maniquí poseído (ver [[poseer]]).
 - **El mouse y la E le llegan antes que al jugador**: un nodo al final de la raíz (`_InputCatcher`), porque `_input` va
   de atrás para adelante. Sólo se queda con la E si el panel está abierto o mirado, y con el mouse si está abierto.
-- **La piña**: `MechArm.punch_at(punto)` si existe (pedido a la sesión Meca); si no, el directo de siempre. El punto es
+- **La piña**: `MechArm.punch_at(punto)` (de la sesión Meca): un directo hacia el punto, recortado a lo que alcanza. El punto es
   lo primero que encuentra el rayo de la mira (sin la meca), o un punto a 18 m.
 - **Se arma con** `SeatPanels.attach(cabin)`, que la cabina llama al armar las sillas.
 
@@ -29,5 +29,4 @@ piña desde adentro y desde afuera.
 
 ## Falta
 - Que la cabeza acompañe un poco a la mira (con poca sensibilidad y tope).
-- Que la piña vaya de verdad hacia la mira (`punch_at`).
 - Mantener para cargar; la energía.

@@ -251,11 +251,7 @@ func handle(event: InputEvent) -> bool:
 func _punch() -> void:
 	if mech.state != BalanceBody.State.STANDING or arm_index >= mech.arms.size():
 		return
-	var arm := mech.arms[arm_index]
-	if arm.has_method("punch_at"):
-		arm.call("punch_at", _aim_point())
-	else:
-		arm.punch(MechArm.Punch.STRAIGHT)
+	mech.arms[arm_index].punch_at(_aim_point())
 
 
 ## ADÓNDE APUNTA LA MIRA: lo primero que encuentra el rayo que sale de los ojos por la mira (sin la meca), o un punto
