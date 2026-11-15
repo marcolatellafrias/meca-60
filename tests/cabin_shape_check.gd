@@ -1,7 +1,7 @@
 extends Node3D
 
 ## EL PANEL DE LA FORMA DE LA MECA (CabinShapePanel), sin el sandbox: una parcela con la meca y otra con la arena de
-## esquivar (con la torre apagada); el panel pasa a 2 × 2 módulos y 2 pisos con «Probar», y se mira que las mecas se
+## esquivar (con la torre apagada); el panel pasa a celdas de trama de 11 (43 cm) con «Probar», y se mira que las mecas se
 ## rearmaron con esa forma y que la torre sigue apagada (sólo se cambian las mecas). No guarda nada.
 ##   tools/godot_ventana.sh res://tests/cabin_shape_check.tscn -- --salida=C:/carpeta
 
@@ -41,8 +41,7 @@ func _ready() -> void:
 	var panel := CabinShapePanel.new()
 	add_child(panel)
 	panel.setup_panel()
-	panel._draft.modules = 2
-	panel._draft.floors = 2
+	panel._draft.cell = 11
 	panel._try()
 	await get_tree().create_timer(3.0).timeout
 	var firing := arena.find_children("*", "MissileTurret", true, false).map(

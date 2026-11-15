@@ -74,9 +74,9 @@ func _ready() -> void:
 	_mech.keys.driving = true
 	await _seconds(3.0)
 	# DOS CUBOS SUELTOS en el piso del medio, contra las paredes de los costados (lejos de las sillas y los maniquíes).
-	var floor_y := CabinGrid.ground(mini(1, CabinGrid.FLOORS - 1)) + CUBE * 0.5 + 0.02
+	var floor_y := CabinGrid.floor_top() + CUBE * 0.5 + 0.02
 	for x: float in [-1.0, 1.0]:
-		var at := Vector3(x * (CabinGrid.INNER - 1.2), floor_y, CabinGrid.row_z(2))
+		var at := Vector3(x * (CabinGrid.INNER - 1.2), floor_y, CabinGrid.line(3))
 		_cubes.append(_cube(holder, _mech.global_transform * at, CUBE, Clay.RED))
 	await _seconds(1.0)
 	var inside := 0

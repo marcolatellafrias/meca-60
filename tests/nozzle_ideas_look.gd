@@ -118,7 +118,7 @@ func _direction_sheet() -> void:
 			shots.append(await _grab())
 	# Para atrás: el par de adelante, debajo del vidrio (lo mismo para cualquiera de las cuatro).
 	_clear()
-	var front := -h - CabinGrid.GLASS_OUT
+	var front := -h
 	for x: float in [-2.2, 2.2]:
 		_mount(Vector3(x, -h - 0.25, front + 0.5), Vector3(1.0, 0.5, 0.9))
 		_nozzle(Vector3(x, -h - 0.75, front + 0.35), Vector3.FORWARD, 0.42, true)

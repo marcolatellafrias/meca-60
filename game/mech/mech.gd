@@ -3,7 +3,7 @@ extends BalanceBody
 
 ## LA MECA PROPIA: el cuerpo con equilibrio (ver BalanceBody: la caja, el péndulo, caerse y volver, las piernas, las
 ## toberas, caminar y saltar), con lo que es sólo suyo:
-##   · MechCabin    los tres pisos por dentro, el afuera (MechExterior), el ascensor (PelvisLift) y el marco que lleva a
+##   · MechCabin    la cabina de un piso por dentro, el ascensor (PelvisLift) y el marco que lleva a
 ##                  los que van adentro.
 ##   · MechKeys     el teclado y el mouse de quien la posee: escribe LO QUE SE LE PIDE (ver `_think`).
 ##   · los brazos   MechArm: PoseArm (discretos) o MuscleArm (físicos), según `arms_kind`: los dos caminos. Sin brazos
@@ -16,11 +16,11 @@ enum Arms { NONE, POSE, MUSCLE }
 
 const MASS := 50000.0
 const NAMES := ["Meca de práctica", "Meca discreta", "Meca física"]
-## LOS BRAZOS: el hombro, en el espacio de la caja (`x` del lado derecho): el piso y el módulo del costado que se
-## eligieron (ver CabinGrid.shoulder), `SHOULDER_OUT` afuera del costado, más con brazos más anchos. *El 12/11/2026 se
+## LOS BRAZOS: el hombro, en el espacio de la caja (`x` del lado derecho): en el medio del costado (ver
+## CabinGrid.shoulder), `SHOULDER_OUT` afuera del costado, más con brazos más anchos. *El 12/11/2026 se
 ## probó en el último tercio, hacia atrás: la postura era más natural, pero el brazo alcanzaba 2,6 m menos hacia
-## adelante, y el usuario lo volvió («estaban bien los brazos a la mitad, no me gusta el sacrificio en rango»). Desde el
-## 13/11/2026 se elige en el panel F2.* Y cuánto pesan los físicos, en partes de lo que pesa el brazo solo (ver
+## adelante, y el usuario lo volvió («estaban bien los brazos a la mitad, no me gusta el sacrificio en rango»). Del 13 al
+## 14/11/2026 se elegía en el panel F2 (el piso y el módulo); con la cabina de un piso, va en el medio.* Y cuánto pesan los físicos, en partes de lo que pesa el brazo solo (ver
 ## MuscleArm.weight).
 const SHOULDER_OUT := 1.0
 
@@ -55,8 +55,6 @@ func _init() -> void:
 
 func _ready() -> void:
 	name = NAMES[arms_kind] if has_cabin else "Meca simplificada"
-	# El cilindro de la cinemática envuelve también el vidrio de adelante.
-	outline_extra = CabinGrid.GLASS_OUT if has_cabin else 0.0
 	if knobs == null:
 		knobs = Mech.knobs_for(arms_kind)
 	super()

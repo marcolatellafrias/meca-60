@@ -51,5 +51,6 @@ queda **de 0,00 a 0,15 m** sobre el piso de la cápsula. **Falta verlo con el pe
 
 ## Quién la usa
 - Las escaleras de incendio del mapa (`Battlefield.stairs`, arriba).
-- La escalera de atrás de la meca (`MechExterior`, desde el commit `3e5abfd`). El marco de la meca (`MotionFrame`) copia
-  la rampa a su sombra de siempre y los escalones a una segunda sombra, en la capa Escalones.
+- Las dos escaleras de adentro de la cabina de la meca, que suben a la tarima (`MechCabin`, desde el 14/11/2026; antes,
+  la escalera de atrás, `MechExterior`, desde el commit `3e5abfd`). El marco de la meca (`MotionFrame`) copia la rampa a
+  su sombra de siempre y los escalones a una segunda sombra, en la capa Escalones.

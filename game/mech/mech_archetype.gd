@@ -69,7 +69,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 ## prueba, van en el panel chico; el usuario, 13/11/2026: «empuje liviano, empuje fuerte… deberían ir en panel chico»).
 func keys() -> Array[SandboxKey]:
 	var out := TestBall.keys(self)
-	out.append(SandboxKey.action(KEY_U, SandboxKey.Weight.MAIN, "subirse a la meca (al piso del medio)",
+	out.append(SandboxKey.action(KEY_U, SandboxKey.Weight.MAIN, "subirse a la meca (adentro)",
 		func(parcel: SandboxParcel) -> void:
 			for mech: Mech in parcel.find_children("*", "Mech", true, false):
 				if mech.arms_kind != Mech.Arms.NONE and mech.cabin != null:

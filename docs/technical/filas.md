@@ -24,7 +24,7 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 
 ## La meca (lo que comparten sus dos filas)
 `game/balance_body/` entero (el cuerpo con equilibrio, que comparte con los jefes: `BalanceBody`, `BodyLegs`,
-`BodyNozzles`, `BodyMoves`, `BodySettings`) y `game/mech/` entero: `Mech` y sus piezas (`MechCabin`, `MechExterior`,
+`BodyNozzles`, `BodyMoves`, `BodySettings`) y `game/mech/` entero: `Mech` y sus piezas (`MechCabin`,
 `PelvisLift`, `MechLeg`, `MechKeys`, `MechArm`, `MechHand`, `MechBody`), sus dos paneles, su parcela
 y `Clay`. Tests: `mech_balance_check` (el equilibrio), `mech_ride_check` (caminar adentro y afuera), `possess_check`.
 

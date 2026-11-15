@@ -87,7 +87,7 @@ func keys() -> Array[SandboxKey]:
 			func(parcel: SandboxParcel, index: int) -> void:
 				for turret in _turrets(parcel):
 					turret.choose(index as MissileTurret.Attack)),
-		SandboxKey.action(KEY_U, SandboxKey.Weight.NORMAL, "subirse a la meca (al piso del medio)",
+		SandboxKey.action(KEY_U, SandboxKey.Weight.NORMAL, "subirse a la meca (adentro)",
 			func(parcel: SandboxParcel) -> void:
 				for mech: Mech in parcel.find_children("*", "Mech", true, false):
 					mech.cabin.board()),

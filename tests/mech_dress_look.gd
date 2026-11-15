@@ -65,8 +65,7 @@ func _ready() -> void:
 		if each[0].begins_with("1."):
 			# Las sillas, por dentro: de costado, con el maniquí sentado, y desde atrás.
 			var chair := mech.cabin.chairs[0]
-			_title.text = "Las sillas: de costado (ojos a %.2f m, a %d celdas del vidrio)" % [CabinGrid.EYE_HEIGHT,
-				CabinGrid.SEAT_GAP_CELLS]
+			_title.text = "Las sillas: de costado (ojos a %.2f m)" % CabinGrid.EYE_HEIGHT
 			_look_at(chair.global_position + Vector3(-3.0, 1.0, 0.3), chair.global_position + Vector3(0, 0.8, -0.4), 60.0)
 			shots.append(await _grab())
 			_title.text = "Las sillas: desde atrás"

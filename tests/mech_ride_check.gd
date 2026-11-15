@@ -24,8 +24,8 @@ func _ready() -> void:
 	await _seconds(1.0)
 	_mech.cabin.board()
 	await _seconds(2.0)
-	var floor_at := MechCabin.floor_y(1) + MechCabin.SLAB * 0.5
-	print("SUBIÓ: en el marco %s · la caja no lo ve %s · pies a %.2f m del piso del medio · caído %s" % [
+	var floor_at := CabinGrid.floor_top()
+	print("SUBIÓ: en el marco %s · la caja no lo ve %s · pies a %.2f m del piso · caído %s" % [
 		MotionFrame.frame_of(_body) == _mech.cabin.frame, _mech.cabin._riders.has(_body), _feet() - floor_at, player.ragdoll_util.is_active])
 	await _shot("1_adentro")
 	# EL ASCENSOR (ver PelvisLift): parado en su piso, baja y sube con él.
@@ -45,39 +45,34 @@ func _ready() -> void:
 	await _seconds(3.2)
 	print("SUBIÓ de vuelta: pies a %.2f m del piso de abajo · en el marco %s · caído %s" % [_feet() - lift_top,
 		MotionFrame.frame_of(_body) == _mech.cabin.frame, player.ragdoll_util.is_active])
-	# AFUERA (ver MechExterior): parado en la pasarela, en el balcón y en un tramo; y del balcón al piso por la puerta.
-	var half := CabinGrid.SIZE * 0.5
-	var floors := [MechCabin.floor_y(0) + MechCabin.SLAB * 0.5, MechCabin.floor_y(1) + MechCabin.SLAB * 0.5]
-	var spots := [
-		["la pasarela, al costado", Vector3(half + 0.55, floors[0], 1.5), floors[0]],
-		["la pasarela, atrás", Vector3(0.0, floors[0], half + 0.55), floors[0]],
-		["el medio del primer tramo", Vector3(0.0, (floors[0] + floors[1]) * 0.5, (CabinGrid.HALF + MechExterior.WALK + MechExterior.LANE * 0.5)), (floors[0] + floors[1]) * 0.5],
-		["el balcón del segundo piso", Vector3(1.2, floors[1], half + 0.55), floors[1]],
-	]
-	for spot: Array in spots:
-		player.place_at(_mech.global_transform * ((spot[1] as Vector3) + Vector3(0, 0.1, 0)), _mech.yaw())
-		await _seconds(1.5)
-		print("AFUERA, en %s: en el marco %s · pies a %.2f m de donde va · caído %s" % [spot[0],
-			MotionFrame.frame_of(_body) == _mech.cabin.frame, _feet() - float(spot[2]), player.ragdoll_util.is_active])
-		if spot == spots[0]:
-			await _shot("1b_pasarela")
-	player.place_at(_mech.global_transform * Vector3(0.0, floors[1] + 0.1, half + 0.6), _mech.yaw())
+	# LA TARIMA Y SU ESCALERA (ver MechCabin): parado arriba de la tarima; y desde el pie de la escalera de la derecha,
+	# caminando hacia atrás, sube a la tarima.
+	var top_at := CabinGrid.floor_top() + CabinGrid.PLATFORM_HEIGHT
+	var on_top := Vector3(-1.0, top_at + 0.1, CabinGrid.INNER - CabinGrid.TRAMA)
+	player.place_at(_mech.global_transform * on_top, _mech.yaw())
+	await _seconds(1.5)
+	print("ARRIBA DE LA TARIMA: en el marco %s · pies a %.2f m de la tarima · caído %s" % [
+		MotionFrame.frame_of(_body) == _mech.cabin.frame, _feet() - top_at, player.ragdoll_util.is_active])
+	await _shot("1b_tarima")
+	var stair_x := CabinGrid.INNER - CabinGrid.STAIR_CELLS * CabinGrid.TRAMA * 0.5
+	var foot := Vector3(stair_x, CabinGrid.floor_top() + 0.1, CabinGrid.platform_front() - Stairs.run_for(CabinGrid.PLATFORM_HEIGHT) - 0.6)
+	player.place_at(_mech.global_transform * foot, _mech.yaw() + PI)
 	await _seconds(1.0)
-	await _shot("1c_balcon")
 	var key := InputEventKey.new()
 	key.physical_keycode = KEY_W
 	key.keycode = KEY_W
 	key.pressed = true
 	Input.parse_input_event(key)
-	await _seconds(1.6)
+	await _seconds(2.6)
 	key = InputEventKey.new()
 	key.physical_keycode = KEY_W
 	key.keycode = KEY_W
 	key.pressed = false
 	Input.parse_input_event(key)
 	await _seconds(0.5)
-	print("DEL BALCÓN AL PISO, caminando por la puerta: quedó a z = %.1f (la pared de atrás está en %.1f; adentro es menos) · pies a %.2f m del piso · caído %s" % [
-		_local().z, half, _feet() - floors[1], player.ragdoll_util.is_active])
+	print("SUBIÓ LA ESCALERA caminando: quedó a z = %.1f (la tarima empieza en %.1f) · pies a %.2f m de la tarima · caído %s" % [
+		_local().z, CabinGrid.platform_front(), _feet() - top_at, player.ragdoll_util.is_active])
+	await _shot("1c_escalera")
 	_mech.cabin.board()
 	await _seconds(1.5)
 	# LA MECA SE CORRE (empujada 2,5 s): el de adentro va con ella.
@@ -109,7 +104,7 @@ func _ready() -> void:
 	await _seconds(3.0)
 	var inside := _local()
 	print("SE CAYÓ y se recuperó (%.1f s): el de adentro quedó %s (en la cabina: %.1f, %.1f, %.1f) · en el marco %s · caído %s" % [
-		clock, "ADENTRO" if maxf(absf(inside.x), maxf(absf(inside.y), absf(inside.z))) < CabinGrid.SIZE * 0.5 else "AFUERA",
+		clock, "ADENTRO" if maxf(absf(inside.x), absf(inside.z)) < CabinGrid.HALF and absf(inside.y) < CabinGrid.HALF_HEIGHT else "AFUERA",
 		inside.x, inside.y, inside.z, MotionFrame.frame_of(_body) == _mech.cabin.frame, player.ragdoll_util.is_active])
 	await _shot("3_despues_de_caerse")
 	get_tree().quit()

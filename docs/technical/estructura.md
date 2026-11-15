@@ -25,7 +25,6 @@ el cubo péndulo, la meca péndulo); ese día se aplanaron y después se separó
 |---|---|---|
 | `mech.gd` | `Mech` | La meca propia: el cuerpo con equilibrio más su cabina, sus teclas y sus brazos (`arms_kind`: ninguno, discretos o físicos). Poseerla. |
 | `mech_cabin.gd` | `MechCabin` | Lo que se ve y por donde se camina: los tres pisos, el afuera, el ascensor y **el marco** que lleva a los de adentro. |
-| `mech_exterior.gd` | `MechExterior` | La pasarela y la escalera de atrás (superficies pisables, altura libre medida, barandas donde hay caída). |
 | `pelvis_lift.gd` | `PelvisLift` | El ascensor de la pelvis. |
 | `mech_keys.gd` | `MechKeys` | **El único lugar que lee teclas**: el teclado y el mouse de quien la posee, y su cámara. |
 | `mech_arm.gd` | `MechArm` | Lo que se le pide a un brazo (posturas, piñas, la pose, la mano). Base de los dos caminos. |

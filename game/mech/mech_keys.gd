@@ -9,7 +9,7 @@ extends Node
 ##   mouse: hacia dónde mirar. LA CABEZA del que va sentado mira ahí YA, y el torso la alcanza con su demora (el
 ##     usuario: «que con delay se gire la meca, pero que yo pueda mirar normalmente»).
 ##   clic izq. / der.: directo · Q / E: gancho · Z / C: uppercut · 1 / 3: desde arriba · F: la postura · G / X: el ascensor sube / baja
-## Y LA CÁMARA de poseerla: en primera persona, la del que va sentado en el piso del medio; en tercera, atrás y arriba.
+## Y LA CÁMARA de poseerla: en primera persona, la del que va sentado en la silla del movimiento, arriba; en tercera, atrás y arriba.
 
 ## Las teclas de las piñas: para el brazo izquierdo y para el derecho.
 const PUNCH_KEYS := {

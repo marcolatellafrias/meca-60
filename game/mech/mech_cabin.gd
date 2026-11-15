@@ -1,54 +1,52 @@
 class_name MechCabin
 extends Node3D
 
-## LA CABINA DE LA MECA: lo que se ve de la caja y por donde se camina. Este nodo es EL DIBUJO (va con la caja).
-##   · LOS PISOS de paredes de verdad, no una caja pintada (el usuario, 12/11/2026): las losas, los costados, atrás la
-##     pared con el HUECO de la puerta, y los asientos. Las medidas, de la grilla (CabinGrid), que se cambia jugando.
-##   · AL FRENTE, UNA CAJA DE VIDRIO QUE SOBRESALE (`_glass`): vidrio al frente, a los costados, arriba y abajo, sin
-##     parantes ni marcos; todas las losas llegan en metal hasta la cara de la caja y siguen en vidrio. El de más arriba
-##     ve para arriba y el de más abajo, para abajo (el usuario, 13/11/2026: «que también se doble en la parte de arriba y de abajo… así
-##     efectivamente logramos una parte más sobresalida»).
-##   · LA ESTRUCTURA (CabinGrid.STRUCTURE, el F2): AFUERA, la pasarela de planta baja, la escalera de atrás y una
-##     puerta atrás en cada piso (MechExterior); o ADENTRO, sin nada afuera ni puertas, la escalera contra la pared de
-##     atrás y un hueco en cada losa por donde se sube (MechInsideStairs); o EL ASCENSOR ENTRE PISOS, sin nada afuera,
-##     ni puertas, ni escalera: el ascensor sube hasta el último piso y cada losa tiene su recorte y su baranda.
-##   · EL ASCENSOR DE LA PELVIS (PelvisLift): por donde se sube desde el suelo, con la meca agachada.
-##   · EL MARCO (MotionFrame): ADENTRO Y AFUERA SE CAMINA. Las losas, las paredes, la pasarela y la escalera tienen sus
+## LA CABINA DE LA MECA: lo que se ve de la caja y por donde se camina. Este nodo es EL DIBUJO (va con la caja). Las
+## medidas salen de la trama (CabinGrid), que se cambia jugando (el F2).
+##   · UN SOLO PISO, con el recorte del ascensor en el medio (PelvisLift), y el techo.
+##   · ADELANTE, EL VIDRIO, SIN MARCOS (`_glass`): el frente y los costados hasta la mitad, de piso a techo, y la arista
+##     de arriba del frente cortada a 45°, también de vidrio. Paños planos que se tocan justo en las aristas (el usuario,
+##     14/11/2026: «toda esa zona de cristal… el suelo no… en la esquina superior delantera, tenga un chamfer»). Atrás,
+##     la pared y la mitad de atrás de los costados, de metal.
+##   · ADELANTE, EL TABLERO CORRIDO con sus tres puestos (un brazo a cada lado y la espalda al medio).
+##   · ATRÁS, LA TARIMA de pared a pared, con el movimiento arriba al medio, y una escalera recta contra cada costado. En
+##     el frente de la tarima, de cara al ascensor, los cuatro kits y la batería; arriba, en la pared de atrás, la
+##     munición (por ahora, sólo se ven: los huecos de verdad vienen con los recursos).
+##   · EL MARCO (MotionFrame): adentro se camina. El piso, las paredes, el vidrio, el tablero y la tarima tienen sus
 ##     formas de choque en `interior`, un cuerpo que NO choca con nada: es de donde el marco copia su SOMBRA. El que
-##     entra a alguno de sus volúmenes pasa a ir en el marco, que lo lleva con la meca, y choca sólo con esa sombra. Y
-##     LA CAJA DE AFUERA, que es maciza y es la que choca con el mundo, deja de chocar con él (`ride`).
+##     entra a la caja pasa a ir en el marco, que lo lleva con la meca, y choca sólo con esa sombra. Y LA CAJA DE AFUERA,
+##     que es maciza y es la que choca con el mundo, deja de chocar con él (`ride`).
+## *Hasta el 14/11/2026 era de varios pisos, con una caja de vidrio que sobresalía, puertas atrás y una pasarela y
+## escaleras por afuera (MechExterior) o una escalera adentro (MechInsideStairs), a elegir. Se sacó todo.*
 
-## LAS MEDIDAS SALEN DE LA GRILLA (CabinGrid, 13/11/2026): todo es celdas enteras, y cambiar un número de la grilla
-## cambia los pisos, las paredes, los huecos y los asientos.
 const SLAB := CabinGrid.SLAB
 const WALL := CabinGrid.WALL
-const DOOR := Vector2(CabinGrid.DOOR_CELLS) * CabinGrid.CELL
 ## El vidrio, bien transparente (el usuario: «haría más transparente el vidrio»).
 const GLASS := Color(0.6, 0.8, 0.92, 0.12)
+const KIT := Color(0.78, 0.27, 0.27)
+const BATTERY := Color(0.93, 0.75, 0.16)
+const AMMO := Color(0.47, 0.53, 0.32)
 const SEAT_SCENE := "res://game/interactables/activatable/working_seat.tscn"
 const DUMMY_SCENE := "res://game/character/player.tscn"
 const DUMMY_BODIES: Array[EntityArchetype.Archetype] = [EntityArchetype.Archetype.fat_athletic,
 	EntityArchetype.Archetype.lanky, EntityArchetype.Archetype.buff, EntityArchetype.Archetype.fat_man]
+## Los puestos, en el orden de las sillas (`chairs`): los tres de adelante, de izquierda a derecha, y el de arriba.
+const POSTS := ["brazo izquierdo", "espalda", "brazo derecho", "movimiento"]
 
 var mech: Mech = null
 var frame: MotionFrame = null
 var lift: PelvisLift = null
 var interior: StaticBody3D = null
-## Las sillas (ver `_seats`) y los maniquíes sentados en ellas (ver `seat_dummies`).
+## Las sillas (ver `_seats`, en el orden de `POSTS`) y los maniquíes sentados en ellas (ver `seat_dummies`).
 var chairs: Array[SeatInteractable] = []
 var dummies: Array[Node3D] = []
 
 var _riders := {}
 
 
-## La losa del piso `index` (0 el de abajo), su medio, en el espacio de la caja: se pisa a media losa más arriba.
-static func floor_y(index: int) -> float:
-	return CabinGrid.slab_y(index)
-
-
-## El asiento desde el que se mira en primera persona: el de la izquierda del primer piso con asientos.
+## La silla desde la que se mira en primera persona al poseer la meca: la del movimiento, arriba.
 static func seat() -> Vector3:
-	return CabinGrid.seat(CabinGrid.seat_floors()[0], -1.0)
+	return CabinGrid.top_seat()
 
 
 func _ready() -> void:
@@ -58,88 +56,122 @@ func _ready() -> void:
 	interior.collision_layer = 0
 	interior.collision_mask = 0
 	add_child(interior)
-	var size := CabinGrid.SIZE
-	var out := CabinGrid.GLASS_OUT
 	var metal := Clay.METAL
-	var half := CabinGrid.HALF - WALL * 0.5
-	# Sin nada afuera (la escalera adentro, o el ascensor entre pisos): sin puertas atrás.
-	var inside := CabinGrid.STRUCTURE != CabinGrid.Structure.OUTSIDE
-	var stairs := CabinGrid.STRUCTURE == CabinGrid.Structure.INSIDE
-	var lift_floors := CabinGrid.STRUCTURE == CabinGrid.Structure.LIFT
-	for index in CabinGrid.FLOORS + 1:
-		var y := floor_y(index)
-		if index == 0 or (lift_floors and index < CabinGrid.FLOORS):
-			# La losa de abajo (con el ascensor entre pisos, todas menos el techo), con el recorte redondo del ascensor y
-			# su baranda (ver PelvisLift).
-			PelvisLift.build_floor(self, interior, y, SLAB, metal.darkened(0.12))
-		elif stairs:
-			# Con la escalera adentro, el hueco por donde se sube (ver MechInsideStairs).
-			MechInsideStairs.slab(self, interior, index, metal.darkened(0.12))
-		else:
-			_solid(Vector3(size, SLAB, size), Vector3(0, y, 0), metal.darkened(0.12))
-		# ADELANTE, EN LA CAJA DE VIDRIO, TODAS LAS LOSAS IGUALES: el metal llega hasta la cara de la caja y lo que sigue
-		# hasta el vidrio es vidrio que se pisa (el usuario, 13/11/2026: «quiero que los tres estén alineados»).
-		if out > 0.0:
-			var ahead := Vector3(size, SLAB, out)
-			var at := Vector3(0, y, -CabinGrid.HALF - out * 0.5)
-			Clay.box(self, ahead, at, GLASS)
-			Clay.shape_box(interior, ahead, at)
-	for index in CabinGrid.FLOORS:
-		var base := CabinGrid.ground(index)
-		var wall_h := CabinGrid.clear_height(index)
-		var mid := base + wall_h * 0.5
-		# Los costados llegan hasta el frente de la caja: de ahí en adelante, el vidrio.
-		for side: float in [-1.0, 1.0]:
-			_solid(Vector3(WALL, wall_h, size - WALL), Vector3(side * half, mid, -WALL * 0.5), metal)
-		# Atrás: sin nada afuera, la pared entera; si no, a los costados y arriba del hueco de la puerta.
-		if inside:
-			_solid(Vector3(size, wall_h, WALL), Vector3(0, mid, half), metal)
-			_seats(index)
-			continue
-		var beside := (size - DOOR.x) * 0.5
-		for side: float in [-1.0, 1.0]:
-			_solid(Vector3(beside, wall_h, WALL), Vector3(side * (DOOR.x + beside) * 0.5, mid, half), metal)
-		# La puerta, no más alta que el piso (con pisos bajos, llega hasta el techo).
-		var door_h := minf(DOOR.y, wall_h)
-		if wall_h - door_h > 0.01:
-			_solid(Vector3(DOOR.x, wall_h - door_h, WALL), Vector3(0, base + door_h + (wall_h - door_h) * 0.5, half), metal)
-		_seats(index)
-	_glass(size, out)
-	if stairs:
-		MechInsideStairs.build(self, interior)
-	elif not inside:
-		MechExterior.build(self, interior)
+	var floor_top := CabinGrid.floor_top()
+	var ceiling := CabinGrid.ceiling()
+	var half := CabinGrid.HALF
+	var trama := CabinGrid.TRAMA
+	var cut := CabinGrid.CHAMFER * trama
+	# El piso, con el recorte del ascensor; el techo, de donde termina el corte del vidrio hasta atrás.
+	PelvisLift.build_floor(self, interior, floor_top - SLAB * 0.5, SLAB, metal.darkened(0.12))
+	var roof_from := -half + cut
+	_solid(Vector3(CabinGrid.SIZE, SLAB, half - roof_from), Vector3(0, ceiling + SLAB * 0.5, (roof_from + half) * 0.5), metal)
+	# Atrás, de metal: la pared y la mitad de atrás de los costados.
+	var mid := (floor_top + ceiling) * 0.5
+	_solid(Vector3(CabinGrid.SIZE, CabinGrid.CLEAR, WALL), Vector3(0, mid, half - WALL * 0.5), metal)
+	for side: float in [-1.0, 1.0]:
+		_solid(Vector3(WALL, CabinGrid.CLEAR, half - WALL), Vector3(side * (half - WALL * 0.5), mid, (half - WALL) * 0.5), metal)
+	_glass(cut)
+	_desk()
+	_platform()
+	_seats()
 	lift = PelvisLift.new()
 	lift.solid = interior
 	add_child(lift)
 
 
-## LA CAJA DE VIDRIO DEL FRENTE, de `out` de fondo (sin fondo, el vidrio plano en la cara de la caja): el frente y los
-## dos costados, de punta a punta, con formas que no dejan atravesarlos. Sin marcos (el usuario, 13/11/2026: «esos
-## marcos se los sacaría»). El vidrio de arriba y de abajo es la punta de las losas (ver `_ready`).
-func _glass(size: float, out: float) -> void:
-	var height := CabinGrid.HEIGHT
-	var front := -CabinGrid.HALF - out + 0.02 if out > 0.0 else -CabinGrid.HALF + WALL * 0.5
-	Clay.box(self, Vector3(size, height, 0.04), Vector3(0, 0, front), GLASS)
-	Clay.shape_box(interior, Vector3(size, height, 0.1), Vector3(0, 0, front - 0.03))
-	if out <= 0.0:
-		return
+## EL VIDRIO, EN PAÑOS EXACTOS Y SIN MARCOS: el frente hasta el corte, el corte a 45° de arista a arista, y cada costado
+## de adelante con su esquina cortada igual. Todos van en la cara de afuera de la caja y se tocan justo en las aristas.
+func _glass(cut: float) -> void:
+	var half := CabinGrid.HALF
+	var y0 := CabinGrid.floor_top()
+	var y1 := CabinGrid.HALF_HEIGHT
+	var yc := y1 - cut
+	var front := -half + 0.02
+	var side_x := half - 0.02
+	_pane([Vector3(-side_x, y0, front), Vector3(side_x, y0, front), Vector3(side_x, yc, front), Vector3(-side_x, yc, front)])
+	if cut > 0.0:
+		_pane([Vector3(-side_x, yc, front), Vector3(side_x, yc, front), Vector3(side_x, y1, front + cut),
+			Vector3(-side_x, y1, front + cut)])
+		Clay.shape_box(interior, Vector3(CabinGrid.SIZE, 0.1, cut * sqrt(2.0)), Vector3(0, yc + cut * 0.5, front + cut * 0.5),
+			Basis(Vector3.RIGHT, PI * 0.25))
+	Clay.shape_box(interior, Vector3(CabinGrid.SIZE, yc - y0, 0.1), Vector3(0, (y0 + yc) * 0.5, front - 0.03))
 	for side: float in [-1.0, 1.0]:
-		var x := side * (CabinGrid.HALF - 0.02)
-		Clay.box(self, Vector3(0.04, height, out), Vector3(x, 0, -CabinGrid.HALF - out * 0.5), GLASS)
-		Clay.shape_box(interior, Vector3(0.1, height, out), Vector3(x, 0, -CabinGrid.HALF - out * 0.5))
+		var x := side * side_x
+		_pane([Vector3(x, y0, front), Vector3(x, y0, 0.0), Vector3(x, y1, 0.0), Vector3(x, y1, front + cut), Vector3(x, yc, front)])
+		Clay.shape_box(interior, Vector3(0.1, y1 - y0, half), Vector3(side * (half - 0.02), (y0 + y1) * 0.5, -half * 0.5))
 
 
-## LOS ASIENTOS DEL PISO `index` (ver CabinGrid.seat_floors): LAS SILLAS DE VERDAD, las de las consolas (`SEAT_SCENE`),
-## mirando al frente. Sin tablero adelante: el bloque bajo que había tapaba la vista para abajo (el usuario,
-## 13/11/2026). Los controles vienen después.
-func _seats(index: int) -> void:
-	if not CabinGrid.seat_floors().has(index):
-		return
+## Un paño de vidrio plano, con sus esquinas en orden (un abanico desde la primera).
+func _pane(corners: Array) -> void:
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var a: Vector3 = corners[0]
+	var normal := ((corners[1] as Vector3) - a).cross((corners[2] as Vector3) - a).normalized()
+	for i in range(1, corners.size() - 1):
+		for point: Vector3 in [a, corners[i], corners[i + 1]]:
+			tool.set_normal(normal)
+			tool.add_vertex(point)
+	var pane := MeshInstance3D.new()
+	pane.name = "Vidrio"
+	pane.mesh = tool.commit()
+	var paint := StandardMaterial3D.new()
+	paint.albedo_color = GLASS
+	paint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	paint.cull_mode = BaseMaterial3D.CULL_DISABLED
+	paint.roughness = 0.2
+	pane.material_override = paint
+	add_child(pane)
+
+
+## EL TABLERO CORRIDO DE ADELANTE, de pared a pared, con una raya donde termina cada puesto.
+func _desk() -> void:
+	var trama := CabinGrid.TRAMA
+	var depth := CabinGrid.DESK_ROWS * trama
+	var floor_top := CabinGrid.floor_top()
+	_solid(Vector3(CabinGrid.INNER * 2.0, CabinGrid.DESK_HEIGHT, depth),
+		Vector3(0, floor_top + CabinGrid.DESK_HEIGHT * 0.5, CabinGrid.line(0) + depth * 0.5), Clay.DARK)
+	var margin := (CabinGrid.ACROSS - CabinGrid.POST_CELLS * 3) * 0.5
+	for post in [1, 2]:
+		Clay.box(self, Vector3(0.04, CabinGrid.DESK_HEIGHT + 0.02, depth),
+			Vector3(CabinGrid.line(margin + CabinGrid.POST_CELLS * post), floor_top + CabinGrid.DESK_HEIGHT * 0.5 + 0.01,
+			CabinGrid.line(0) + depth * 0.5), Clay.METAL)
+
+
+## LA TARIMA DE ATRÁS, de pared a pared, y una escalera recta contra cada costado (con `Stairs`, la regla de toda
+## escalera: escalones para los pies y una rampa para la cápsula). En su frente, de cara al ascensor, los cuatro kits y
+## la batería, parejos entre las dos escaleras; arriba, en la pared de atrás, la munición (sólo sobresale el cubo).
+func _platform() -> void:
+	var trama := CabinGrid.TRAMA
+	var floor_top := CabinGrid.floor_top()
+	var tall := CabinGrid.PLATFORM_HEIGHT
+	var front := CabinGrid.platform_front()
+	_solid(Vector3(CabinGrid.INNER * 2.0, tall, CabinGrid.INNER - front),
+		Vector3(0, floor_top + tall * 0.5, (front + CabinGrid.INNER) * 0.5), Clay.METAL.darkened(0.05))
+	var width := CabinGrid.STAIR_CELLS * trama
+	var run := Stairs.run_for(tall)
 	for side: float in [-1.0, 1.0]:
+		Stairs.flight(self, Vector3(side * (CabinGrid.INNER - width * 0.5), floor_top, front - run), Vector3.BACK, tall, width,
+			Clay.METAL.lightened(0.15))
+	var free := (CabinGrid.INNER - width) * 2.0
+	for index in 5:
+		var x := -free * 0.5 + free * (index + 0.5) / 5.0
+		Clay.box(self, Vector3(0.6, 0.6, 0.06), Vector3(x, floor_top + 0.32, front - 0.03), BATTERY if index == 2 else KIT)
+	for side: float in [-1.0, 1.0]:
+		var at := Vector3(side * 2.5 * trama, floor_top + tall + 0.42, CabinGrid.HALF + 0.3)
+		Clay.box(self, Vector3(0.8, 0.8, 0.6), at, Clay.METAL)
+		Clay.box(self, Vector3(0.6, 0.6, 0.06), at + Vector3(0, 0, -0.62), AMMO)
+
+
+## LAS SILLAS (las de verdad, las de las consolas, `SEAT_SCENE`), mirando al frente: las tres de adelante y la de arriba,
+## en el orden de `POSTS`.
+func _seats() -> void:
+	var places := CabinGrid.front_seats()
+	places.append(CabinGrid.top_seat())
+	for index in places.size():
 		var chair := (load(SEAT_SCENE) as PackedScene).instantiate() as SeatInteractable
-		chair.name = "Asiento %d %s" % [index, "izquierdo" if side < 0.0 else "derecho"]
-		chair.position = CabinGrid.seat(index, side)
+		chair.name = "Asiento %s" % POSTS[index]
+		chair.position = places[index]
 		# La altura de los ojos que busca (ver CabinGrid.EYE_HEIGHT): cada uno se nivela a ella.
 		chair.eye_height = CabinGrid.EYE_HEIGHT
 		add_child(chair)
@@ -190,25 +222,21 @@ func _solid(size: Vector3, at: Vector3, color: Color) -> void:
 	Clay.shape_box(interior, size, at)
 
 
-## EL MARCO, con sus volúmenes (la caja, el afuera y el hueco del ascensor), y su sombra: la copia de las formas de
-## `interior` y de los escalones y la rampa de la escalera. El marco copia las de un cuerpo de la capa 1; `interior` lo
-## es sólo mientras se copia. Se llama cuando la meca ya tiene todo armado.
+## EL MARCO, con sus volúmenes (la caja y el hueco del ascensor), y su sombra: la copia de las formas de `interior` y de
+## los escalones y las rampas de las escaleras. El marco copia las de un cuerpo de la capa 1; `interior` lo es sólo
+## mientras se copia. Se llama cuando la meca ya tiene todo armado.
 func build_frame() -> void:
 	frame = MotionFrame.new()
 	mech.add_child(frame)
-	frame.floor_height = CabinGrid.ground(0)
-	var out := CabinGrid.GLASS_OUT
-	frame.add_volume(AABB(Vector3(-CabinGrid.HALF, -CabinGrid.HALF_HEIGHT, -CabinGrid.HALF - out),
-		Vector3(CabinGrid.SIZE, CabinGrid.HEIGHT, CabinGrid.SIZE + out)))
-	if CabinGrid.STRUCTURE == CabinGrid.Structure.OUTSIDE:
-		frame.add_volume(MechExterior.bounds())
+	frame.floor_height = CabinGrid.floor_top()
+	frame.add_volume(AABB(-CabinGrid.box() * 0.5, CabinGrid.box()))
 	frame.add_volume(PelvisLift.shaft())
 	interior.collision_layer = 1
 	frame.cast_shadow(self)
 	interior.collision_layer = 0
 	interior.collision_mask = 0
-	# LA ESCALERA DE ATRÁS (ver MechExterior, Stairs): sus escalones y su rampa ya están copiados en la sombra; los de
-	# verdad, que van con la meca, dejan de chocar, como `interior`.
+	# LAS ESCALERAS (ver Stairs): sus escalones y sus rampas ya están copiados en la sombra; los de verdad, que van con la
+	# meca, dejan de chocar, como `interior`.
 	for body in find_children("*", "StaticBody3D", true, false):
 		if body != interior:
 			(body as StaticBody3D).collision_layer = 0
@@ -233,7 +261,7 @@ func ride() -> void:
 	_riders = inside
 
 
-## SUBE AL JUGADOR (la U del sandbox): al piso del medio, detrás del asiento, mirando al frente.
+## SUBE AL JUGADOR (la U del sandbox): al piso, entre las sillas de adelante y el ascensor, mirando al frente.
 func board() -> void:
 	var player := DesignSandbox.player_of(get_tree())
 	if player == null:
@@ -242,5 +270,5 @@ func board() -> void:
 		SandboxPossession.of(get_tree()).release()
 	if player.is_seated and player.current_seat is SeatInteractable:
 		(player.current_seat as SeatInteractable).release_occupant_in_place()
-	player.place_at(mech.global_transform * (Vector3(0.0, CabinGrid.ground(mini(1, CabinGrid.FLOORS - 1)) + 0.05, CabinGrid.row_z(2))),
-		mech.yaw())
+	var spot := Vector3(0.0, CabinGrid.floor_top() + 0.05, (CabinGrid.front_seats()[0].z - PelvisLift.hole()) * 0.5)
+	player.place_at(mech.global_transform * spot, mech.yaw())
