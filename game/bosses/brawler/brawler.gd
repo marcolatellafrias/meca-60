@@ -26,9 +26,10 @@ const GRAVITY := 30.0
 ## LAS POSES: parado; agachado para embestir (los brazos atrás, temblando); embistiendo (los puños adelante); los
 ## brazos arriba para el golpe al piso; el golpe (los puños al piso); aturdido (desplomado); las manos en el piso para
 ## arrancarlo; la piedra arriba de la cabeza; y el tiro (los brazos adelante); el trompo (los brazos abiertos, antes y
-## girando); el agarre (los brazos atrás y el tiro de la mano); y el revoleo (los brazos adelante, con la meca).
+## girando); el agarre (los brazos atrás y el tiro de la mano); el revoleo (los brazos adelante, con la meca); y el
+## lanzallamas (echado atrás, los brazos abiertos para atrás, el pecho adelante).
 enum Pose { REST, CHARGE_READY, CHARGING, SLAM_READY, SLAM, STUNNED, DIG, LIFT, THROW, SPIN_READY, SPIN, HOOK_READY,
-	HOOK, SWING }
+	HOOK, SWING, FLAME_READY, FLAME }
 ## De cada pose: cuánto se inclina el torso (°, adelante), cuánto giran los brazos en el hombro (°, adelante y arriba),
 ## cuánto tiembla (m), en cuánto llega a ella (s) y cuánto se abren los brazos para los costados (°).
 const POSES := {
@@ -46,6 +47,8 @@ const POSES := {
 	Pose.HOOK_READY: [6.0, -45.0, 0.2, 0.5, 0.0],
 	Pose.HOOK: [14.0, 88.0, 0.0, 0.1, 0.0],
 	Pose.SWING: [-6.0, 88.0, 0.0, 0.3, 0.0],
+	Pose.FLAME_READY: [-10.0, -30.0, 0.3, 0.5, 35.0],
+	Pose.FLAME: [-4.0, -15.0, 0.12, 0.3, 45.0],
 }
 
 ## ── LO QUE SE LE PIDE ──

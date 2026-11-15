@@ -131,6 +131,20 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 @export_range(0.0, 100.0, 1.0) var fling_damage := 35.0
 @export_range(0.2, 4.0, 0.05) var hook_recover := 1.0
 
+@export_group("Lanzallamas")
+## EL LANZALLAMAS DEL HORNO (ver BrawlerBrain, BrawlerFlame), SÓLO CON IRA (el usuario eligió «el lanzallamas» como lo
+## propio de la ira, 15/11/2026): el aviso (s: abre el horno y gira la cintura hacia donde empieza, con el abanico en el
+## piso), cuánto dura el chorro (s) y cuánto barre (°), hasta dónde llega (m) y la mitad de su ancho (°). Si te toca,
+## cuánta vida te saca y cuánto te empuja (m). Después se queda con el horno abierto (s: la ventana).
+@export_range(0.2, 4.0, 0.05) var flame_windup := 1.0
+@export_range(0.3, 6.0, 0.1) var flame_time := 2.2
+@export_range(0.0, 270.0, 5.0) var flame_sweep := 100.0
+@export_range(10.0, 120.0, 1.0) var flame_reach := 45.0
+@export_range(2.0, 45.0, 0.5) var flame_angle := 12.0
+@export_range(0.0, 100.0, 1.0) var flame_damage := 25.0
+@export_range(0.0, 40.0, 0.5) var flame_push := 12.0
+@export_range(0.2, 6.0, 0.1) var flame_recover := 1.8
+
 @export_group("Golpes")
 ## LO QUE LE SACA UNA PIÑA DE LA MECA: en el cuerpo, y en el horno abierto (el punto débil).
 @export_range(0.0, 100.0, 1.0) var punch_damage := 6.0

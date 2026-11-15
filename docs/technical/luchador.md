@@ -155,8 +155,23 @@ tiene poderes propios… hay que ver cómo hacemos que se diferencie».
   - la embestida **rebota en el borde** una vez y vuelve hacia vos, en vez de estrellarse (la segunda vez, sí).
 - El video arranca con agarres y trompos, sigue con todo tranquilo y termina con todo con ira.
 
+## Paso 7 (15/11/2026): el lanzallamas, lo propio de la ira
+El usuario: «el boss con ira no tiene habilidades nuevas… habría que pensar en una»; de tres propuestas (el
+lanzallamas, el salto que aplasta, el humo), eligió «el lanzallamas».
+- **El lanzallamas del horno** (`BrawlerBrain._flame_act`, `BrawlerFlame`; **sólo con ira**, entre 20 y 60 m; la L lo
+  deja solo aunque no tenga ira): **aviso** (1 s), abre el horno, se echa atrás con los brazos abiertos y **gira la
+  cintura hacia donde va a empezar**; en el piso, **el abanico rojo** con todo lo que va a barrer (sigue a la meca).
+  **Golpe**: un chorro de fuego en cono desde la boca del horno (45 m, 12° de medio ancho, con su rugido) que **barre
+  100° en 2,2 s** con la cintura. Si te toca, te saca 25 y te empuja 12 m. Después queda **1,8 s con el horno
+  abierto** (y lo tuvo abierto todo el ataque): la ventana para pegarle donde más le duele. Pestaña «Lanzallamas» del F1.
+- **Esquivarlo** (`brawler_dodge_check --solo-fuego`): quieta, caminando de costado (con el barrido o contra él) te
+  alcanza; **desde 45 m, alejándote**, no; de cerca, **el dash contra el chorro** (intocable, lo cruza) cuando el chorro
+  está a unos 20–25° tuyo (a 45 m, 15–20°): antes, te alcanza cuando se te terminó; después, ya te tocó.
+- El video, con ira, empieza con 14 s de lanzallamas.
+
 ## Lo que sigue
-Los poderes, de a uno (propuestos, sin confirmar): el gancho al cielo y la guardia con contraataque. Para los golpes:
+Los poderes, de a uno (propuestos, sin confirmar): el gancho al cielo y la guardia con contraataque; para la ira, si
+hace falta más, el salto que aplasta y el humo. Para los golpes:
 un dash que haga a la meca intocable un momento (como la rodada de Souls; es del módulo Meca), frenar el tiempo unos
 cuadros al pegar y temblar la cámara; con ira, el humo como zona que tapa la vista. Sin
 ametralladora por ahora.

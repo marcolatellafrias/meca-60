@@ -2,15 +2,16 @@ extends Node
 
 ## EL VIDEO DE LA PELEA (para mandárselo al usuario): el Luchador contra la meca cinemática, con una cámara que sigue a
 ## los dos de costado, y después el choque contra el borde. Primero sólo el agarre (`HOOKS` s), después sólo el trompo
-## (`SPINS` s), después todos los ataques, primero tranquilo (`FIGHT` s) y después con ira (`RAGE` s: encadena, tres
-## ondas, dos piedras, la embestida rebota). La meca esquiva un ataque sí y otro no (la embestida con un dash cuando le
+## (`SPINS` s), después todos los ataques, primero tranquilo (`FIGHT` s) y después con ira: primero sólo su lanzallamas
+## (`FLAMES` s) y después todo (`RAGE` s: encadena, tres ondas, dos piedras, la embestida rebota). La meca esquiva un ataque sí y otro no (la embestida con un dash cuando le
 ## faltan 38 m; la onda del golpe al piso, saltando cuando le faltan 24 m; la piedra, caminando de costado desde que la
 ## tira; el trompo, escapando para atrás o, de cerca, con el dash hacia él y pegada; el agarre, saliéndose de la franja cuando
 ## apuntó, de cerca con el dash). Se graba con --write-movie:
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/pelea.avi --fixed-fps 30 res://tests/brawler_charge_movie.tscn
 
 const FIGHT := 20.0
-const RAGE := 26.0
+const RAGE := 20.0
+const FLAMES := 14.0
 const HOOKS := 14.0
 const SPINS := 14.0
 
@@ -81,6 +82,9 @@ func _ready() -> void:
 	await _run(mech, FIGHT)
 	_boss.rage = true
 	BossSounds.play(BossSounds.Kind.RAGE_ON, _boss.global_position + Vector3.UP * Brawler.BOX.y, _boss.get_parent())
+	BrawlerBrain.moves = BrawlerBrain.Moves.FLAME
+	await _run(mech, FLAMES)
+	BrawlerBrain.moves = BrawlerBrain.Moves.ALL
 	await _run(mech, RAGE)
 	_boss.rage = false
 	# CONTRA EL BORDE.
@@ -160,6 +164,17 @@ func _dodge(mech: Mech, ground: Vector3, to_boss: Vector3) -> void:
 		mech.move = Vector2(0.0, 1.0) if close else Vector2(0.0, -1.0)
 		if close and _brain._step == 1 and _dodged != attack:
 			_dodged = attack
+			mech.dash = true
+	# El lanzallamas: de lejos, para atrás; de cerca, el dash contra el chorro cuando está a 22° (intocable, lo cruza).
+	if _brain.act == BrawlerBrain.Act.FLAME and _brain._step < 2:
+		var flame_way := Basis(Vector3.UP, _boss.waist_yaw) * Vector3.FORWARD
+		var to_mech := -to_boss.normalized()
+		if to_boss.length() >= 40.0:
+			mech.move = Vector2(0.0, -1.0)
+		elif _brain._step == 1 and _dodged != attack and rad_to_deg(flame_way.angle_to(to_mech)) <= 22.0:
+			_dodged = attack
+			var coming := to_mech.cross(Vector3.UP) * signf((-to_boss).cross(flame_way).y)
+			mech.move = Vector2(-signf(coming.dot(mech.global_basis.x)), 0.0)
 			mech.dash = true
 	# El agarre: de costado desde que apuntó (de cerca, con el dash).
 	if _brain.act == BrawlerBrain.Act.HOOK and (_brain._step == 1 or _brain.stage.ends_with("apuntó!")):

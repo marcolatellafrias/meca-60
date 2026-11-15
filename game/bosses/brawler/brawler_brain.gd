@@ -27,16 +27,19 @@ extends Node
 ##   · CON IRA (15/11/2026, el usuario: «la ira… funciona igual que la común… hay que ver cómo hacemos que se
 ##     diferencie»), como la segunda fase de un jefe de Souls: ENCADENA (al terminar un ataque, a veces sigue con otro
 ##     sin rodearte, hasta dos), el golpe al piso larga TRES ONDAS en abanico, tira DOS PIEDRAS (adonde estás y adonde
-##     vas) y la embestida REBOTA en el borde una vez y vuelve, en vez de estrellarse. Viene por tiempos.
+##     vas) y la embestida REBOTA en el borde una vez y vuelve, en vez de estrellarse. Viene por tiempos. Y SU PROPIO
+##     ATAQUE, EL LANZALLAMAS (el usuario lo eligió): AVISO, abre el horno y gira la cintura hacia donde empieza, con el
+##     abanico en el piso; GOLPE, un chorro de fuego en cono (BrawlerFlame) que barre; si te toca, te saca vida y te
+##     empuja. Se esquiva alejándose o cruzando el chorro con el dash (intocable). El horno queda abierto: la ventana.
 ##   · CUÁL: al terminar de rodear, uno de los que tengan tu distancia a tiro, al azar (la L de la parcela deja uno).
 ## LA VIDA, POR CÓDIGO (Health): las piñas de la meca que tocan el cuerpo le sacan poco; en el horno abierto, mucho.
 ## Mientras alguien lo posee, la cabeza no hace nada.
 
-enum Act { STALK, CHARGE, SLAM, THROW, SPIN, HOOK }
-## QUÉ ATAQUES USA (la L de la parcela): todos, o uno solo.
-enum Moves { ALL, CHARGE, SLAM, THROW, SPIN, HOOK }
+enum Act { STALK, CHARGE, SLAM, THROW, SPIN, HOOK, FLAME }
+## QUÉ ATAQUES USA (la L de la parcela): todos, o uno solo (el lanzallamas, aunque no tenga ira).
+enum Moves { ALL, CHARGE, SLAM, THROW, SPIN, HOOK, FLAME }
 const MOVES_NAMES := ["todos", "sólo la embestida", "sólo el golpe al piso", "sólo arrancar el piso", "sólo el trompo",
-	"sólo el agarre"]
+	"sólo el agarre", "sólo el lanzallamas"]
 static var moves := Moves.ALL
 
 ## Las distancias que deciden (m, del medio del Luchador al blanco): se queda entre `KEEP`; embiste entre `CHARGE_RANGE`.
@@ -52,6 +55,8 @@ const THROW_RANGE := Vector2(35.0, 130.0)
 ## El trompo y el agarre, entre estas (m).
 const SPIN_RANGE := Vector2(30.0, 110.0)
 const HOOK_RANGE := Vector2(25.0, 80.0)
+## El lanzallamas (sólo con ira), entre estas (m).
+const FLAME_RANGE := Vector2(20.0, 60.0)
 ## El trompo pega con la parte de afuera de los brazos: desde qué parte del camino del hombro al puño.
 const SPIN_INNER := 0.9
 ## Con ira, cuántos ataques encadena como mucho seguidos (además del primero).
@@ -94,6 +99,8 @@ var spins := 0
 var spun := 0
 var hooks := 0
 var grabbed := 0
+var flames := 0
+var burned := 0
 
 var _boss: Brawler = null
 var _clock := 0.0
@@ -116,6 +123,9 @@ var _chain := 0
 var _shown_at := 0
 var _bounced := false
 var _wave_sides: Array[BrawlerWave] = []
+var _flame: BrawlerFlame = null
+var _flame_start := 0.0
+var _flame_turn := 1.0
 
 
 func _ready() -> void:
@@ -175,6 +185,8 @@ func _physics_process(delta: float) -> void:
 			_spin()
 		Act.HOOK:
 			_hook_act()
+		Act.FLAME:
+			_flame_act()
 
 
 ## ── LOS ACTOS ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -211,6 +223,9 @@ func _can() -> Array[Act]:
 		can.append(Act.SPIN)
 	if (moves == Moves.ALL or moves == Moves.HOOK) and gap > HOOK_RANGE.x and gap < HOOK_RANGE.y:
 		can.append(Act.HOOK)
+	var flame_ok := moves == Moves.FLAME or (moves == Moves.ALL and _boss.rage)
+	if flame_ok and gap > FLAME_RANGE.x and gap < FLAME_RANGE.y:
+		can.append(Act.FLAME)
 	return can
 
 
@@ -547,6 +562,56 @@ func _hook_act() -> void:
 				_begin(Act.STALK)
 
 
+## EL LANZALLAMAS (sólo con ira), por tiempos (`_step`): 0 abre el horno y gira hacia donde empieza (el abanico), 1 el
+## chorro barre, 2 se queda con el horno abierto.
+func _flame_act() -> void:
+	var k := BrawlerSettings.current
+	var waist := Basis(Vector3.UP, _boss.waist_yaw) * Vector3.FORWARD
+	var center := _yaw_to_target()
+	if _flame == null:
+		_flame = BrawlerFlame.new()
+		_flame.name = "Lanzallamas"
+		_boss.get_parent().add_child(_flame)
+		_flame.setup(k.flame_reach, k.flame_angle, k.flame_sweep)
+		_flame_turn = -1.0 if _random.randf() < 0.5 else 1.0
+		_flame_start = center - _flame_turn * deg_to_rad(k.flame_sweep * 0.5)
+	match _step:
+		0:
+			stage = "lanzallamas: abre el horno"
+			_boss.pose = Brawler.Pose.FLAME_READY
+			_boss.furnace = true
+			_boss.move = Vector2(clampf(-_error_to(_to_target()) * 3.0, -1.0, 1.0), 0.0)
+			# Mientras avisa, el centro sigue a la meca; la cintura va hacia donde empieza.
+			_flame_start = center - _flame_turn * deg_to_rad(k.flame_sweep * 0.5)
+			_boss.aim_yaw = _flame_start
+			_flame.warn(_boss.global_position, Basis(Vector3.UP, center) * Vector3.FORWARD)
+			if _clock >= k.flame_windup:
+				flames += 1
+				BossSounds.play(BossSounds.Kind.FLAME, _boss.furnace_point(), _boss.get_parent())
+				_next(1)
+		1:
+			stage = "¡lanzallamas!"
+			_boss.pose = Brawler.Pose.FLAME
+			_boss.move = Vector2.ZERO
+			var share := clampf(_clock / maxf(k.flame_time, 0.01), 0.0, 1.0)
+			_boss.aim_yaw = _flame_start + _flame_turn * deg_to_rad(k.flame_sweep) * share
+			_flame.blow(_boss.furnace_point(), waist, true)
+			if not _hit_this_act and _flame.covers(_ground(), _target_half_width()):
+				var away := _to_target()
+				_hit_this_act = _strike(k.flame_damage, "el lanzallamas", HitReaction.Kind.PUSH, away, k.flame_push,
+					_ground() + Vector3.UP * 8.0)
+				burned += int(_hit_this_act)
+			if _clock >= k.flame_time:
+				_flame.blow(_boss.furnace_point(), waist, false)
+				_next(2)
+		_:
+			stage = "lanzallamas: horno abierto"
+			_boss.pose = Brawler.Pose.STUNNED
+			_boss.move = Vector2.ZERO
+			if _clock >= k.flame_recover:
+				_begin(Act.STALK)
+
+
 ## LAS PIEDRAS QUE CAEN: si te cae encima apoyada, te saca vida y se rompe; si no, queda un rato.
 func _check_rocks() -> void:
 	var k := BrawlerSettings.current
@@ -824,6 +889,9 @@ func _drop_warning() -> void:
 		if is_instance_valid(extra):
 			extra.queue_free()
 	_wave_sides.clear()
+	if _flame != null and is_instance_valid(_flame):
+		_flame.queue_free()
+	_flame = null
 	if _rock != null and is_instance_valid(_rock):
 		_rock.queue_free()
 	_rock = null

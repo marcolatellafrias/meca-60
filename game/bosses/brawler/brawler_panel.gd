@@ -36,10 +36,13 @@ const LABELS := {
 	"hook_windup": "aviso: la franja (s)", "hook_lock": "ya apuntó, quieta (s)", "hook_speed": "la mano sale a (m/s)",
 	"hook_reach": "llega hasta (m)", "hook_width": "ancho (m)", "swing_time": "te revolea (s)",
 	"swing_speed": "a (°/s)", "fling_distance": "te tira a (m)", "fling_arc": "el arco sube (m)",
+	"flame_windup": "aviso: abre el horno (s)", "flame_time": "el chorro dura (s)", "flame_sweep": "barre (°)",
+	"flame_reach": "llega hasta (m)", "flame_angle": "medio ancho (°)", "flame_damage": "te saca (vida)",
+	"flame_push": "te empuja (m)", "flame_recover": "después, horno abierto (s)",
 	"fling_time": "vuelo (s)", "fling_damage": "al caer te saca (vida)", "hook_recover": "se queda después (s)",
 }
 const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Ira", "Embestida", "Golpe al piso", "Arrancar el piso",
-	"Trompo", "Agarre", "Golpes", "Arena"]
+	"Trompo", "Agarre", "Lanzallamas", "Golpes", "Arena"]
 
 
 func setup_panel() -> void:

@@ -6,7 +6,7 @@ extends RefCounted
 ## el agarre, el aviso de cada ataque y el cambio de ira (el usuario: «tal vez una audio cue… audio cues para las
 ## distintas etapas de ira o no ira del boss»). Se tocan en un punto del mundo y se van solos.
 
-enum Kind { HIT, KNOCKDOWN, LAND, GRAB, WINDUP, RAGE_ON, RAGE_OFF }
+enum Kind { HIT, KNOCKDOWN, LAND, GRAB, WINDUP, RAGE_ON, RAGE_OFF, FLAME }
 
 const RATE := 22050
 ## Hasta dónde se oye (m) y a qué distancia empieza a bajar: todo es enorme.
@@ -79,6 +79,13 @@ static func _build(kind: Kind) -> AudioStreamWAV:
 			samples = _render(1.2, func(t: float, phase: float) -> float:
 				return sin(phase) * exp(-t * 3.0) * 0.5 + noise.randf_range(-1.0, 1.0) * sin(minf(t / 1.2, 1.0) * PI) * 0.25,
 				func(t: float) -> float: return lerpf(220.0, 70.0, t / 1.2))
+	if kind == Kind.FLAME:
+		# EL LANZALLAMAS: un rugido de ruido grave, parejo, que se apaga al final.
+		var low := 0.0
+		samples = _render(2.4, func(t: float, phase: float) -> float:
+			low = lerpf(low, noise.randf_range(-1.0, 1.0), 0.12)
+			return (low * 2.2 + sin(phase) * 0.25) * minf(t * 6.0, 1.0) * clampf((2.4 - t) * 3.0, 0.0, 1.0) * 0.6,
+			func(_t: float) -> float: return 60.0)
 	var data := PackedByteArray()
 	data.resize(samples.size() * 2)
 	for index in samples.size():

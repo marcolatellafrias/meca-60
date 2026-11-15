@@ -63,6 +63,7 @@ Cómo lo hacen los Souls, y cómo queda acá:
 | La piedra | el círculo donde cae | te derriba, 10 m desde el medio |
 | El trompo | la parte de afuera de los dos brazos, hasta el puño (barriendo entre paso y paso); pegada al cuerpo, a salvo | te empuja 16 m de costado, parada |
 | El agarre | la mano | te agarra, te revolea y te tira; al caer, derribada |
+| El lanzallamas (con ira) | el cono del chorro | te empuja 12 m, parada |
 | Tus piñas al jefe | (de la meca) | él no se mueve: se pone blanco, chispas y sonido |
 
 **El dash intocable** (15/11/2026, del módulo Meca con el sí del usuario: `BalanceBody.untouchable()`, 0,35 s desde

@@ -4,7 +4,7 @@ extends Node
 ## `GAPS`. Cada manera de esquivar, cuántas veces la alcanzó: quieta; caminando de costado desde el aviso; caminando
 ## de costado desde que arranca; y el dash de costado cuando el jefe está a tantos metros (con y sin caminar después).
 ## También el golpe al piso (--solo-piso), la piedra de arrancar el piso (--solo-piedra), el trompo (--solo-trompo) y
-## el agarre (--solo-agarre).
+## el agarre (--solo-agarre) y el lanzallamas (--solo-fuego).
 ##   godot --headless --path . res://tests/brawler_dodge_check.tscn
 
 const GAPS := [50.0, 80.0, 110.0]
@@ -49,6 +49,10 @@ func _ready() -> void:
 		k.charge_windup, k.charge_speed, k.charge_homing, KinematicSettings.current.walk_speed,
 		KinematicSettings.current.dash_distance, KinematicSettings.current.dash_time])
 	var args := OS.get_cmdline_user_args()
+	if args.has("--solo-fuego"):
+		await _flames(k)
+		get_tree().quit()
+		return
 	if args.has("--solo-trompo") or args.has("--solo-agarre"):
 		if args.has("--solo-trompo"):
 			await _spins(k)
@@ -151,6 +155,65 @@ func _try_spin(gap: float, how: String, at: float) -> String:
 		print("   %s %.0f: a los %.2f s, la meca a %.1f m de su medio%s" % [how, at, clock, off.length(),
 			", con el dash" if dashed else ""])
 	return "X" if _brain.spun > spun else "·"
+
+
+## EL LANZALLAMAS (sólo con ira): quieta, caminando para atrás, de costado con el barrido o contra él, y el dash contra
+## el barrido (intocable, cruzando el chorro) cuando el chorro está a tantos grados.
+func _flames(k: BrawlerSettings) -> void:
+	print("el lanzallamas: aviso %.2f s, barre %.0f° en %.1f s, llega a %.0f m, medio ancho %.0f°" % [k.flame_windup,
+		k.flame_sweep, k.flame_time, k.flame_reach, k.flame_angle])
+	for gap: float in [30.0, 45.0]:
+		var line := "a %3.0f m:" % gap
+		for how: String in ["still", "walk_back", "walk_with", "walk_against"]:
+			line += " %s %s" % [how, await _try_flame(gap, how, 0.0)]
+		line += " · dash contra el chorro a"
+		for at: float in [15.0, 25.0, 40.0]:
+			line += " %.0f° %s" % [at, await _try_flame(gap, "dash_against", at)]
+		print(line)
+
+
+func _try_flame(gap: float, how: String, at: float) -> String:
+	await _place(gap)
+	var burned := _brain.burned
+	_brain.awake = true
+	await get_tree().physics_frame
+	_brain._begin(BrawlerBrain.Act.FLAME)
+	var dashed := false
+	var clock := 0.0
+	while clock < 8.0 and _brain.act == BrawlerBrain.Act.FLAME and _brain.burned == burned:
+		await get_tree().physics_frame
+		clock += 1.0 / Engine.physics_ticks_per_second
+		_face_boss()
+		_mech.move = Vector2.ZERO
+		_mech.dash = false
+		var flame := _brain._flame
+		if flame == null:
+			continue
+		# Hacia qué lado (de costado, en el mundo) viene el chorro, visto desde la meca.
+		var to_mech := (_mech.mover.global_position - _boss.global_position) * Vector3(1, 0, 1)
+		var way := Basis(Vector3.UP, _boss.waist_yaw) * Vector3.FORWARD
+		var coming := to_mech.normalized().cross(Vector3.UP) * signf(to_mech.cross(way).y)
+		var right := _mech.global_basis.x
+		var against := Vector2(-signf(coming.dot(right)), 0.0)
+		if how == "walk_back":
+			_mech.move = Vector2(0.0, -1.0)
+		elif how == "walk_with":
+			_mech.move = -against
+		elif how == "walk_against":
+			_mech.move = against
+		elif how == "dash_against" and not dashed and _brain._step == 1:
+			if rad_to_deg(way.angle_to(to_mech.normalized())) <= at:
+				dashed = true
+				_mech.move = against
+				_mech.dash = true
+	_mech.move = Vector2.ZERO
+	_mech.dash = false
+	if OS.get_cmdline_user_args().has("--ver") and _brain.burned > burned:
+		var off := (_mech.mover.global_position - _boss.global_position) * Vector3(1, 0, 1)
+		var way := Basis(Vector3.UP, _boss.waist_yaw) * Vector3.FORWARD
+		print("   %s %.0f: a los %.2f s (paso %d), a %.1f m, el chorro a %.0f° de la meca%s" % [how, at, clock,
+			_brain._step, off.length(), rad_to_deg(way.angle_to(off.normalized())), ", con el dash" if dashed else ""])
+	return "X" if _brain.burned > burned else "·"
 
 
 ## EL AGARRE: quieta, caminando de costado desde el aviso, desde que apuntó o desde que sale la mano, y el dash de
