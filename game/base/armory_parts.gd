@@ -15,7 +15,7 @@ extends RefCounted
 
 const STEEL := Color(0.68, 0.7, 0.72)
 const PLATE := Color(0.6, 0.62, 0.62)
-const ENERGY := Color(0.55, 0.8, 0.85)
+const CANNON_COLOR := Color(0.3, 0.31, 0.33)
 const FOREARM_COLOR := Color(0.47, 0.49, 0.52)
 ## El antebrazo y la mano de la meca, en su medida base.
 const FOREARM := 5.5
@@ -90,16 +90,16 @@ static func _drill(root: Node3D) -> void:
 			Vector3(90, 0, 14))
 
 
-## EL CAÑÓN DE ENERGÍA: un caño grueso en el eje, con cuatro bobinas que se ven de lejos.
+## EL CAÑÓN DE ENERGÍA: un solo cilindro grande en el eje, gris oscuro, con su boca al frente. El usuario, 15/11/2026:
+## en vez de varios discos, «todo un gran cilindro», y no celeste: «un gris más oscuro».
 static func _energy_cannon(root: Node3D) -> void:
 	Clay.cylinder(root, 1.2, 1.0, Vector3(0, 0, TIP - 1.2), Clay.METAL.darkened(0.1), Vector3(90, 0, 0))
 	var length := 5.6
 	var start := TIP - 1.7
-	Clay.cylinder(root, 0.75, length, Vector3(0, 0, start - length * 0.5), Clay.DARK, Vector3(90, 0, 0))
-	for i in 4:
-		Clay.cylinder(root, 1.45, 0.4, Vector3(0, 0, start - 0.7 - i * 1.05), ENERGY, Vector3(90, 0, 0))
-	Clay.cylinder(root, 1.05, 0.8, Vector3(0, 0, start - length), MechBody.JOINT_COLOR, Vector3(90, 0, 0))
-	Clay.cylinder(root, 0.6, 0.1, Vector3(0, 0, start - length - 0.42), ENERGY.lightened(0.3), Vector3(90, 0, 0))
+	Clay.cylinder(root, 1.45, length - 1.0, Vector3(0, 0, start - (length - 1.0) * 0.5), CANNON_COLOR,
+		Vector3(90, 0, 0))
+	Clay.cylinder(root, 1.05, 0.8, Vector3(0, 0, start - length + 0.4), MechBody.JOINT_COLOR, Vector3(90, 0, 0))
+	Clay.cylinder(root, 0.6, 0.1, Vector3(0, 0, start - length - 0.02), Clay.DARK, Vector3(90, 0, 0))
 
 
 ## LA SIERRA: un disco grande, parado en el eje del antebrazo, sostenido por una horquilla.
