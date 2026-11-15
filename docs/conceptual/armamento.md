@@ -25,6 +25,12 @@ cualquiera, y lo que se elige es **qué usar en qué momento**, no qué equipar 
   gesto se dibuja con una palanca y el brazo lo sigue con inercia, llega tarde y se pasa) y guardia. La espada es un
   objeto que la mano agarra: puede soltarla. Paneles en 2D pixelado (grises, pantallas negro y verde), con la forma de
   la iteración 41: tramo arriba, cajas en los parantes, módulos abajo sobre una franja común con la energía.
+- **El mouse, sentado (15/11/2026):** la cámara queda trabada al frente y el cursor anda libre por el tablero. **Una
+  palanca se agarra manteniendo el clic izquierdo**: el mouse la mueve; al soltar, el cursor vuelve a estar libre y la
+  palanca queda donde quedó. **Mientras se la tiene, el clic derecho es el gatillo de su bocha**: en el movimiento,
+  saltar (en el aire, levitar); en el cañón, disparar (mantenido carga el súper); en la espada, la estocada (mantenida
+  carga). El tajo sale de mover la palanca de la hoja. Se fueron los botones de salto, levitar, gatillo y golpe, y la
+  pantalla del gesto (se ve en el vidrio). **Una mano, un control a la vez**: para cambiar de modo hay que soltar.
 - **Tres pasajeros, sin espalda (15/11/2026, lo último; manda sobre lo de abajo):** la meca cuadrada tiene tres
   sillas, las tres adelante. **Izquierda, el brazo izquierdo; derecha, el derecho; al medio, el movimiento.** Se fue la
   silla de la tarima. **Las armas de la espalda desaparecen** (la ametralladora y los misiles; el usuario: «desaparecen»).
