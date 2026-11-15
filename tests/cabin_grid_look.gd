@@ -5,8 +5,9 @@ extends Node3D
 ## arriba; y desde arriba, sin techo. Imprime las medidas (ver CabinGrid).
 ##   tools/godot_ventana.sh res://tests/cabin_grid_look.tscn -- --salida=C:/carpeta --celdas=13,11
 ## `--celdas=13,11`: las celdas de trama (en celdas chicas) que mira; sin eso, la guardada. Y, si se quiere, la misma
-## forma con otro vidrio, tarima o marco: `--costados=9 --techo=6 --tarima=1.8 --marco=2 --ascensor_cuadrado=1` (ver CabinShape).
+## forma con otro vidrio, tarima o marco: `--costados=9 --techo=6 --marco=2` (ver CabinShape).
 ## La cabeza: `--cabeza=1` (en rampa) `--frente=73 --alto=96` (los altos libres, en celdas chicas) y `--zocalo=12`.
+## La planta: `--esquinas=0 --pelvis=25`. Las sillas: `--silla_medio=16 --silla_brazos=48 --silla_atras=13`.
 ## Afuera, además del de frente, de perfil y de tres cuartos de atrás.
 
 const VIEW := Vector2i(1280, 720)
@@ -26,9 +27,9 @@ func _ready() -> void:
 		if argument.begins_with("--celdas="):
 			for each in argument.trim_prefix("--celdas=").split(","):
 				_cells.append(int(each))
-		for knob: String in ["costados:side_glass", "techo:roof_glass", "tarima:platform_height", "marco:frame_kind",
-				"ascensor_cuadrado:lift_square", "cabeza:head", "frente:front_height_cells", "alto:height_cells", "zocalo:sill_cells",
-				"chanfle:chamfer", "interior:interior", "pelvis:base_cells", "esquinas:corner_cells"]:
+		for knob: String in ["costados:side_glass", "techo:roof_glass", "marco:frame_kind", "cabeza:head", "frente:front_height_cells", "alto:height_cells", "zocalo:sill_cells",
+				"chanfle:chamfer", "pelvis:base_cells", "esquinas:corner_cells", "silla_medio:seat_front_cells",
+				"silla_brazos:seat_spread_cells", "silla_atras:seat_back_cells"]:
 			var parts := knob.split(":")
 			if argument.begins_with("--%s=" % parts[0]):
 				_changes[parts[1]] = float(argument.trim_prefix("--%s=" % parts[0]))
@@ -68,13 +69,12 @@ func _ready() -> void:
 		var form := CabinGrid.current()
 		form.cell = cell
 		for knob: String in _changes:
-			var value: Variant = _changes[knob] if knob == "platform_height" else int(_changes[knob])
-			form.set(knob, value == 1 if knob == "lift_square" else value)
+			form.set(knob, int(_changes[knob]))
 		CabinGrid.shape(form)
 		var name_of := "celda de %d cm · %.2f m por dentro · %.2f m libres" % [roundi(CabinGrid.TRAMA * 100.0),
 			CabinGrid.INNER * 2.0, CabinGrid.CLEAR]
 		print("TRAMA %s · caja de %.2f × %.2f m · ascensor de %.2f m de radio · sillas: %d" % [name_of, CabinGrid.SIZE,
-			CabinGrid.HEIGHT, PelvisLift.hole(), CabinGrid.front_seats().size() + 1])
+			CabinGrid.HEIGHT, SquareCabin.lift_radius(), CabinGrid.front_seats().size() + 1])
 		_mech = Mech.new()
 		_mech.arms_kind = Mech.Arms.POSE
 		_mech.position = Vector3(0.0, Mech.standing_height(), 0.0)

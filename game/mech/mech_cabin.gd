@@ -1,27 +1,18 @@
 class_name MechCabin
 extends Node3D
 
-## LA CABINA DE LA MECA: lo que se ve de la caja y por donde se camina. Este nodo es EL DIBUJO (va con la caja). Las
-## medidas salen de la trama (CabinGrid), que se cambia jugando (el F2).
-##   · UN SOLO PISO, con el recorte del ascensor en el medio (PelvisLift), y el techo.
-##   · ADELANTE, EL VIDRIO, SIN MARCOS (`_glass`): el frente y los costados (hasta CabinGrid.SIDE_GLASS), de piso a
-##     techo, la arista de arriba del frente cortada a 45° y el techo hasta CabinGrid.ROOF_GLASS, también de vidrio.
-##     Paños planos que se tocan justo en las aristas (el usuario,
-##     14/11/2026: «toda esa zona de cristal… el suelo no… en la esquina superior delantera, tenga un chamfer»). Lo
-##     demás, de metal: la pared de atrás, los costados y el techo desde donde termina el vidrio.
-##   · O LA CABEZA EN RAMPA (CabinGrid.ramp): sin el corte; el frente más bajo (CabinGrid.front_clear) y el techo de
-##     vidrio que sube desde él hasta donde termina el de los costados; de ahí atrás, el techo de metal, alto.
-##   · ABAJO DEL VIDRIO, EL ZÓCALO (CabinGrid.sill): chapa llena, del frente y de los costados; en 0, no hay.
-##   · ADELANTE, EL TABLERO CORRIDO con sus tres puestos (un brazo a cada lado y la espalda al medio).
-##   · ATRÁS, LA TARIMA de pared a pared, con el movimiento arriba al medio, y una escalera recta contra cada costado. En
-##     el frente de la tarima, de cara al ascensor, los cuatro kits y la batería; arriba, en la pared de atrás, la
-##     munición (por ahora, sólo se ven: los huecos de verdad vienen con los recursos).
-##   · EL MARCO (MotionFrame): adentro se camina. El piso, las paredes, el vidrio, el tablero y la tarima tienen sus
-##     formas de choque en `interior`, un cuerpo que NO choca con nada: es de donde el marco copia su SOMBRA. El que
-##     entra a la caja pasa a ir en el marco, que lo lleva con la meca, y choca sólo con esa sombra. Y LA CAJA DE AFUERA,
-##     que es maciza y es la que choca con el mundo, deja de chocar con él (`ride`).
-## *Hasta el 14/11/2026 era de varios pisos, con una caja de vidrio que sobresalía, puertas atrás y una pasarela y
-## escaleras por afuera (MechExterior) o una escalera adentro (MechInsideStairs), a elegir. Se sacó todo.*
+## LO DE TODA CABINA DE LA MECA (la cuadrada, SquareCabin; la redonda, RoundCabin): lo que se ve de la caja y por donde
+## se camina adentro. Cada una arma lo suyo en su `_ready` y dice dónde va la silla de arriba (`top_seat`), cómo es su
+## marco (`build_frame`) y adónde sube la U (`board`). Lo de todas, acá:
+##   · LAS SILLAS (`chairs`, en el orden de `POSTS`) y los maniquíes sentados en ellas (`seat_dummies`).
+##   · EL MARCO (MotionFrame): adentro se camina. Las formas de choque van en `interior`, un cuerpo que NO choca con nada:
+##     es de donde el marco copia su SOMBRA. El que entra a la caja pasa a ir en el marco, que lo lleva con la meca, y
+##     choca sólo con esa sombra. Y LA CAJA DE AFUERA, que es maciza y es la que choca con el mundo, deja de chocar con
+##     él (`ride`).
+##   · LAS PIEZAS: el vidrio (`_pane`), las barras del marco del vidrio (`_bar`), las placas con hueco y sus choques.
+## *Hasta el 15/11/2026 este era también el interior de la cuadrada de antes: la tarima atrás de pared a pared con dos
+## escaleras, el tablero corrido con sus divisores y la caja sin chanfles, con el vidrio y su marco armados a mano para
+## cada cabeza. Se retiró (el usuario: «dale, hacé todo eso»): la cuadrada es SquareCabin.*
 
 const SLAB := CabinGrid.SLAB
 const WALL := CabinGrid.WALL
@@ -41,198 +32,85 @@ var mech: Mech = null
 var frame: MotionFrame = null
 var lift: PelvisLift = null
 var interior: StaticBody3D = null
-## Las sillas (ver `_seats`, en el orden de `POSTS`) y los maniquíes sentados en ellas (ver `seat_dummies`).
+## Las sillas (las pone cada una, en el orden de `POSTS`) y los maniquíes sentados en ellas (ver `seat_dummies`).
 var chairs: Array[SeatInteractable] = []
 var dummies: Array[Node3D] = []
 
 var _riders := {}
 
 
-## La silla desde la que se mira en primera persona al poseer la meca: la del movimiento, arriba.
-static func seat() -> Vector3:
-	return CabinGrid.top_seat()
-
-
-## La misma, de esta cabina (la redonda pone la suya).
+## La silla desde la que se mira en primera persona al poseer la meca: la del movimiento, arriba (la pone cada una).
 func top_seat() -> Vector3:
-	return CabinGrid.top_seat()
+	return Vector3.ZERO
 
 
-func _ready() -> void:
-	name = "Cabina"
-	interior = StaticBody3D.new()
-	interior.name = "Interior"
-	interior.collision_layer = 0
-	interior.collision_mask = 0
-	add_child(interior)
-	var metal := Clay.METAL
-	var floor_top := CabinGrid.floor_top()
-	var ceiling := CabinGrid.ceiling()
-	var half := CabinGrid.HALF
-	var trama := CabinGrid.TRAMA
-	# En rampa, sin corte, y el vidrio del techo (la rampa) llega hasta donde el de los costados.
-	var cut := 0.0 if CabinGrid.ramp() else CabinGrid.CHAMFER * trama
-	# Hasta dónde llega el vidrio de los costados y el del techo (el del techo, por lo menos hasta el corte).
-	var side_to := CabinGrid.line(CabinGrid.SIDE_GLASS)
-	var roof_to := side_to if CabinGrid.ramp() else maxf(CabinGrid.line(CabinGrid.ROOF_GLASS), -half + cut)
-	# El piso, con el recorte del ascensor; el techo de metal, de donde termina el vidrio hasta atrás.
-	PelvisLift.build_floor(self, interior, floor_top - SLAB * 0.5, SLAB, metal.darkened(0.12))
-	_solid(Vector3(CabinGrid.SIZE, SLAB, half - roof_to), Vector3(0, ceiling + SLAB * 0.5, (roof_to + half) * 0.5), metal)
-	# De metal: la pared de atrás y los costados de donde termina el vidrio hasta ella.
-	var mid := (floor_top + ceiling) * 0.5
-	_solid(Vector3(CabinGrid.SIZE, CabinGrid.CLEAR, WALL), Vector3(0, mid, half - WALL * 0.5), metal)
-	var back := half - WALL
-	if back - side_to > 0.01:
-		for side: float in [-1.0, 1.0]:
-			_solid(Vector3(WALL, CabinGrid.CLEAR, back - side_to), Vector3(side * (half - WALL * 0.5), mid, (side_to + back) * 0.5),
-				metal)
-	# EL ZÓCALO: del frente y de cada costado, en el espesor de la pared, hasta donde llega el vidrio.
-	var sill := CabinGrid.sill()
-	if sill > 0.0:
-		var low := floor_top + sill * 0.5
-		_solid(Vector3(CabinGrid.SIZE, sill, WALL), Vector3(0, low, -half + WALL * 0.5), metal)
-		for side: float in [-1.0, 1.0]:
-			_solid(Vector3(WALL, sill, side_to + half - WALL), Vector3(side * (half - WALL * 0.5), low, (side_to - half + WALL) * 0.5),
-				metal)
-	if CabinGrid.ramp():
-		_ramp_glass(side_to)
-		_ramp_frame(side_to)
-	else:
-		_glass(cut, side_to, roof_to)
-		_frame(cut, side_to, roof_to)
-	_desk()
-	_platform()
-	_seats()
-	lift = PelvisLift.new()
-	lift.solid = interior
-	add_child(lift)
+## EL MARCO, con sus volúmenes y su sombra (lo arma cada una, cuando la meca ya tiene todo armado).
+func build_frame() -> void:
+	push_error("MechCabin: la cabina %s no arma su marco" % name)
 
 
-## EL VIDRIO, EN PAÑOS EXACTOS Y SIN MARCOS: el frente hasta el corte, el corte a 45° de arista a arista, el techo
-## hasta `roof_to` y cada costado hasta `side_to`, con su esquina cortada igual. Todos van en la cara de afuera de la
-## caja y se tocan justo en las aristas.
-func _glass(cut: float, side_to: float, roof_to: float) -> void:
-	var half := CabinGrid.HALF
-	var y0 := CabinGrid.floor_top() + CabinGrid.sill()
-	var y1 := CabinGrid.HALF_HEIGHT
-	var yc := y1 - cut
-	var front := -half + 0.02
-	var side_x := half - 0.02
-	_pane([Vector3(-side_x, y0, front), Vector3(side_x, y0, front), Vector3(side_x, yc, front), Vector3(-side_x, yc, front)])
-	if cut > 0.0:
-		_pane([Vector3(-side_x, yc, front), Vector3(side_x, yc, front), Vector3(side_x, y1, front + cut),
-			Vector3(-side_x, y1, front + cut)])
-		Clay.shape_box(interior, Vector3(CabinGrid.SIZE, 0.1, cut * sqrt(2.0)), Vector3(0, yc + cut * 0.5, front + cut * 0.5),
-			Basis(Vector3.RIGHT, -PI * 0.25))
-	Clay.shape_box(interior, Vector3(CabinGrid.SIZE, yc - y0, 0.1), Vector3(0, (y0 + yc) * 0.5, front - 0.03))
-	var roof_from := front + cut
-	if roof_to - roof_from > 0.01:
-		_pane([Vector3(-side_x, y1, roof_from), Vector3(side_x, y1, roof_from), Vector3(side_x, y1, roof_to),
-			Vector3(-side_x, y1, roof_to)])
-		Clay.shape_box(interior, Vector3(CabinGrid.SIZE, 0.1, roof_to - roof_from), Vector3(0, y1 - 0.05, (roof_from + roof_to) * 0.5))
-	for side: float in [-1.0, 1.0]:
-		var x := side * side_x
-		_pane([Vector3(x, y0, front), Vector3(x, y0, side_to), Vector3(x, y1, side_to), Vector3(x, y1, front + cut),
-			Vector3(x, yc, front)])
-		Clay.shape_box(interior, Vector3(0.1, y1 - y0, side_to - front), Vector3(side * (half - 0.02), (y0 + y1) * 0.5,
-			(front + side_to) * 0.5))
+## SUBE AL JUGADOR (la U del sandbox): cada una dice adónde.
+func board() -> void:
+	pass
 
 
-## EL MARCO DEL VIDRIO (CabinGrid.FRAME_KIND; el usuario, 15/11/2026: «dejaría ambos como opciones… con una tercera
-## opción que sea sin nada… que pueda cambiar el grosor independientemente de los principales… a los de los puestos»).
-##   · LAS ARISTAS, con una sola regla: TODO BORDE DE UN PAÑO lleva marco, también donde el vidrio se junta con la chapa
-##     o con el piso («preferiría que elijas… yo diría que es con el límite, así tenemos más consistencia»).
-##   · LOS PARANTES ENTRE PUESTOS: en cada división del tablero, uno que sube por el frente, dobla por el corte y sigue
-##     por el vidrio del techo. Caen donde nadie mira. En los costados, ninguno: sólo el del límite con la chapa (el
-##     usuario, 15/11/2026: «no me interesa tener el parante lateral… solamente el del límite»).
-## Son barras cuadradas centradas en la arista; sólo se ven (adentro, se choca con el vidrio).
-func _frame(cut: float, side_to: float, roof_to: float) -> void:
-	if CabinGrid.FRAME_KIND == 0:
+## LOS PUESTOS de las sillas de adelante (ver SeatStation, sesión Tableros). Por ahora ninguna: los puestos se apoyaban
+## en el tablero de la cuadrada de antes, que se retiró; vuelven cuando pasen a la silla.
+func _stations() -> void:
+	pass
+
+
+## UN MANIQUÍ SENTADO EN CADA SILLA, para ver la escala de adentro (el usuario, 13/11/2026: «le pondría los asientos
+## reales y dejaría sentados… unos dummies. Así veo cómo se siente la escala de adentro»). Personajes de la calle, de
+## varios cuerpos, que van al lado de la meca en el árbol y los lleva su silla. Los sienta la meca de brazos, no la de
+## práctica.
+func seat_dummies() -> void:
+	var holder := mech.get_parent() as Node3D
+	if holder == null:
 		return
-	var h := CabinGrid.HALF
-	var y0 := CabinGrid.floor_top() + CabinGrid.sill()
-	var y1 := CabinGrid.HALF_HEIGHT
-	var yc := y1 - cut
-	var f := -h
-	var roof_from := f + cut
-	var edge := CabinGrid.EDGE_THICKNESS
-	# El frente: abajo, el pliegue con el corte y el del corte con el techo; el vidrio del techo, su borde de atrás.
-	_bar(Vector3(-h, y0, f), Vector3(h, y0, f), edge)
-	if cut > 0.0:
-		_bar(Vector3(-h, yc, f), Vector3(h, yc, f), edge)
-	_bar(Vector3(-h, y1, roof_from), Vector3(h, y1, roof_from), edge)
-	if roof_to - roof_from > 0.01:
-		_bar(Vector3(-h, y1, roof_to), Vector3(h, y1, roof_to), edge)
-	for side: float in [-1.0, 1.0]:
-		var x := side * h
-		_bar(Vector3(x, y0, f), Vector3(x, yc, f), edge)
-		if cut > 0.0:
-			_bar(Vector3(x, yc, f), Vector3(x, y1, roof_from), edge)
-		# Arriba, la arista del costado con el techo: hasta donde llegue el vidrio de cualquiera de los dos.
-		_bar(Vector3(x, y1, roof_from), Vector3(x, y1, maxf(side_to, roof_to)), edge)
-		_bar(Vector3(x, y0, f), Vector3(x, y0, side_to), edge)
-		_bar(Vector3(x, y0, side_to), Vector3(x, y1, side_to), edge)
-	if CabinGrid.FRAME_KIND < 2:
-		return
-	var post := CabinGrid.POST_THICKNESS
-	for x in CabinGrid.post_lines():
-		_bar(Vector3(x, y0, f), Vector3(x, yc, f), post)
-		if cut > 0.0:
-			_bar(Vector3(x, yc, f), Vector3(x, y1, roof_from), post)
-		if roof_to - roof_from > 0.01:
-			_bar(Vector3(x, y1, roof_from), Vector3(x, y1, roof_to), post)
+	# EL PUESTO (ver SeatStation, sesión Tableros): en cada silla de adelante con su puesto abierto. La primera silla de
+	# la derecha, la del brazo derecho, queda sin maniquí, para sentarse uno con E.
+	_stations()
+	var free_chair: SeatInteractable = null
+	for chair_found in chairs:
+		if chair_found.position.x > 0.0:
+			free_chair = chair_found
+			break
+	for i in chairs.size():
+		if chairs[i] == free_chair:
+			continue
+		var dummy := (load(DUMMY_SCENE) as PackedScene).instantiate() as BoneInstantiator
+		dummy.kind = CharacterKind.npc()
+		dummy.master_seed = EntityInstantiation.debug_seed(DUMMY_BODIES[i % DUMMY_BODIES.size()], i)
+		holder.add_child(dummy)
+		dummies.append(dummy)
+		# Aparece adentro de la caja maciza: que no la empuje antes de que el marco lo lleve (ver `ride`).
+		mech.add_collision_exception_with(dummy.char_rigidbody)
+		dummy.place_at(chairs[i].global_position + chairs[i].global_basis.z * 0.8, chairs[i].heading())
+		dummy.intent.seat = chairs[i]
 
 
-## EL VIDRIO DE LA CABEZA EN RAMPA (ver CabinGrid.ramp): el frente, del zócalo al alto del frente; la rampa, de ahí
-## hasta `side_to` arriba de todo; cada costado, con el borde de arriba inclinado. Como en `_glass`, en la cara de
-## afuera de la caja, y adentro se choca.
-func _ramp_glass(side_to: float) -> void:
-	var half := CabinGrid.HALF
-	var y0 := CabinGrid.floor_top() + CabinGrid.sill()
-	var yf := CabinGrid.floor_top() + CabinGrid.front_clear() + SLAB
-	var yb := CabinGrid.HALF_HEIGHT
-	var front := -half + 0.02
-	var side_x := half - 0.02
-	_pane([Vector3(-side_x, y0, front), Vector3(side_x, y0, front), Vector3(side_x, yf, front), Vector3(-side_x, yf, front)])
-	Clay.shape_box(interior, Vector3(CabinGrid.SIZE, yf - y0, 0.1), Vector3(0, (y0 + yf) * 0.5, front - 0.03))
-	_pane([Vector3(-side_x, yf, front), Vector3(side_x, yf, front), Vector3(side_x, yb, side_to), Vector3(-side_x, yb, side_to)])
-	var along := Vector3(0.0, yb - yf, side_to - front)
-	var slope := along.normalized()
-	Clay.shape_box(interior, Vector3(CabinGrid.SIZE, 0.1, along.length()), Vector3(0, (yf + yb) * 0.5, (front + side_to) * 0.5),
-		Basis(Vector3.RIGHT, slope.cross(Vector3.RIGHT), slope))
-	for side: float in [-1.0, 1.0]:
-		var x := side * side_x
-		_pane([Vector3(x, y0, front), Vector3(x, y0, side_to), Vector3(x, yb, side_to), Vector3(x, yf, front)])
-		Clay.shape_box(interior, Vector3(0.1, yb - y0, side_to - front), Vector3(x, (y0 + yb) * 0.5, (front + side_to) * 0.5))
+## Saca a los maniquíes (van al lado de la meca en el árbol, no adentro): para cuando la meca se cambia por otra.
+func free_dummies() -> void:
+	for dummy in dummies:
+		if is_instance_valid(dummy):
+			dummy.queue_free()
+	dummies.clear()
 
 
-## EL MARCO DE LA CABEZA EN RAMPA, con las reglas de `_frame`: todo borde de un paño (abajo, sobre el zócalo; el pliegue
-## del frente con la rampa; la punta de la rampa contra el techo de metal; las esquinas y los bordes de los costados) y,
-## si van, los parantes entre puestos, que suben por el frente y siguen por la rampa.
-func _ramp_frame(side_to: float) -> void:
-	if CabinGrid.FRAME_KIND == 0:
-		return
-	var h := CabinGrid.HALF
-	var y0 := CabinGrid.floor_top() + CabinGrid.sill()
-	var yf := CabinGrid.floor_top() + CabinGrid.front_clear() + SLAB
-	var yb := CabinGrid.HALF_HEIGHT
-	var f := -h
-	var edge := CabinGrid.EDGE_THICKNESS
-	_bar(Vector3(-h, y0, f), Vector3(h, y0, f), edge)
-	_bar(Vector3(-h, yf, f), Vector3(h, yf, f), edge)
-	_bar(Vector3(-h, yb, side_to), Vector3(h, yb, side_to), edge)
-	for side: float in [-1.0, 1.0]:
-		var x := side * h
-		_bar(Vector3(x, y0, f), Vector3(x, yf, f), edge)
-		_bar(Vector3(x, yf, f), Vector3(x, yb, side_to), edge)
-		_bar(Vector3(x, y0, f), Vector3(x, y0, side_to), edge)
-		_bar(Vector3(x, y0, side_to), Vector3(x, yb, side_to), edge)
-	if CabinGrid.FRAME_KIND < 2:
-		return
-	var post := CabinGrid.POST_THICKNESS
-	for x in CabinGrid.post_lines():
-		_bar(Vector3(x, y0, f), Vector3(x, yf, f), post)
-		_bar(Vector3(x, yf, f), Vector3(x, yb, side_to), post)
+## LA CAJA DE AFUERA NO CHOCA CON LOS QUE VAN ADENTRO: ellos ya dejaron de mirar al mundo (ver MotionFrame.join), pero
+## la caja los seguía viendo. Se mira quién va en el marco en cada paso.
+func ride() -> void:
+	var inside := {}
+	for body: Variant in frame._members.keys():
+		if is_instance_valid(body) and body is PhysicsBody3D:
+			inside[body] = true
+			if not _riders.has(body):
+				mech.add_collision_exception_with(body as PhysicsBody3D)
+	for body: Variant in _riders.keys():
+		if not inside.has(body) and is_instance_valid(body):
+			mech.remove_collision_exception_with(body as PhysicsBody3D)
+	_riders = inside
 
 
 ## Una barra cuadrada del marco, de `a` a `b`, centrada en la línea.
@@ -270,178 +148,7 @@ func _pane(corners: Array) -> void:
 	add_child(pane)
 
 
-## EL TABLERO DE ADELANTE: la franja de pared a pared y, hacia atrás, los cuatro divisores, todos iguales; entre ellos,
-## el hueco de cada puesto, con la silla adentro. Un puesto cerrado se rellena hasta la punta de los divisores y queda
-## parejo (ver CabinGrid.OPEN_POSTS). Los módulos de cada puesto se apoyan en la franja (sesión Tableros).
-func _desk() -> void:
-	var trama := CabinGrid.TRAMA
-	var depth := CabinGrid.DESK_ROWS * trama
-	var reach := CabinGrid.DIVIDER_ROWS * trama
-	var tall := CabinGrid.DESK_HEIGHT
-	var y := CabinGrid.floor_top() + tall * 0.5
-	var front := CabinGrid.line(0)
-	_solid(Vector3(CabinGrid.INNER * 2.0, tall, depth), Vector3(0, y, front + depth * 0.5), Clay.DARK)
-	var back := reach - depth
-	var behind := front + depth + back * 0.5
-	for index in 4:
-		var left := CabinGrid.divider_cell(index)
-		var x := CabinGrid.line(left + CabinGrid.DIVIDER_CELLS * 0.5)
-		_solid(Vector3(CabinGrid.DIVIDER_CELLS * trama, tall, back), Vector3(x, y, behind), Clay.DARK)
-	for post in 3:
-		if CabinGrid.OPEN_POSTS[post]:
-			continue
-		var x := CabinGrid.line(CabinGrid.divider_cell(post) + CabinGrid.DIVIDER_CELLS + CabinGrid.hole_cells() * 0.5)
-		_solid(Vector3(CabinGrid.hole_cells() * trama, tall, back), Vector3(x, y, behind), Clay.DARK)
-
-
-## LA TARIMA DE ATRÁS, de pared a pared, y una escalera recta contra cada costado (con `Stairs`, la regla de toda
-## escalera: escalones para los pies y una rampa para la cápsula). En su frente, de cara al ascensor, los cuatro kits y
-## la batería, parejos entre las dos escaleras; arriba, en la pared de atrás, la munición (sólo sobresale el cubo).
-func _platform() -> void:
-	var trama := CabinGrid.TRAMA
-	var floor_top := CabinGrid.floor_top()
-	var tall := CabinGrid.PLATFORM_HEIGHT
-	var front := CabinGrid.platform_front()
-	_solid(Vector3(CabinGrid.INNER * 2.0, tall, CabinGrid.INNER - front),
-		Vector3(0, floor_top + tall * 0.5, (front + CabinGrid.INNER) * 0.5), Clay.METAL.darkened(0.05))
-	var width := CabinGrid.STAIR_CELLS * trama
-	var run := Stairs.run_for(tall)
-	for side: float in [-1.0, 1.0]:
-		Stairs.flight(self, Vector3(side * (CabinGrid.INNER - width * 0.5), floor_top, front - run), Vector3.BACK, tall, width,
-			Clay.METAL.lightened(0.15))
-	# Los kits y la batería, cuadrados, en celdas: de 1,2 celdas de trama (61 cm), o menos si no entran a lo ancho o a lo
-	# alto de la tarima.
-	var free := (CabinGrid.INNER - width) * 2.0
-	var kit := minf(1.2 * trama, minf(free / 5.0 * 0.85, tall - 2.0 * CabinGrid.CELL))
-	for index in 5:
-		var x := -free * 0.5 + free * (index + 0.5) / 5.0
-		Clay.box(self, Vector3(kit, kit, 0.06), Vector3(x, floor_top + CabinGrid.CELL + kit * 0.5, front - 0.03),
-			BATTERY if index == 2 else KIT)
-	# La munición: un cubo de 1,6 celdas de trama (82 cm) que sobresale de la pared de atrás, con su tapa de adentro.
-	var ammo := 1.6 * trama
-	for side: float in [-1.0, 1.0]:
-		var at := Vector3(side * 2.5 * trama, floor_top + tall + CabinGrid.CELL * 0.5 + ammo * 0.5, CabinGrid.HALF + ammo * 0.375)
-		Clay.box(self, Vector3(ammo, ammo, ammo * 0.75), at, Clay.METAL)
-		Clay.box(self, Vector3(ammo * 0.75, ammo * 0.75, 0.06), at + Vector3(0, 0, -ammo * 0.775), AMMO)
-
-
-## LAS SILLAS (las de verdad, las de las consolas, `SEAT_SCENE`), mirando al frente: las tres de adelante y la de arriba,
-## en el orden de `POSTS`.
-func _seats() -> void:
-	var places := CabinGrid.front_seats()
-	places.append(CabinGrid.top_seat())
-	for index in places.size():
-		var chair := (load(SEAT_SCENE) as PackedScene).instantiate() as SeatInteractable
-		chair.name = "Asiento %s" % POSTS[index]
-		chair.position = places[index]
-		# La altura de los ojos que busca (ver CabinGrid.EYE_HEIGHT): cada uno se nivela a ella.
-		chair.eye_height = CabinGrid.EYE_HEIGHT
-		add_child(chair)
-		chairs.append(chair)
-
-
-## UN MANIQUÍ SENTADO EN CADA SILLA, para ver la escala de adentro (el usuario, 13/11/2026: «le pondría los asientos
-## reales y dejaría sentados… unos dummies. Así veo cómo se siente la escala de adentro»). Personajes de la calle, de
-## varios cuerpos, que van al lado de la meca en el árbol y los lleva su silla. Los sienta la meca de brazos, no la de
-## práctica.
-func seat_dummies() -> void:
-	var holder := mech.get_parent() as Node3D
-	if holder == null:
-		return
-	# EL PUESTO (ver SeatStation, sesión Tableros): en cada silla de adelante con su puesto abierto. La primera silla de
-	# la derecha, la del brazo derecho, queda sin maniquí, para sentarse uno con E.
-	_stations()
-	var free_chair: SeatInteractable = null
-	for chair_found in chairs:
-		if chair_found.position.x > 0.0:
-			free_chair = chair_found
-			break
-	for i in chairs.size():
-		if chairs[i] == free_chair:
-			continue
-		var dummy := (load(DUMMY_SCENE) as PackedScene).instantiate() as BoneInstantiator
-		dummy.kind = CharacterKind.npc()
-		dummy.master_seed = EntityInstantiation.debug_seed(DUMMY_BODIES[i % DUMMY_BODIES.size()], i)
-		holder.add_child(dummy)
-		dummies.append(dummy)
-		# Aparece adentro de la caja maciza: que no la empuje antes de que el marco lo lleve (ver `ride`).
-		mech.add_collision_exception_with(dummy.char_rigidbody)
-		dummy.place_at(chairs[i].global_position + chairs[i].global_basis.z * 0.8, chairs[i].heading())
-		dummy.intent.seat = chairs[i]
-
-
-## LOS PUESTOS de las sillas de adelante (ver SeatStation). La redonda, por ahora, sin.
-func _stations() -> void:
-	SeatStation.attach(self)
-
-
-## Saca a los maniquíes (van al lado de la meca en el árbol, no adentro): para cuando la meca se cambia por otra.
-func free_dummies() -> void:
-	for dummy in dummies:
-		if is_instance_valid(dummy):
-			dummy.queue_free()
-	dummies.clear()
-
-
-## Una pieza de la cabina que se ve y que, adentro, se choca.
-func _solid(size: Vector3, at: Vector3, color: Color) -> void:
-	Clay.box(self, size, at, color)
-	Clay.shape_box(interior, size, at)
-
-
-## EL MARCO, con sus volúmenes (la caja y el hueco del ascensor), y su sombra: la copia de las formas de `interior` y de
-## los escalones y las rampas de las escaleras. El marco copia las de un cuerpo de la capa 1; `interior` lo es sólo
-## mientras se copia. Se llama cuando la meca ya tiene todo armado.
-func build_frame() -> void:
-	frame = MotionFrame.new()
-	mech.add_child(frame)
-	frame.floor_height = CabinGrid.floor_top()
-	frame.add_volume(AABB(-CabinGrid.box() * 0.5, CabinGrid.box()))
-	frame.add_volume(PelvisLift.shaft())
-	interior.collision_layer = 1
-	frame.cast_shadow(self)
-	interior.collision_layer = 0
-	interior.collision_mask = 0
-	# LAS ESCALERAS (ver Stairs): sus escalones y sus rampas ya están copiados en la sombra; los de verdad, que van con la
-	# meca, dejan de chocar, como `interior`.
-	for body in find_children("*", "StaticBody3D", true, false):
-		if body != interior:
-			(body as StaticBody3D).collision_layer = 0
-	# LAS SILLAS: su cuerpo (quieto, ver SeatInteractable) también quedó copiado; la caja maciza, que las tiene adentro,
-	# no choca con él (la empujaba y la volteaba).
-	for body in find_children("*", "RigidBody3D", true, false):
-		mech.add_collision_exception_with(body as RigidBody3D)
-
-
-## LA CAJA DE AFUERA NO CHOCA CON LOS QUE VAN ADENTRO: ellos ya dejaron de mirar al mundo (ver MotionFrame.join), pero
-## la caja los seguía viendo. Se mira quién va en el marco en cada paso.
-func ride() -> void:
-	var inside := {}
-	for body: Variant in frame._members.keys():
-		if is_instance_valid(body) and body is PhysicsBody3D:
-			inside[body] = true
-			if not _riders.has(body):
-				mech.add_collision_exception_with(body as PhysicsBody3D)
-	for body: Variant in _riders.keys():
-		if not inside.has(body) and is_instance_valid(body):
-			mech.remove_collision_exception_with(body as PhysicsBody3D)
-	_riders = inside
-
-
-## SUBE AL JUGADOR (la U del sandbox): al piso, entre las sillas de adelante y el ascensor, mirando al frente.
-func board() -> void:
-	var player := DesignSandbox.player_of(get_tree())
-	if player == null:
-		return
-	if mech.keys.driving:
-		SandboxPossession.of(get_tree()).release()
-	if player.is_seated and player.current_seat is SeatInteractable:
-		(player.current_seat as SeatInteractable).release_occupant_in_place()
-	var spot := Vector3(0.0, CabinGrid.floor_top() + 0.05, (CabinGrid.front_seats()[0].z - PelvisLift.hole()) * 0.5)
-	player.place_at(mech.global_transform * spot, mech.yaw())
-
-
-## ── LAS PIEZAS DE PLACAS Y CHOQUES (las usan la redonda y la de chanfles) ──────────────────────────────────────────
+## ── LAS PIEZAS DE PLACAS Y CHOQUES (las usan la redonda y la cuadrada) ──────────────────────────────────────────
 
 ## EL SOMBREADO, COMO EL AUTO SMOOTH DE BLENDER (el usuario, 15/11/2026: «veo que tienen shade smooth, debería ser auto
 ## smooth»): cada cara curva (la de afuera de un cilindro, la de adentro, el borde de un hueco redondo) es un grupo

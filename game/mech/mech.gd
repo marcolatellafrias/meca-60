@@ -3,7 +3,7 @@ extends BalanceBody
 
 ## LA MECA PROPIA: el cuerpo con equilibrio (ver BalanceBody: la caja, el péndulo, caerse y volver, las piernas, las
 ## toberas, caminar y saltar), con lo que es sólo suyo:
-##   · MechCabin    la cabina de un piso por dentro, el ascensor (PelvisLift) y el marco que lleva a
+##   · SquareCabin  la cabina de un piso por dentro, el ascensor (PelvisLift) y el marco que lleva a
 ##                  los que van adentro.
 ##   · MechKeys     el teclado y el mouse de quien la posee: escribe LO QUE SE LE PIDE (ver `_think`).
 ##   · los brazos   MechArm: PoseArm (discretos) o MuscleArm (físicos), según `arms_kind`: los dos caminos. Sin brazos
@@ -13,7 +13,7 @@ extends BalanceBody
 
 ## Los brazos que lleva: ninguno (la de práctica, para pegarle), discretos o físicos.
 enum Arms { NONE, POSE, MUSCLE }
-## LA CABINA QUE LLEVA, una pieza más (ver docs/technical/cuerpo-por-piezas.md): la cuadrada (MechCabin, CabinGrid) o
+## LA CABINA QUE LLEVA, una pieza más (ver docs/technical/cuerpo-por-piezas.md): la cuadrada (SquareCabin, CabinGrid) o
 ## la redonda (RoundCabin, RoundGrid; el usuario, 15/11/2026: «un "fork" en otra parcela»). Lo que cambia con ella se
 ## pregunta en un solo lugar: `cabin_kit`.
 enum Cabin { SQUARE, ROUND }
@@ -89,11 +89,7 @@ func _build() -> void:
 		Clay.box(look, Vector3(size.x * 0.6, 0.5, 0.2), Vector3(0.0, size.y * 0.3, -size.z * 0.5 - 0.1), Clay.YELLOW)
 		_build_arms()
 		return
-	# La cuadrada, con su interior: el de escaleras (MechCabin) o el del centro octogonal con chanfles (ChamferCabin).
-	if cabin_shape == Cabin.ROUND:
-		cabin = RoundCabin.new()
-	else:
-		cabin = ChamferCabin.new() if CabinGrid.chamfered() else MechCabin.new()
+	cabin = RoundCabin.new() if cabin_shape == Cabin.ROUND else SquareCabin.new()
 	cabin.mech = self
 	add_child(cabin)
 	_build_arms()

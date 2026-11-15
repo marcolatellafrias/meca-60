@@ -11,20 +11,15 @@ extends Resource
 ## usuario, 15/11/2026, de la maqueta de los chanfles, la cabeza 2: «me gusta la segunda… como una opción más, no como
 ## reemplazo»). Cada una muestra sus perillas en el F2.
 @export_enum("plana con el corte", "en rampa") var head := 0
-## EL INTERIOR: el de la tarima atrás con dos escaleras (el primero), o EL CENTRO OCTOGONAL CON CHANFLES: las cuatro
-## esquinas de la caja cortadas, la tarima octogonal al medio con escalones alrededor y el ascensor adentro, la silla
-## del medio más adelante (el usuario, 15/11/2026: «tiene que ser en realidad la nueva… con chamfers y tarima
-## octogonal»; ChamferCabin). Cada uno muestra sus perillas en el F2.
-@export_enum("tarima atrás con escaleras", "centro octogonal con chanfles") var interior := 1
-## CON CHANFLES: el corte de las cuatro esquinas, de cada lado de la esquina, por dentro, en celdas chicas (18: 71 cm;
+## EL CORTE de las cuatro esquinas, de cada lado de la esquina, por dentro, en celdas chicas (18: 71 cm;
 ## 0, sin corte: los kits pasan a la pared de atrás).
 @export_range(0, 40, 1) var corner_cells := 18
-## CON CHANFLES: la tarima, de su centro a cada lado, en celdas chicas (29: 1,14 m); cuántos escalones (de 15 cm de
+## LA TARIMA, de su centro a cada lado, en celdas chicas (29: 1,14 m); cuántos escalones (de 15 cm de
 ## alto y 31 de pisada) suben a ella, contando la tarima; y cuánto atrás del centro va el ascensor (13: 51 cm).
 @export_range(18, 60, 1) var deck_cells := 29
 @export_range(1, 5, 1) var deck_steps := 3
 @export_range(0, 30, 1) var lift_back_cells := 13
-## CON CHANFLES: LA PELVIS DE ABAJO, una placa chata con la misma planta, debajo del piso; de abajo de ella salen las
+## LA PELVIS DE ABAJO, una placa chata con la misma planta, debajo del piso; de abajo de ella salen las
 ## piernas. Su alto, en celdas chicas (25: 98 cm; 0, sin). Para maquetar rápido: la pelvis de ahora se va a borrar (el
 ## usuario, 15/11/2026: «una segunda pelvis… un cubo como lo de arriba, pero más chato y con los mismos chamfers… recién
 ## a partir de abajo… van a salir las piernas»).
@@ -38,14 +33,10 @@ extends Resource
 ## EN RAMPA: el alto libre del frente, la parte de vidrio rebajada, en celdas chicas (73: 2,88 m). El de atrás, el de
 ## metal, es `height_cells`. No pasa del de atrás.
 @export_range(40, 140, 1) var front_height_cells := 73
-## El radio del hueco del ascensor, en celdas chicas de 3,9 cm (26: 1,02 m; cuadrado: la mitad del lado). *Hasta el
+## El radio del hueco del ascensor, en celdas chicas de 3,9 cm (26: 1,02 m; o menos, si no entra en la tarima). *Hasta el
 ## 15/11/2026 iba en celdas de trama (`lift_cells`, de 1 a 3): de a 51 cm, muy grueso (el usuario: «¿por qué no puedo
 ## controlarlo mediante celdas?»).*
 @export_range(4, 60, 1) var lift_radius := 26
-## El ascensor cuadrado: el hueco, la plataforma y la pelvis (si no, redondos).
-@export var lift_square := false
-## El alto de la tarima de atrás (m; de a un escalón, 15 cm).
-@export_range(0.3, 2.4, 0.15) var platform_height := 1.2
 @export_group("El vidrio")
 ## El corte de la arista de arriba del frente, en celdas de trama.
 @export_range(0, 4, 1) var chamfer := 2
@@ -67,6 +58,13 @@ extends Resource
 @export_group("Las sillas")
 ## La altura que buscan igualar las sillas: la de los ojos del que se sienta, sobre el piso (m).
 @export_range(0.9, 1.6, 0.01) var eye_height := 1.15
+## DÓNDE VAN LAS TRES DE ADELANTE, en celdas chicas (ver CabinGrid.front_seats; el usuario, 15/11/2026: «qué tan alejada
+## está la izquierda y derecha de la del medio, y qué tan offseteada para atrás… así yo lo tuiqueo a mano»): la del
+## medio, del vidrio (16: 63 cm); los brazos, de ella a cada costado (48: 1,89 m); y cuánto más atrás van los brazos
+## (13: 51 cm; negativo, más adelante).
+@export_range(8, 60, 1) var seat_front_cells := 16
+@export_range(15, 90, 1) var seat_spread_cells := 48
+@export_range(-20, 40, 1) var seat_back_cells := 13
 @export_group("Brazos y piernas")
 @export_enum("chico", "mediano", "grande") var arm_length := 1
 @export_enum("chico", "mediano", "grande") var leg_length := 1

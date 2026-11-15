@@ -66,7 +66,6 @@ func _ready() -> void:
 	lift.raised_at = floor_top + RoundGrid.PLATFORM_TALL
 	lift.lowered_at = PelvisLift.lowered(RoundGrid.HALF_HEIGHT)
 	lift.center = hole
-	lift.square_shape = false
 	add_child(lift)
 
 
@@ -210,11 +209,6 @@ func _round_seats() -> void:
 		chair.eye_height = CabinGrid.EYE_HEIGHT
 		add_child(chair)
 		chairs.append(chair)
-
-
-## La redonda no tiene puestos (todavía).
-func _stations() -> void:
-	pass
 
 
 ## EL MARCO: el volumen de la cabina (de la losa del piso al techo) y el del hueco del ascensor, por el disco y hasta

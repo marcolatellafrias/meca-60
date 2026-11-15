@@ -1,10 +1,10 @@
-class_name ChamferCabin
+class_name SquareCabin
 extends MechCabin
 
-## LA CABINA CUADRADA CON CHANFLES Y EL CENTRO OCTOGONAL (CabinGrid.chamfered; el usuario, 15/11/2026: «tiene que ser en
-## realidad la nueva que hicimos… con chamfers y tarima octogonal»). Es la planta 1 de la maqueta de los chanfles
-## (tests/chamfer_cabin_look.tscn) en la meca de verdad, con las medidas de la trama (CabinGrid) y las cabezas de
-## siempre (la plana con el corte, o en rampa). Lo de la cuadrada lo hereda (ir adentro, los maniquíes, `ride`); arma:
+## LA CABINA CUADRADA: la caja con chanfles y el centro octogonal (el usuario, 15/11/2026: «tiene que ser en realidad la
+## nueva que hicimos… con chamfers y tarima octogonal»). Es la planta 1 de la maqueta de los chanfles
+## (tests/chamfer_cabin_look.tscn) en la meca de verdad, con las medidas de la trama (CabinGrid) y las dos cabezas (la
+## plana con el corte, o en rampa). Lo de toda cabina lo hereda (ir adentro, los maniquíes, `ride`); arma:
 ##   · LA CAJA CON LAS CUATRO ESQUINAS CORTADAS (`corner`). Adelante, el vidrio: el frente, los chanfles de adelante y
 ##     los costados hasta CabinGrid.SIDE_GLASS, con el zócalo abajo; el techo de vidrio hasta donde diga la cabeza.
 ##     Atrás, metal. LA CABEZA ES UN PERFIL (`_top`): el alto de arriba de la caja según qué tan adelante; las paredes
@@ -12,8 +12,9 @@ extends MechCabin
 ##   · AL MEDIO, LA TARIMA OCTOGONAL con escalones alrededor (de 15 cm de alto y una pisada de escalera, Stairs.TREAD);
 ##     para la cápsula, una rampa (como las escaleras). Adentro, corrido atrás, el ascensor (atraviesa la pelvis, como
 ##     en la redonda: después se arregla). Arriba, delante del ascensor, el movimiento.
-##   · ADELANTE, TRES SILLAS SIN TABLERO (lo que aprendió la redonda): la del medio más adelante, los brazos un paso
-##     atrás, todas mirando al frente. Sin puestos, por ahora (los de SeatStation se apoyan en el tablero).
+##   · ADELANTE, TRES SILLAS SIN TABLERO (lo que aprendió la redonda), donde diga CabinGrid.front_seats (tres perillas:
+##     la del medio del vidrio, los brazos a los costados y atrás), mirando al frente. Sin puestos, por ahora (los de
+##     SeatStation se apoyaban en el tablero, que ya no está).
 ##   · ATRÁS: los kits en los chanfles de atrás, dos en cada uno; las municiones y la batería en la pared de atrás (por
 ##     ahora, sólo se ven).
 
@@ -60,16 +61,6 @@ static func lift_center() -> Vector2:
 
 static func lift_radius() -> float:
 	return clampf(CabinGrid.LIFT_HOLE, 0.3, deck_reach() - lift_center().y - 0.12)
-
-
-## LAS TRES SILLAS DE ADELANTE, en el piso, de izquierda a derecha (el brazo izquierdo, la espalda, el brazo derecho):
-## la del medio a 1,2 celdas de trama del vidrio; las de los brazos un paso atrás (2,2) y a 2,3 de los costados.
-static func front_seats() -> Array[Vector3]:
-	var inner := CabinGrid.INNER
-	var trama := CabinGrid.TRAMA
-	var y := CabinGrid.floor_top()
-	var arm := inner - 2.3 * trama
-	return [Vector3(-arm, y, -inner + 2.2 * trama), Vector3(0.0, y, -inner + 1.2 * trama), Vector3(arm, y, -inner + 2.2 * trama)]
 
 
 ## LA SILLA DEL MOVIMIENTO: en la tarima, delante del ascensor, adentro de su borde.
@@ -152,7 +143,6 @@ func _ready() -> void:
 	lift.raised_at = floor_top + deck_tall()
 	lift.lowered_at = PelvisLift.lowered()
 	lift.center = center
-	lift.square_shape = false
 	add_child(lift)
 
 
@@ -277,7 +267,8 @@ func _posts() -> void:
 		if z > -half and z < _roof_to:
 			stops.append(z)
 	stops.append(_roof_to)
-	for x: float in [front_seats()[0].x * 0.5, front_seats()[2].x * 0.5]:
+	var seats := CabinGrid.front_seats()
+	for x: float in [seats[0].x * 0.5, seats[2].x * 0.5]:
 		_bar(Vector3(x, low, -half), Vector3(x, _top(-half), -half), post)
 		for k in stops.size() - 1:
 			_bar(Vector3(x, _top(stops[k]), stops[k]), Vector3(x, _top(stops[k + 1]), stops[k + 1]), post)
@@ -333,7 +324,7 @@ func _supplies() -> void:
 
 ## LAS SILLAS, las de verdad, en el orden de `POSTS`, mirando al frente.
 func _seats_here() -> void:
-	var places := front_seats()
+	var places := CabinGrid.front_seats()
 	places.append(top_seat_at())
 	for index in places.size():
 		var chair := (load(SEAT_SCENE) as PackedScene).instantiate() as SeatInteractable
@@ -342,11 +333,6 @@ func _seats_here() -> void:
 		chair.eye_height = CabinGrid.EYE_HEIGHT
 		add_child(chair)
 		chairs.append(chair)
-
-
-## Sin puestos, por ahora: los de SeatStation se apoyan en el tablero, y esta no tiene.
-func _stations() -> void:
-	pass
 
 
 ## EL MARCO: la caja y el hueco del ascensor, por debajo del piso hasta su parada de abajo.
@@ -377,7 +363,7 @@ func board() -> void:
 		SandboxPossession.of(get_tree()).release()
 	if player.is_seated and player.current_seat is SeatInteractable:
 		(player.current_seat as SeatInteractable).release_occupant_in_place()
-	var spot := Vector3(0.0, CabinGrid.floor_top() + 0.05, (front_seats()[1].z - deck_foot()) * 0.5)
+	var spot := Vector3(0.0, CabinGrid.floor_top() + 0.05, (CabinGrid.front_seats()[1].z - deck_foot()) * 0.5)
 	player.place_at(mech.global_transform * spot, mech.yaw())
 
 

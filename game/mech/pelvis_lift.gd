@@ -8,14 +8,14 @@ extends Node3D
 ##
 ##   · LA PELVIS es un tambor hueco, de pared fina, debajo del cubo (ver `tube`; la dibuja la meca, que la gira con los
 ##     pies: redonda, siempre coincide).
-##   · LA LOSA del piso de la cabina tiene UN RECORTE redondo del mismo hueco (`build_floor`).
+##   · LA LOSA del piso de la cabina tiene UN RECORTE redondo del mismo hueco (lo arma cada cabina).
 ##   · EL ASCENSOR (este nodo, en el espacio del cubo): UNA PLATAFORMA REDONDA que llena el hueco, y nada más (el
 ##     usuario, 14/11/2026: «simplificar un poco el ascensor para que sea solamente una plataforma sin toda la estructura
 ##     metálica… después vamos a los detalles»). BAJADA, queda a un salto del suelo con la meca agachada; SUBIDA, al ras
 ##     del piso. *Hasta el 14/11/2026 tenía cuatro parantes, un aro y una baranda alrededor del recorte.*
 ##
-## REDONDO O CUADRADO (CabinGrid.LIFT_SQUARE, el F2; el usuario, 15/11/2026: «otro toggle para el ascensor, que cambie
-## su forma de circular a cuadrada»): el hueco, la plataforma y la pelvis, todos de la misma forma (`outline`).
+## *Del 15/11/2026 hasta que se retiró la cuadrada de antes, podía ser cuadrado (un toggle del F2): el hueco, la
+## plataforma y la pelvis. Las cabinas de ahora lo llevan adentro de la tarima, redondo.*
 ##
 ## SE VIAJA EN ELLA: su piso tiene forma de choque en `solid` (las formas de adentro de la meca, de las que su marco
 ## copia la sombra), y se mueve con ella. DOS TECLAS (el usuario, 13/11/2026: «dos teclas»): `up` la sube y `lower` la
@@ -45,13 +45,11 @@ var solid: PhysicsBody3D = null
 ## Adónde va: -1 bajada, 0 subida.
 var stop := 0
 ## LO DE CADA CABINA (lo pone la que lo arma, antes de agregarlo; por defecto, el de la cuadrada): el radio del hueco,
-## las dos paradas (en el espacio del cubo), dónde va en planta (`center`, x y z) y si es cuadrado. La redonda
-## (RoundCabin) pone los suyos.
+## las dos paradas (en el espacio del cubo) y dónde va en planta (`center`, x y z).
 var hole_radius := 0.0
 var raised_at := 0.0
 var lowered_at := 0.0
 var center := Vector2.ZERO
-var square_shape := false
 
 var _shape: CollisionShape3D = null
 
@@ -60,7 +58,6 @@ func _init() -> void:
 	hole_radius = hole()
 	raised_at = raised_y()
 	lowered_at = lowered()
-	square_shape = CabinGrid.LIFT_SQUARE
 
 
 ## Su plataforma: un poco más chica que el hueco.
@@ -73,17 +70,11 @@ func _ready() -> void:
 	position = Vector3(center.x, raised_at, center.y)
 	_shape = CollisionShape3D.new()
 	var reach := plate_radius()
-	if square_shape:
-		Clay.box(self, Vector3(reach * 2.0, 0.1, reach * 2.0), Vector3(0, -0.05, 0), GRATE)
-		var plate := BoxShape3D.new()
-		plate.size = Vector3(reach * 2.0, 0.12, reach * 2.0)
-		_shape.shape = plate
-	else:
-		Clay.cylinder(self, reach, 0.1, Vector3(0, -0.05, 0), GRATE)
-		var disc := CylinderShape3D.new()
-		disc.radius = reach
-		disc.height = 0.12
-		_shape.shape = disc
+	Clay.cylinder(self, reach, 0.1, Vector3(0, -0.05, 0), GRATE)
+	var disc := CylinderShape3D.new()
+	disc.radius = reach
+	disc.height = 0.12
+	_shape.shape = disc
 	solid.add_child(_shape)
 	_place()
 
@@ -131,25 +122,6 @@ func _place() -> void:
 	_shape.position = Vector3(center.x, position.y - 0.06, center.y)
 
 
-## ── LO FIJO: LA LOSA CON EL RECORTE ──────────────────────────────────────────────────────────────────────────────
-
-## La losa del piso de la cabina, a la altura `y` (su medio), de `thickness`: se ve con su recorte redondo, y se pisa
-## alrededor (cuatro piezas en torno al hueco).
-static func build_floor(holder: Node3D, body: PhysicsBody3D, y: float, thickness: float, color: Color) -> void:
-	holder.add_child(holed(square(CabinGrid.HALF), hole(), y - thickness * 0.5, y + thickness * 0.5, color))
-	var beside := CabinGrid.HALF - hole()
-	for way: float in [-1.0, 1.0]:
-		Clay.shape_box(body, Vector3(CabinGrid.SIZE, thickness, beside), Vector3(0, y, way * (hole() + beside * 0.5)))
-		Clay.shape_box(body, Vector3(beside, thickness, hole() * 2.0), Vector3(way * (hole() + beside * 0.5), y, 0))
-
-
-## El volumen del hueco por donde viaja, en el espacio del cubo: para el marco de la meca. Empieza un poco arriba del
-## piso bajado: el que camina por el suelo debajo de la meca agachada no entra; el que se para en el ascensor, sí.
-static func shaft() -> AABB:
-	var bottom := lowered() + 0.55
-	return AABB(Vector3(-drum(), bottom, -drum()), Vector3(drum() * 2.0, -CabinGrid.HALF_HEIGHT - bottom + 0.3, drum() * 2.0))
-
-
 ## LA PELVIS: el tambor hueco, centrado en su medio (como la caja de siempre).
 static func tube(color: Color) -> MeshInstance3D:
 	return holed(outline(drum()), hole(), -MechBody.PELVIS_SIZE.y * 0.5, MechBody.PELVIS_SIZE.y * 0.5, color)
@@ -168,9 +140,9 @@ static func circle(radius: float) -> PackedVector2Array:
 	return points
 
 
-## El borde de la forma del ascensor (redondo o cuadrado, ver CabinGrid.LIFT_SQUARE), de radio (o medio lado) `size`.
+## El borde de la forma del ascensor, de radio `size`.
 static func outline(size: float) -> PackedVector2Array:
-	return square(size) if CabinGrid.LIFT_SQUARE else circle(size)
+	return circle(size)
 
 
 ## El borde de un cuadrado de medio lado `half`, en los mismos `SIDES` ángulos.
