@@ -52,6 +52,8 @@ func _ready() -> void:
 				var at := Vector3(BossMaquettes.APART * state, 0, 0)
 				await _shot("%s, %s" % [name_of, BossMaquettes.entry(i)["states"][int(state > 0.0)]],
 					at + Vector3(38, 30, -52), at + Vector3(0, 16, 0))
+			await _shot("%s, de frente" % name_of, Vector3(-BossMaquettes.APART, 18, -48),
+				Vector3(-BossMaquettes.APART, 13, 0))
 			holder.queue_free()
 			await get_tree().process_frame
 			continue

@@ -37,14 +37,18 @@ const ALL: Array[Dictionary] = [
 		"brazo izquierdo, ESCUDO: se cubre y empuja · brazo derecho, CAÑÓN LARGO: de lejos, lento y fuerte",
 		"techo, RADAR: marca en el piso dónde va a caer el cañonazo",
 		"CON IRA tira el escudo, se agacha con las patas abiertas y salta de costado; los ojos barren con láser"]},
-	{"name": "Tenaza", "torso": "box", "size": Vector3(24, 8, 16), "height": 14.0, "legs": "crab",
-		"left": "claw_big", "right": "claw_small", "roof": "mortar", "head": "eyes", "chest": "", "exhaust": false,
-		"color": Color(0.58, 0.42, 0.36), "rage_color": Color(0.75, 0.25, 0.12), "rage": "side",
+	# LA ELEGIDA (15/11/2026; el usuario: «el que yo pienso con el que podríamos ir»): el cuerpo y la cabeza, discos; los
+	# ojos, una tira recortada en el disco de la cabeza, rojos; las pinzas nacen del frente («ahora mismo es como que se
+	# están cruzando con las piernas»); el lanzacohetes, otro disco atrás, integrado; otro color.
+	{"name": "Tenaza", "torso": "disc", "size": Vector3(24, 7, 24), "height": 13.0, "legs": "crab", "shoulders": "front",
+		"left": "claw_big", "right": "claw_small", "roof": "pod", "head": "visor", "chest": "", "exhaust": false,
+		"color": Color(0.78, 0.76, 0.7), "rage_color": Color(0.55, 0.16, 0.13), "rage": "side",
 		"states": ["normal: bajo y ancho", "con ira: pinzas arriba, de costado"], "lines": [
-		"bajo y ancho, las patas abiertas; el cangrejo, en formas simples",
+		"bajo y ancho, un disco en patas abiertas; la cabeza, otro disco, con los ojos en una tira roja",
 		"brazo izquierdo, PINZA GRANDE: agarra a la meca y la aprieta · brazo derecho, PINZA CHICA: cortes rápidos",
-		"techo, MORTERO: cuatro tubos que tiran en parábola",
-		"CON IRA levanta las dos pinzas abiertas y corre de costado; se pone rojo"]},
+		"las dos pinzas nacen del frente, adelante de las patas",
+		"atrás, LANZACOHETES: un disco con los tubos al ras, que tira en parábola",
+		"CON IRA levanta las dos pinzas abiertas, se agacha y corre de costado (sin dejar de mirarte); se pone rojo"]},
 	{"name": "Minero", "torso": "wedge", "size": Vector3(16, 10, 22), "height": 12.0, "legs": "tread",
 		"left": "claw_small", "right": "drill", "roof": "lamp", "head": "", "chest": "grille", "exhaust": true,
 		"color": Color(0.75, 0.62, 0.25), "rage_color": Color(0.5, 0.35, 0.15), "rage": "dig",
@@ -89,8 +93,7 @@ static func build(index: int, p: Node3D, rage: bool) -> void:
 		"crouch":
 			height -= 12.0
 		"side":
-			yaw = 90.0
-			height -= 2.0
+			height -= 3.0
 		"dig":
 			height -= 3.0
 			pitch = -18.0
@@ -115,9 +118,11 @@ static func build(index: int, p: Node3D, rage: bool) -> void:
 			var dropped := Clay.box(p, Vector3(10.0, 1.0, 13.0), Vector3(side * 16.0, 0.5, -14.0), hull.darkened(0.2))
 			dropped.rotation_degrees = Vector3(0.0, 20.0, 4.0)
 			weapon = ""
-		_arm(p, body, side, half, weapon, rage, hull)
+		_arm(p, body, side, half, weapon, rage, hull, str(spec.get("shoulders", "side")) == "front")
 	_roof(p, body, str(spec["roof"]), half, rage, hull)
-	if str(spec["head"]) != "":
+	if str(spec["head"]) == "visor":
+		_visor(p, body, half, hull)
+	elif str(spec["head"]) != "":
 		_head(p, body, half, rage, hull, str(spec["head"]) == "lasers")
 	_chest(p, body, str(spec["chest"]), half, rage)
 	if spec["exhaust"]:
@@ -142,6 +147,9 @@ static func build(index: int, p: Node3D, rage: bool) -> void:
 
 static func _torso(body: Node3D, kind: String, size: Vector3, color: Color) -> void:
 	match kind:
+		"disc":
+			Clay.cylinder(body, size.x * 0.5, size.y, Vector3.ZERO, color)
+			Clay.cylinder(body, size.x * 0.5 + 0.3, 1.2, Vector3(0.0, -size.y * 0.5 + 0.6, 0.0), color.darkened(0.35))
 		"drum":
 			Clay.cylinder(body, size.y * 0.5, size.x, Vector3.ZERO, color, Vector3(0.0, 0.0, 90.0))
 		"dome":
@@ -170,7 +178,7 @@ static func _leg(p: Node3D, kind: String, hip: Vector3, out: Vector3, pose: Stri
 		BossMaquettes._rod(p, hip, tucked, 1.4, dark)
 		Clay.sphere(p, 2.0, tucked, dark)
 		return
-	var spread := 1.5 if pose in ["crouch", "plant"] else 1.0
+	var spread := 1.5 if pose in ["crouch", "plant", "side"] else 1.0
 	match kind:
 		"pillar":
 			var foot := Vector3(hip.x + out.x * 2.0 * spread, 0.0, hip.z + out.z * 2.0)
@@ -184,7 +192,7 @@ static func _leg(p: Node3D, kind: String, hip: Vector3, out: Vector3, pose: Stri
 			BossMaquettes._rod(p, knee, foot + Vector3.UP, 1.1, dark)
 			Clay.cylinder(p, 2.6, 1.0, foot + Vector3.UP * 0.5, dark)
 		"crab":
-			var foot := Vector3(hip.x + out.x * 16.0, 0.0, hip.z + out.z * 5.0)
+			var foot := Vector3(hip.x + out.x * 16.0 * spread, 0.0, hip.z + out.z * 5.0)
 			var knee := Vector3(hip.x + out.x * 9.0, hip.y + 7.0, hip.z + out.z * 3.0)
 			BossMaquettes._rod(p, hip, knee, 1.8, dark)
 			Clay.sphere(p, 2.3, knee, dark.lightened(0.1))
@@ -211,21 +219,28 @@ static func _leg(p: Node3D, kind: String, hip: Vector3, out: Vector3, pose: Stri
 
 ## ── LOS BRAZOS Y SUS ARMAS ───────────────────────────────────────────────────────────────────────────────────────
 
-static func _arm(p: Node3D, body: Node3D, side: float, half: Vector3, weapon: String, rage: bool, color: Color) -> void:
+## UN BRAZO: del costado del torso o, con `front`, del frente (adelante de las patas, en el borde del disco).
+static func _arm(p: Node3D, body: Node3D, side: float, half: Vector3, weapon: String, rage: bool, color: Color,
+		front := false) -> void:
 	var shoulder := body.transform * Vector3(side * (half.x + 1.5), half.y * 0.3, -half.z * 0.3)
+	if front:
+		var x := half.x * 0.42
+		shoulder = body.transform * Vector3(side * x, -half.y * 0.1, -sqrt(maxf(half.z * half.z - x * x, 0.0)) - 0.5)
 	Clay.sphere(p, 2.6, shoulder, color.darkened(0.2))
-	# Con ira, lo que se blande va arriba; lo que apunta, al frente; el taladro, clavado en el piso.
-	var elbow := shoulder + Vector3(side * 3.0, -6.0, -2.0)
-	var hand := elbow + Vector3(0.0, -1.0, -8.0)
+	# Con ira, lo que se blande va arriba; lo que apunta, al frente; el taladro, clavado en el piso. Las vueltas del
+	# brazo van con el cuerpo (si se inclina, el brazo también).
+	var turn := body.transform.basis
+	var elbow := shoulder + turn * (Vector3(side * 2.0, -3.0, -5.0) if front else Vector3(side * 3.0, -6.0, -2.0))
+	var hand := elbow + turn * (Vector3(0.0, -1.5, -7.0) if front else Vector3(0.0, -1.0, -8.0))
 	if rage and weapon in ["flamer", "cannon", "gatling"]:
-		elbow = shoulder + Vector3(side * 3.0, -2.0, -4.0)
-		hand = elbow + Vector3(0.0, -0.5, -8.0)
+		elbow = shoulder + turn * Vector3(side * 3.0, -2.0, -4.0)
+		hand = elbow + turn * Vector3(0.0, -0.5, -8.0)
 	elif rage and weapon == "drill":
-		elbow = shoulder + Vector3(side * 2.0, -5.0, -3.0)
-		hand = elbow + Vector3(0.0, -6.0, -5.0)
+		elbow = shoulder + turn * Vector3(side * 2.0, -5.0, -3.0)
+		hand = elbow + turn * Vector3(0.0, -6.0, -5.0)
 	elif rage:
-		elbow = shoulder + Vector3(side * 3.0, 2.0, -4.0)
-		hand = elbow + Vector3(0.0, 5.0, -6.0)
+		elbow = shoulder + turn * Vector3(side * 3.0, 3.0, -4.0)
+		hand = elbow + turn * Vector3(0.0, 5.0, -5.0)
 	BossMaquettes._rod(p, shoulder, elbow, 1.6, Clay.DARK)
 	Clay.sphere(p, 1.9, elbow, Clay.DARK.lightened(0.1))
 	BossMaquettes._rod(p, elbow, hand, 1.4, Clay.DARK)
@@ -324,6 +339,22 @@ static func _roof(p: Node3D, body: Node3D, kind: String, half: Vector3, rage: bo
 			dish.basis = _axis_basis((up + Vector3.FORWARD * 0.8).normalized())
 			if rage:
 				BossMaquettes._zone(p, 6.0, Vector3(top.x, 0.0, top.z - 40.0))
+		"pod":
+			# Otro disco, atrás, con los tubos al ras: integrado a la forma.
+			var center := body.transform * Vector3(0.0, half.y + 1.4, half.z * 0.35)
+			var pod := Clay.cylinder(p, half.x * 0.55, 2.8, center, color.darkened(0.12))
+			pod.basis = body.transform.basis
+			for i in 6:
+				var at := center + body.transform.basis * Vector3(-3.0 + (i % 3) * 3.0, 1.45, -1.6 + int(i / 3.0) * 3.2)
+				var tube := Clay.cylinder(p, 0.9, 0.2, at, Clay.DARK)
+				tube.basis = body.transform.basis
+				if rage:
+					Clay.sphere(p, 0.6, at + up * 0.6, Clay.RED)
+			if rage:
+				for i in 3:
+					var trail := center + Vector3(-4.0 + i * 4.0, 10.0 + i * 3.0, -6.0 - i * 4.0)
+					Clay.sphere(p, 0.8, trail, Clay.RED)
+					_cone(p, trail, trail + Vector3(0.0, -3.0, 3.0), 0.5, SMOKE)
 		"mortar":
 			var made6 := Clay.box(p, Vector3(7.0, 3.0, 7.0), top + up * 1.5, color.darkened(0.2))
 			made6.basis = body.transform.basis
@@ -363,6 +394,23 @@ static func _roof(p: Node3D, body: Node3D, kind: String, half: Vector3, rage: bo
 					var trail := box.position + Vector3(-4.0 + i * 4.0, 8.0 + i * 3.0, -10.0 - i * 4.0)
 					Clay.sphere(p, 0.8, trail, Clay.RED)
 					_cone(p, trail, trail + Vector3(0.0, -2.0, 4.0), 0.5, SMOKE)
+
+
+## LA CABEZA EN DISCO: los ojos son una tira roja recortada en su frente (el usuario: «la cabeza también un disco, y que
+## los ojos sean básicamente un recorte en ese disco… una tira… rojos»).
+static func _visor(p: Node3D, body: Node3D, half: Vector3, color: Color) -> void:
+	var radius := 4.5
+	var center := body.transform * Vector3(0.0, half.y + 1.6, -half.z * 0.5)
+	var head := Clay.cylinder(p, radius, 3.2, center, color.lightened(0.05))
+	head.basis = body.transform.basis
+	var red := Color(1.0, 0.12, 0.08)
+	for i in 15:
+		var angle := deg_to_rad(-70.0 + i * 10.0)
+		var out := body.transform.basis * Vector3(sin(angle), 0.0, -cos(angle))
+		var bit := Clay.box(p, Vector3(radius * 2.0 * sin(deg_to_rad(5.0)) + 0.08, 0.8, 0.3), center + out * (radius - 0.05),
+			red)
+		bit.basis = Basis.looking_at(out, body.transform.basis.y)
+		bit.material_override = _glow_of(red)
 
 
 ## La cabeza con dos ojos; con ira se ponen rojos y, si es de `lasers`, tiran láser al piso.

@@ -32,10 +32,16 @@ prende lo suyo.
 |---|---|---|---|---|---|
 | **Fogonero** (caja, patas columna) | martillo: golpe al piso con onda | lanzallamas: un cono adelante | chimeneas | el horno del pecho, caños de escape | abre el horno, se pone al rojo, escupe brasas y embiste agachado |
 | **Vigía** (alto, patas largas) | escudo: se cubre y empuja | cañón largo | radar: marca dónde cae el tiro | la cabeza con ojos que tiran láser | tira el escudo, se agacha con las patas abiertas, salta de costado; láser |
-| **Tenaza** (bajo y ancho, patas de cangrejo) | pinza grande: agarra a la meca | pinza chica: cortes rápidos | mortero | el cangrejo, en formas simples | pinzas arriba, abiertas; corre de costado |
+| **Tenaza** (**la elegida**; un disco en patas de cangrejo) | pinza grande: agarra a la meca | pinza chica: cortes rápidos | lanzacohetes: otro disco atrás, con los tubos al ras | la cabeza, otro disco, con los ojos en una tira roja | pinzas arriba, abiertas; se agacha y corre de costado sin dejar de mirarte |
 | **Minero** (cuña, orugas) | garra: tira rocas | taladro: embiste | reflector que encandila | rueda en vez de caminar | se clava con el taladro y salen grietas alrededor |
 | **Campanario** (cúpula, patas de perro) | horquilla: un rayo de punta a punta | bola con cadena | bobina | el núcleo celeste del pecho | recoge las patas y flota sobre un anillo; la bobina tira rayos al piso |
 | **Artillero** (caja baja, patas de perro) | sierra | ametralladora | lanzamisiles | ágil, corre y frena | se planta (clava las patas) y es una torreta: dispara todo |
+
+**La Tenaza es la elegida** (15/11/2026; el usuario: «el que yo pienso con el que podríamos ir»). Sus cambios, pedidos por
+él: las dos pinzas nacen del frente («ahora mismo es como que se están cruzando con las piernas»); el cuerpo, un disco en
+vez de una caja; la cabeza, otro disco, con los ojos como una tira recortada, rojos; otro color (marfil; con ira, rojo
+oscuro); el lanzacohetes de atrás, más integrado a la forma (otro disco, con los tubos al ras). Con ira ya no se da
+vuelta: corre de costado mirándote, como un cangrejo.
 
 ## Las recorribles (15/11/2026): el hexápodo y el cuadrúpedo
 El usuario, de la primera tanda: «muy simplistas… no se dan mucho a espacios a recorrer a pie… tienen que tener algo de
