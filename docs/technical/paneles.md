@@ -1,33 +1,35 @@
-# Los paneles de la silla
+# Los puestos de adelante
 
-`game/consoles/seat_panels.gd` (`SeatPanels`), `seat_strip.gd` (`SeatStrip`) · módulo **Tableros y controles** · el
-diseño, en [[armamento]] («Los paneles de la silla») · ver [[cabina]]
+`game/consoles/seat_station.gd` (`SeatStation`) · módulo **Tableros y controles** · el diseño, en [[armamento]] («El
+puesto: holograma, botones y estado») · ver [[cabina]]
 
-**El primer caso jugable** (14/11/2026): un panel, el del brazo derecho, en la primera silla de la derecha de la cabina,
-y la tira que tienen todos los puestos.
+**Todavía de arcilla** (15/11/2026): se ven en la meca, pero nada funciona. Reemplazan al primer panel jugable, el que
+se traía con E y tomaba el mouse para tirar una piña (`SeatPanels`, borrado: el usuario, al probarlo, «no es el camino
+este»).
 
-## Cómo se usa
-- **Sentado en esa silla, mirando el panel** (plegado a la derecha, sobre su brazo articulado), se ilumina y pide la E.
-- **E lo abre**: viene adelante de los ojos y **toma el mouse**. El mouse mueve una mira por la vista del frente (la
-  cabeza no se mueve); **clic izquierdo, una piña hacia la mira**. **E lo cierra.** No es Escape porque Escape abre la
-  pausa.
-- **La tira**, fija adelante y abajo: la energía (vacía: todavía no existe) y la meca en contorno, de frente y de
-  costado, inclinada como está.
+## Qué hay en cada puesto
+Va en el hueco del tablero de cada puesto de adelante abierto (`CabinGrid.OPEN_POSTS`), mirando a su silla:
+- **Al medio, el holograma**, que sube de una ranura del tablero. Es la mira, con **la energía siempre** a la izquierda
+  (con la raya del máximo que le queda) y el nombre del sistema. Naranja, no celeste: menos futurista.
+- **A los costados, módulos parejos**: un cubo de 28 cm (`CUBE`) y rectángulos de su ancho y fondo y la mitad de alto
+  (`SLAB`), contra los costados del hueco (`CabinGrid.hole_cells`) y girados hacia la silla.
+  - **A la izquierda**: eyectar (un rectángulo, el hongo rojo al frente bajo una tapa de vidrio) y encima **el cubo de
+    estado** (una pantalla de fósforo con la meca de frente; la parte rota, punteada).
+  - **A la derecha**: los botones de baquelita, con una lamparita sobre el elegido.
+  - **Todo lo que se usa va en la cara que mira a la silla**; las otras, vacías.
+- **Lo que maneja cada puesto** (`SeatStation.SYSTEMS`, en el orden de `MechCabin.POSTS`): el brazo izquierdo (piña,
+  agarre, sierra), la espalda (ametralladora, misiles) y el brazo derecho (piña, agarre, cañón).
+- **De taller**: chapa pintada, baquelita, lamparitas. Lo escrito, con la letra del juego (`StrokeFont`, copiada de
+  character-parametric).
+- **Las pantallas se dibujan una sola vez** (`UPDATE_ONCE`): no cambian, y seis pantallas no cuestan cada cuadro.
 
-## Cómo está hecho
-- Todo cuelga de la cabina, en una **zona fija delante de la silla**, no de la silla. Sin choques: sólo se ve.
-- **A quién le hace caso**: a la cámara que está a los ojos de esa silla, con alguien sentado. Sirve igual para el
-  jugador sentado o para un maniquí poseído (ver [[poseer]]).
-- **El mouse y la E le llegan antes que al jugador**: un nodo al final de la raíz (`_InputCatcher`), porque `_input` va
-  de atrás para adelante. Sólo se queda con la E si el panel está abierto o mirado, y con el mouse si está abierto.
-- **La piña**: `MechArm.punch_at(punto)` (de la sesión Meca): un directo hacia el punto, recortado a lo que alcanza. El punto es
-  lo primero que encuentra el rayo de la mira (sin la meca), o un punto a 18 m.
-- **Se arma con** `SeatPanels.attach(cabin)`, que la cabina llama en `seat_dummies` (sólo la meca con brazos); esa silla
-  queda sin maniquí, para sentarse con E (lo hizo la sesión Interior).
+## Cómo se arma
+`SeatStation.attach(cabin)`, que la cabina llama en `seat_dummies` (sólo la meca con brazos). La silla del brazo
+derecho queda sin maniquí, para sentarse con E y ver la escala.
 
-Test para mirar: `tests/seat_panels_look.tscn` (unos 12 s, sin el sandbox; sienta un maniquí en la silla): plegado, mirado, abierto con la mira, la
-piña desde adentro y desde afuera.
+Test para mirar: `tests/seat_station_look.tscn` (unos 10 s, sin el sandbox): sentado en la silla del brazo derecho, por
+encima del hombro con un maniquí sentado, y los tres puestos desde atrás.
 
-## Falta
-- Que la cabeza acompañe un poco a la mira (con poca sensibilidad y tope).
-- Mantener para cargar; la energía.
+## Lo que falta
+Que funcione: tomar el control mirando el holograma y haciendo clic (E lo suelta), apretar los botones mirándolos, el
+clic derecho como escudo, la energía y el estado de verdad. El puesto del movimiento, con su silla que se inclina.

@@ -37,7 +37,7 @@ El detalle, en [[partida]].
 | [[cuerpo-por-piezas]] | La regla común (acordada, sin hacer): motor del torso discreto o físico, brazos y dibujo, por separado. |
 | [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto. |
 | [[cabina]] | La cabina sobre su grilla (módulo Interior): celdas, módulos, pisos y asientos. |
-| [[paneles]] | Los paneles de la silla (módulo Tableros y controles): se abren con E, toman el mouse para apuntar un brazo; la tira con la energía y la meca dibujada. |
+| [[paneles]] | Los puestos de adelante (módulo Tableros y controles): el holograma con la mira y la energía, los botones, eyectar y el cubo de estado; todavía de arcilla. |
 | [[maquetas-jefes]] | Jefes de arcilla, quietos: seis con personalidad (la misma base de cuatro patas, dos brazos con armas distintas y un accesorio en el techo, normales y con ira), dos recorribles (seis y cuatro patas, con pasarelas y baterías detrás de compuertas) y una primera tanda de seis. |
 | [[jefe-bola]] | El primer jefe: la bola con su rendija y cuatro tentáculos con su propio IK (el cañón que corre por la rendija y dispara; hecha bola, rueda y pega; el barrido con las paletas; lo maneja la computadora, como un jefe de Souls; vida y barras; la K cambia entre los cuatro tipos de meca). |
 | [[proyectiles]] | Los proyectiles por red y la arena de esquivar. |
