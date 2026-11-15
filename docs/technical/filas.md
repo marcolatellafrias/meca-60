@@ -6,6 +6,7 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 
 | Fila | Arquetipo | Código propio | Paneles | Tests | Usa (compartido) |
 |---|---|---|---|---|---|
+| Meca de tres | `ToolMechArchetype` | `game/tool_mech/` entero (`ToolMech`, `ToolMechKeys`, `MechEnergy`, `DrillArm`, `CannonArm`, `EnergyBolt`, `ArmorPlates`) | `KinematicPanel` (F1), `CabinShapePanel` (F2), `PoseArmPanel` (F3), `LegsPanel` (F4) | `tool_mech_look` | la meca entera, `PoseArm` |
 | Meca discreta | `MechArchetype` (`Mech.Arms.POSE`) | `game/pose_arm/` | `MechPanel` (F1), `CabinShapePanel` (F2), `PoseArmPanel` (F3) | `mech_fork_look` | la meca (abajo) |
 | Meca física | `MechArchetype` (`Mech.Arms.MUSCLE`) | — (sus brazos son los de la fila Brazo) | `MechPanel(MUSCLE)` (F1, sus perillas), `CabinShapePanel` (F2), `MuscleArmPanel` (F3) | `mech_look`, `mech_hands_look` | la meca (abajo), `game/muscle_arm/` |
 | Arena de esquivar | `DodgeArenaArchetype` | `game/dodge_arena/` entero | `MechPanel` (F1), `CabinShapePanel` (F2), `PoseArmPanel` (F3) | `dodge_arena_look` | la meca, `game/projectiles/` |

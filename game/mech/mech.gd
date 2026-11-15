@@ -193,7 +193,8 @@ static func rebuild_all(tree: SceneTree) -> void:
 		if old.keys != null and old.keys.driving:
 			SandboxPossession.of(tree).release()
 		var holder := old.get_parent()
-		var fresh := Mech.new()
+		# La misma clase (una subclase, como la Meca de tres, sigue siendo ella).
+		var fresh := old.get_script().new() as Mech
 		fresh.arms_kind = old.arms_kind
 		fresh.kinematic = old.kinematic
 		fresh.has_cabin = old.has_cabin

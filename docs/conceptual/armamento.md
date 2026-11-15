@@ -59,6 +59,8 @@ tengan una especie de dinámica distinta»).
   espacio.
 
 ## El movimiento: te conectás (14/11/2026)
+*15/11/2026: el usuario lo replanteó para la meca de tres (ver [[meca-de-tres]]): sentado, la cámara trabada al frente
+y clic en el tablero; una palanca de dos ejes que queda trabada, y el dash, el salto y levitar en botones aparte.*
 **El que maneja se conecta** (un casco, unos guantes) y **sus controles de a pie pasan a la meca**: WASD, el mouse,
 Shift el dash, y agacharse y saltar con las mismas teclas que a pie. Su cuerpo queda quieto mientras está conectado
 (el usuario: «todos los mismos controles que te dan cuando estás a pie, pero en la meca… uno ya los aprende

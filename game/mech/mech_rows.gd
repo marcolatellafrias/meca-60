@@ -15,6 +15,14 @@ static func rows() -> Array[SandboxRow]:
 			.panel(KEY_F2, VORTEX_PANEL, VortexShapePanel.new()) \
 			.panel(KEY_F3, MUSCLE_ARMS_PANEL, MuscleArmPanel.new()) \
 			.panel(KEY_F4, LEGS_PANEL, LegsPanel.new()),
+		# LA MECA DE TRES, una meca de ejemplo con elementos concretos (ToolMech; el usuario, 15/11/2026: «una parcela
+		# nueva que esté al principio de todo, al lado de la de vórtice, así la iteramos rápido»).
+		SandboxRow.new(SandboxSuper.Id.MECH, "Meca de tres") \
+			.add(SandboxRow.Build.NEAR, [ToolMechArchetype.new()]) \
+			.panel(KEY_F1, KINEMATIC_PANEL, KinematicPanel.new()) \
+			.panel(KEY_F2, CABIN_PANEL, CabinShapePanel.new()) \
+			.panel(KEY_F3, POSE_ARMS_PANEL, PoseArmPanel.new()) \
+			.panel(KEY_F4, LEGS_PANEL, LegsPanel.new()),
 		SandboxRow.new(SandboxSuper.Id.MECH, "Meca discreta") \
 			.add(SandboxRow.Build.NEAR, [MechArchetype.new(Mech.Arms.POSE)]) \
 			.panel(KEY_F1, MECH_PANEL, MechPanel.new()) \

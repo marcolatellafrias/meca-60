@@ -36,6 +36,7 @@ El detalle, en [[partida]].
 | [[laboratorio-cinematico]] | El experimento del cubo cinemático contra cajas sueltas: cuatro formas de tratar lo suelto, medidas. |
 | [[base-comun]] | Lo que comparten la meca propia y los jefes (`BalanceBody`), y el resto en piezas. |
 | [[cuerpo-por-piezas]] | La regla común (acordada, sin hacer): motor del torso discreto o físico, brazos y dibujo, por separado. |
+| [[meca-de-tres]] | **La meca de ejemplo**: la cabina de tres, el cañón de energía de cuatro modos, el taladro, la energía común y las placas, manejados poseyéndola. |
 | [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto. |
 | [[cabina]] | La cabina sobre su grilla (módulo Interior): celdas, módulos, pisos y asientos. |
 | [[paneles]] | Los puestos de adelante (módulo Tableros y controles): el holograma con la mira y la energía, los botones, eyectar y el cubo de estado; todavía de arcilla. |
