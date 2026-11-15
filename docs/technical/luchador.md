@@ -51,8 +51,9 @@ embista, con la ventana del horno. `BrawlerBrain`, como un jefe de Souls (aviso,
   al pecho).
 - Medido (`brawler_fight_look`, la meca cinemática quieta): en 35 s embistió 2 veces y la alcanzó las 2 (le dejó 50);
   contra el borde se estrelló a 137,5 m del medio; dos piñas al horno abierto le sacaron 60.
-- **Abierto**: las pruebas con una meca con cabina hacen caer a Godot al cerrar (sólo al cerrar; sin cabina, no). No
-  es del Luchador ni de la meca sola: no se encontró.
+- **Conocido, sin daño**: las pruebas con una meca con cabina hacen caer a Godot al cerrar (sólo al cerrar; sin cabina,
+  no). El generalista: pasa en el cierre, también en `possess_character` y `possess_check`; no hace falta resolverlo,
+  salvo que se caiga antes de terminar la prueba.
 
 ## Lo que sigue
 Los poderes, de a uno (propuestos, sin confirmar): el golpe doble al piso (onda en línea), el agarre y revoleo, el gancho al cielo, arrancar el piso y
