@@ -28,6 +28,8 @@ const TIP := -FOREARM * 0.5 - 0.3
 const HEAVY_FINGERS := 1.35
 ## Y cuánto más largas.
 const HEAVY_LENGTH := 1.45
+## El largo de los pinches de los nudillos (el usuario, 15/11/2026: «un poco más cortos»).
+const SPIKE := 0.32
 
 
 ## Arma la maqueta de `id` (ver ArmoryCatalog) colgada de `parent`, con su soporte.
@@ -82,7 +84,7 @@ static func _forearm(root: Node3D, heavy: bool, with_hand := true) -> void:
 	# los nudillos: donde cada dedo sale de la palma, al frente
 	for finger in 4:
 		var y := (finger - 1.5) * MechHand.FINGER_RADIUS * 2.2
-		_cone(hand, 0.2, 0.55, Vector3(0, y, -MechHand.PALM.z - MechHand.FINGER_RADIUS * HEAVY_FINGERS - 0.22),
+		_cone(hand, 0.2, SPIKE, Vector3(0, y, -MechHand.PALM.z - MechHand.FINGER_RADIUS * HEAVY_FINGERS - SPIKE * 0.4),
 			Vector3(-90, 0, 0), Clay.DARK.lightened(0.15))
 
 
