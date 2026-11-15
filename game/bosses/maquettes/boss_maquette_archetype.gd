@@ -8,7 +8,7 @@ var index := 0
 
 func _init(which: int) -> void:
 	index = which
-	display_name = str(BossMaquettes.ALL[which]["name"])
+	display_name = str(BossMaquettes.entry(which)["name"])
 
 
 func max_footprint() -> Vector2:
@@ -20,8 +20,8 @@ func far_height() -> float:
 
 
 func describe(_seed_value: int) -> PackedStringArray:
-	var lines := PackedStringArray(BossMaquettes.ALL[index]["lines"])
-	lines.append("izquierda: %s · derecha: %s" % BossMaquettes.ALL[index]["states"])
+	var lines := PackedStringArray(BossMaquettes.entry(index)["lines"])
+	lines.append("izquierda: %s · derecha: %s" % BossMaquettes.entry(index)["states"])
 	lines.append("naranja que brilla: punto débil · rojo en el piso: ataque de área · bloque rojo: la meca (18 m)")
 	return lines
 

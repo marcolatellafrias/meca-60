@@ -44,8 +44,17 @@ func _ready() -> void:
 		var holder := Node3D.new()
 		self_3d().add_child(holder)
 		BossMaquettes.build(i, holder)
-		var name_of := str(BossMaquettes.ALL[i]["name"])
-		print("%s: %s" % [name_of, " / ".join(BossMaquettes.ALL[i]["lines"])])
+		var name_of := str(BossMaquettes.entry(i)["name"])
+		print("%s: %s" % [name_of, " / ".join(BossMaquettes.entry(i)["lines"])])
+		if str(BossMaquettes.ALL[i]["kind"]) == "armed":
+			# Las de personalidad: cada estado de cerca, de tres cuartos de frente.
+			for state: float in [-1.0, 1.0]:
+				var at := Vector3(BossMaquettes.APART * state, 0, 0)
+				await _shot("%s, %s" % [name_of, BossMaquettes.entry(i)["states"][int(state > 0.0)]],
+					at + Vector3(38, 30, -52), at + Vector3(0, 16, 0))
+			holder.queue_free()
+			await get_tree().process_frame
+			continue
 		await _shot("%s, de frente" % name_of, Vector3(0, 32, 118), Vector3(0, 22, 0))
 		await _shot("%s, desde arriba" % name_of, Vector3(70, 80, 85), Vector3(0, 10, 0))
 		if str(BossMaquettes.ALL[i]["kind"]) in ["hexapod", "quadruped"]:

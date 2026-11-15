@@ -24,10 +24,17 @@ const HULL := Color(0.45, 0.47, 0.5)
 ## Cuánto separa los dos estados (m, del centro a cada uno).
 const APART := 75.0
 
-## LAS MAQUETAS: cuál es (`kind`), nombre, los dos estados y lo que se piensa de cada una. Primero las dos RECORRIBLES
+## LAS MAQUETAS: cuál es (`kind`), nombre, los dos estados y lo que se piensa de cada una (las de ArmedMaquettes, en su
+## ficha: ver `entry`). Primero las seis CON PERSONALIDAD (ArmedMaquettes, 15/11/2026); después las dos RECORRIBLES
 ## (WalkerMaquettes, 15/11/2026); después la primera tanda, de seis (el usuario: «muy simplistas… no se dan mucho a espacios
 ## a recorrer a pie», aunque «hay algunos que tienen algo de potencial»).
 const ALL: Array[Dictionary] = [
+	{"kind": "armed", "spec": 0},
+	{"kind": "armed", "spec": 1},
+	{"kind": "armed", "spec": 2},
+	{"kind": "armed", "spec": 3},
+	{"kind": "armed", "spec": 4},
+	{"kind": "armed", "spec": 5},
 	{"kind": "hexapod", "name": "Hexápodo plataforma", "states": ["compuertas cerradas: camina",
 		"compuertas abiertas: después del pisotón"], "lines": WalkerMaquettes.HEXAPOD_LINES},
 	{"kind": "quadruped", "name": "Cuadrúpedo bastión", "states": ["compuertas cerradas: camina",
@@ -67,16 +74,24 @@ const ALL: Array[Dictionary] = [
 static var _glow: StandardMaterial3D = null
 
 
+## LA FICHA de la maqueta `index`: nombre, sus dos estados y lo que se piensa de ella.
+static func entry(index: int) -> Dictionary:
+	if str(ALL[index]["kind"]) == "armed":
+		return ArmedMaquettes.ALL[int(ALL[index]["spec"])]
+	return ALL[index]
+
+
 ## ARMA la maqueta `index`: sus dos estados, la meca y una persona para la escala, y los carteles.
 static func build(index: int, parent: Node3D) -> Node3D:
 	var root := Node3D.new()
-	root.name = str(ALL[index]["name"])
+	root.name = str(entry(index)["name"])
 	parent.add_child(root)
 	for state in 2:
 		var holder := Node3D.new()
 		holder.position = Vector3(APART * (state * 2 - 1), 0.0, 0.0)
 		root.add_child(holder)
 		match str(ALL[index]["kind"]):
+			"armed": ArmedMaquettes.build(int(ALL[index]["spec"]), holder, state == 1)
 			"hexapod": WalkerMaquettes.hexapod(holder, state == 1)
 			"quadruped": WalkerMaquettes.quadruped(holder, state == 1)
 			"tripod": _tripod(holder, state)
@@ -85,7 +100,7 @@ static func build(index: int, parent: Node3D) -> Node3D:
 			"reliquary": _reliquary(holder, state)
 			"centipede": _centipede(holder, state)
 			"hive": _hive(holder, state)
-		_sign(holder, "%s · %s" % [ALL[index]["name"], ALL[index]["states"][state]], Vector3(0.0, 62.0, 0.0))
+		_sign(holder, "%s · %s" % [entry(index)["name"], entry(index)["states"][state]], Vector3(0.0, 62.0, 0.0))
 	_mech(root, Vector3(0.0, 0.0, 45.0))
 	_person(root, Vector3(6.0, 0.0, 45.0))
 	return root

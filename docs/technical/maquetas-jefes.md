@@ -12,6 +12,31 @@ matarlo desde cerca»; «varios ciclos… caminando, pero después tal vez va vo
 cuando le rompe las alas se cae y va caminando… modo frenzy»; ataques «menos físicos y más bien poderes de AoE»;
 «empecemos con muchas maquetas de clay». El jefe bola «no va mucho con esa idea».
 
+## Con personalidad (15/11/2026): la misma base, seis caracteres
+**Lo acordado con el usuario**, después de las recorribles («son medio monotemáticos, son básicamente un cañón con
+patas»):
+- **Primero un jefe divertido; después los puntos débiles y las plataformas.** «Primero vamos a lo base, a hacer un boss
+  divertido que no sea tan monotemático… distintas formas de moverse que puedan cambiar en base a la fase, y distintas
+  formas de atacar… distintas armas en distintos brazos… a qué brazo nos conviene romperle primero».
+- **La base: cuatro patas, dos brazos y un accesorio en el techo**, con formas simples, no de insecto.
+- **Las baterías, unificadas con la meca, para después**: una por componente (las patas, cada brazo, el techo; si tiene
+  más brazos, más baterías), **siempre en el mismo lugar**. Sacarle una lo vuelve más lento o inestable, o ese brazo más
+  torpe. Nada de buscarlas: lo difícil es llegar a pie sin morirse. Las de 1 a 3 por jefe, no muchas.
+- **Lo de recorrer** (trampolines de energía, escaleras de vez en cuando, que se sienta ajeno) **queda para más adelante**.
+
+Están en `ArmedMaquettes`, primeras en la fila: un kit (torso, patas, armas, techo, cabeza, pecho) y una ficha por jefe.
+A la izquierda el normal; a la derecha **con ira**: cambia de color, cambia la pose (cómo se mueve en esa fase) y se le
+prende lo suyo.
+
+| Jefe | Brazo izquierdo | Brazo derecho | Techo | Lo suyo | Con ira |
+|---|---|---|---|---|---|
+| **Fogonero** (caja, patas columna) | martillo: golpe al piso con onda | lanzallamas: un cono adelante | chimeneas | el horno del pecho, caños de escape | abre el horno, se pone al rojo, escupe brasas y embiste agachado |
+| **Vigía** (alto, patas largas) | escudo: se cubre y empuja | cañón largo | radar: marca dónde cae el tiro | la cabeza con ojos que tiran láser | tira el escudo, se agacha con las patas abiertas, salta de costado; láser |
+| **Tenaza** (bajo y ancho, patas de cangrejo) | pinza grande: agarra a la meca | pinza chica: cortes rápidos | mortero | el cangrejo, en formas simples | pinzas arriba, abiertas; corre de costado |
+| **Minero** (cuña, orugas) | garra: tira rocas | taladro: embiste | reflector que encandila | rueda en vez de caminar | se clava con el taladro y salen grietas alrededor |
+| **Campanario** (cúpula, patas de perro) | horquilla: un rayo de punta a punta | bola con cadena | bobina | el núcleo celeste del pecho | recoge las patas y flota sobre un anillo; la bobina tira rayos al piso |
+| **Artillero** (caja baja, patas de perro) | sierra | ametralladora | lanzamisiles | ágil, corre y frena | se planta (clava las patas) y es una torreta: dispara todo |
+
 ## Las recorribles (15/11/2026): el hexápodo y el cuadrúpedo
 El usuario, de la primera tanda: «muy simplistas… no se dan mucho a espacios a recorrer a pie… tienen que tener algo de
 recorrido, algo de interés… una silueta más o menos simple»; «una de 6 patas y otra de 4»; «los puntos débiles sean
