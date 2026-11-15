@@ -12,6 +12,15 @@ matarlo desde cerca»; «varios ciclos… caminando, pero después tal vez va vo
 cuando le rompe las alas se cae y va caminando… modo frenzy»; ataques «menos físicos y más bien poderes de AoE»;
 «empecemos con muchas maquetas de clay». El jefe bola «no va mucho con esa idea».
 
+## Cómo se hacen los jefes (15/11/2026, con el usuario)
+**Hechos a mano, con variaciones**, no procedurales: «los bosses más diseñados a mano, pero con ciertas variaciones para
+que si lo peleás varias veces sigue siendo interesante… vamos a empezar a diseñar de a poco personajes y vamos a ver cómo
+se siente». Los dos que siguen, en paralelo: **el jefe bola** (el punto débil, el núcleo abajo, entre las patas; normal y
+hecho bola) y **uno humanoide** (patas y brazos cuadrados, con cabeza, más alocado que la meca propia; normal y con ira).
+**Los poderes son discretos o mixtos**: un golpe físico que dispara algo claro (una onda, una línea, una zona) con su
+aviso, su forma y su efecto (daño por código y, a veces, un empujón o una caída). La lista para elegir está en la charla
+del 15/11/2026; todavía no está confirmada.
+
 ## Con personalidad (15/11/2026): la misma base, seis caracteres
 **Lo acordado con el usuario**, después de las recorribles («son medio monotemáticos, son básicamente un cañón con
 patas»):
