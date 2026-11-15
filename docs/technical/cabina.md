@@ -89,8 +89,9 @@ medidas que salen y la altura de la caja sobre el piso, que sale de las piernas.
 - `tests/two_cabins_look.tscn`: la maqueta de arcilla de la cabina, en cuatro escalas (de donde salió esta).
 
 ## Lo que sigue
-- **Los puestos con tres y con dos**: con tres, falta decidir entre dos adelante y uno arriba, o los tres adelante; con
-  dos, los dos adelante, cada uno en su puesto, con el del medio por resolver cuando se hagan los tableros.
+- **Los puestos con tres y con dos**: con tres, falta decidir entre dos adelante y uno arriba, o los tres adelante. Con
+  dos, **uno adelante, en el puesto del medio, y otro atrás, en el movimiento** (el usuario, 15/11/2026, por la sesión
+  Tableros; antes eran los dos adelante con el medio vacío).
 - **Los huecos de verdad** (kits, batería, munición), cuando lleguen los recursos.
 - **La artillería en los hombros**, sobre un soporte fijo que no gira con la bola (lo mostró la maqueta; es del cuerpo,
   de la sesión Meca).
