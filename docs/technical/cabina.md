@@ -42,6 +42,11 @@ en la meca de verdad.
   los brazos un paso atrás (2,2) y a 2,3 de los costados. **Sin puestos por ahora**: los de `SeatStation` (sesión
   Tableros) se apoyan en el tablero.
 - **Atrás**: dos kits en cada chanfle de atrás; las municiones arriba y la batería al medio en la pared de atrás.
+- **Abajo, la pelvis de abajo** (`base_cells`, en celdas chicas; 25: 98 cm; 0, sin): una placa chata con la misma
+  planta, debajo del piso, con el hueco del ascensor y una franja oscura en la junta. **Es parte de la caja**
+  (`CabinGrid.BASE` entra en `HEIGHT` y el piso queda arriba de ella), así que las piernas salen de abajo de ella. Es
+  para maquetar rápido: la pelvis de ahora se va a borrar (el usuario, 15/11/2026: «una segunda pelvis… un cubo como lo
+  de arriba, pero más chato y con los mismos chamfers»). El alto libre baja ahora hasta 55 celdas (2,17 m).
 - Las placas con hueco y sus choques (`_plate`, `_ring_shapes`, `_convex`) son de `MechCabin`; las usan la redonda y
   ésta.
 

@@ -18,6 +18,7 @@ const LABELS := {
 	"deck_cells": "tarima, del centro al lado (celdas de 3,9 cm)",
 	"deck_steps": "escalones de la tarima (con ella)",
 	"lift_back_cells": "ascensor corrido atrás (celdas de 3,9 cm)",
+	"base_cells": "pelvis de abajo, alto (celdas de 3,9 cm)",
 	"cell": "celda de la trama (celdas de 3,9 cm)",
 	"front_height_cells": "alto del frente, el de vidrio (celdas de 3,9 cm)",
 	"sill_cells": "zócalo abajo del vidrio (celdas de 3,9 cm)",
@@ -50,7 +51,8 @@ const PARTS := ["La caja", "El vidrio", "Las sillas", "Brazos y piernas"]
 const SKIP_BY_HEAD := [["front_height_cells"], ["chamfer", "roof_glass"]]
 ## LO QUE CADA INTERIOR NO USA (ver CabinShape.interior): el de escaleras, lo del centro octogonal; el octogonal, el alto
 ## de la tarima de atrás y el ascensor cuadrado (el suyo es redondo; su alto sale de los escalones).
-const SKIP_BY_INTERIOR := [["corner_cells", "deck_cells", "deck_steps", "lift_back_cells"], ["platform_height", "lift_square"]]
+const SKIP_BY_INTERIOR := [["corner_cells", "deck_cells", "deck_steps", "lift_back_cells", "base_cells"],
+	["platform_height", "lift_square"]]
 const LABELS_BY_HEAD := [{}, {"height_cells": "alto de atrás, el de metal (celdas de 3,9 cm)",
 	"side_glass": "vidrio de los costados y la rampa, hasta (celdas de la trama)"}]
 

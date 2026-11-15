@@ -75,6 +75,10 @@ static var CORNER_CELLS := 18
 static var DECK_CELLS := 29
 static var DECK_STEPS := 3
 static var LIFT_BACK_CELLS := 13
+## LA PELVIS DE ABAJO del interior con chanfles (ver CabinShape.base_cells), en celdas chicas, y su alto (m; 0 en el de
+## escaleras). Es parte de la caja: el piso queda arriba de ella y las piernas salen de abajo.
+static var BASE_CELLS := 25
+static var BASE := 0.0
 static var LIFT_CELLS := 26
 ## Hasta dónde llega el vidrio, desde el frente de adentro, en celdas de trama: el de los costados y el del techo.
 static var SIDE_GLASS := 6
@@ -132,7 +136,7 @@ static func apply(saved: CabinShape) -> void:
 static func shape(saved: CabinShape) -> void:
 	TRAMA_CELLS = maxi(saved.cell, 4)
 	ACROSS = maxi(saved.across, MIN_ACROSS) / 2 * 2
-	HEIGHT_CELLS = maxi(saved.height_cells, 60)
+	HEIGHT_CELLS = maxi(saved.height_cells, 55)
 	CHAMFER = clampi(saved.chamfer, 0, ACROSS / 2)
 	HEAD = clampi(saved.head, 0, 1)
 	INTERIOR = clampi(saved.interior, 0, 1)
@@ -140,6 +144,7 @@ static func shape(saved: CabinShape) -> void:
 	DECK_CELLS = clampi(saved.deck_cells, 18, 60)
 	DECK_STEPS = clampi(saved.deck_steps, 1, 5)
 	LIFT_BACK_CELLS = clampi(saved.lift_back_cells, 0, 30)
+	BASE_CELLS = clampi(saved.base_cells, 0, 60)
 	FRONT_CELLS = clampi(saved.front_height_cells, 40, HEIGHT_CELLS)
 	SILL_CELLS = clampi(saved.sill_cells, 0, (FRONT_CELLS if HEAD == 1 else HEIGHT_CELLS) - 30)
 	# En rampa, el vidrio de los costados llega por lo menos a una celda (es donde termina la rampa).
@@ -157,7 +162,8 @@ static func shape(saved: CabinShape) -> void:
 	HALF = INNER + WALL
 	SIZE = HALF * 2.0
 	CLEAR = HEIGHT_CELLS * CELL
-	HEIGHT = CLEAR + SLAB * 2.0
+	BASE = BASE_CELLS * CELL if INTERIOR == 1 else 0.0
+	HEIGHT = CLEAR + SLAB * 2.0 + BASE
 	HALF_HEIGHT = HEIGHT * 0.5
 	LIFT_HOLE = LIFT_CELLS * CELL
 
@@ -175,6 +181,7 @@ static func current() -> CabinShape:
 	now.deck_cells = DECK_CELLS
 	now.deck_steps = DECK_STEPS
 	now.lift_back_cells = LIFT_BACK_CELLS
+	now.base_cells = BASE_CELLS
 	now.front_height_cells = FRONT_CELLS
 	now.sill_cells = SILL_CELLS
 	now.lift_radius = LIFT_CELLS
@@ -223,7 +230,7 @@ static func box() -> Vector3:
 
 ## Donde se pisa adentro (la cara de arriba de la losa del piso).
 static func floor_top() -> float:
-	return -HALF_HEIGHT + SLAB
+	return -HALF_HEIGHT + BASE + SLAB
 
 
 ## La cara de abajo del techo.

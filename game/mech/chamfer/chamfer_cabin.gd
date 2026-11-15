@@ -130,6 +130,7 @@ func _ready() -> void:
 	var floor_edge := _fine(outer_outline())
 	add_child(_plate(floor_edge, _gap(floor_edge, center, hole), floor_top - SLAB, floor_top, Clay.METAL.darkened(0.12)))
 	_ring_shapes(floor_edge, _gap(floor_edge, center, hole), floor_top - SLAB, floor_top)
+	_base(floor_edge, center, hole)
 	_walls()
 	_roof()
 	if CabinGrid.FRAME_KIND == 2:
@@ -145,6 +146,23 @@ func _ready() -> void:
 	lift.center = center
 	lift.square_shape = false
 	add_child(lift)
+
+
+## LA PELVIS DE ABAJO (CabinGrid.BASE): una placa chata con la planta de la caja, del fondo de la caja al piso, con el
+## hueco del ascensor; en la junta con el piso, una franja un poco más ancha y más oscura (como el disco de la redonda).
+## De abajo de ella salen las piernas: es parte de la caja.
+func _base(edge: PackedVector2Array, center: Vector2, hole: float) -> void:
+	if CabinGrid.BASE < 0.01:
+		return
+	var bottom := -CabinGrid.HALF_HEIGHT
+	var joint := CabinGrid.floor_top() - SLAB
+	var gap := _gap(edge, center, hole)
+	var base := _plate(edge, gap, bottom, joint, Clay.METAL.darkened(0.25))
+	base.name = "Pelvis de abajo"
+	add_child(base)
+	_ring_shapes(edge, gap, bottom, joint)
+	var belt := _fine(outline(CabinGrid.HALF + 0.06, corner() + CabinGrid.WALL * (2.0 - sqrt(2.0)) + 0.06 * (2.0 - sqrt(2.0))))
+	add_child(_plate(belt, edge, joint - 0.06, joint + 0.06, Clay.METAL.darkened(0.35)))
 
 
 ## LA CABEZA, COMO PERFIL: el alto de arriba de la caja (la cara de afuera del techo) en `z`. Plana: arriba de todo,

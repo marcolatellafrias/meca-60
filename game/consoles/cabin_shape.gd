@@ -23,12 +23,17 @@ extends Resource
 @export_range(18, 60, 1) var deck_cells := 29
 @export_range(1, 5, 1) var deck_steps := 3
 @export_range(0, 30, 1) var lift_back_cells := 13
+## CON CHANFLES: LA PELVIS DE ABAJO, una placa chata con la misma planta, debajo del piso; de abajo de ella salen las
+## piernas. Su alto, en celdas chicas (25: 98 cm; 0, sin). Para maquetar rápido: la pelvis de ahora se va a borrar (el
+## usuario, 15/11/2026: «una segunda pelvis… un cubo como lo de arriba, pero más chato y con los mismos chamfers… recién
+## a partir de abajo… van a salir las piernas»).
+@export_range(0, 60, 1) var base_cells := 25
 ## Una celda de la trama, en celdas chicas de 3,9 cm (13: 51 cm).
 @export_range(8, 20, 1) var cell := 13
 ## Cuántas celdas de trama por lado (la planta es cuadrada; siempre par; los tres puestos de adelante piden 12).
 @export_range(12, 20, 2) var across := 12
 ## El alto libre, del piso al techo, en celdas chicas (96: 3,78 m).
-@export_range(70, 140, 1) var height_cells := 96
+@export_range(55, 140, 1) var height_cells := 96
 ## EN RAMPA: el alto libre del frente, la parte de vidrio rebajada, en celdas chicas (73: 2,88 m). El de atrás, el de
 ## metal, es `height_cells`. No pasa del de atrás.
 @export_range(40, 140, 1) var front_height_cells := 73
