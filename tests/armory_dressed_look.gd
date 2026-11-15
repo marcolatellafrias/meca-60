@@ -3,7 +3,7 @@ extends Node3D
 ## LA MECA CON TODO PUESTO, PARA MIRAR (unos 8 segundos, sin el sandbox): una meca parada, vestida con ArmoryParts.dress
 ## (el puño pesado en el izquierdo, el taladro afuera en el derecho, la ametralladora y el lanzamisiles en la espalda, y
 ## las placas en los dos tramos de brazos y piernas). Capturas de adelante, de atrás y de costado.
-##   tools/godot_ventana.sh res://tests/armory_dressed_look.tscn -- --salida=C:/carpeta [--sin-chanfles] [--alto=5] [--pelvis=40]
+##   tools/godot_ventana.sh res://tests/armory_dressed_look.tscn -- --salida=C:/carpeta [--sin-chanfles] [--alto=5] [--pelvis=40] [--cabina=3.5]
 
 var _folder := ""
 
@@ -45,10 +45,17 @@ func _ready() -> void:
 		elif argument.begins_with("--pelvis="):
 			shape.base_cells = int(argument.trim_prefix("--pelvis="))
 			reshaped = true
+		elif argument.begins_with("--cabina="):
+			# el alto de la cabina, del piso de abajo al techo de arriba, sin la pelvis (m); el corte del frente queda
+			# igual, en celdas de trama: el mismo ángulo
+			var cabin := float(argument.trim_prefix("--cabina="))
+			shape.height_cells = roundi((cabin - CabinGrid.SLAB * 2.0) / CabinGrid.CELL)
+			reshaped = true
 		elif argument.begins_with("--alto="):
 			waist = float(argument.trim_prefix("--alto="))
 	if reshaped:
-		print("pelvis de abajo: %d celdas (%.2f m)" % [shape.base_cells, shape.base_cells * CabinGrid.CELL])
+		print("pelvis de abajo: %d celdas (%.2f m) · cabina: %d celdas libres (%.2f m con piso y techo)" % [shape.base_cells,
+			shape.base_cells * CabinGrid.CELL, shape.height_cells, shape.height_cells * CabinGrid.CELL + CabinGrid.SLAB * 2.0])
 		CabinGrid.apply(shape)
 		prefix = "meca_variante"
 	if waist > 0.0:
