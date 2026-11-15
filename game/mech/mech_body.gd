@@ -106,6 +106,12 @@ static func waist_for(thickness: int, leg_length: int, leg_stretch: float) -> fl
 	return float(BASE["ANKLE"]) * t + float(BASE["HIP_DROP"]) * t + (float(BASE["THIGH"]) + float(BASE["SHIN"])) * l * leg_stretch
 
 
+## LA CINTURA DE UNAS PIERNAS `legs` veces más largas que las elegidas (ver BalanceBody.leg_scale): el tobillo y la
+## caída de la cadera van con el ancho; el muslo y la canilla, con el largo. Con 1, `WAIST`.
+static func waist_scaled(legs: float) -> float:
+	return ANKLE + HIP_DROP + (THIGH + SHIN) * legs * stretch
+
+
 ## LA INCLINACIÓN: `lean` es el ángulo (radianes) hacia cada lado, x a la derecha e y adelante, en el espacio de la
 ## raíz. Gira alrededor del eje horizontal que la hace caer para ese lado.
 static func tilt(lean: Vector2) -> Basis:
@@ -142,17 +148,18 @@ static func foot_rest(root: Transform3D, side: float) -> Vector3:
 
 ## UNA PIERNA, de la cadera `hip` al pie apoyado en `ground` (el punto del piso bajo el tobillo, en el mundo; con el pie
 ## en el aire, más arriba), con el pie mirando según `facing` (sólo cuenta su giro). La rodilla dobla hacia `knee_way`
-## (por defecto, hacia donde mira el pie). Devuelve las partes (`thigh`, `shin`, `foot`: su centro y orientación; los
+## (por defecto, hacia donde mira el pie). `legs`: cuántas veces más largos el muslo y la canilla (ver
+## BalanceBody.leg_scale). Devuelve las partes (`thigh`, `shin`, `foot`: su centro y orientación; los
 ## largos van por −Z) y las articulaciones (`knee`, `ankle`).
-static func leg(hip_point: Vector3, ground: Vector3, facing: Basis, knee_way := Vector3.ZERO) -> Dictionary:
+static func leg(hip_point: Vector3, ground: Vector3, facing: Basis, knee_way := Vector3.ZERO, legs := 1.0) -> Dictionary:
 	var forward := -facing.z
 	forward.y = 0.0
 	forward = forward.normalized() if forward.length_squared() > 0.0001 else Vector3.FORWARD
 	var flat := Basis.looking_at(forward, Vector3.UP)
 	var ankle := ground + Vector3.UP * ANKLE
 	var bend := knee_way if knee_way.length_squared() > 0.0001 else forward
-	var knee := joint(hip_point, ankle, THIGH, SHIN, bend)
-	var reach := (ankle - hip_point).limit_length(THIGH + SHIN - 0.01)
+	var knee := joint(hip_point, ankle, THIGH * legs, SHIN * legs, bend)
+	var reach := (ankle - hip_point).limit_length((THIGH + SHIN) * legs - 0.01)
 	var end := hip_point + reach
 	return {
 		"thigh": segment(hip_point, knee, bend),

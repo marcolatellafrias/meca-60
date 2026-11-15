@@ -66,6 +66,7 @@ func _ready() -> void:
 	add_child(_pelvis)
 	for i in 2:
 		var leg := MechLeg.new()
+		leg.length_scale = body.leg_scale
 		add_child(leg)
 		_legs.append(leg)
 
@@ -120,14 +121,14 @@ func place(k: BodySettings, delta: float) -> void:
 		var facing := Basis(Vector3.UP, _feet_yaw[i]) if standing else root.basis
 		var hip := MechBody.hip(waist, side)
 		var to_ankle := ground + Vector3.UP * MechBody.ANKLE - hip
-		var reach := MechBody.THIGH + MechBody.SHIN - 0.5
+		var reach := (MechBody.THIGH + MechBody.SHIN) * body.leg_scale - 0.5
 		if to_ankle.length() > reach:
 			ground = hip + to_ankle.normalized() * reach - Vector3.UP * MechBody.ANKLE
 		# LA RODILLA: hacia adelante de la pelvis y del pie, y un poco hacia afuera.
 		var ahead := -waist.basis.z - facing.z
 		ahead.y = 0.0
 		var knee_way := ahead.normalized() + waist.basis.x * side * out
-		var open := MechBody.leg(hip, ground, facing, knee_way)
+		var open := MechBody.leg(hip, ground, facing, knee_way, body.leg_scale)
 		_legs[i].pose(BodyLegs._blend(open, _tucked_leg(waist, side), share) if share > 0.001 else open)
 
 
@@ -211,7 +212,7 @@ func _foot_ground(k: BodySettings, index: int) -> Vector3:
 ## LOS PASOS NUEVOS (ver arriba): termina el paso de ahora y, si no hay ninguno en el aire, ve si sale uno.
 func _classic(delta: float, yaw: float) -> void:
 	var s := LegSettings.current
-	var stride := s.stride * MechBody.stride
+	var stride := s.stride * _stride()
 	if _swing >= 0:
 		_swing_clock += delta
 		if _swing_clock < _swing_time:
@@ -261,7 +262,7 @@ func _landing(index: int, yaw: float, left: float) -> Vector3:
 	var at := _home(index, yaw, left)
 	var velocity := Vector3(body.support_speed.x, 0.0, body.support_speed.z)
 	if velocity.length() > STILL:
-		at = _ground(at + velocity.normalized() * LegSettings.current.stride * MechBody.stride / 3.0)
+		at = _ground(at + velocity.normalized() * LegSettings.current.stride * _stride() / 3.0)
 	return at
 
 
@@ -272,16 +273,16 @@ func _classic_swing(index: int) -> Vector3:
 	var to := _landing(index, body.yaw(), maxf(_swing_time - _swing_clock, 0.0))
 	var eased := smoothstep(0.0, 1.0, share)
 	_feet_yaw[index] = lerp_angle(_swing_yaw, body.yaw(), eased)
-	var stride := s.stride * MechBody.stride
+	var stride := s.stride * _stride()
 	var lift := clampf(Vector2(to.x - _swing_from.x, to.z - _swing_from.z).length() / stride, 0.35, 1.0)
-	return _swing_from.lerp(to, eased) + Vector3.UP * sin(share * PI) * s.lift * MechBody.stride * lift
+	return _swing_from.lerp(to, eased) + Vector3.UP * sin(share * PI) * s.lift * _stride() * lift
 
 
 ## EL PISO DE VERDAD debajo de `at`: un rayo desde la altura de la caja hacia abajo, que saltea lo que se mueve y los
 ## pies con choque de la meca. Sin piso, la altura del apoyo.
 func _ground(at: Vector3) -> Vector3:
 	var top := Vector3(at.x, body.global_position.y, at.z)
-	var query := PhysicsRayQueryParameters3D.create(top, Vector3(at.x, body.support.y - MechBody.WAIST, at.z))
+	var query := PhysicsRayQueryParameters3D.create(top, Vector3(at.x, body.support.y - body.hover, at.z))
 	var skip: Array[RID] = [body.get_rid()]
 	if body.stomp != null:
 		for foot in body.stomp.bodies():
@@ -303,8 +304,8 @@ func _ground(at: Vector3) -> Vector3:
 ## el pie debajo de la cadera.
 func _tucked_leg(waist: Transform3D, side: float) -> Dictionary:
 	var hip := Vector3(side * MechBody.HIP_X, -MechBody.HIP_DROP, 0.0)
-	var knee := hip + Vector3(0.0, 0.15, -1.0).normalized() * MechBody.THIGH
-	var ankle := knee + Vector3(0.0, -0.45, 1.0).normalized() * MechBody.SHIN
+	var knee := hip + Vector3(0.0, 0.15, -1.0).normalized() * MechBody.THIGH * body.leg_scale
+	var ankle := knee + Vector3(0.0, -0.45, 1.0).normalized() * MechBody.SHIN * body.leg_scale
 	var up := waist.basis.y
 	return {
 		"thigh": MechBody.segment(waist * hip, waist * knee, up),
@@ -324,17 +325,22 @@ static func _blend(from: Dictionary, to: Dictionary, share: float) -> Dictionary
 	}
 
 
-## EL PASO DE ESTAS PIERNAS: el del F1 es el de piernas medianas; se escala con su largo (MechBody.stride, del F2).
+## EL PASO DE ESTAS PIERNAS: el del F1 y el del F4 son los de piernas medianas; se escalan con su largo (MechBody.stride,
+## del F2, por el de este cuerpo: BalanceBody.leg_scale).
+func _stride() -> float:
+	return MechBody.stride * body.leg_scale
+
+
 func _reach(k: BodySettings) -> float:
-	return k.step_reach * MechBody.stride
+	return k.step_reach * _stride()
 
 
 func _lift(k: BodySettings) -> float:
-	return k.step_height * MechBody.stride
+	return k.step_height * _stride()
 
 
 func _settle(k: BodySettings) -> float:
-	return k.settle_gap * MechBody.stride
+	return k.settle_gap * _stride()
 
 
 ## DÓNDE ESTÁN LOS PIES (mundo), como se dibujaron en el último paso: los siguen los pies con choque (StompFeet).

@@ -35,15 +35,20 @@ static func shoulder(shape := Cabin.SQUARE) -> Vector3:
 	return (cabin_kit(shape)["shoulder"] as Vector3) + Vector3(CabinGrid.SHOULDER_OUT * MechBody.thick, 0.0, 0.0)
 
 
-## LO QUE CAMBIA CON LA CABINA, en un solo lugar: la caja (`box`), el hombro sin lo que lo corre afuera (`shoulder`) y si
+## LO QUE CAMBIA CON LA CABINA, en un solo lugar: la caja (`box`), el hombro sin lo que lo corre afuera (`shoulder`), si
 ## se ven las toberas (`nozzles`; la redonda, sin: el usuario, 15/11/2026: «quitaremos las toberas de abajo… sólo de
-## la cilíndrica»).
+## la cilíndrica») y el largo de las piernas (`legs`, por el del F2; la del vórtice, más cortas: «piernas más cortas…
+## sólo esta meca»).
 static func cabin_kit(shape: Cabin) -> Dictionary:
 	if shape == Cabin.ROUND:
-		return {"box": RoundGrid.box(), "shoulder": RoundGrid.shoulder(), "nozzles": false}
+		return {"box": RoundGrid.box(), "shoulder": RoundGrid.shoulder(), "nozzles": false, "legs": 1.0}
 	if shape == Cabin.VORTEX:
-		return {"box": VortexCabin.box(), "shoulder": VortexCabin.shoulder(), "nozzles": false}
-	return {"box": CabinGrid.box(), "shoulder": CabinGrid.shoulder(), "nozzles": true}
+		return {"box": VortexCabin.box(), "shoulder": VortexCabin.shoulder(), "nozzles": false, "legs": VORTEX_LEGS}
+	return {"box": CabinGrid.box(), "shoulder": CabinGrid.shoulder(), "nozzles": true, "legs": 1.0}
+
+
+## Las piernas de la del vórtice, por las del F2 (ver `cabin_kit`).
+const VORTEX_LEGS := 0.6
 
 
 const ARM_WEIGHT := 0.4
@@ -79,6 +84,8 @@ func _ready() -> void:
 	var kit := cabin_kit(cabin_shape)
 	size = kit["box"]
 	show_nozzles = kit["nozzles"]
+	leg_scale = kit["legs"]
+	hover = MechBody.waist_scaled(leg_scale)
 	super()
 	add_to_group(SandboxPossession.GROUP)
 
@@ -210,4 +217,5 @@ static func knobs_for(arms: Arms) -> BodySettings:
 ## A QUÉ ALTURA NACE PARADA (el centro de la caja sobre el piso, m): sus piernas más media caja. Un solo lugar para
 ## todas las parcelas que la arman. *Estaba copiado en cuatro.*
 static func standing_height(shape := Cabin.SQUARE) -> float:
-	return MechBody.WAIST + (cabin_kit(shape)["box"] as Vector3).y * 0.5
+	var kit := cabin_kit(shape)
+	return MechBody.waist_scaled(kit["legs"]) + (kit["box"] as Vector3).y * 0.5

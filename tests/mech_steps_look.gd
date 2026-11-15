@@ -59,6 +59,9 @@ func _ready() -> void:
 	# Con «--redonda», la caja de la cabina redonda.
 	if OS.get_cmdline_user_args().has("--redonda"):
 		_mech.cabin_shape = Mech.Cabin.ROUND
+	# Con «--vortice», la del vórtice (sus piernas más cortas: Mech.VORTEX_LEGS).
+	if OS.get_cmdline_user_args().has("--vortice"):
+		_mech.cabin_shape = Mech.Cabin.VORTEX
 	_mech.position = Vector3(0.0, Mech.standing_height(_mech.cabin_shape), 0.0)
 	add_child(_mech)
 	_eye = Camera3D.new()

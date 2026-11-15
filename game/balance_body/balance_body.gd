@@ -66,6 +66,10 @@ var outline_extra := 0.0
 ## A QUÉ ALTURA DEL PISO VA LA CARA DE ABAJO DE LA CAJA, parada (m): de ahí sale el largo del palo del péndulo. NO ES UNA
 ## PERILLA: la da el cuerpo (la meca propia, el de sus piernas: MechBody.WAIST, del F2). Se pone antes de agregarla.
 var hover := 7.4
+## EL LARGO DE SUS PIERNAS, por las del F2 (MechBody): el muslo, la canilla y el paso, `leg_scale` veces. Lo da el
+## cuerpo (la meca, según su cabina: Mech.cabin_kit; el usuario, 15/11/2026, de la del vórtice: «piernas más cortas…
+## sólo esta meca»), con `hover` que haga juego (MechBody.waist_scaled). Se pone antes de agregarla.
+var leg_scale := 1.0
 
 ## ── LO QUE SE LE PIDE ──
 ## Caminar (x a la derecha, y adelante, de −1 a 1), correr, agacharse, el salto (mantenido carga, soltarlo salta; en el

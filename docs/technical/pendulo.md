@@ -59,6 +59,10 @@ de fuerza y su inclinación son huesos; la meca tiene colisión 1:1 con su caja 
     4,5 m con las piernas cortas, y caminando a 8 m/s mide 4,4 m en promedio. Frenada, los pies vuelven justo a su
     lugar. Un giro de 90° en el lugar, 3 o 4 pasos. **Al lado de un escalón de 1,5 m** (la física), el pie de ese
     lado pisa arriba, a 1,5 m, y el otro abajo.
+  - **Cada meca puede llevar su largo** (15/11/2026; el usuario, de la del vórtice: «piernas más cortas… sólo esta
+    meca»): `BalanceBody.leg_scale` multiplica el muslo, la canilla y el paso de las del F2, y la cintura sale de
+    `MechBody.waist_scaled`. La meca lo toma de su cabina (`Mech.cabin_kit`, clave `legs`): 1 todas, 0,6 la del vórtice
+    (`Mech.VORTEX_LEGS`; parada, 2,2 m más baja). Medido con `-- --fisica --vortice`: el paso, 3,6 m.
   - **La cinemática no llega a un escalón**: su cilindro contra lo fijo va del piso al techo, así que lo frena antes
     de que el pie lo pise. Para que suba escalones el cilindro tendría que empezar más arriba (falta decidir).
 - Pasado el ángulo, **o sin piso bajo su apoyo** (un borde, un pozo), cae, suelto del todo, y se recupera con las
