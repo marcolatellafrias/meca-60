@@ -39,7 +39,7 @@ El detalle, en [[partida]].
 | [[cabina]] | La cabina sobre su grilla (módulo Interior): celdas, módulos, pisos y asientos. |
 | [[paneles]] | Los puestos de adelante (módulo Tableros y controles): el holograma con la mira y la energía, los botones, eyectar y el cubo de estado; todavía de arcilla. |
 | [[maquetas-jefes]] | Jefes de arcilla, quietos: seis siluetas de jefe humanoide, seis con personalidad (la misma base de cuatro patas, dos brazos con armas distintas y un accesorio en el techo, normales y con ira), dos recorribles (seis y cuatro patas, con pasarelas y baterías detrás de compuertas) y una primera tanda de seis. |
-| [[jefe-bola]] | El primer jefe: la bola con cuatro tentáculos con su propio IK (rediseñado: la cabeza de disco con el ojo y el núcleo abajo, entre las patas; hecha bola, rueda y pega; el barrido con las paletas; lo maneja la computadora, como un jefe de Souls; vida y barras; la K cambia entre los cuatro tipos de meca). |
+| [[pelea-jefes]] | Lo común de la pelea con los jefes: la vida por código, las barras y la arena (un círculo del que el jefe no sale); y lo que se aprendió con el jefe bola, borrado el 15/11/2026. |
 | [[proyectiles]] | Los proyectiles por red y la arena de esquivar. |
 | [[mapa]] | El mapa de pelea: una arena circular con barrios, escaleras y recursos en el borde. |
 | [[sucursal]] | La base en el sandbox: el plano 6 en arcilla (elevador, gimnasio, consolas, casilleros). |

@@ -51,4 +51,5 @@ haga easing»).
   en cada momento.
 - **Sostenidos** (caminar, rodar): `MoveRamp` sube hacia la velocidad pedida en un tiempo, con su curva, y baja al
   soltar en otro, con la suya. Es continua: cambiar de pedido a mitad de camino no salta. Una bajada larga es la inercia.
-- Hoy la usa sólo el jefe bola (rodar). Falta que la usen el dash, el salto y caminar de la meca.
+- Hoy `MoveCurve` la usa el dash de la meca. `MoveRamp` la usaba el jefe bola para rodar (borrado el 15/11/2026); la
+  va a usar el Luchador de orugas. Falta que las usen el salto y caminar de la meca.

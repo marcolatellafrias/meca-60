@@ -2,7 +2,7 @@ class_name Health
 extends Node
 
 ## LA VIDA (13/11/2026): cuánta tiene algo y cuánta le queda. Se cuelga como hijo («Vida») del jefe o de la meca. TODO
-## POR CÓDIGO: no la bajan los choques ni la física, sino quien decide que algo pegó (ver BallBrain). El usuario: «un
+## POR CÓDIGO: no la bajan los choques ni la física, sino quien decide que algo pegó (la cabeza de cada jefe). El usuario: «un
 ## sistema de vida que por ahora sea todo vía código… si toca un área de un misil, o si toca la bola cuando está yendo…
 ## le hace daño; bien simple por ahora». *Cambia lo que decía el diseño («no hay vida»): ahora hay vida.*
 

@@ -3,37 +3,25 @@
 **14/11/2026, módulo Jefes.** Bocetos de arcilla, quietos, para pensar con el usuario jefes con **puntos débiles**,
 **fases** y **ataques de área**. Todavía no se mueven ni pelean: son para mirar, elegir y refinar. El código está en
 `game/bosses/maquettes/`: `BossMaquettes` (las seis y su arcilla) y `BossMaquetteArchetype` (una parcela cada una). Están
-en la fila **Maquetas de jefes**, debajo de la del Jefe bola, y se miran con `tests/boss_maquettes_look.tscn` (con
+en la fila **Maquetas de jefes**, y se miran con `tests/boss_maquettes_look.tscn` (con
 ventana, unos 15 s: cada una de frente y desde arriba).
 
 El usuario: «un sistema en el que los bosses tienen puntos débiles… si me tiro con un personaje… desconectar algún cable
 o sacarle un core… mucho risk y mucho reward. Si voy a pie y me tiro desde un punto alto y justo encajo, puedo llegar a
 matarlo desde cerca»; «varios ciclos… caminando, pero después tal vez va volando… por tiempo o por threshold de vida…
 cuando le rompe las alas se cae y va caminando… modo frenzy»; ataques «menos físicos y más bien poderes de AoE»;
-«empecemos con muchas maquetas de clay». El jefe bola «no va mucho con esa idea».
+«empecemos con muchas maquetas de clay».
 
 ## Cómo se hacen los jefes (15/11/2026, con el usuario)
 **Hechos a mano, con variaciones**, no procedurales: «los bosses más diseñados a mano, pero con ciertas variaciones para
 que si lo peleás varias veces sigue siendo interesante… vamos a empezar a diseñar de a poco personajes y vamos a ver cómo
-se siente». Los dos que siguen, en paralelo: **el jefe bola** (el punto débil, el núcleo abajo, entre las patas; normal y
-hecho bola) y **uno humanoide** (patas y brazos cuadrados, con cabeza, más alocado que la meca propia; normal y con ira).
+se siente». **Van a ser humanoides** (con brazos y cabeza), con variantes como cuatro brazos u orugas: el usuario,
+15/11/2026: «la trayectoria del juego va a ser más con pelear enemigos más humanoides… me concentraría en el otro jefe
+solamente por ahora y borraría todo lo de la bola». **El jefe bola se borró** ese día; el que sigue es **el Luchador de
+orugas** (patas y brazos cuadrados, con cabeza, más alocado que la meca propia; normal y con ira).
 **Los poderes son discretos o mixtos**: un golpe físico que dispara algo claro (una onda, una línea, una zona) con su
 aviso, su forma y su efecto (daño por código y, a veces, un empujón o una caída). La lista para elegir está en la charla
 del 15/11/2026; todavía no está confirmada.
-
-## El jefe bola, rediseñado (15/11/2026; acordado, sin hacer)
-- **Una cabeza de disco** (como la de la Tenaza), con el ojo. **Sin rendija ni cañón**: sus armas son los tentáculos y el
-  ojo («lo único que tiene como armamento son los tentáculos y el ojo… se elimina todo lo de la rendija»).
-- **El punto débil: el núcleo abajo de la bola, entre las patas**; se llega caminando («te la jugás, no tenés que saltar
-  desde ningún lado, pero es complicado»).
-- **Dos estados**: normal y hecho bola.
-- **Los poderes** (de la lista del 15/11/2026; fuera la succión, la erupción en línea y el pulso desde abajo): el pisotón
-  con onda, el agarre con un tentáculo, el láser de los ojos, el remolino de los tentáculos, el salto aplastante y el modo
-  bola. La cantidad, la propuesta: unos cinco más el modo bola (un jefe de Souls tiene unos cinco ataques a mano por fase).
-- **El modo bola, con variantes de movimiento** (el usuario: «una que rebote en el piso y salte, otra más tipo pinball,
-  otra más tipo pinball pero con furia… que deje zona de fuego en el piso cuando pasa»): **rebotando** (salta y cae
-  pegando), **pinball** (rebota en las paredes) y **pinball furioso** (lo mismo, dejando fuego en el piso). Cada pelea
-  usa algunas: es la variación de un jefe hecho a mano.
 
 ## El jefe humanoide: el Luchador de orugas (15/11/2026; elegido)
 El usuario: «iría con la de luchador, pero en vez de piernas les haría las huellas de un tanque… y los tubos de atrás son
@@ -49,14 +37,14 @@ una zona que tapa la vista.
 costado taparía el punto débil); es el punto débil y se abre en la carga antes de la embestida (la ventana) y con ira.
 **Sin ametralladora por ahora**: personajes simples, cada uno con lo suyo. **Los dos jefes, cinemáticos** primero.
 
-## Dónde se mueven los jefes: la arena (15/11/2026; hecha en el jefe bola, `BossArena`)
+## Dónde se mueven los jefes: la arena (15/11/2026; `BossArena`, ver [[pelea-jefes]])
 El usuario: «un radio central en la que pueden moverse y que no salgan de eso… en las afueras están los edificios… no
 debería tener un sistema que lee objetos en el momento, sino que tiene ya preplaneado dónde puede y dónde no… de la forma
 más simple que se pueda». **Un círculo** (centro y radio), conocido de antemano: los edificios van afuera. El jefe nunca
 elige ir afuera y, si lo empujan hacia el borde, se desliza por él. **Embistiendo, el borde es la pared**: se estrella y
 queda aturdido un momento (otra ventana). **El pinball rebota en el borde** (la velocidad se refleja sobre la dirección al
 centro). Sin rayos ni lecturas del mundo: cuentas con el círculo. El motor sigue chocando con lo fijo, por las dudas.
-El radio es una perilla (F1 del jefe bola, pestaña Arena): 150 m (de los 100 primeros, el usuario: «es muy poco»).
+El radio, 150 m (de los 100 primeros, el usuario: «es muy poco»), perilla del jefe.
 
 ## Las siluetas del humanoide (15/11/2026)
 `HumanoidMaquettes`, primeras en la fila: seis siluetas de meca, de cajas (los miembros cuadrados, con cabeza), normales y
