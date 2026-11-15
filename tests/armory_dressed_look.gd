@@ -92,13 +92,13 @@ static func make_mech(parent: Node, args: PackedStringArray) -> Mech:
 			shape.base_cells * CabinGrid.CELL, shape.height_cells, shape.height_cells * CabinGrid.CELL + CabinGrid.SLAB * 2.0])
 		CabinGrid.apply(shape)
 	if waist > 0.0:
-		var fixed := MechBody.ANKLE + MechBody.HIP_DROP
-		var legs := (MechBody.WAIST - fixed) / (MechBody.THIGH + MechBody.SHIN)
-		var factor := (waist - fixed) / ((MechBody.THIGH + MechBody.SHIN) * legs)
-		print("cintura de %.1f a %.1f m: muslo y canilla x %.2f" % [MechBody.WAIST, waist, factor])
-		MechBody.THIGH *= factor
-		MechBody.SHIN *= factor
-		MechBody.WAIST = waist
+		var fixed := MechBody.current.ANKLE + MechBody.current.HIP_DROP
+		var legs := (MechBody.current.WAIST - fixed) / (MechBody.current.THIGH + MechBody.current.SHIN)
+		var factor := (waist - fixed) / ((MechBody.current.THIGH + MechBody.current.SHIN) * legs)
+		print("cintura de %.1f a %.1f m: muslo y canilla x %.2f" % [MechBody.current.WAIST, waist, factor])
+		MechBody.current.THIGH *= factor
+		MechBody.current.SHIN *= factor
+		MechBody.current.WAIST = waist
 	var mech := Mech.new()
 	mech.arms_kind = Mech.Arms.POSE
 	mech.scripted = true

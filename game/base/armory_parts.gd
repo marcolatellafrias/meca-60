@@ -272,9 +272,9 @@ static func dress(mech: Mech, loadout: Dictionary, tool_out := 0.0) -> void:
 		# del lado de afuera del brazo
 		var outward := mech.global_basis.x * arm.side
 		if loadout.get("plate_arm_" + side, "") != "":
-			_wrap(pose_arm._upper, Transform3D(_facing(pose_arm._upper, outward), Vector3.ZERO), MechBody.UPPER_ARM * 0.75)
-			_wrap(forearm, Transform3D(_facing(forearm, outward), Vector3(0, 0, 0.3)), MechBody.FOREARM * 0.7)
-		var tip := -MechBody.FOREARM * 0.5 - 0.3
+			_wrap(pose_arm._upper, Transform3D(_facing(pose_arm._upper, outward), Vector3.ZERO), mech.measures.UPPER_ARM * 0.75)
+			_wrap(forearm, Transform3D(_facing(forearm, outward), Vector3(0, 0, 0.3)), mech.measures.FOREARM * 0.7)
+		var tip := -mech.measures.FOREARM * 0.5 - 0.3
 		Clay.cylinder(forearm, MOUTH, 0.7, Vector3(0, 0, tip + 0.35), FOREARM_COLOR.darkened(0.15), Vector3(90, 0, 0))
 		var tool: String = loadout.get("tool_" + side, "")
 		if is_equal_approx(tool_out, arm.side) and tool != "":
@@ -288,15 +288,15 @@ static func dress(mech: Mech, loadout: Dictionary, tool_out := 0.0) -> void:
 				"energy_cannon": _energy_cannon(holder)
 				"circular_saw": _saw(holder)
 		elif loadout.get("fist_" + side, "") == "heavy_fist":
-			make_heavy(pose_arm._hand, MechBody.thick)
+			make_heavy(pose_arm._hand, mech.measures.thick)
 	for leg: Node in mech.find_children("*", "MechLeg", true, false):
 		var plated: bool = loadout.get("plate_leg_left", "") != "" or loadout.get("plate_leg_right", "") != ""
 		if not plated:
 			continue
 		# al frente de la meca
 		var ahead := -mech.global_basis.z
-		_wrap(leg._thigh, Transform3D(_facing(leg._thigh, ahead), Vector3.ZERO), MechBody.THIGH * 0.75)
-		_wrap(leg._shin, Transform3D(_facing(leg._shin, ahead), Vector3.ZERO), MechBody.SHIN * 0.8)
+		_wrap(leg._thigh, Transform3D(_facing(leg._thigh, ahead), Vector3.ZERO), mech.measures.THIGH * 0.75)
+		_wrap(leg._shin, Transform3D(_facing(leg._shin, ahead), Vector3.ZERO), mech.measures.SHIN * 0.8)
 	for side: float in [-1.0, 1.0]:
 		var weapon: String = loadout.get("back_left" if side < 0.0 else "back_right", "")
 		if weapon == "":

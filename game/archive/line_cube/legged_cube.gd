@@ -43,7 +43,7 @@ func _ready() -> void:
 	super()
 	name = "Cubo con piernas"
 	torso_yaw = global_rotation.y
-	_pelvis = Clay.box(self, MechBody.PELVIS_SIZE, Vector3.ZERO, Clay.METAL.darkened(0.15))
+	_pelvis = Clay.box(self, MechBody.current.PELVIS_SIZE, Vector3.ZERO, Clay.METAL.darkened(0.15))
 	_pelvis.top_level = true
 	for i in 2:
 		var leg := MechLeg.new()
@@ -72,7 +72,7 @@ func _place_body(delta: float) -> void:
 		twist = wrapf(torso_yaw - global_rotation.y, -PI, PI)
 		_shape.basis = Basis(Vector3.UP, twist)
 		waist = bottom * Transform3D(MechBody.tilt(lean * deg_to_rad(knobs.lean_angle)), Vector3.ZERO)
-	_pelvis.global_transform = MechBody.pelvis(waist)
+	_pelvis.global_transform = MechBody.current.pelvis(waist)
 	# RECOGIDAS tirado y subiendo; ESTIRADAS parado y ya al empezar a enderezarse, así llegan antes de quedar derecho.
 	var folded := state == State.LIMP or state == State.LIFT
 	_tuck = move_toward(_tuck, 1.0 if folded else 0.0,
@@ -81,7 +81,7 @@ func _place_body(delta: float) -> void:
 	var root := _root()
 	if standing:
 		if not _planted:
-			_feet = [MechBody.foot_rest(root, -1.0), MechBody.foot_rest(root, 1.0)]
+			_feet = [MechBody.current.foot_rest(root, -1.0), MechBody.current.foot_rest(root, 1.0)]
 			_planted = true
 		_stepping(delta, root)
 	else:
@@ -91,24 +91,24 @@ func _place_body(delta: float) -> void:
 		var side := -1.0 if i == 0 else 1.0
 		# Estiradas: parado, donde pisan; enderezándose, debajo de las caderas (donde va a pisar); recién caído, donde
 		# pisaban.
-		var ground := _foot_ground(i) if standing else (MechBody.foot_rest(root, side) if state == State.RIGHT
+		var ground := _foot_ground(i) if standing else (MechBody.current.foot_rest(root, side) if state == State.RIGHT
 			else _feet[i])
-		var open := MechBody.leg(MechBody.hip(waist, side), ground, root.basis)
+		var open := MechBody.current.leg(MechBody.current.hip(waist, side), ground, root.basis)
 		_legs[i].pose(_blend(open, _tucked_leg(waist, side), share) if share > 0.001 else open)
 
 
 ## UNA PIERNA RECOGIDA, en el espacio de la cintura: el muslo adelante y casi horizontal, la canilla de vuelta abajo y
 ## el pie debajo de la cadera, plano con el cuerpo. Se pliega, no se achica: las piezas no se estiran.
 func _tucked_leg(waist: Transform3D, side: float) -> Dictionary:
-	var hip := Vector3(side * MechBody.HIP_X, -MechBody.HIP_DROP, 0.0)
-	var knee := hip + Vector3(0.0, 0.15, -1.0).normalized() * MechBody.THIGH
-	var ankle := knee + Vector3(0.0, -0.45, 1.0).normalized() * MechBody.SHIN
+	var hip := Vector3(side * MechBody.current.HIP_X, -MechBody.current.HIP_DROP, 0.0)
+	var knee := hip + Vector3(0.0, 0.15, -1.0).normalized() * MechBody.current.THIGH
+	var ankle := knee + Vector3(0.0, -0.45, 1.0).normalized() * MechBody.current.SHIN
 	var up := waist.basis.y
 	return {
 		"thigh": MechBody.segment(waist * hip, waist * knee, up),
 		"shin": MechBody.segment(waist * knee, waist * ankle, up),
-		"foot": Transform3D(waist.basis, waist * (ankle + Vector3(0.0, MechBody.FOOT_SIZE.y * 0.5 - MechBody.ANKLE,
-			-MechBody.FOOT_AHEAD))),
+		"foot": Transform3D(waist.basis, waist * (ankle + Vector3(0.0, MechBody.current.FOOT_SIZE.y * 0.5 - MechBody.current.ANKLE,
+			-MechBody.current.FOOT_AHEAD))),
 		"knee": waist * knee,
 	}
 
@@ -141,7 +141,7 @@ func _stepping(delta: float, root: Transform3D) -> void:
 		var foot := int(_step["foot"])
 		_step["clock"] = float(_step["clock"]) + delta
 		# Adonde va lo sigue al cuerpo mientras está en el aire.
-		_step["to"] = MechBody.foot_rest(ahead, -1.0 if foot == 0 else 1.0)
+		_step["to"] = MechBody.current.foot_rest(ahead, -1.0 if foot == 0 else 1.0)
 		if float(_step["clock"]) >= float(_step["time"]):
 			_feet[foot] = _step["to"]
 			_step = {}
@@ -149,14 +149,14 @@ func _stepping(delta: float, root: Transform3D) -> void:
 	var worst := -1
 	var farthest := knobs.step_radius
 	for i in 2:
-		var rest := MechBody.foot_rest(ahead, -1.0 if i == 0 else 1.0)
+		var rest := MechBody.current.foot_rest(ahead, -1.0 if i == 0 else 1.0)
 		var away := Vector2(rest.x - _feet[i].x, rest.z - _feet[i].z).length()
 		if away > farthest:
 			worst = i
 			farthest = away
 	if worst < 0:
 		return
-	_step = {"foot": worst, "from": _feet[worst], "to": MechBody.foot_rest(ahead, -1.0 if worst == 0 else 1.0),
+	_step = {"foot": worst, "from": _feet[worst], "to": MechBody.current.foot_rest(ahead, -1.0 if worst == 0 else 1.0),
 		"clock": 0.0, "time": knobs.step_time}
 	steps_taken += 1
 

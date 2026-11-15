@@ -13,8 +13,8 @@ var _foot: MeshInstance3D = null
 var _hip: MeshInstance3D = null
 var _knee: MeshInstance3D = null
 var _ankle: MeshInstance3D = null
-## Cuántas veces más largos el muslo y la canilla que los del F2 (ver BalanceBody.leg_scale). Se pone antes de agregarla.
-var length_scale := 1.0
+## Las medidas del cuerpo que la lleva (ver BalanceBody.measures). Se ponen antes de agregarla.
+var measures := MechBody.current
 
 
 func _init() -> void:
@@ -22,15 +22,15 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	var thickness := MechBody.LEG_THICKNESS
-	_thigh = Clay.limb(self, thickness * 0.5, MechBody.THIGH * length_scale, Vector3.ZERO, Clay.METAL.darkened(0.1))
-	_shin = Clay.limb(self, thickness * 0.5, MechBody.SHIN * length_scale, Vector3.ZERO, Clay.METAL.darkened(0.2))
-	_foot = Clay.box(self, MechBody.FOOT_SIZE, Vector3.ZERO, MechBody.JOINT_COLOR)
+	var thickness := measures.LEG_THICKNESS
+	_thigh = Clay.limb(self, thickness * 0.5, measures.THIGH, Vector3.ZERO, Clay.METAL.darkened(0.1))
+	_shin = Clay.limb(self, thickness * 0.5, measures.SHIN, Vector3.ZERO, Clay.METAL.darkened(0.2))
+	_foot = Clay.box(self, measures.FOOT_SIZE, Vector3.ZERO, MechBody.JOINT_COLOR)
 	# El disco de la cadera, apenas más ancho que la pierna para que no se pisen las caras; la rodilla y el tobillo,
 	# esferas que asoman de la pierna.
-	_hip = Clay.cylinder(self, MechBody.JOINT_RADIUS * 1.15, thickness * 1.04, Vector3.ZERO, MechBody.JOINT_COLOR)
-	_knee = Clay.sphere(self, MechBody.JOINT_RADIUS, Vector3.ZERO, MechBody.JOINT_COLOR)
-	_ankle = Clay.sphere(self, MechBody.JOINT_RADIUS * 0.85, Vector3.ZERO, MechBody.JOINT_COLOR)
+	_hip = Clay.cylinder(self, measures.JOINT_RADIUS * 1.15, thickness * 1.04, Vector3.ZERO, MechBody.JOINT_COLOR)
+	_knee = Clay.sphere(self, measures.JOINT_RADIUS, Vector3.ZERO, MechBody.JOINT_COLOR)
+	_ankle = Clay.sphere(self, measures.JOINT_RADIUS * 0.85, Vector3.ZERO, MechBody.JOINT_COLOR)
 
 
 ## La pone como dice `leg` (ver MechBody.leg): las partes, y las articulaciones en sus puntas (el muslo va de la cadera a la
@@ -44,9 +44,9 @@ func pose(leg: Dictionary) -> void:
 	_foot.transform = leg["foot"]
 	# El eje del disco (su Y) va de costado: el X de la parte.
 	var sideways := Basis(Vector3.BACK, PI * 0.5)
-	_hip.transform = Transform3D(thigh.basis * sideways, thigh * Vector3(0.0, 0.0, MechBody.THIGH * length_scale * 0.5))
+	_hip.transform = Transform3D(thigh.basis * sideways, thigh * Vector3(0.0, 0.0, measures.THIGH * 0.5))
 	_knee.transform = Transform3D(thigh.basis * sideways, leg["knee"])
-	_ankle.transform = Transform3D(shin.basis * sideways, shin * Vector3(0.0, 0.0, -MechBody.SHIN * length_scale * 0.5))
+	_ankle.transform = Transform3D(shin.basis * sideways, shin * Vector3(0.0, 0.0, -measures.SHIN * 0.5))
 
 
 ## Dónde está el pie (mundo).

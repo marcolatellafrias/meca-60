@@ -29,8 +29,6 @@ static var CORE_ON := true
 ## EL CUERPO DE ESTA MECA (los campos de la pestaña «Brazos y piernas», ver VortexShape) y lo que sale de él: el largo
 ## de las piernas y de los brazos en partes de los de las otras (los lee Mech.cabin_kit).
 static var BODY := VortexShape.new()
-static var LEGS := 0.75
-static var ARMS := 1.0
 const RIM_OUT := 1.0
 const RIM_IN := 0.8
 const SHELL := 0.15
@@ -82,8 +80,6 @@ static func apply(shape: VortexShape) -> void:
 	CORE_ON = shape.core
 	for field: String in BODY_FIELDS:
 		BODY.set(field, shape.get(field))
-	LEGS = MechBody.SIZES[clampi(shape.leg_length, 0, 2)] / MechBody.stride
-	ARMS = MechBody.SIZES[clampi(shape.arm_length, 0, 2)] / MechBody.reach
 
 
 ## La forma de hoy, para guardarla.

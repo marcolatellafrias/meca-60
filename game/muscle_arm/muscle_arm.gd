@@ -66,17 +66,17 @@ func _ready() -> void:
 	var base := anchor.global_transform
 	var shoulder := base * shoulder_local
 	var pose := _pose(shoulder, shoulder + base.basis * _local(_rest), base.basis)
-	upper = _piece("Brazo", UPPER_MASS * weight, Vector3(MechBody.LEG_THICKNESS, MechBody.LEG_THICKNESS, upper_length()), pose["upper"],
+	upper = _piece("Brazo", UPPER_MASS * weight, Vector3(measures.LEG_THICKNESS, measures.LEG_THICKNESS, upper_length()), pose["upper"],
 		Clay.METAL.darkened(0.1))
-	forearm = _piece("Antebrazo", FOREARM_MASS * weight, Vector3(MechBody.LEG_THICKNESS, MechBody.LEG_THICKNESS, forearm_length()),
+	forearm = _piece("Antebrazo", FOREARM_MASS * weight, Vector3(measures.LEG_THICKNESS, measures.LEG_THICKNESS, forearm_length()),
 		pose["forearm"], Clay.METAL.darkened(0.2))
 	# El hombro y el codo, esferas en la punta de arriba de cada pieza; la mano, en la de abajo del antebrazo, con su
 	# forma de choque (el puño).
-	Clay.sphere(upper, MechBody.LEG_THICKNESS * 0.78, Vector3(0, 0, upper_length() * 0.5), MechBody.JOINT_COLOR)
-	Clay.sphere(forearm, MechBody.LEG_THICKNESS * 0.66, Vector3(0, 0, forearm_length() * 0.5), MechBody.JOINT_COLOR)
+	Clay.sphere(upper, measures.LEG_THICKNESS * 0.78, Vector3(0, 0, upper_length() * 0.5), MechBody.JOINT_COLOR)
+	Clay.sphere(forearm, measures.LEG_THICKNESS * 0.66, Vector3(0, 0, forearm_length() * 0.5), MechBody.JOINT_COLOR)
 	_mount_hand(forearm)
-	Clay.shape_box(forearm, Vector3(MechHand.PALM.y, MechHand.PALM.x * 2.2, MechHand.length() * 0.8) * MechBody.thick,
-		Vector3(0, 0, -forearm_length() * 0.5 - MechHand.length() * MechBody.thick * 0.4))
+	Clay.shape_box(forearm, Vector3(MechHand.PALM.y, MechHand.PALM.x * 2.2, MechHand.length() * 0.8) * measures.thick,
+		Vector3(0, 0, -forearm_length() * 0.5 - MechHand.length() * measures.thick * 0.4))
 	# El hombro, una bola; el codo, una bisagra sobre su eje (el Z de la articulación).
 	var ball := PinJoint3D.new()
 	_join(ball, anchor, upper, Transform3D(Basis(), shoulder))

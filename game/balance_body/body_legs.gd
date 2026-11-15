@@ -61,12 +61,12 @@ var _legs: Array[MechLeg] = []
 
 
 func _ready() -> void:
-	_pelvis = PelvisLift.tube(Clay.METAL.darkened(0.15))
+	_pelvis = PelvisLift.tube(Clay.METAL.darkened(0.15), body.measures.PELVIS_SIZE.y)
 	_pelvis.top_level = true
 	add_child(_pelvis)
 	for i in 2:
 		var leg := MechLeg.new()
-		leg.length_scale = body.leg_scale
+		leg.measures = body.measures
 		add_child(leg)
 		_legs.append(leg)
 
@@ -92,7 +92,7 @@ func place(k: BodySettings, delta: float) -> void:
 			if classic:
 				_feet = [_home(0, yaw, 0.0), _home(1, yaw, 0.0)]
 			else:
-				_feet = [MechBody.foot_rest(root, -1.0), MechBody.foot_rest(root, 1.0)]
+				_feet = [body.measures.foot_rest(root, -1.0), body.measures.foot_rest(root, 1.0)]
 			_feet_yaw = [yaw, yaw]
 			_swing = -1
 			_still_clock = 0.0
@@ -111,24 +111,24 @@ func place(k: BodySettings, delta: float) -> void:
 		body.global_transform * Vector3(0.0, -body.size.y * 0.5, 0.0))
 	if not standing:
 		waist.basis = body.global_basis
-	_pelvis.global_transform = MechBody.pelvis(waist)
+	_pelvis.global_transform = body.measures.pelvis(waist)
 	var crouched := clampf((1.0 - body.moves.rod_scale) / maxf(1.0 - k.crouch_rod, 0.01), 0.0, 1.0)
 	var out := lerpf(k.knee_out, k.knee_out_crouched, crouched)
 	for i in 2:
 		var side := -1.0 if i == 0 else 1.0
 		# Estiradas: parada, donde pisan; recién caída, donde pisaban; enderezándose o en el aire, debajo de las caderas.
-		var ground := _foot_ground(k, i) if standing else (_feet[i] if folded else MechBody.foot_rest(root, side))
+		var ground := _foot_ground(k, i) if standing else (_feet[i] if folded else body.measures.foot_rest(root, side))
 		var facing := Basis(Vector3.UP, _feet_yaw[i]) if standing else root.basis
-		var hip := MechBody.hip(waist, side)
-		var to_ankle := ground + Vector3.UP * MechBody.ANKLE - hip
-		var reach := (MechBody.THIGH + MechBody.SHIN) * body.leg_scale - 0.5
+		var hip := body.measures.hip(waist, side)
+		var to_ankle := ground + Vector3.UP * body.measures.ANKLE - hip
+		var reach := body.measures.THIGH + body.measures.SHIN - 0.5
 		if to_ankle.length() > reach:
-			ground = hip + to_ankle.normalized() * reach - Vector3.UP * MechBody.ANKLE
+			ground = hip + to_ankle.normalized() * reach - Vector3.UP * body.measures.ANKLE
 		# LA RODILLA: hacia adelante de la pelvis y del pie, y un poco hacia afuera.
 		var ahead := -waist.basis.z - facing.z
 		ahead.y = 0.0
 		var knee_way := ahead.normalized() + waist.basis.x * side * out
-		var open := MechBody.leg(hip, ground, facing, knee_way, body.leg_scale)
+		var open := body.measures.leg(hip, ground, facing, knee_way)
 		_legs[i].pose(BodyLegs._blend(open, _tucked_leg(waist, side), share) if share > 0.001 else open)
 
 
@@ -184,11 +184,11 @@ func _target(k: BodySettings, index: int, yaw: float, left: float) -> Dictionary
 		var whole := _swing_time if _swing == index else left
 		lead = body.support_speed / speed * minf(_reach(k), speed * whole * 0.5)
 	var basis := Basis(Vector3.UP, facing)
-	var at := body.support + body.support_speed * left + basis * Vector3(side * MechBody.STANCE_X, 0.0, 0.0) + lead
+	var at := body.support + body.support_speed * left + basis * Vector3(side * body.measures.STANCE_X, 0.0, 0.0) + lead
 	# NUNCA CRUZADO: de su lado del otro pie, a por lo menos MechBody.STANCE_X * 1.2.
 	var local := basis.inverse() * (at - _feet[other])
-	if local.x * side < MechBody.STANCE_X * 1.2:
-		local.x = side * MechBody.STANCE_X * 1.2
+	if local.x * side < body.measures.STANCE_X * 1.2:
+		local.x = side * body.measures.STANCE_X * 1.2
 		at = _feet[other] + basis * local
 	at.y = body.support.y
 	return {"at": at, "yaw": facing}
@@ -254,7 +254,7 @@ func _home(index: int, yaw: float, ahead: float) -> Vector3:
 	var side := -1.0 if index == 0 else 1.0
 	var root := Transform3D(Basis(Vector3.UP, yaw), body.support + Vector3(body.support_speed.x, 0.0,
 		body.support_speed.z) * ahead)
-	return _ground(MechBody.foot_rest(root, side))
+	return _ground(body.measures.foot_rest(root, side))
 
 
 ## DÓNDE PISA el pie `index` si le quedan `left` segundos de paso: un tercio de paso adelante de su lugar, hacia donde va.
@@ -303,15 +303,15 @@ func _ground(at: Vector3) -> Vector3:
 ## UNA PIERNA RECOGIDA, en el espacio de la cintura: el muslo adelante y casi horizontal, la canilla de vuelta abajo y
 ## el pie debajo de la cadera.
 func _tucked_leg(waist: Transform3D, side: float) -> Dictionary:
-	var hip := Vector3(side * MechBody.HIP_X, -MechBody.HIP_DROP, 0.0)
-	var knee := hip + Vector3(0.0, 0.15, -1.0).normalized() * MechBody.THIGH * body.leg_scale
-	var ankle := knee + Vector3(0.0, -0.45, 1.0).normalized() * MechBody.SHIN * body.leg_scale
+	var hip := Vector3(side * body.measures.HIP_X, -body.measures.HIP_DROP, 0.0)
+	var knee := hip + Vector3(0.0, 0.15, -1.0).normalized() * body.measures.THIGH
+	var ankle := knee + Vector3(0.0, -0.45, 1.0).normalized() * body.measures.SHIN
 	var up := waist.basis.y
 	return {
 		"thigh": MechBody.segment(waist * hip, waist * knee, up),
 		"shin": MechBody.segment(waist * knee, waist * ankle, up),
-		"foot": Transform3D(waist.basis, waist * (ankle + Vector3(0.0, MechBody.FOOT_SIZE.y * 0.5 - MechBody.ANKLE,
-			-MechBody.FOOT_AHEAD))),
+		"foot": Transform3D(waist.basis, waist * (ankle + Vector3(0.0, body.measures.FOOT_SIZE.y * 0.5 - body.measures.ANKLE,
+			-body.measures.FOOT_AHEAD))),
 		"knee": waist * knee,
 	}
 
@@ -325,10 +325,10 @@ static func _blend(from: Dictionary, to: Dictionary, share: float) -> Dictionary
 	}
 
 
-## EL PASO DE ESTAS PIERNAS: el del F1 y el del F4 son los de piernas medianas; se escalan con su largo (MechBody.stride,
-## del F2, por el de este cuerpo: BalanceBody.leg_scale).
+## EL PASO DE ESTAS PIERNAS: el del F1 y el del F4 son los de piernas medianas; se escalan con su largo (el `stride` de
+## las medidas de este cuerpo).
 func _stride() -> float:
-	return MechBody.stride * body.leg_scale
+	return body.measures.stride
 
 
 func _reach(k: BodySettings) -> float:

@@ -63,7 +63,7 @@ func _round(what: String) -> void:
 	await _shot("%s, de frente" % what, "%s_frente" % what.to_lower().replace(" ", "_"))
 	for index in 2:
 		var arm := _mech.arms[index] as MuscleArm
-		var hand := arm.forearm.global_transform * Vector3(0, 0, -MechBody.FOREARM * 0.5 - 1.0)
+		var hand := arm.forearm.global_transform * Vector3(0, 0, -arm.forearm_length() * 0.5 - 1.0)
 		_eye.global_position = hand + Vector3(arm.side * 5.0, 2.0, -7.0)
 		_eye.look_at(hand)
 		await _shot("%s: la mano %s" % [what, "izquierda" if arm.side < 0.0 else "derecha"],

@@ -50,10 +50,9 @@ const PUNCHES := {
 var side := 1.0
 var anchor: PhysicsBody3D = null
 var shoulder_local := Vector3.ZERO
-## EL LARGO DE ESTE BRAZO, por el del F2 (MechBody): el brazo, el antebrazo, las posturas y las piñas, `length_scale`
-## veces. Lo da la meca según su cabina (Mech.cabin_kit; el usuario, 15/11/2026, de la del vórtice: «opciones para
-## cambiar brazos y piernas solo para esta versión»).
-var length_scale := 1.0
+## LAS MEDIDAS DEL CUERPO QUE LO LLEVA (ver MechBody, BalanceBody.measures): el largo del brazo y del antebrazo, el de
+## las posturas y las piñas, y el ancho de la mano. Las pone la meca. Se ponen antes de agregarlo.
+var measures := MechBody.current
 ## La postura pedida, y la piña que está tirando.
 var stance := Stance.COVER
 var punching := Punch.NONE
@@ -127,18 +126,18 @@ func stance_at(which: Stance) -> Vector3:
 	return (STANCES[which] as Vector3) * reach()
 
 
-## EL LARGO DE ESTE BRAZO: el factor de las posturas y las piñas (MechBody.reach, del F2, por `length_scale`), y el
-## brazo y el antebrazo (m).
+## EL LARGO DE ESTE BRAZO: el factor de las posturas y las piñas (el `reach` de sus medidas), y el brazo y el antebrazo
+## (m).
 func reach() -> float:
-	return MechBody.reach * length_scale
+	return measures.reach
 
 
 func upper_length() -> float:
-	return MechBody.UPPER_ARM * length_scale
+	return measures.UPPER_ARM
 
 
 func forearm_length() -> float:
-	return MechBody.FOREARM * length_scale
+	return measures.FOREARM
 
 
 ## DÓNDE SE PIDE EL PUÑO AHORA, desde el hombro (como `STANCES`): a lo largo de la piña y de vuelta a su postura, o en
@@ -192,7 +191,7 @@ func _target() -> Dictionary:
 ## dos piezas, con su −Z a lo largo y su Y sobre EL EJE DEL CODO (el que es perpendicular al brazo y al antebrazo): así
 ## el giro del brazo sobre su largo es el que pone al antebrazo donde va, como con una bisagra.
 func _pose(shoulder: Vector3, fist: Vector3, torso: Basis) -> Dictionary:
-	var arm := MechBody.arm(shoulder, fist, side, torso, length_scale)
+	var arm := measures.arm(shoulder, fist, side, torso)
 	var elbow: Vector3 = arm["elbow"]
 	var wrist: Vector3 = arm["wrist"]
 	var across := (elbow - shoulder).cross(wrist - elbow)
@@ -222,5 +221,5 @@ func _along(way: Vector3) -> Basis:
 ## cuarto de vuelta sobre Z lleva su Y al −X de la pieza y su X al Y, y la palma queda en −side·Y: hacia adentro.
 func _mount_hand(forearm: Node3D) -> void:
 	_hand = MechHand.build(forearm, side)
-	_hand.scale = Vector3.ONE * MechBody.thick
+	_hand.scale = Vector3.ONE * measures.thick
 	_hand.transform = Transform3D(Basis(Vector3.BACK, PI * 0.5), Vector3(0, 0, -forearm_length() * 0.5))

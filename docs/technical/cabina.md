@@ -100,8 +100,9 @@ En las filas de la meca, **F2** (`CabinShapePanel`), en cuatro pestañas (el cor
   aparte, en celdas de trama desde el frente), el zócalo, su color y cuánto se ve, y el marco.
 - **Las sillas**: la altura de los ojos que buscan, y **dónde van las tres de adelante** (la del medio, del vidrio; los
   brazos, a los costados y atrás).
-- **Brazos y piernas** (`MechBody.dress`, que no depende de la caja): el largo de los brazos y el de las piernas
-  (chico, mediano o grande), el ancho de los dos y cuánto se estiran las piernas paradas.
+- **Brazos y piernas** (`MechBody.current.dress`, que no depende de la caja): el largo de los brazos y el de las
+  piernas (chico, mediano o grande), el ancho de los dos, cuánto se estiran las piernas paradas y cuánto salen los
+  hombros. Son las medidas de todas las mecas menos las que tienen su propio cuerpo (la del vórtice: ver pendulo.md).
 
 **Un solo Guardar**: la escribe en `game/consoles/cabin_trama.tres` (no se sube al repositorio), rearma todas las mecas
 y es la forma de todas, también al reiniciar. *La forma guardada de antes (`cabin_shape.tres`) ya no se usa.* Abajo, las

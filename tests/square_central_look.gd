@@ -65,7 +65,7 @@ func _ready() -> void:
 	form.cell = 13
 	form.across = 12
 	form.height_cells = roundi((_disc + _clear + _slab * 2.0 - CabinGrid.SLAB * 2.0) / CabinGrid.CELL)
-	# `--hombro=2`: cuánto salen los hombros del costado (ver CabinGrid.SHOULDER_OUT).
+	# `--hombro=2`: cuánto salen los hombros del costado (ver MechBody.shoulder_out).
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--hombro="):
 			form.shoulder_out = float(argument.trim_prefix("--hombro="))

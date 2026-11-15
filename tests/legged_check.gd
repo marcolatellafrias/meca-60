@@ -111,7 +111,7 @@ func _foot_error() -> float:
 	var root := _cube._root()
 	var worst := 0.0
 	for i in 2:
-		var rest := MechBody.foot_rest(root, -1.0 if i == 0 else 1.0)
+		var rest := MechBody.current.foot_rest(root, -1.0 if i == 0 else 1.0)
 		var foot := _cube._foot_ground(i)
 		worst = maxf(worst, Vector2(rest.x - foot.x, rest.z - foot.z).length())
 	return worst

@@ -28,27 +28,26 @@ const NAMES := ["Meca de práctica", "Meca discreta", "Meca física"]
 ## adelante, y el usuario lo volvió («estaban bien los brazos a la mitad, no me gusta el sacrificio en rango»). Del 13 al
 ## 14/11/2026 se elegía en el panel F2 (el piso y el módulo); con la cabina de un piso, va en el medio.* Y cuánto pesan los físicos, en partes de lo que pesa el brazo solo (ver
 ## MuscleArm.weight).
-## *Era una constante (1 m); desde el 15/11/2026 se cambia jugando (CabinGrid.SHOULDER_OUT, el F2: «Brazos y piernas»).*
+## *Era una constante (1 m); desde el 15/11/2026 se cambia jugando (MechBody.shoulder_out, el F2: «Brazos y piernas»).*
 
 
 static func shoulder(shape := Cabin.SQUARE) -> Vector3:
-	return (cabin_kit(shape)["shoulder"] as Vector3) + Vector3(CabinGrid.SHOULDER_OUT * MechBody.thick, 0.0, 0.0)
+	var kit := cabin_kit(shape)
+	var body: MechBody = kit["body"]
+	return (kit["shoulder"] as Vector3) + Vector3(body.shoulder_out * body.thick, 0.0, 0.0)
 
 
 ## LO QUE CAMBIA CON LA CABINA, en un solo lugar: la caja (`box`), el hombro sin lo que lo corre afuera (`shoulder`), si
 ## se ven las toberas (`nozzles`; la redonda, sin: el usuario, 15/11/2026: «quitaremos las toberas de abajo… sólo de
-## la cilíndrica»), el largo de las piernas (`legs`) y el de los brazos (`arms`), por los del F2 (la del vórtice, los de su
-## F2: «opciones para cambiar brazos y piernas solo para esta versión»).
+## la cilíndrica») y EL CUERPO (`body`, sus medidas: MechBody; el de su F2 en la del vórtice: «opciones para cambiar
+## brazos y piernas solo para esta versión»).
 static func cabin_kit(shape: Cabin) -> Dictionary:
 	if shape == Cabin.ROUND:
-		return {"box": RoundGrid.box(), "shoulder": RoundGrid.shoulder(), "nozzles": false, "legs": 1.0, "arms": 1.0}
+		return {"box": RoundGrid.box(), "shoulder": RoundGrid.shoulder(), "nozzles": false, "body": MechBody.current}
 	if shape == Cabin.VORTEX:
-		return {"box": VortexCabin.box(), "shoulder": VortexCabin.shoulder(), "nozzles": false, "legs": VortexCabin.LEGS, "arms": VortexCabin.ARMS}
-	return {"box": CabinGrid.box(), "shoulder": CabinGrid.shoulder(), "nozzles": true, "legs": 1.0, "arms": 1.0}
-
-
-## Las piernas de la del vórtice: las da su forma (VortexCabin.LEGS, de su F2, VortexShapePanel; el usuario: «opciones
-## para cambiar brazos y piernas solo para esta versión»).
+		return {"box": VortexCabin.box(), "shoulder": VortexCabin.shoulder(), "nozzles": false,
+			"body": MechBody.from_shape(VortexCabin.BODY)}
+	return {"box": CabinGrid.box(), "shoulder": CabinGrid.shoulder(), "nozzles": true, "body": MechBody.current}
 
 
 const ARM_WEIGHT := 0.4
@@ -74,7 +73,7 @@ func _init() -> void:
 	super()
 	mass = MASS
 	size = CabinGrid.box()
-	hover = MechBody.WAIST
+	hover = measures.WAIST
 
 
 func _ready() -> void:
@@ -84,8 +83,8 @@ func _ready() -> void:
 	var kit := cabin_kit(cabin_shape)
 	size = kit["box"]
 	show_nozzles = kit["nozzles"]
-	leg_scale = kit["legs"]
-	hover = MechBody.waist_scaled(leg_scale)
+	measures = kit["body"]
+	hover = measures.WAIST
 	super()
 	add_to_group(SandboxPossession.GROUP)
 
@@ -128,7 +127,7 @@ func _build_arms() -> void:
 			arm = PoseArm.new()
 		arm.side = side
 		arm.anchor = self
-		arm.length_scale = cabin_kit(cabin_shape)["arms"]
+		arm.measures = measures
 		var at := shoulder(cabin_shape)
 		arm.shoulder_local = Vector3(side * at.x, at.y, at.z)
 		arm.stance = MechArm.Stance.NORMAL
@@ -219,4 +218,4 @@ static func knobs_for(arms: Arms) -> BodySettings:
 ## todas las parcelas que la arman. *Estaba copiado en cuatro.*
 static func standing_height(shape := Cabin.SQUARE) -> float:
 	var kit := cabin_kit(shape)
-	return MechBody.waist_scaled(kit["legs"]) + (kit["box"] as Vector3).y * 0.5
+	return (kit["body"] as MechBody).WAIST + (kit["box"] as Vector3).y * 0.5

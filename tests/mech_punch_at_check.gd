@@ -32,10 +32,12 @@ func _ready() -> void:
 		# Con «-- --vortice», la del vórtice (sus brazos, los de su F2).
 		if OS.get_cmdline_user_args().has("--vortice"):
 			mech.cabin_shape = Mech.Cabin.VORTEX
-		# Con «-- --brazos=N», los brazos de la del vórtice, N veces (VortexCabin.ARMS).
+		# Con «-- --brazos=N», el largo de los brazos de la del vórtice (0 chico, 1 mediano, 2 grande: VortexCabin.BODY).
 		for argument in OS.get_cmdline_user_args():
 			if argument.begins_with("--brazos="):
-				VortexCabin.ARMS = float(argument.trim_prefix("--brazos="))
+				VortexCabin.BODY.arm_length = int(argument.trim_prefix("--brazos="))
+			if argument.begins_with("--grosor="):
+				VortexCabin.BODY.thickness = int(argument.trim_prefix("--grosor="))
 		mech.position = Vector3(0.0, Mech.standing_height(mech.cabin_shape), 0.0)
 		add_child(mech)
 		await _seconds(2.0)
@@ -53,8 +55,8 @@ func _ready() -> void:
 				await get_tree().physics_frame
 				clock += 1.0 / Engine.physics_ticks_per_second
 				closest = minf(closest, arm._hand.global_position.distance_to(goal))
-			print("%s, %s: %s · la mano pasó a %.2f m de donde apunta (el brazo alcanza %.1f m)" % [mech.name, label,
-				"la tiró" if fired else "NO LA TIRÓ", closest, reach])
+			print("%s, %s: %s · la mano pasó a %.2f m de donde apunta (el brazo alcanza %.1f m; ancho ×%.2f)" % [mech.name,
+				label, "la tiró" if fired else "NO LA TIRÓ", closest, reach, mech.measures.thick])
 		mech.queue_free()
 		await _seconds(0.5)
 	get_tree().quit()

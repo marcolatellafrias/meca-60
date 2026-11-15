@@ -37,13 +37,13 @@ func _ready() -> void:
 	# Sus piezas van en el mundo: la pose ya viene en el mundo.
 	top_level = true
 	global_transform = Transform3D()
-	_sphere.radius = PoseArmSettings.current.fist_radius * MechBody.thick
+	_sphere.radius = PoseArmSettings.current.fist_radius * measures.thick
 	_rest = stance_at(stance)
-	_upper = Clay.limb(self, MechBody.LEG_THICKNESS * 0.5, upper_length(), Vector3.ZERO, Clay.METAL.darkened(0.1))
-	_forearm = Clay.limb(self, MechBody.LEG_THICKNESS * 0.5, forearm_length(), Vector3.ZERO, Clay.METAL.darkened(0.2))
+	_upper = Clay.limb(self, measures.LEG_THICKNESS * 0.5, upper_length(), Vector3.ZERO, Clay.METAL.darkened(0.1))
+	_forearm = Clay.limb(self, measures.LEG_THICKNESS * 0.5, forearm_length(), Vector3.ZERO, Clay.METAL.darkened(0.2))
 	# El hombro y el codo, esferas en la punta de arriba de cada pieza; la mano, en la de abajo del antebrazo.
-	Clay.sphere(_upper, MechBody.LEG_THICKNESS * 0.78, Vector3(0, 0, upper_length() * 0.5), MechBody.JOINT_COLOR)
-	Clay.sphere(_forearm, MechBody.LEG_THICKNESS * 0.66, Vector3(0, 0, forearm_length() * 0.5), MechBody.JOINT_COLOR)
+	Clay.sphere(_upper, measures.LEG_THICKNESS * 0.78, Vector3(0, 0, upper_length() * 0.5), MechBody.JOINT_COLOR)
+	Clay.sphere(_forearm, measures.LEG_THICKNESS * 0.66, Vector3(0, 0, forearm_length() * 0.5), MechBody.JOINT_COLOR)
 	_mount_hand(_forearm)
 	_place(_target())
 
@@ -76,7 +76,7 @@ func _place(pose: Dictionary) -> void:
 ## EL PUÑO BARRE SU CAMINO en el mundo, desde donde estaba el paso anterior, y le pega a lo suelto que toca.
 func _sweep(pose: Dictionary, delta: float) -> void:
 	var forearm: Transform3D = pose["forearm"]
-	var fist: Vector3 = (pose["wrist"] as Vector3) - forearm.basis.z * MechHand.length() * MechBody.thick * 0.5
+	var fist: Vector3 = (pose["wrist"] as Vector3) - forearm.basis.z * MechHand.length() * measures.thick * 0.5
 	var motion := fist - _last_fist
 	if _has_last and stage() == Stage.STRIKE and motion.length() > 0.001 and motion.length() < JUMP:
 		var query := PhysicsShapeQueryParameters3D.new()

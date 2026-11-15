@@ -32,40 +32,59 @@ const BASE := {
 }
 ## Chico, mediano (el de siempre) y grande.
 const SIZES: Array[float] = [0.75, 1.0, 1.25]
+## UN CUERPO ES UN OBJETO DE MEDIDAS (15/11/2026; el usuario, de la meca del vórtice: «cada panel de la meca original
+## debería poder tener como varias variaciones si se le cambia algo estructural… después de todo es solamente
+## información»): cada meca lleva el suyo (BalanceBody.measures, que le da su cabina en Mech.cabin_kit). `current` es el
+## del F2 de la cuadrada (lo pone CabinGrid.apply), y lo llevan todas menos las que tienen su propio F2 (la del vórtice:
+## `from_shape`). *Hasta el 15/11/2026 eran medidas estáticas, una para todas.*
+static var current := MechBody.new()
+
+
+## UN CUERPO CON LAS MEDIDAS de una forma guardada que tenga los cinco campos del cuerpo (`thickness`, `arm_length`,
+## `leg_length`, `leg_stretch`, `shoulder_out`: CabinShape, VortexShape).
+static func from_shape(shape: Resource) -> MechBody:
+	var body := MechBody.new()
+	body.dress(shape.get("thickness"), shape.get("arm_length"), shape.get("leg_length"), shape.get("leg_stretch"),
+		shape.get("shoulder_out"))
+	return body
+
+
 ## LO QUE SE ELIGIÓ: el tamaño (0, 1, 2) del ancho, del largo de los brazos y del de las piernas, y cuánto se estiran
 ## las piernas paradas (de la cadera al tobillo, en partes del largo de la pierna; con 0,64 queda la de siempre).
-static var thick_size := 1
-static var arm_size := 1
-static var leg_size := 1
-static var stretch := 0.64
+var thick_size := 1
+var arm_size := 1
+var leg_size := 1
+var stretch := 0.64
+## Cuánto salen los hombros del costado de la caja (m, con el ancho de siempre; ver Mech.shoulder).
+var shoulder_out := 1.0
 ## Sus factores: el ancho (`thick`, para las manos, el puño y las articulaciones), el largo de los brazos (`reach`, para
 ## las posturas y las piñas) y el de las piernas (`stride`).
-static var thick := 1.0
-static var reach := 1.0
-static var stride := 1.0
+var thick := 1.0
+var reach := 1.0
+var stride := 1.0
 ## La cintura: dónde se apoya el torso, sobre el suelo, parada.
-static var WAIST := 7.4
+var WAIST := 7.4
 ## Las caderas, a los costados de la pelvis y debajo de la cintura.
-static var HIP_X := 2.7
-static var HIP_DROP := 1.2
-static var THIGH := 4.4
-static var SHIN := 4.4
+var HIP_X := 2.7
+var HIP_DROP := 1.2
+var THIGH := 4.4
+var SHIN := 4.4
 ## Las piernas, macizas (lo pidió el usuario el 12/11/2026: «más chunky»), y sus ARTICULACIONES —cadera, rodilla,
 ## tobillo—, discos de ese mismo grosor, con el eje de costado.
-static var LEG_THICKNESS := 2.1
-static var JOINT_RADIUS := LEG_THICKNESS * 0.62
+var LEG_THICKNESS := 2.1
+var JOINT_RADIUS := LEG_THICKNESS * 0.62
 ## La pelvis, entre los dos discos de las caderas: corta, para darles lugar.
-static var PELVIS_SIZE := Vector3(HIP_X * 2.0 - LEG_THICKNESS, 1.8, 3.6)
+var PELVIS_SIZE := Vector3(HIP_X * 2.0 - LEG_THICKNESS, 1.8, 3.6)
 ## El color de las articulaciones y de los pies: un poco más oscuro que la pierna, no negro.
 const JOINT_COLOR := Color(0.36, 0.375, 0.4)
-static var ANKLE := 0.6
-static var FOOT_SIZE := Vector3(2.2, 0.7, 3.4)
+var ANKLE := 0.6
+var FOOT_SIZE := Vector3(2.2, 0.7, 3.4)
 ## Cuánto va el pie adelante del tobillo.
-static var FOOT_AHEAD := 0.4
+var FOOT_AHEAD := 0.4
 ## Dónde se paran los pies, a cada lado.
-static var STANCE_X := HIP_X + 0.3
-static var UPPER_ARM := 5.5
-static var FOREARM := 5.5
+var STANCE_X := HIP_X + 0.3
+var UPPER_ARM := 5.5
+var FOREARM := 5.5
 ## Hacia dónde dobla el codo, en el espacio del torso (`x` del lado derecho): afuera, abajo y un poco atrás.
 const ELBOW_HINT := Vector3(1.0, -0.8, 0.5)
 
@@ -75,7 +94,8 @@ const ELBOW_HINT := Vector3(1.0, -0.8, 0.5)
 ## está la pierna—, y es la altura de la caja sobre el piso (Mech la toma al armarse: BalanceBody.hover); el paso del F1
 ## lo escalan las piernas con `stride` al leerlo. NO ESCRIBE NINGUNA PERILLA (cada número, un solo dueño). Lo que se armó
 ## antes no cambia (ver Mech.rebuild_all).
-static func dress(thickness: int, arm_length: int, leg_length: int, leg_stretch: float) -> void:
+func dress(thickness: int, arm_length: int, leg_length: int, leg_stretch: float, shoulder := 1.0) -> void:
+	shoulder_out = shoulder
 	thick_size = clampi(thickness, 0, SIZES.size() - 1)
 	arm_size = clampi(arm_length, 0, SIZES.size() - 1)
 	leg_size = clampi(leg_length, 0, SIZES.size() - 1)
@@ -106,12 +126,6 @@ static func waist_for(thickness: int, leg_length: int, leg_stretch: float) -> fl
 	return float(BASE["ANKLE"]) * t + float(BASE["HIP_DROP"]) * t + (float(BASE["THIGH"]) + float(BASE["SHIN"])) * l * leg_stretch
 
 
-## LA CINTURA DE UNAS PIERNAS `legs` veces más largas que las elegidas (ver BalanceBody.leg_scale): el tobillo y la
-## caída de la cadera van con el ancho; el muslo y la canilla, con el largo. Con 1, `WAIST`.
-static func waist_scaled(legs: float) -> float:
-	return ANKLE + HIP_DROP + (THIGH + SHIN) * legs * stretch
-
-
 ## LA INCLINACIÓN: `lean` es el ángulo (radianes) hacia cada lado, x a la derecha e y adelante, en el espacio de la
 ## raíz. Gira alrededor del eje horizontal que la hace caer para ese lado.
 static func tilt(lean: Vector2) -> Basis:
@@ -127,7 +141,7 @@ static func waist(root: Transform3D, height: float, lean_basis: Basis) -> Transf
 
 
 ## LA PELVIS (su centro), colgada de la cintura.
-static func pelvis(waist_transform: Transform3D) -> Transform3D:
+func pelvis(waist_transform: Transform3D) -> Transform3D:
 	return waist_transform * Transform3D(Basis(), Vector3(0.0, -PELVIS_SIZE.y * 0.5, 0.0))
 
 
@@ -137,30 +151,29 @@ static func torso(waist_transform: Transform3D, twist: float) -> Transform3D:
 
 
 ## La cadera de `side`, en el mundo.
-static func hip(waist_transform: Transform3D, side: float) -> Vector3:
+func hip(waist_transform: Transform3D, side: float) -> Vector3:
 	return waist_transform * Vector3(side * HIP_X, -HIP_DROP, 0.0)
 
 
 ## Dónde se para el pie de `side` con la meca quieta: el punto del piso, en el mundo.
-static func foot_rest(root: Transform3D, side: float) -> Vector3:
+func foot_rest(root: Transform3D, side: float) -> Vector3:
 	return root * Vector3(side * STANCE_X, 0.0, 0.0)
 
 
 ## UNA PIERNA, de la cadera `hip` al pie apoyado en `ground` (el punto del piso bajo el tobillo, en el mundo; con el pie
 ## en el aire, más arriba), con el pie mirando según `facing` (sólo cuenta su giro). La rodilla dobla hacia `knee_way`
-## (por defecto, hacia donde mira el pie). `legs`: cuántas veces más largos el muslo y la canilla (ver
-## BalanceBody.leg_scale). Devuelve las partes (`thigh`, `shin`, `foot`: su centro y orientación; los
+## (por defecto, hacia donde mira el pie). Devuelve las partes (`thigh`, `shin`, `foot`: su centro y orientación; los
 ## largos van por −Z) y las articulaciones (`knee`, `ankle`).
-static func leg(hip_point: Vector3, ground: Vector3, facing: Basis, knee_way := Vector3.ZERO, legs := 1.0) -> Dictionary:
+func leg(hip_point: Vector3, ground: Vector3, facing: Basis, knee_way := Vector3.ZERO) -> Dictionary:
 	var forward := -facing.z
 	forward.y = 0.0
 	forward = forward.normalized() if forward.length_squared() > 0.0001 else Vector3.FORWARD
 	var flat := Basis.looking_at(forward, Vector3.UP)
 	var ankle := ground + Vector3.UP * ANKLE
 	var bend := knee_way if knee_way.length_squared() > 0.0001 else forward
-	var knee := joint(hip_point, ankle, THIGH * legs, SHIN * legs, bend)
-	var reach := (ankle - hip_point).limit_length((THIGH + SHIN) * legs - 0.01)
-	var end := hip_point + reach
+	var knee := joint(hip_point, ankle, THIGH, SHIN, bend)
+	var to_ankle := (ankle - hip_point).limit_length(THIGH + SHIN - 0.01)
+	var end := hip_point + to_ankle
 	return {
 		"thigh": segment(hip_point, knee, bend),
 		"shin": segment(knee, end, bend),
@@ -173,10 +186,10 @@ static func leg(hip_point: Vector3, ground: Vector3, facing: Basis, knee_way := 
 ## UN BRAZO, del hombro `shoulder_point` al puño `fist` (en el mundo, o en el espacio que sea, con `torso_basis` el del
 ## torso en ese espacio). Devuelve `upper` y `forearm` (centro y orientación; el largo por −Z), `elbow` y `wrist` (el
 ## puño, al alcance).
-static func arm(shoulder_point: Vector3, fist: Vector3, side: float, torso_basis: Basis, arms := 1.0) -> Dictionary:
+func arm(shoulder_point: Vector3, fist: Vector3, side: float, torso_basis: Basis) -> Dictionary:
 	var hint := torso_basis * Vector3(side * ELBOW_HINT.x, ELBOW_HINT.y, ELBOW_HINT.z)
-	var elbow := joint(shoulder_point, fist, UPPER_ARM * arms, FOREARM * arms, hint)
-	var wrist := shoulder_point + (fist - shoulder_point).limit_length((UPPER_ARM + FOREARM) * arms - 0.01)
+	var elbow := joint(shoulder_point, fist, UPPER_ARM, FOREARM, hint)
+	var wrist := shoulder_point + (fist - shoulder_point).limit_length(UPPER_ARM + FOREARM - 0.01)
 	var up := torso_basis * Vector3.UP
 	return {
 		"upper": segment(shoulder_point, elbow, up),

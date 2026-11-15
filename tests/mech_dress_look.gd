@@ -54,8 +54,8 @@ func _ready() -> void:
 		mech.freeze = true
 		if mech.label != null:
 			mech.label.visible = false
-		var far := maxf(CabinGrid.HEIGHT + MechBody.WAIST, CabinGrid.SIZE) * 1.9
-		var middle := (MechBody.WAIST + CabinGrid.HEIGHT) * 0.5
+		var far := maxf(CabinGrid.HEIGHT + MechBody.current.WAIST, CabinGrid.SIZE) * 1.9
+		var middle := (MechBody.current.WAIST + CabinGrid.HEIGHT) * 0.5
 		_title.text = "%s · de costado" % each[0]
 		_look(Vector3(-far, middle, -far * 0.15), Vector3(0, middle, 0), 40.0)
 		shots.append(await _grab())

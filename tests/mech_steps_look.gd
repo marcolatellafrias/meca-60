@@ -70,7 +70,7 @@ func _ready() -> void:
 	_eye.make_current()
 	await _watch(1.0)
 	print("PASOS NUEVOS: %s · largo del paso %.1f m (piernas medianas ×%.2f)" % [LegSettings.current.new_steps,
-		LegSettings.current.stride, MechBody.stride])
+		LegSettings.current.stride, _mech.measures.stride])
 	# CAMINA DERECHO.
 	_mech.move = Vector2(0.0, 1.0)
 	await _watch(2.0)

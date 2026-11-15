@@ -34,8 +34,8 @@ func _ready() -> void:
 		var asked := (float(steps[0][0]) + float(steps[1][0])) / k.punch_speed
 		var base := _arm.anchor.global_transform
 		var shoulder := base * _arm.shoulder_local
-		var target := shoulder + base.basis * _arm._local((steps[1][1] as Vector3) * MechBody.reach)
-		var windup := shoulder + base.basis * _arm._local((steps[0][1] as Vector3) * MechBody.reach)
+		var target := shoulder + base.basis * _arm._local((steps[1][1] as Vector3) * _arm.reach())
+		var windup := shoulder + base.basis * _arm._local((steps[0][1] as Vector3) * _arm.reach())
 		var way := (target - windup).normalized()
 		_arm.punch(kind as MechArm.Punch)
 		var clock := 0.0
@@ -46,7 +46,7 @@ func _ready() -> void:
 		while clock < 2.5:
 			await get_tree().physics_frame
 			clock += 1.0 / Engine.physics_ticks_per_second
-			var hand := _arm.forearm.global_transform * Vector3(0, 0, -MechBody.FOREARM * 0.5)
+			var hand := _arm.forearm.global_transform * Vector3(0, 0, -_arm.forearm_length() * 0.5)
 			if arrived < 0.0 and hand.distance_to(target) < REACHED:
 				arrived = clock
 			if clock < asked + float(steps[2][0]) / k.punch_speed:

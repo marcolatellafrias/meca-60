@@ -83,7 +83,7 @@ func _ready() -> void:
 ## la caja; por defecto, la cuadrada).
 static func lowered(half_height := -1.0) -> float:
 	var half := CabinGrid.HALF_HEIGHT if half_height < 0.0 else half_height
-	return -half - LOWERED_BELOW * MechBody.WAIST / MechBody.BASE["WAIST"]
+	return -half - LOWERED_BELOW * MechBody.current.WAIST / MechBody.BASE["WAIST"]
 
 
 ## Su piso subido: al ras del piso de la cabina.
@@ -123,8 +123,8 @@ func _place() -> void:
 
 
 ## LA PELVIS: el tambor hueco, centrado en su medio (como la caja de siempre).
-static func tube(color: Color) -> MeshInstance3D:
-	return holed(outline(drum()), hole(), -MechBody.PELVIS_SIZE.y * 0.5, MechBody.PELVIS_SIZE.y * 0.5, color)
+static func tube(color: Color, tall := MechBody.current.PELVIS_SIZE.y) -> MeshInstance3D:
+	return holed(outline(drum()), hole(), -tall * 0.5, tall * 0.5, color)
 
 
 ## ── UNA PLACA CON UN HUECO REDONDO ───────────────────────────────────────────────────────────────────────────────
