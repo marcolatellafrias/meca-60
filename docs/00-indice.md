@@ -33,6 +33,7 @@ El detalle, en [[partida]].
 | [[meca-cinematica]] | La meca de siempre movida a mano, y la regla de adentro: todo como si la meca estuviera quieta. |
 | [[laboratorio-cinematico]] | El experimento del cubo cinemático contra cajas sueltas: cuatro formas de tratar lo suelto, medidas. |
 | [[base-comun]] | Lo que comparten la meca propia y los jefes (`BalanceBody`), y el resto en piezas. |
+| [[cuerpo-por-piezas]] | La regla común (acordada, sin hacer): motor del torso discreto o físico, brazos y dibujo, por separado. |
 | [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto. |
 | [[cabina]] | La cabina sobre su grilla (módulo Interior): celdas, módulos, pisos y asientos. |
 | [[paneles]] | Los paneles de la silla (módulo Tableros y controles): se abren con E, toman el mouse para apuntar un brazo; la tira con la energía y la meca dibujada. |
