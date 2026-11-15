@@ -122,7 +122,8 @@ func _glass(cut: float, side_to: float, roof_to: float) -> void:
 ##   · LAS ARISTAS, con una sola regla: TODO BORDE DE UN PAÑO lleva marco, también donde el vidrio se junta con la chapa
 ##     o con el piso («preferiría que elijas… yo diría que es con el límite, así tenemos más consistencia»).
 ##   · LOS PARANTES ENTRE PUESTOS: en cada división del tablero, uno que sube por el frente, dobla por el corte y sigue
-##     por el vidrio del techo; y uno en el medio de cada costado, de piso a techo. Caen donde nadie mira.
+##     por el vidrio del techo. Caen donde nadie mira. En los costados, ninguno: sólo el del límite con la chapa (el
+##     usuario, 15/11/2026: «no me interesa tener el parante lateral… solamente el del límite»).
 ## Son barras cuadradas centradas en la arista; sólo se ven (adentro, se choca con el vidrio).
 func _frame(cut: float, side_to: float, roof_to: float) -> void:
 	if CabinGrid.FRAME_KIND == 0:
@@ -159,10 +160,6 @@ func _frame(cut: float, side_to: float, roof_to: float) -> void:
 			_bar(Vector3(x, yc, f), Vector3(x, y1, roof_from), post)
 		if roof_to - roof_from > 0.01:
 			_bar(Vector3(x, y1, roof_from), Vector3(x, y1, roof_to), post)
-	for side: float in [-1.0, 1.0]:
-		var z := (roof_from + side_to) * 0.5
-		var top := y1 if z >= roof_from else yc + (z - f)
-		_bar(Vector3(side * h, y0, z), Vector3(side * h, top, z), post)
 
 
 ## Una barra cuadrada del marco, de `a` a `b`, centrada en la línea.
