@@ -56,7 +56,10 @@ func _ready() -> void:
 	_mech.kinematic = not OS.get_cmdline_user_args().has("--fisica")
 	_mech.has_cabin = false
 	_mech.scripted = true
-	_mech.position = Vector3(0.0, Mech.standing_height(), 0.0)
+	# Con «--redonda», la caja de la cabina redonda.
+	if OS.get_cmdline_user_args().has("--redonda"):
+		_mech.cabin_shape = Mech.Cabin.ROUND
+	_mech.position = Vector3(0.0, Mech.standing_height(_mech.cabin_shape), 0.0)
 	add_child(_mech)
 	_eye = Camera3D.new()
 	_eye.far = 2000.0

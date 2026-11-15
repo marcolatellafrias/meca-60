@@ -26,7 +26,10 @@ func _ready() -> void:
 		mech.arms_kind = kind
 		mech.has_cabin = false
 		mech.scripted = true
-		mech.position = Vector3(0.0, Mech.standing_height(), 0.0)
+		# Con «-- --redonda», la caja de la cabina redonda.
+		if OS.get_cmdline_user_args().has("--redonda"):
+			mech.cabin_shape = Mech.Cabin.ROUND
+		mech.position = Vector3(0.0, Mech.standing_height(mech.cabin_shape), 0.0)
 		add_child(mech)
 		await _seconds(2.0)
 		var arm: MechArm = mech.arms[mech.arms.size() - 1]
