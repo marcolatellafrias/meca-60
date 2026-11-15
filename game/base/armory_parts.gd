@@ -76,17 +76,19 @@ static func _forearm(root: Node3D, heavy: bool, with_hand := true) -> void:
 			Clay.DARK.lightened(0.15))
 
 
-## EL TALADRO: una mecha enorme, en el eje del antebrazo, casi el doble de larga que él.
+## EL TALADRO: una mecha enorme, ancha y corta, en el eje del antebrazo.
 static func _drill(root: Node3D) -> void:
 	Clay.cylinder(root, 1.15, 0.6, Vector3(0, 0, TIP - 1.1), MechBody.JOINT_COLOR, Vector3(90, 0, 0))
-	Clay.cylinder(root, 1.45, 0.9, Vector3(0, 0, TIP - 1.8), Clay.METAL.darkened(0.1), Vector3(90, 0, 0))
+	# más ancha y más corta (el usuario, 15/11/2026)
+	var width := 2.0
+	Clay.cylinder(root, width + 0.15, 0.9, Vector3(0, 0, TIP - 1.8), Clay.METAL.darkened(0.1), Vector3(90, 0, 0))
 	var bit_start := TIP - 2.25
-	var bit := 6.5
-	_cone(root, 1.3, bit, Vector3(0, 0, bit_start - bit * 0.5), Vector3(-90, 0, 0), STEEL)
+	var bit := 4.2
+	_cone(root, width, bit, Vector3(0, 0, bit_start - bit * 0.5), Vector3(-90, 0, 0), STEEL)
 	# la espiral, en anillos que se achican hacia la punta
-	for i in 7:
-		var t := (i + 0.5) / 7.0
-		Clay.cylinder(root, 1.3 * (1.0 - t) + 0.1, 0.16, Vector3(0, 0, bit_start - t * bit), STEEL.darkened(0.3),
+	for i in 5:
+		var t := (i + 0.5) / 5.0
+		Clay.cylinder(root, width * (1.0 - t) + 0.1, 0.18, Vector3(0, 0, bit_start - t * bit), STEEL.darkened(0.3),
 			Vector3(90, 0, 14))
 
 
