@@ -16,6 +16,8 @@ extends Resource
 ## EL NÚCLEO DEL MEDIO, en el primer piso: la columna opaca que hace que arriba se camine en anillo. Sin él, arriba es un
 ## piso entero.
 @export var core := true
+## ATRÁS ELEVADO, con un escalón: el piso y el borde de atrás suben juntos (la idea 9 de tests/vortex_ideas_look).
+@export var back_raised := true
 ## El radio del vórtice (m): el hueco del piso de la planta baja por donde te sube. Aparte del núcleo de arriba.
 @export_range(0.4, 2.5, 0.05) var vortex_radius := 0.7
 @export_group("La escalera")

@@ -11,8 +11,12 @@ extends MechCabin
 ##   · LA PLANTA BAJA, cerrada: la máquina, el banco de reparación, el tablero de la energía y las municiones (sólo se
 ##     ven). La ESCALERA CARACOL, pegada a la pared, sube al primer piso por un hueco del piso de arriba; se pisa una
 ##     rampa en hélice (los escalones se ven).
-##   · EL PRIMER PISO, abierto: el anillo alrededor de un núcleo opaco que no se cruza; el borde con su bevel, el manejo
-##     adelante, los mandos de los brazos a los costados y las ametralladoras en enchufes del borde (sólo se ven).
+##   · EL PRIMER PISO, abierto: el anillo alrededor de un núcleo opaco que no se cruza; el borde con su bevel; ATRÁS,
+##     ELEVADO con un escalón (el piso y el borde suben juntos); LAS ZONAS DE TABLEROS, piezas paradas en el piso que
+##     crecen hasta el canto de afuera del disco, de anchos distintos (el manejo, los brazos, una chica); las
+##     ametralladoras a la altura del borde, en sus enchufes (sólo se ven). Es la idea 9 de tests/vortex_ideas_look
+##     (el usuario: «sí, al juego, pero las ametralladoras no me gustan subidas, y las zonas de tableros haría que tengan
+##     tamaños más variados, y tamaño mínimo, como zonas»).
 ## Arriba se camina al aire libre: el marco (ver MechCabin) lleva a todos hasta 2,6 m sobre el primer piso.
 
 ## LA FORMA SE CAMBIA JUGANDO (el F2 de su fila, VortexShapePanel; se guarda en `SAVED`, ver VortexShape): el radio, el
@@ -26,6 +30,19 @@ static var CLEAR := 3.0
 static var STAIR_OUT := 5.0
 static var STAIR_IN := 3.2
 static var CORE_ON := true
+## ATRÁS ELEVADO: si va, desde qué z hacia atrás (en partes del radio que se camina) y cuánto sube (m).
+static var BACK_ON := true
+const BACK_FROM := 0.24
+const RAISE := 0.6
+## LAS ZONAS DE TABLEROS: [ángulo (grados, desde el frente hacia la derecha), ancho (m), qué es]. Ninguna más angosta que
+## `MIN_ZONE`; salen `ZONE_DEPTH` hacia adentro del borde y llegan hasta el canto de afuera; `ZONE_TALL` de alto.
+const ZONES := [[0.0, 2.6, "drive"], [70.0, 1.6, "arm"], [290.0, 1.1, "arm"], [265.0, 0.9, "panel"]]
+const MIN_ZONE := 0.9
+const ZONE_DEPTH := 0.7
+const ZONE_TALL := 1.1
+## Las ametralladoras y los enchufes vacíos, en el borde (grados).
+const GUNS := [45.0, 315.0]
+const SOCKETS := [100.0, 180.0, 240.0]
 ## EL CUERPO DE ESTA MECA (los campos de la pestaña «Brazos y piernas», ver VortexShape) y lo que sale de él: el largo
 ## de las piernas y de los brazos en partes de los de las otras (los lee Mech.cabin_kit).
 static var BODY := VortexShape.new()
@@ -78,6 +95,7 @@ static func apply(shape: VortexShape) -> void:
 	# La escalera deja por lo menos un paso de 0,9 m entre ella y el tubo del vórtice.
 	STAIR_IN = maxf(STAIR_OUT - shape.stair_width, TUBE + TUBE_WALL + 0.9)
 	CORE_ON = shape.core
+	BACK_ON = shape.back_raised
 	for field: String in BODY_FIELDS:
 		BODY.set(field, shape.get(field))
 
@@ -88,6 +106,7 @@ static func current() -> VortexShape:
 	now.radius = OUTER
 	now.floor_height = CLEAR
 	now.core = CORE_ON
+	now.back_raised = BACK_ON
 	now.vortex_radius = TUBE
 	now.stair_width = STAIR_OUT - STAIR_IN
 	for field: String in BODY_FIELDS:
@@ -124,10 +143,36 @@ static func out(angle: float) -> Vector3:
 	return Vector3(sin(angle), 0.0, -cos(angle))
 
 
+## Desde qué z empieza atrás (hacia +z).
+static func back_from() -> float:
+	return WALK * BACK_FROM
+
+
+## Si el punto a `reach` del centro hacia `angle` está en la parte elevada de atrás.
+static func is_back(angle: float, reach: float) -> bool:
+	return BACK_ON and -cos(angle) * reach > back_from()
+
+
+## El piso donde se pisa hacia `angle`, a `reach` del centro: el primer piso, o atrás, más alto.
+static func floor_at(angle: float, reach: float) -> float:
+	return upper_floor() + (RAISE if is_back(angle, reach) else 0.0)
+
+
+## El alto de arriba del borde hacia `angle` (por afuera).
+static func rim_top(angle: float) -> float:
+	return upper_floor() + RIM_OUT + (RAISE if is_back(angle, OUTER) else 0.0)
+
+
+## Hasta dónde sube la escalera: el piso de arriba donde termina (atrás, más alto).
+static func stair_top() -> float:
+	return floor_at(STAIR_TO, (STAIR_IN + STAIR_OUT) * 0.5)
+
+
 ## Donde se mira en primera persona al poseerla: parado en el manejo, adelante (ver MechKeys.camera, que le suma el
 ## alto de los ojos sentado).
 func top_seat() -> Vector3:
-	return out(0.0) * (WALK - 0.6) + Vector3(0.0, upper_floor() + 1.65 - SeatInteractable.STATION_EYE_HEIGHT, 0.0)
+	return out(0.0) * (WALK - ZONE_DEPTH - 0.55) + Vector3(0.0, upper_floor() + 1.65 - SeatInteractable.STATION_EYE_HEIGHT,
+		0.0)
 
 
 func _ready() -> void:
@@ -142,10 +187,15 @@ func _ready() -> void:
 	_tube()
 	_stairs()
 	_rooms()
-	for station: Array in [[0.0, "drive"], [deg_to_rad(70.0), "arm"], [deg_to_rad(290.0), "arm"],
-			[deg_to_rad(40.0), "gun"], [deg_to_rad(320.0), "gun"], [deg_to_rad(100.0), "socket"],
-			[deg_to_rad(180.0), "socket"], [deg_to_rad(255.0), "socket"]]:
-		_station(station[0], station[1])
+	_rim()
+	if BACK_ON:
+		_raised_back()
+	for zone: Array in ZONES:
+		_zone(deg_to_rad(zone[0]), maxf(zone[1], MIN_ZONE), zone[2])
+	for degrees: float in GUNS:
+		_gun(deg_to_rad(degrees), true)
+	for degrees: float in SOCKETS:
+		_gun(deg_to_rad(degrees), false)
 	_vortex = Area3D.new()
 	_vortex.name = "Vórtice"
 	_vortex.collision_layer = 0
@@ -173,15 +223,13 @@ func _shell() -> void:
 	var wall := OUTER - SHELL
 	# Afuera: el fondo, la pared hasta el borde de arriba, el bevel y la cara de adentro del borde.
 	_revolve(self, [Vector2(TUBE + TUBE_WALL, low), Vector2(OUTER - 0.15, low), Vector2(OUTER, low + 0.15),
-		Vector2(OUTER, floor1 + RIM_OUT), Vector2(WALK, floor1 + RIM_IN), Vector2(WALK, floor1)], METAL)
+		Vector2(OUTER, floor1)], METAL)
 	# Adentro de la planta baja: la pared y el piso.
 	_revolve(self, [Vector2(wall, floor1 - DECK_SLAB), Vector2(wall, floor0)], METAL.lightened(0.08))
 	_revolve(self, [Vector2(wall, floor0), Vector2(TUBE + TUBE_WALL, floor0)], LOW_FLOOR)
 	_arc_shapes(TUBE + TUBE_WALL, wall, 0.0, TAU, low, floor0)
-	# La pared choca gruesa hacia afuera (el que se resbala adentro cuando la meca arranca no la atraviesa); y el
-	# borde de arriba, desde el piso hasta su alto.
+	# La pared choca gruesa hacia afuera (el que se resbala adentro cuando la meca arranca no la atraviesa).
 	_arc_shapes(wall, OUTER + 0.5, 0.0, TAU, floor0, floor1)
-	_arc_shapes(WALK, OUTER + 0.5, 0.0, TAU, floor1, floor1 + RIM_OUT)
 
 
 ## EL PRIMER PISO: la losa con el hueco de la escalera (ver `_hole_from`) y el núcleo opaco.
@@ -199,13 +247,16 @@ func _upstairs() -> void:
 	# Los cantos del hueco.
 	for r: float in [STAIR_IN, STAIR_OUT]:
 		_revolve(self, [Vector2(r, floor1), Vector2(r, floor1 - DECK_SLAB)], METAL, hole_from, STAIR_TO)
+	var rail := stair_top() - floor1
 	# La baranda del hueco, del lado de adentro (se ve; no choca: el que se cae, cae a la escalera).
 	var posts := 8
 	for i in posts + 1:
 		var angle := lerpf(hole_from, STAIR_TO, float(i) / posts)
-		Clay.cylinder(self, 0.03, 1.0, out(angle) * (STAIR_IN + 0.05) + Vector3(0, floor1 + 0.5, 0), DARK_METAL)
-	_revolve(self, [Vector2(STAIR_IN + 0.08, floor1 + 1.0), Vector2(STAIR_IN + 0.08, floor1 + 0.94)], DARK_METAL,
-		hole_from, STAIR_TO)
+		var base := floor_at(angle, STAIR_IN + 0.05)
+		Clay.cylinder(self, 0.03, 1.0, out(angle) * (STAIR_IN + 0.05) + Vector3(0, base + 0.5, 0), DARK_METAL)
+	_revolve(self, [Vector2(STAIR_IN + 0.08, floor1 + rail + 1.0), Vector2(STAIR_IN + 0.08, floor1 + rail + 0.94)],
+		DARK_METAL, maxf(hole_from, PI - acos(minf(back_from() / (STAIR_IN + 0.08), 1.0))) if BACK_ON else hole_from,
+		STAIR_TO)
 	# El núcleo: opaco, con una tapa; choca. Se puede sacar (ver VortexShape.core).
 	if not CORE_ON:
 		return
@@ -243,14 +294,14 @@ func _tube() -> void:
 ## hélice.
 func _stairs() -> void:
 	var floor0 := ground_floor()
-	var rise := (upper_floor() - floor0) / STEPS
+	var rise := (stair_top() - floor0) / STEPS
 	var sweep := (STAIR_TO - STAIR_FROM) / STEPS
 	for i in STEPS:
 		add_child(_wedge(STAIR_IN, STAIR_OUT, STAIR_FROM + sweep * i, STAIR_FROM + sweep * (i + 1), floor0,
 			floor0 + rise * (i + 1), STAIR.darkened(0.06 * (i % 2))))
 	var pieces := STEPS * 2
 	var span := (STAIR_TO - STAIR_FROM) / pieces
-	var climb := (upper_floor() - floor0) / pieces
+	var climb := (stair_top() - floor0) / pieces
 	for i in pieces:
 		var a0 := STAIR_FROM + span * i
 		var a1 := a0 + span
@@ -290,45 +341,131 @@ func _rooms() -> void:
 		crate.rotation.y = -deg_to_rad(angle)
 
 
-## UN PUESTO del primer piso, en el borde (sólo se ve): el manejo, los mandos de un brazo, una ametralladora en su
-## enchufe, o un enchufe vacío.
-func _station(angle: float, kind: String) -> void:
+## EL BORDE: por afuera, la pared hasta `rim_top`; arriba, el bevel hacia adentro; por adentro, la cara hasta el piso
+## (atrás, hasta el piso elevado). Choca hasta su alto.
+func _rim() -> void:
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	var floor1 := upper_floor()
+	var sides := 192
+	for k in sides:
+		var a0 := TAU * k / sides
+		var a1 := TAU * (k + 1) / sides
+		var t0 := rim_top(a0)
+		var t1 := rim_top(a1)
+		var bevel := RIM_OUT - RIM_IN
+		var low0 := floor_at(a0, WALK)
+		var low1 := floor_at(a1, WALK)
+		_quad(tool, out(a0) * OUTER + Vector3(0, floor1, 0), out(a1) * OUTER + Vector3(0, floor1, 0),
+			out(a1) * OUTER + Vector3(0, t1, 0), out(a0) * OUTER + Vector3(0, t0, 0), FLAT)
+		_quad(tool, out(a0) * OUTER + Vector3(0, t0, 0), out(a1) * OUTER + Vector3(0, t1, 0),
+			out(a1) * WALK + Vector3(0, t1 - bevel, 0), out(a0) * WALK + Vector3(0, t0 - bevel, 0), FLAT)
+		_quad(tool, out(a0) * WALK + Vector3(0, t0 - bevel, 0), out(a1) * WALK + Vector3(0, t1 - bevel, 0),
+			out(a1) * WALK + Vector3(0, low1, 0), out(a0) * WALK + Vector3(0, low0, 0), FLAT)
+	add_child(_mesh(tool, METAL))
+	var pieces := 64
+	for k in pieces:
+		var a0 := TAU * k / pieces
+		var a1 := TAU * (k + 1) / pieces
+		_arc_shapes(WALK, OUTER + 0.5, a0, a1, floor1, rim_top((a0 + a1) * 0.5))
+
+
+## ATRÁS ELEVADO: el trozo de piso detrás de `back_from`, `RAISE` más alto, con su escalón (el canto, marcado); el hueco
+## de la escalera sigue abierto. Se ve y se pisa.
+func _raised_back() -> void:
+	var floor1 := upper_floor()
+	var top := floor1 + RAISE
+	var edge := back_from()
+	var half := acos(edge / WALK)
+	var hole_from := _hole_from()
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var pieces := 48
+	for k in pieces:
+		var a0 := PI - half + 2.0 * half * k / pieces
+		var a1 := PI - half + 2.0 * half * (k + 1) / pieces
+		var middle := (a0 + a1) * 0.5
+		var r0 := minf(edge / maxf(-cos(a0), 0.001), WALK)
+		var r1 := minf(edge / maxf(-cos(a1), 0.001), WALK)
+		var spans: Array = [[r0, r1, WALK]]
+		if middle > hole_from and middle < STAIR_TO:
+			spans = [[r0, r1, STAIR_IN], [STAIR_OUT, STAIR_OUT, WALK]]
+		for span: Array in spans:
+			var in0: float = span[0]
+			var in1: float = span[1]
+			var far: float = span[2]
+			if in0 >= far and in1 >= far:
+				continue
+			in0 = minf(in0, far)
+			in1 = minf(in1, far)
+			var p := [out(a0) * in0, out(a1) * in1, out(a1) * far, out(a0) * far]
+			_quad(tool, p[0] + Vector3(0, top, 0), p[3] + Vector3(0, top, 0), p[2] + Vector3(0, top, 0),
+				p[1] + Vector3(0, top, 0), FLAT)
+			_quad(tool, p[0] + Vector3(0, floor1, 0), p[0] + Vector3(0, top, 0), p[1] + Vector3(0, top, 0),
+				p[1] + Vector3(0, floor1, 0), FLAT)
+			var points := PackedVector3Array()
+			for corner: Vector3 in p:
+				points.append_array([corner + Vector3(0, floor1, 0), corner + Vector3(0, top, 0)])
+			_convex(points)
+	add_child(_mesh(tool, DECK.darkened(0.08)))
+	var width := 2.0 * sqrt(WALK * WALK - edge * edge)
+	Clay.box(self, Vector3(width, 0.06, 0.1), Vector3(0.0, top - 0.03, edge + 0.05), YELLOW.darkened(0.3))
+
+
+## UNA ZONA DE TABLEROS hacia `angle`, de `wide` de ancho: una pieza parada en el piso que sale `ZONE_DEPTH` hacia
+## adentro del borde y llega hasta el canto de afuera del disco, con la cara de arriba inclinada hacia adentro y los
+## mandos de lo que es (el manejo: palancas; un brazo: dos mandos; las otras: botones), repartidos por su ancho.
+func _zone(angle: float, wide: float, kind: String) -> void:
+	var inner := WALK - ZONE_DEPTH
+	var depth := OUTER - inner
+	var base := floor_at(angle, inner)
+	var holder := Node3D.new()
+	holder.position = out(angle) * (inner + depth * 0.5) + Vector3(0, base, 0)
+	holder.rotation.y = -angle
+	add_child(holder)
+	Clay.box(holder, Vector3(wide, ZONE_TALL, depth), Vector3(0, ZONE_TALL * 0.5, 0), METAL.darkened(0.1))
+	Clay.shape_box(interior, Vector3(wide, ZONE_TALL, depth), holder.position + Vector3(0, ZONE_TALL * 0.5, 0),
+		holder.basis)
+	# La cara de los mandos: arriba, en el lado de adentro, inclinada hacia quien está parado delante.
+	var face := Node3D.new()
+	face.position = Vector3(0, ZONE_TALL + 0.04, depth * 0.5 - 0.35)
+	face.rotation.x = deg_to_rad(30.0)
+	holder.add_child(face)
+	Clay.box(face, Vector3(wide - 0.1, 0.06, 0.6), Vector3.ZERO, DARK_METAL)
+	var groups := maxi(1, floori(wide / 0.7))
+	for g in groups:
+		var x := (g - (groups - 1) * 0.5) * (wide - 0.2) / groups
+		match kind:
+			"drive":
+				Clay.cylinder(face, 0.025, 0.42, Vector3(x, 0.24, 0.0), DARK_METAL)
+				Clay.sphere(face, 0.06, Vector3(x, 0.46, 0.0), RED)
+			"arm":
+				Clay.cylinder(face, 0.04, 0.3, Vector3(x, 0.17, 0.0), DARK_METAL)
+				Clay.box(face, Vector3(0.1, 0.1, 0.18), Vector3(x, 0.34, 0.0), RED)
+			_:
+				Clay.cylinder(face, 0.06, 0.06, Vector3(x, 0.05, 0.0), YELLOW if g % 2 == 0 else RED)
+	Clay.cylinder(face, 0.13, 0.04, Vector3(0.0, 0.04, 0.2), FACE)
+
+
+## UNA AMETRALLADORA EN SU ENCHUFE (o el enchufe vacío) arriba del borde, a su altura (el usuario: «las ametralladoras
+## no me gustan subidas»).
+func _gun(angle: float, mounted: bool) -> void:
 	var outward := out(angle)
-	if kind == "gun" or kind == "socket":
-		Clay.box(self, Vector3(0.45, 0.06, 0.45), outward * (WALK + 0.32) + Vector3(0, floor1 + RIM_OUT - 0.03, 0),
-			YELLOW.darkened(0.3)).rotation.y = -angle
-		if kind == "socket":
-			return
-		var gun := Node3D.new()
-		gun.position = outward * (WALK + 0.32) + Vector3(0.0, floor1 + RIM_OUT, 0.0)
-		gun.rotation.y = -angle
-		add_child(gun)
-		Clay.cylinder(gun, 0.07, 0.3, Vector3(0.0, 0.15, 0.0), DARK_METAL)
-		Clay.box(gun, Vector3(0.24, 0.24, 0.6), Vector3(0.0, 0.4, -0.05), DARK_METAL)
-		Clay.cylinder(gun, 0.05, 0.85, Vector3(0.0, 0.42, -0.75), DARK_METAL, Vector3(90.0, 0.0, 0.0))
-		Clay.box(gun, Vector3(0.5, 0.3, 0.04), Vector3(0.0, 0.5, -0.38), METAL)
-		for side: float in [-1.0, 1.0]:
-			Clay.cylinder(gun, 0.03, 0.2, Vector3(side * 0.13, 0.38, 0.3), YELLOW, Vector3(90.0, 0.0, 0.0))
+	var top := rim_top(angle) - (RIM_OUT - RIM_IN) * 0.3
+	Clay.box(self, Vector3(0.45, 0.06, 0.45), outward * (WALK + 0.32) + Vector3(0, top - 0.03, 0),
+		YELLOW.darkened(0.3)).rotation.y = -angle
+	if not mounted:
 		return
-	var bevel := Vector2(OUTER - WALK, RIM_OUT - RIM_IN)
-	var up := (Vector3.UP * bevel.x - outward * bevel.y).normalized()
-	var along := Vector3(cos(angle), 0.0, sin(angle))
-	var plate := Node3D.new()
-	plate.basis = Basis(along, up, along.cross(up))
-	plate.position = outward * (WALK + bevel.x * 0.5) + Vector3(0.0, floor1 + (RIM_IN + RIM_OUT) * 0.5, 0.0)
-	add_child(plate)
-	if kind == "drive":
-		for side: float in [-1.0, 1.0]:
-			Clay.box(plate, Vector3(0.16, 0.06, 0.24), Vector3(side * 0.2, 0.03, 0.0), DARK_METAL)
-			Clay.cylinder(plate, 0.025, 0.42, Vector3(side * 0.2, 0.24, 0.0), DARK_METAL)
-			Clay.sphere(plate, 0.06, Vector3(side * 0.2, 0.46, 0.0), RED)
-		return
-	Clay.box(plate, Vector3(0.7, 0.05, 0.3), Vector3(0.0, 0.025, 0.0), DARK_METAL)
+	var gun := Node3D.new()
+	gun.position = outward * (WALK + 0.32) + Vector3(0.0, top, 0.0)
+	gun.rotation.y = -angle
+	add_child(gun)
+	Clay.cylinder(gun, 0.07, 0.3, Vector3(0.0, 0.15, 0.0), DARK_METAL)
+	Clay.box(gun, Vector3(0.24, 0.24, 0.6), Vector3(0.0, 0.4, -0.05), DARK_METAL)
+	Clay.cylinder(gun, 0.05, 0.85, Vector3(0.0, 0.42, -0.75), DARK_METAL, Vector3(90.0, 0.0, 0.0))
+	Clay.box(gun, Vector3(0.5, 0.3, 0.04), Vector3(0.0, 0.5, -0.38), METAL)
 	for side: float in [-1.0, 1.0]:
-		Clay.cylinder(plate, 0.04, 0.3, Vector3(side * 0.22, 0.17, 0.0), DARK_METAL)
-		Clay.box(plate, Vector3(0.1, 0.1, 0.18), Vector3(side * 0.22, 0.34, 0.0), RED)
-	Clay.cylinder(plate, 0.13, 0.04, Vector3(0.0, 0.04, 0.0), FACE)
+		Clay.cylinder(gun, 0.03, 0.2, Vector3(side * 0.13, 0.38, 0.3), YELLOW, Vector3(90.0, 0.0, 0.0))
 
 
 ## ── EL MARCO Y EL VÓRTICE ────────────────────────────────────────────────────────────────────────────────────────
@@ -357,8 +494,8 @@ func seat_dummies() -> void:
 	var holder := mech.get_parent() as Node3D
 	if holder == null:
 		return
-	var places := [[0.0, upper_floor(), WALK - 0.45], [deg_to_rad(290.0), upper_floor(), WALK - 0.45],
-		[deg_to_rad(320.0), upper_floor(), WALK - 0.45], [deg_to_rad(300.0), ground_floor(), OUTER - 1.3]]
+	var places := [[0.0, upper_floor(), WALK - ZONE_DEPTH - 0.5], [deg_to_rad(290.0), upper_floor(), WALK - ZONE_DEPTH - 0.45],
+		[deg_to_rad(315.0), upper_floor(), WALK - 0.45], [deg_to_rad(300.0), ground_floor(), OUTER - 1.3]]
 	for i in places.size():
 		var angle: float = places[i][0]
 		var spot: Vector3 = out(angle) * float(places[i][2]) + Vector3(0.0, places[i][1], 0.0)
@@ -439,7 +576,7 @@ func _pop(body: CharacterRigidBody3D) -> void:
 
 ## DESDE DÓNDE VA EL HUECO DE ARRIBA: desde el escalón en que, bajando, la cabeza ya no pasa debajo del piso de arriba.
 func _hole_from() -> float:
-	var rise := (upper_floor() - ground_floor()) / STEPS
+	var rise := (stair_top() - ground_floor()) / STEPS
 	var step := clampi(floori((CLEAR - 2.0) / rise), 1, STEPS - 2)
 	return STAIR_FROM + (STAIR_TO - STAIR_FROM) * step / STEPS
 

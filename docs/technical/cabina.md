@@ -138,14 +138,16 @@ primera del sandbox (`Mech.Cabin.VORTEX`, brazos físicos):
   al lado del hueco; el que pisa el hueco baja despacio (4 m/s como mucho) hasta el suelo. Después irá una tapa de hojas
   que se abre en círculo.
 - **El F2** (VortexShapePanel, guarda en `game/mech/vortex/vortex_shape.tres`, del usuario): el radio, el alto de la
-  planta baja, el núcleo de arriba (sí o no), el radio del vórtice, el ancho de la escalera y la pestaña «Brazos y
+  planta baja, el núcleo de arriba (sí o no), atrás elevado (sí o no), el radio del vórtice, el ancho de la escalera y la pestaña «Brazos y
   piernas» de las otras mecas, pero de esta sola.
 - **La planta baja**, cerrada: la máquina, el banco de reparación, el tablero de la energía y las municiones (se ven y
   la máquina y el banco chocan). La **escalera caracol**, pegada a la pared, sube al primer piso por un hueco; se pisa
   una rampa en hélice.
-- **El primer piso**, abierto: un anillo alrededor de un núcleo opaco; el borde con su bevel, el manejo adelante, los
-  mandos de los brazos a los costados y las ametralladoras en enchufes del borde (sólo se ven). El marco lleva a todos
-  hasta 2,6 m sobre el piso.
+- **El primer piso**, abierto: un anillo alrededor de un núcleo opaco; el borde con su bevel; **atrás, elevado** con un
+  escalón (el piso y el borde suben 0,6 m juntos; la escalera llega hasta ahí); **las zonas de tableros**, piezas paradas
+  en el piso que crecen hasta el canto de afuera del disco, de anchos distintos y nunca menos de 0,9 m (el manejo, los
+  dos brazos, una chica); las ametralladoras a la altura del borde (todo sólo se ve; las zonas y lo elevado chocan). Es
+  la idea 9 de `tests/vortex_ideas_look`. El marco lleva a todos hasta 2,6 m sobre el piso.
 - **La U** te deja en la planta baja, al lado del hueco del vórtice. Sin sillas ni ascensor (G, X, Y, H no hacen
   nada).
 - `tests/vortex_mech_check.tscn`: uno sube por el vórtice, otro baja por el tubo; imprime dónde está cada uno.
