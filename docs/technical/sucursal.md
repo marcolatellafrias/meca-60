@@ -100,3 +100,7 @@ encima, y los contratos con uno firmado.
 `tests/armory_parts_look.tscn` (con ventana, unos 10 s): todos los componentes juntos, y después uno por uno, de cerca.
 `tests/armory_dressed_look.tscn` (con ventana, unos 8 s): una meca parada con todo puesto, de adelante, de atrás y de
 costado.
+`tests/armory_dressed_movie.tscn` (con `--write-movie`): la misma meca camina hasta dos pilas de cajas y les pega piñas,
+con física, vista desde afuera (`--vista=afuera`) o desde la tarima (`--vista=tarima`). Las dos pruebas aceptan los
+argumentos de la variante (sin el corte de las esquinas, el alto de la cabina y de la pelvis, los hombros abajo, los
+parantes): sólo para mirar, no se guarda nada.

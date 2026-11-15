@@ -27,18 +27,49 @@ func _ready() -> void:
 	world.environment.ambient_light_color = Color(0.82, 0.84, 0.87)
 	world.environment.ambient_light_energy = 0.7
 	add_child(world)
+	var args := OS.get_cmdline_user_args()
+	var mech := make_mech(self, args)
+	var prefix := "meca_variante" if args.size() > 1 else "meca_puesta"
+	var eye := Camera3D.new()
+	eye.fov = 50.0
+	add_child(eye)
+	eye.make_current()
+	await get_tree().create_timer(3.0).timeout
+	dress_variant(mech, args)
+	await get_tree().create_timer(2.0).timeout
+	var center := mech.global_position + Vector3(0, -4.0, 0)
+	var forward := -mech.global_basis.z
+	var right := mech.global_basis.x
+	for shot: Array in [["_1_adelante", forward * 30.0 + right * 12.0 + Vector3(0, 8, 0)],
+			["_2_atras", -forward * 30.0 - right * 14.0 + Vector3(0, 14, 0)],
+			["_3_costado", right * 32.0 + forward * 4.0 + Vector3(0, 4, 0)]]:
+		eye.global_position = center + (shot[1] as Vector3)
+		eye.look_at(center)
+		await _shot(prefix + str(shot[0]))
+	get_tree().quit()
+
+
+func _shot(file: String) -> void:
+	await get_tree().create_timer(0.5).timeout
+	if not _folder.is_empty() and DisplayServer.get_name() != "headless":
+		get_viewport().get_texture().get_image().save_png(_folder + "/" + file + ".png")
+		print("CAPTURA ", _folder + "/" + file + ".png")
+
+
+## LA MECA DE LA VARIANTE, armada en `parent` y sin vestir (ver los argumentos arriba). La usa también el video
+## (tests/armory_dressed_movie.gd).
+static func make_mech(parent: Node, args: PackedStringArray) -> Mech:
 	# LA VARIANTE (el usuario, 15/11/2026: «sin los chamfers de las cuatro esquinas y con la altura rebajada… a 5 metros»):
 	# --sin-chanfles, la caja sin el corte de las esquinas; --alto=5, la altura de la cintura (el «altura» del cartel, de
 	# la caja al piso), con muslo y canilla acortados en la misma proporción. Sólo en esta corrida: no se guarda nada.
 	# --pelvis=40: el alto de la pelvis de abajo, en celdas chicas (el usuario: «que la base sea un poco más alta… la
 	# segunda pelvis»).
 	var waist := 0.0
-	var prefix := "meca_puesta"
 	var shape := CabinShape.new()
 	if ResourceLoader.exists(CabinGrid.SAVED):
 		shape = (load(CabinGrid.SAVED) as CabinShape).duplicate() as CabinShape
 	var reshaped := false
-	for argument in OS.get_cmdline_user_args():
+	for argument in args:
 		if argument == "--sin-chanfles":
 			shape.corner_cells = 0
 			reshaped = true
@@ -60,7 +91,6 @@ func _ready() -> void:
 		print("pelvis de abajo: %d celdas (%.2f m) · cabina: %d celdas libres (%.2f m con piso y techo)" % [shape.base_cells,
 			shape.base_cells * CabinGrid.CELL, shape.height_cells, shape.height_cells * CabinGrid.CELL + CabinGrid.SLAB * 2.0])
 		CabinGrid.apply(shape)
-		prefix = "meca_variante"
 	if waist > 0.0:
 		var fixed := MechBody.ANKLE + MechBody.HIP_DROP
 		var legs := (MechBody.WAIST - fixed) / (MechBody.THIGH + MechBody.SHIN)
@@ -69,17 +99,16 @@ func _ready() -> void:
 		MechBody.THIGH *= factor
 		MechBody.SHIN *= factor
 		MechBody.WAIST = waist
-		prefix = "meca_variante"
 	var mech := Mech.new()
 	mech.arms_kind = Mech.Arms.POSE
 	mech.scripted = true
 	mech.position = Vector3(0, Mech.standing_height(), 0)
-	add_child(mech)
-	var eye := Camera3D.new()
-	eye.fov = 50.0
-	add_child(eye)
-	eye.make_current()
-	await get_tree().create_timer(3.0).timeout
+	parent.add_child(mech)
+	return mech
+
+
+## LA VISTE: lo de la armería, y los hombros abajo y los parantes si los argumentos lo piden.
+static func dress_variant(mech: Mech, args: PackedStringArray) -> void:
 	var loadout := BaseState.new().loadout
 	loadout["fist_left"] = "heavy_fist"
 	loadout["tool_right"] = "drill"
@@ -88,13 +117,13 @@ func _ready() -> void:
 	# --brazos-abajo: los hombros a la altura de la pelvis de abajo, sólo para la foto (la meca no tiene cómo ponerlos
 	# ahí: el usuario, 15/11/2026, «ponelos nomás para la foto»)
 	# (el usuario, después: «subiría un poco más los brazos»: a la altura del piso de la cabina, arriba de la pelvis)
-	if OS.get_cmdline_user_args().has("--brazos-abajo"):
+	if args.has("--brazos-abajo"):
 		for arm in mech.arms:
 			arm.shoulder_local.y = -CabinGrid.HALF_HEIGHT + CabinGrid.BASE + CabinGrid.SLAB
 	# --parantes: sin los marcos de la cabina, sólo dos parantes en L, finos, en las dos esquinas del frente, del piso
 	# y por el corte de arriba hasta el techo (el usuario: «los únicos parantes… los dos verticales de… las dos esquinas…
 	# cada parante tendría dos lados… que no sean tan gruesos»)
-	if OS.get_cmdline_user_args().has("--parantes"):
+	if args.has("--parantes"):
 		var bottom := -CabinGrid.HALF_HEIGHT + CabinGrid.BASE
 		var top := CabinGrid.HALF_HEIGHT - CabinGrid.CHAMFER * CabinGrid.TRAMA
 		var tall := top - bottom
@@ -125,22 +154,5 @@ func _ready() -> void:
 					Clay.DARK)
 				Clay.box(post, Vector3(thin, lengths[i], wing), Vector3(side * (half + thin * 0.5), 0, -thin + wing * 0.5),
 					Clay.DARK)
-	ArmoryParts.dress(mech, loadout, 1.0)
-	await get_tree().create_timer(2.0).timeout
-	var center := mech.global_position + Vector3(0, -4.0, 0)
-	var forward := -mech.global_basis.z
-	var right := mech.global_basis.x
-	for shot: Array in [["_1_adelante", forward * 30.0 + right * 12.0 + Vector3(0, 8, 0)],
-			["_2_atras", -forward * 30.0 - right * 14.0 + Vector3(0, 14, 0)],
-			["_3_costado", right * 32.0 + forward * 4.0 + Vector3(0, 4, 0)]]:
-		eye.global_position = center + (shot[1] as Vector3)
-		eye.look_at(center)
-		await _shot(prefix + str(shot[0]))
-	get_tree().quit()
-
-
-func _shot(file: String) -> void:
-	await get_tree().create_timer(0.5).timeout
-	if not _folder.is_empty() and DisplayServer.get_name() != "headless":
-		get_viewport().get_texture().get_image().save_png(_folder + "/" + file + ".png")
-		print("CAPTURA ", _folder + "/" + file + ".png")
+	# --sin-herramienta: la herramienta adentro y los dos puños afuera (para pegar piñas en el video)
+	ArmoryParts.dress(mech, loadout, 0.0 if args.has("--sin-herramienta") else 1.0)
