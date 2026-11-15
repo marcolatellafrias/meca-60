@@ -34,3 +34,12 @@ en un **elevador** que la sube derecho a la arena.
 - Dos versiones de la pintura: **(1)** una terminal, sin pintar a mano; **(2)** **pasarelas en U adentro del pozo del
   elevador**, a 5, 10 y 15 m: se pinta donde duerme, entre varios, con latas compradas; al subir, la plataforma pasa
   entre las pasarelas.
+- **Plano 3** (15/11/2026, en revisión): **menos puestos, tres espacios distintos** en vez de una fila.
+  - **El vestuario**, un cuarto cerrado: se aparece por el **ascensor de personal, empotrado** en la pared; los
+    **casilleros** con la ropa de cada uno; **los de los muertos, oscuros y con su foto, son el memorial**.
+  - **La sala**, que mira al gimnasio por el vidrio, con bancos y **una sola expendedora** (cosméticos de la meca y
+    latas).
+  - **La plaza de embarque**, con **la mesa de contratos grande en el medio** (la jerarquía), la armería contra la pared
+    al pie de la pasarela, y la escalera a las pasarelas del pozo.
+  - **Se pinta a distancia, con una pistola de pintura** (un chorro que llega a la meca desde la pasarela), así las
+    pasarelas del pozo sirven aunque queden a 6 m de la meca.
