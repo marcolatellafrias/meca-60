@@ -59,9 +59,13 @@ Cómo lo hacen los Souls, y cómo queda acá:
 | El golpe al piso, los puños | los dos puños, al caer | te derriba, 8 m |
 | El golpe al piso, la onda | el lomo, si estás apoyada | te derriba, 8 m para donde va |
 | La piedra | el círculo donde cae | te derriba, 10 m desde el medio |
-| El trompo | los dos brazos, del hombro al puño (barriendo entre paso y paso) | te empuja 16 m de costado, parada |
+| El trompo | la parte de afuera de los dos brazos, hasta el puño (barriendo entre paso y paso); pegada al cuerpo, a salvo | te empuja 16 m de costado, parada |
 | El agarre | la mano | te agarra, te revolea y te tira; al caer, derribada |
 | Tus piñas al jefe | (de la meca) | él no se mueve: se pone blanco, chispas y sonido |
+
+**El dash intocable** (15/11/2026, del módulo Meca con el sí del usuario: `BalanceBody.untouchable()`, 0,35 s desde
+que arranca, como la rodada de Souls): `HitReaction.untouchable()` lo suma, y si un golpe no entra por eso, no se gasta:
+puede entrar cuando se termine (las ondas y las piedras, no: las cruzaste). El jefe sí la sigue frenando.
 
 **Los golpes de la meca de tres al jefe** (sus tiros, el rayo, el taladro): llegan por la costura del módulo Meca,
 `EnergyBolt.lands(body, impulse, at, source)`, que le dice `take_hit(strength, at, source)` a lo que recibe. Como el

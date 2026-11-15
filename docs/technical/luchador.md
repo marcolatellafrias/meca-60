@@ -142,8 +142,10 @@ tiene poderes propios… hay que ver cómo hacemos que se diferencie».
 - **El trompo, más rápido y andando**: gira a 1080°/s (antes 540) y anda a 20 m/s (antes 12) durante 3,5 s, **derecho**,
   corrigiendo 4°/s (como la embestida). Los brazos se abren menos (52°) para barrer a la altura de la meca de tres (14 m
   de alto; abiertos del todo le pasaban por arriba). Barre unos 60 m de ancho: **se esquiva escapando**, para atrás
-  desde 70 m o de costado (dash y caminando) desde 95; más cerca, no hay cómo (la meca no tiene un dash que la haga
-  intocable), así que **arranca desde 65 m** (hasta 110).
+  desde 70 m o de costado (dash y caminando) desde 95. **De cerca, como en Souls, metiéndose**: pega sólo la punta de
+  los brazos (`SPIN_INNER`), pegada a su cuerpo estás a salvo, y para llegar, **el dash hacia él cuando su medio está a
+  38–44 m** (intocable, cruza el anillo de los puños) y seguir caminando pegada: lo esquiva desde cualquier distancia.
+  Arranca entre 30 y 110 m. *El dash intocable lo hizo el módulo Meca, a pedido de este.*
 - **El sonido de cada ataque**: un zumbido que sube al empezar el aviso.
 - **La ira, por tiempos**: 40 s tranquilo, 18 s con ira, con un bramido al entrar y un soplido al salir (perillas en
   «Ira»; 0 s tranquilo, sólo con la tecla). **Y con lo suyo**, como la segunda fase de un jefe de Souls:

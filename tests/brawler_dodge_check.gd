@@ -92,11 +92,16 @@ func _ready() -> void:
 	get_tree().quit()
 
 
-## EL TROMPO (ahora rápido y andando, 15/11/2026): quieta, caminando de costado o para atrás desde el aviso, y el dash
-## de costado cuando su medio está a tantos metros.
+## EL TROMPO (ahora rápido y andando, 15/11/2026): quieta, caminando de costado o para atrás desde el aviso, el dash de
+## costado cuando su medio está a tantos metros, y el dash hacia él (intocable, cruzando el anillo de los puños) y
+## caminando pegada. --solo-pegada: sólo eso, desde 70 m.
 func _spins(k: BrawlerSettings) -> void:
 	print("el trompo: aviso %.2f s, gira %.1f s a %.0f°/s, las orugas a %.0f m/s" % [k.spin_windup,
 		k.spin_time, k.spin_speed, k.spin_move])
+	if OS.get_cmdline_user_args().has("--solo-pegada"):
+		for at: float in [32.0, 38.0, 44.0]:
+			print("dash hacia él a %.0f m: %s" % [at, await _try_spin(70.0, "dash_in", at)])
+		return
 	for gap: float in [40.0, 70.0, 95.0]:
 		var line := "a %3.0f m:" % gap
 		for how: String in ["still", "walk_side", "walk_back"]:
@@ -104,6 +109,9 @@ func _spins(k: BrawlerSettings) -> void:
 		line += " · dash de costado (solo / y caminando) a"
 		for at: float in [45.0, 60.0, 80.0]:
 			line += " %.0f m %s/%s" % [at, await _try_spin(gap, "dash", at), await _try_spin(gap, "dash_walk", at)]
+		line += " · dash hacia él (y caminando pegada) a"
+		for at: float in [32.0, 38.0, 44.0]:
+			line += " %.0f m %s" % [at, await _try_spin(gap, "dash_in", at)]
 		print(line)
 
 
@@ -120,18 +128,28 @@ func _try_spin(gap: float, how: String, at: float) -> String:
 		clock += 1.0 / Engine.physics_ticks_per_second
 		_face_boss()
 		_mech.move = Vector2.ZERO
-		if how == "walk_side" or (how == "dash_walk" and dashed):
+		if how == "dash_in" and dashed:
+			_mech.move = Vector2(0.0, 1.0)
+		elif how == "walk_side" or (how == "dash_walk" and dashed):
 			_mech.move = Vector2(1.0, 0.0)
 		elif how == "walk_back":
 			_mech.move = Vector2(0.0, -1.0)
 		_mech.dash = false
 		var gap_now := (_boss.global_position - _mech.mover.global_position) * Vector3(1, 0, 1)
-		if how.begins_with("dash") and not dashed and _brain.stage == "¡trompo!" and gap_now.length() <= at:
+		if how == "dash_in" and not dashed and _brain.stage == "¡trompo!" and gap_now.length() <= at:
+			dashed = true
+			_mech.move = Vector2(0.0, 1.0)
+			_mech.dash = true
+		elif how.begins_with("dash") and how != "dash_in" and not dashed and _brain.stage == "¡trompo!" and gap_now.length() <= at:
 			dashed = true
 			_mech.move = Vector2(1.0, 0.0)
 			_mech.dash = true
 	_mech.move = Vector2.ZERO
 	_mech.dash = false
+	if OS.get_cmdline_user_args().has("--ver") and _brain.spun > spun:
+		var off := (_mech.mover.global_position - _boss.global_position) * Vector3(1, 0, 1)
+		print("   %s %.0f: a los %.2f s, la meca a %.1f m de su medio%s" % [how, at, clock, off.length(),
+			", con el dash" if dashed else ""])
 	return "X" if _brain.spun > spun else "·"
 
 

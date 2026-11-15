@@ -5,7 +5,7 @@ extends Node
 ## (`SPINS` s), después todos los ataques, primero tranquilo (`FIGHT` s) y después con ira (`RAGE` s: encadena, tres
 ## ondas, dos piedras, la embestida rebota). La meca esquiva un ataque sí y otro no (la embestida con un dash cuando le
 ## faltan 38 m; la onda del golpe al piso, saltando cuando le faltan 24 m; la piedra, caminando de costado desde que la
-## tira; el trompo, escapando para atrás; el agarre, saliéndose de la franja cuando
+## tira; el trompo, escapando para atrás o, de cerca, con el dash hacia él y pegada; el agarre, saliéndose de la franja cuando
 ## apuntó, de cerca con el dash). Se graba con --write-movie:
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/pelea.avi --fixed-fps 30 res://tests/brawler_charge_movie.tscn
 
@@ -154,9 +154,13 @@ func _dodge(mech: Mech, ground: Vector3, to_boss: Vector3) -> void:
 	# La piedra: desde que la tiró hasta que cae, caminando de costado.
 	if not _brain._rocks.is_empty():
 		mech.move = Vector2(1.0, 0.0)
-	# El trompo: escapando para atrás todo el ataque.
+	# El trompo: de lejos, escapando para atrás; de cerca, el dash hacia él (intocable) y pegada.
 	if _brain.act == BrawlerBrain.Act.SPIN and _brain._step < 2:
-		mech.move = Vector2(0.0, -1.0)
+		var close := to_boss.length() < 46.0
+		mech.move = Vector2(0.0, 1.0) if close else Vector2(0.0, -1.0)
+		if close and _brain._step == 1 and _dodged != attack:
+			_dodged = attack
+			mech.dash = true
 	# El agarre: de costado desde que apuntó (de cerca, con el dash).
 	if _brain.act == BrawlerBrain.Act.HOOK and (_brain._step == 1 or _brain.stage.ends_with("apuntó!")):
 		mech.move = Vector2(1.0, 0.0)

@@ -50,8 +50,10 @@ const WAVE_AHEAD := 4.0
 ## Arrancar el piso, entre estas (m).
 const THROW_RANGE := Vector2(35.0, 130.0)
 ## El trompo y el agarre, entre estas (m).
-const SPIN_RANGE := Vector2(65.0, 110.0)
+const SPIN_RANGE := Vector2(30.0, 110.0)
 const HOOK_RANGE := Vector2(25.0, 80.0)
+## El trompo pega con la parte de afuera de los brazos: desde qué parte del camino del hombro al puño.
+const SPIN_INNER := 0.9
 ## Con ira, cuántos ataques encadena como mucho seguidos (además del primero).
 const RAGE_CHAIN_MAX := 2
 ## Revoleando: a cuánto adelante de su frente y a qué altura tiene a la meca (m).
@@ -321,9 +323,9 @@ func _slam() -> void:
 			# LOS PUÑOS: si estás justo adelante, te pegan ellos (derriba).
 			for fist in _boss.body.fists():
 				if not _hit_this_act and _touches_target(fist, BrawlerBody.FIST * 1.5):
-					_hit_this_act = true
-					_strike(k.wave_damage, "los puños al piso", HitReaction.Kind.KNOCKDOWN, _to_target(),
-						k.wave_push, fist)
+					# Si no entró (en el dash), puede entrar en el paso que sigue.
+					_hit_this_act = _strike(k.wave_damage, "los puños al piso", HitReaction.Kind.KNOCKDOWN,
+						_to_target(), k.wave_push, fist)
 			if _clock >= SLAM_FALL:
 				_wave.launch(k.wave_speed)
 				_waves.append(_wave)
@@ -436,13 +438,14 @@ func _spin() -> void:
 				_begin(Act.STALK)
 
 
-## LOS BRAZOS DEL TROMPO (su zona de golpe: del hombro al puño, cada uno, barriendo entre un paso y el otro): si te
-## tocan, te empujan de costado (parada). Una vez por trompo.
+## LOS BRAZOS DEL TROMPO (su zona de golpe: la parte de afuera de cada brazo, de `SPIN_INNER` al puño, barriendo
+## entre un paso y el otro): si te tocan, te empujan de costado (parada). Una vez por trompo. PEGADA AL CUERPO ESTÁS A
+## SALVO, como con los ataques que giran en Souls: para llegar, el dash (intocable) cruzando el anillo de los puños.
 func _check_spin(k: BrawlerSettings) -> void:
 	var arms: Array[Vector3] = []
 	var fists := _boss.body.fists()
 	for index in _boss.body.shoulders.size():
-		arms.append(_boss.body.shoulders[index].global_position)
+		arms.append(_boss.body.shoulders[index].global_position.lerp(fists[index], SPIN_INNER))
 		arms.append(fists[index])
 	var were := _arms_were if _arms_were.size() == arms.size() else arms
 	_arms_were = arms
@@ -456,9 +459,11 @@ func _check_spin(k: BrawlerSettings) -> void:
 			for along in 7:
 				var point := from.lerp(to, along / 6.0)
 				if _touches_target(point, BrawlerBody.FIST * 0.8):
-					_hit_this_act = true
-					spun += int(_strike(k.spin_damage, "el trompo", HitReaction.Kind.PUSH,
-						Vector3.UP.cross(_to_target().normalized()) * signf(_boss.spin), k.spin_push, point))
+					# Si no entró (en el dash), el brazo sigue y puede entrar cuando se le termine.
+					if _strike(k.spin_damage, "el trompo", HitReaction.Kind.PUSH,
+							Vector3.UP.cross(_to_target().normalized()) * signf(_boss.spin), k.spin_push, point):
+						_hit_this_act = true
+						spun += 1
 					return
 
 
@@ -591,10 +596,11 @@ func _check_ram(k: BrawlerSettings) -> void:
 	var half := _target_half_width()
 	if ahead < 0.0 or ahead > Brawler.BOX.z * 0.5 + radius + REACH or aside > Brawler.BOX.x * 0.5 + half:
 		return
-	_hit_this_act = true
 	var front := _boss.global_position + _boss.heading() * Brawler.BOX.z * 0.5 + Vector3.UP * Brawler.BOX.y * 0.4
-	landed += int(_strike(k.charge_damage, "la embestida", HitReaction.Kind.KNOCKDOWN, _boss.heading(), k.charge_push,
-		front))
+	# Si no entró (en el dash), puede entrar en el paso que sigue.
+	_hit_this_act = _strike(k.charge_damage, "la embestida", HitReaction.Kind.KNOCKDOWN, _boss.heading(), k.charge_push,
+		front)
+	landed += int(_hit_this_act)
 
 
 ## ── LOS GOLPES (ver HitReaction y docs/technical/pelea-jefes.md) ─────────────────────────────────────────────────────
@@ -623,7 +629,7 @@ func _target_height() -> float:
 ## NO SE EMPUJAN: el Luchador no avanza dentro del blanco (lo frena, como en Souls: el jefe no te arrastra con el
 ## cuerpo); si está tirado o agarrado, pasa.
 func _block() -> void:
-	var free := not HitReaction.of(target).untouchable()
+	var free := not HitReaction.of(target).down()
 	_boss.block_at = _ground()
 	_boss.block_radius = _target_half_width() if free else 0.0
 

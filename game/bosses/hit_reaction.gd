@@ -92,8 +92,14 @@ func _ready() -> void:
 	_white.albedo_color = Color(1, 1, 1, 0)
 
 
-## Si ahora no se le puede pegar.
+## Si ahora no se le puede pegar: tirada, agarrada, volando, o EN EL DASH (intocable un momento, como la rodada de
+## Souls: lo dice el cuerpo, BalanceBody.untouchable, del módulo Meca).
 func untouchable() -> bool:
+	return down() or (_body != null and _body.untouchable())
+
+
+## Si está tirada, agarrada o volando (el jefe no la frena: pasa).
+func down() -> bool:
 	return state in [State.FALLING, State.DOWN, State.RISING, State.HELD, State.FLYING]
 
 
