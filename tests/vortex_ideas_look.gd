@@ -13,7 +13,9 @@ extends Node3D
 ##   5 · almenas: el borde alterna dientes altos y huecos bajos, y las armas van en los huecos;
 ##   6 · proa y popa: adelante un borde bajo con vidrio; atrás, un muro alto (la escalera queda resguardada);
 ##   7 · las costillas del domo: arcos que salen del borde y se juntan arriba (el campo de fuerza, apenas);
-##   8 · la 2 con los puestos de la 4 (sin costillas: el usuario, «sin costillas»).
+##   8 · la 2 con los puestos de la 4 (sin costillas: el usuario, «sin costillas»);
+##   9 · la 8 con los puestos integrados al borde (el usuario: «vamos con la 8 pero los puestos están integrados al
+##       borde, no adentro del borde»): en cada puesto el borde mismo sube y avanza un poco, y los mandos van en su cara.
 ##   tools/godot_ventana.sh res://tests/vortex_ideas_look.tscn -- --salida=C:/carpeta --idea=2
 
 const VIEW := Vector2i(1280, 720)
@@ -44,6 +46,7 @@ const NAMES := {
 	6: "proa baja con vidrio, popa con muro",
 	7: "las costillas del domo",
 	8: "la 2, con los puestos de la 4",
+	9: "la 8, con los puestos integrados al borde",
 }
 
 const METAL := Color(0.55, 0.57, 0.6)
@@ -78,7 +81,7 @@ func _ready() -> void:
 	for crew: Array in [[0.0, EntityArchetype.Archetype.buff], [deg_to_rad(290.0), EntityArchetype.Archetype.lanky],
 			[deg_to_rad(40.0), EntityArchetype.Archetype.fat_athletic]]:
 		var angle: float = crew[0]
-		var reach := WALK - (1.15 if _raised_consoles() and angle == 0.0 else 0.55)
+		var reach := (WALK - 1.15 if _raised_consoles() and angle == 0.0 else _rim_in(angle) - 0.55)
 		PeopleArchetype.spawn(self, crew[1], _out(angle) * reach + Vector3(0, floor1, 0), -angle)
 	PeopleArchetype.spawn(self, EntityArchetype.Archetype.fat_man, Vector3(OUTER + 2.5, 0.0, -2.0), -PI * 0.6)
 	await get_tree().create_timer(3.0).timeout
@@ -104,7 +107,7 @@ func _out(angle: float) -> Vector3:
 
 
 func _back_raised() -> bool:
-	return _idea in [2, 3, 8]
+	return _idea in [2, 3, 8, 9]
 
 
 func _raised_consoles() -> bool:
@@ -120,8 +123,34 @@ func _is_back(angle: float, reach: float) -> bool:
 	return _back_raised() and -cos(angle) * reach > CHORD
 
 
+## LOS PUESTOS DEL BORDE (la 9): [ángulo, tipo, medio ancho (grados), cuánto sube, cuánto avanza hacia adentro, cuánto
+## más baja su cara de adentro (m)].
+const STATIONS := [[0.0, "drive", 16.0, 0.45, 0.55, 0.55], [70.0, "arm", 9.0, 0.35, 0.4, 0.45],
+	[290.0, "arm", 9.0, 0.35, 0.4, 0.45], [40.0, "gun", 6.0, 0.25, 0.15, 0.1], [320.0, "gun", 6.0, 0.25, 0.15, 0.1],
+	[100.0, "socket", 6.0, 0.25, 0.15, 0.1], [260.0, "socket", 6.0, 0.25, 0.15, 0.1]]
+
+
+## EL BULTO DEL BORDE EN `angle` (la 9): [cuánto sube, cuánto avanza, cuánto baja su cara de adentro], suave a los lados.
+func _bump(angle: float) -> Vector3:
+	if _idea != 9:
+		return Vector3.ZERO
+	var out := Vector3.ZERO
+	for station: Array in STATIONS:
+		var away := absf(rad_to_deg(angle_difference(angle, deg_to_rad(station[0]))))
+		var share := 1.0 - smoothstep(float(station[2]) * 0.55, float(station[2]), away)
+		out = out.max(Vector3(station[3], station[4], station[5]) * share)
+	return out
+
+
+## Hasta dónde llega el borde hacia adentro en `angle`.
+func _rim_in(angle: float) -> float:
+	return WALK - _bump(angle).y
+
+
 ## EL ALTO DEL BORDE (sobre el primer piso) en `angle`, por afuera; por adentro, `RIM_OUT - RIM_IN` menos.
 func _rim_top(angle: float) -> float:
+	if _idea == 9:
+		return RIM_OUT + _bump(angle).x + (RAISE if _is_back(angle, OUTER) else 0.0)
 	var z := -cos(angle)
 	match _idea:
 		3:
@@ -205,16 +234,18 @@ func _rim(floor1: float) -> void:
 		var t0 := floor1 + _rim_top(a0)
 		var t1 := floor1 + _rim_top(a1)
 		var bevel := RIM_OUT - RIM_IN
-		var in0 := t0 - bevel
-		var in1 := t1 - bevel
+		var in0 := t0 - bevel - _bump(a0).z
+		var in1 := t1 - bevel - _bump(a1).z
+		var r0 := _rim_in(a0)
+		var r1 := _rim_in(a1)
 		var low0 := floor1 + (RAISE if _is_back(a0, WALK) else 0.0)
 		var low1 := floor1 + (RAISE if _is_back(a1, WALK) else 0.0)
 		_quad(tool, _out(a0) * OUTER + Vector3(0, floor1, 0), _out(a1) * OUTER + Vector3(0, floor1, 0),
 			_out(a1) * OUTER + Vector3(0, t1, 0), _out(a0) * OUTER + Vector3(0, t0, 0))
 		_quad(tool, _out(a0) * OUTER + Vector3(0, t0, 0), _out(a1) * OUTER + Vector3(0, t1, 0),
-			_out(a1) * WALK + Vector3(0, in1, 0), _out(a0) * WALK + Vector3(0, in0, 0))
-		_quad(tool, _out(a0) * WALK + Vector3(0, in0, 0), _out(a1) * WALK + Vector3(0, in1, 0),
-			_out(a1) * WALK + Vector3(0, low1, 0), _out(a0) * WALK + Vector3(0, low0, 0))
+			_out(a1) * r1 + Vector3(0, in1, 0), _out(a0) * r0 + Vector3(0, in0, 0))
+		_quad(tool, _out(a0) * r0 + Vector3(0, in0, 0), _out(a1) * r1 + Vector3(0, in1, 0),
+			_out(a1) * r1 + Vector3(0, low1, 0), _out(a0) * r0 + Vector3(0, low0, 0))
 	tool.generate_normals()
 	var mesh := MeshInstance3D.new()
 	mesh.mesh = tool.commit()
@@ -267,12 +298,13 @@ func _rim_station(angle: float, kind: String, top: float) -> void:
 		if kind == "gun":
 			_gun(outward * (WALK + 0.32) + Vector3(0, top, 0), angle, 0.3)
 		return
-	var bevel := Vector2(OUTER - WALK, RIM_OUT - RIM_IN)
+	var inner := _rim_in(angle)
+	var bevel := Vector2(OUTER - inner, RIM_OUT - RIM_IN + _bump(angle).z)
 	var up := (Vector3.UP * bevel.x - outward * bevel.y).normalized()
 	var along := Vector3(cos(angle), 0.0, sin(angle))
 	var plate := Node3D.new()
 	plate.basis = Basis(along, up, along.cross(up))
-	plate.position = outward * (WALK + bevel.x * 0.5) + Vector3(0.0, top - bevel.y * 0.5, 0.0)
+	plate.position = outward * (inner + bevel.x * 0.45) + Vector3(0.0, top - bevel.y * 0.55, 0.0)
 	add_child(plate)
 	_controls(plate, kind)
 
