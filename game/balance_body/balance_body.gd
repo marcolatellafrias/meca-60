@@ -466,6 +466,12 @@ func push_impulse(impulse: Vector3, at := Vector3.ZERO) -> void:
 		apply_impulse(impulse, at)
 
 
+## SI AHORA NO SE LE PUEDE PEGAR: la cinemática, al arrancar un dash (ver KinematicSettings.dash_untouchable). Lo
+## pregunta quien pega (los jefes: HitReaction.untouchable); la física, siempre se le puede.
+func untouchable() -> bool:
+	return kinematic and mover != null and mover.untouchable()
+
+
 ## LE PEGA A CUALQUIER CUERPO: a uno con equilibrio, por su puerta (física o cinemática); a lo demás, de siempre.
 static func hit(body: RigidBody3D, impulse: Vector3, at := Vector3.ZERO) -> void:
 	if body is BalanceBody:

@@ -48,6 +48,10 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 ## con easing, que haga easing»): recorre lo mismo en lo mismo, pero arrancando lento, frenando al final o las dos.
 ## Lineal: parejo, como antes.
 @export var dash_curve := MoveCurve.Shape.LINEAR
+## INTOCABLE (s): desde que arranca el dash, tanto tiempo no se le puede pegar, como la rodada de Souls (15/11/2026, desde
+## el módulo Jefes, con el sí del usuario: sin eso el trompo del Luchador no se esquiva de cerca). 0: nunca. Puede durar
+## más o menos que el dash. Lo pregunta quien pega (BalanceBody.untouchable).
+@export_range(0.0, 1.5, 0.05) var dash_untouchable := 0.35
 
 @export_group("Agacharse")
 ## Agachada, la altura de la caja que le queda (parte de la de parada) y a qué ritmo cambia (partes por segundo).

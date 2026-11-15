@@ -40,6 +40,8 @@ var _dash_left := 0.0
 var _dash_velocity := Vector3.ZERO
 ## Cuánto lleva el dash (s), para su curva (ver KinematicSettings.dash_curve).
 var _dash_clock := 0.0
+## Cuánto le queda sin que se le pueda pegar (s; ver KinematicSettings.dash_untouchable).
+var _untouchable_left := 0.0
 var _cylinder := CylinderShape3D.new()
 var _holder := CollisionShape3D.new()
 var _below := BoxShape3D.new()
@@ -90,6 +92,7 @@ func step(delta: float) -> void:
 	_fit()
 	var grounded := is_on_floor()
 	dash_fuel = minf(dash_fuel + delta / k.dash_refill, 1.0)
+	_untouchable_left = maxf(_untouchable_left - delta, 0.0)
 	if _dash_left > 0.0:
 		# EN UN DASH: derecho, sin teclas ni gravedad.
 		_dash_left -= delta
@@ -158,9 +161,15 @@ func _dash(k: KinematicSettings, delta: float) -> void:
 	_dash_velocity = way * (k.dash_distance / k.dash_time)
 	_dash_left = k.dash_time
 	_dash_clock = 0.0
+	_untouchable_left = k.dash_untouchable
 	velocity = _dash_velocity * _dash_rate(k, delta)
 	dash_fuel -= k.dash_cost
 	body.nozzles.show(way, k.dash_time)
+
+
+## Si ahora no se le puede pegar (al arrancar un dash, ver KinematicSettings.dash_untouchable).
+func untouchable() -> bool:
+	return _untouchable_left > 0.0
 
 
 ## Por cuánto multiplicar la velocidad pareja del dash este paso, según su curva (a la mitad del paso; lineal: 1).
@@ -188,6 +197,7 @@ func put(where: Transform3D) -> void:
 	_yaw_speed = 0.0
 	velocity = Vector3.ZERO
 	_dash_left = 0.0
+	_untouchable_left = 0.0
 	_last_bottom = global_position.y + _hover_now()
 
 

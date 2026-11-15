@@ -16,6 +16,7 @@ const LABELS := {
 	"dash_distance": "recorre (m)", "dash_time": "en (s)",
 	"dash_cost": "gasta de la barra (parte)", "dash_refill": "la barra se llena en (s)",
 	"dash_curve": "la curva (lineal: parejo)",
+	"dash_untouchable": "intocable desde que arranca (s)",
 	"crouch_share": "agachada: la altura que le queda (parte)", "crouch_rate": "ritmo (partes por s)",
 }
 ## Una pestaña por grupo de KinematicSettings.
