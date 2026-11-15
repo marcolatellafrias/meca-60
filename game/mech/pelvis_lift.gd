@@ -183,9 +183,14 @@ static func square(half: float) -> PackedVector2Array:
 
 
 ## UNA PLACA de `bottom` a `top`, con el borde de afuera `outer` (ver `circle`, `square`) y un hueco de la forma del
-## ascensor (`outline`), de radio `hole`, en el medio: las dos caras, la pared del hueco y la de afuera.
+## ascensor (`outline`), de radio `hole`, en el medio: las dos caras, la pared del hueco y la de afuera. EL SOMBREADO,
+## COMO EL AUTO SMOOTH (el usuario, 15/11/2026: «la pelvis… en shading smooth cuando deberían estar… auto smooth»): una
+## pared redonda, suave; una de lados (el cuadrado), cada lado plano. *Las paredes llevaban la normal hacia el centro
+## de cada tramo: en el cuadrado, inclinada hacia la esquina, y se veía como suavizado.*
 static func holed(outer: PackedVector2Array, hole: float, bottom: float, top: float, color: Color) -> MeshInstance3D:
 	var inner := outline(hole)
+	var outer_round := _is_round(outer)
+	var inner_round := _is_round(inner)
 	var tool := SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for step in SIDES:
@@ -198,8 +203,8 @@ static func holed(outer: PackedVector2Array, hole: float, bottom: float, top: fl
 		var low := Vector3.UP * bottom
 		_quad(tool, a + up_offset, b + up_offset, d + up_offset, c + up_offset, Vector3.UP)
 		_quad(tool, a + low, b + low, d + low, c + low, Vector3.DOWN)
-		_quad(tool, a + low, b + low, b + up_offset, a + up_offset, -(a + b).normalized())
-		_quad(tool, c + low, d + low, d + up_offset, c + up_offset, (c + d).normalized())
+		_wall(tool, a, b, low, up_offset, inner_round, false)
+		_wall(tool, c, d, low, up_offset, outer_round, true)
 	var instance := MeshInstance3D.new()
 	instance.mesh = tool.commit()
 	var material := StandardMaterial3D.new()
@@ -208,6 +213,32 @@ static func holed(outer: PackedVector2Array, hole: float, bottom: float, top: fl
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	instance.material_override = material
 	return instance
+
+
+## Una pared de la placa, de `from` a `to` (en el piso, sin alto), de `low` a `high`: si es redonda, cada borde con la
+## normal hacia afuera del centro (suave); si no, toda con la normal de su cara (plana). `outward`: la de afuera (si no,
+## la del hueco, que mira hacia adentro).
+static func _wall(tool: SurfaceTool, from: Vector3, to: Vector3, low: Vector3, high: Vector3, round_wall: bool,
+		outward: bool) -> void:
+	var way := 1.0 if outward else -1.0
+	var flat := (to - from).cross(Vector3.UP).normalized()
+	if flat.dot(from + to) * way < 0.0:
+		flat = -flat
+	var n_from := from.normalized() * way if round_wall else flat
+	var n_to := to.normalized() * way if round_wall else flat
+	for pair: Array in [[from + low, n_from], [to + low, n_to], [to + high, n_to], [from + low, n_from], [to + high, n_to],
+			[from + high, n_from]]:
+		tool.set_normal(pair[1])
+		tool.add_vertex(pair[0])
+
+
+## Si un borde es redondo: todos sus puntos a la misma distancia del centro.
+static func _is_round(edge: PackedVector2Array) -> bool:
+	var reach := edge[0].length()
+	for point in edge:
+		if absf(point.length() - reach) > 0.01:
+			return false
+	return true
 
 
 static func _quad(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, normal: Vector3) -> void:

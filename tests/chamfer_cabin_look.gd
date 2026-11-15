@@ -10,7 +10,12 @@ extends Node3D
 ##     movimiento delante.
 ##   · LA SILLA DEL MEDIO ADELANTE; las de los brazos atrás, giradas `turn` hacia afuera.
 ##   · LOS KITS en los chanfles de atrás; las municiones y la batería en la pared de atrás.
-##   tools/godot_ventana.sh res://tests/chamfer_cabin_look.tscn -- --salida=C:/carpeta --planta=3 [--hombro=2]
+##   tools/godot_ventana.sh res://tests/chamfer_cabin_look.tscn -- --salida=C:/carpeta --planta=3 [--hombro=2] [--techo=1]
+## LA CABEZA (`--techo`, el usuario, 15/11/2026: «a la misma altura que está retraída a los costados… toda esa parte del
+## techo sea vidriada también… el final del fondo de todo el techo para que sea más alto… una estética más interesante
+## la forma de la cabeza»): el techo de la mitad de adelante, de vidrio; la de atrás, más alta (`RISE`). 1, en escalón,
+## con un frente de vidrio entre las dos; 2, el vidrio del techo sube en rampa hasta la mitad y atrás queda plano; 3,
+## todo el techo sube hacia atrás. Sin `--techo`, plano. LA TARIMA, octogonal.
 
 const VIEW := Vector2i(1280, 720)
 const IN := 3.07
@@ -53,6 +58,9 @@ var _real: Mech = null
 var _shell := Node3D.new()
 var _glass_paint := StandardMaterial3D.new()
 var _roof: Node3D = null
+var _head := 0
+## Cuánto más alto queda el techo de atrás (m).
+const RISE := 0.9
 
 
 func _ready() -> void:
@@ -62,6 +70,8 @@ func _ready() -> void:
 			_folder = argument.trim_prefix("--salida=")
 		if argument.begins_with("--planta="):
 			_plan = int(argument.trim_prefix("--planta="))
+		if argument.begins_with("--techo="):
+			_head = int(argument.trim_prefix("--techo="))
 		if argument.begins_with("--hombro="):
 			shoulder_out = float(argument.trim_prefix("--hombro="))
 	get_window().size = VIEW
@@ -93,18 +103,19 @@ func _ready() -> void:
 	_build(PLANS[_plan])
 	var shots: Array = []
 	_glass_paint.albedo_color = GLASS_OUTSIDE
-	_title.text = "%d. De frente" % _plan
+	var name_of := "%d%s" % [_plan, "" if _head == 0 else " · techo %d" % _head]
+	_title.text = "%s. De frente" % name_of
 	_look(Vector3(-13.0, 0.5, -21.0), Vector3(0.0, -3.5, 0.0), 45.0)
 	shots.append(await _grab())
-	_title.text = "%d. De atrás, de costado" % _plan
+	_title.text = "%s. De atrás, de costado" % name_of
 	_look(Vector3(16.0, 1.5, 17.0), Vector3(0.0, -3.5, 0.0), 45.0)
 	shots.append(await _grab())
 	_glass_paint.albedo_color = GLASS_INSIDE
-	_title.text = "%d. Adentro, desde atrás" % _plan
+	_title.text = "%s. Adentro, desde atrás" % name_of
 	_look(Vector3(0.6, 1.9, IN - 0.5), Vector3(-0.2, 0.7, -3.0), 85.0)
 	shots.append(await _grab())
 	_roof.visible = false
-	_title.text = "%d. Desde arriba, sin techo" % _plan
+	_title.text = "%s. Desde arriba, sin techo" % name_of
 	_look(Vector3(-1.5, 11.0, 3.5), Vector3(0.0, 0.0, -0.3), 50.0)
 	shots.append(await _grab())
 	_save(shots)
@@ -169,28 +180,22 @@ func _build(plan: Array) -> void:
 	_prism(outer, -SLAB - DISC, -SLAB, DARK_METAL)
 	_prism(_outline(IN + WALL + 0.06, front, back), -SLAB - 0.06, -SLAB + 0.06, METAL.darkened(0.25))
 	_prism(outer, -SLAB, 0.0, FLOOR)
-	_roof = _prism(outer, CLEAR, CLEAR + SLAB, METAL)
-	# Las paredes: metal o vidrio, lado por lado.
+	_roof = Node3D.new()
+	_shell.add_child(_roof)
+	_head_roof(outer)
+	# Las paredes: metal o vidrio, lado por lado, hasta el techo (que puede subir hacia atrás).
 	for i in inner.size():
 		var j := (i + 1) % inner.size()
-		var a := inner[i]
-		var b := inner[j]
-		var normal := Vector2(b.y - a.y, a.x - b.x).normalized()
-		if normal.dot((a + b) * 0.5) < 0.0:
-			normal = -normal
-		var length := a.distance_to(b)
-		var center := (a + b) * 0.5 + normal * WALL * 0.5
+		var a := outer[i]
+		var b := outer[j]
+		var middle := (a.y + b.y) * 0.5
 		var glass: bool = GLASS_SIDES.has(i)
-		var piece := Clay.box(_shell, Vector3(length + (0.0 if glass else WALL * 0.4), CLEAR, 0.04 if glass else WALL),
-			Vector3(center.x, CLEAR * 0.5, center.y), METAL)
-		piece.basis = Basis(Vector3.UP, atan2(-(b - a).y, (b - a).x))
-		if glass:
-			piece.material_override = _glass_paint
-	# El centro escalonado: dos escalones alrededor y la tarima; el ascensor adentro, atrás.
+		_panel(a, b, _height(a.y, middle), _height(b.y, middle), _glass_paint if glass else Clay.material(METAL))
+	# El centro escalonado, octogonal: dos escalones alrededor y la tarima; el ascensor adentro, atrás.
 	var size: float = plan[2]
-	_prism(_outline(size + 0.6, front, back), 0.0, STEP_TALL, DECK.darkened(0.1))
-	_prism(_outline(size + 0.3, front, back), 0.0, STEP_TALL * 2.0, DECK.darkened(0.05))
-	_prism(_outline(size, front, back), 0.0, STEP_TALL * 3.0, DECK)
+	_prism(_octagon(size + 0.6), 0.0, STEP_TALL, DECK.darkened(0.1))
+	_prism(_octagon(size + 0.3), 0.0, STEP_TALL * 2.0, DECK.darkened(0.05))
+	_prism(_octagon(size), 0.0, STEP_TALL * 3.0, DECK)
 	Clay.cylinder(_shell, LIFT_R, 0.04, Vector3(0, STEP_TALL * 3.0 + 0.02, LIFT_AT), LIFT)
 	# Las sillas: la del medio adelante, los brazos atrás y girados; el movimiento en la tarima.
 	_post(Vector3(0.0, 0.0, plan[3]), 0.0)
@@ -212,10 +217,103 @@ func _build(plan: Array) -> void:
 	Clay.box(_shell, Vector3(0.4, 0.5, 0.12), Vector3(0.0, 0.6, IN - 0.06), BATTERY)
 
 
+## Un octógono regular, con un lado al frente, de `reach` de su centro a cada lado.
+func _octagon(reach: float) -> PackedVector2Array:
+	var corner := reach / cos(PI / 8.0)
+	var points := PackedVector2Array()
+	for i in 8:
+		var angle := PI / 8.0 + TAU * i / 8.0
+		points.append(Vector2(sin(angle), -cos(angle)) * corner)
+	return points
+
+
+## LA CABEZA: el alto del techo en `z` (de la cara de adentro del techo), según la variante. `side_z`: en qué mitad
+## está la pared que lo pregunta (para el escalón de la 1, que en z = 0 tiene dos altos).
+func _height(z: float, side_z: float) -> float:
+	var back := (z if absf(z) > 0.001 else side_z) > 0.0
+	match _head:
+		1:
+			return CLEAR + (RISE if back else 0.0)
+		2:
+			return CLEAR + RISE if back else CLEAR + RISE * clampf((z + IN + WALL) / (IN + WALL), 0.0, 1.0)
+		3:
+			return CLEAR + RISE * clampf((z + IN + WALL) / (2.0 * (IN + WALL)), 0.0, 1.0)
+	return CLEAR
+
+
+## EL TECHO: la mitad de adelante (z < 0), de vidrio, salvo el plano (sin `--techo`); la de atrás, de metal; los dos
+## con el alto de `_height`. En el escalón (la 1), un frente de vidrio entre las dos.
+func _head_roof(outer: PackedVector2Array) -> void:
+	if _head == 0:
+		var flat := _prism(outer, CLEAR, CLEAR + SLAB, METAL)
+		flat.reparent(_roof, false)
+		return
+	for half: float in [-1.0, 1.0]:
+		var part := _clip(outer, half)
+		var tool := SurfaceTool.new()
+		tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+		tool.set_smooth_group(4294967295)
+		var center := Vector2.ZERO
+		for point in part:
+			center += point
+		center /= part.size()
+		for i in part.size():
+			var a := part[i]
+			var b := part[(i + 1) % part.size()]
+			for point: Vector2 in [center, a, b]:
+				tool.add_vertex(Vector3(point.x, _height(point.y, half), point.y))
+		tool.generate_normals()
+		var mesh := MeshInstance3D.new()
+		mesh.mesh = tool.commit()
+		var paint := Clay.material(METAL).duplicate() as StandardMaterial3D
+		paint.cull_mode = BaseMaterial3D.CULL_DISABLED
+		mesh.material_override = _glass_paint if half < 0.0 else paint
+		_roof.add_child(mesh)
+	if _head == 1:
+		var width := IN + WALL
+		_panel(Vector2(-width, 0.0), Vector2(width, 0.0), CLEAR + RISE, CLEAR + RISE, _glass_paint, CLEAR)
+
+
+## La mitad de un polígono convexo: la de adelante (`half` −1, z ≤ 0) o la de atrás (1, z ≥ 0).
+func _clip(points: PackedVector2Array, half: float) -> PackedVector2Array:
+	var out := PackedVector2Array()
+	for i in points.size():
+		var a := points[i]
+		var b := points[(i + 1) % points.size()]
+		var a_in := a.y * half >= 0.0
+		var b_in := b.y * half >= 0.0
+		if a_in:
+			out.append(a)
+		if a_in != b_in:
+			out.append(a.lerp(b, a.y / (a.y - b.y)))
+	return out
+
+
+## Una pared fina de `a` a `b` (en planta), del piso (o de `from`) a `top_a` / `top_b` (puede ir inclinada arriba).
+func _panel(a: Vector2, b: Vector2, top_a: float, top_b: float, paint: Material, from := 0.0) -> void:
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	tool.set_smooth_group(4294967295)
+	var p := [Vector3(a.x, from, a.y), Vector3(b.x, from, b.y), Vector3(b.x, top_b, b.y), Vector3(a.x, top_a, a.y)]
+	for k: int in [0, 1, 2, 0, 2, 3]:
+		tool.add_vertex(p[k])
+	tool.generate_normals()
+	var mesh := MeshInstance3D.new()
+	mesh.mesh = tool.commit()
+	if paint is StandardMaterial3D and not paint == _glass_paint:
+		var both := (paint as StandardMaterial3D).duplicate() as StandardMaterial3D
+		both.cull_mode = BaseMaterial3D.CULL_DISABLED
+		paint = both
+	mesh.material_override = paint
+	_shell.add_child(mesh)
+
+
 ## Un prisma de borde `points` (convexo, en planta), de `y0` a `y1`: tapas planas y costados con aristas.
 func _prism(points: PackedVector2Array, y0: float, y1: float, color: Color) -> MeshInstance3D:
 	var tool := SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# Plano: cada cara con su arista (el usuario: «shading auto smooth», no suavizado entre la tapa y el costado).
+	tool.set_smooth_group(4294967295)
 	var center := Vector2.ZERO
 	for point in points:
 		center += point
@@ -270,7 +368,7 @@ func _save(shots: Array) -> void:
 		var shot: Image = shots[index]
 		shot.resize(w, h, Image.INTERPOLATE_BILINEAR)
 		sheet.blit_rect(shot, Rect2i(Vector2i.ZERO, shot.get_size()), Vector2i(w * (index % 2), h * (index / 2)))
-	var path := "%s/chanfle_%d.png" % [_folder, _plan]
+	var path := "%s/chanfle_%d%s.png" % [_folder, _plan, "" if _head == 0 else "_techo_%d" % _head]
 	sheet.save_png(path)
 	print("CAPTURA ", path)
 
