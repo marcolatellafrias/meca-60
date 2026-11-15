@@ -92,7 +92,7 @@ func _ready() -> void:
 		for arm in mech.arms:
 			arm.shoulder_local.y = -CabinGrid.HALF_HEIGHT + CabinGrid.BASE + CabinGrid.SLAB
 	# --parantes: sin los marcos de la cabina, sólo dos parantes en L, finos, en las dos esquinas del frente, del piso
-	# hasta donde empieza el corte de arriba (el usuario: «los únicos parantes… los dos verticales de… las dos esquinas…
+	# y por el corte de arriba hasta el techo (el usuario: «los únicos parantes… los dos verticales de… las dos esquinas…
 	# cada parante tendría dos lados… que no sean tan gruesos»)
 	if OS.get_cmdline_user_args().has("--parantes"):
 		var bottom := -CabinGrid.HALF_HEIGHT + CabinGrid.BASE
@@ -101,11 +101,23 @@ func _ready() -> void:
 		var half := CabinGrid.HALF
 		var wing := 0.2
 		var thin := 0.05
+		# y el tramo del corte, a 45°, que sube del parante hasta el techo de atrás (el usuario: «te faltó la del
+		# chamfer, la que conecta con la parte de atrás»)
+		var cut := CabinGrid.CHAMFER * CabinGrid.TRAMA
+		var stretches: Array[Transform3D] = [Transform3D(Basis(), Vector3(0, bottom + tall * 0.5, -half))]
+		var lengths: Array[float] = [tall]
+		if cut > 0.0:
+			stretches.append(Transform3D(Basis(Vector3.RIGHT, PI * 0.25), Vector3(0, top + cut * 0.5, -half + cut * 0.5)))
+			lengths.append(cut * sqrt(2.0))
 		for side: float in [-1.0, 1.0]:
-			Clay.box(mech, Vector3(wing, tall, thin), Vector3(side * (half + thin - wing * 0.5), bottom + tall * 0.5,
-				-half - thin * 0.5), Clay.DARK)
-			Clay.box(mech, Vector3(thin, tall, wing), Vector3(side * (half + thin * 0.5), bottom + tall * 0.5,
-				-half - thin + wing * 0.5), Clay.DARK)
+			for i in stretches.size():
+				var post := Node3D.new()
+				post.transform = stretches[i]
+				mech.add_child(post)
+				Clay.box(post, Vector3(wing, lengths[i], thin), Vector3(side * (half + thin - wing * 0.5), 0, -thin * 0.5),
+					Clay.DARK)
+				Clay.box(post, Vector3(thin, lengths[i], wing), Vector3(side * (half + thin * 0.5), 0, -thin + wing * 0.5),
+					Clay.DARK)
 	ArmoryParts.dress(mech, loadout, 1.0)
 	await get_tree().create_timer(2.0).timeout
 	var center := mech.global_position + Vector3(0, -4.0, 0)
