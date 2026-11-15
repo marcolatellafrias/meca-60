@@ -79,7 +79,7 @@ Lo pidió el usuario: «empecemos a hacer maquetas de clay de todos los componen
   - El puño pesado es la misma mano, un 30 % más grande, con las falanges más gruesas y más largas, y un cono en cada
     nudillo.
 - **Lo de la espalda** va sobre un pedazo del techo con su torreta.
-- **Cada placa** son tres caras del prisma de ocho del miembro, un poco afuera: arriba del antebrazo, o al frente de la
+- **Cada placa** son tres caras del prisma de ocho del miembro, gruesas y bien despegadas (que no se confundan con él): arriba del antebrazo, o al frente de la
   canilla. El torso, por ahora, sin placa.
 - Son maquetas de forma: todavía no se montan en la meca.
 - En el sandbox, en la fila **Componentes de la armería** (`ArmoryPartsArchetype`), numeradas y en tres filas.

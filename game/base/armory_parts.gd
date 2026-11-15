@@ -30,6 +30,8 @@ const HEAVY_FINGERS := 1.35
 const HEAVY_LENGTH := 1.45
 ## El largo de los pinches de los nudillos (el usuario, 15/11/2026: «un poco más cortos»).
 const SPIKE := 0.32
+## Cuánto se despegan las placas del miembro que cubren.
+const PLATE_GAP := 0.35
 
 
 ## Arma la maqueta de `id` (ver ArmoryCatalog) colgada de `parent`, con su soporte.
@@ -219,7 +221,7 @@ static func _heavy_cannon(root: Node3D) -> void:
 ## La placa de brazo: arriba del antebrazo y sus dos caras vecinas.
 static func _arm_plate(root: Node3D) -> void:
 	_forearm(root, false)
-	_wrap(root, Transform3D(Basis(), Vector3(0, 0, 0.3)), 3.6)
+	_wrap(root, Transform3D(Basis(), Vector3(0, 0, 0.3)), 4.3)
 
 
 ## La placa de pierna: al frente de la canilla y sus dos caras vecinas.
@@ -230,14 +232,16 @@ static func _leg_plate(root: Node3D) -> void:
 	Clay.sphere(root, ARM_HALF * 1.25, Vector3(0, shin + 0.7, 0), MechBody.JOINT_COLOR)
 	Clay.box(root, Vector3(2.2, 0.7, 3.4), Vector3(0, 0.35, -0.4), MechBody.JOINT_COLOR)
 	# el marco de la placa: el largo por Z del marco va hacia arriba, y su +Y (la cara del medio) hacia el frente (−Z)
-	_wrap(root, Transform3D(Basis(Vector3.RIGHT, -PI * 0.5), Vector3(0, shin * 0.5 + 0.7, 0)), 3.4)
+	_wrap(root, Transform3D(Basis(Vector3.RIGHT, -PI * 0.5), Vector3(0, shin * 0.5 + 0.7, 0)), 4.0)
 
 
 ## Tres caras de un prisma de ocho, alrededor de un miembro de radio ARM_HALF con el largo por Z (en el marco `frame`):
 ## la del medio mira a +Y y las otras dos, a 45° de cada lado.
 static func _wrap(root: Node3D, frame: Transform3D, length: float) -> void:
-	var thickness := 0.18
-	var apothem := ARM_HALF * cos(PI / 8.0) + 0.06 + thickness * 0.5
+	# más gruesa y despegada, para que no se confunda con el miembro (el usuario, 15/11/2026: «más grandes y más
+	# sobresalidas»)
+	var thickness := 0.3
+	var apothem := ARM_HALF * cos(PI / 8.0) + PLATE_GAP + thickness * 0.5
 	var width := 2.0 * apothem * tan(PI / 8.0)
 	for step: int in [-1, 0, 1]:
 		var turn := Basis(Vector3.BACK, step * PI * 0.25)
