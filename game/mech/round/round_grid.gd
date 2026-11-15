@@ -29,14 +29,17 @@ static var SIDES := 12
 static var RADIUS := 3.55
 static var CLEAR := 2.3
 static var DISC := 1.0
-## El domo de arriba (ver RoundShape.dome): si va, y su alto sobre el borde de las paredes.
+## El domo de arriba (ver RoundShape.dome): si va, y su alto sobre el borde de las paredes (una media esfera: el radio
+## de afuera).
 static var DOME := false
-static var DOME_TALL := 1.8
+static var DOME_TALL := 0.0
 static var PLATFORM_R := 1.35
 static var PLATFORM_TALL := 0.3
 static var LIFT_R := 0.5
 static var LIFT_BACK := 0.7
 static var GLASS_SIDES := 5
+## El alto del visor sobre el piso (ver RoundShape.visor_height): nunca más que el techo.
+static var VISOR := 2.3
 static var GLASS_COLOR := Color(0.6, 0.8, 0.92, 0.14)
 ## Lo que sale: la distancia del centro al medio de un lado de adentro, el radio de afuera y el alto de la caja.
 static var APOTHEM := 0.0
@@ -57,7 +60,6 @@ static func apply(saved: RoundShape) -> void:
 	CLEAR = saved.clear_height
 	DISC = saved.disc_height
 	DOME = saved.dome
-	DOME_TALL = saved.dome_height
 	APOTHEM = RADIUS * cos(PI / SIDES)
 	OUTER = APOTHEM + WALL
 	PLATFORM_TALL = saved.platform_height
@@ -66,7 +68,9 @@ static func apply(saved: RoundShape) -> void:
 	PLATFORM_R = clampf(saved.platform_radius, 0.6, APOTHEM - SEAT_IN - 0.6)
 	LIFT_BACK = clampf(saved.lift_back, 0.0, maxf(PLATFORM_R * cos(PI / SIDES) - LIFT_R - 0.1, 0.0))
 	GLASS_SIDES = clampi(saved.glass_sides, 1, SIDES - 1) / 2 * 2 + 1
+	VISOR = clampf(saved.visor_height, 0.5, CLEAR)
 	GLASS_COLOR = Color(saved.glass_color, saved.glass_opacity)
+	DOME_TALL = OUTER
 	# La caja: el disco, el piso, la cabina y, arriba, el techo o el domo.
 	HEIGHT = DISC + SLAB + CLEAR + (DOME_TALL if DOME else SLAB)
 	HALF_HEIGHT = HEIGHT * 0.5
@@ -80,12 +84,12 @@ static func current() -> RoundShape:
 	now.clear_height = CLEAR
 	now.disc_height = DISC
 	now.dome = DOME
-	now.dome_height = DOME_TALL
 	now.platform_radius = PLATFORM_R
 	now.platform_height = PLATFORM_TALL
 	now.lift_radius = LIFT_R
 	now.lift_back = LIFT_BACK
 	now.glass_sides = GLASS_SIDES
+	now.visor_height = VISOR
 	now.glass_color = Color(GLASS_COLOR, 1.0)
 	now.glass_opacity = GLASS_COLOR.a
 	return now

@@ -16,13 +16,13 @@ const LABELS := {
 	"radius": "radio de adentro, a un vértice (m)",
 	"clear_height": "alto libre de la cabina (m)",
 	"disc_height": "alto del disco de abajo (m)",
-	"dome": "domo arriba (abierto por dentro)",
-	"dome_height": "alto del domo (m)",
+	"dome": "domo arriba: media esfera, abierta por dentro",
 	"platform_radius": "radio de la tarima (m)",
 	"platform_height": "alto de la tarima (m)",
 	"lift_radius": "radio del ascensor (m)",
 	"lift_back": "ascensor corrido atrás (m)",
 	"glass_sides": "lados de vidrio, al frente",
+	"visor_height": "alto del visor, desde el piso (m)",
 	"glass_color": "color del vidrio",
 	"glass_opacity": "cuánto se ve el vidrio (0 nada, 1 opaco)",
 }
@@ -61,7 +61,7 @@ func _measure() -> void:
 	if _state == null:
 		return
 	var apothem := _draft.radius * cos(PI / maxi(_draft.sides, 6))
-	var top := _draft.dome_height if _draft.dome else RoundGrid.SLAB
+	var top := apothem + RoundGrid.WALL if _draft.dome else RoundGrid.SLAB
 	_state.text = "por fuera, %.2f m de diámetro y %.2f m de alto (la cabina %.2f m libres, el disco %.2f m) · la caja va a %.2f m del piso (sale de las piernas)" % [
 		(apothem + RoundGrid.WALL) * 2.0, _draft.disc_height + _draft.clear_height + RoundGrid.SLAB + top,
 		_draft.clear_height, _draft.disc_height, MechBody.waist_for(_body.thickness, _body.leg_length, _body.leg_stretch)]

@@ -136,7 +136,11 @@ func _walls(floor_top: float, ceiling: float) -> void:
 	var glass_half := PI * RoundGrid.GLASS_SIDES / RoundGrid.SIDES
 	var apothem := RoundGrid.APOTHEM
 	add_child(_band(apothem, RoundGrid.OUTER, glass_half, TAU - glass_half, floor_top, ceiling, METAL))
-	var glass := _band(RoundGrid.OUTER - 0.03, RoundGrid.OUTER, -glass_half, glass_half, floor_top, ceiling, Color.WHITE)
+	# El visor: de vidrio desde el piso hasta su alto; arriba, hasta el techo, metal.
+	var visor_top := floor_top + RoundGrid.VISOR
+	if ceiling - visor_top > 0.01:
+		add_child(_band(apothem, RoundGrid.OUTER, -glass_half, glass_half, visor_top, ceiling, METAL))
+	var glass := _band(RoundGrid.OUTER - 0.03, RoundGrid.OUTER, -glass_half, glass_half, floor_top, visor_top, Color.WHITE)
 	glass.name = "Vidrio"
 	var paint := StandardMaterial3D.new()
 	paint.albedo_color = RoundGrid.GLASS_COLOR

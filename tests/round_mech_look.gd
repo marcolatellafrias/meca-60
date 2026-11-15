@@ -49,6 +49,10 @@ func _ready() -> void:
 	if OS.get_cmdline_user_args().has("--domo"):
 		var form := RoundGrid.current()
 		form.dome = true
+		# `--visor`: además, el techo más alto que el visor (3,4 m de techo, el visor a 2,2).
+		if OS.get_cmdline_user_args().has("--visor"):
+			form.clear_height = 3.4
+			form.visor_height = 2.2
 		RoundGrid.apply(form)
 	_mech = Mech.new()
 	_mech.arms_kind = Mech.Arms.POSE
