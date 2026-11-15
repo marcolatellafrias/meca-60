@@ -2,7 +2,7 @@ extends Node3D
 
 ## LA MECA REDONDA DE VERDAD, PARA MIRAR (unos 10 segundos, sin el sandbox; ver RoundCabin, RoundGrid): de frente, de
 ## costado, de atrás, desde la silla del movimiento, desde atrás de ella, y desde arriba sin techo.
-##   tools/godot_ventana.sh res://tests/round_mech_look.tscn -- --salida=C:/carpeta
+##   tools/godot_ventana.sh res://tests/round_mech_look.tscn -- --salida=C:/carpeta [--domo]
 
 const VIEW := Vector2i(1280, 720)
 
@@ -45,6 +45,11 @@ func _ready() -> void:
 	_title.add_theme_color_override("font_outline_color", Color.WHITE)
 	_title.add_theme_constant_override("outline_size", 10)
 	layer.add_child(_title)
+	# `--domo`: la forma guardada, con el domo (ver RoundGrid.DOME).
+	if OS.get_cmdline_user_args().has("--domo"):
+		var form := RoundGrid.current()
+		form.dome = true
+		RoundGrid.apply(form)
 	_mech = Mech.new()
 	_mech.arms_kind = Mech.Arms.POSE
 	_mech.cabin_shape = Mech.Cabin.ROUND

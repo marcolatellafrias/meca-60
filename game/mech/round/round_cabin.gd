@@ -54,11 +54,14 @@ func _ready() -> void:
 	add_child(_plate(outer, gap, floor_top - RoundGrid.SLAB, floor_top, FLOOR, true))
 	var room := RoundGrid.polygon(RoundGrid.RADIUS, PER_SIDE * 2)
 	_ring_shapes(room, RoundGrid.circle(hole_radius, hole, PER_SIDE * 2), floor_top - RoundGrid.SLAB, floor_top)
-	var roof := Clay.cylinder(self, RoundGrid.OUTER, RoundGrid.SLAB, Vector3(0, ceiling + RoundGrid.SLAB * 0.5, 0), METAL)
-	(roof.mesh as CylinderMesh).radial_segments = 64
-	roof.name = "Techo"
-	Clay.shape_box(interior, Vector3(RoundGrid.OUTER * 2.0, RoundGrid.SLAB, RoundGrid.OUTER * 2.0),
-		Vector3(0, ceiling + RoundGrid.SLAB * 0.5, 0))
+	if RoundGrid.DOME:
+		_dome(ceiling)
+	else:
+		var roof := Clay.cylinder(self, RoundGrid.OUTER, RoundGrid.SLAB, Vector3(0, ceiling + RoundGrid.SLAB * 0.5, 0), METAL)
+		(roof.mesh as CylinderMesh).radial_segments = 64
+		roof.name = "Techo"
+		Clay.shape_box(interior, Vector3(RoundGrid.OUTER * 2.0, RoundGrid.SLAB, RoundGrid.OUTER * 2.0),
+			Vector3(0, ceiling + RoundGrid.SLAB * 0.5, 0))
 	_walls(floor_top, ceiling)
 	_deck(floor_top, hole, hole_radius)
 	_supplies(floor_top)
@@ -71,6 +74,60 @@ func _ready() -> void:
 	lift.center = hole
 	lift.square_shape = false
 	add_child(lift)
+
+
+## EL DOMO (ver RoundGrid.DOME): un casquete de esfera de metal, sin vidrio, que nace del borde de arriba de la piel y
+## sube `DOME_TALL`; por dentro, abierto (la cabina gana todo ese alto). Su cara de adentro choca.
+func _dome(base: float) -> void:
+	var tall := RoundGrid.DOME_TALL
+	var outer := _cap(RoundGrid.OUTER, tall)
+	var inner := _cap(RoundGrid.APOTHEM, maxf(tall - RoundGrid.SLAB, 0.1))
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var around := 64
+	var faces := PackedVector3Array()
+	for ring in outer.size() - 1:
+		for k in around:
+			var a0 := TAU * k / around
+			var a1 := TAU * (k + 1) / around
+			_quad(tool, _ring_at(outer[ring], a0, base), _ring_at(outer[ring], a1, base), _ring_at(outer[ring + 1], a1, base),
+				_ring_at(outer[ring + 1], a0, base), SMOOTH_OUT)
+			var p := [_ring_at(inner[ring], a0, base), _ring_at(inner[ring], a1, base), _ring_at(inner[ring + 1], a1, base),
+				_ring_at(inner[ring + 1], a0, base)]
+			_quad(tool, p[0], p[1], p[2], p[3], SMOOTH_IN)
+			faces.append_array(PackedVector3Array([p[0], p[1], p[2], p[0], p[2], p[3]]))
+	# El borde de abajo, entre las dos caras, plano.
+	for k in around:
+		var a0 := TAU * k / around
+		var a1 := TAU * (k + 1) / around
+		_quad(tool, _ring_at(inner[0], a0, base), _ring_at(inner[0], a1, base), _ring_at(outer[0], a1, base),
+			_ring_at(outer[0], a0, base), FLAT)
+	var dome := _mesh(tool, METAL)
+	dome.name = "Techo"
+	add_child(dome)
+	var shape := CollisionShape3D.new()
+	var hull := ConcavePolygonShape3D.new()
+	hull.backface_collision = true
+	hull.set_faces(faces)
+	shape.shape = hull
+	interior.add_child(shape)
+
+
+## Los anillos de un casquete de esfera de base `radius` y alto `tall`, de la base a la punta: [radio, alto sobre la base].
+func _cap(radius: float, tall: float) -> Array[Vector2]:
+	var sphere := (radius * radius + tall * tall) / (2.0 * tall)
+	var widest := atan2(radius, sphere - tall)
+	var rings: Array[Vector2] = []
+	var count := 14
+	for i in count + 1:
+		var angle := widest * (1.0 - float(i) / count)
+		rings.append(Vector2(sphere * sin(angle), tall - sphere + sphere * cos(angle)))
+	return rings
+
+
+## Un punto de un anillo del domo, hacia el ángulo `angle`, sobre la base `base`.
+func _ring_at(ring: Vector2, angle: float, base: float) -> Vector3:
+	return RoundGrid.at(ring.x, angle, base + ring.y)
 
 
 ## LA PIEL Y LOS LADOS: afuera, la banda lisa (metal atrás, vidrio adelante); adentro, los lados planos de metal (los
