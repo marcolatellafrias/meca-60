@@ -6,6 +6,15 @@ extends KnobsPanel
 
 const PANEL_WIDTH := 400.0
 const LABELS := {
+	"radius": "bola: radio (m)", "shell_bands": "bola: franjas de polo a polo", "slit_bands": "rendija: cuántas franjas",
+	"shell_sides": "bola: caras alrededor", "slit_depth": "rendija: se hunde (m)",
+	"reach_margin": "choca con lo fijo a (m más que la bola)",
+	"tentacle_root": "tentáculo: grueso en la bola (m)", "tentacle_tip": "tentáculo: grueso en el pie (m)",
+	"hub_radius": "pie: radio del medio (m)", "hub_height": "pie: alto del medio (m)",
+	"blade_width": "paleta: ancho (m)", "blade_length": "paleta: largo (m)", "blade_thickness": "paleta: grueso (m)",
+	"carriage_height": "cañón: alto del carro (m)", "carriage_depth": "cañón: fondo del carro (m)",
+	"barrel_radius": "cañón: radio del caño (m)", "barrel_length": "cañón: largo del caño (m)",
+	"muzzle_radius": "cañón: radio de la boca (m)", "muzzle_length": "cañón: largo de la boca (m)",
 	"walk_speed": "velocidad (m/s)", "reach_time": "tiempo para llegar a ella y para frenar (s; 0: al instante)",
 	"turn_speed": "velocidad tope (°/s)", "turn_accel": "aceleración tope (°/s²)",
 	"jump_height": "sube (m)", "jump_time": "tarda en subir (s)",
@@ -26,7 +35,7 @@ const LABELS := {
 	"tentacle_length": "largo de cada tentáculo (m)", "spread": "el pie, a cuánto del centro (m)",
 	"step_radius": "un pie sale a más de (m)", "step_time": "el paso tarda (s)", "step_lift": "el pie sube (m)",
 }
-const TABS: Array[String] = ["Moverse", "Girar", "Saltar", "Agacharse", "Cañón", "Disparos", "Bola", "Barrido", "Tentáculos"]
+const TABS: Array[String] = ["Forma", "Moverse", "Girar", "Saltar", "Agacharse", "Cañón", "Disparos", "Bola", "Barrido", "Tentáculos"]
 
 
 func setup_panel() -> void:
@@ -46,10 +55,12 @@ func saved_path() -> String:
 	return BallBossSettings.SAVED
 
 
-## Nada que rearmar: el jefe lee sus perillas en cada paso (lo que cambia de forma, como la altura o los tentáculos, va
-## de a poco hacia lo nuevo).
+## LO DE LA PESTAÑA FORMA SE REARMA: cada jefe bola se vuelve a armar donde está (BallBoss.rebuild). Lo demás lo lee en
+## cada paso.
 func applied() -> void:
-	pass
+	for node in get_tree().get_nodes_in_group(SandboxPossession.GROUP):
+		if node is BallBoss:
+			(node as BallBoss).rebuild()
 
 
 func sections() -> Array[Dictionary]:

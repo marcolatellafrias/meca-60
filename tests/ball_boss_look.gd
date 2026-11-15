@@ -219,7 +219,7 @@ func _ready() -> void:
 	_boss.move = Vector2(1, 0)
 	await _wait(6.0)
 	print("contra la pared: el centro quedó a %.2f m de su cara (el cilindro mide %.1f)" % [
-		49.0 - _boss.global_position.x, BallBoss.REACH])
+		49.0 - _boss.global_position.x, _boss.reach()])
 	await _shot("contra la pared", _boss.global_position + Vector3(-60, 30, 70), _boss.global_position + Vector3(8, 15, 0))
 	# AL LADO DEL EDIFICIO (de 12 m, su cara en x = -35): los pies pisan su techo.
 	_boss.move = Vector2.ZERO
@@ -235,7 +235,40 @@ func _ready() -> void:
 	print("al lado del edificio: el alto de cada pie ", tips)
 	await _shot("al lado del edificio: un pie en el techo", _boss.global_position + Vector3(10, 30, 85),
 		_boss.global_position + Vector3(-12, 12, 0))
+	await _reshaped()
 	get_tree().quit()
+
+
+## LA PESTAÑA FORMA: otra bola (más grande, más caras, rendija más ancha, patas y cañón más gruesos), rearmada donde está
+## (como al guardar el F1), y de vuelta a la de antes.
+func _reshaped() -> void:
+	var k := BallBossSettings.current
+	var before := k.duplicate() as BallBossSettings
+	_boss.put(Transform3D(Basis(), Vector3(0.0, 0.0, 30.0)))
+	k.radius = 20.0
+	k.stand_height = 26.0
+	k.shell_bands = 12
+	k.slit_bands = 4
+	k.shell_sides = 12
+	k.tentacle_root = 4.5
+	k.tentacle_tip = 3.0
+	k.blade_length = 10.0
+	k.barrel_radius = 2.4
+	k.barrel_length = 16.0
+	_boss.rebuild()
+	await _wait(2.0)
+	print("rearmada: radio %.1f · centro a %.1f m · cilindro de %.1f · %d piezas en la bola" % [_boss.radius,
+		_boss.center_height, _boss.reach(), _boss.ball().get_child_count()])
+	await _shot("rearmada con otra forma (radio 20, 12 caras, rendija de 4 franjas)", Vector3(-40, 30, -80),
+		_boss.global_position + Vector3.UP * 22)
+	for property in k.get_property_list():
+		if property["usage"] & PROPERTY_USAGE_STORAGE:
+			k.set(property["name"], before.get(property["name"]))
+	_boss.rebuild()
+	await _wait(1.0)
+	print("de vuelta: radio %.1f · centro a %.1f m · %d piezas en la bola" % [_boss.radius, _boss.center_height,
+		_boss.ball().get_child_count()])
+	await _shot("de vuelta a la de antes", Vector3(-40, 30, -80), _boss.global_position + Vector3.UP * 18)
 
 
 func _report(what: String) -> void:

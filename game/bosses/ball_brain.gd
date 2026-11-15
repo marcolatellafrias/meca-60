@@ -398,7 +398,7 @@ func _check_touch() -> void:
 	if _boss.roll.fold > 0.5 and absf(_boss.roll.speed) > BallBossSettings.current.hit_min_speed \
 			and not _hit_this_act:
 		var ball := _boss.global_position + Vector3.UP * _boss.center_height
-		if Vector2(ball.x - centre.x, ball.z - centre.z).length() < BallBoss.RADIUS + radius:
+		if Vector2(ball.x - centre.x, ball.z - centre.z).length() < _boss.radius + radius:
 			_hit_this_act = true
 			_hit("la carga")
 
@@ -428,7 +428,7 @@ func _check_punches() -> void:
 		if _punched.has(key) or (stage_now != MechArm.Stage.STRIKE and stage_now != MechArm.Stage.HOLD):
 			continue
 		for hand: Node3D in arm.find_children("*", "MechHand", true, false):
-			if hand.global_position.distance_to(ball) < BallBoss.RADIUS + PUNCH_REACH:
+			if hand.global_position.distance_to(ball) < _boss.radius + PUNCH_REACH:
 				_punched[key] = true
 				own.hurt(PUNCH_DAMAGE, "una piña (%s)" % MechArm.NAMES[arm.punching])
 				break
@@ -457,7 +457,7 @@ func _still() -> void:
 
 
 func _show() -> void:
-	_label.position = Vector3.UP * (_boss.center_height + BallBoss.RADIUS + 6.0)
+	_label.position = Vector3.UP * (_boss.center_height + _boss.radius + 6.0)
 	var head := stage if awake or stage == "derrotado" else "quieto (P lo despierta)"
 	_label.text = "%s\nte pegó %d%s" % [head, landed, (" · %s" % last_hit) if landed > 0 else ""]
 	_label.modulate = Color(1.0, 0.55, 0.3) if stage.ends_with("apunta") or stage.ends_with("se hunde") \

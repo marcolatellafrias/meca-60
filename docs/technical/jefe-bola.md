@@ -45,10 +45,17 @@ posee (la **O**). La computadora todavía no.
   - El piso se busca con un rayo a lo fijo del mundo, así que sobre un edificio pisa el techo.
   - Cuando un pie queda a más de 6 m de su lugar, sale **con el de su diagonal**, en arco.
   - En el aire, los pies cuelgan; al caer, apoyan donde estén.
-- **F1**: las perillas (`BallBossPanel`), con una pestaña por grupo: Moverse, Girar, Saltar, Agacharse, Cañón y
-  Tentáculos. Como todos los paneles de perillas (`KnobsPanel`), se mueve un borrador: **Guardar** lo aplica y lo
-  deja en `game/bosses/ball_boss_settings.tres`, que se carga al arrancar; el archivo es del usuario y no va al
-  repositorio.
+- **F1**: las perillas (`BallBossPanel`), con una pestaña por grupo: Forma, Moverse, Girar, Saltar, Agacharse, Cañón,
+  Disparos, Bola, Barrido y Tentáculos. Como todos los paneles de perillas (`KnobsPanel`), se mueve un borrador:
+  **Guardar** lo aplica y lo deja en `game/bosses/ball_boss_settings.tres`, que se carga al arrancar; el archivo es del
+  usuario y no va al repositorio.
+- **La pestaña Forma** (14/11/2026; el usuario: «está todo muy hardcodeado… experimentar con tamaños»): el radio de la
+  bola, el casco (franjas, franjas de la rendija, caras alrededor, cuánto se hunde), cuánto más ancho es el cilindro que
+  choca con lo fijo, el grueso de los tentáculos, el pie y sus paletas, y el carro, el caño y la boca del cañón. **Al
+  guardar, cada jefe bola se rearma donde está** (`BallBoss.rebuild`): la bola, el cañón y las patas, con los pies a su
+  lugar. Las franjas se redondean a pares. El centro nunca baja del radio (si la bola crece y la altura parada no, queda
+  apoyada en el piso). Lo demás (velocidades, alturas, el largo de los tentáculos) lo lee en cada paso.
+  `ball_boss_look` termina rearmándola con radio 20, 12 franjas, rendija de 4 y patas y cañón más gruesos, y de vuelta.
 
 ### Lo medido (`ball_boss_look`)
 | Prueba | Resultado |

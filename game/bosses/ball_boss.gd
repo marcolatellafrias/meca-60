@@ -24,18 +24,9 @@ extends CharacterBody3D
 ## cielo). Para apuntar de costado gira la bola entera, con las patas (el usuario: «la rendija es en la otra dirección, si
 ## quiere rotar en y, va a usar las piernas»).
 
-## El radio de la bola (m).
-const RADIUS := 15.0
-## Ancha y poco hundida (el usuario: «la rendija más gruesa y menos indentada»).
-const SLIT_DEPTH := 0.6
-## EL CASCO LOW POLY (BallShell): franjas de polo a polo, cuántas del medio son la rendija, y caras alrededor. El ancho de
-## la rendija sale de ahí (2·radio·sen de media rendija).
-const SHELL_BANDS := 16
-const SLIT_BANDS := 2
-const SHELL_SIDES := 18
-const SLIT := 2.0 * RADIUS * 0.19509
-## El cilindro contra lo fijo: un poco más ancho que la bola (m).
-const REACH := 16.0
+## LA FORMA SON PERILLAS (BallBossSettings, pestaña Forma; 14/11/2026): el radio, el casco y la rendija (ancha y poco
+## hundida; el usuario: «la rendija más gruesa y menos indentada»), los tentáculos y el cañón. Se arma al nacer y se
+## rearma al guardar el F1 (`rebuild`).
 
 ## ── LO QUE SE LE PIDE ──
 var move := Vector2.ZERO
@@ -60,6 +51,8 @@ var center_height := 20.0
 var legs: BallLegs = null
 var cannon: BallCannon = null
 var roll := BallRoll.new()
+## El radio de la bola (m), el de la pestaña Forma cuando se armó.
+var radius := 15.0
 
 var _yaw := 0.0
 var _yaw_speed := 0.0
@@ -74,6 +67,9 @@ var _holder: CollisionShape3D = null
 var _ball: AnimatableBody3D = null
 var _driving := false
 var _chase_yaw := 0.0
+var _reach := 16.0
+var _shell: MeshInstance3D = null
+var _sphere: CollisionShape3D = null
 
 
 func _init() -> void:
@@ -84,7 +80,8 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	_cylinder.radius = REACH
+	_measure(BallBossSettings.current)
+	_cylinder.radius = _reach
 	_holder = CollisionShape3D.new()
 	_holder.shape = _cylinder
 	add_child(_holder)
@@ -100,7 +97,7 @@ func _ready() -> void:
 	_ball.transform = _ball_place()
 	add_child(_ball)
 	_ball.sync_to_physics = true
-	_dress(_ball)
+	_dress(BallBossSettings.current)
 	# PARA LAS MECAS CINEMÁTICAS, LA BOLA ES PARED: ellas chocan sólo con lo fijo del mundo, así que la bola va también en
 	# esa capa. No pueden meterse en ella, y si la bola se les mete encima, su motor las saca hacia afuera (el jefe gana:
 	# es el doble). Él no se choca con su propia bola.
@@ -109,26 +106,60 @@ func _ready() -> void:
 	cannon = BallCannon.new()
 	cannon.name = "Cañón"
 	_ball.add_child(cannon)
-	cannon.build(RADIUS, SLIT, SLIT_DEPTH)
+	cannon.build(BallBossSettings.current, radius, _slit(BallBossSettings.current), BallBossSettings.current.slit_depth)
 	legs = BallLegs.new()
 	add_child(legs)
-	legs.place_now(BallBossSettings.current, _ball_place().origin, _yaw, RADIUS)
+	legs.place_now(BallBossSettings.current, _ball_place().origin, _yaw, radius)
 	add_to_group(SandboxPossession.GROUP)
 
 
-## LA BOLA DE ARCILLA: dos medias esferas, la izquierda y la derecha, separadas por la rendija, que le da toda la vuelta
-## de arriba a abajo, con su fondo oscuro. El cañón (BallCannon) va metido en ella.
-static func _dress(ball: AnimatableBody3D) -> void:
-	var shape := CollisionShape3D.new()
+## LO QUE SALE DE LA FORMA: el radio y el ancho del cilindro contra lo fijo.
+func _measure(k: BallBossSettings) -> void:
+	radius = k.radius
+	_reach = k.radius + k.reach_margin
+
+
+## El ancho de la rendija (m): 2·radio·sen de media rendija (cada franja abarca 180° / franjas).
+func _slit(k: BallBossSettings) -> float:
+	var bands := maxi(k.shell_bands, 4)
+	return 2.0 * radius * sin(PI * clampi(k.slit_bands, 2, bands - 2) * 0.5 / bands)
+
+
+## LA BOLA DE ARCILLA: el casco low poly con la rendija hundida, que le da toda la vuelta de arriba a abajo, con su fondo
+## oscuro (BallShell), y su esfera para chocar. El cañón (BallCannon) va metido en ella. Rearmándola, saca lo de antes.
+func _dress(k: BallBossSettings) -> void:
+	if _sphere != null:
+		_sphere.queue_free()
+		_shell.queue_free()
+	_sphere = CollisionShape3D.new()
 	var sphere := SphereShape3D.new()
-	sphere.radius = RADIUS
-	shape.shape = sphere
-	ball.add_child(shape)
-	var shell := MeshInstance3D.new()
-	shell.mesh = BallShell.mesh(RADIUS, SHELL_BANDS, SLIT_BANDS, SHELL_SIDES, SLIT_DEPTH)
-	shell.set_surface_override_material(0, Clay.material(Clay.METAL.darkened(0.05)))
-	shell.set_surface_override_material(1, Clay.material(Clay.DARK.darkened(0.4)))
-	ball.add_child(shell)
+	sphere.radius = radius
+	_sphere.shape = sphere
+	_ball.add_child(_sphere)
+	# Las franjas, pares, y la rendija, par y con casco a los dos lados.
+	var bands := maxi(k.shell_bands + k.shell_bands % 2, 4)
+	var slit := clampi(k.slit_bands + k.slit_bands % 2, 2, bands - 2)
+	_shell = MeshInstance3D.new()
+	_shell.mesh = BallShell.mesh(radius, bands, slit, k.shell_sides, k.slit_depth)
+	_shell.set_surface_override_material(0, Clay.material(Clay.METAL.darkened(0.05)))
+	_shell.set_surface_override_material(1, Clay.material(Clay.DARK.darkened(0.4)))
+	_ball.add_child(_shell)
+
+
+## LA REARMA con la pestaña Forma de sus perillas, donde está: la bola, el cañón y las patas, y los pies a su lugar.
+func rebuild() -> void:
+	var k := BallBossSettings.current
+	_measure(k)
+	_dress(k)
+	cannon.build(k, radius, _slit(k), k.slit_depth)
+	legs.rebuild(k)
+	_fit(k)
+	put(Transform3D(Basis(Vector3.UP, _yaw), global_position))
+
+
+## El ancho del cilindro que choca con lo fijo (m).
+func reach() -> float:
+	return _reach
 
 
 func _physics_process(delta: float) -> void:
@@ -158,9 +189,9 @@ func _physics_process(delta: float) -> void:
 	flat.y = 0.0
 	if roll.fold > 0.0:
 		roll.moved(flat.dot(heading), k)
-	roll.turn_ball(flat, RADIUS, delta)
+	roll.turn_ball(flat, radius, delta)
 	_ball.global_transform = _ball_place()
-	roll.strike(k, get_world_3d().direct_space_state, _ball_place().origin, RADIUS, flat)
+	roll.strike(k, get_world_3d().direct_space_state, _ball_place().origin, radius, flat)
 	cannon.step(k, aim_pitch, delta, roll.fold)
 	if fire and not _fire_was and roll.fold <= 0.0:
 		cannon.shoot(k)
@@ -169,12 +200,12 @@ func _physics_process(delta: float) -> void:
 	_fire_was = fire
 	_barrage_was = barrage
 	if roll.fold <= 0.0:
-		legs.step(k, delta, _ball_place().origin, _yaw, flat, grounded, RADIUS)
+		legs.step(k, delta, _ball_place().origin, _yaw, flat, grounded, radius)
 	else:
 		# Al empezar a abrirse, los pies salen hacia su lugar en el piso.
 		if _was_rolling and not roll.rolling():
 			legs.homes(k, _ball_place().origin, _yaw)
-		legs.folded(k, _ball_place().origin, _yaw, RADIUS, roll.fold)
+		legs.folded(k, _ball_place().origin, _yaw, radius, roll.fold)
 	_was_rolling = roll.rolling()
 
 
@@ -199,11 +230,11 @@ func _rise(k: BallBossSettings, delta: float) -> float:
 ## La altura del centro (parado, agachado o hecha bola) y el cilindro, del piso a lo alto de la bola: hecha bola, del
 ## ancho de la bola.
 func _fit(k: BallBossSettings) -> void:
-	var standing := lerpf(k.stand_height, k.crouch_height, smoothstep(0.0, 1.0, crouched))
+	var standing := maxf(lerpf(k.stand_height, k.crouch_height, smoothstep(0.0, 1.0, crouched)), radius)
 	var eased := smoothstep(0.0, 1.0, roll.fold)
-	center_height = lerpf(standing, RADIUS, eased)
-	_cylinder.radius = lerpf(REACH, RADIUS, eased)
-	_cylinder.height = center_height + RADIUS
+	center_height = lerpf(standing, radius, eased)
+	_cylinder.radius = lerpf(_reach, radius, eased)
+	_cylinder.height = center_height + radius
 	_holder.position.y = _cylinder.height * 0.5
 
 
@@ -246,7 +277,7 @@ func put(where: Transform3D) -> void:
 	_ball.sync_to_physics = false
 	_ball.global_transform = _ball_place()
 	_ball.sync_to_physics = true
-	legs.place_now(BallBossSettings.current, _ball_place().origin, _yaw, RADIUS)
+	legs.place_now(BallBossSettings.current, _ball_place().origin, _yaw, radius)
 
 
 ## ── POSEERLA (ver SandboxPossession) ─────────────────────────────────────────────────────────────────────────────
@@ -326,7 +357,7 @@ func possess_end() -> void:
 
 func possess_camera(first: bool, delta: float) -> Transform3D:
 	if first:
-		var eye := global_position + Vector3.UP * center_height + Basis(Vector3.UP, _yaw) * Vector3(0.0, 0.0, -RADIUS)
+		var eye := global_position + Vector3.UP * center_height + Basis(Vector3.UP, _yaw) * Vector3(0.0, 0.0, -radius)
 		return Transform3D(Basis(Vector3.UP, _yaw), eye)
 	_chase_yaw = lerp_angle(_chase_yaw, _yaw, 1.0 - exp(-3.0 * delta))
 	var at := global_position + Vector3.UP * center_height * 0.7

@@ -12,18 +12,12 @@ extends Node3D
 ## EL PIE SON CUATRO PALETAS TRIANGULARES EN CRUZ, apoyadas en el piso. El usuario: «cuando son pies es como que están en
 ## modo de cruz, pero cuando son en modo hélice empiezan a girar»: la cruz es el `rotor`, que mañana gira.
 
-## Cuántos tramos se dibujan, y el grueso del tentáculo en la bola y en el pie (radio, m).
-## Gruesos y cortos (el usuario: «hacé las piernas mucho más chunky y cortas»).
+## Cuántos tramos se dibujan. El grueso, el pie y las paletas son perillas (BallBossSettings, pestaña Forma): gruesos y
+## cortos (el usuario: «hacé las piernas mucho más chunky y cortas»).
 const SEGMENTS := 8
-const ROOT_RADIUS := 3.2
-const TIP_RADIUS := 2.2
 ## Cuántas muestras mide la curva y cuántas vueltas da la búsqueda.
 const SAMPLES := 16
 const SEARCHES := 14
-## El pie: el cubo del medio (radio y alto, m) y cada paleta (ancho de la base, largo y grueso, m).
-const HUB_RADIUS := 2.8
-const HUB_HEIGHT := 2.0
-const BLADE := Vector3(4.5, 7.0, 0.9)
 
 ## La cruz del pie: gira sobre su eje (mañana, la hélice).
 var rotor: Node3D = null
@@ -31,24 +25,35 @@ var rotor: Node3D = null
 var _pieces: Array[Node3D] = []
 var _joints: Array[Node3D] = []
 var _foot: Node3D = null
+var _hub_height := 0.0
 
 
 func _ready() -> void:
 	top_level = true
 	global_transform = Transform3D()
+	build(BallBossSettings.current)
+
+
+## LO ARMA con las medidas de `k` (y lo rearma: saca lo que tenía).
+func build(k: BallBossSettings) -> void:
+	for child in get_children():
+		child.queue_free()
+	_pieces.clear()
+	_joints.clear()
 	for i in SEGMENTS:
-		var radius := lerpf(ROOT_RADIUS, TIP_RADIUS, (i + 0.5) / SEGMENTS)
+		var radius := lerpf(k.tentacle_root, k.tentacle_tip, (i + 0.5) / SEGMENTS)
 		_pieces.append(Clay.limb(self, radius, 1.0, Vector3.ZERO, Clay.METAL.darkened(0.15)))
 		if i > 0:
 			_joints.append(Clay.sphere(self, radius * 1.05, Vector3.ZERO, Clay.METAL.darkened(0.3)))
+	_hub_height = k.hub_height
 	_foot = Node3D.new()
 	add_child(_foot)
-	Clay.cylinder(_foot, HUB_RADIUS, HUB_HEIGHT, Vector3.UP * HUB_HEIGHT * 0.5, Clay.DARK)
+	Clay.cylinder(_foot, k.hub_radius, k.hub_height, Vector3.UP * k.hub_height * 0.5, Clay.DARK)
 	rotor = Node3D.new()
-	rotor.position = Vector3.UP * BLADE.z * 0.5
+	rotor.position = Vector3.UP * k.blade_thickness * 0.5
 	_foot.add_child(rotor)
 	var blade := PrismMesh.new()
-	blade.size = BLADE
+	blade.size = Vector3(k.blade_width, k.blade_length, k.blade_thickness)
 	for i in 4:
 		# El triángulo del prisma apunta a su +Y y su grueso va en Z: la punta, hacia afuera; el grueso, para arriba.
 		var out := Vector3.FORWARD.rotated(Vector3.UP, i * PI * 0.5)
@@ -56,7 +61,7 @@ func _ready() -> void:
 		part.mesh = blade
 		part.material_override = Clay.material(Clay.YELLOW.darkened(0.25) if i == 0 else Clay.METAL.lightened(0.15))
 		part.transform = Transform3D(Basis(out.cross(Vector3.UP), out, Vector3.UP),
-			out * (HUB_RADIUS * 0.6 + BLADE.y * 0.5))
+			out * (k.hub_radius * 0.6 + k.blade_length * 0.5))
 		rotor.add_child(part)
 
 
@@ -64,7 +69,7 @@ func _ready() -> void:
 ## `foot_yaw`; `length` es lo que mide.
 func pose(root: Vector3, out: Vector3, tip: Vector3, foot_yaw: float, length: float) -> void:
 	_foot.global_transform = Transform3D(Basis(Vector3.UP, foot_yaw), tip)
-	var end := tip + Vector3.UP * HUB_HEIGHT
+	var end := tip + Vector3.UP * _hub_height
 	var handle := Tentacle.fit(root, out, end, length)
 	var previous := root
 	for i in SEGMENTS:

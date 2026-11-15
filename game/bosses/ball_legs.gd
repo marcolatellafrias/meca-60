@@ -52,6 +52,12 @@ func _ready() -> void:
 		_feet.append({"at": Vector3.ZERO, "from": Vector3.ZERO, "yaw": 0.0, "planted": true})
 
 
+## LAS REARMA con las medidas de `k` (la pestaña Forma).
+func rebuild(k: BallBossSettings) -> void:
+	for tentacle in tentacles:
+		tentacle.build(k)
+
+
 ## Hacia dónde sale la pata `i` de la bola (en el espacio de la bola, sin girar).
 static func direction(i: int) -> Vector3:
 	return Vector3.FORWARD.rotated(Vector3.UP, -PI * 0.25 - i * PI * 0.5)

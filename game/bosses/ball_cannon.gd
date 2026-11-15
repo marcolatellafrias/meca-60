@@ -21,12 +21,8 @@ extends Node3D
 ## un cañón de tanque»). El carro que va metido en la rendija (alto y fondo, m; el ancho es el de la rendija), el caño
 ## (radio y largo, m) y, en la punta, la boca más gruesa (radio y largo, m), con el hueco bien a la vista.
 ## *Después volvió a los anchos de antes, un poco más largo, con la boca más larga: «más larga la parte ensanchada en
-## relación al largo del cañón, y volvamos a los anchos antes de la exageración (solamente un poco más largos)».*
-const CARRIAGE := Vector2(5.0, 3.0)
-const BARREL_RADIUS := 1.6
-const BARREL_LENGTH := 12.0
-const MUZZLE_RADIUS := 2.4
-const MUZZLE_LENGTH := 5.5
+## relación al largo del cañón, y volvamos a los anchos antes de la exageración (solamente un poco más largos)».* Las
+## medidas son perillas (BallBossSettings, pestaña Forma).
 ## Hasta dónde llega el tiro simple si no encuentra nada (m).
 const SHELL_RANGE := 400.0
 
@@ -42,21 +38,25 @@ var _queue: Array[Vector3] = []
 var _gap := 0.0
 var _cooldown := 0.0
 var _tip := 0.0
+var _tuck := 0.0
 
 
-## LO ARMA en la bola de `radius`, con la rendija de `slit` de ancho y `depth` de fondo.
-func build(radius: float, slit: float, depth: float) -> void:
+## LO ARMA en la bola de `radius`, con la rendija de `slit` de ancho y `depth` de fondo, con las medidas de `k` (y lo
+## rearma: saca lo que tenía).
+func build(k: BallBossSettings, radius: float, slit: float, depth: float) -> void:
+	for child in get_children():
+		child.queue_free()
 	var bottom := radius - depth
-	_tip = bottom + BARREL_LENGTH
-	Clay.box(self, Vector3(slit * 0.9, CARRIAGE.x, CARRIAGE.y), Vector3(0.0, 0.0, -(bottom + CARRIAGE.y * 0.5 - 0.3)),
-		Clay.DARK.lightened(0.15))
-	Clay.cylinder(self, BARREL_RADIUS, BARREL_LENGTH, Vector3(0.0, 0.0, -(bottom + BARREL_LENGTH * 0.5)), Clay.YELLOW,
-		Vector3(90.0, 0.0, 0.0))
-	var tip := bottom + BARREL_LENGTH
-	Clay.cylinder(self, MUZZLE_RADIUS, MUZZLE_LENGTH, Vector3(0.0, 0.0, -(tip - MUZZLE_LENGTH * 0.5)), Clay.YELLOW.darkened(0.15),
-		Vector3(90.0, 0.0, 0.0))
+	_tip = bottom + k.barrel_length
+	_tuck = k.barrel_length + k.carriage_depth
+	Clay.box(self, Vector3(slit * 0.9, k.carriage_height, k.carriage_depth),
+		Vector3(0.0, 0.0, -(bottom + k.carriage_depth * 0.5 - 0.3)), Clay.DARK.lightened(0.15))
+	Clay.cylinder(self, k.barrel_radius, k.barrel_length, Vector3(0.0, 0.0, -(bottom + k.barrel_length * 0.5)),
+		Clay.YELLOW, Vector3(90.0, 0.0, 0.0))
+	Clay.cylinder(self, k.muzzle_radius, k.muzzle_length, Vector3(0.0, 0.0, -(_tip - k.muzzle_length * 0.5)),
+		Clay.YELLOW.darkened(0.15), Vector3(90.0, 0.0, 0.0))
 	# El hueco, oscuro, para ver adónde mira.
-	Clay.cylinder(self, BARREL_RADIUS * 0.8, 0.3, Vector3(0.0, 0.0, -(tip + 0.1)), Clay.DARK.darkened(0.5),
+	Clay.cylinder(self, k.barrel_radius * 0.8, 0.3, Vector3(0.0, 0.0, -(_tip + 0.1)), Clay.DARK.darkened(0.5),
 		Vector3(90.0, 0.0, 0.0))
 
 
@@ -70,7 +70,7 @@ func step(k: BallBossSettings, aim: float, delta: float, tuck := 0.0) -> void:
 	pitch = wrapf(pitch + clampf(error, -most, most), -PI, PI)
 	rotation = Vector3(pitch, 0.0, 0.0)
 	# Metido: hacia adentro por su eje (su +Z), lo que mide el caño y el carro.
-	position = basis.z * (BARREL_LENGTH + CARRIAGE.y) * smoothstep(0.0, 1.0, tuck)
+	position = basis.z * _tuck * smoothstep(0.0, 1.0, tuck)
 	if _queue.is_empty() or absf(wrapf(PI * 0.5 - pitch, -PI, PI)) > deg_to_rad(2.0):
 		return
 	_gap -= delta

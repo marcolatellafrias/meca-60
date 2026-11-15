@@ -124,7 +124,7 @@ func _kinds() -> void:
 			arm.punch(MechArm.Punch.STRAIGHT)
 		await _wait(1.6)
 		print("meca %s: lo más cerca de la bola, %.1f m del centro (la bola mide %.0f) · dos directos le sacaron %.0f" % [
-			BallBossArchetype.KIND_NAMES[kind], closest, BallBoss.RADIUS, before - Health.of(_boss).left])
+			BallBossArchetype.KIND_NAMES[kind], closest, _boss.radius, before - Health.of(_boss).left])
 		await _shot("la meca %s contra la bola" % BallBossArchetype.KIND_NAMES[kind],
 			_mech.global_position + Vector3(60, 30, 20), (_mech.global_position + _boss.global_position) * 0.5)
 		_brain.awake = true

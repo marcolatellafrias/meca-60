@@ -8,6 +8,36 @@ extends Resource
 const SAVED := "res://game/bosses/ball_boss_settings.tres"
 static var current := KnobsFile.load_into(BallBossSettings.new(), SAVED) as BallBossSettings
 
+@export_group("Forma")
+## LA FORMA (14/11/2026; el usuario: «está todo muy hardcodeado… experimentar con tamaños»). Todo esto SE REARMA AL
+## GUARDAR (BallBossPanel.applied): el jefe se vuelve a armar en el lugar donde está.
+## LA BOLA: el radio (m); el casco low poly (BallShell): franjas de polo a polo, cuántas del medio son la rendija (las
+## dos, pares) y caras alrededor; cuánto se hunde la rendija (m). El ancho de la rendija sale de las franjas. Y cuánto
+## más ancho que la bola es el cilindro que choca con lo fijo (m).
+@export_range(6.0, 40.0, 0.5) var radius := 15.0
+@export_range(6, 40, 2) var shell_bands := 16
+@export_range(2, 10, 2) var slit_bands := 2
+@export_range(6, 48, 1) var shell_sides := 18
+@export_range(0.0, 4.0, 0.05) var slit_depth := 0.6
+@export_range(0.0, 6.0, 0.25) var reach_margin := 1.0
+## LOS TENTÁCULOS (Tentacle): el grueso en la bola y en el pie (radio, m); el pie: el cubo del medio (radio y alto, m)
+## y cada paleta (ancho de la base, largo y grueso, m). El largo, en la pestaña Tentáculos.
+@export_range(0.5, 8.0, 0.1) var tentacle_root := 3.2
+@export_range(0.5, 8.0, 0.1) var tentacle_tip := 2.2
+@export_range(0.5, 8.0, 0.1) var hub_radius := 2.8
+@export_range(0.2, 6.0, 0.1) var hub_height := 2.0
+@export_range(0.5, 15.0, 0.25) var blade_width := 4.5
+@export_range(1.0, 20.0, 0.25) var blade_length := 7.0
+@export_range(0.1, 3.0, 0.05) var blade_thickness := 0.9
+## EL CAÑÓN (BallCannon): el carro metido en la rendija (alto y fondo, m), el caño (radio y largo, m) y la boca de la
+## punta (radio y largo, m).
+@export_range(1.0, 15.0, 0.25) var carriage_height := 5.0
+@export_range(0.5, 10.0, 0.25) var carriage_depth := 3.0
+@export_range(0.3, 6.0, 0.1) var barrel_radius := 1.6
+@export_range(2.0, 40.0, 0.5) var barrel_length := 12.0
+@export_range(0.3, 8.0, 0.1) var muzzle_radius := 2.4
+@export_range(0.5, 20.0, 0.25) var muzzle_length := 5.5
+
 @export_group("Moverse")
 ## Una velocidad y el tiempo para llegar a ella y para frenar (0: al instante). En el aire no se mueve de costado.
 @export_range(1.0, 30.0, 0.5) var walk_speed := 6.0
@@ -25,7 +55,7 @@ static var current := KnobsFile.load_into(BallBossSettings.new(), SAVED) as Ball
 
 @export_group("Agacharse")
 ## A qué altura va el centro de la bola parada y agachada (m), y a qué ritmo baja y sube (partes por segundo). Agacharse
-## SÓLO BAJA LA BOLA: los tentáculos se doblan solos (Tentacle).
+## SÓLO BAJA LA BOLA: los tentáculos se doblan solos (Tentacle). Nunca baja de su radio: la bola no se mete en el piso.
 @export_range(12.0, 50.0, 0.5) var stand_height := 20.0
 @export_range(11.0, 40.0, 0.5) var crouch_height := 15.5
 @export_range(0.1, 3.0, 0.05) var crouch_rate := 0.6
