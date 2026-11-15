@@ -3,7 +3,7 @@ extends Node3D
 ## LA MECA CON TODO PUESTO, PARA MIRAR (unos 8 segundos, sin el sandbox): una meca parada, vestida con ArmoryParts.dress
 ## (el puño pesado en el izquierdo, el taladro afuera en el derecho, la ametralladora y el lanzamisiles en la espalda, y
 ## las placas en los dos tramos de brazos y piernas). Capturas de adelante, de atrás y de costado.
-##   tools/godot_ventana.sh res://tests/armory_dressed_look.tscn -- --salida=C:/carpeta [--sin-chanfles] [--alto=5] [--pelvis=40] [--cabina=3.5]
+##   tools/godot_ventana.sh res://tests/armory_dressed_look.tscn -- --salida=C:/carpeta [--sin-chanfles] [--alto=5] [--pelvis=40] [--cabina=3.5] [--sin-marcos] [--brazos-abajo]
 
 var _folder := ""
 
@@ -51,6 +51,9 @@ func _ready() -> void:
 			var cabin := float(argument.trim_prefix("--cabina="))
 			shape.height_cells = roundi((cabin - CabinGrid.SLAB * 2.0) / CabinGrid.CELL)
 			reshaped = true
+		elif argument == "--sin-marcos":
+			shape.frame_kind = 0
+			reshaped = true
 		elif argument.begins_with("--alto="):
 			waist = float(argument.trim_prefix("--alto="))
 	if reshaped:
@@ -82,6 +85,11 @@ func _ready() -> void:
 	loadout["tool_right"] = "drill"
 	loadout["back_left"] = "machine_gun"
 	loadout["back_right"] = "missile_launcher"
+	# --brazos-abajo: los hombros a la altura de la pelvis de abajo, sólo para la foto (la meca no tiene cómo ponerlos
+	# ahí: el usuario, 15/11/2026, «ponelos nomás para la foto»)
+	if OS.get_cmdline_user_args().has("--brazos-abajo"):
+		for arm in mech.arms:
+			arm.shoulder_local.y = -CabinGrid.HALF_HEIGHT + CabinGrid.BASE * 0.5
 	ArmoryParts.dress(mech, loadout, 1.0)
 	await get_tree().create_timer(2.0).timeout
 	var center := mech.global_position + Vector3(0, -4.0, 0)
