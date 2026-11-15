@@ -29,6 +29,10 @@ const REACH := 600.0
 ## Lo poseído (o null) y la vista.
 var target: Node3D = null
 var view := View.THIRD
+## SI SE ESTÁ POSEYENDO, aparte de `target` (15/11/2026): algo liberado da igual a null al compararlo, así que si lo
+## poseído desaparecía sin soltarlo (un pasajero que se borra al rearmar las mecas con «Guardar»), `target != null`
+## daba falso, nunca se lo soltaba y el jugador quedaba apagado con la cámara de poseer quieta. Lo vio el usuario.
+var possessing := false
 
 var _last: Node3D = null
 var _aimed: Node3D = null
@@ -92,6 +96,7 @@ func possess(thing: Node3D) -> void:
 			(player.current_seat as SeatInteractable).release_occupant_in_place()
 		player.set_active(false)
 	target = thing
+	possessing = true
 	_last = thing
 	target.add_to_group("driving")
 	target.call("possess_begin")
@@ -100,12 +105,13 @@ func possess(thing: Node3D) -> void:
 
 
 func release() -> void:
-	if target == null:
+	if not possessing:
 		return
 	if is_instance_valid(target):
 		target.remove_from_group("driving")
 		target.call("possess_end")
 	target = null
+	possessing = false
 	var player := DesignSandbox.player_of(get_tree())
 	if is_instance_valid(player):
 		player.set_active(true)
@@ -138,7 +144,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if key == null or not key.pressed or key.echo or not UIState.gameplay_active():
 		return
 	if key.physical_keycode == KEY_O:
-		if target != null:
+		if possessing:
 			release()
 		elif _can(_aimed):
 			possess(_aimed)
@@ -147,7 +153,7 @@ func _unhandled_input(event: InputEvent) -> void:
 		else:
 			return
 		get_viewport().set_input_as_handled()
-	elif key.physical_keycode == KEY_T and target != null:
+	elif key.physical_keycode == KEY_T and possessing:
 		view = ((view + 1) % View.size()) as View
 		_apply_view()
 		get_viewport().set_input_as_handled()
@@ -156,14 +162,14 @@ func _unhandled_input(event: InputEvent) -> void:
 ## ── CADA CUADRO ──────────────────────────────────────────────────────────────────────────────────────────────────
 
 func _physics_process(_delta: float) -> void:
-	_aimed = _look() if target == null else null
+	_aimed = _look() if not possessing else null
 
 
 func _process(delta: float) -> void:
-	# Lo poseído se fue (R volvió a armar su parcela): se suelta.
-	if target != null and not _can(target):
+	# Lo poseído se fue (R volvió a armar su parcela, o se lo borró al rearmar las mecas): se suelta.
+	if possessing and not _can(target):
 		release()
-	if target != null and view != View.FREE:
+	if possessing and view != View.FREE:
 		_camera.global_transform = target.call("possess_camera", view == View.FIRST, delta)
 	_show()
 
@@ -196,9 +202,9 @@ func _look() -> Node3D:
 ## EL CARTEL (poseyendo) y LA PISTA (sin poseer: qué poseería la O).
 func _show() -> void:
 	var screen := get_viewport().get_visible_rect().size
-	_card.visible = target != null
+	_card.visible = possessing
 	_hint.visible = false
-	if target != null:
+	if possessing:
 		var lines := PackedStringArray()
 		lines.append("POSEYENDO: %s" % str(target.call("possess_name")))
 		lines.append("vista: %s" % VIEW_NAMES[view])
