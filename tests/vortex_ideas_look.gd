@@ -14,8 +14,9 @@ extends Node3D
 ##   6 · proa y popa: adelante un borde bajo con vidrio; atrás, un muro alto (la escalera queda resguardada);
 ##   7 · las costillas del domo: arcos que salen del borde y se juntan arriba (el campo de fuerza, apenas);
 ##   8 · la 2 con los puestos de la 4 (sin costillas: el usuario, «sin costillas»);
-##   9 · la 8 con los puestos integrados al borde (el usuario: «vamos con la 8 pero los puestos están integrados al
-##       borde, no adentro del borde»): en cada puesto el borde mismo sube y avanza un poco, y los mandos van en su cara.
+##   9 · la 8 con los puestos sobre el borde (el usuario: «los puestos terminen donde termina el borde, no que hagas
+##       puestos doblando el borde, siguen siendo elementos distintos»): piezas aparte, apoyadas arriba del borde y de su
+##       mismo ancho, sin meterse en el piso por donde se camina. *Primero fue el borde mismo subiendo en cada puesto.*
 ##   tools/godot_ventana.sh res://tests/vortex_ideas_look.tscn -- --salida=C:/carpeta --idea=2
 
 const VIEW := Vector2i(1280, 720)
@@ -46,7 +47,7 @@ const NAMES := {
 	6: "proa baja con vidrio, popa con muro",
 	7: "las costillas del domo",
 	8: "la 2, con los puestos de la 4",
-	9: "la 8, con los puestos integrados al borde",
+	9: "la 8, con los puestos sobre el borde",
 }
 
 const METAL := Color(0.55, 0.57, 0.6)
@@ -123,34 +124,13 @@ func _is_back(angle: float, reach: float) -> bool:
 	return _back_raised() and -cos(angle) * reach > CHORD
 
 
-## LOS PUESTOS DEL BORDE (la 9): [ángulo, tipo, medio ancho (grados), cuánto sube, cuánto avanza hacia adentro, cuánto
-## más baja su cara de adentro (m)].
-const STATIONS := [[0.0, "drive", 16.0, 0.45, 0.55, 0.55], [70.0, "arm", 9.0, 0.35, 0.4, 0.45],
-	[290.0, "arm", 9.0, 0.35, 0.4, 0.45], [40.0, "gun", 6.0, 0.25, 0.15, 0.1], [320.0, "gun", 6.0, 0.25, 0.15, 0.1],
-	[100.0, "socket", 6.0, 0.25, 0.15, 0.1], [260.0, "socket", 6.0, 0.25, 0.15, 0.1]]
-
-
-## EL BULTO DEL BORDE EN `angle` (la 9): [cuánto sube, cuánto avanza, cuánto baja su cara de adentro], suave a los lados.
-func _bump(angle: float) -> Vector3:
-	if _idea != 9:
-		return Vector3.ZERO
-	var out := Vector3.ZERO
-	for station: Array in STATIONS:
-		var away := absf(rad_to_deg(angle_difference(angle, deg_to_rad(station[0]))))
-		var share := 1.0 - smoothstep(float(station[2]) * 0.55, float(station[2]), away)
-		out = out.max(Vector3(station[3], station[4], station[5]) * share)
-	return out
-
-
-## Hasta dónde llega el borde hacia adentro en `angle`.
-func _rim_in(angle: float) -> float:
-	return WALK - _bump(angle).y
+## Hasta dónde llega el borde hacia adentro.
+func _rim_in(_angle: float) -> float:
+	return WALK
 
 
 ## EL ALTO DEL BORDE (sobre el primer piso) en `angle`, por afuera; por adentro, `RIM_OUT - RIM_IN` menos.
 func _rim_top(angle: float) -> float:
-	if _idea == 9:
-		return RIM_OUT + _bump(angle).x + (RAISE if _is_back(angle, OUTER) else 0.0)
 	var z := -cos(angle)
 	match _idea:
 		3:
@@ -234,8 +214,8 @@ func _rim(floor1: float) -> void:
 		var t0 := floor1 + _rim_top(a0)
 		var t1 := floor1 + _rim_top(a1)
 		var bevel := RIM_OUT - RIM_IN
-		var in0 := t0 - bevel - _bump(a0).z
-		var in1 := t1 - bevel - _bump(a1).z
+		var in0 := t0 - bevel
+		var in1 := t1 - bevel
 		var r0 := _rim_in(a0)
 		var r1 := _rim_in(a1)
 		var low0 := floor1 + (RAISE if _is_back(a0, WALK) else 0.0)
@@ -284,7 +264,9 @@ func _stations(floor1: float) -> void:
 			var tooth := TAU / 16.0
 			angle = (floor(angle / tooth) + (0.0 if int(floor(angle / tooth)) % 2 == 0 else 1.0)) * tooth
 			top = floor1 + _rim_top(angle)
-		if _raised_consoles():
+		if _idea == 9:
+			_rim_piece(angle, kind, top)
+		elif _raised_consoles():
 			_raised_station(angle, kind, floor1)
 		else:
 			_rim_station(angle, kind, top)
@@ -299,7 +281,7 @@ func _rim_station(angle: float, kind: String, top: float) -> void:
 			_gun(outward * (WALK + 0.32) + Vector3(0, top, 0), angle, 0.3)
 		return
 	var inner := _rim_in(angle)
-	var bevel := Vector2(OUTER - inner, RIM_OUT - RIM_IN + _bump(angle).z)
+	var bevel := Vector2(OUTER - inner, RIM_OUT - RIM_IN)
 	var up := (Vector3.UP * bevel.x - outward * bevel.y).normalized()
 	var along := Vector3(cos(angle), 0.0, sin(angle))
 	var plate := Node3D.new()
@@ -346,6 +328,31 @@ func _raised_station(angle: float, kind: String, floor1: float) -> void:
 			Clay.box(holder, Vector3(0.45, 0.06, 0.45), Vector3(0, 0.72, 0), YELLOW.darkened(0.3))
 			if kind == "gun":
 				_gun(holder.position + Vector3(0, 0.72, 0), angle, 0.3)
+
+
+## UN PUESTO SOBRE EL BORDE (la 9): una pieza aparte, del ancho del borde, apoyada arriba de él; su cara de mandos mira
+## hacia adentro, inclinada. El manejo, ancho; los brazos, angostos y un poco más altos; las armas, en un pie corto.
+func _rim_piece(angle: float, kind: String, top: float) -> void:
+	var depth := OUTER - WALK
+	var holder := Node3D.new()
+	holder.position = _out(angle) * (WALK + depth * 0.5) + Vector3(0, top, 0)
+	holder.rotation.y = -angle
+	add_child(holder)
+	if kind == "gun" or kind == "socket":
+		Clay.box(holder, Vector3(0.6, 0.3, depth), Vector3(0, 0.15, 0), METAL.darkened(0.12))
+		Clay.box(holder, Vector3(0.45, 0.06, 0.4), Vector3(0, 0.33, 0), YELLOW.darkened(0.3))
+		if kind == "gun":
+			_gun(holder.global_position + Vector3(0, 0.36, 0), angle, 0.2)
+		return
+	var wide := 1.6 if kind == "drive" else 0.7
+	var tall := 0.55 if kind == "drive" else 0.7
+	Clay.box(holder, Vector3(wide, tall, depth), Vector3(0, tall * 0.5, 0), METAL.darkened(0.12))
+	var face := Node3D.new()
+	face.position = Vector3(0, tall + 0.02, 0.0)
+	face.rotation.x = deg_to_rad(-30.0)
+	holder.add_child(face)
+	Clay.box(face, Vector3(wide, 0.05, depth), Vector3.ZERO, DARK_METAL)
+	_controls(face, kind)
 
 
 func _controls(plate: Node3D, kind: String) -> void:
