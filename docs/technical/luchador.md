@@ -91,7 +91,23 @@ con las otras habilidades».
   **saltar, en su momento**: cuenta si vas más alto que el lomo cuando pasa, o sea, saltando cuando le faltan 15 a 25 m
   (antes ya estás bajando; después todavía no subiste).
 
+## Paso 4 (15/11/2026): más rápido, y arrancar el piso y tirarlo
+El usuario: «la embestida es lentísima, hacela mucho más rápida, y la piedra del suelo también un poco más rápida y
+empezá con el 3er poder» (el tercero de la lista: arrancar el piso y tirarlo).
+- **La embestida, de 26 a 55 m/s** (llega en 0,3 s; dura como mucho 3 s, cruza la arena igual). Esquivarla ahora es
+  **un dash cuando le faltan 32 a 45 m** (0,6 a 0,8 s antes): más cerca ya no te corrés a tiempo. Quieta o caminando,
+  te alcanza siempre. **La onda del golpe al piso, de 45 a 60 m/s.**
+- **Arrancar el piso y tirarlo** (`BrawlerBrain._throw`, `BrawlerRock`; entre 35 y 130 m): **mete las manos** (1 s,
+  agachado, temblando) y saca un pedazo de piso de 14 × 6 × 11 m que sale de a poco; queda **el pozo**. **Aviso**
+  (1,1 s): la levanta sobre la cabeza y en el piso aparece **un círculo rojo que te sigue**. **Golpe**: la tira en arco
+  (35 m de alto, 1,8 s de vuelo, de cualquier distancia) y el círculo se queda donde estabas. Si te cae encima (radio 9
+  más tu medio ancho), te saca 30 y se rompe; **si no le pegó a nadie, queda de pared** 8 s (las mecas y el Luchador
+  chocan con ella: te podés esconder atrás) y se hunde. Sus perillas, en la pestaña «Arrancar el piso» del F1.
+- **Esquivarla** (`brawler_dodge_check --solo-piedra`): quieta, te cae encima; **caminando de costado** (desde el aviso
+  o desde el tiro) **o con el dash, no**. Al filo: con 1,3 s de vuelo, caminando ya no llega y sólo la esquiva el dash.
+- **La L** suma «sólo arrancar el piso». El video (`brawler_charge_movie`) arranca con 20 s de piedras.
+
 ## Lo que sigue
-Los poderes, de a uno (propuestos, sin confirmar): el agarre y revoleo, el gancho al cielo, arrancar el piso y
-tirarlo, la guardia con contraataque y el trompo; con ira, combos más largos y el humo como zona que tapa la vista. Sin
+Los poderes, de a uno (propuestos, sin confirmar): el agarre y revoleo, el gancho al cielo, la guardia con contraataque
+y el trompo; con ira, combos más largos y el humo como zona que tapa la vista. Sin
 ametralladora por ahora.

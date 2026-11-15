@@ -3,6 +3,7 @@ extends Node
 ## ESQUIVAR LA EMBESTIDA (sin ventana, unos 2 minutos): la meca cinemática contra el Luchador, que embiste desde
 ## `GAPS`. Cada manera de esquivar, cuántas veces la alcanzó: quieta; caminando de costado desde el aviso; caminando
 ## de costado desde que arranca; y el dash de costado cuando el jefe está a tantos metros (con y sin caminar después).
+## También el golpe al piso (--solo-piso) y la piedra de arrancar el piso (--solo-piedra).
 ##   godot --headless --path . res://tests/brawler_dodge_check.tscn
 
 const GAPS := [50.0, 80.0, 110.0]
@@ -30,7 +31,7 @@ func _ready() -> void:
 	await _wait(0.5)
 	_mech.scripted = true
 	var k := BrawlerSettings.current
-	# Para probar otros números sin tocar las perillas: --homing=, --tiempo=, --aviso=, --dash=.
+	# Para probar otros números sin tocar las perillas: --homing=, --tiempo=, --aviso=, --dash=, --radio= (de la piedra).
 	for argument in OS.get_cmdline_user_args():
 		var pair := argument.trim_prefix("--").split("=")
 		if pair.size() != 2:
@@ -40,10 +41,16 @@ func _ready() -> void:
 			"tiempo": k.charge_time = float(pair[1])
 			"aviso": k.charge_windup = float(pair[1])
 			"dash": KinematicSettings.current.dash_distance = float(pair[1])
+			"radio": k.rock_radius = float(pair[1])
 	print("la embestida: aviso %.2f s, %.0f m/s, corrige %.0f°/s · la meca: camina %.0f m/s, dash %.0f m en %.2f s" % [
 		k.charge_windup, k.charge_speed, k.charge_homing, KinematicSettings.current.walk_speed,
 		KinematicSettings.current.dash_distance, KinematicSettings.current.dash_time])
 	var args := OS.get_cmdline_user_args()
+	if not args.has("--solo-piso") and not args.has("--solo-embestida"):
+		await _throws(k)
+	if args.has("--solo-piedra"):
+		get_tree().quit()
+		return
 	for gap: float in ([] if args.has("--solo-piso") else GAPS):
 		var line := "a %3.0f m:" % gap
 		line += " quieta %s" % await _try(gap, "still", 0.0)
@@ -73,6 +80,52 @@ func _ready() -> void:
 				row += " %2.0f m %s" % [at, await _try_slam(gap, how, at)]
 			print(row)
 	get_tree().quit()
+
+
+## ARRANCAR EL PISO: quieta, caminando de costado desde el aviso o desde el tiro, y el dash a tantos segundos del tiro.
+func _throws(k: BrawlerSettings) -> void:
+	print("la piedra: aviso %.2f s, vuela %.2f s, radio %.0f m" % [k.lift_time, k.rock_flight, k.rock_radius])
+	for gap: float in [40.0, 80.0, 120.0]:
+		var line := "a %3.0f m:" % gap
+		line += " quieta %s" % await _try_throw(gap, "still", 0.0)
+		line += " · camina desde el aviso %s" % await _try_throw(gap, "walk_early", 0.0)
+		line += " · camina desde el tiro %s" % await _try_throw(gap, "walk_late", 0.0)
+		var row := " · dash a los"
+		for at: float in [0.0, 0.4, 0.8, 1.1]:
+			row += " %.1f s %s" % [at, await _try_throw(gap, "dash", at)]
+		print(line + row + " del tiro")
+
+
+## Una piedra desde `gap`; devuelve «X» si le cayó encima, «·» si no.
+func _try_throw(gap: float, how: String, at: float) -> String:
+	await _place(gap)
+	var rocked := _brain.rocked
+	var throws := _brain.throws
+	_brain.awake = true
+	await get_tree().physics_frame
+	_brain._begin(BrawlerBrain.Act.THROW)
+	var since := -1.0
+	var done := false
+	var clock := 0.0
+	while clock < 8.0 and _brain.rocked == rocked and (_brain.act == BrawlerBrain.Act.THROW or not _brain._rocks.is_empty()):
+		await get_tree().physics_frame
+		var delta := 1.0 / Engine.physics_ticks_per_second
+		clock += delta
+		var ground := _mech.mover.global_position
+		var to_boss := _boss.global_position - ground
+		to_boss.y = 0.0
+		_mech.aim_yaw = atan2(-to_boss.x, -to_boss.z)
+		if _brain.throws > throws:
+			since = 0.0 if since < 0.0 else since + delta
+		_mech.move = Vector2(1.0, 0.0) if how == "walk_early" or (how == "walk_late" and since >= 0.0) else Vector2.ZERO
+		_mech.dash = false
+		if how == "dash" and not done and since >= at:
+			done = true
+			_mech.move = Vector2(1.0, 0.0)
+			_mech.dash = true
+	_mech.move = Vector2.ZERO
+	_mech.dash = false
+	return "X" if _brain.rocked > rocked else "·"
 
 
 ## Un golpe al piso desde `gap`; devuelve «X» si la onda la alcanzó, «·» si no.
@@ -131,6 +184,12 @@ func _place(gap: float) -> void:
 		if is_instance_valid(wave):
 			wave.queue_free()
 	_brain._waves.clear()
+	for rock in _brain._rocks:
+		if is_instance_valid(rock):
+			rock.queue_free()
+	_brain._rocks.clear()
+	for rock in _brain.get_parent().get_parent().find_children("Piedra*", "BrawlerRock", false, false):
+		rock.queue_free()
 	await _wait(0.1)
 	_boss.put(Transform3D(Basis(), Vector3(0.0, 0.0, gap * 0.5)))
 	_mech.put(Transform3D(Basis(Vector3.UP, PI), Vector3(0.0, Mech.standing_height(), -gap * 0.5)))

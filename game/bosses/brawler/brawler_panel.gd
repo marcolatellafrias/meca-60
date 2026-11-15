@@ -20,8 +20,16 @@ const LABELS := {
 	"charge_damage": "te saca (vida)", "charge_push": "te empuja (m/s)",
 	"punch_damage": "una piña en el cuerpo le saca", "furnace_damage": "una piña en el horno abierto le saca",
 	"arena_radius": "radio de la arena (m; los edificios, con R)",
+	"slam_windup": "aviso: los brazos arriba (s)", "slam_recover": "se queda después (s)",
+	"wave_speed": "la onda corre a (m/s)", "wave_reach": "llega hasta (m)", "wave_width": "ancho (m)",
+	"wave_damage": "te saca (vida)", "wave_push": "te levanta (m/s)",
+	"rip_time": "mete las manos y lo arranca en (s)", "lift_time": "aviso: la tiene arriba (s)",
+	"rock_flight": "vuela (s)", "rock_arc": "el arco sube (m)", "rock_radius": "radio del golpe (m)",
+	"rock_stay": "queda de pared (s)", "throw_recover": "se queda después (s)",
+	"rock_damage": "te saca (vida)", "rock_push": "te empuja (m/s)",
 }
-const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Ira", "Embestida", "Golpe al piso", "Golpes", "Arena"]
+const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Ira", "Embestida", "Golpe al piso", "Arrancar el piso",
+	"Golpes", "Arena"]
 
 
 func setup_panel() -> void:

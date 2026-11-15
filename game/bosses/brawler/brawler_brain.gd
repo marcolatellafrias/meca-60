@@ -12,14 +12,18 @@ extends Node
 ##   · EL GOLPE DOBLE AL PISO (15/11/2026): AVISO, levanta los dos brazos y en el piso aparece la franja por donde va a
 ##     salir la onda (sigue a la cintura, que te mira); GOLPE, los puños al piso y sale LA ONDA (BrawlerWave), un lomo
 ##     de tierra que corre derecho; si te alcanza, te saca vida (si la saltás más alto que el lomo o te corrés de costado, no).
+##   · ARRANCAR EL PISO Y TIRARLO (15/11/2026): mete las manos en el piso adelante suyo y arranca un pedazo (queda el
+##     pozo); AVISO, lo levanta sobre la cabeza y en el piso aparece un círculo rojo que te sigue; GOLPE, lo tira en arco
+##     y el círculo se queda donde estabas: la piedra (BrawlerRock) cae ahí. Si te alcanza, te saca vida; si no, queda
+##     de pared un rato (te podés esconder atrás).
 ##   · CUÁL: al terminar de rodear, uno de los que tengan tu distancia a tiro, al azar (la L de la parcela deja uno).
 ## LA VIDA, POR CÓDIGO (Health): las piñas de la meca que tocan el cuerpo le sacan poco; en el horno abierto, mucho.
 ## Mientras alguien lo posee, la cabeza no hace nada.
 
-enum Act { STALK, CHARGE, SLAM }
+enum Act { STALK, CHARGE, SLAM, THROW }
 ## QUÉ ATAQUES USA (la L de la parcela): todos, o uno solo.
-enum Moves { ALL, CHARGE, SLAM }
-const MOVES_NAMES := ["todos", "sólo la embestida", "sólo el golpe al piso"]
+enum Moves { ALL, CHARGE, SLAM, THROW }
+const MOVES_NAMES := ["todos", "sólo la embestida", "sólo el golpe al piso", "sólo arrancar el piso"]
 static var moves := Moves.ALL
 
 ## Las distancias que deciden (m, del medio del Luchador al blanco): se queda entre `KEEP`; embiste entre `CHARGE_RANGE`.
@@ -30,6 +34,8 @@ const SLAM_RANGE := Vector2(25.0, 120.0)
 ## Cuánto tarda el golpe en llegar al piso (s) y a cuánto adelante de él sale la onda (m, desde su frente).
 const SLAM_FALL := 0.15
 const WAVE_AHEAD := 4.0
+## Arrancar el piso, entre estas (m).
+const THROW_RANGE := Vector2(35.0, 130.0)
 ## Rodeando: cuánto (s, entre los dos).
 const STALK_TIME := Vector2(2.0, 4.0)
 ## La embestida: cuánto tiene que estar de frente para arrancar (radianes) y la recuperación (s).
@@ -60,6 +66,8 @@ var body_hits := 0
 var furnace_hits := 0
 var slams := 0
 var waved := 0
+var throws := 0
+var rocked := 0
 
 var _boss: Brawler = null
 var _clock := 0.0
@@ -72,6 +80,9 @@ var _punched := {}
 var _label: Label3D = null
 var _wave: BrawlerWave = null
 var _waves: Array[BrawlerWave] = []
+var _rock: BrawlerRock = null
+var _rocks: Array[BrawlerRock] = []
+var _dig := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -95,6 +106,7 @@ func _physics_process(delta: float) -> void:
 	# Las piñas de la meca cuentan aunque no piense o lo posea alguien.
 	_check_punches()
 	_check_waves()
+	_check_rocks()
 	if _boss.driven():
 		return
 	if not awake:
@@ -120,6 +132,8 @@ func _physics_process(delta: float) -> void:
 			_charge()
 		Act.SLAM:
 			_slam()
+		Act.THROW:
+			_throw()
 
 
 ## ── LOS ACTOS ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -138,10 +152,12 @@ func _stalk() -> void:
 	if _clock < _stalk_time:
 		return
 	var can: Array[Act] = []
-	if moves != Moves.SLAM and gap > CHARGE_RANGE.x and gap < CHARGE_RANGE.y:
+	if (moves == Moves.ALL or moves == Moves.CHARGE) and gap > CHARGE_RANGE.x and gap < CHARGE_RANGE.y:
 		can.append(Act.CHARGE)
-	if moves != Moves.CHARGE and gap > SLAM_RANGE.x and gap < SLAM_RANGE.y:
+	if (moves == Moves.ALL or moves == Moves.SLAM) and gap > SLAM_RANGE.x and gap < SLAM_RANGE.y:
 		can.append(Act.SLAM)
+	if (moves == Moves.ALL or moves == Moves.THROW) and gap > THROW_RANGE.x and gap < THROW_RANGE.y:
+		can.append(Act.THROW)
 	if not can.is_empty():
 		_begin(can[_random.randi() % can.size()])
 
@@ -238,14 +254,82 @@ func _slam() -> void:
 				_begin(Act.STALK)
 
 
+## ARRANCAR EL PISO, por tiempos (`_step`): 0 mete las manos y lo arranca, 1 lo levanta (el aviso), 2 lo tiró, se queda.
+func _throw() -> void:
+	var k := BrawlerSettings.current
+	var waist := Basis(Vector3.UP, _boss.waist_yaw) * Vector3.FORWARD
+	match _step:
+		0:
+			stage = "arranca el piso: mete las manos"
+			_boss.pose = Brawler.Pose.DIG
+			_boss.move = Vector2(clampf(-_error_to(_to_target()) * 3.0, -1.0, 1.0), 0.0)
+			if _rock == null:
+				_dig = _boss.global_position + waist * (Brawler.BOX.z * 0.5 + BrawlerRock.SIZE.z * 0.5 + 1.0)
+				_rock = BrawlerRock.new()
+				_rock.name = "Piedra"
+				_boss.get_parent().add_child(_rock)
+				_rock.setup(_dig, _boss.waist_yaw, k.rock_radius)
+			# Sale del piso de a poco.
+			var up := clampf(_clock / maxf(k.rip_time, 0.01), 0.0, 1.0)
+			_rock.hold(_dig + Vector3.UP * lerpf(-BrawlerRock.SIZE.y * 0.5, BrawlerRock.SIZE.y * 0.5, up),
+				_boss.waist_yaw, null)
+			if _clock >= k.rip_time:
+				_next(1)
+		1:
+			stage = "arranca el piso: la levanta"
+			_boss.pose = Brawler.Pose.LIFT
+			_boss.move = Vector2(clampf(-_error_to(_to_target()) * 3.0, -1.0, 1.0), 0.0)
+			var hands := _boss.body.fists()
+			var over := (hands[0] + hands[1]) * 0.5 + Vector3.UP * (BrawlerRock.SIZE.y * 0.5 + 1.0)
+			var follow := 1.0 - exp(-6.0 * get_physics_process_delta_time())
+			_rock.hold(_rock.held_at().lerp(over, follow), _boss.waist_yaw, _ground())
+			if _clock >= k.lift_time:
+				throws += 1
+				_boss.pose = Brawler.Pose.THROW
+				_rock.throw(_ground(), k.rock_flight, k.rock_arc, k.rock_stay)
+				_rocks.append(_rock)
+				_rock = null
+				_next(2)
+		_:
+			stage = "arranca el piso: la tiró"
+			_boss.move = Vector2.ZERO
+			if _clock >= k.throw_recover:
+				_begin(Act.STALK)
+
+
+## LAS PIEDRAS QUE CAEN: si te cae encima apoyada, te saca vida y se rompe; si no, queda de pared.
+func _check_rocks() -> void:
+	var k := BrawlerSettings.current
+	var body := target as BalanceBody
+	_rocks.assign(_rocks.filter(func(rock: Variant) -> bool: return is_instance_valid(rock)))
+	for rock: BrawlerRock in _rocks.duplicate():
+		if not rock.just_landed:
+			continue
+		rock.just_landed = false
+		_rocks.erase(rock)
+		var over := body != null and not body.grounded and body.mover != null 			and body.mover.global_position.y - rock.spot.y > BrawlerRock.SIZE.y + 2.0
+		if not over and rock.covers(_ground(), _target_half_width()):
+			rocked += 1
+			rock.shatter()
+			var theirs := Health.of(target)
+			if theirs != null:
+				theirs.hurt(k.rock_damage, "la piedra")
+			if body != null and not body.kinematic:
+				var away := _ground() - rock.spot
+				away.y = 0.0
+				BalanceBody.hit(body, (away.normalized() + Vector3.UP).normalized() * k.rock_push * body.mass)
+		elif rock.covers(_boss.global_position, Brawler.BOX.x * 0.5):
+			rock.shatter()
+		else:
+			rock.settle()
+
+
 ## LAS ONDAS QUE CORREN: si una te pasa por debajo apoyada, te saca vida (una vez cada una).
 func _check_waves() -> void:
 	var k := BrawlerSettings.current
 	var body := target as BalanceBody
-	for wave in _waves.duplicate():
-		if not is_instance_valid(wave):
-			_waves.erase(wave)
-			continue
+	_waves.assign(_waves.filter(func(wave: Variant) -> bool: return is_instance_valid(wave)))
+	for wave: BrawlerWave in _waves.duplicate():
 		# SALTANDO, la pasa si va más alto que el lomo (la cinemática: lo que la mueve está en el piso de sus pies).
 		var over := body != null and not body.grounded
 		if over and body.mover != null:
@@ -408,11 +492,14 @@ func _end(why: String) -> void:
 	stage = why
 
 
-## Si quedó una franja de aviso sin onda (lo cortaron), se va.
+## Si quedó una franja de aviso sin onda o una piedra sin tirar (lo cortaron), se va.
 func _drop_warning() -> void:
 	if _wave != null and is_instance_valid(_wave):
 		_wave.queue_free()
 	_wave = null
+	if _rock != null and is_instance_valid(_rock):
+		_rock.queue_free()
+	_rock = null
 
 
 func _still() -> void:
@@ -426,7 +513,7 @@ func _still() -> void:
 
 func _show() -> void:
 	var head := stage if awake or stage == "derrotado" else "quieto (J lo despierta)"
-	_label.text = "%s\nembistió %d · te alcanzó %d · se estrelló %d\ngolpes al piso %d · te alcanzaron %d" % [head,
-		charges, landed, crashes, slams, waved]
+	_label.text = "%s\nembistió %d · te alcanzó %d · se estrelló %d\ngolpes al piso %d · te alcanzaron %d\npiedras %d · te alcanzaron %d" \
+		% [head, charges, landed, crashes, slams, waved, throws, rocked]
 	_label.modulate = Color(1.0, 0.55, 0.3) if stage.ends_with("abre el horno") or stage.begins_with("¡se") \
-		or stage.ends_with("brazos") else Color(1, 1, 1)
+		or stage.ends_with("brazos") or stage.ends_with("la levanta") else Color(1, 1, 1)

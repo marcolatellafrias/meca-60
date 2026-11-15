@@ -1,11 +1,14 @@
 extends Node
 
 ## EL VIDEO DE LA PELEA (para mandárselo al usuario): el Luchador contra la meca cinemática, con una cámara que sigue a
-## los dos de costado, y después el choque contra el borde. La meca esquiva un ataque sí y otro no (la embestida con un
-## dash cuando le faltan 20 m; la onda del golpe al piso, saltando cuando le faltan 20 m). Se graba con --write-movie:
+## los dos de costado, y después el choque contra el borde. Primero sólo arranca el piso y lo tira (`ROCKS` s), después
+## todos los ataques. La meca esquiva un ataque sí y otro no (la embestida con un dash cuando le faltan 38 m; la onda del
+## golpe al piso, saltando cuando le faltan 20 m; la piedra, caminando de costado desde que la tira). Se graba con
+## --write-movie:
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/pelea.avi --fixed-fps 30 res://tests/brawler_charge_movie.tscn
 
-const FIGHT := 42.0
+const FIGHT := 40.0
+const ROCKS := 20.0
 
 var _boss: Brawler = null
 var _brain: BrawlerBrain = null
@@ -21,9 +24,8 @@ func _ready() -> void:
 	var layer := CanvasLayer.new()
 	add_child(layer)
 	_title = Label.new()
-	_title.position = Vector2(20, 14)
 	_title.add_theme_font_size_override("font_size", 22)
-	_title.position = Vector2(20, 60)
+	_title.position = Vector2(20, 462)
 	_title.add_theme_color_override("font_outline_color", Color(0, 0, 0))
 	_title.add_theme_constant_override("outline_size", 8)
 	layer.add_child(_title)
@@ -52,6 +54,8 @@ func _ready() -> void:
 	var root := BrawlerArchetype.new().build(0, parent)
 	_boss = root.get_node("Luchador") as Brawler
 	_brain = _boss.get_node("Cabeza") as BrawlerBrain
+	# El letrero de su cabeza se pisa con su barra: lo dice el de abajo.
+	_brain._label.visible = false
 	_eye = Camera3D.new()
 	_eye.far = 2000.0
 	_eye.fov = 60.0
@@ -60,6 +64,9 @@ func _ready() -> void:
 	var mech := _brain.target as Mech
 	await _run(mech, 0.5)
 	mech.scripted = true
+	BrawlerBrain.moves = BrawlerBrain.Moves.THROW
+	await _run(mech, ROCKS)
+	BrawlerBrain.moves = BrawlerBrain.Moves.ALL
 	await _run(mech, FIGHT)
 	# CONTRA EL BORDE.
 	var crashes := _brain.crashes
@@ -110,21 +117,24 @@ func _tick(mech: Mech) -> float:
 	_cam_at = _cam_at.lerp(at, follow)
 	_cam_from = _cam_from.lerp(from, follow)
 	_eye.global_transform = Transform3D(Basis(), _cam_from).looking_at(_cam_at, Vector3.UP)
-	_title.text = "a %.0f m · el jefe a %.0f m/s · la meca %s este ataque" % [gap, absf(_boss.speed),
+	_title.text = _brain.stage + "\na %.0f m · el jefe a %.0f m/s · la meca %s este ataque" % [gap, absf(_boss.speed),
 		"esquiva" if _dodging() else "no esquiva"]
 	return delta
 
 
 ## Un ataque sí y otro no.
 func _dodging() -> bool:
-	return (_brain.charges + _brain.slams) % 2 == 0
+	return (_brain.charges + _brain.slams + _brain.throws) % 2 == 0
 
 
 func _dodge(mech: Mech, ground: Vector3, to_boss: Vector3) -> void:
-	var attack := _brain.charges + _brain.slams
+	# La piedra: desde que la tiró hasta que cae, caminando de costado.
+	if not _brain._rocks.is_empty() and (_brain.charges + _brain.slams + _brain.throws) % 2 == 1:
+		mech.move = Vector2(1.0, 0.0)
+	var attack := _brain.charges + _brain.slams + _brain.throws
 	if not _dodging() or _dodged == attack:
 		return
-	if _brain.stage.contains("arranca") and to_boss.length() - Brawler.BOX.z * 0.5 < 20.0:
+	if _brain.stage.contains("¡arranca!") and to_boss.length() - Brawler.BOX.z * 0.5 < 38.0:
 		_dodged = attack
 		mech.move = Vector2(1.0, 0.0)
 		mech.dash = true

@@ -47,10 +47,12 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 ## AJUSTADO CONTRA LA MECA CINEMÁTICA (15/11/2026, tests/brawler_dodge_check): 5 s cruzan la arena (con 3 no llegaba
 ## desde 110 m); corrigiendo 6°/s, caminar de costado no alcanza, pero dos dashes seguidos cuando le faltan 24–32 m sí
 ## (con 12°/s no la esquivaba nada).
+## MÁS RÁPIDA (15/11/2026, el usuario: «la embestida es lentísima, hacela mucho más rápida»): de 26 a 55 m/s, llega en
+## 0,3 s y dura 3 s (cruza la arena igual).
 @export_range(0.2, 4.0, 0.05) var charge_windup := 1.4
-@export_range(5.0, 60.0, 0.5) var charge_speed := 26.0
-@export_range(0.0, 3.0, 0.05) var charge_up_time := 0.5
-@export_range(0.5, 8.0, 0.1) var charge_time := 5.0
+@export_range(5.0, 120.0, 0.5) var charge_speed := 55.0
+@export_range(0.0, 3.0, 0.05) var charge_up_time := 0.3
+@export_range(0.5, 8.0, 0.1) var charge_time := 3.0
 @export_range(0.0, 60.0, 1.0) var charge_homing := 6.0
 @export_range(0.2, 8.0, 0.1) var stun_time := 2.5
 @export_range(0.0, 100.0, 1.0) var charge_damage := 25.0
@@ -60,14 +62,32 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 ## EL GOLPE DOBLE AL PISO (ver BrawlerBrain, BrawlerWave): cuánto tiene los brazos arriba (s: el aviso, con la franja en
 ## el piso que sigue a la cintura), cuánto se queda después (s), y la onda: a qué velocidad corre (m/s), hasta dónde
 ## (m) y qué ancho tiene (m). Si te alcanza apoyada (saltando, no), cuánta vida te saca y cuánto te levanta (m/s; a la
-## meca física).
+## meca física). La onda, de 45 a 60 m/s (el usuario: «la piedra del suelo también un poco más rápida»).
 @export_range(0.3, 4.0, 0.05) var slam_windup := 1.3
 @export_range(0.2, 4.0, 0.05) var slam_recover := 1.4
-@export_range(5.0, 120.0, 1.0) var wave_speed := 45.0
+@export_range(5.0, 120.0, 1.0) var wave_speed := 60.0
 @export_range(20.0, 250.0, 5.0) var wave_reach := 140.0
 @export_range(2.0, 40.0, 0.5) var wave_width := 14.0
 @export_range(0.0, 100.0, 1.0) var wave_damage := 20.0
 @export_range(0.0, 40.0, 0.5) var wave_push := 10.0
+
+@export_group("Arrancar el piso")
+## ARRANCAR EL PISO Y TIRARLO (ver BrawlerBrain, BrawlerRock): cuánto tarda en meter las manos y arrancarlo (s), cuánto
+## la tiene arriba (s: el aviso, con el círculo rojo que te sigue), cuánto vuela (s: de lejos va más rápido, siempre
+## tarda eso), cuánto sube el arco (m), el radio del golpe (m), cuánto queda de pared si no le pegó a nadie (s) y cuánto
+## se queda después de tirarla (s). Si te alcanza, cuánta vida te saca y cuánto te empuja (m/s; a la meca física).
+## MEDIDO CONTRA LA MECA CINEMÁTICA (15/11/2026, tests/brawler_dodge_check --solo-piedra): con radio 9 y 1,8 s de vuelo,
+## quieta le cae encima y caminando de costado (desde el aviso o desde el tiro) o con el dash, no. Es al filo: con 1,3 s
+## de vuelo, caminando ya no llega (sólo el dash).
+@export_range(0.2, 4.0, 0.05) var rip_time := 1.0
+@export_range(0.2, 4.0, 0.05) var lift_time := 1.1
+@export_range(0.3, 4.0, 0.05) var rock_flight := 1.8
+@export_range(0.0, 80.0, 1.0) var rock_arc := 35.0
+@export_range(3.0, 25.0, 0.5) var rock_radius := 9.0
+@export_range(0.0, 30.0, 0.5) var rock_stay := 8.0
+@export_range(0.2, 4.0, 0.05) var throw_recover := 1.2
+@export_range(0.0, 100.0, 1.0) var rock_damage := 30.0
+@export_range(0.0, 60.0, 0.5) var rock_push := 14.0
 
 @export_group("Golpes")
 ## LO QUE LE SACA UNA PIÑA DE LA MECA: en el cuerpo, y en el horno abierto (el punto débil).

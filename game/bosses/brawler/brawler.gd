@@ -24,8 +24,9 @@ const BOX := Vector3(24.0, 30.0, 20.0)
 const GRAVITY := 30.0
 
 ## LAS POSES: parado; agachado para embestir (los brazos atrás, temblando); embistiendo (los puños adelante); los
-## brazos arriba para el golpe al piso; el golpe (los puños al piso); aturdido (desplomado).
-enum Pose { REST, CHARGE_READY, CHARGING, SLAM_READY, SLAM, STUNNED }
+## brazos arriba para el golpe al piso; el golpe (los puños al piso); aturdido (desplomado); las manos en el piso para
+## arrancarlo; la piedra arriba de la cabeza; y el tiro (los brazos adelante).
+enum Pose { REST, CHARGE_READY, CHARGING, SLAM_READY, SLAM, STUNNED, DIG, LIFT, THROW }
 ## De cada pose: cuánto se inclina el torso (°, adelante), cuánto giran los brazos en el hombro (°, adelante y arriba),
 ## cuánto tiembla (m) y en cuánto llega a ella (s).
 const POSES := {
@@ -35,6 +36,9 @@ const POSES := {
 	Pose.SLAM_READY: [-14.0, 165.0, 0.2, 0.8],
 	Pose.SLAM: [32.0, 50.0, 0.0, 0.1],
 	Pose.STUNNED: [28.0, 10.0, 0.0, 0.4],
+	Pose.DIG: [42.0, 25.0, 0.25, 0.5],
+	Pose.LIFT: [-12.0, 175.0, 0.15, 0.6],
+	Pose.THROW: [28.0, 80.0, 0.0, 0.12],
 }
 
 ## ── LO QUE SE LE PIDE ──
