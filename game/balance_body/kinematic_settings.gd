@@ -38,7 +38,9 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 @export_group("Dash")
 ## EL DASH (Shift, con una dirección): recorre `dash_distance` (m) en `dash_time` (s), en línea recta; mientras dura no
 ## lo afectan ni las teclas ni la gravedad. Gasta `dash_cost` de su barra, que se llena sola en `dash_refill` (s).
-@export_range(1.0, 40.0, 0.5) var dash_distance := 12.0
+## 18 m (15/11/2026, desde el módulo Jefes, con el sí del usuario): con 12 un dash solo nunca esquivaba la embestida del
+## Luchador, que mide 24 m de ancho (ver docs/technical/luchador.md).
+@export_range(1.0, 40.0, 0.5) var dash_distance := 18.0
 @export_range(0.05, 1.5, 0.05) var dash_time := 0.35
 @export_range(0.05, 1.0, 0.05) var dash_cost := 0.35
 @export_range(0.2, 20.0, 0.1) var dash_refill := 3.0
