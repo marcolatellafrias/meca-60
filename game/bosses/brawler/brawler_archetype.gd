@@ -39,9 +39,9 @@ func describe(_seed_value: int) -> PackedStringArray:
 func keys() -> Array[SandboxKey]:
 	return [
 		SandboxKey.toggle(KEY_H, SandboxKey.Weight.MAIN, "el horno abierto", func() -> bool: return _all(func(b: Brawler) -> bool: return b.furnace),
-			func(on: bool) -> void: _each(func(b: Brawler) -> void: b.furnace = on)),
+			func(_parcel: SandboxParcel, on: bool) -> void: _each(func(b: Brawler) -> void: b.furnace = on)),
 		SandboxKey.toggle(KEY_P, SandboxKey.Weight.MAIN, "con ira", func() -> bool: return _all(func(b: Brawler) -> bool: return b.rage),
-			func(on: bool) -> void: _each(func(b: Brawler) -> void: b.rage = on)),
+			func(_parcel: SandboxParcel, on: bool) -> void: _each(func(b: Brawler) -> void: b.rage = on)),
 	]
 
 
