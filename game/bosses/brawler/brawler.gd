@@ -77,6 +77,8 @@ var fury := 0.0
 ## LA ARENA: el círculo del que no sale (sin arena, anda por donde sea).
 var arena: BossArena = null
 var body: BrawlerBody = null
+## DONDE SE LE PEGA (BossHurtbox): la caja que encuentran los tiros y el taladro de la meca de tres.
+var hurtbox: BossHurtbox = null
 
 var _ahead := MoveRamp.new()
 var _turn := MoveRamp.new()
@@ -130,6 +132,9 @@ func _ready() -> void:
 	_solid.add_child(_torso_shape)
 	PhysicsLayers.mark_fixed(_solid)
 	add_collision_exception_with(_solid)
+	hurtbox = BossHurtbox.new()
+	_solid.add_child(hurtbox)
+	hurtbox.shape(BOX, Vector3.UP * BOX.y * 0.5)
 	add_to_group(SandboxPossession.GROUP)
 	_place_upper()
 

@@ -135,6 +135,12 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 ## LO QUE LE SACA UNA PIÑA DE LA MECA: en el cuerpo, y en el horno abierto (el punto débil).
 @export_range(0.0, 100.0, 1.0) var punch_damage := 6.0
 @export_range(0.0, 200.0, 1.0) var furnace_damage := 30.0
+## LOS TIROS, EL RAYO Y EL TALADRO DE LA MECA DE TRES (ver BossHurtbox): cuánta vida le sacan por cada 100.000 kg·m/s
+## de empujón (un tiro simple empuja 70.000; el súper cargado, 600.000; el rayo, 150.000 por segundo). En el horno
+## abierto, tantas veces más como la piña en el horno sobre la del cuerpo. Y lo más que saca un golpe en el cuerpo (el
+## taladro cargado empuja mucho: sin tope sacaba 38).
+@export_range(0.0, 50.0, 0.5) var energy_damage := 4.0
+@export_range(1.0, 100.0, 1.0) var energy_cap := 12.0
 
 @export_group("Arena")
 ## EL RADIO DE LA ARENA (m; BossArena): el círculo del que no sale. El anillo del piso lo sigue al guardar; los edificios

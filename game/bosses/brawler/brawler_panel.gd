@@ -21,6 +21,7 @@ const LABELS := {
 	"charge_homing": "corrige hacia vos (°/s)", "stun_time": "estrellado, aturdido (s)",
 	"charge_damage": "te saca (vida)", "charge_push": "te tira (m)",
 	"punch_damage": "una piña en el cuerpo le saca", "furnace_damage": "una piña en el horno abierto le saca",
+	"energy_damage": "tiros y taladro: vida por 100.000 kg·m/s", "energy_cap": "lo más por golpe",
 	"arena_radius": "radio de la arena (m; los edificios, con R)",
 	"slam_windup": "aviso: los brazos arriba (s)", "slam_recover": "se queda después (s)",
 	"wave_speed": "la onda corre a (m/s)", "wave_reach": "llega hasta (m)", "wave_width": "ancho (m)",

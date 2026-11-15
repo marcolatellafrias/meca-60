@@ -111,6 +111,7 @@ var _hook: BrawlerHook = null
 var _arms_were: Array[Vector3] = []
 var _rage_clock := 0.0
 var _chain := 0
+var _shown_at := 0
 var _bounced := false
 var _wave_sides: Array[BrawlerWave] = []
 
@@ -131,6 +132,8 @@ func _ready() -> void:
 
 func _physics_process(delta: float) -> void:
 	_show()
+	if _boss.hurtbox != null and _boss.hurtbox.owner_of_hits == null:
+		_boss.hurtbox.owner_of_hits = self
 	if target == null or not is_instance_valid(target):
 		return
 	# Las piñas de la meca cuentan aunque no piense o lo posea alguien.
@@ -745,6 +748,9 @@ func _check_punches() -> void:
 	var mouth := _boss.furnace_point()
 	var center := _boss.global_position + Vector3.UP * Brawler.BOX.y * 0.5
 	for arm in mech.arms:
+		# El taladro de la meca de tres pega por take_hit (no contarlo dos veces).
+		if arm is DrillArm:
+			continue
 		var key := arm.get_instance_id()
 		var now := arm.stage()
 		if now == MechArm.Stage.IDLE or now == MechArm.Stage.WINDUP:
@@ -769,6 +775,29 @@ func _check_punches() -> void:
 				own.hurt(k.punch_damage, "una piña")
 				HitReaction.of(_boss).show_hit(at, false)
 				break
+
+
+## LOS GOLPES DE LA MECA DE TRES (sus tiros, el rayo, el taladro; llegan por BossHurtbox): le sacan según cuánto
+## empujan; en el horno abierto, mucho más. Se ven (blanco, chispas, sonido), el rayo de a ratos.
+func take_hit(strength: float, at: Vector3, source: String) -> void:
+	var own := Health.of(_boss)
+	if own == null:
+		return
+	var k := BrawlerSettings.current
+	var furnace := _boss.opened > 0.5 and at.distance_to(_boss.furnace_point()) < FURNACE_REACH
+	var damage := minf(strength / 100000.0 * k.energy_damage, k.energy_cap)
+	if furnace:
+		damage *= k.furnace_damage / maxf(k.punch_damage, 0.01)
+	own.hurt(damage, "%s en el horno" % source if furnace else source)
+	var now := Time.get_ticks_msec()
+	if source != "rayo" or now - _shown_at > 250:
+		_shown_at = now
+		HitReaction.of(_boss).show_hit(at, furnace or strength > 300000.0)
+	if source != "rayo":
+		if furnace:
+			furnace_hits += 1
+		else:
+			body_hits += 1
 
 
 ## ── LO DEMÁS ─────────────────────────────────────────────────────────────────────────────────────────────────────

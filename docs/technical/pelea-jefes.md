@@ -62,3 +62,11 @@ Cómo lo hacen los Souls, y cómo queda acá:
 | El trompo | los dos brazos, del hombro al puño (barriendo entre paso y paso) | te empuja 16 m de costado, parada |
 | El agarre | la mano | te agarra, te revolea y te tira; al caer, derribada |
 | Tus piñas al jefe | (de la meca) | él no se mueve: se pone blanco, chispas y sonido |
+
+**Los golpes de la meca de tres al jefe** (sus tiros, el rayo, el taladro): llegan por la costura del módulo Meca,
+`EnergyBolt.lands(body, impulse, at, source)`, que le dice `take_hit(strength, at, source)` a lo que recibe. Como el
+cuerpo del jefe es lo fijo del mundo y los tiros no miran esa capa, cada jefe lleva **`BossHurtbox`**: una caja que no
+choca con nada (congelada, sin máscara) en la capa común, que lo sigue y le pasa `take_hit` a su cabeza. El Luchador
+saca 4 de vida por cada 100.000 kg·m/s de empujón, con un tope de 12 por golpe en el cuerpo, y en el horno abierto 5
+veces más. Medido (`tests/brawler_shots_check`, sin ventana, 20 s): un tiro simple 2,8; la ráfaga 13 en 2 s; el rayo 12
+en 2 s; el taladro cargado, 12 (sin tope, 38). El taladro ya no se cuenta también como piña.
