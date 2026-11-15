@@ -45,6 +45,18 @@ gancho al cielo, arrancar el piso y tirarlo, la guardia con contraataque, y en v
 cintura con los brazos abiertos: lo de cerca sale despedido). Con ira: combos más largos, derrapes, y el humo negro como
 una zona que tapa la vista.
 
+**Acordado después** (15/11/2026): **un solo horno al medio, abajo**, con una puerta que **se abre hacia arriba** (de
+costado taparía el punto débil); es el punto débil y se abre en la carga antes de la embestida (la ventana) y con ira.
+**Sin ametralladora por ahora**: personajes simples, cada uno con lo suyo. **Los dos jefes, cinemáticos** primero.
+
+## Dónde se mueven los jefes: la arena (15/11/2026; acordado, sin hacer)
+El usuario: «un radio central en la que pueden moverse y que no salgan de eso… en las afueras están los edificios… no
+debería tener un sistema que lee objetos en el momento, sino que tiene ya preplaneado dónde puede y dónde no… de la forma
+más simple que se pueda». **Un círculo** (centro y radio), conocido de antemano: los edificios van afuera. El jefe nunca
+elige ir afuera y, si lo empujan hacia el borde, se desliza por él. **Embistiendo, el borde es la pared**: se estrella y
+queda aturdido un momento (otra ventana). **El pinball rebota en el borde** (la velocidad se refleja sobre la dirección al
+centro). Sin rayos ni lecturas del mundo: cuentas con el círculo. El motor sigue chocando con lo fijo, por las dudas.
+
 ## Las siluetas del humanoide (15/11/2026)
 `HumanoidMaquettes`, primeras en la fila: seis siluetas de meca, de cajas (los miembros cuadrados, con cabeza), normales y
 con ira (otro color, los ojos rojos, las rejillas al rojo, las toberas prendidas). El usuario: «tiene que parecer una
