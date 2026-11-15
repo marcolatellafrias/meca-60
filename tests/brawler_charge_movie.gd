@@ -2,15 +2,17 @@ extends Node
 
 ## EL VIDEO DE LA PELEA (para mandárselo al usuario): el Luchador contra la meca cinemática, con una cámara que sigue a
 ## los dos de costado, y después el choque contra el borde. Primero sólo el agarre (`HOOKS` s), después sólo el trompo
-## (`SPINS` s), después todos los ataques. La meca esquiva un ataque sí y otro no (la embestida con un dash cuando le
+## (`SPINS` s), después todos los ataques, primero tranquilo (`FIGHT` s) y después con ira (`RAGE` s: encadena, tres
+## ondas, dos piedras, la embestida rebota). La meca esquiva un ataque sí y otro no (la embestida con un dash cuando le
 ## faltan 38 m; la onda del golpe al piso, saltando cuando le faltan 24 m; la piedra, caminando de costado desde que la
-## tira; el trompo, un dash para atrás en el aviso y caminando para atrás; el agarre, saliéndose de la franja cuando
+## tira; el trompo, escapando para atrás; el agarre, saliéndose de la franja cuando
 ## apuntó, de cerca con el dash). Se graba con --write-movie:
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/pelea.avi --fixed-fps 30 res://tests/brawler_charge_movie.tscn
 
-const FIGHT := 32.0
-const HOOKS := 16.0
-const SPINS := 16.0
+const FIGHT := 20.0
+const RAGE := 26.0
+const HOOKS := 14.0
+const SPINS := 14.0
 
 var _boss: Brawler = null
 var _brain: BrawlerBrain = null
@@ -55,7 +57,9 @@ func _ready() -> void:
 	var parent := Node3D.new()
 	add_child(parent)
 	BrawlerArchetype.thinking = true
-	BrawlerArchetype.mech_kind = BrawlerArchetype.Kind.KINEMATIC
+	BrawlerArchetype.mech_kind = BrawlerArchetype.Kind.TOOL
+	# La ira la pone el video (no por tiempos).
+	BrawlerSettings.current.rage_calm = 0.0
 	var root := BrawlerArchetype.new().build(0, parent)
 	_boss = root.get_node("Luchador") as Brawler
 	_brain = _boss.get_node("Cabeza") as BrawlerBrain
@@ -75,6 +79,10 @@ func _ready() -> void:
 	await _run(mech, SPINS)
 	BrawlerBrain.moves = BrawlerBrain.Moves.ALL
 	await _run(mech, FIGHT)
+	_boss.rage = true
+	BossSounds.play(BossSounds.Kind.RAGE_ON, _boss.global_position + Vector3.UP * Brawler.BOX.y, _boss.get_parent())
+	await _run(mech, RAGE)
+	_boss.rage = false
 	# CONTRA EL BORDE.
 	var crashes := _brain.crashes
 	var arena := _boss.arena
@@ -124,7 +132,7 @@ func _tick(mech: Mech) -> float:
 	_cam_at = _cam_at.lerp(at, follow)
 	_cam_from = _cam_from.lerp(from, follow)
 	_eye.global_transform = Transform3D(Basis(), _cam_from).looking_at(_cam_at, Vector3.UP)
-	_title.text = _brain.stage + "\na %.0f m · el jefe a %.0f m/s · la meca %s este ataque" % [gap, absf(_boss.speed),
+	_title.text = _brain.stage + (" · CON IRA" if _boss.rage else "") + "\na %.0f m · el jefe a %.0f m/s · la meca %s este ataque" % [gap, absf(_boss.speed),
 		"esquiva" if _dodging() else "no esquiva"]
 	return delta
 
@@ -146,12 +154,9 @@ func _dodge(mech: Mech, ground: Vector3, to_boss: Vector3) -> void:
 	# La piedra: desde que la tiró hasta que cae, caminando de costado.
 	if not _brain._rocks.is_empty():
 		mech.move = Vector2(1.0, 0.0)
-	# El trompo: para atrás todo el ataque, con un dash al empezar.
+	# El trompo: escapando para atrás todo el ataque.
 	if _brain.act == BrawlerBrain.Act.SPIN and _brain._step < 2:
 		mech.move = Vector2(0.0, -1.0)
-		if _dodged != attack:
-			_dodged = attack
-			mech.dash = true
 	# El agarre: de costado desde que apuntó (de cerca, con el dash).
 	if _brain.act == BrawlerBrain.Act.HOOK and (_brain._step == 1 or _brain.stage.ends_with("apuntó!")):
 		mech.move = Vector2(1.0, 0.0)

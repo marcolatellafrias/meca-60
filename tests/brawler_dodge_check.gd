@@ -24,7 +24,7 @@ func _ready() -> void:
 	var parent := Node3D.new()
 	add_child(parent)
 	BrawlerArchetype.thinking = true
-	BrawlerArchetype.mech_kind = BrawlerArchetype.Kind.KINEMATIC
+	BrawlerArchetype.mech_kind = BrawlerArchetype.Kind.TOOL
 	var root := BrawlerArchetype.new().build(0, parent)
 	_boss = root.get_node("Luchador") as Brawler
 	_brain = _boss.get_node("Cabeza") as BrawlerBrain
@@ -32,6 +32,8 @@ func _ready() -> void:
 	await _wait(0.5)
 	_mech.scripted = true
 	var k := BrawlerSettings.current
+	# Sin ira (viene por tiempos): cada ataque, el de siempre.
+	k.rage_calm = 0.0
 	# Para probar otros números sin tocar las perillas: --homing=, --tiempo=, --aviso=, --dash=, --radio= (de la piedra).
 	for argument in OS.get_cmdline_user_args():
 		var pair := argument.trim_prefix("--").split("=")
@@ -90,42 +92,43 @@ func _ready() -> void:
 	get_tree().quit()
 
 
-## EL TROMPO: quieta, caminando para atrás desde el aviso, un dash para atrás al empezar a girar (solo, y después
-## caminando, o dos), y un dash para atrás desde el aviso y después caminando.
+## EL TROMPO (ahora rápido y andando, 15/11/2026): quieta, caminando de costado o para atrás desde el aviso, y el dash
+## de costado cuando su medio está a tantos metros.
 func _spins(k: BrawlerSettings) -> void:
-	print("el trompo: aviso %.2f s, gira %.1f s, los brazos a %.0f m, las orugas a %.0f m/s" % [k.spin_windup,
-		k.spin_time, k.spin_reach, k.spin_move])
-	for gap: float in [30.0, 45.0, 60.0]:
+	print("el trompo: aviso %.2f s, gira %.1f s a %.0f°/s, las orugas a %.0f m/s" % [k.spin_windup,
+		k.spin_time, k.spin_speed, k.spin_move])
+	for gap: float in [40.0, 70.0, 95.0]:
 		var line := "a %3.0f m:" % gap
-		for how: String in ["still", "walk", "dash", "dash_walk", "dash_twice", "dash_aim_walk"]:
-			line += " %s %s" % [how, await _try_spin(gap, how)]
+		for how: String in ["still", "walk_side", "walk_back"]:
+			line += " %s %s" % [how, await _try_spin(gap, how, 0.0)]
+		line += " · dash de costado (solo / y caminando) a"
+		for at: float in [45.0, 60.0, 80.0]:
+			line += " %.0f m %s/%s" % [at, await _try_spin(gap, "dash", at), await _try_spin(gap, "dash_walk", at)]
 		print(line)
 
 
-func _try_spin(gap: float, how: String) -> String:
+func _try_spin(gap: float, how: String, at: float) -> String:
 	await _place(gap)
 	var spun := _brain.spun
 	_brain.awake = true
 	await get_tree().physics_frame
 	_brain._begin(BrawlerBrain.Act.SPIN)
-	var dashes := 0
+	var dashed := false
 	var clock := 0.0
 	while clock < 10.0 and _brain.act == BrawlerBrain.Act.SPIN and _brain.spun == spun:
 		await get_tree().physics_frame
 		clock += 1.0 / Engine.physics_ticks_per_second
 		_face_boss()
-		var spinning := _brain.stage == "¡trompo!"
-		var back := how == "walk" or (how != "still" and how != "dash" and dashes > 0)
-		_mech.move = Vector2(0.0, -1.0) if back else Vector2.ZERO
-		_mech.dash = false
-		var wanted := 0
-		if how == "dash_aim_walk":
-			wanted = 1
-		elif how.begins_with("dash") and spinning:
-			wanted = 2 if how == "dash_twice" and _brain._clock > 0.6 else 1
-		if dashes < wanted:
-			dashes += 1
+		_mech.move = Vector2.ZERO
+		if how == "walk_side" or (how == "dash_walk" and dashed):
+			_mech.move = Vector2(1.0, 0.0)
+		elif how == "walk_back":
 			_mech.move = Vector2(0.0, -1.0)
+		_mech.dash = false
+		var gap_now := (_boss.global_position - _mech.mover.global_position) * Vector3(1, 0, 1)
+		if how.begins_with("dash") and not dashed and _brain.stage == "¡trompo!" and gap_now.length() <= at:
+			dashed = true
+			_mech.move = Vector2(1.0, 0.0)
 			_mech.dash = true
 	_mech.move = Vector2.ZERO
 	_mech.dash = false
@@ -291,6 +294,10 @@ func _place(gap: float) -> void:
 	_mech.put(Transform3D(Basis(Vector3.UP, PI), Vector3(0.0, Mech.standing_height(), -gap * 0.5)))
 	Health.of(_mech).left = BrawlerArchetype.MECH_HEALTH
 	(_mech.mover as KinematicMover).dash_fuel = 1.0
+	HitReaction.of(_mech).clear()
+	if _mech is ToolMech:
+		(_mech as ToolMech).energy.level = 1.0
+		(_mech as ToolMech).energy.stunned = 0.0
 	await _wait(0.6)
 
 

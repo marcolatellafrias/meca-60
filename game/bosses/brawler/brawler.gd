@@ -41,8 +41,8 @@ const POSES := {
 	Pose.DIG: [42.0, 25.0, 0.25, 0.5, 0.0],
 	Pose.LIFT: [-12.0, 175.0, 0.15, 0.6, 0.0],
 	Pose.THROW: [28.0, 80.0, 0.0, 0.12, 0.0],
-	Pose.SPIN_READY: [-6.0, 10.0, 0.25, 0.6, 75.0],
-	Pose.SPIN: [0.0, 0.0, 0.0, 0.3, 88.0],
+	Pose.SPIN_READY: [-6.0, 10.0, 0.25, 0.6, 45.0],
+	Pose.SPIN: [8.0, 0.0, 0.0, 0.3, 52.0],
 	Pose.HOOK_READY: [6.0, -45.0, 0.2, 0.5, 0.0],
 	Pose.HOOK: [14.0, 88.0, 0.0, 0.1, 0.0],
 	Pose.SWING: [-6.0, 88.0, 0.0, 0.3, 0.0],
@@ -60,6 +60,10 @@ var charging := false
 var pose := Pose.REST
 ## EL TROMPO: la cintura gira sola a tantos °/s (positivo, a la izquierda), sin mirar a `aim_yaw`; 0, como siempre.
 var spin := 0.0
+## LO QUE NO EMPUJA (el blanco de su cabeza): un punto del piso y su radio (m; 0, nada). No avanza dentro de él: se
+## frena contra él, no lo arrastra (como los jefes de Souls; ver docs/technical/pelea-jefes.md).
+var block_at := Vector3.ZERO
+var block_radius := 0.0
 
 ## ── LO QUE MIDE ──
 ## A cuánto va adelante (m/s; atrás, negativo).
@@ -151,6 +155,8 @@ func _physics_process(delta: float) -> void:
 	if arena != null:
 		arena.resize(k.arena_radius)
 		velocity = arena.keep(global_position, velocity, BOX.x * 0.5)
+	if block_radius > 0.0:
+		velocity = _blocked(velocity)
 	move_and_slide()
 	if arena != null:
 		global_position = arena.hold(global_position, BOX.x * 0.5)
@@ -184,6 +190,19 @@ func _place_upper() -> void:
 		_torso_shape.transform = Transform3D(Basis(Vector3.UP, waist_yaw - hull_yaw), _torso_shape.position)
 	body.upper.global_transform = Transform3D(Basis(Vector3.UP, waist_yaw),
 		global_position + Vector3.UP * BrawlerBody.HIP)
+
+
+## Sin lo que lo metería dentro de `block_at`: si su caja está a menos de su radio (y un poco), no avanza hacia él.
+func _blocked(wanted: Vector3) -> Vector3:
+	var local := global_transform.affine_inverse() * block_at
+	var gap := Vector2(maxf(absf(local.x) - BOX.x * 0.5, 0.0), maxf(absf(local.z) - BOX.z * 0.5, 0.0)).length()
+	var toward := block_at - global_position
+	toward.y = 0.0
+	if gap > block_radius + 1.0 or toward.length() < 0.01:
+		return wanted
+	toward = toward.normalized()
+	var into := wanted.dot(toward)
+	return wanted - toward * into if into > 0.0 else wanted
 
 
 ## LO PARA EN SECO (se estrelló): sin velocidad.

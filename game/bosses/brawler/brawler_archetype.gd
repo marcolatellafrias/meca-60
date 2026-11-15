@@ -4,8 +4,9 @@ extends SeededArchetype
 ## LA PARCELA DEL LUCHADOR DE ORUGAS (Brawler): el jefe en su arena (BossArena: un círculo del que no sale; los
 ## edificios, afuera; el medio, despejado) y, enfrente, UNA MECA, el blanco de su cabeza (BrawlerBrain). Los dos con vida
 ## (Health) y sus barras (FightBars). Mirándolos, la O posee a cualquiera de los dos.
-##   · LA K CAMBIA LA MECA entre los cuatro tipos: física (torso y brazos simulados), mixta (torso simulado, brazos de
-##     pose), cinemática (todo cinemático, con brazos y cabina) y simplificada (sin brazos ni cabina: no puede pegar).
+##   · LA K CAMBIA LA MECA entre los cinco tipos: la de tres (ToolMech: cinemática, cañón y taladro; la primera), física
+##     (torso y brazos simulados), mixta (torso simulado, brazos de pose), cinemática (todo cinemático, con brazos y
+##     cabina) y simplificada (sin brazos ni cabina: no puede pegar).
 ##   · LA J: si el jefe piensa. LA L: qué ataques usa (todos, o uno solo, para probarlo).
 
 ## Lo que ocupa: la arena más grande del F1 y los edificios de afuera.
@@ -18,16 +19,18 @@ const MECH_HEALTH := 100.0
 
 ## Si el jefe piensa (la J).
 static var thinking := true
-## LOS TIPOS DE MECA (la K): su nombre y cómo se arma.
-enum Kind { PHYSICAL, MIXED, KINEMATIC, SIMPLE }
-const KIND_NAMES := ["física", "mixta", "cinemática", "simplificada"]
+## LOS TIPOS DE MECA (la K): su nombre y cómo se arma. LA DE TRES (ToolMech, del módulo Meca: cinemática, el cañón y
+## el taladro) es la primera: el usuario la pidió para pelear con el jefe (por la sesión Cabinas separadas, 15/11/2026).
+enum Kind { PHYSICAL, MIXED, KINEMATIC, SIMPLE, TOOL }
+const KIND_NAMES := ["física", "mixta", "cinemática", "simplificada", "de tres"]
 const KINDS := {
 	Kind.PHYSICAL: {"arms": Mech.Arms.MUSCLE, "kinematic": false, "cabin": true},
 	Kind.MIXED: {"arms": Mech.Arms.POSE, "kinematic": false, "cabin": true},
 	Kind.KINEMATIC: {"arms": Mech.Arms.POSE, "kinematic": true, "cabin": true},
 	Kind.SIMPLE: {"arms": Mech.Arms.NONE, "kinematic": true, "cabin": false},
+	Kind.TOOL: {"tool": true},
 }
-static var mech_kind := Kind.KINEMATIC
+static var mech_kind := Kind.TOOL
 
 
 func _init() -> void:
@@ -138,10 +141,14 @@ static func swap_mech(brain: BrawlerBrain, kind: Kind) -> void:
 		await tree.physics_frame
 		await tree.physics_frame
 	var shape: Dictionary = KINDS[kind]
-	var mech := Mech.new()
-	mech.arms_kind = shape["arms"]
-	mech.kinematic = shape["kinematic"]
-	mech.has_cabin = shape["cabin"]
+	var mech: Mech = null
+	if shape.get("tool", false):
+		mech = ToolMech.new()
+	else:
+		mech = Mech.new()
+		mech.arms_kind = shape["arms"]
+		mech.kinematic = shape["kinematic"]
+		mech.has_cabin = shape["cabin"]
 	mech.transform = Transform3D(Basis(), TARGET_AT + Vector3.UP * Mech.standing_height())
 	root.add_child(mech)
 	mech.name = "Meca %s" % KIND_NAMES[kind]

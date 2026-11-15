@@ -35,15 +35,22 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 
 @export_group("Ira")
 ## CON IRA: cuánto tarda en cambiar de color y prender el humo (s) y cuánto más rápido andan las orugas y gira la
-## cintura (veces).
+## cintura (veces). LA IRA VIENE POR TIEMPOS (15/11/2026, el usuario: «debería suceder por intervalos de tiempo»):
+## tranquilo tanto (s; 0, nunca: sólo con la tecla) y con ira tanto (s), con su sonido al cambiar.
 @export_range(0.1, 5.0, 0.1) var rage_time := 1.2
 @export_range(1.0, 3.0, 0.05) var rage_speed := 1.35
+@export_range(0.0, 180.0, 1.0) var rage_calm := 40.0
+@export_range(1.0, 120.0, 1.0) var rage_last := 18.0
+## Con ira: qué chance tiene de encadenar otro ataque al terminar uno (0 a 1), y cuánto se abren las dos ondas de más
+## del golpe al piso (°).
+@export_range(0.0, 1.0, 0.05) var rage_chain := 0.6
+@export_range(0.0, 60.0, 1.0) var rage_fan := 28.0
 
 @export_group("Embestida")
 ## LA EMBESTIDA (ver BrawlerBrain): el aviso (s: frena, se da vuelta hacia vos y abre el horno: la ventana), la velocidad
 ## (m/s) y cuánto tarda en llegar a ella (s), cuánto dura como mucho (s), cuánto corrige hacia vos (°/s: poco) y, si se
 ## estrella contra el borde de la arena, cuánto queda aturdido (s, con el horno abierto). Si te alcanza, cuánta vida te
-## saca y cuánto te cambia la velocidad (m/s; a la meca física).
+## saca y CUÁNTO TE TIRA (m: te derriba; ver HitReaction).
 ## AJUSTADO CONTRA LA MECA CINEMÁTICA (15/11/2026, tests/brawler_dodge_check): 5 s cruzan la arena (con 3 no llegaba
 ## desde 110 m); corrigiendo 6°/s, caminar de costado no alcanza, pero dos dashes seguidos cuando le faltan 24–32 m sí
 ## (con 12°/s no la esquivaba nada).
@@ -56,12 +63,12 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 @export_range(0.0, 60.0, 1.0) var charge_homing := 6.0
 @export_range(0.2, 8.0, 0.1) var stun_time := 2.5
 @export_range(0.0, 100.0, 1.0) var charge_damage := 25.0
-@export_range(0.0, 60.0, 0.5) var charge_push := 18.0
+@export_range(0.0, 60.0, 0.5) var charge_push := 22.0
 
 @export_group("Golpe al piso")
 ## EL GOLPE DOBLE AL PISO (ver BrawlerBrain, BrawlerWave): cuánto tiene los brazos arriba (s: el aviso, con la franja en
 ## el piso que sigue a la cintura), cuánto se queda después (s), y la onda: a qué velocidad corre (m/s), hasta dónde
-## (m) y qué ancho tiene (m). Si te alcanza apoyada (saltando, no), cuánta vida te saca y cuánto te levanta (m/s; a la
+## (m) y qué ancho tiene (m). Si te alcanza apoyada (saltando, no), cuánta vida te saca y cuánto te tira (m: te derriba, la onda o los puños; a la
 ## meca física). La onda, de 45 a 60 m/s (el usuario: «la piedra del suelo también un poco más rápida»).
 @export_range(0.3, 4.0, 0.05) var slam_windup := 1.3
 @export_range(0.2, 4.0, 0.05) var slam_recover := 1.4
@@ -69,13 +76,13 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 @export_range(20.0, 250.0, 5.0) var wave_reach := 140.0
 @export_range(2.0, 40.0, 0.5) var wave_width := 14.0
 @export_range(0.0, 100.0, 1.0) var wave_damage := 20.0
-@export_range(0.0, 40.0, 0.5) var wave_push := 10.0
+@export_range(0.0, 40.0, 0.5) var wave_push := 8.0
 
 @export_group("Arrancar el piso")
 ## ARRANCAR EL PISO Y TIRARLO (ver BrawlerBrain, BrawlerRock): cuánto tarda en meter las manos y arrancarlo (s), cuánto
 ## la tiene arriba (s: el aviso, con el círculo rojo que te sigue), cuánto vuela (s: de lejos va más rápido, siempre
 ## tarda eso), cuánto sube el arco (m), el radio del golpe (m), cuánto queda en el piso si no le pegó a nadie (s) y cuánto
-## se queda después de tirarla (s). Si te alcanza, cuánta vida te saca y cuánto te empuja (m/s; a la meca física).
+## se queda después de tirarla (s). Si te alcanza, cuánta vida te saca y cuánto te tira (m: te derriba).
 ## MEDIDO CONTRA LA MECA CINEMÁTICA (15/11/2026, tests/brawler_dodge_check --solo-piedra): con radio 9 y 1,8 s de vuelo,
 ## quieta le cae encima y caminando de costado (desde el aviso o desde el tiro) o con el dash, no. Es al filo: con 1,3 s
 ## de vuelo, caminando ya no llega (sólo el dash).
@@ -87,19 +94,22 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 @export_range(0.0, 30.0, 0.5) var rock_stay := 8.0
 @export_range(0.2, 4.0, 0.05) var throw_recover := 1.2
 @export_range(0.0, 100.0, 1.0) var rock_damage := 30.0
-@export_range(0.0, 60.0, 0.5) var rock_push := 14.0
+@export_range(0.0, 60.0, 0.5) var rock_push := 10.0
 
 @export_group("Trompo")
 ## EL TROMPO (ver BrawlerBrain): abre los brazos y empieza a girar (s: el aviso), gira tanto tiempo (s) a tantos °/s
-## andando hacia vos con las orugas (a tantos m/s, con su arranque corto: el de la embestida), y después queda MAREADO (s, con el horno abierto: la
-## ventana). Si te alcanzan los brazos (hasta dónde llegan, m desde su medio), cuánta vida te saca y cuánto te empuja
-## (m/s, de costado; a la meca física).
+## andando hacia vos con las orugas (a tantos m/s, con su arranque corto: el de la embestida; dobla con las orugas), y
+## después queda MAREADO (s, con el horno abierto: la ventana). Si te tocan los brazos (su zona de golpe, del hombro al
+## puño), cuánta vida te saca y cuánto te empuja de costado (m, parada). MÁS RÁPIDO Y QUE ANDE (15/11/2026, el usuario:
+## «se mueve muy lento… no se mueve casi nada en el mapa. Y que gire más rápido también»): de 540 a 1080°/s y de 12
+## a 24 m/s, 3,5 s.
 @export_range(0.2, 4.0, 0.05) var spin_windup := 1.0
-@export_range(0.5, 8.0, 0.1) var spin_time := 3.0
-@export_range(90.0, 1440.0, 10.0) var spin_speed := 540.0
-@export_range(1.0, 40.0, 0.5) var spin_move := 12.0
+@export_range(0.5, 8.0, 0.1) var spin_time := 3.5
+@export_range(90.0, 1440.0, 10.0) var spin_speed := 1080.0
+@export_range(1.0, 40.0, 0.5) var spin_move := 20.0
+## Cuánto corrige hacia vos girando (°/s: poco, como la embestida; si no, no se esquiva).
+@export_range(0.0, 90.0, 1.0) var spin_homing := 4.0
 @export_range(0.2, 6.0, 0.1) var spin_dizzy := 2.0
-@export_range(10.0, 50.0, 0.5) var spin_reach := 30.0
 @export_range(0.0, 100.0, 1.0) var spin_damage := 20.0
 @export_range(0.0, 60.0, 0.5) var spin_push := 16.0
 

@@ -25,3 +25,40 @@ que sigue, el Luchador de orugas ([[luchador]]), que ya las usa.
   azar, sin repetir tres veces; entre ataques te rodea.
 - **Cambiar de meca** en la parcela (la K): la nueva tiene que nacer cuando la vieja ya no está, y sin nada suelto encima;
   si no, el motor la despide a lo bruto.
+
+## Los golpes, como en Souls (15/11/2026)
+El usuario: «no colisionen entre sí los personajes… sí puede colisionar. Fijate cómo lo hacen los bosses de Dark
+Souls… el boss le pega a la mecha y la mecha se hace hacia atrás… que sea algo cinemático… un indicador que muestre
+cuando le pegan… le ponés unos colliders en los puños que cuando tocan al personaje haciendo una cierta habilidad le
+hacen daño… cuándo lo empuja, cuándo lo tira… el estado de la nave que se cae y se levanta, que también tiene que ser
+cinemático».
+
+Cómo lo hacen los Souls, y cómo queda acá:
+- **Los cuerpos se bloquean, no se empujan.** Cada uno tiene su cápsula: no se atraviesan, pero el jefe no te arrastra
+  con el cuerpo. Acá: la meca choca con el cuerpo del jefe (lo fijo, como siempre), y **el jefe no avanza dentro de la
+  meca** (`Brawler.block_at`/`block_radius`, lo pone su cabeza): se frena contra ella. *Antes, el jefe se le metía
+  encima y el motor de la meca cinemática la sacaba para atrás de golpe.*
+- **El daño lo hacen zonas de golpe, no el cuerpo.** Van pegadas a lo que pega (los puños, el frente embistiendo), se
+  prenden sólo en los cuadros del golpe de cada ataque y pegan **una vez por ataque**. Acá, por ataque, en la cabeza.
+- **Cada ataque dice qué te hace** (`HitReaction.Kind`): **aguantás** (no te movés), **te empuja** (te corrés parado),
+  **te derriba** (salís para atrás, caés, quedás tirado y te levantás; **tirado no se te puede pegar** y no manejás).
+- **Que se note**: el que recibe **se pone blanco** un momento, **chispas** donde pegó y **un sonido** (`BossSounds`,
+  sintetizados por código). En los Souls además se frena el tiempo unos cuadros y tiembla la cámara: todavía no.
+- **Todo cinemático**: a la meca cinemática la mueve `HitReaction` (corre después de ella en cada paso y la mueve por su
+  motor, con choque de costado; la altura, la del saltito), y la caída es una animación simple: se inclina **entera**
+  de espaldas al golpe (la caja y las piezas sueltas de las piernas; los brazos la siguen solos), queda, se endereza.
+  *La primera vez se inclinaba sólo la caja: el torso se salía de las piernas (el usuario: «se le sale el torso… y el
+  otro se queda quieto»); y el motor se trepaba a sus propias piezas.* `tests/hit_reaction_look` (con ventana, unos 10
+  s): capturas de empujada, cayendo, tirada y levantándose, y a qué altura queda tirada. A la física
+  le da un impulso y cae con su física. *Es una puerta provisoria del módulo Jefes: «qué le hace un golpe» a la cinemática
+  es del módulo Meca; cuando lo decida, `HitReaction` le pasa la posta.*
+
+| Ataque del Luchador | Zona de golpe | Qué te hace |
+|---|---|---|
+| La embestida | el frente de su caja, embistiendo | te derriba, 22 m para donde va |
+| El golpe al piso, los puños | los dos puños, al caer | te derriba, 8 m |
+| El golpe al piso, la onda | el lomo, si estás apoyada | te derriba, 8 m para donde va |
+| La piedra | el círculo donde cae | te derriba, 10 m desde el medio |
+| El trompo | los dos brazos, del hombro al puño (barriendo entre paso y paso) | te empuja 16 m de costado, parada |
+| El agarre | la mano | te agarra, te revolea y te tira; al caer, derribada |
+| Tus piñas al jefe | (de la meca) | él no se mueve: se pone blanco, chispas y sonido |

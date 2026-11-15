@@ -24,6 +24,10 @@ extends Node
 ##     se queda quieta y titila (ya apuntó); GOLPE, la mano sale derecho con su cadena (BrawlerHook). Si te toca, te
 ##     arrastra hasta él, te revolea dando vueltas y te tira lejos: al caer te saca vida. Si te corriste de la franja,
 ##     la mano vuelve vacía.
+##   · CON IRA (15/11/2026, el usuario: «la ira… funciona igual que la común… hay que ver cómo hacemos que se
+##     diferencie»), como la segunda fase de un jefe de Souls: ENCADENA (al terminar un ataque, a veces sigue con otro
+##     sin rodearte, hasta dos), el golpe al piso larga TRES ONDAS en abanico, tira DOS PIEDRAS (adonde estás y adonde
+##     vas) y la embestida REBOTA en el borde una vez y vuelve, en vez de estrellarse. Viene por tiempos.
 ##   · CUÁL: al terminar de rodear, uno de los que tengan tu distancia a tiro, al azar (la L de la parcela deja uno).
 ## LA VIDA, POR CÓDIGO (Health): las piñas de la meca que tocan el cuerpo le sacan poco; en el horno abierto, mucho.
 ## Mientras alguien lo posee, la cabeza no hace nada.
@@ -46,8 +50,10 @@ const WAVE_AHEAD := 4.0
 ## Arrancar el piso, entre estas (m).
 const THROW_RANGE := Vector2(35.0, 130.0)
 ## El trompo y el agarre, entre estas (m).
-const SPIN_RANGE := Vector2(0.0, 65.0)
+const SPIN_RANGE := Vector2(65.0, 110.0)
 const HOOK_RANGE := Vector2(25.0, 80.0)
+## Con ira, cuántos ataques encadena como mucho seguidos (además del primero).
+const RAGE_CHAIN_MAX := 2
 ## Revoleando: a cuánto adelante de su frente y a qué altura tiene a la meca (m).
 const SWING_HOLD := Vector2(12.0, 8.0)
 ## Rodeando: cuánto (s, entre los dos).
@@ -102,9 +108,11 @@ var _rock: BrawlerRock = null
 var _rocks: Array[BrawlerRock] = []
 var _dig := Vector3.ZERO
 var _hook: BrawlerHook = null
-var _fling_from := Vector3.ZERO
-var _fling_to := Vector3.ZERO
-var _fling_clock := -1.0
+var _arms_were: Array[Vector3] = []
+var _rage_clock := 0.0
+var _chain := 0
+var _bounced := false
+var _wave_sides: Array[BrawlerWave] = []
 
 
 func _ready() -> void:
@@ -129,7 +137,7 @@ func _physics_process(delta: float) -> void:
 	_check_punches()
 	_check_waves()
 	_check_rocks()
-	_fly_target(delta)
+	_block()
 	if _boss.driven():
 		return
 	if not awake:
@@ -146,6 +154,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if stage in ["quieto", "derrotado", "ganó"]:
 		_begin(Act.STALK)
+	_rage_cycle(delta)
 	_clock += delta
 	_boss.aim_yaw = _yaw_to_target()
 	match act:
@@ -178,6 +187,14 @@ func _stalk() -> void:
 	_drive(way, 0.8)
 	if _clock < _stalk_time:
 		return
+	var can := _can()
+	if not can.is_empty():
+		_begin(can[_random.randi() % can.size()])
+
+
+## Los ataques que tienen tu distancia a tiro (y que deja la L).
+func _can() -> Array[Act]:
+	var gap := _distance()
 	var can: Array[Act] = []
 	if (moves == Moves.ALL or moves == Moves.CHARGE) and gap > CHARGE_RANGE.x and gap < CHARGE_RANGE.y:
 		can.append(Act.CHARGE)
@@ -189,8 +206,7 @@ func _stalk() -> void:
 		can.append(Act.SPIN)
 	if (moves == Moves.ALL or moves == Moves.HOOK) and gap > HOOK_RANGE.x and gap < HOOK_RANGE.y:
 		can.append(Act.HOOK)
-	if not can.is_empty():
-		_begin(can[_random.randi() % can.size()])
+	return can
 
 
 ## LA EMBESTIDA, por tiempos (`_step`): 0 el aviso, 1 arranca, 2 frena, 3 aturdido, 4 se recupera.
@@ -217,7 +233,15 @@ func _charge() -> void:
 			_check_ram(k)
 			var ahead := _boss.heading()
 			var passed := ahead.dot(_to_target()) < 0.0 and _distance() > 20.0
-			if _boss.arena != null and _boss.arena.at_edge(_boss.global_position, Brawler.BOX.x * 0.5 + 0.5):
+			if _boss.arena != null and _boss.arena.at_edge(_boss.global_position, Brawler.BOX.x * 0.5 + 0.5) \
+					and _boss.rage and not _bounced:
+				# CON IRA, REBOTA: frena, se da vuelta hacia vos y vuelve a embestir (una vez).
+				_bounced = true
+				_boss.stop()
+				_boss.charging = false
+				_hit_this_act = false
+				_next(5)
+			elif _boss.arena != null and _boss.arena.at_edge(_boss.global_position, Brawler.BOX.x * 0.5 + 0.5):
 				# CONTRA EL BORDE: se estrella.
 				crashes += 1
 				_boss.stop()
@@ -241,6 +265,13 @@ func _charge() -> void:
 			if _clock >= k.stun_time:
 				_boss.furnace = false
 				_next(4)
+		5:
+			stage = "embestida: ¡rebota!"
+			_boss.pose = Brawler.Pose.CHARGE_READY
+			var error := _error_to(_to_target())
+			_boss.move = Vector2(clampf(-error * 3.0, -1.0, 1.0), 0.0)
+			if _clock >= 0.5 and absf(error) < AIMED * 2.0:
+				_next(1)
 		_:
 			stage = "embestida: se recupera"
 			_boss.pose = Brawler.Pose.REST
@@ -266,6 +297,17 @@ func _slam() -> void:
 				_boss.get_parent().add_child(_wave)
 				_wave.setup(k.wave_width, k.wave_reach)
 			_wave.aim(mouth, waist)
+			# CON IRA, TRES: dos más, abiertas en abanico.
+			if _boss.rage and _wave_sides.is_empty():
+				for side in 2:
+					var extra := BrawlerWave.new()
+					extra.name = "Onda"
+					_boss.get_parent().add_child(extra)
+					extra.setup(k.wave_width, k.wave_reach)
+					_wave_sides.append(extra)
+			for index in _wave_sides.size():
+				var turn := deg_to_rad(k.rage_fan) * (-1.0 if index == 0 else 1.0)
+				_wave_sides[index].aim(mouth, waist.rotated(Vector3.UP, turn))
 			if _clock >= k.slam_windup:
 				slams += 1
 				_boss.pose = Brawler.Pose.SLAM
@@ -273,10 +315,20 @@ func _slam() -> void:
 		1:
 			stage = "¡golpe al piso!"
 			_boss.move = Vector2.ZERO
+			# LOS PUÑOS: si estás justo adelante, te pegan ellos (derriba).
+			for fist in _boss.body.fists():
+				if not _hit_this_act and _touches_target(fist, BrawlerBody.FIST * 1.5):
+					_hit_this_act = true
+					_strike(k.wave_damage, "los puños al piso", HitReaction.Kind.KNOCKDOWN, _to_target(),
+						k.wave_push, fist)
 			if _clock >= SLAM_FALL:
 				_wave.launch(k.wave_speed)
 				_waves.append(_wave)
 				_wave = null
+				for extra in _wave_sides:
+					extra.launch(k.wave_speed)
+					_waves.append(extra)
+				_wave_sides.clear()
 				_next(2)
 		_:
 			stage = "golpe al piso: se recupera"
@@ -319,6 +371,8 @@ func _throw() -> void:
 				_boss.pose = Brawler.Pose.THROW
 				_rock.throw(_ground(), k.rock_flight, k.rock_arc, k.rock_stay)
 				_rocks.append(_rock)
+				if _boss.rage:
+					_rocks.append(_second_rock(k))
 				_rock = null
 				_next(2)
 		_:
@@ -326,6 +380,25 @@ func _throw() -> void:
 			_boss.move = Vector2.ZERO
 			if _clock >= k.throw_recover:
 				_begin(Act.STALK)
+
+
+## CON IRA, LA SEGUNDA PIEDRA: sale de las mismas manos y va adonde vas (donde estarás cuando caiga); si estás quieta,
+## al lado, para un costado al azar.
+func _second_rock(k: BrawlerSettings) -> BrawlerRock:
+	var other := BrawlerRock.new()
+	other.name = "Piedra"
+	_boss.get_parent().add_child(other)
+	other.setup(_dig, _boss.waist_yaw, k.rock_radius)
+	other.hold(_rock.held_at() + Vector3.UP * BrawlerRock.SIZE.y, _boss.waist_yaw, null)
+	var body := target as BalanceBody
+	var going := body.velocity() if body != null else Vector3.ZERO
+	going.y = 0.0
+	var ahead := going * k.rock_flight
+	if ahead.length() < k.rock_radius * 2.2:
+		var side := Vector3.UP.cross(_to_target().normalized()) * (-1.0 if _random.randf() < 0.5 else 1.0)
+		ahead = side * k.rock_radius * 2.2
+	other.throw(_ground() + ahead, k.rock_flight, k.rock_arc, k.rock_stay)
+	return other
 
 
 ## EL TROMPO, por tiempos (`_step`): 0 abre los brazos y arranca a girar, 1 gira y avanza, 2 mareado.
@@ -344,7 +417,9 @@ func _spin() -> void:
 			stage = "¡trompo!"
 			_boss.pose = Brawler.Pose.SPIN
 			_boss.spin = k.spin_speed
-			_drive(_to_target().normalized(), 1.0)
+			# Derecho, corrigiendo poco (como la embestida).
+			var correct := k.spin_homing / maxf(k.turn_speed, 1.0)
+			_boss.move = Vector2(clampf(-_error_to(_to_target()) * 3.0, -correct, correct), 1.0)
 			_check_spin(k)
 			if _clock >= k.spin_time:
 				_next(2)
@@ -358,19 +433,30 @@ func _spin() -> void:
 				_begin(Act.STALK)
 
 
-## SI LOS BRAZOS DEL TROMPO TE ALCANZAN: una vez por trompo.
+## LOS BRAZOS DEL TROMPO (su zona de golpe: del hombro al puño, cada uno, barriendo entre un paso y el otro): si te
+## tocan, te empujan de costado (parada). Una vez por trompo.
 func _check_spin(k: BrawlerSettings) -> void:
-	if _hit_this_act or _distance() > k.spin_reach + _target_half_width():
+	var arms: Array[Vector3] = []
+	var fists := _boss.body.fists()
+	for index in _boss.body.shoulders.size():
+		arms.append(_boss.body.shoulders[index].global_position)
+		arms.append(fists[index])
+	var were := _arms_were if _arms_were.size() == arms.size() else arms
+	_arms_were = arms
+	if _hit_this_act:
 		return
-	_hit_this_act = true
-	spun += 1
-	var theirs := Health.of(target)
-	if theirs != null:
-		theirs.hurt(k.spin_damage, "el trompo")
-	var body := target as BalanceBody
-	if body != null and not body.kinematic:
-		var aside := Vector3.UP.cross(_to_target().normalized()) * signf(_boss.spin)
-		BalanceBody.hit(body, (aside + Vector3.UP * 0.3).normalized() * k.spin_push * body.mass)
+	for sub in 4:
+		var t := (sub + 1) / 4.0
+		for pair in range(0, arms.size(), 2):
+			var from := were[pair].lerp(arms[pair], t)
+			var to := were[pair + 1].lerp(arms[pair + 1], t)
+			for along in 7:
+				var point := from.lerp(to, along / 6.0)
+				if _touches_target(point, BrawlerBody.FIST * 0.8):
+					_hit_this_act = true
+					spun += int(_strike(k.spin_damage, "el trompo", HitReaction.Kind.PUSH,
+						Vector3.UP.cross(_to_target().normalized()) * signf(_boss.spin), k.spin_push, point))
+					return
 
 
 ## EL AGARRE, por tiempos (`_step`): 0 apunta (la franja; al final, quieta), 1 la mano sale, 2 te arrastra, 3 te revolea
@@ -404,19 +490,19 @@ func _hook_act() -> void:
 			stage = "agarre: ¡la mano!"
 			_boss.aim_yaw = atan2(-_hook.way.x, -_hook.way.z)
 			_boss.move = Vector2.ZERO
-			var body := target as BalanceBody
-			if _hook.touches(_ground(), _target_half_width()):
+			if _hook.touches(_ground(), _target_half_width()) and not HitReaction.of(target).untouchable():
 				grabbed += 1
 				_hook.reel()
-				if body != null and body.mover != null:
+				var reaction := HitReaction.of(target)
+				reaction.grab(_hook.tip() + Vector3.UP * BrawlerHook.HEIGHT)
+				if reaction.state == HitReaction.State.HELD:
 					_next(2)
 				else:
 					# A LA FÍSICA no la lleva: la tira hacia él (y le saca lo mismo).
 					var theirs := Health.of(target)
 					if theirs != null:
 						theirs.hurt(k.fling_damage, "el agarre")
-					if body != null:
-						BalanceBody.hit(body, (-_hook.way + Vector3.UP * 0.5).normalized() * k.spin_push * body.mass)
+					reaction.react(HitReaction.Kind.KNOCKDOWN, -_hook.way, k.spin_push, _hook.tip())
 					_next(4)
 			elif _hook.state == BrawlerHook.State.BACK:
 				_next(4)
@@ -428,14 +514,14 @@ func _hook_act() -> void:
 				_hook = null
 				_next(3)
 			else:
-				_put_target(_hook.tip())
+				HitReaction.of(target).hold_at(_hook.tip())
 		3:
 			stage = "¡revoleo!"
 			_boss.pose = Brawler.Pose.SWING
 			_boss.move = Vector2.ZERO
 			_boss.spin = k.swing_speed * clampf(_clock / 0.4, 0.2, 1.0)
 			var hold := _boss.global_position + waist * (Brawler.BOX.z * 0.5 + SWING_HOLD.x) + Vector3.UP * SWING_HOLD.y
-			_put_target(hold)
+			HitReaction.of(target).hold_at(hold)
 			if _clock >= k.swing_time:
 				_boss.spin = 0.0
 				_boss.pose = Brawler.Pose.THROW
@@ -443,38 +529,14 @@ func _hook_act() -> void:
 				to.y = 0.0
 				if _boss.arena != null:
 					to = _boss.arena.hold(to, _target_half_width() + 2.0)
-				_fling_from = hold
-				_fling_to = to
-				_fling_clock = 0.0
+				HitReaction.of(target).fling(to, k.fling_arc, k.fling_time, k.fling_damage, "el revoleo")
+				BossSounds.play(BossSounds.Kind.WINDUP, hold, _boss.get_parent(), -4.0)
 				_next(4)
 		_:
 			stage = "agarre: se recupera"
 			_boss.move = Vector2.ZERO
 			if _clock >= k.hook_recover:
 				_begin(Act.STALK)
-
-
-## TE TIRÓ: vuela en arco hasta donde cae; al caer, te saca vida.
-func _fly_target(delta: float) -> void:
-	if _fling_clock < 0.0:
-		return
-	var k := BrawlerSettings.current
-	_fling_clock += delta
-	var t := minf(_fling_clock / maxf(k.fling_time, 0.01), 1.0)
-	_put_target(_fling_from.lerp(_fling_to, t) + Vector3.UP * k.fling_arc * 4.0 * t * (1.0 - t))
-	if t < 1.0:
-		return
-	_fling_clock = -1.0
-	var theirs := Health.of(target)
-	if theirs != null:
-		theirs.hurt(k.fling_damage, "el revoleo")
-
-
-## LO PONE AL BLANCO en `at` (el piso debajo de sus pies), mirando como mira: sólo una meca cinemática.
-func _put_target(at: Vector3) -> void:
-	var body := target as BalanceBody
-	if body != null and body.mover != null:
-		body.put(Transform3D(Basis(Vector3.UP, body.mover.rotation.y), at))
 
 
 ## LAS PIEDRAS QUE CAEN: si te cae encima apoyada, te saca vida y se rompe; si no, queda un rato.
@@ -487,17 +549,12 @@ func _check_rocks() -> void:
 			continue
 		rock.just_landed = false
 		_rocks.erase(rock)
-		var over := body != null and not body.grounded and body.mover != null 			and body.mover.global_position.y - rock.spot.y > BrawlerRock.SIZE.y + 2.0
+		var over := body != null and not body.grounded and body.mover != null
+		over = over and body.mover.global_position.y - rock.spot.y > BrawlerRock.SIZE.y + 2.0
 		if not over and rock.covers(_ground(), _target_half_width()):
-			rocked += 1
 			rock.shatter()
-			var theirs := Health.of(target)
-			if theirs != null:
-				theirs.hurt(k.rock_damage, "la piedra")
-			if body != null and not body.kinematic:
-				var away := _ground() - rock.spot
-				away.y = 0.0
-				BalanceBody.hit(body, (away.normalized() + Vector3.UP).normalized() * k.rock_push * body.mass)
+			rocked += int(_strike(k.rock_damage, "la piedra", HitReaction.Kind.KNOCKDOWN, _ground() - rock.spot,
+				k.rock_push, rock.spot + Vector3.UP * BrawlerRock.SIZE.y))
 		elif rock.covers(_boss.global_position, Brawler.BOX.x * 0.5):
 			rock.shatter()
 
@@ -515,15 +572,11 @@ func _check_waves() -> void:
 		if over or not wave.covers(_ground(), _target_half_width()):
 			continue
 		_waves.erase(wave)
-		waved += 1
-		var theirs := Health.of(target)
-		if theirs != null:
-			theirs.hurt(k.wave_damage, "el golpe al piso")
-		if body != null and not body.kinematic:
-			BalanceBody.hit(body, (wave.way * 0.3 + Vector3.UP).normalized() * k.wave_push * body.mass)
+		waved += int(_strike(k.wave_damage, "el golpe al piso", HitReaction.Kind.KNOCKDOWN, wave.way, k.wave_push,
+			_ground() + Vector3.UP * BrawlerWave.RIDGE.x))
 
 
-## SI TE ALCANZA: una vez por embestida, si su frente llega a vos: estás adelante, a menos de `REACH` de su frente, y
+## SI TE ALCANZA (la zona de golpe: el frente de su caja, embistiendo): una vez por embestida, si su frente llega a vos: estás adelante, a menos de `REACH` de su frente, y
 ## de costado, dentro del ancho de las orugas (lo que se ve: si te corriste lo suficiente, te pasa al lado).
 func _check_ram(k: BrawlerSettings) -> void:
 	if _hit_this_act:
@@ -536,14 +589,54 @@ func _check_ram(k: BrawlerSettings) -> void:
 	if ahead < 0.0 or ahead > Brawler.BOX.z * 0.5 + radius + REACH or aside > Brawler.BOX.x * 0.5 + half:
 		return
 	_hit_this_act = true
-	landed += 1
-	var theirs := Health.of(target)
-	if theirs != null:
-		theirs.hurt(k.charge_damage, "la embestida")
-	var body := target as RigidBody3D
-	if body != null and not (target is BalanceBody and (target as BalanceBody).kinematic):
-		var way := (_boss.heading() * 0.8 + Vector3.UP * 0.2).normalized()
-		BalanceBody.hit(body, way * k.charge_push * body.mass)
+	var front := _boss.global_position + _boss.heading() * Brawler.BOX.z * 0.5 + Vector3.UP * Brawler.BOX.y * 0.4
+	landed += int(_strike(k.charge_damage, "la embestida", HitReaction.Kind.KNOCKDOWN, _boss.heading(), k.charge_push,
+		front))
+
+
+## ── LOS GOLPES (ver HitReaction y docs/technical/pelea-jefes.md) ─────────────────────────────────────────────────────
+
+## UN GOLPE AL BLANCO: el daño y la reacción, empujado `distance` m hacia `away`; `at`, dónde pegó. Devuelve si entró
+## (tirado o agarrado no se le puede pegar).
+func _strike(damage: float, what: String, kind: HitReaction.Kind, away: Vector3, distance: float, at: Vector3) -> bool:
+	return HitReaction.land(target, damage, what, kind, away, distance, at)
+
+
+## Si el punto `point` (mundo), con su radio, toca al blanco: un cilindro parado del piso de sus pies hasta arriba.
+func _touches_target(point: Vector3, radius: float) -> bool:
+	var ground := _ground()
+	var flat := Vector2(point.x - ground.x, point.z - ground.z).length()
+	return flat < _target_half_width() + radius and point.y > ground.y - radius \
+		and point.y < ground.y + _target_height() + radius
+
+
+func _target_height() -> float:
+	var body := target as BalanceBody
+	if body != null:
+		return body.hover + body.size.y
+	return TARGET_HEIGHT
+
+
+## NO SE EMPUJAN: el Luchador no avanza dentro del blanco (lo frena, como en Souls: el jefe no te arrastra con el
+## cuerpo); si está tirado o agarrado, pasa.
+func _block() -> void:
+	var free := not HitReaction.of(target).untouchable()
+	_boss.block_at = _ground()
+	_boss.block_radius = _target_half_width() if free else 0.0
+
+
+## LA IRA, POR TIEMPOS: tranquilo `rage_calm` s, con ira `rage_last` s, y así (con su sonido al cambiar).
+func _rage_cycle(delta: float) -> void:
+	var k := BrawlerSettings.current
+	if k.rage_calm <= 0.0:
+		return
+	_rage_clock += delta
+	var angry := _boss.rage
+	if (not angry and _rage_clock >= k.rage_calm) or (angry and _rage_clock >= k.rage_last):
+		_rage_clock = 0.0
+		_boss.rage = not angry
+		var at := _boss.global_position + Vector3.UP * Brawler.BOX.y
+		BossSounds.play(BossSounds.Kind.RAGE_ON if _boss.rage else BossSounds.Kind.RAGE_OFF, at, _boss.get_parent())
 
 
 ## ── MANEJAR ──────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -560,6 +653,16 @@ func _error_to(way: Vector3) -> float:
 
 
 func _begin(next: Act) -> void:
+	# CON IRA, ENCADENA: en vez de volver a rodear, a veces sigue con otro ataque.
+	if next == Act.STALK and act != Act.STALK and _boss.rage and _chain < RAGE_CHAIN_MAX \
+			and _random.randf() < BrawlerSettings.current.rage_chain:
+		var can := _can()
+		if not can.is_empty():
+			_chain += 1
+			next = can[_random.randi() % can.size()]
+	elif next == Act.STALK:
+		_chain = 0
+	_bounced = false
 	act = next
 	_clock = 0.0
 	_step = 0
@@ -568,6 +671,10 @@ func _begin(next: Act) -> void:
 	_boss.spin = 0.0
 	_boss.pose = Brawler.Pose.REST
 	_drop_warning()
+	if next != Act.STALK:
+		_arms_were.clear()
+		BossSounds.play(BossSounds.Kind.WINDUP, _boss.global_position + Vector3.UP * Brawler.BOX.y, _boss.get_parent(),
+			-6.0)
 	if next == Act.STALK:
 		_boss.furnace = false
 		_side = -1.0 if _random.randf() < 0.5 else 1.0
@@ -652,6 +759,7 @@ func _check_punches() -> void:
 				_punched[key] = true
 				furnace_hits += 1
 				own.hurt(k.furnace_damage, "una piña en el horno")
+				HitReaction.of(_boss).show_hit(at, true)
 				break
 			var local := _boss.global_transform.affine_inverse() * at
 			var half := Brawler.BOX * 0.5 + Vector3.ONE * BODY_REACH
@@ -659,6 +767,7 @@ func _check_punches() -> void:
 				_punched[key] = true
 				body_hits += 1
 				own.hurt(k.punch_damage, "una piña")
+				HitReaction.of(_boss).show_hit(at, false)
 				break
 
 
@@ -676,6 +785,10 @@ func _drop_warning() -> void:
 	if _wave != null and is_instance_valid(_wave):
 		_wave.queue_free()
 	_wave = null
+	for extra in _wave_sides:
+		if is_instance_valid(extra):
+			extra.queue_free()
+	_wave_sides.clear()
 	if _rock != null and is_instance_valid(_rock):
 		_rock.queue_free()
 	_rock = null

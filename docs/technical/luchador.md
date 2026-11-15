@@ -128,6 +128,33 @@ El usuario: «hacé el trompo y el agarre y revoleo… obvio que el agarre se de
   apuntó** alcanza; más cerca, **con el dash** (cuando apuntó o cuando sale la mano).
 - **La L** suma «sólo el trompo» y «sólo el agarre». El video arranca con 16 s de agarres y 16 de trompos.
 
+## Paso 6 (15/11/2026): los golpes como en Souls, el trompo que anda y la ira con lo suyo
+El usuario: «no colisionen entre sí los personajes… que sea algo cinemático… un indicador… una audio cue… el trompo
+haría de que se mueva más… y que gire más rápido… la ira… debería suceder por intervalos de tiempo… la ira creo que no
+tiene poderes propios… hay que ver cómo hacemos que se diferencie».
+- **Los golpes** (todo en [[pelea-jefes]], «Los golpes, como en Souls»): el Luchador no se mete dentro de la meca (se
+  frena contra ella); cada ataque pega con su zona de golpe, una vez, y dice si te empuja o te derriba; al que recibe lo
+  mueve `HitReaction` (cinemático: la caída es una animación simple), **se pone blanco, chispas y sonido**
+  (`BossSounds`, sintetizados). Las piñas de la meca al jefe también se ven así. Los empujes de las perillas ahora son
+  metros (antes, m/s a la meca física).
+- **La meca de enfrente es la de tres** (`ToolMech`, del módulo Meca; el usuario la pidió por la sesión Cabinas
+  separadas): la primera de la K, y la de las pruebas y el video.
+- **El trompo, más rápido y andando**: gira a 1080°/s (antes 540) y anda a 20 m/s (antes 12) durante 3,5 s, **derecho**,
+  corrigiendo 4°/s (como la embestida). Los brazos se abren menos (52°) para barrer a la altura de la meca de tres (14 m
+  de alto; abiertos del todo le pasaban por arriba). Barre unos 60 m de ancho: **se esquiva escapando**, para atrás
+  desde 70 m o de costado (dash y caminando) desde 95; más cerca, no hay cómo (la meca no tiene un dash que la haga
+  intocable), así que **arranca desde 65 m** (hasta 110).
+- **El sonido de cada ataque**: un zumbido que sube al empezar el aviso.
+- **La ira, por tiempos**: 40 s tranquilo, 18 s con ira, con un bramido al entrar y un soplido al salir (perillas en
+  «Ira»; 0 s tranquilo, sólo con la tecla). **Y con lo suyo**, como la segunda fase de un jefe de Souls:
+  - **encadena**: al terminar un ataque, 60 % de las veces sigue con otro sin rodearte (hasta dos seguidos);
+  - el golpe al piso larga **tres ondas en abanico** (28° para cada lado);
+  - tira **dos piedras**: adonde estás y adonde vas (si estás quieta, al lado);
+  - la embestida **rebota en el borde** una vez y vuelve hacia vos, en vez de estrellarse (la segunda vez, sí).
+- El video arranca con agarres y trompos, sigue con todo tranquilo y termina con todo con ira.
+
 ## Lo que sigue
-Los poderes, de a uno (propuestos, sin confirmar): el gancho al cielo y la guardia con contraataque; con ira, combos más largos y el humo como zona que tapa la vista. Sin
+Los poderes, de a uno (propuestos, sin confirmar): el gancho al cielo y la guardia con contraataque. Para los golpes:
+un dash que haga a la meca intocable un momento (como la rodada de Souls; es del módulo Meca), frenar el tiempo unos
+cuadros al pegar y temblar la cámara; con ira, el humo como zona que tapa la vista. Sin
 ametralladora por ahora.
