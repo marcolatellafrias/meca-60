@@ -1,7 +1,7 @@
 extends Node
 
-## LAS MAQUETAS DE JEFES (con ventana, unos 15 s, sin el sandbox): cada una sola, de frente y de tres cuartos desde
-## arriba, con sus dos estados (ver BossMaquettes). Capturas numeradas.
+## LAS MAQUETAS DE JEFES (con ventana, unos 20 s, sin el sandbox): cada una sola, de frente y de tres cuartos desde
+## arriba, con sus dos estados (ver BossMaquettes); las recorribles, también de cerca. Capturas numeradas.
 ##   tools/godot_ventana.sh res://tests/boss_maquettes_look.tscn -- --salida=C:/carpeta
 
 var _folder := ""
@@ -48,6 +48,13 @@ func _ready() -> void:
 		print("%s: %s" % [name_of, " / ".join(BossMaquettes.ALL[i]["lines"])])
 		await _shot("%s, de frente" % name_of, Vector3(0, 32, 118), Vector3(0, 22, 0))
 		await _shot("%s, desde arriba" % name_of, Vector3(70, 80, 85), Vector3(0, 10, 0))
+		if str(BossMaquettes.ALL[i]["kind"]) in ["hexapod", "quadruped"]:
+			# De cerca, las compuertas abiertas y el recorrido: la de la derecha de atrás y la de la izquierda de frente.
+			var open := Vector3(BossMaquettes.APART, 0, 0)
+			await _shot("%s, abierta, de atrás: el recorrido" % name_of, open + Vector3(38, 52, 62), open + Vector3(0, 26, 0))
+			await _shot("%s, abierta, de frente" % name_of, open + Vector3(-35, 30, -60), open + Vector3(0, 22, 0))
+			var shut := Vector3(-BossMaquettes.APART, 0, 0)
+			await _shot("%s, cerrada, de cerca" % name_of, shut + Vector3(40, 40, 40), shut + Vector3(0, 24, 0))
 		holder.queue_free()
 		await get_tree().process_frame
 	get_tree().quit()

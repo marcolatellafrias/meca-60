@@ -22,36 +22,42 @@ const BEAM := Color(1.0, 0.85, 0.3, 0.3)
 const STONE := Color(0.62, 0.6, 0.56)
 const HULL := Color(0.45, 0.47, 0.5)
 ## Cuánto separa los dos estados (m, del centro a cada uno).
-const APART := 60.0
+const APART := 75.0
 
-## LAS SEIS: nombre, los dos estados y lo que se piensa de cada una (puntos débiles, fases, ataques).
+## LAS MAQUETAS: cuál es (`kind`), nombre, los dos estados y lo que se piensa de cada una. Primero las dos RECORRIBLES
+## (WalkerMaquettes, 15/11/2026); después la primera tanda, de seis (el usuario: «muy simplistas… no se dan mucho a espacios
+## a recorrer a pie», aunque «hay algunos que tienen algo de potencial»).
 const ALL: Array[Dictionary] = [
-	{"name": "Trípode faro", "states": ["camina en tres patas", "una pata rota: se arrodilla"], "lines": [
+	{"kind": "hexapod", "name": "Hexápodo plataforma", "states": ["compuertas cerradas: camina",
+		"compuertas abiertas: después del pisotón"], "lines": WalkerMaquettes.HEXAPOD_LINES},
+	{"kind": "quadruped", "name": "Cuadrúpedo bastión", "states": ["compuertas cerradas: camina",
+		"compuertas abiertas: después del cañonazo"], "lines": WalkerMaquettes.QUADRUPED_LINES},
+	{"kind": "tripod", "name": "Trípode faro", "states": ["camina en tres patas", "una pata rota: se arrodilla"], "lines": [
 		"alto y lento, en tres patas; arriba de la cabeza, una escotilla con el núcleo",
 		"PUNTO DÉBIL: el núcleo de arriba, sólo tirándose desde lo alto (la torre); y los cables de cada rodilla",
 		"cortar los cables de una rodilla la traba; trabada una, se arrodilla y la cabeza queda a tiro",
 		"ÁREA: el faro barre el piso con su luz (lo que toca, quema) y el pisotón hace una onda"]},
-	{"name": "Polilla", "states": ["volando", "sin alas: camina"], "lines": [
+	{"kind": "moth", "name": "Polilla", "states": ["volando", "sin alas: camina"], "lines": [
 		"primero vuela en círculos, alto, y tira columnas desde arriba",
 		"PUNTO DÉBIL: las raíces de las alas, con sus cables; se llega desde lo alto cuando pasa cerca",
 		"FASE: rotas dos alas se cae (por vida); camina en seis patas cortas y la panza, con su núcleo, queda a la vista",
 		"ÁREA: las columnas que caen en fila; en el piso, arrastra los muñones de las alas"]},
-	{"name": "Caracol fortaleza", "states": ["anda", "frenesí: se mete en la caparazón"], "lines": [
+	{"kind": "snail", "name": "Caracol fortaleza", "states": ["anda", "frenesí: se mete en la caparazón"], "lines": [
 		"lento y enorme; la caparazón es una torre con una chimenea arriba",
 		"PUNTO DÉBIL: el núcleo en la chimenea: hay que caer adentro, desde lo alto",
 		"FASE: con poca vida se mete en la caparazón, se agrieta y brilla por las grietas: frenesí, gira y empuja",
 		"ÁREA: golpea el piso y salen anillos (saltarlos); alrededor, una zona que quema"]},
-	{"name": "Relicario", "states": ["flota con sus nodos", "caído: es una rampa"], "lines": [
+	{"kind": "reliquary", "name": "Relicario", "states": ["flota con sus nodos", "caído: es una rampa"], "lines": [
 		"un monolito que flota; tres nodos le dan vueltas, atados con cables",
 		"PUNTO DÉBIL: los nodos, de a uno (bajos, pero giran); rotos los tres, se cae",
 		"FASE: caído queda como una rampa; se sube caminando hasta el núcleo de la punta, mientras se levanta",
 		"ÁREA: círculos en el piso que explotan después de un rato, y rayos que bajan"]},
-	{"name": "Ciempiés de vagones", "states": ["entero", "partido en dos"], "lines": [
+	{"kind": "centipede", "name": "Ciempiés de vagones", "states": ["entero", "partido en dos"], "lines": [
 		"un tren de vagones con patas; cada unión es un enganche con cables",
 		"PUNTO DÉBIL: los enganches de arriba, subiéndose al lomo mientras anda",
 		"FASE: desenganchado uno, se parte en dos más chicos que pelean aparte (y más rápido)",
 		"ÁREA: la cola deja una línea que quema; los vagones barren al doblar"]},
-	{"name": "Colmena colgante", "states": ["en lo alto de sus patas", "frenesí: se agacha"], "lines": [
+	{"kind": "hive", "name": "Colmena colgante", "states": ["en lo alto de sus patas", "frenesí: se agacha"], "lines": [
 		"un cuerpo alto en seis patas largas; abajo cuelga una bolsa con el núcleo, de cables",
 		"PUNTO DÉBIL: los cables de la bolsa, por debajo: hay que meterse donde pisa",
 		"FASE: cortada la bolsa, se enoja (frenesí): se agacha, pisa más rápido y el núcleo cae al piso",
@@ -70,13 +76,15 @@ static func build(index: int, parent: Node3D) -> Node3D:
 		var holder := Node3D.new()
 		holder.position = Vector3(APART * (state * 2 - 1), 0.0, 0.0)
 		root.add_child(holder)
-		match index:
-			0: _tripod(holder, state)
-			1: _moth(holder, state)
-			2: _snail(holder, state)
-			3: _reliquary(holder, state)
-			4: _centipede(holder, state)
-			5: _hive(holder, state)
+		match str(ALL[index]["kind"]):
+			"hexapod": WalkerMaquettes.hexapod(holder, state == 1)
+			"quadruped": WalkerMaquettes.quadruped(holder, state == 1)
+			"tripod": _tripod(holder, state)
+			"moth": _moth(holder, state)
+			"snail": _snail(holder, state)
+			"reliquary": _reliquary(holder, state)
+			"centipede": _centipede(holder, state)
+			"hive": _hive(holder, state)
 		_sign(holder, "%s · %s" % [ALL[index]["name"], ALL[index]["states"][state]], Vector3(0.0, 62.0, 0.0))
 	_mech(root, Vector3(0.0, 0.0, 45.0))
 	_person(root, Vector3(6.0, 0.0, 45.0))

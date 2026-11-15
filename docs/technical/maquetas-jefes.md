@@ -12,15 +12,34 @@ matarlo desde cerca»; «varios ciclos… caminando, pero después tal vez va vo
 cuando le rompe las alas se cae y va caminando… modo frenzy»; ataques «menos físicos y más bien poderes de AoE»;
 «empecemos con muchas maquetas de clay». El jefe bola «no va mucho con esa idea».
 
+## Las recorribles (15/11/2026): el hexápodo y el cuadrúpedo
+El usuario, de la primera tanda: «muy simplistas… no se dan mucho a espacios a recorrer a pie… tienen que tener algo de
+recorrido, algo de interés… una silueta más o menos simple»; «una de 6 patas y otra de 4»; «los puntos débiles sean
+básicamente las baterías y los componentes que se dan a ver solamente a veces… a pie tenés que timear para cuando esté
+abierta una compuerta… y sacarlo». Están en `WalkerMaquettes`, primeras en la fila.
+- **La silueta es simple** (un casco sobre patas), **pero el cuerpo es un lugar**: cubiertas, pasarelas con baranda,
+  escaleras y una rampa, a la escala de una persona. Al lado, un edificio para tirarse. **El recorrido va en celeste.**
+- **Los puntos débiles son baterías detrás de compuertas**: cerradas casi siempre (el estado de la izquierda); se abren
+  un rato después de un ataque fuerte suyo (el de la derecha). **Una batería por pata**, en las pasarelas; **la del
+  cañón**; **el núcleo**, en lo más alto. Y **una compuerta grande al frente, a la altura de la meca**: la de la meca.
+- **Hexápodo plataforma**: largo (50 m), la cubierta a 26 m. Se cae en la cubierta baja de atrás (la plataforma de luz);
+  una escalera sube a la cubierta, otra baja a la pasarela de cada lado (tres compuertas por lado, una por pata), y la
+  de la torre sube al núcleo. Las compuertas se abren después del pisotón (la onda roja).
+- **Cuadrúpedo bastión**: más alto y compacto, en pisos. Se cae en la cubierta (29 m); una rampa baja a la pasarela de
+  alrededor (una compuerta por pata), una escalera sube al segundo piso (la batería del cañón, a los costados) y otra a
+  la torreta (el núcleo). Las compuertas se abren después del cañonazo.
+- *Pensado y todavía sin ver: subido, al rato se sacude (agarrarse o bajarse); si la meca se queda pegada mucho tiempo,
+  carga un pulso que la aleja.*
+
 ## Cómo se leen
 - Cada parcela tiene **dos estados**, uno al lado del otro: a la izquierda el primero, a la derecha el que viene después
   (la fase rota, caída o enojada).
 - **Naranja que brilla**: un punto débil (un núcleo, una unión de cables). **Naranja oscuro**: los cables.
 - **Rojo transparente en el piso**: un ataque de área; un **anillo rojo** es una onda. Lo amarillo transparente, un rayo.
-- **Bloque rojo**: la meca (18 m). **Muñeco amarillo**: una persona (1,8 m). **Torre gris**: un punto alto desde donde
+- **Celeste**: el recorrido a pie. **Bloque rojo**: la meca (18 m). **Muñeco amarillo**: una persona (1,8 m). **Torre gris**: un punto alto desde donde
   tirarse (con una persona arriba).
 
-## Las seis
+## La primera tanda, de seis (14/11/2026)
 | Maqueta | Punto débil | Fases | Ataques de área |
 |---|---|---|---|
 | **Trípode faro** | el núcleo en la escotilla de arriba de la cabeza (sólo tirándose desde la torre); los cables de cada rodilla | cortados los cables de una rodilla, se traba; con una pata rota se arrodilla y la cabeza queda a tiro | el faro barre el piso con su luz; el pisotón, una onda |

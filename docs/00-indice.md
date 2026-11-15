@@ -38,7 +38,7 @@ El detalle, en [[partida]].
 | [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto. |
 | [[cabina]] | La cabina sobre su grilla (módulo Interior): celdas, módulos, pisos y asientos. |
 | [[paneles]] | Los paneles de la silla (módulo Tableros y controles): se abren con E, toman el mouse para apuntar un brazo; la tira con la energía y la meca dibujada. |
-| [[maquetas-jefes]] | Seis jefes de arcilla, quietos, con puntos débiles, fases y ataques de área, para elegir con el usuario. |
+| [[maquetas-jefes]] | Jefes de arcilla, quietos: dos recorribles (seis y cuatro patas, con pasarelas y baterías detrás de compuertas) y una primera tanda de seis. |
 | [[jefe-bola]] | El primer jefe: la bola con su rendija y cuatro tentáculos con su propio IK (el cañón que corre por la rendija y dispara; hecha bola, rueda y pega; el barrido con las paletas; lo maneja la computadora, como un jefe de Souls; vida y barras; la K cambia entre los cuatro tipos de meca). |
 | [[proyectiles]] | Los proyectiles por red y la arena de esquivar. |
 | [[mapa]] | El mapa de pelea: una arena circular con barrios, escaleras y recursos en el borde. |
