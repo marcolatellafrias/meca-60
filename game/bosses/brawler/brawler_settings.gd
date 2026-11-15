@@ -44,11 +44,14 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 ## (m/s) y cuánto tarda en llegar a ella (s), cuánto dura como mucho (s), cuánto corrige hacia vos (°/s: poco) y, si se
 ## estrella contra el borde de la arena, cuánto queda aturdido (s, con el horno abierto). Si te alcanza, cuánta vida te
 ## saca y cuánto te cambia la velocidad (m/s; a la meca física).
+## AJUSTADO CONTRA LA MECA CINEMÁTICA (15/11/2026, tests/brawler_dodge_check): 5 s cruzan la arena (con 3 no llegaba
+## desde 110 m); corrigiendo 6°/s, caminar de costado no alcanza, pero dos dashes seguidos cuando le faltan 24–32 m sí
+## (con 12°/s no la esquivaba nada).
 @export_range(0.2, 4.0, 0.05) var charge_windup := 1.4
 @export_range(5.0, 60.0, 0.5) var charge_speed := 26.0
 @export_range(0.0, 3.0, 0.05) var charge_up_time := 0.5
-@export_range(0.5, 8.0, 0.1) var charge_time := 3.0
-@export_range(0.0, 60.0, 1.0) var charge_homing := 12.0
+@export_range(0.5, 8.0, 0.1) var charge_time := 5.0
+@export_range(0.0, 60.0, 1.0) var charge_homing := 6.0
 @export_range(0.2, 8.0, 0.1) var stun_time := 2.5
 @export_range(0.0, 100.0, 1.0) var charge_damage := 25.0
 @export_range(0.0, 60.0, 0.5) var charge_push := 18.0

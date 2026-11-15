@@ -1,0 +1,105 @@
+extends Node
+
+## EL VIDEO DE LA EMBESTIDA (temporal, para mandárselo al usuario): la pelea de brawler_fight_look con una cámara que
+## sigue a los dos de costado, y después el choque contra el borde. Se graba con --write-movie.
+
+const FIGHT := 32.0
+
+var _boss: Brawler = null
+var _brain: BrawlerBrain = null
+var _eye: Camera3D = null
+var _title: Label = null
+var _cam_at := Vector3.ZERO
+var _cam_from := Vector3.ZERO
+var _first := true
+
+
+func _ready() -> void:
+	var layer := CanvasLayer.new()
+	add_child(layer)
+	_title = Label.new()
+	_title.position = Vector2(20, 14)
+	_title.add_theme_font_size_override("font_size", 26)
+	_title.add_theme_color_override("font_outline_color", Color(0, 0, 0))
+	_title.add_theme_constant_override("outline_size", 8)
+	layer.add_child(_title)
+	var ground := StaticBody3D.new()
+	Clay.shape_box(ground, Vector3(800, 1, 800), Vector3(0, -0.5, 0))
+	Clay.box(ground, Vector3(800, 1, 800), Vector3(0, -0.5, 0), Color(0.82, 0.80, 0.76))
+	PhysicsLayers.mark_fixed(ground)
+	add_child(ground)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-50.0, 205.0, 0.0)
+	sun.shadow_enabled = true
+	add_child(sun)
+	var world := WorldEnvironment.new()
+	world.environment = Environment.new()
+	world.environment.background_mode = Environment.BG_COLOR
+	world.environment.background_color = Color(0.75, 0.82, 0.9)
+	world.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+	world.environment.ambient_light_color = Color(0.8, 0.82, 0.85)
+	world.environment.ambient_light_energy = 0.6
+	world.environment.glow_enabled = true
+	add_child(world)
+	var parent := Node3D.new()
+	add_child(parent)
+	BrawlerArchetype.thinking = true
+	BrawlerArchetype.mech_kind = BrawlerArchetype.Kind.KINEMATIC
+	var root := BrawlerArchetype.new().build(0, parent)
+	_boss = root.get_node("Luchador") as Brawler
+	_brain = _boss.get_node("Cabeza") as BrawlerBrain
+	_eye = Camera3D.new()
+	_eye.far = 2000.0
+	_eye.fov = 60.0
+	add_child(_eye)
+	_eye.make_current()
+	var mech := _brain.target as Mech
+	await _run(mech, 0.5)
+	mech.scripted = true
+	await _run(mech, FIGHT)
+	# CONTRA EL BORDE.
+	var crashes := _brain.crashes
+	var arena := _boss.arena
+	_brain.awake = false
+	mech.put(Transform3D(Basis(), Vector3(0.0, Mech.standing_height(), -(arena.radius - 8.0))))
+	_boss.put(Transform3D(Basis(), Vector3(0.0, 0.0, -(arena.radius - 75.0))))
+	Health.of(mech).left = BrawlerArchetype.MECH_HEALTH
+	_first = true
+	await _run(mech, 0.3)
+	_brain.awake = true
+	var clock := 0.0
+	while _brain.crashes == crashes and clock < 20.0:
+		clock += await _tick(mech)
+	await _run(mech, 3.5)
+	get_tree().quit()
+
+
+func _run(mech: Mech, seconds: float) -> void:
+	var clock := 0.0
+	while clock < seconds:
+		clock += await _tick(mech)
+
+
+func _tick(mech: Mech) -> float:
+	await get_tree().physics_frame
+	var delta := 1.0 / Engine.physics_ticks_per_second
+	var ground := mech.mover.global_position if mech.mover != null else mech.global_position
+	if mech.scripted:
+		var to_boss := _boss.global_position - ground
+		mech.aim_yaw = atan2(-to_boss.x, -to_boss.z)
+		mech.move = Vector2.ZERO
+	# LA CÁMARA: de costado a la línea entre los dos, más lejos cuanto más separados.
+	var line := ground - _boss.global_position
+	line.y = 0.0
+	var gap := line.length()
+	var side := line.normalized().cross(Vector3.UP) if gap > 1.0 else Vector3.RIGHT
+	var at := (_boss.global_position + ground) * 0.5 + Vector3.UP * 12.0
+	var from := at + side * (gap * 0.75 + 55.0) + Vector3.UP * (25.0 + gap * 0.2) - line.normalized() * 15.0
+	var follow := 1.0 if _first else 1.0 - exp(-2.5 * delta)
+	_first = false
+	_cam_at = _cam_at.lerp(at, follow)
+	_cam_from = _cam_from.lerp(from, follow)
+	_eye.global_transform = Transform3D(Basis(), _cam_from).looking_at(_cam_at, Vector3.UP)
+	_title.text = "%s · a %.0f m · %.0f m/s\nla meca: %.0f de vida · embistió %d, te alcanzó %d, se estrelló %d" % [
+		_brain.stage, gap, absf(_boss.speed), Health.of(mech).left, _brain.charges, _brain.landed, _brain.crashes]
+	return delta

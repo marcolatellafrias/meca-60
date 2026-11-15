@@ -170,13 +170,17 @@ func _charge() -> void:
 				_begin(Act.STALK)
 
 
-## SI TE ALCANZA: una vez por embestida, si su frente llega a vos.
+## SI TE ALCANZA: una vez por embestida, si su frente llega a vos: estás adelante, a menos de `REACH` de su frente, y
+## de costado, dentro del ancho de las orugas (lo que se ve: si te corriste lo suficiente, te pasa al lado).
 func _check_ram(k: BrawlerSettings) -> void:
 	if _hit_this_act:
 		return
 	var gap := _to_target()
-	var reach := Brawler.BOX.z * 0.5 + _target_radius() + REACH
-	if gap.length() > reach or _boss.heading().dot(gap) < 0.0:
+	var ahead := _boss.heading().dot(gap)
+	var aside := absf(_boss.heading().cross(Vector3.UP).dot(gap))
+	var radius := _target_radius()
+	var half := _target_half_width()
+	if ahead < 0.0 or ahead > Brawler.BOX.z * 0.5 + radius + REACH or aside > Brawler.BOX.x * 0.5 + half:
 		return
 	_hit_this_act = true
 	landed += 1
@@ -248,6 +252,14 @@ func _ground() -> Vector3:
 		if not hit.is_empty():
 			return hit["position"]
 	return target.global_position
+
+
+## El medio ancho del blanco (m): de costado, lo que tiene que correrse para que el Luchador le pase al lado.
+func _target_half_width() -> float:
+	var body := target as BalanceBody
+	if body != null:
+		return maxf(body.size.x, body.size.z) * 0.5
+	return TARGET_RADIUS
 
 
 func _target_radius() -> float:

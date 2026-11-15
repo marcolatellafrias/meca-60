@@ -39,7 +39,8 @@ embista, con la ventana del horno. `BrawlerBrain`, como un jefe de Souls (aviso,
 - **Rodea**: la cintura te mira siempre; las orugas se acercan si estás a más de 80 m, se alejan si estás a menos de 45 y,
   en el medio, van en diagonal (un tanque no camina de costado). Cada 2 a 4 s, si estás entre 35 y 140 m, embiste.
 - **La embestida**: **aviso** (1,4 s): frena, se da vuelta hacia vos y **abre el horno** (la ventana); **golpe**: arranca
-  a 26 m/s (en 0,5 s), derecho, corrigiendo poco (12°/s), hasta 3 s; **si te alcanza**, te saca 25 de vida y a la meca
+  a 26 m/s (en 0,5 s), derecho, corrigiendo poco (6°/s), hasta 5 s; **si te alcanza** (estás adelante y, de
+  costado, dentro de su ancho más el tuyo), te saca 25 de vida y a la meca
   física la empuja (18 m/s). Después frena, se recupera 1,5 s y cierra el horno.
 - **Si llega al borde de la arena, se estrella**: para en seco y queda **aturdido 2,5 s con el horno abierto** (otra
   ventana).
@@ -54,6 +55,21 @@ embista, con la ventana del horno. `BrawlerBrain`, como un jefe de Souls (aviso,
 - **Conocido, sin daño**: las pruebas con una meca con cabina hacen caer a Godot al cerrar (sólo al cerrar; sin cabina,
   no). El generalista: pasa en el cierre, también en `possess_character` y `possess_check`; no hace falta resolverlo,
   salvo que se caiga antes de terminar la prueba.
+
+## Ajuste contra la meca cinemática (15/11/2026)
+El usuario: «tunea las distancias de dashes y todo eso, y podemos probar por ahora como contrincante de la meca propia
+kinemática». `tests/brawler_dodge_check` (sin ventana, unos 3 minutos) le tira embestidas desde 50, 80 y 110 m y prueba
+cada manera de esquivar: quieta, caminando de costado (desde el aviso o desde que arranca) y el dash de costado cuando a su
+frente le faltan 8 a 45 m (solo, seguido de caminar, o dos seguidos). Acepta `--homing=`, `--tiempo=`, `--aviso=` y
+`--dash=` para probar otros números sin tocar las perillas.
+- **Antes** (3 s, 12°/s): desde 110 m no llegaba nunca; caminar no esquivaba; el dash, sólo de casualidad.
+- **El ancho**: el Luchador mide 24 m y la meca 8; para que le pase al lado hay que correrse unos 16 m. **Un dash de la
+  meca (12 m) solo no alcanza nunca.**
+- **Ahora** (5 s, 6°/s): quieta o caminando, te alcanza siempre; **dos dashes seguidos cuando le faltan 24 a 32 m (un
+  segundo antes) esquivan** desde cualquier distancia; antes, corrige; después, no llegás.
+- **Si el dash de la meca fuera de 18 m** (es del módulo Meca; no lo toqué): uno solo esquiva cuando le faltan 16 a 24
+  m; antes o después, no.
+- `tests/brawler_charge_movie.tscn`: el video de la pelea (con `--write-movie`, de costado a los dos).
 
 ## Lo que sigue
 Los poderes, de a uno (propuestos, sin confirmar): el golpe doble al piso (onda en línea), el agarre y revoleo, el gancho al cielo, arrancar el piso y
