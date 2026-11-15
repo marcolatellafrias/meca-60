@@ -104,12 +104,24 @@ func _ready() -> void:
 	var shots: Array = []
 	_glass_paint.albedo_color = GLASS_OUTSIDE
 	var name_of := "%d%s" % [_plan, "" if _head == 0 else " · techo %d" % _head]
-	_title.text = "%s. De frente" % name_of
-	_look(Vector3(-13.0, 0.5, -21.0), Vector3(0.0, -3.5, 0.0), 45.0)
-	shots.append(await _grab())
-	_title.text = "%s. De atrás, de costado" % name_of
-	_look(Vector3(16.0, 1.5, 17.0), Vector3(0.0, -3.5, 0.0), 45.0)
-	shots.append(await _grab())
+	# MÁS ÁNGULOS DE AFUERA (el usuario: «saca más ángulos, porque el que me manda no se entiende»): la meca entera de
+	# tres cuartos, y la cabeza de frente, de tres cuartos, de perfil, de tres cuartos de atrás, de atrás y de arriba.
+	for view: Array in [
+			["toda, de tres cuartos", Vector3(-13.0, 0.5, -21.0), Vector3(0.0, -3.5, 0.0), 45.0],
+			["de frente", Vector3(0.0, 1.5, -15.0), Vector3(0.0, 0.6, 0.0), 40.0],
+			["de tres cuartos, adelante", Vector3(-10.0, 3.0, -11.0), Vector3(0.0, 0.8, 0.0), 40.0],
+			["de perfil", Vector3(-16.0, 1.2, 0.0), Vector3(0.0, 0.8, 0.0), 38.0],
+			["de tres cuartos, atrás", Vector3(-10.0, 3.0, 11.0), Vector3(0.0, 0.8, 0.0), 40.0],
+			["de atrás", Vector3(0.0, 1.5, 15.0), Vector3(0.0, 0.6, 0.0), 40.0],
+			["desde arriba, adelante", Vector3(-4.0, 11.0, -9.0), Vector3(0.0, 0.5, 0.0), 45.0]]:
+		_title.text = "%s. %s" % [name_of, view[0]]
+		# En las de la cabeza, sin los brazos: tapan la forma.
+		for arm in _real.arms:
+			arm.visible = view[0] == "toda, de tres cuartos"
+		_look(view[1], view[2], view[3])
+		shots.append(await _grab())
+	for arm in _real.arms:
+		arm.visible = true
 	_glass_paint.albedo_color = GLASS_INSIDE
 	_title.text = "%s. Adentro, desde atrás" % name_of
 	_look(Vector3(0.6, 1.9, IN - 0.5), Vector3(-0.2, 0.7, -3.0), 85.0)
