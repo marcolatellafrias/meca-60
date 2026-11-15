@@ -3,7 +3,7 @@ extends Node3D
 ## LA MECA CON TODO PUESTO, PARA MIRAR (unos 8 segundos, sin el sandbox): una meca parada, vestida con ArmoryParts.dress
 ## (el puño pesado en el izquierdo, el taladro afuera en el derecho, la ametralladora y el lanzamisiles en la espalda, y
 ## las placas en los dos tramos de brazos y piernas). Capturas de adelante, de atrás y de costado.
-##   tools/godot_ventana.sh res://tests/armory_dressed_look.tscn -- --salida=C:/carpeta [--sin-chanfles] [--alto=5] [--pelvis=40] [--cabina=3.5] [--sin-marcos] [--brazos-abajo]
+##   tools/godot_ventana.sh res://tests/armory_dressed_look.tscn -- --salida=C:/carpeta [--sin-chanfles] [--alto=5] [--pelvis=40] [--cabina=3.5] [--sin-marcos] [--brazos-abajo] [--parantes]
 
 var _folder := ""
 
@@ -87,9 +87,25 @@ func _ready() -> void:
 	loadout["back_right"] = "missile_launcher"
 	# --brazos-abajo: los hombros a la altura de la pelvis de abajo, sólo para la foto (la meca no tiene cómo ponerlos
 	# ahí: el usuario, 15/11/2026, «ponelos nomás para la foto»)
+	# (el usuario, después: «subiría un poco más los brazos»: a la altura del piso de la cabina, arriba de la pelvis)
 	if OS.get_cmdline_user_args().has("--brazos-abajo"):
 		for arm in mech.arms:
-			arm.shoulder_local.y = -CabinGrid.HALF_HEIGHT + CabinGrid.BASE * 0.5
+			arm.shoulder_local.y = -CabinGrid.HALF_HEIGHT + CabinGrid.BASE + CabinGrid.SLAB
+	# --parantes: sin los marcos de la cabina, sólo dos parantes en L, finos, en las dos esquinas del frente, del piso
+	# hasta donde empieza el corte de arriba (el usuario: «los únicos parantes… los dos verticales de… las dos esquinas…
+	# cada parante tendría dos lados… que no sean tan gruesos»)
+	if OS.get_cmdline_user_args().has("--parantes"):
+		var bottom := -CabinGrid.HALF_HEIGHT + CabinGrid.BASE
+		var top := CabinGrid.HALF_HEIGHT - CabinGrid.CHAMFER * CabinGrid.TRAMA
+		var tall := top - bottom
+		var half := CabinGrid.HALF
+		var wing := 0.2
+		var thin := 0.05
+		for side: float in [-1.0, 1.0]:
+			Clay.box(mech, Vector3(wing, tall, thin), Vector3(side * (half + thin - wing * 0.5), bottom + tall * 0.5,
+				-half - thin * 0.5), Clay.DARK)
+			Clay.box(mech, Vector3(thin, tall, wing), Vector3(side * (half + thin * 0.5), bottom + tall * 0.5,
+				-half - thin + wing * 0.5), Clay.DARK)
 	ArmoryParts.dress(mech, loadout, 1.0)
 	await get_tree().create_timer(2.0).timeout
 	var center := mech.global_position + Vector3(0, -4.0, 0)
