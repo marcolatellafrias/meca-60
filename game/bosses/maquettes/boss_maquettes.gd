@@ -25,10 +25,16 @@ const HULL := Color(0.45, 0.47, 0.5)
 const APART := 75.0
 
 ## LAS MAQUETAS: cuál es (`kind`), nombre, los dos estados y lo que se piensa de cada una (las de ArmedMaquettes, en su
-## ficha: ver `entry`). Primero las seis CON PERSONALIDAD (ArmedMaquettes, 15/11/2026); después las dos RECORRIBLES
+## ficha: ver `entry`). Primero las siluetas del HUMANOIDE (HumanoidMaquettes); después las seis CON PERSONALIDAD (ArmedMaquettes, 15/11/2026); después las dos RECORRIBLES
 ## (WalkerMaquettes, 15/11/2026); después la primera tanda, de seis (el usuario: «muy simplistas… no se dan mucho a espacios
 ## a recorrer a pie», aunque «hay algunos que tienen algo de potencial»).
 const ALL: Array[Dictionary] = [
+	{"kind": "humanoid", "spec": 0},
+	{"kind": "humanoid", "spec": 1},
+	{"kind": "humanoid", "spec": 2},
+	{"kind": "humanoid", "spec": 3},
+	{"kind": "humanoid", "spec": 4},
+	{"kind": "humanoid", "spec": 5},
 	{"kind": "armed", "spec": 0},
 	{"kind": "armed", "spec": 1},
 	{"kind": "armed", "spec": 2},
@@ -78,6 +84,8 @@ static var _glow: StandardMaterial3D = null
 static func entry(index: int) -> Dictionary:
 	if str(ALL[index]["kind"]) == "armed":
 		return ArmedMaquettes.ALL[int(ALL[index]["spec"])]
+	if str(ALL[index]["kind"]) == "humanoid":
+		return HumanoidMaquettes.ALL[int(ALL[index]["spec"])]
 	return ALL[index]
 
 
@@ -92,6 +100,7 @@ static func build(index: int, parent: Node3D) -> Node3D:
 		root.add_child(holder)
 		match str(ALL[index]["kind"]):
 			"armed": ArmedMaquettes.build(int(ALL[index]["spec"]), holder, state == 1)
+			"humanoid": HumanoidMaquettes.build(int(ALL[index]["spec"]), holder, state == 1)
 			"hexapod": WalkerMaquettes.hexapod(holder, state == 1)
 			"quadruped": WalkerMaquettes.quadruped(holder, state == 1)
 			"tripod": _tripod(holder, state)

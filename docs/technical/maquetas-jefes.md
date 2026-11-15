@@ -21,6 +21,24 @@ hecho bola) y **uno humanoide** (patas y brazos cuadrados, con cabeza, más aloc
 aviso, su forma y su efecto (daño por código y, a veces, un empujón o una caída). La lista para elegir está en la charla
 del 15/11/2026; todavía no está confirmada.
 
+## El jefe bola, rediseñado (15/11/2026; acordado, sin hacer)
+- **Una cabeza de disco** (como la de la Tenaza), con el ojo. **Sin rendija ni cañón**: sus armas son los tentáculos y el
+  ojo («lo único que tiene como armamento son los tentáculos y el ojo… se elimina todo lo de la rendija»).
+- **El punto débil: el núcleo abajo de la bola, entre las patas**; se llega caminando («te la jugás, no tenés que saltar
+  desde ningún lado, pero es complicado»).
+- **Dos estados**: normal y hecho bola.
+- **Los poderes** (de la lista del 15/11/2026; fuera la succión, la erupción en línea y el pulso desde abajo): el pisotón
+  con onda, el agarre con un tentáculo, el láser de los ojos, el modo bola (embestir), el remolino de los tentáculos y el
+  salto aplastante.
+
+## Las siluetas del humanoide (15/11/2026)
+`HumanoidMaquettes`, primeras en la fila: seis siluetas de meca, de cajas (los miembros cuadrados, con cabeza), normales y
+con ira (otro color, los ojos rojos, las rejillas al rojo, las toberas prendidas). El usuario: «tiene que parecer una
+meca… inspirarte de las mecas… medio un trope». **Gorila** (encorvado, brazos largos, ojo único), **Caballero** (erguido,
+cresta en V, falda de placas), **Luchador** (ancho, la cabeza hundida, chimeneas), **Tanque** (una caja con puños de
+bloque y una cúpula), **Duelista** (alto, rodillas para atrás, hojas en los antebrazos, aletas) y **Torre** (todo arriba,
+hombreras gigantes, patas chicas). Con ira tendrá un solo estado más.
+
 ## Con personalidad (15/11/2026): la misma base, seis caracteres
 **Lo acordado con el usuario**, después de las recorribles («son medio monotemáticos, son básicamente un cañón con
 patas»):

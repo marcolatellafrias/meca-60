@@ -46,6 +46,16 @@ func _ready() -> void:
 		BossMaquettes.build(i, holder)
 		var name_of := str(BossMaquettes.entry(i)["name"])
 		print("%s: %s" % [name_of, " / ".join(BossMaquettes.entry(i)["lines"])])
+		if str(BossMaquettes.ALL[i]["kind"]) == "humanoid":
+			# Las siluetas: de tres cuartos, de costado (la silueta pura) y con ira.
+			var normal := Vector3(-BossMaquettes.APART, 0, 0)
+			await _shot("%s, de tres cuartos" % name_of, normal + Vector3(24, 22, -36), normal + Vector3(0, 16, 0))
+			await _shot("%s, de costado" % name_of, normal + Vector3(46, 17, 0), normal + Vector3(0, 16, 0))
+			var angry := Vector3(BossMaquettes.APART, 0, 0)
+			await _shot("%s, con ira" % name_of, angry + Vector3(-24, 22, -36), angry + Vector3(0, 16, 0))
+			holder.queue_free()
+			await get_tree().process_frame
+			continue
 		if str(BossMaquettes.ALL[i]["kind"]) == "armed":
 			# Las de personalidad: cada estado de cerca, de tres cuartos de frente.
 			for state: float in [-1.0, 1.0]:
