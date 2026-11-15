@@ -13,6 +13,13 @@ static func rows() -> Array[SandboxRow]:
 			.panel(KEY_F2, CABIN_PANEL, CabinShapePanel.new()) \
 			.panel(KEY_F3, POSE_ARMS_PANEL, PoseArmPanel.new()) \
 			.panel(KEY_F4, LEGS_PANEL, LegsPanel.new()),
+		# LA REDONDA (el usuario, 15/11/2026: «un "fork" en otra parcela»): la discreta con la cabina redonda, con su F2.
+		SandboxRow.new(SandboxSuper.Id.MECH, "Meca redonda") \
+			.add(SandboxRow.Build.NEAR, [MechArchetype.new(Mech.Arms.POSE, false, Mech.Cabin.ROUND)]) \
+			.panel(KEY_F1, MECH_PANEL, MechPanel.new()) \
+			.panel(KEY_F2, ROUND_PANEL, RoundShapePanel.new()) \
+			.panel(KEY_F3, POSE_ARMS_PANEL, PoseArmPanel.new()) \
+			.panel(KEY_F4, LEGS_PANEL, LegsPanel.new()),
 		SandboxRow.new(SandboxSuper.Id.MECH, "Meca física") \
 			.add(SandboxRow.Build.NEAR, [MechArchetype.new(Mech.Arms.MUSCLE)]) \
 			.panel(KEY_F1, MECH_PANEL, MechPanel.new(Mech.Arms.MUSCLE)) \
@@ -47,6 +54,7 @@ static func rows() -> Array[SandboxRow]:
 
 ## La forma de la cabina (módulo Interior): cambia todas las mecas.
 const CABIN_PANEL := "la cabina: módulos, pisos y el vidrio; guardar cambia todas las mecas"
+const ROUND_PANEL := "la cabina redonda: el radio, el alto, el disco, la tarima, el ascensor y el vidrio"
 const MECH_PANEL := "la meca: moverse, el equilibrio, las piernas, saltar y caerse (cada variante las suyas)"
 const LEGS_PANEL := "las piernas: los pasos (los mismos para todas las mecas)"
 const POSE_ARMS_PANEL := "los brazos discretos: lo rápido de las piñas y cuánto empujan"

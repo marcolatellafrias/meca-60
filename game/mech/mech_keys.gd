@@ -123,7 +123,7 @@ func camera(first: bool, delta: float) -> Transform3D:
 	if first:
 		_chase_yaw = _view_yaw()
 		# Sin cabina (la simplificada), arriba de la caja, al frente.
-		var eyes := MechCabin.seat() + Vector3(0.0, SeatInteractable.STATION_EYE_HEIGHT, 0.0) if mech.cabin != null \
+		var eyes := mech.cabin.top_seat() + Vector3(0.0, SeatInteractable.STATION_EYE_HEIGHT, 0.0) if mech.cabin != null \
 			else Vector3(0.0, mech.size.y * 0.5 + 1.5, -mech.size.z * 0.4)
 		return mech.global_transform * Transform3D(Basis(Vector3.UP, head_yaw()) * Basis(Vector3.RIGHT, _head_pitch), eyes)
 	_chase_yaw = lerp_angle(_chase_yaw, _view_yaw(), 1.0 - exp(-4.0 * delta))

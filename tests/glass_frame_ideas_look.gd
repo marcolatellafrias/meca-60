@@ -273,8 +273,7 @@ func _edges(thick: float) -> void:
 
 ## Las líneas de las divisiones de los puestos (las rayas del tablero).
 func _post_lines() -> Array[float]:
-	var margin := (CabinGrid.ACROSS - CabinGrid.POST_CELLS * 3) * 0.5
-	return [CabinGrid.line(margin + CabinGrid.POST_CELLS), CabinGrid.line(margin + CabinGrid.POST_CELLS * 2)]
+	return CabinGrid.post_lines()
 
 
 ## Un parante del frente en `x`: sube por el frente y dobla por el corte.

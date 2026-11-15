@@ -50,6 +50,11 @@ static func seat() -> Vector3:
 	return CabinGrid.top_seat()
 
 
+## La misma, de esta cabina (la redonda pone la suya).
+func top_seat() -> Vector3:
+	return CabinGrid.top_seat()
+
+
 func _ready() -> void:
 	name = "Cabina"
 	interior = StaticBody3D.new()
@@ -277,7 +282,7 @@ func seat_dummies() -> void:
 		return
 	# EL PUESTO (ver SeatStation, sesión Tableros): en cada silla de adelante con su puesto abierto. La primera silla de
 	# la derecha, la del brazo derecho, queda sin maniquí, para sentarse uno con E.
-	SeatStation.attach(self)
+	_stations()
 	var free_chair: SeatInteractable = null
 	for chair_found in chairs:
 		if chair_found.position.x > 0.0:
@@ -295,6 +300,11 @@ func seat_dummies() -> void:
 		mech.add_collision_exception_with(dummy.char_rigidbody)
 		dummy.place_at(chairs[i].global_position + chairs[i].global_basis.z * 0.8, chairs[i].heading())
 		dummy.intent.seat = chairs[i]
+
+
+## LOS PUESTOS de las sillas de adelante (ver SeatStation). La redonda, por ahora, sin.
+func _stations() -> void:
+	SeatStation.attach(self)
 
 
 ## Saca a los maniquíes (van al lado de la meca en el árbol, no adentro): para cuando la meca se cambia por otra.

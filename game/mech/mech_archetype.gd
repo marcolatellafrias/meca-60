@@ -17,15 +17,17 @@ const FAST := 100.0
 const SMALL := 5.0
 const BIG := 14.0
 
-## El camino: qué brazos lleva. Y si se mueve cinemática (ver KinematicMover).
+## El camino: qué brazos lleva. Y si se mueve cinemática (ver KinematicMover). Y qué cabina (ver Mech.Cabin).
 var arms := Mech.Arms.POSE
 var kinematic := false
+var cabin_shape := Mech.Cabin.SQUARE
 
 
-func _init(arms_kind := Mech.Arms.POSE, moves_kinematic := false) -> void:
+func _init(arms_kind := Mech.Arms.POSE, moves_kinematic := false, shape := Mech.Cabin.SQUARE) -> void:
 	arms = arms_kind
 	kinematic = moves_kinematic
-	display_name = "Meca cinemática" if kinematic else Mech.NAMES[arms]
+	cabin_shape = shape
+	display_name = "Meca cinemática" if kinematic else ("Meca redonda" if shape == Mech.Cabin.ROUND else Mech.NAMES[arms])
 
 
 func max_footprint() -> Vector2:
@@ -56,7 +58,8 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	var mech := Mech.new()
 	mech.arms_kind = arms
 	mech.kinematic = kinematic
-	mech.transform = Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(0.0, standing, 0.0))
+	mech.cabin_shape = cabin_shape
+	mech.transform = Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(0.0, Mech.standing_height(cabin_shape), 0.0))
 	root.add_child(mech)
 	var target := Mech.new()
 	target.arms_kind = Mech.Arms.NONE

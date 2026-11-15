@@ -55,6 +55,8 @@ func _init(body: BalanceBody, holder: Node3D) -> void:
 			_all.append({"at": at, "out": normal, "throttle": 0.0})
 	var k := 1.0
 	var corner := half.x - SHOWN_INSET * k
+	if not body.show_nozzles:
+		return
 	for sx: float in [-1.0, 1.0]:
 		for sz: float in [-1.0, 1.0]:
 			_shown.append(_build_shown(holder, Vector3(sx * corner, -half.y, sz * corner), k))

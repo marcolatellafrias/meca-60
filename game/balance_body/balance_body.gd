@@ -99,6 +99,9 @@ var airborne := false
 var look: Node3D = null
 var legs: BodyLegs = null
 var nozzles: BodyNozzles = null
+## Si se ven las toberas (las cuatro campanas de abajo). Sin ellas, empujan igual: sólo no se dibujan. Se pone antes de
+## agregarlo.
+var show_nozzles := true
 var moves: BodyMoves = null
 var label: Label3D = null
 

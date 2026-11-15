@@ -1,0 +1,261 @@
+class_name RoundCabin
+extends MechCabin
+
+## LA CABINA REDONDA (ver RoundGrid, docs/technical/cabina-redonda.md): la forma de la maqueta de arcilla
+## (tests/round_cabin_look.tscn), en la meca de verdad. Lo que hace la cuadrada lo hereda (el marco, ir adentro, los
+## maniquíes en las sillas, subir con la U); arma otra cosa:
+##   · ADENTRO, LOS LADOS PLANOS, de metal atrás; AFUERA, la piel lisa del cilindro, de vidrio en los lados del frente,
+##     de piso a techo. El techo, liso.
+##   · DEBAJO DEL PISO, EL DISCO, macizo, con el hueco por donde pasa el ascensor.
+##   · LA TARIMA, al centro, con un escalón alrededor que se ve; para la cápsula, una rampa (como las escaleras, ver
+##     Stairs). Dentro de ella, corrido atrás, el ascensor (atraviesa la pelvis: después se arregla).
+##   · LAS SILLAS: tres adelante, cada una en su lado, mirando hacia afuera; el movimiento en la tarima, delante del
+##     ascensor. Sin tableros ni puestos (el usuario, 15/11/2026: «sacale los tableros y los hologramas a las sillas»).
+##   · ATRÁS, en las paredes: los cuatro kits en los lados de los costados, y las dos municiones con la batería al medio
+##     en el de atrás de todo (por ahora, sólo se ven).
+
+const METAL := Color(0.55, 0.57, 0.6)
+const DARK_METAL := Color(0.42, 0.44, 0.47)
+const FLOOR := Color(0.62, 0.63, 0.65)
+const DECK := Color(0.7, 0.71, 0.73)
+## Cuántos puntos por lado tienen las placas y los cilindros.
+const PER_SIDE := 4
+
+
+func top_seat() -> Vector3:
+	return RoundGrid.top_seat()
+
+
+func _ready() -> void:
+	name = "Cabina redonda"
+	interior = StaticBody3D.new()
+	interior.name = "Interior"
+	interior.collision_layer = 0
+	interior.collision_mask = 0
+	add_child(interior)
+	var floor_top := RoundGrid.floor_top()
+	var ceiling := RoundGrid.ceiling()
+	var hole := Vector2(0.0, RoundGrid.LIFT_BACK)
+	var hole_radius := RoundGrid.LIFT_R + CabinGrid.CELL
+	var outer := RoundGrid.circle(RoundGrid.OUTER, Vector2.ZERO, PER_SIDE * 2)
+	var gap := RoundGrid.circle(hole_radius, hole, PER_SIDE * 2)
+	# El disco de abajo y la losa del piso, con el hueco del ascensor; el techo, liso.
+	if RoundGrid.DISC > 0.01:
+		add_child(_plate(outer, gap, -RoundGrid.HALF_HEIGHT, floor_top - RoundGrid.SLAB, DARK_METAL))
+		var belt := RoundGrid.circle(RoundGrid.OUTER + 0.06, Vector2.ZERO, PER_SIDE * 2)
+		add_child(_plate(belt, outer, floor_top - RoundGrid.SLAB - 0.06, floor_top - RoundGrid.SLAB + 0.06,
+			METAL.darkened(0.25)))
+	add_child(_plate(outer, gap, floor_top - RoundGrid.SLAB, floor_top, FLOOR))
+	var room := RoundGrid.polygon(RoundGrid.RADIUS, PER_SIDE * 2)
+	_ring_shapes(room, RoundGrid.circle(hole_radius, hole, PER_SIDE * 2), floor_top - RoundGrid.SLAB, floor_top)
+	var roof := Clay.cylinder(self, RoundGrid.OUTER, RoundGrid.SLAB, Vector3(0, ceiling + RoundGrid.SLAB * 0.5, 0), METAL)
+	(roof.mesh as CylinderMesh).radial_segments = 64
+	roof.name = "Techo"
+	Clay.shape_box(interior, Vector3(RoundGrid.OUTER * 2.0, RoundGrid.SLAB, RoundGrid.OUTER * 2.0),
+		Vector3(0, ceiling + RoundGrid.SLAB * 0.5, 0))
+	_walls(floor_top, ceiling)
+	_deck(floor_top, hole, hole_radius)
+	_supplies(floor_top)
+	_round_seats()
+	lift = PelvisLift.new()
+	lift.solid = interior
+	lift.hole_radius = hole_radius
+	lift.raised_at = floor_top + RoundGrid.PLATFORM_TALL
+	lift.lowered_at = PelvisLift.lowered(RoundGrid.HALF_HEIGHT)
+	lift.center = hole
+	lift.square_shape = false
+	add_child(lift)
+
+
+## LA PIEL Y LOS LADOS: afuera, la banda lisa (metal atrás, vidrio adelante); adentro, los lados planos de metal (los
+## de vidrio no tienen: el vidrio es la piel). Todos los lados chocan, de piso a techo.
+func _walls(floor_top: float, ceiling: float) -> void:
+	var glass_half := PI * RoundGrid.GLASS_SIDES / RoundGrid.SIDES
+	var apothem := RoundGrid.APOTHEM
+	add_child(_band(apothem, RoundGrid.OUTER, glass_half, TAU - glass_half, floor_top, ceiling, METAL))
+	var glass := _band(RoundGrid.OUTER - 0.03, RoundGrid.OUTER, -glass_half, glass_half, floor_top, ceiling, Color.WHITE)
+	glass.name = "Vidrio"
+	var paint := StandardMaterial3D.new()
+	paint.albedo_color = RoundGrid.GLASS_COLOR
+	paint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	paint.cull_mode = BaseMaterial3D.CULL_DISABLED
+	paint.roughness = 0.15
+	glass.material_override = paint
+	add_child(glass)
+	var width := 2.0 * RoundGrid.RADIUS * sin(PI / RoundGrid.SIDES)
+	var tall := ceiling - floor_top
+	for side in RoundGrid.SIDES:
+		var angle := RoundGrid.side_angle(side)
+		var turn := Basis(Vector3.UP, -angle)
+		# Gruesa hacia afuera: el que se resbala adentro cuando la meca arranca llega rápido y una fina la atraviesa.
+		var mid := RoundGrid.at(apothem + 0.4, angle, (floor_top + ceiling) * 0.5)
+		Clay.shape_box(interior, Vector3(width + 0.5, tall, 0.8), mid, turn)
+		var reach := int((RoundGrid.GLASS_SIDES - 1) / 2.0)
+		var front := side <= reach or side >= RoundGrid.SIDES - reach
+		if not front:
+			var panel := Clay.box(self, Vector3(width, tall, 0.06), RoundGrid.at(apothem + 0.03, angle, mid.y),
+				METAL.lightened(0.08))
+			panel.basis = turn
+
+
+## LA TARIMA: la placa de arriba con el hueco del ascensor, el escalón de alrededor (a la mitad del alto) y, para la
+## cápsula, una rampa del piso al borde de la tarima (los pies pisan el escalón).
+func _deck(floor_top: float, hole: Vector2, hole_radius: float) -> void:
+	var tall := RoundGrid.PLATFORM_TALL
+	var deck := RoundGrid.polygon(RoundGrid.PLATFORM_R, PER_SIDE)
+	var step := RoundGrid.polygon(RoundGrid.PLATFORM_R + RoundGrid.STEP, PER_SIDE)
+	var gap := RoundGrid.circle(hole_radius, hole, PER_SIDE)
+	add_child(_plate(deck, gap, floor_top, floor_top + tall, DECK))
+	add_child(_plate(step, deck, floor_top, floor_top + tall * 0.5, DECK.darkened(0.08)))
+	# Lo que se pisa arriba, y la rampa: del borde de afuera del escalón, en el piso, al de la tarima, arriba.
+	_ring_shapes(deck, gap, floor_top, floor_top + tall)
+	var foot := RoundGrid.polygon(RoundGrid.PLATFORM_R + RoundGrid.STEP + 0.15, PER_SIDE)
+	for i in deck.size():
+		var j := (i + 1) % deck.size()
+		var points := PackedVector3Array([
+			_v(deck[i], floor_top + tall), _v(deck[j], floor_top + tall), _v(deck[i], floor_top), _v(deck[j], floor_top),
+			_v(foot[i], floor_top), _v(foot[j], floor_top)])
+		_convex(points)
+
+
+## LOS RECURSOS, en las paredes de atrás (sólo se ven): los kits en los dos lados de cada costado de atrás; en el de
+## atrás de todo, las dos municiones y la batería al medio.
+func _supplies(floor_top: float) -> void:
+	var back := RoundGrid.SIDES / 2
+	for offset in [-2, -1, 1, 2]:
+		_on_wall(back + offset, 0.0, Vector2(0.6, 0.6), floor_top + 0.6, KIT)
+	_on_wall(back, -0.55, Vector2(0.6, 0.6), floor_top + 1.2, AMMO)
+	_on_wall(back, 0.55, Vector2(0.6, 0.6), floor_top + 1.2, AMMO)
+	_on_wall(back, 0.0, Vector2(0.4, 0.5), floor_top + 0.6, BATTERY)
+
+
+func _on_wall(side: int, shift: float, size: Vector2, y: float, color: Color) -> void:
+	var angle := RoundGrid.side_angle(side)
+	var along := Vector3(cos(angle), 0, sin(angle))
+	var part := Clay.box(self, Vector3(size.x, size.y, 0.12),
+		RoundGrid.at(RoundGrid.APOTHEM - 0.04, angle, y + size.y * 0.5) + along * shift, color)
+	part.basis = Basis(Vector3.UP, -angle)
+
+
+## LAS SILLAS, las de verdad, en el orden de `POSTS`: las tres de adelante, mirando hacia afuera, y la del movimiento.
+func _round_seats() -> void:
+	var places := RoundGrid.front_seats()
+	places.append([RoundGrid.top_seat(), 0.0])
+	for index in places.size():
+		var chair := (load(SEAT_SCENE) as PackedScene).instantiate() as SeatInteractable
+		chair.name = "Asiento %s" % POSTS[index]
+		chair.position = places[index][0]
+		chair.rotation.y = places[index][1]
+		chair.eye_height = CabinGrid.EYE_HEIGHT
+		add_child(chair)
+		chairs.append(chair)
+
+
+## La redonda no tiene puestos (todavía).
+func _stations() -> void:
+	pass
+
+
+## EL MARCO: el volumen de la cabina (de la losa del piso al techo) y el del hueco del ascensor, por el disco y hasta
+## su parada de abajo.
+func build_frame() -> void:
+	frame = MotionFrame.new()
+	mech.add_child(frame)
+	frame.floor_height = RoundGrid.floor_top()
+	var outer := RoundGrid.OUTER
+	var bottom := RoundGrid.floor_top() - RoundGrid.SLAB
+	frame.add_volume(AABB(Vector3(-outer, bottom, -outer), Vector3(outer * 2.0, RoundGrid.HALF_HEIGHT - bottom, outer * 2.0)))
+	var reach := RoundGrid.LIFT_R + 0.3
+	var low := PelvisLift.lowered(RoundGrid.HALF_HEIGHT) + 0.55
+	frame.add_volume(AABB(Vector3(-reach, low, RoundGrid.LIFT_BACK - reach), Vector3(reach * 2.0, bottom + 0.3 - low,
+		reach * 2.0)))
+	interior.collision_layer = 1
+	frame.cast_shadow(self)
+	interior.collision_layer = 0
+	interior.collision_mask = 0
+	for body in find_children("*", "RigidBody3D", true, false):
+		mech.add_collision_exception_with(body as RigidBody3D)
+
+
+## LA U: al piso, entre la silla del medio de adelante y el escalón de la tarima, mirando al frente.
+func board() -> void:
+	var player := DesignSandbox.player_of(get_tree())
+	if player == null:
+		return
+	if mech.keys.driving:
+		SandboxPossession.of(get_tree()).release()
+	if player.is_seated and player.current_seat is SeatInteractable:
+		(player.current_seat as SeatInteractable).release_occupant_in_place()
+	var front := -(RoundGrid.APOTHEM - RoundGrid.SEAT_IN)
+	var step := -(RoundGrid.PLATFORM_R + RoundGrid.STEP)
+	var spot := Vector3(0.0, RoundGrid.floor_top() + 0.05, (front + step) * 0.5 + 0.2)
+	player.place_at(mech.global_transform * spot, mech.yaw())
+
+
+## ── LAS PIEZAS ───────────────────────────────────────────────────────────────────────────────────────────────────
+
+func _v(point: Vector2, y: float) -> Vector3:
+	return Vector3(point.x, y, point.y)
+
+
+## Una forma de choque convexa en `interior`.
+func _convex(points: PackedVector3Array) -> void:
+	var shape := CollisionShape3D.new()
+	var hull := ConvexPolygonShape3D.new()
+	hull.points = points
+	shape.shape = hull
+	interior.add_child(shape)
+
+
+## Formas de choque de un anillo entre `outer` y `inner` (de la misma cantidad de puntos), de `bottom` a `top`.
+func _ring_shapes(outer: PackedVector2Array, inner: PackedVector2Array, bottom: float, top: float) -> void:
+	for i in outer.size():
+		var j := (i + 1) % outer.size()
+		_convex(PackedVector3Array([_v(outer[i], bottom), _v(outer[j], bottom), _v(inner[i], bottom), _v(inner[j], bottom),
+			_v(outer[i], top), _v(outer[j], top), _v(inner[i], top), _v(inner[j], top)]))
+
+
+## UNA PLACA entre el borde `outer` y el `inner` (de la misma cantidad de puntos), de `bottom` a `top`: las dos caras y
+## los dos cantos.
+func _plate(outer: PackedVector2Array, inner: PackedVector2Array, bottom: float, top: float, color: Color) -> MeshInstance3D:
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for i in outer.size():
+		var j := (i + 1) % outer.size()
+		_quad(tool, _v(inner[i], top), _v(inner[j], top), _v(outer[j], top), _v(outer[i], top))
+		_quad(tool, _v(inner[i], bottom), _v(outer[i], bottom), _v(outer[j], bottom), _v(inner[j], bottom))
+		_quad(tool, _v(outer[i], bottom), _v(outer[i], top), _v(outer[j], top), _v(outer[j], bottom))
+		_quad(tool, _v(inner[i], bottom), _v(inner[j], bottom), _v(inner[j], top), _v(inner[i], top))
+	return _mesh(tool, color)
+
+
+## Una banda de cilindro de `r0` a `r1`, de los ángulos `a0` a `a1` (0 al frente, positivo a la derecha), de `y0` a `y1`.
+func _band(r0: float, r1: float, a0: float, a1: float, y0: float, y1: float, color: Color) -> MeshInstance3D:
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var steps := maxi(int((a1 - a0) / TAU * 96.0), 2)
+	for k in steps:
+		var b0 := a0 + (a1 - a0) * k / steps
+		var b1 := a0 + (a1 - a0) * (k + 1) / steps
+		for r: float in [r0, r1]:
+			_quad(tool, RoundGrid.at(r, b0, y0), RoundGrid.at(r, b1, y0), RoundGrid.at(r, b1, y1), RoundGrid.at(r, b0, y1))
+		_quad(tool, RoundGrid.at(r0, b0, y1), RoundGrid.at(r0, b1, y1), RoundGrid.at(r1, b1, y1), RoundGrid.at(r1, b0, y1))
+		_quad(tool, RoundGrid.at(r0, b0, y0), RoundGrid.at(r1, b0, y0), RoundGrid.at(r1, b1, y0), RoundGrid.at(r0, b1, y0))
+	for b: float in [a0, a1]:
+		_quad(tool, RoundGrid.at(r0, b, y0), RoundGrid.at(r1, b, y0), RoundGrid.at(r1, b, y1), RoundGrid.at(r0, b, y1))
+	return _mesh(tool, color)
+
+
+func _quad(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3) -> void:
+	for point: Vector3 in [a, b, c, a, c, d]:
+		tool.add_vertex(point)
+
+
+func _mesh(tool: SurfaceTool, color: Color) -> MeshInstance3D:
+	tool.generate_normals()
+	var part := MeshInstance3D.new()
+	part.mesh = tool.commit()
+	var paint := Clay.material(color).duplicate() as StandardMaterial3D
+	paint.cull_mode = BaseMaterial3D.CULL_DISABLED
+	part.material_override = paint
+	return part

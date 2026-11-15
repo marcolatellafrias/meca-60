@@ -44,32 +44,55 @@ const GRATE := Color(0.36, 0.38, 0.41)
 var solid: PhysicsBody3D = null
 ## Adónde va: -1 bajada, 0 subida.
 var stop := 0
+## LO DE CADA CABINA (lo pone la que lo arma, antes de agregarlo; por defecto, el de la cuadrada): el radio del hueco,
+## las dos paradas (en el espacio del cubo), dónde va en planta (`center`, x y z) y si es cuadrado. La redonda
+## (RoundCabin) pone los suyos.
+var hole_radius := 0.0
+var raised_at := 0.0
+var lowered_at := 0.0
+var center := Vector2.ZERO
+var square_shape := false
 
 var _shape: CollisionShape3D = null
 
 
+func _init() -> void:
+	hole_radius = hole()
+	raised_at = raised_y()
+	lowered_at = lowered()
+	square_shape = CabinGrid.LIFT_SQUARE
+
+
+## Su plataforma: un poco más chica que el hueco.
+func plate_radius() -> float:
+	return hole_radius - CabinGrid.CELL
+
+
 func _ready() -> void:
 	name = "Ascensor"
-	position.y = raised_y()
+	position = Vector3(center.x, raised_at, center.y)
 	_shape = CollisionShape3D.new()
-	if CabinGrid.LIFT_SQUARE:
-		Clay.box(self, Vector3(platform() * 2.0, 0.1, platform() * 2.0), Vector3(0, -0.05, 0), GRATE)
+	var reach := plate_radius()
+	if square_shape:
+		Clay.box(self, Vector3(reach * 2.0, 0.1, reach * 2.0), Vector3(0, -0.05, 0), GRATE)
 		var plate := BoxShape3D.new()
-		plate.size = Vector3(platform() * 2.0, 0.12, platform() * 2.0)
+		plate.size = Vector3(reach * 2.0, 0.12, reach * 2.0)
 		_shape.shape = plate
 	else:
-		Clay.cylinder(self, platform(), 0.1, Vector3(0, -0.05, 0), GRATE)
+		Clay.cylinder(self, reach, 0.1, Vector3(0, -0.05, 0), GRATE)
 		var disc := CylinderShape3D.new()
-		disc.radius = platform()
+		disc.radius = reach
 		disc.height = 0.12
 		_shape.shape = disc
 	solid.add_child(_shape)
 	_place()
 
 
-## Su piso bajado: a la misma distancia debajo del cubo que con la caja de siempre.
-static func lowered() -> float:
-	return -CabinGrid.HALF_HEIGHT - LOWERED_BELOW * MechBody.WAIST / MechBody.BASE["WAIST"]
+## Su piso bajado: a la misma distancia debajo del cubo que con la caja de siempre (`half_height`: la mitad del alto de
+## la caja; por defecto, la cuadrada).
+static func lowered(half_height := -1.0) -> float:
+	var half := CabinGrid.HALF_HEIGHT if half_height < 0.0 else half_height
+	return -half - LOWERED_BELOW * MechBody.WAIST / MechBody.BASE["WAIST"]
 
 
 ## Su piso subido: al ras del piso de la cabina.
@@ -89,7 +112,7 @@ func lower() -> void:
 
 ## La altura de su piso en la parada de ahora.
 func target() -> float:
-	return lowered() if stop < 0 else raised_y()
+	return lowered_at if stop < 0 else raised_at
 
 
 ## Si está viajando.
@@ -105,7 +128,7 @@ func _physics_process(delta: float) -> void:
 
 
 func _place() -> void:
-	_shape.position = Vector3(0.0, position.y - 0.06, 0.0)
+	_shape.position = Vector3(center.x, position.y - 0.06, center.y)
 
 
 ## ── LO FIJO: LA LOSA CON EL RECORTE ──────────────────────────────────────────────────────────────────────────────

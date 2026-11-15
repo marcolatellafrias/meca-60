@@ -13,6 +13,10 @@ extends BalanceBody
 
 ## Los brazos que lleva: ninguno (la de práctica, para pegarle), discretos o físicos.
 enum Arms { NONE, POSE, MUSCLE }
+## LA CABINA QUE LLEVA, una pieza más (ver docs/technical/cuerpo-por-piezas.md): la cuadrada (MechCabin, CabinGrid) o
+## la redonda (RoundCabin, RoundGrid; el usuario, 15/11/2026: «un "fork" en otra parcela»). Lo que cambia con ella se
+## pregunta en un solo lugar: `cabin_kit`.
+enum Cabin { SQUARE, ROUND }
 
 const MASS := 50000.0
 const NAMES := ["Meca de práctica", "Meca discreta", "Meca física"]
@@ -25,8 +29,17 @@ const NAMES := ["Meca de práctica", "Meca discreta", "Meca física"]
 const SHOULDER_OUT := 1.0
 
 
-static func shoulder() -> Vector3:
-	return CabinGrid.shoulder() + Vector3(SHOULDER_OUT * MechBody.thick, 0.0, 0.0)
+static func shoulder(shape := Cabin.SQUARE) -> Vector3:
+	return (cabin_kit(shape)["shoulder"] as Vector3) + Vector3(SHOULDER_OUT * MechBody.thick, 0.0, 0.0)
+
+
+## LO QUE CAMBIA CON LA CABINA, en un solo lugar: la caja (`box`), el hombro sin lo que lo corre afuera (`shoulder`) y si
+## se ven las toberas (`nozzles`; la redonda, sin: el usuario, 15/11/2026: «quitaremos las toberas de abajo… sólo de
+## la cilíndrica»).
+static func cabin_kit(shape: Cabin) -> Dictionary:
+	if shape == Cabin.ROUND:
+		return {"box": RoundGrid.box(), "shoulder": RoundGrid.shoulder(), "nozzles": false}
+	return {"box": CabinGrid.box(), "shoulder": CabinGrid.shoulder(), "nozzles": true}
 
 
 const ARM_WEIGHT := 0.4
@@ -37,6 +50,8 @@ var arms_kind := Arms.POSE
 var covering := false
 
 var cabin: MechCabin = null
+## La cabina que lleva (ver `Cabin`). Se pone antes de agregarla.
+var cabin_shape := Cabin.SQUARE
 var keys: MechKeys = null
 var arms: Array[MechArm] = []
 ## CON CABINA (la de siempre) o SIN (LA SIMPLIFICADA: sin cabina, sin escaleras ni ascensor, sin maniquíes; con
@@ -57,6 +72,9 @@ func _ready() -> void:
 	name = NAMES[arms_kind] if has_cabin else "Meca simplificada"
 	if knobs == null:
 		knobs = Mech.knobs_for(arms_kind)
+	var kit := cabin_kit(cabin_shape)
+	size = kit["box"]
+	show_nozzles = kit["nozzles"]
 	super()
 	add_to_group(SandboxPossession.GROUP)
 
@@ -71,7 +89,7 @@ func _build() -> void:
 		Clay.box(look, Vector3(size.x * 0.6, 0.5, 0.2), Vector3(0.0, size.y * 0.3, -size.z * 0.5 - 0.1), Clay.YELLOW)
 		_build_arms()
 		return
-	cabin = MechCabin.new()
+	cabin = RoundCabin.new() if cabin_shape == Cabin.ROUND else MechCabin.new()
 	cabin.mech = self
 	add_child(cabin)
 	_build_arms()
@@ -93,7 +111,7 @@ func _build_arms() -> void:
 			arm = PoseArm.new()
 		arm.side = side
 		arm.anchor = self
-		var at := shoulder()
+		var at := shoulder(cabin_shape)
 		arm.shoulder_local = Vector3(side * at.x, at.y, at.z)
 		arm.stance = MechArm.Stance.NORMAL
 		add_child(arm)
@@ -162,8 +180,10 @@ static func rebuild_all(tree: SceneTree) -> void:
 		fresh.arms_kind = old.arms_kind
 		fresh.kinematic = old.kinematic
 		fresh.has_cabin = old.has_cabin
+		fresh.cabin_shape = old.cabin_shape
 		# Parada sobre el piso de su parcela (la altura 0 de lo que la tiene, como la arman sus arquetipos).
-		fresh.transform = Transform3D(Basis(Vector3.UP, old.yaw()), Vector3(old.position.x, Mech.standing_height(),
+		fresh.transform = Transform3D(Basis(Vector3.UP, old.yaw()), Vector3(old.position.x,
+			Mech.standing_height(old.cabin_shape),
 			old.position.z))
 		if old.cabin != null:
 			old.cabin.free_dummies()
@@ -179,5 +199,5 @@ static func knobs_for(arms: Arms) -> BodySettings:
 
 ## A QUÉ ALTURA NACE PARADA (el centro de la caja sobre el piso, m): sus piernas más media caja. Un solo lugar para
 ## todas las parcelas que la arman. *Estaba copiado en cuatro.*
-static func standing_height() -> float:
-	return MechBody.WAIST + CabinGrid.HALF_HEIGHT
+static func standing_height(shape := Cabin.SQUARE) -> float:
+	return MechBody.WAIST + (cabin_kit(shape)["box"] as Vector3).y * 0.5
