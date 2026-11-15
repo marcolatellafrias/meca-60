@@ -47,6 +47,8 @@ vuelve solo a su silla.
 Test: `tests/possess_check.tscn`; los personajes, `tests/possess_character.tscn`.
 
 ## Historia
+- 15/11/2026: si lo poseído desaparece sin soltarlo (un pasajero borrado al rearmar las mecas con «Guardar»), se suelta
+  solo al cuadro siguiente. Antes quedaba en un limbo: algo liberado da igual a null, y la posesión nunca lo soltaba.
 - 13/11/2026: se poseen personajes, empezando por los maniquíes de las sillas de la meca.
 - 12/11/2026: la primera persona pasa del frente de la caja al asiento de adentro, con la cabeza libre; los cubos
   ganan una cabina por dentro (un piso con vidrio y parantes, como los de la meca).
