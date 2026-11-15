@@ -5,7 +5,7 @@ extends Node3D
 ## arriba; y desde arriba, sin techo. Imprime las medidas (ver CabinGrid).
 ##   tools/godot_ventana.sh res://tests/cabin_grid_look.tscn -- --salida=C:/carpeta --celdas=13,11
 ## `--celdas=13,11`: las celdas de trama (en celdas chicas) que mira; sin eso, la guardada. Y, si se quiere, la misma
-## forma con otro vidrio, tarima o marco: `--costados=9 --techo=6 --tarima=1.8 --marco=2` (ver CabinShape).
+## forma con otro vidrio, tarima o marco: `--costados=9 --techo=6 --tarima=1.8 --marco=2 --ascensor_cuadrado=1` (ver CabinShape).
 
 const VIEW := Vector2i(1280, 720)
 
@@ -24,7 +24,7 @@ func _ready() -> void:
 		if argument.begins_with("--celdas="):
 			for each in argument.trim_prefix("--celdas=").split(","):
 				_cells.append(int(each))
-		for knob: String in ["costados:side_glass", "techo:roof_glass", "tarima:platform_height", "marco:frame_kind"]:
+		for knob: String in ["costados:side_glass", "techo:roof_glass", "tarima:platform_height", "marco:frame_kind", "ascensor_cuadrado:lift_square"]:
 			var parts := knob.split(":")
 			if argument.begins_with("--%s=" % parts[0]):
 				_changes[parts[1]] = float(argument.trim_prefix("--%s=" % parts[0]))
@@ -64,7 +64,8 @@ func _ready() -> void:
 		var form := CabinGrid.current()
 		form.cell = cell
 		for knob: String in _changes:
-			form.set(knob, _changes[knob] if knob == "platform_height" else int(_changes[knob]))
+			var value: Variant = _changes[knob] if knob == "platform_height" else int(_changes[knob])
+			form.set(knob, value == 1 if knob == "lift_square" else value)
 		CabinGrid.shape(form)
 		var name_of := "celda de %d cm · %.2f m por dentro · %.2f m libres" % [roundi(CabinGrid.TRAMA * 100.0),
 			CabinGrid.INNER * 2.0, CabinGrid.CLEAR]

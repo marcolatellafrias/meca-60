@@ -75,7 +75,8 @@ En las filas de la meca, **F2** (`CabinShapePanel`), en cuatro pestañas (el cor
 - **La caja**: la celda de trama (en celdas chicas; es **el tamaño general**), cuántas celdas por lado (desde 12: menos,
   no entran los tres puestos), el alto libre (en celdas chicas), el corte del vidrio, **hasta dónde llega el vidrio de
   los costados** y **hasta dónde el del techo** (cada uno aparte, en celdas de trama desde el frente; los dos, por lo
-  menos hasta el corte), el radio del ascensor y **el alto de la tarima** (de a un escalón; las escaleras lo siguen).
+  menos hasta el corte), el radio del ascensor, **si es cuadrado** (el hueco, la plataforma y la pelvis; si no, redondos) y **el alto de
+  la tarima** (de a un escalón; las escaleras lo siguen).
   Las sillas, los kits, la batería y la munición se acomodan solos (los kits, de 1,2 celdas de trama o menos si no
   entran; la munición, de 1,6).
 - **Las sillas**: la altura de los ojos que buscan.

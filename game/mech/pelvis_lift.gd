@@ -14,6 +14,9 @@ extends Node3D
 ##     metálica… después vamos a los detalles»). BAJADA, queda a un salto del suelo con la meca agachada; SUBIDA, al ras
 ##     del piso. *Hasta el 14/11/2026 tenía cuatro parantes, un aro y una baranda alrededor del recorte.*
 ##
+## REDONDO O CUADRADO (CabinGrid.LIFT_SQUARE, el F2; el usuario, 15/11/2026: «otro toggle para el ascensor, que cambie
+## su forma de circular a cuadrada»): el hueco, la plataforma y la pelvis, todos de la misma forma (`outline`).
+##
 ## SE VIAJA EN ELLA: su piso tiene forma de choque en `solid` (las formas de adentro de la meca, de las que su marco
 ## copia la sombra), y se mueve con ella. DOS TECLAS (el usuario, 13/11/2026: «dos teclas»): `up` la sube y `lower` la
 ## baja. Las paradas (`stop`): bajada (-1) y subida (0); subir arriba de todo no hace nada.
@@ -48,12 +51,18 @@ var _shape: CollisionShape3D = null
 func _ready() -> void:
 	name = "Ascensor"
 	position.y = raised_y()
-	Clay.cylinder(self, platform(), 0.1, Vector3(0, -0.05, 0), GRATE)
 	_shape = CollisionShape3D.new()
-	var disc := CylinderShape3D.new()
-	disc.radius = platform()
-	disc.height = 0.12
-	_shape.shape = disc
+	if CabinGrid.LIFT_SQUARE:
+		Clay.box(self, Vector3(platform() * 2.0, 0.1, platform() * 2.0), Vector3(0, -0.05, 0), GRATE)
+		var plate := BoxShape3D.new()
+		plate.size = Vector3(platform() * 2.0, 0.12, platform() * 2.0)
+		_shape.shape = plate
+	else:
+		Clay.cylinder(self, platform(), 0.1, Vector3(0, -0.05, 0), GRATE)
+		var disc := CylinderShape3D.new()
+		disc.radius = platform()
+		disc.height = 0.12
+		_shape.shape = disc
 	solid.add_child(_shape)
 	_place()
 
@@ -120,7 +129,7 @@ static func shaft() -> AABB:
 
 ## LA PELVIS: el tambor hueco, centrado en su medio (como la caja de siempre).
 static func tube(color: Color) -> MeshInstance3D:
-	return holed(circle(drum()), hole(), -MechBody.PELVIS_SIZE.y * 0.5, MechBody.PELVIS_SIZE.y * 0.5, color)
+	return holed(outline(drum()), hole(), -MechBody.PELVIS_SIZE.y * 0.5, MechBody.PELVIS_SIZE.y * 0.5, color)
 
 
 ## ── UNA PLACA CON UN HUECO REDONDO ───────────────────────────────────────────────────────────────────────────────
@@ -136,6 +145,11 @@ static func circle(radius: float) -> PackedVector2Array:
 	return points
 
 
+## El borde de la forma del ascensor (redondo o cuadrado, ver CabinGrid.LIFT_SQUARE), de radio (o medio lado) `size`.
+static func outline(size: float) -> PackedVector2Array:
+	return square(size) if CabinGrid.LIFT_SQUARE else circle(size)
+
+
 ## El borde de un cuadrado de medio lado `half`, en los mismos `SIDES` ángulos.
 static func square(half: float) -> PackedVector2Array:
 	var points := PackedVector2Array()
@@ -145,10 +159,10 @@ static func square(half: float) -> PackedVector2Array:
 	return points
 
 
-## UNA PLACA de `bottom` a `top`, con el borde de afuera `outer` (ver `circle`, `square`) y un hueco redondo de radio
-## `hole` en el medio: las dos caras, la pared del hueco y la de afuera.
+## UNA PLACA de `bottom` a `top`, con el borde de afuera `outer` (ver `circle`, `square`) y un hueco de la forma del
+## ascensor (`outline`), de radio `hole`, en el medio: las dos caras, la pared del hueco y la de afuera.
 static func holed(outer: PackedVector2Array, hole: float, bottom: float, top: float, color: Color) -> MeshInstance3D:
-	var inner := circle(hole)
+	var inner := outline(hole)
 	var tool := SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	for step in SIDES:

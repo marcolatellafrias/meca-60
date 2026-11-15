@@ -19,6 +19,7 @@ const LABELS := {
 	"side_glass": "vidrio de los costados, hasta (celdas de la trama)",
 	"roof_glass": "vidrio del techo, hasta (celdas de la trama)",
 	"lift_cells": "radio del ascensor (celdas de la trama)",
+	"lift_square": "ascensor cuadrado",
 	"glass_color": "color del vidrio",
 	"glass_opacity": "cuánto se ve el vidrio (0 nada, 1 opaco)",
 	"frame_kind": "marco del vidrio",

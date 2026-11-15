@@ -89,8 +89,9 @@ static var HEIGHT := 0.0
 static var HALF_HEIGHT := 0.0
 ## Lo libre adentro, del piso al techo.
 static var CLEAR := 0.0
-## El radio del hueco del ascensor.
+## El radio del hueco del ascensor (cuadrado, la mitad del lado), y si es cuadrado (ver PelvisLift).
 static var LIFT_HOLE := 0.0
+static var LIFT_SQUARE := false
 ## LAS SILLAS: la altura de los ojos que buscan igualar (m, sobre su piso).
 static var EYE_HEIGHT := 1.15
 
@@ -120,6 +121,7 @@ static func shape(saved: CabinShape) -> void:
 	ROOF_GLASS = clampi(saved.roof_glass, CHAMFER, ACROSS)
 	LIFT_CELLS = clampi(saved.lift_cells, 1, ACROSS / 4)
 	PLATFORM_HEIGHT = clampf(saved.platform_height, 0.3, HEIGHT_CELLS * CELL - 1.0)
+	LIFT_SQUARE = saved.lift_square
 	GLASS_COLOR = Color(saved.glass_color, saved.glass_opacity)
 	FRAME_KIND = saved.frame_kind
 	EDGE_THICKNESS = saved.edge_thickness
@@ -142,6 +144,7 @@ static func current() -> CabinShape:
 	now.height_cells = HEIGHT_CELLS
 	now.chamfer = CHAMFER
 	now.lift_cells = LIFT_CELLS
+	now.lift_square = LIFT_SQUARE
 	now.side_glass = SIDE_GLASS
 	now.roof_glass = ROOF_GLASS
 	now.platform_height = PLATFORM_HEIGHT
