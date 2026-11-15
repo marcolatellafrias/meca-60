@@ -40,7 +40,7 @@ func _ready() -> void:
 	eye.global_position = BaseLayout.at(70.0, 62.0, 60.0)
 	eye.look_at(BaseLayout.at(30.0, 14.0, 10.0))
 	await _shot("base_arriba")
-	eye.global_position = BaseLayout.at(57.0, 25.5, 1.7)
+	eye.global_position = BaseLayout.at(57.0, 28.0, 1.7)
 	eye.look_at(BaseLayout.at(20.0, 14.0, 6.0))
 	await _shot("base_desde_las_consolas")
 	eye.global_position = BaseLayout.at(40.0, 20.0, 1.7)

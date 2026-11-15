@@ -30,7 +30,7 @@ Armado en arcilla en la fila **Base** (ver [[sucursal]]).
 - **Una línea de peligro** en el piso (rayas amarillas y negras) separa el gimnasio de la franja de las consolas.
 - **El gimnasio** sigue al elevador. **La bolsa**, a la derecha, centrada en alto y con margen: si vuela de un golpe
   fuerte, no llega a la pared.
-- **Las consolas, en una franja angosta** (6 m) debajo del gimnasio, contra la pared; al ser angosta, las cosas son más
+- **Las consolas, en una franja de 12 m de fondo** (era de 6 y quedaba angosta) debajo del gimnasio, contra la pared; las cosas son más
   anchas:
   1. **Los contratos**: una consola, como las otras.
   2. **Customizar la meca**: dos terminales, **la armería** y **los cosméticos con la pintura** (la pintura es una

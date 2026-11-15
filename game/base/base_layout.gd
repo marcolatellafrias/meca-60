@@ -14,12 +14,12 @@ extends RefCounted
 const ELEVATOR := 24.0          # el lado del cuadrado del elevador
 const LENGTH := 60.0            # el largo del elevador más el gimnasio
 const NAVE := 24.0              # el fondo del elevador y del gimnasio
-const STRIP := 6.0              # el fondo de la franja de las consolas
+const STRIP := 12.0             # el fondo de la franja de las consolas (el doble que en el plano 6: quedaba angosta)
 const HEIGHT := 22.0            # el alto de las paredes (el techo, cuando lo haya)
 const WALL := 0.5
 ## El hueco del ascensor de personal, metido en la pared de la punta: de Z1 a Z2, y PERSONNEL_DEPTH hacia afuera.
-const PERSONNEL_Z1 := 24.4
-const PERSONNEL_Z2 := 29.6
+const PERSONNEL_Z1 := NAVE + STRIP - 6.4
+const PERSONNEL_Z2 := NAVE + STRIP - 1.2
 const PERSONNEL_DEPTH := 4.5
 ## El alto del hueco: sólo lo del ascensor (el usuario: «es una ilusión de continuidad»). Arriba sigue la pared.
 const PERSONNEL_HEIGHT := 3.4
@@ -145,8 +145,8 @@ static func _roof(body: StaticBody3D) -> void:
 
 ## LAS LUCES: con techo, el sol no entra. Lámparas colgadas, sin sombras.
 static func _lights(body: StaticBody3D) -> void:
-	for spot: Vector3 in [Vector3(12, 12, 18), Vector3(36, 8, 18), Vector3(52, 18, 18), Vector3(34, 27, 8),
-			Vector3(52, 27, 8)]:
+	for spot: Vector3 in [Vector3(12, 12, 18), Vector3(36, 8, 18), Vector3(52, 18, 18), Vector3(34, 30, 8),
+			Vector3(52, 30, 8)]:
 		var where := at(spot.x, spot.y, spot.z)
 		Clay.sphere(body, 0.4, where, Color(1.0, 0.95, 0.8))
 		var lamp := OmniLight3D.new()
