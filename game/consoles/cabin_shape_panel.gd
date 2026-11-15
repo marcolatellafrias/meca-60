@@ -18,7 +18,7 @@ const LABELS := {
 	"chamfer": "corte del vidrio de arriba (celdas de la trama)",
 	"side_glass": "vidrio de los costados, hasta (celdas de la trama)",
 	"roof_glass": "vidrio del techo, hasta (celdas de la trama)",
-	"lift_cells": "radio del ascensor (celdas de la trama)",
+	"lift_radius": "radio del ascensor (celdas de 3,9 cm)",
 	"lift_square": "ascensor cuadrado",
 	"glass_color": "color del vidrio",
 	"glass_opacity": "cuánto se ve el vidrio (0 nada, 1 opaco)",

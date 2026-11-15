@@ -12,8 +12,10 @@ extends Resource
 @export_range(12, 20, 2) var across := 12
 ## El alto libre, del piso al techo, en celdas chicas (96: 3,78 m).
 @export_range(70, 140, 1) var height_cells := 96
-## El radio del hueco del ascensor, en celdas de trama (cuadrado: la mitad del lado).
-@export_range(1, 3, 1) var lift_cells := 2
+## El radio del hueco del ascensor, en celdas chicas de 3,9 cm (26: 1,02 m; cuadrado: la mitad del lado). *Hasta el
+## 15/11/2026 iba en celdas de trama (`lift_cells`, de 1 a 3): de a 51 cm, muy grueso (el usuario: «¿por qué no puedo
+## controlarlo mediante celdas?»).*
+@export_range(4, 60, 1) var lift_radius := 26
 ## El ascensor cuadrado: el hueco, la plataforma y la pelvis (si no, redondos).
 @export var lift_square := false
 ## El alto de la tarima de atrás (m; de a un escalón, 15 cm).

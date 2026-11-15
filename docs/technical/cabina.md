@@ -54,8 +54,8 @@ limpio»).*
   igualar **la altura de los ojos** del que se sienta (`CabinGrid.EYE_HEIGHT`). En la meca con brazos se sientan
   maniquíes en todas menos la del brazo derecho, que queda libre para sentarse uno con E. En cada hueco abierto
   va **el puesto** (`SeatStation`, de la sesión Tableros, ver [[paneles]]).
-- **El ascensor en el medio**, aparte de la trama de los puestos: un hueco redondo de **dos celdas de trama de radio
-  (1,02 m)** en el piso, y **una plataforma lisa**, sin parantes, aro ni baranda (el usuario: «solamente una plataforma
+- **El ascensor en el medio**, aparte de la trama de los puestos: un hueco redondo (o cuadrado) de **26 celdas chicas
+  de radio (1,02 m)** en el piso, y **una plataforma lisa**, sin parantes, aro ni baranda (el usuario: «solamente una plataforma
   sin toda la estructura metálica… después vamos a los detalles»). Dos teclas: **sube** y **baja** (Y / H en el panel
   chico de las filas de la meca, G / X para el que la posee); subida, al ras del piso; bajada, a un salto del suelo con
   la meca agachada.
@@ -75,7 +75,7 @@ En las filas de la meca, **F2** (`CabinShapePanel`), en cuatro pestañas (el cor
 - **La caja**: la celda de trama (en celdas chicas; es **el tamaño general**), cuántas celdas por lado (desde 12: menos,
   no entran los tres puestos), el alto libre (en celdas chicas), el corte del vidrio, **hasta dónde llega el vidrio de
   los costados** y **hasta dónde el del techo** (cada uno aparte, en celdas de trama desde el frente; los dos, por lo
-  menos hasta el corte), el radio del ascensor, **si es cuadrado** (el hueco, la plataforma y la pelvis; si no, redondos) y **el alto de
+  menos hasta el corte), el radio del ascensor (en celdas chicas: de a 3,9 cm), **si es cuadrado** (el hueco, la plataforma y la pelvis; si no, redondos) y **el alto de
   la tarima** (de a un escalón; las escaleras lo siguen).
   Las sillas, los kits, la batería y la munición se acomodan solos (los kits, de 1,2 celdas de trama o menos si no
   entran; la munición, de 1,6).

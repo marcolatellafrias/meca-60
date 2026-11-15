@@ -24,7 +24,7 @@ extends RefCounted
 ##   · ATRÁS, UNA TARIMA de dos celdas de fondo, de pared a pared, de `PLATFORM_HEIGHT` de alto: arriba, al medio, el movimiento
 ##     (`top_seat`). Dos escaleras rectas contra las paredes de los costados (dos celdas de ancho) suben a ella. En el
 ##     frente de la tarima, de cara al ascensor, los cuatro kits y la batería; arriba, en la pared de atrás, la munición.
-##   · EL ASCENSOR EN EL MEDIO, aparte de la trama de los puestos: un hueco redondo de `LIFT_CELLS` celdas de trama de
+##   · EL ASCENSOR EN EL MEDIO, aparte de la trama de los puestos: un hueco redondo de `LIFT_CELLS` celdas chicas de
 ##     radio (el usuario: «el ascensor del medio sale de esa grilla de módulos»).
 ##   · LA FORMA SE CAMBIA JUGANDO (`shape`, el panel F2, CabinShapePanel). Lo guardado (`SAVED`) es la forma de todas.
 ##
@@ -61,7 +61,7 @@ static var TRAMA_CELLS := 13
 static var ACROSS := 12
 static var HEIGHT_CELLS := 96
 static var CHAMFER := 2
-static var LIFT_CELLS := 2
+static var LIFT_CELLS := 26
 ## Hasta dónde llega el vidrio, desde el frente de adentro, en celdas de trama: el de los costados y el del techo.
 static var SIDE_GLASS := 6
 static var ROOF_GLASS := 2
@@ -119,7 +119,7 @@ static func shape(saved: CabinShape) -> void:
 	CHAMFER = clampi(saved.chamfer, 0, ACROSS / 2)
 	SIDE_GLASS = clampi(saved.side_glass, CHAMFER, ACROSS - PLATFORM_ROWS)
 	ROOF_GLASS = clampi(saved.roof_glass, CHAMFER, ACROSS)
-	LIFT_CELLS = clampi(saved.lift_cells, 1, ACROSS / 4)
+	LIFT_CELLS = clampi(saved.lift_radius, 4, ACROSS * TRAMA_CELLS / 4)
 	PLATFORM_HEIGHT = clampf(saved.platform_height, 0.3, HEIGHT_CELLS * CELL - 1.0)
 	LIFT_SQUARE = saved.lift_square
 	GLASS_COLOR = Color(saved.glass_color, saved.glass_opacity)
@@ -133,7 +133,7 @@ static func shape(saved: CabinShape) -> void:
 	CLEAR = HEIGHT_CELLS * CELL
 	HEIGHT = CLEAR + SLAB * 2.0
 	HALF_HEIGHT = HEIGHT * 0.5
-	LIFT_HOLE = LIFT_CELLS * TRAMA
+	LIFT_HOLE = LIFT_CELLS * CELL
 
 
 ## La forma de hoy, para guardarla.
@@ -143,7 +143,7 @@ static func current() -> CabinShape:
 	now.across = ACROSS
 	now.height_cells = HEIGHT_CELLS
 	now.chamfer = CHAMFER
-	now.lift_cells = LIFT_CELLS
+	now.lift_radius = LIFT_CELLS
 	now.lift_square = LIFT_SQUARE
 	now.side_glass = SIDE_GLASS
 	now.roof_glass = ROOF_GLASS
