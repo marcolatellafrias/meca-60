@@ -1,7 +1,8 @@
 extends Node3D
 
 ## LA BASE, PARA MIRAR (unos 8 segundos, sin el sandbox): arma la parcela de la base, deja que la meca se asiente en el
-## elevador y saca dos capturas: desde arriba, en diagonal, y desde la franja de las consolas, mirando la meca.
+## elevador y saca tres capturas: desde afuera con el techo y la compuerta abierta, desde la franja de las consolas
+## mirando la meca, y desde el piso del gimnasio hacia la compuerta.
 ##   tools/godot_ventana.sh res://tests/base_look.tscn -- --salida=C:/carpeta
 
 var _folder := ""
@@ -26,7 +27,7 @@ func _ready() -> void:
 	world.environment.ambient_light_color = Color(0.82, 0.84, 0.87)
 	world.environment.ambient_light_energy = 0.8
 	add_child(world)
-	BaseArchetype.new().build(0, self)
+	var base := BaseArchetype.new().build(0, self)
 	# Una persona de 1,8 m frente a las consolas, para la escala.
 	Clay.box(self, Vector3(0.5, 1.8, 0.3), BaseLayout.at(38.0, 27.0, 0.9), Color(0.95, 0.5, 0.1))
 	var eye := Camera3D.new()
@@ -35,12 +36,16 @@ func _ready() -> void:
 	add_child(eye)
 	eye.make_current()
 	await get_tree().create_timer(5.0).timeout
-	eye.global_position = BaseLayout.at(33.0, 30.0, 72.0)
-	eye.look_at(BaseLayout.at(33.0, 16.0, 0.0))
+	(base.get_node("Compuerta") as BaseHatch).snap_open()
+	eye.global_position = BaseLayout.at(70.0, 62.0, 60.0)
+	eye.look_at(BaseLayout.at(30.0, 14.0, 10.0))
 	await _shot("base_arriba")
 	eye.global_position = BaseLayout.at(57.0, 25.5, 1.7)
 	eye.look_at(BaseLayout.at(20.0, 14.0, 6.0))
 	await _shot("base_desde_las_consolas")
+	eye.global_position = BaseLayout.at(40.0, 20.0, 1.7)
+	eye.look_at(BaseLayout.at(12.0, 12.0, 22.0))
+	await _shot("base_la_compuerta")
 	get_tree().quit()
 
 

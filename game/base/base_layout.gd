@@ -5,7 +5,8 @@ extends RefCounted
 ## Un solo piso, todo al mismo nivel y sin divisiones: el elevador (un cuadrado marcado del piso, donde duerme la meca),
 ## el gimnasio con la bolsa, y abajo una franja angosta con las consolas contra la pared (los contratos, la armería,
 ## los cosméticos con la pintura), los casilleros con el cuadro del empleado del mes y el ascensor de personal metido en
-## la pared. Debajo del elevador, pared. Sin techo, para verla desde arriba.
+## la pared. Debajo del elevador, pared. Arriba, el techo, con la compuerta sobre el elevador (BaseHatch) que se abre
+## cuando empieza una partida.
 ##
 ## Las medidas, en metros sobre el plano: X a lo largo (0 el borde del elevador), Z hacia la franja (0 la pared del
 ## fondo). Todo se corre con OFFSET para quedar centrado en la parcela.
@@ -20,6 +21,11 @@ const WALL := 0.5
 const PERSONNEL_Z1 := 24.4
 const PERSONNEL_Z2 := 29.6
 const PERSONNEL_DEPTH := 4.5
+## El alto del hueco: sólo lo del ascensor (el usuario: «es una ilusión de continuidad»). Arriba sigue la pared.
+const PERSONNEL_HEIGHT := 3.4
+## El grosor del techo y el borde de la compuerta: el mismo cuadrado marcado del elevador.
+const ROOF := 0.6
+const HATCH_INSET := 1.0
 ## La bolsa: centrada en alto, a la derecha del gimnasio, con margen para que un golpe fuerte no la lleve a la pared.
 const BAG_AT := Vector2(50.0, 12.0)
 const BAG_RADIUS := 2.6
@@ -58,6 +64,12 @@ static func build(parent: Node3D) -> StaticBody3D:
 	_bag(body)
 	_consoles(body)
 	_characters(body)
+	_roof(body)
+	_lights(body)
+	var hatch := BaseHatch.new()
+	hatch.name = "Compuerta"
+	parent.add_child(hatch)
+	hatch.build()
 	return body
 
 
@@ -104,10 +116,44 @@ static func _walls(body: StaticBody3D) -> void:
 	for i in outline.size() - 1:
 		var a := outline[i]
 		var b := outline[i + 1]
+		# las tres del hueco del ascensor de personal, sólo de su alto
+		var high := PERSONNEL_HEIGHT if i in [2, 3, 4] else HEIGHT
 		var mid := (a + b) * 0.5
 		var length := a.distance_to(b) + WALL
-		var size := Vector3(length, HEIGHT, WALL) if is_equal_approx(a.y, b.y) else Vector3(WALL, HEIGHT, length)
-		Clay.solid(body, size, at(mid.x, mid.y, HEIGHT * 0.5), WALL_COLOR)
+		var size := Vector3(length, high, WALL) if is_equal_approx(a.y, b.y) else Vector3(WALL, high, length)
+		Clay.solid(body, size, at(mid.x, mid.y, high * 0.5), WALL_COLOR)
+	# encima del hueco sigue la pared, y el hueco tiene su techito
+	var gap := PERSONNEL_Z2 - PERSONNEL_Z1
+	Clay.solid(body, Vector3(WALL, HEIGHT - PERSONNEL_HEIGHT, gap), at(LENGTH, (PERSONNEL_Z1 + PERSONNEL_Z2) * 0.5,
+		(HEIGHT + PERSONNEL_HEIGHT) * 0.5), WALL_COLOR)
+	Clay.solid(body, Vector3(PERSONNEL_DEPTH + WALL, 0.3, gap + WALL), at(LENGTH + PERSONNEL_DEPTH * 0.5,
+		(PERSONNEL_Z1 + PERSONNEL_Z2) * 0.5, PERSONNEL_HEIGHT + 0.15), WALL_COLOR)
+
+
+## EL TECHO, sobre todo menos la compuerta del elevador.
+static func _roof(body: StaticBody3D) -> void:
+	var y := HEIGHT + ROOF * 0.5
+	var far := ELEVATOR - HATCH_INSET
+	for piece: Rect2 in [
+			Rect2(0, 0, HATCH_INSET, NAVE), Rect2(far, 0, HATCH_INSET, NAVE),
+			Rect2(HATCH_INSET, 0, far - HATCH_INSET, HATCH_INSET),
+			Rect2(HATCH_INSET, NAVE - HATCH_INSET, far - HATCH_INSET, HATCH_INSET),
+			Rect2(ELEVATOR, 0, LENGTH - ELEVATOR, NAVE + STRIP)]:
+		Clay.solid(body, Vector3(piece.size.x, ROOF, piece.size.y), at(piece.get_center().x, piece.get_center().y, y),
+			WALL_COLOR)
+
+
+## LAS LUCES: con techo, el sol no entra. Lámparas colgadas, sin sombras.
+static func _lights(body: StaticBody3D) -> void:
+	for spot: Vector3 in [Vector3(12, 12, 18), Vector3(36, 8, 18), Vector3(52, 18, 18), Vector3(34, 27, 8),
+			Vector3(52, 27, 8)]:
+		var where := at(spot.x, spot.y, spot.z)
+		Clay.sphere(body, 0.4, where, Color(1.0, 0.95, 0.8))
+		var lamp := OmniLight3D.new()
+		lamp.position = where
+		lamp.omni_range = 34.0
+		lamp.light_energy = 1.6
+		body.add_child(lamp)
 
 
 ## LA BOLSA, colgada de una viga a lo ancho del gimnasio. Fija por ahora (la física, después).
