@@ -78,14 +78,20 @@ func replant() -> void:
 
 func place(k: BodySettings, delta: float) -> void:
 	var standing := body.state == BalanceBody.State.STANDING and body.grounded
-	# RECOGIDAS tirada y subiendo; ESTIRADAS parada y ya al empezar a enderezarse.
-	var folded := body.state == BalanceBody.State.DOWN or body.state == BalanceBody.State.LIFT
+	# RECOGIDAS tirada y subiendo; ESTIRADAS parada y ya al empezar a enderezarse. LA CINEMÁTICA, SIEMPRE ESTIRADAS: se
+	# cae con las piernas como paradas, inclinadas con la caja (el usuario, 15/11/2026: «las piernas no me gustan tan
+	# retiradas, estaban bien antes estiradas»).
+	var folded := (body.state == BalanceBody.State.DOWN or body.state == BalanceBody.State.LIFT) and not body.kinematic
+	var lying := body.kinematic and not standing and body.state != BalanceBody.State.STANDING
 	_tuck = move_toward(_tuck, 1.0 if folded else 0.0, delta / maxf(k.fold_time if folded else k.unfold_time, 0.01))
 	var share := smoothstep(0.0, 1.0, _tuck)
 	var yaw := body.yaw()
 	var centre := body.global_position
 	var under := body.support if standing else Vector3(centre.x, centre.y - body.ground_distance(centre), centre.z)
 	var root := Transform3D(Basis(Vector3.UP, yaw), under)
+	if lying:
+		# Debajo de la caja como si estuviera parada, inclinada con ella.
+		root = body.global_transform * Transform3D(Basis(), Vector3.DOWN * (body.size.y * 0.5 + body.hover))
 	if standing:
 		var classic := LegSettings.current.new_steps
 		if not _planted:
@@ -118,7 +124,7 @@ func place(k: BodySettings, delta: float) -> void:
 		var side := -1.0 if i == 0 else 1.0
 		# Estiradas: parada, donde pisan; recién caída, donde pisaban; enderezándose o en el aire, debajo de las caderas.
 		var ground := _foot_ground(k, i) if standing else (_feet[i] if folded else body.measures.foot_rest(root, side))
-		var facing := Basis(Vector3.UP, _feet_yaw[i]) if standing else root.basis
+		var facing := Basis(Vector3.UP, _feet_yaw[i]) if standing else root.basis.orthonormalized()
 		var hip := body.measures.hip(waist, side)
 		var to_ankle := ground + Vector3.UP * body.measures.ANKLE - hip
 		var reach := body.measures.THIGH + body.measures.SHIN - 0.5
