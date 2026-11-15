@@ -109,6 +109,13 @@ func _ready() -> void:
 		if cut > 0.0:
 			stretches.append(Transform3D(Basis(Vector3.RIGHT, PI * 0.25), Vector3(0, top + cut * 0.5, -half + cut * 0.5)))
 			lengths.append(cut * sqrt(2.0))
+		# y el tercero, por la arista de arriba, del corte hasta donde termina el vidrio del techo (el usuario: «te falta
+		# el otro tramo. Eran tres»)
+		var roof := CabinGrid.ROOF_GLASS * CabinGrid.TRAMA
+		if roof > cut:
+			stretches.append(Transform3D(Basis(Vector3.RIGHT, PI * 0.5),
+				Vector3(0, CabinGrid.HALF_HEIGHT, -half + (cut + roof) * 0.5)))
+			lengths.append(roof - cut)
 		for side: float in [-1.0, 1.0]:
 			for i in stretches.size():
 				var post := Node3D.new()
