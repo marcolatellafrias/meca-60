@@ -42,6 +42,10 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 @export_range(0.05, 1.5, 0.05) var dash_time := 0.35
 @export_range(0.05, 1.0, 0.05) var dash_cost := 0.35
 @export_range(0.2, 20.0, 0.1) var dash_refill := 3.0
+## LA CURVA DEL DASH (14/11/2026; ver MoveCurve, de la base común; el usuario: «si yo hago un dash… y lo tengo activado
+## con easing, que haga easing»): recorre lo mismo en lo mismo, pero arrancando lento, frenando al final o las dos.
+## Lineal: parejo, como antes.
+@export var dash_curve := MoveCurve.Shape.LINEAR
 
 @export_group("Agacharse")
 ## Agachada, la altura de la caja que le queda (parte de la de parada) y a qué ritmo cambia (partes por segundo).

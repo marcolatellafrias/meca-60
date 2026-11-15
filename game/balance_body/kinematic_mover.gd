@@ -38,6 +38,8 @@ var _fly_armed := false
 ## El dash de ahora: cuánto le queda (s) y a qué velocidad va.
 var _dash_left := 0.0
 var _dash_velocity := Vector3.ZERO
+## Cuánto lleva el dash (s), para su curva (ver KinematicSettings.dash_curve).
+var _dash_clock := 0.0
 var _cylinder := CylinderShape3D.new()
 var _holder := CollisionShape3D.new()
 var _below := BoxShape3D.new()
@@ -91,12 +93,12 @@ func step(delta: float) -> void:
 	if _dash_left > 0.0:
 		# EN UN DASH: derecho, sin teclas ni gravedad.
 		_dash_left -= delta
-		velocity = _dash_velocity
+		velocity = _dash_velocity * _dash_rate(k, delta)
 	else:
 		var flat := _walk(k, delta, grounded)
 		velocity = Vector3(flat.x, _rise(k, delta, grounded), flat.z)
 		if body.dash and not _dash_was and body.move.length() > 0.1 and dash_fuel >= k.dash_cost:
-			_dash(k)
+			_dash(k, delta)
 	_dash_was = body.dash
 	_jump_was = body.jump
 	_turn(k, delta)
@@ -150,14 +152,22 @@ func _rise(k: KinematicSettings, delta: float, grounded: bool) -> float:
 
 
 ## EL DASH: hacia donde se pide (en el espacio de la caja), `dash_distance` en `dash_time`.
-func _dash(k: KinematicSettings) -> void:
+func _dash(k: KinematicSettings, delta: float) -> void:
 	var stick := Vector3(body.move.x, 0.0, -body.move.y).normalized()
 	var way := Basis(Vector3.UP, _yaw) * stick
 	_dash_velocity = way * (k.dash_distance / k.dash_time)
 	_dash_left = k.dash_time
-	velocity = _dash_velocity
+	_dash_clock = 0.0
+	velocity = _dash_velocity * _dash_rate(k, delta)
 	dash_fuel -= k.dash_cost
 	body.nozzles.show(way, k.dash_time)
+
+
+## Por cuánto multiplicar la velocidad pareja del dash este paso, según su curva (a la mitad del paso; lineal: 1).
+func _dash_rate(k: KinematicSettings, delta: float) -> float:
+	var rate := MoveCurve.rate(k.dash_curve, (_dash_clock + delta * 0.5) / k.dash_time)
+	_dash_clock += delta
+	return rate
 
 
 ## EL GIRO: hacia `aim_yaw`, con tope de velocidad y de aceleración. Nada lo traba: contra el mundo es un cilindro.

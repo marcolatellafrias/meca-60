@@ -15,6 +15,7 @@ const LABELS := {
 	"fly_refill": "vuelo: se llena apoyada en (s)",
 	"dash_distance": "recorre (m)", "dash_time": "en (s)",
 	"dash_cost": "gasta de la barra (parte)", "dash_refill": "la barra se llena en (s)",
+	"dash_curve": "la curva (lineal: parejo)",
 	"crouch_share": "agachada: la altura que le queda (parte)", "crouch_rate": "ritmo (partes por s)",
 }
 ## Una pestaña por grupo de KinematicSettings.

@@ -4,6 +4,7 @@ extends Node
 ## dirección (no tiene que pasar nada), un dash de costado en lo alto de un salto y el vuelo. Imprime cuánto lo corre
 ## cada dash, cuánto sube volando y las barras. Con ventana, capturas de las toberas.
 ##   tools/godot_ventana.sh res://tests/kinematic_lab_moves_look.tscn -- --salida=C:/carpeta
+## Con «-- --curva=N», el dash con esa curva (0 lineal, 1 arranca lento, 2 frena al final, 3 las dos).
 
 var _folder := ""
 var _pillar: Mech = null
@@ -43,6 +44,11 @@ func _ready() -> void:
 	world.environment.ambient_light_color = Color(0.8, 0.82, 0.85)
 	world.environment.ambient_light_energy = 0.6
 	add_child(world)
+	# Con «-- --curva=N», el dash con la curva N (ver MoveCurve.Shape; 0 lineal).
+	for argument in OS.get_cmdline_user_args():
+		if argument.begins_with("--curva="):
+			KinematicSettings.current.dash_curve = int(argument.trim_prefix("--curva=")) as MoveCurve.Shape
+	print("CURVA DEL DASH: %s" % MoveCurve.NAMES[KinematicSettings.current.dash_curve])
 	_pillar = Mech.new()
 	_pillar.arms_kind = Mech.Arms.NONE
 	_pillar.kinematic = true
