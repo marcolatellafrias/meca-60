@@ -13,7 +13,7 @@ extends Node3D
 ##   5 · almenas: el borde alterna dientes altos y huecos bajos, y las armas van en los huecos;
 ##   6 · proa y popa: adelante un borde bajo con vidrio; atrás, un muro alto (la escalera queda resguardada);
 ##   7 · las costillas del domo: arcos que salen del borde y se juntan arriba (el campo de fuerza, apenas);
-##   8 · la 2 con los puestos de la 4 y las costillas de la 7.
+##   8 · la 2 con los puestos de la 4 (sin costillas: el usuario, «sin costillas»).
 ##   tools/godot_ventana.sh res://tests/vortex_ideas_look.tscn -- --salida=C:/carpeta --idea=2
 
 const VIEW := Vector2i(1280, 720)
@@ -43,7 +43,7 @@ const NAMES := {
 	5: "almenas",
 	6: "proa baja con vidrio, popa con muro",
 	7: "las costillas del domo",
-	8: "la 2, con los puestos de la 4 y las costillas",
+	8: "la 2, con los puestos de la 4",
 }
 
 const METAL := Color(0.55, 0.57, 0.6)
@@ -112,7 +112,7 @@ func _raised_consoles() -> bool:
 
 
 func _ribs() -> bool:
-	return _idea in [7, 8]
+	return _idea == 7
 
 
 ## Si el punto del borde en `angle` (a radio `reach`) está en la parte elevada de atrás.
