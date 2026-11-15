@@ -15,27 +15,29 @@ extends MechCabin
 ##     adelante, los mandos de los brazos a los costados y las ametralladoras en enchufes del borde (sólo se ven).
 ## Arriba se camina al aire libre: el marco (ver MechCabin) lleva a todos hasta 2,6 m sobre el primer piso.
 
-## EL RADIO (m): todo lo del borde, la escalera y la planta baja sale de acá. *Era 3,2; el usuario, al probarla:
-## «está muy chico el radio, agrandalo».*
-const OUTER := 5.5
-const WALK := OUTER - 0.45
+## LA FORMA SE CAMBIA JUGANDO (el F2 de su fila, VortexShapePanel; se guarda en `SAVED`, ver VortexShape): el radio, el
+## alto de la planta baja, el núcleo del medio, el ancho de la escalera y el largo de los brazos y las piernas de esta
+## meca. Lo demás sale de acá. *El radio era 3,2 y la planta baja 2,3; el usuario los fue subiendo al probarla.*
+const SAVED := "res://game/mech/vortex/vortex_shape.tres"
+static var OUTER := 5.5
+static var WALK := 5.05
+static var CLEAR := 3.0
+static var STAIR_OUT := 5.0
+static var STAIR_IN := 3.2
+static var CORE_ON := true
+## El largo de las piernas y de los brazos de esta meca, en partes de los de las otras (los lee Mech.cabin_kit).
+static var LEGS := 0.6
+static var ARMS := 1.0
 const RIM_OUT := 1.0
 const RIM_IN := 0.8
 const SHELL := 0.15
 const CORE := 0.85
 const TUBE := 0.7
 const TUBE_WALL := 0.12
-## El alto libre de la planta baja (m). *Era 2,3; el usuario: «aumentá la altura de los pisos, me golpeo con el techo
-## cuando quiero bajar por la escalera».*
-const CLEAR := 3.0
 const DECK_SLAB := 0.25
 const STAIR_FROM := PI / 3.0
 const STAIR_TO := PI * 25.0 / 18.0
 const STEPS := 14
-const STAIR_OUT := WALK - 0.05
-## El ancho de la escalera caracol: 1,8 m (el usuario: «más ancha la escalera caracol»; era 1,1).
-const STAIR_IN := STAIR_OUT - 1.8
-const HOLE_FROM_STEP := 3
 ## La puerta del tubo, en la planta baja (ángulo desde el frente, hacia la derecha) y su medio ancho.
 const DOOR_AT := PI * 11.0 / 6.0
 const DOOR_HALF := 0.5
@@ -58,6 +60,36 @@ const FACE := Color(0.92, 0.9, 0.84)
 var _vortex: Area3D = null
 ## Los que están en el vórtice: cuerpo → true si sube, false si baja.
 var _pulled := {}
+
+
+static func _static_init() -> void:
+	var saved := load(SAVED) as VortexShape if ResourceLoader.exists(SAVED) else null
+	apply(saved if saved != null else VortexShape.new())
+
+
+## TOMA LA FORMA. Las mecas que ya estaban no cambian: hay que rearmarlas (ver VortexShapePanel).
+static func apply(shape: VortexShape) -> void:
+	OUTER = shape.radius
+	WALK = OUTER - 0.45
+	CLEAR = shape.floor_height
+	STAIR_OUT = WALK - 0.05
+	# La escalera deja por lo menos un paso de 0,9 m entre ella y el tubo del vórtice.
+	STAIR_IN = maxf(STAIR_OUT - shape.stair_width, TUBE + TUBE_WALL + 0.9)
+	CORE_ON = shape.core
+	LEGS = shape.legs
+	ARMS = shape.arms
+
+
+## La forma de hoy, para guardarla.
+static func current() -> VortexShape:
+	var now := VortexShape.new()
+	now.radius = OUTER
+	now.floor_height = CLEAR
+	now.core = CORE_ON
+	now.stair_width = STAIR_OUT - STAIR_IN
+	now.legs = LEGS
+	now.arms = ARMS
+	return now
 
 
 ## LA CAJA, EL HOMBRO Y LOS PISOS (en el espacio de la caja: el centro, en el medio).
@@ -148,7 +180,7 @@ func _shell() -> void:
 	_arc_shapes(WALK, OUTER + 0.5, 0.0, TAU, floor1, floor1 + RIM_OUT)
 
 
-## EL PRIMER PISO: la losa con el hueco de la escalera (de su escalón `HOLE_FROM_STEP` al último) y el núcleo opaco.
+## EL PRIMER PISO: la losa con el hueco de la escalera (ver `_hole_from`) y el núcleo opaco.
 func _upstairs() -> void:
 	var floor1 := upper_floor()
 	var wall := OUTER - SHELL
@@ -170,7 +202,9 @@ func _upstairs() -> void:
 		Clay.cylinder(self, 0.03, 1.0, out(angle) * (STAIR_IN + 0.05) + Vector3(0, floor1 + 0.5, 0), DARK_METAL)
 	_revolve(self, [Vector2(STAIR_IN + 0.08, floor1 + 1.0), Vector2(STAIR_IN + 0.08, floor1 + 0.94)], DARK_METAL,
 		hole_from, STAIR_TO)
-	# El núcleo: opaco, con una tapa; choca.
+	# El núcleo: opaco, con una tapa; choca. Se puede sacar (ver VortexShape.core).
+	if not CORE_ON:
+		return
 	_revolve(self, [Vector2(CORE, floor1), Vector2(CORE, floor1 + 1.9), Vector2(CORE - 0.15, floor1 + 2.05),
 		Vector2(0.0, floor1 + 2.05)], DARK_METAL.lightened(0.15))
 	_arc_shapes(0.0, CORE, 0.0, TAU, floor1, floor1 + 2.05)
@@ -203,19 +237,16 @@ func _tube() -> void:
 	air.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
 
-## LA ESCALERA CARACOL: los escalones se ven; se pisa una rampa en hélice, del piso de abajo al de arriba.
+## LA ESCALERA CARACOL: cada escalón, un trozo de anillo macizo hasta el piso, entre dos líneas que salen del centro
+## (el usuario: «que se atenga más al cilindro, salen solos los escalones de líneas del centro»); se pisa una rampa en
+## hélice.
 func _stairs() -> void:
 	var floor0 := ground_floor()
 	var rise := (upper_floor() - floor0) / STEPS
 	var sweep := (STAIR_TO - STAIR_FROM) / STEPS
-	var middle := (STAIR_IN + STAIR_OUT) * 0.5
 	for i in STEPS:
-		var angle := STAIR_FROM + sweep * (i + 0.5)
-		var step := Clay.box(self, Vector3(middle * sweep + 0.06, 0.12, STAIR_OUT - STAIR_IN),
-			out(angle) * middle + Vector3(0, floor0 + rise * (i + 1) - 0.06, 0), STAIR)
-		step.rotation.y = -angle
-		Clay.cylinder(self, 0.04, rise * (i + 1), out(angle) * (STAIR_IN + 0.06)
-			+ Vector3(0, floor0 + rise * (i + 1) * 0.5, 0), DARK_METAL)
+		add_child(_wedge(STAIR_IN, STAIR_OUT, STAIR_FROM + sweep * i, STAIR_FROM + sweep * (i + 1), floor0,
+			floor0 + rise * (i + 1), STAIR.darkened(0.06 * (i % 2))))
 	var pieces := STEPS * 2
 	var span := (STAIR_TO - STAIR_FROM) / pieces
 	var climb := (upper_floor() - floor0) / pieces
@@ -318,6 +349,25 @@ func build_frame() -> void:
 		mech.add_collision_exception_with(body as RigidBody3D)
 
 
+## GENTE PARADA ADENTRO, PARA VER LA ESCALA (el usuario: «ponele personajes adentro así veo escala»): tres arriba,
+## cada uno frente a un puesto (el manejo, el brazo izquierdo y la ametralladora de la izquierda), y uno en la planta
+## baja, en el banco. Van al lado de la meca en el árbol (como los maniquíes de las sillas) y los lleva el marco.
+func seat_dummies() -> void:
+	var holder := mech.get_parent() as Node3D
+	if holder == null:
+		return
+	var places := [[0.0, upper_floor(), WALK - 0.45], [deg_to_rad(290.0), upper_floor(), WALK - 0.45],
+		[deg_to_rad(320.0), upper_floor(), WALK - 0.45], [deg_to_rad(300.0), ground_floor(), OUTER - 1.3]]
+	for i in places.size():
+		var angle: float = places[i][0]
+		var spot: Vector3 = out(angle) * float(places[i][2]) + Vector3(0.0, places[i][1], 0.0)
+		var person := PeopleArchetype.spawn(holder, DUMMY_BODIES[i % DUMMY_BODIES.size()], mech.global_transform * spot,
+			mech.yaw() - angle)
+		# Aparece adentro de la caja maciza: que no la empuje antes de que el marco lo lleve (ver `ride`).
+		mech.add_collision_exception_with(person.char_rigidbody)
+		dummies.append(person)
+
+
 ## LA U: a la planta baja, al lado de la puerta del vórtice, mirándola.
 func board() -> void:
 	var player := DesignSandbox.player_of(get_tree())
@@ -386,8 +436,11 @@ func _pop(body: CharacterRigidBody3D) -> void:
 			return
 
 
+## DESDE DÓNDE VA EL HUECO DE ARRIBA: desde el escalón en que, bajando, la cabeza ya no pasa debajo del piso de arriba.
 func _hole_from() -> float:
-	return STAIR_FROM + (STAIR_TO - STAIR_FROM) * HOLE_FROM_STEP / STEPS
+	var rise := (upper_floor() - ground_floor()) / STEPS
+	var step := clampi(floori((CLEAR - 2.0) / rise), 1, STEPS - 2)
+	return STAIR_FROM + (STAIR_TO - STAIR_FROM) * step / STEPS
 
 
 ## ── LAS PIEZAS ───────────────────────────────────────────────────────────────────────────────────────────────────
@@ -418,6 +471,25 @@ func _revolve(parent: Node3D, profile: Array, color: Color, from := 0.0, to := T
 	mesh.material_override = paint
 	parent.add_child(mesh)
 	return mesh
+
+
+## UN TROZO DE ANILLO MACIZO, de `r0` a `r1`, entre los ángulos `a0` y `a1`, de `y0` a `y1`: las caras de adentro y de
+## afuera, suaves; arriba y las dos puntas, planas.
+func _wedge(r0: float, r1: float, a0: float, a1: float, y0: float, y1: float, color: Color) -> MeshInstance3D:
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var at := func(r: float, a: float, y: float) -> Vector3:
+		return out(a) * r + Vector3(0.0, y, 0.0)
+	var pieces := maxi(2, ceili(48.0 * (a1 - a0) / TAU))
+	for k in pieces:
+		var b0 := lerpf(a0, a1, float(k) / pieces)
+		var b1 := lerpf(a0, a1, float(k + 1) / pieces)
+		_quad(tool, at.call(r1, b0, y0), at.call(r1, b1, y0), at.call(r1, b1, y1), at.call(r1, b0, y1), SMOOTH_OUT)
+		_quad(tool, at.call(r0, b1, y0), at.call(r0, b0, y0), at.call(r0, b0, y1), at.call(r0, b1, y1), SMOOTH_IN)
+		_quad(tool, at.call(r0, b0, y1), at.call(r1, b0, y1), at.call(r1, b1, y1), at.call(r0, b1, y1), FLAT)
+	for b: float in [a0, a1]:
+		_quad(tool, at.call(r0, b, y0), at.call(r1, b, y0), at.call(r1, b, y1), at.call(r0, b, y1), FLAT)
+	return _mesh(tool, color)
 
 
 ## Formas de choque de un anillo (o un tramo) entre `r0` y `r1`, de `y0` a `y1`: un trozo convexo cada tanto.

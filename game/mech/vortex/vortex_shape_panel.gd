@@ -1,0 +1,69 @@
+class_name VortexShapePanel
+extends TunerPanel
+
+## LA FORMA DE LA MECA DEL VÓRTICE (F2 en su fila; ver VortexCabin, VortexShape): el radio, el alto de la planta baja,
+## el núcleo del medio, el ancho de la escalera y el largo de los brazos y las piernas de esta meca. Como el de la
+## redonda (RoundShapePanel): los números se mueven sin rearmar nada, y GUARDAR la escribe en `VortexCabin.SAVED` y
+## rearma las mecas (las otras no cambian: esta tiene su forma y su cuerpo aparte).
+
+const PANEL_WIDTH := 380.0
+const LABELS := {
+	"radius": "radio del disco (m)",
+	"floor_height": "alto de la planta baja (m)",
+	"core": "núcleo en el medio del primer piso (arriba se camina en anillo)",
+	"stair_width": "ancho de la escalera caracol (m)",
+	"legs": "largo de las piernas (1 = el de las otras mecas)",
+	"arms": "largo de los brazos (1 = el de las otras mecas)",
+}
+const PARTS := ["El disco", "La escalera", "Brazos y piernas"]
+
+var _draft := VortexCabin.current()
+var _state: Label = null
+
+
+func setup_panel() -> void:
+	panel_width = PANEL_WIDTH
+	setup("meca del vórtice", "FORMA DE LA MECA DEL VÓRTICE", [
+		new_button("Guardar (rearma la meca)", _save),
+		new_button("Volver a lo guardado", _restore),
+	])
+	_state = state_label()
+	_measure()
+
+
+func sections() -> Array[Dictionary]:
+	var all: Array[Dictionary] = []
+	for part: String in PARTS:
+		all.append({"title": part.to_upper(), "tab": part, "target": _draft, "labels": LABELS,
+			"include": PackedStringArray([part]), "headers": false, "defaults": VortexShape.new(), "on_change": _measure})
+	return all
+
+
+## Lo que sale de los números, sin rearmar nada.
+func _measure() -> void:
+	if _state == null:
+		return
+	_state.text = "por fuera, %.1f m de diámetro · la escalera, %.2f m de ancho · arriba %s" % [_draft.radius * 2.0,
+		_draft.stair_width, "en anillo, alrededor del núcleo" if _draft.core else "un piso entero, sin núcleo"]
+
+
+func _save() -> void:
+	VortexCabin.apply(_draft)
+	Mech.rebuild_all(get_tree())
+	_measure()
+	var error := ResourceSaver.save(VortexCabin.current(), VortexCabin.SAVED)
+	if error != OK:
+		push_warning("VortexShapePanel: no se pudo guardar %s (%d)" % [VortexCabin.SAVED, error])
+	elif _state != null:
+		_state.text += " · guardada"
+
+
+func _restore() -> void:
+	var saved := load(VortexCabin.SAVED) as VortexShape if ResourceLoader.exists(VortexCabin.SAVED) else VortexShape.new()
+	for property in _draft.get_property_list():
+		if int(property["usage"]) & PROPERTY_USAGE_SCRIPT_VARIABLE:
+			_draft.set(property["name"], saved.get(property["name"]))
+	rebuild()
+	VortexCabin.apply(_draft)
+	Mech.rebuild_all(get_tree())
+	_measure()

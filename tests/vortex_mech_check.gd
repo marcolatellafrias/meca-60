@@ -32,6 +32,7 @@ func _ready() -> void:
 	world.environment.ambient_light_color = Color(0.85, 0.86, 0.9)
 	add_child(world)
 	_eye = Camera3D.new()
+	_eye.fov = 70.0
 	add_child(_eye)
 	_eye.make_current()
 	_mech = Mech.new()
@@ -53,10 +54,18 @@ func _ready() -> void:
 			inside.char_rigidbody.linear_velocity = _mech.global_basis * (-door * 1.5)
 		print("SEG %d · meca a %.2f m (%s) · de abajo %s · de adentro %s" % [second + 1, _mech.global_position.y,
 			Mech.State.keys()[_mech.state] if "state" in _mech else "?", _where(below), _where(inside)])
-		if second == 1 or second == 6:
-			_eye.global_position = Vector3(-20.0, 13.0, -24.0)
-			_eye.look_at(Vector3(0.0, 7.0, 0.0))
-			shots.append(await _grab())
+		if second == 6:
+			# Afuera, de tres cuartos; arriba, con la gente; adentro de la planta baja, mirando la escalera.
+			var top := _mech.global_transform * Vector3(0.0, VortexCabin.upper_floor(), 0.0)
+			for view: Array in [[Vector3(-20.0, 13.0, -24.0), Vector3(0.0, 6.0, 0.0)],
+					[top + Vector3(-9.0, 9.0, -9.0), top],
+					[_mech.global_transform * (VortexCabin.out(deg_to_rad(330.0)) * (VortexCabin.OUTER - 1.0)
+						+ Vector3(0.0, VortexCabin.ground_floor() + 1.7, 0.0)),
+						_mech.global_transform * (VortexCabin.out(deg_to_rad(150.0)) * 3.5
+						+ Vector3(0.0, VortexCabin.ground_floor() + 1.0, 0.0))]]:
+				_eye.global_position = view[0]
+				_eye.look_at(view[1])
+				shots.append(await _grab())
 	if not _folder.is_empty() and DisplayServer.get_name() != "headless":
 		for i in shots.size():
 			(shots[i] as Image).save_png("%s/vortice_meca_%d.png" % [_folder, i])

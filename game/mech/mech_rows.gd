@@ -12,6 +12,7 @@ static func rows() -> Array[SandboxRow]:
 		SandboxRow.new(SandboxSuper.Id.MECH, "Meca del vórtice") \
 			.add(SandboxRow.Build.NEAR, [MechArchetype.new(Mech.Arms.MUSCLE, false, Mech.Cabin.VORTEX)]) \
 			.panel(KEY_F1, MECH_PANEL, MechPanel.new(Mech.Arms.MUSCLE)) \
+			.panel(KEY_F2, VORTEX_PANEL, VortexShapePanel.new()) \
 			.panel(KEY_F3, MUSCLE_ARMS_PANEL, MuscleArmPanel.new()) \
 			.panel(KEY_F4, LEGS_PANEL, LegsPanel.new()),
 		SandboxRow.new(SandboxSuper.Id.MECH, "Meca discreta") \
@@ -61,6 +62,7 @@ static func rows() -> Array[SandboxRow]:
 
 ## La forma de la cabina (módulo Interior): cambia todas las mecas.
 const CABIN_PANEL := "la cabina: módulos, pisos y el vidrio; guardar cambia todas las mecas"
+const VORTEX_PANEL := "la meca del vórtice: el radio, los pisos, el núcleo, la escalera, y sus brazos y piernas"
 const ROUND_PANEL := "la cabina redonda: el radio, el alto, el disco, la tarima, el ascensor y el vidrio"
 const MECH_PANEL := "la meca: moverse, el equilibrio, las piernas, saltar y caerse (cada variante las suyas)"
 const LEGS_PANEL := "las piernas: los pasos (los mismos para todas las mecas)"

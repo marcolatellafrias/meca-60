@@ -43,12 +43,12 @@ static func cabin_kit(shape: Cabin) -> Dictionary:
 	if shape == Cabin.ROUND:
 		return {"box": RoundGrid.box(), "shoulder": RoundGrid.shoulder(), "nozzles": false, "legs": 1.0}
 	if shape == Cabin.VORTEX:
-		return {"box": VortexCabin.box(), "shoulder": VortexCabin.shoulder(), "nozzles": false, "legs": VORTEX_LEGS}
+		return {"box": VortexCabin.box(), "shoulder": VortexCabin.shoulder(), "nozzles": false, "legs": VortexCabin.LEGS}
 	return {"box": CabinGrid.box(), "shoulder": CabinGrid.shoulder(), "nozzles": true, "legs": 1.0}
 
 
-## Las piernas de la del vórtice, por las del F2 (ver `cabin_kit`).
-const VORTEX_LEGS := 0.6
+## Las piernas de la del vórtice: las da su forma (VortexCabin.LEGS, de su F2, VortexShapePanel; el usuario: «opciones
+## para cambiar brazos y piernas solo para esta versión»).
 
 
 const ARM_WEIGHT := 0.4
