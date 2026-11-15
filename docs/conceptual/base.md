@@ -22,24 +22,16 @@ en un **elevador** que la sube derecho a la arena.
   una compuerta y se sale a la arena, sin corte.
 - *Propuesta:* **al volver** (después del cartel, donde sí hay corte) la meca aparece dormida sobre la plataforma.
 
-## El plano (en revisión con el usuario)
-- **Sin hangar** (15/11/2026): **la meca duerme sobre la plataforma del elevador**. Así no hay que moverla para salir;
-  sólo se la saca para practicar.
-- **El gimnasio, grande** (40 × 24 m), al lado del pozo: la bolsa y lugar para moverse.
-- **Los puestos no son salas**: son consolas, máquinas expendedoras y carteles **contra la pared de un mismo espacio**
-  (la plaza), al paso. Los contratos, la armería, los cosméticos de la meca, la pintura, el memorial, los casilleros
-  con la ropa de los personajes (cosméticos de personaje: buena idea, también al paso).
-- **Los jugadores aparecen en un lugar especial**, no en la nada: un **ascensor de personal** por el que bajan a la
-  sucursal. Cruzan la plaza y una pasarela los lleva a la meca.
-- Dos versiones de la pintura: **(1)** una terminal, sin pintar a mano; **(2)** **pasarelas en U adentro del pozo del
-  elevador**, a 5, 10 y 15 m: se pinta donde duerme, entre varios, con latas compradas; al subir, la plataforma pasa
-  entre las pasarelas.
-- **Plano 3** (15/11/2026, en revisión): **menos puestos, tres espacios distintos** en vez de una fila.
-  - **El vestuario**, un cuarto cerrado: se aparece por el **ascensor de personal, empotrado** en la pared; los
-    **casilleros** con la ropa de cada uno; **los de los muertos, oscuros y con su foto, son el memorial**.
-  - **La sala**, que mira al gimnasio por el vidrio, con bancos y **una sola expendedora** (cosméticos de la meca y
-    latas).
-  - **La plaza de embarque**, con **la mesa de contratos grande en el medio** (la jerarquía), la armería contra la pared
-    al pie de la pasarela, y la escalera a las pasarelas del pozo.
-  - **Se pinta a distancia, con una pistola de pintura** (un chorro que llega a la meca desde la pasarela), así las
-    pasarelas del pozo sirven aunque queden a 6 m de la meca.
+## El plano (plano 4, 15/11/2026, en revisión con el usuario)
+- **La nave: el elevador y el gimnasio, nada más.** La meca duerme sobre la plataforma del elevador; sólo se la saca
+  para practicar. **La bolsa**, a la derecha del gimnasio, centrada en alto y con margen: si vuela de un golpe fuerte, no
+  llega a la pared.
+- **Todo abierto**: un solo piso, sin paredes, con **vidrio hacia la nave**. Desde cualquier punto se ve la meca y al que
+  boxea. Nada de cuartos cerrados.
+- **Tres zonas**, que se distinguen por el piso:
+  1. **Los contratos**, junto a la pasarela a la meca: la mesa grande.
+  2. **Customizar la meca**: dos terminales juntas, **la armería** y **los cosméticos con la pintura** (la pintura es
+     una interfaz en esa terminal, sin latas ni pintar a mano).
+  3. **Los personajes**: el **ascensor de personal empotrado** en la pared (por ahí se aparece), una **isla de
+     casilleros** con la ropa, y **el memorial, chiquito**: un estante con fotos.
+- **Descartado**: el hangar, pintar a mano (pasarelas, latas, pistola), los cuartos cerrados y los puestos en fila.
