@@ -12,4 +12,6 @@ static func rows() -> Array[SandboxRow]:
 			.panel(KEY_F2, MechRows.KINEMATIC_PANEL, KinematicPanel.new()) \
 			.panel(KEY_F3, MechRows.CABIN_PANEL, CabinShapePanel.new()) \
 			.panel(KEY_F4, MechRows.LEGS_PANEL, LegsPanel.new()),
+		SandboxRow.new(SandboxSuper.Id.WORLD, "Componentes de la armería").add(SandboxRow.Build.NEAR,
+			[ArmoryPartsArchetype.new()]),
 	]

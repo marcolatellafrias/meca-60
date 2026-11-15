@@ -68,9 +68,22 @@ Pedido del usuario: «vos te acercás, apretás E y se te abre». La consola de 
   - **«Firmar»** deja firmado el contrato elegido.
   - **«Salir a la arena»**, con un contrato firmado, abre la compuerta del techo. Todavía no hay arena detrás.
 
+## Los componentes en arcilla (15/11/2026)
+Lo pidió el usuario: «empecemos a hacer maquetas de clay de todos los componentes».
+- **`ArmoryParts`** tiene una maqueta por cosa que vende la armería, a la escala de la meca: el antebrazo de `MechBody`
+  y la mano de `MechHand`.
+- **Lo del brazo** va sobre un antebrazo con el puño cerrado. La herramienta se le suma sin tapar el puño: el taladro
+  arriba, el cañón de energía abajo y la sierra afuera, al costado. El puño pesado es la misma mano, un 30 % más grande,
+  con un cono en cada nudillo.
+- **Lo de la espalda** va sobre un pedazo del techo con su torreta.
+- **Cada placa** va sobre la parte que cubre.
+- Son maquetas de forma: todavía no se montan en la meca.
+- En el sandbox, en la fila **Componentes de la armería** (`ArmoryPartsArchetype`), numeradas y en tres filas.
+
 ## Para mirarla
 `tests/base_look.tscn` (con ventana, unos 8 s): cuatro capturas, desde afuera con la compuerta abierta, desde la
 franja de las consolas, desde el gimnasio hacia la compuerta, y otra vez desde afuera con otras medidas (lo que hace el
 F1 al guardar, sin guardarlas).
 `tests/base_terminals_look.tscn` (con ventana, unos 5 s): la armería con unas compras hechas y lo que dice con el mouse
 encima, y los contratos con uno firmado.
+`tests/armory_parts_look.tscn` (con ventana, unos 10 s): todos los componentes juntos, y después uno por uno, de cerca.
