@@ -7,11 +7,11 @@ extends Node3D
 ## este disco extra vaya recién las piernas»).
 ##   · LA CAJA: adentro, de 12 lados (la misma superficie que la cuadrada de hoy); afuera, un cilindro liso. El frente
 ##     (cinco lados, 150°), de vidrio de piso a techo. Techo bajo.
-##   · DEBAJO, UN DISCO del mismo radio, macizo, por donde baja el ascensor; y recién debajo, las piernas.
-##   · CADA SILLA CON SU ANILLO: la silla y, alrededor, un anillo parcial (la mitad de adelante) con los elementos, y el
-##     holograma flotando al frente. Nada en el piso ni contra las paredes: el anillo de la caja queda libre.
-##   · LA TARIMA, chica, centrada, baja, con un escalón todo alrededor; arriba, el movimiento con su anillo y, atrás, el
-##     ascensor.
+##   · DEBAJO, UN DISCO del mismo radio, chato, por donde baja el ascensor; y recién debajo, las piernas y los brazos de
+##     la meca de verdad (una meca sin cabina, con la caja escondida y esta piel encima).
+##   · LAS SILLAS, solas (el usuario: «sacale los tableros y los hologramas a las sillas»): nada en el piso ni contra
+##     las paredes; el anillo de la caja queda libre.
+##   · LA TARIMA, chica, centrada, baja, con un escalón todo alrededor; arriba, el movimiento y, atrás, el ascensor.
 ##   · Atrás, en las paredes, los kits, las dos municiones y la batería.
 ##   tools/godot_ventana.sh res://tests/round_cabin_look.tscn -- --salida=C:/carpeta
 
@@ -20,10 +20,9 @@ const SIDES := 12
 ## El radio de adentro, a los vértices (la misma superficie que 6,14 × 6,14 m), y el de afuera, liso.
 const R := 3.55
 const OUTER := 3.75
-const CLEAR := 2.6
+const CLEAR := 2.3
 const SLAB := 0.22
-const BASE_TALL := 2.6
-const LEG_TALL := 3.4
+const BASE_TALL := 1.0
 const PLATFORM_R := 1.35
 const PLATFORM_TALL := 0.3
 const STEP_R := 1.65
@@ -34,21 +33,20 @@ const METAL := Color(0.55, 0.57, 0.6)
 const DARK_METAL := Color(0.42, 0.44, 0.47)
 const FLOOR := Color(0.62, 0.63, 0.65)
 const DECK := Color(0.7, 0.71, 0.73)
-const RING := Color(0.24, 0.25, 0.28)
 const SEAT := Color(0.25, 0.42, 0.7)
 const PERSON := Color(0.93, 0.93, 0.93)
-const HOLO := Color(0.3, 0.9, 1.0, 0.45)
 const LIFT := Color(0.3, 0.45, 0.75)
 const KIT := Color(0.78, 0.27, 0.27)
 const BATTERY := Color(0.93, 0.75, 0.16)
 const AMMO := Color(0.47, 0.53, 0.32)
-const GLASS_OUTSIDE := Color(0.16, 0.24, 0.3, 0.72)
+const GLASS_OUTSIDE := Color(0.5, 0.66, 0.76, 0.38)
 const GLASS_INSIDE := Color(0.6, 0.8, 0.92, 0.14)
 
 var _folder := ""
 var _eye: Camera3D = null
 var _title: Label = null
 var _mech := Node3D.new()
+var _real: Mech = null
 var _glass_paint := StandardMaterial3D.new()
 var _roof: Array[Node3D] = []
 var _left: Array[Node3D] = []
@@ -60,8 +58,27 @@ func _ready() -> void:
 			_folder = argument.trim_prefix("--salida=")
 	get_window().size = VIEW
 	_stage()
-	_mech.position.y = LEG_TALL + BASE_TALL + SLAB
-	add_child(_mech)
+	# LA MECA DE VERDAD, sin cabina: sus piernas y sus brazos. Su caja, del tamaño de esta (14 celdas por lado, 3,8 m de
+	# radio; el alto de la cabina, las losas y el disco), para que los hombros y la pelvis caigan donde van.
+	var form := CabinGrid.current()
+	form.across = 14
+	form.height_cells = roundi((BASE_TALL + CLEAR + SLAB * 2.0 - CabinGrid.SLAB * 2.0) / CabinGrid.CELL)
+	CabinGrid.shape(form)
+	_real = Mech.new()
+	_real.has_cabin = false
+	_real.arms_kind = Mech.Arms.POSE
+	_real.position = Vector3(0.0, Mech.standing_height(), 0.0)
+	add_child(_real)
+	await get_tree().create_timer(2.5).timeout
+	_real.freeze = true
+	if _real.label != null:
+		_real.label.visible = false
+	# Su caja lisa y la franja del frente, escondidas: la piel es la de acá.
+	for part in _real.look.get_children():
+		if part is MeshInstance3D and (part as MeshInstance3D).mesh is BoxMesh:
+			(part as MeshInstance3D).visible = false
+	_real.look.add_child(_mech)
+	_mech.position.y = -CabinGrid.HALF_HEIGHT + BASE_TALL + SLAB
 	_glass_paint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_glass_paint.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_glass_paint.roughness = 0.15
@@ -69,17 +86,17 @@ func _ready() -> void:
 	var shots: Array = []
 	_glass_paint.albedo_color = GLASS_OUTSIDE
 	_title.text = "1. Afuera, de frente"
-	_look(Vector3(-9.0, 1.0, -13.5), Vector3(0.0, -2.2, 0.0), 45.0)
+	_look(Vector3(-15.0, 0.0, -24.0), Vector3(0.0, -4.0, 0.0), 45.0)
 	shots.append(await _grab())
 	_title.text = "2. Afuera, de costado"
-	_look(Vector3(-17.0, -1.5, -3.0), Vector3(0.0, -2.8, 0.0), 42.0)
+	_look(Vector3(-28.0, -2.0, -5.0), Vector3(0.0, -4.0, 0.0), 42.0)
 	shots.append(await _grab())
 	_glass_paint.albedo_color = GLASS_INSIDE
 	_title.text = "3. Adentro, desde atrás del movimiento"
-	_look(Vector3(0.6, 2.1, 2.9), Vector3(-0.2, 0.9, -3.0), 85.0)
+	_look(Vector3(0.6, 1.9, 2.9), Vector3(-0.2, 0.9, -3.0), 85.0)
 	shots.append(await _grab())
 	_title.text = "4. Adentro, desde la silla del brazo izquierdo"
-	_look(Vector3(-1.6, 1.75, -1.6), Vector3(-1.3, 1.0, -5.0), 80.0)
+	_look(Vector3(-0.85, 1.75, -1.55), Vector3(-2.6, 1.0, -4.6), 80.0)
 	shots.append(await _grab())
 	_title.text = "5. Adentro, hacia atrás"
 	_look(Vector3(-2.4, 1.7, -1.2), Vector3(0.6, 0.7, 3.0), 85.0)
@@ -96,15 +113,15 @@ func _ready() -> void:
 	for part in _roof:
 		part.visible = true
 	_title.text = "8. Afuera, desde atrás"
-	_look(Vector3(8.0, 0.5, 13.0), Vector3(0.0, -2.2, 0.0), 45.0)
+	_look(Vector3(14.0, 0.0, 23.0), Vector3(0.0, -4.0, 0.0), 45.0)
 	shots.append(await _grab())
 	_save(shots)
 	get_tree().quit()
 
 
 func _stage() -> void:
-	var ground := Node3D.new()
-	Clay.box(ground, Vector3(400, 1, 400), Vector3(0, -0.5, 0), Color(0.82, 0.80, 0.76))
+	var ground := StaticBody3D.new()
+	Clay.solid(ground, Vector3(400, 1, 400), Vector3(0, -0.5, 0), Color(0.82, 0.80, 0.76))
 	add_child(ground)
 	var sun := DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-52.0, -40.0, 0.0)
@@ -153,17 +170,18 @@ func _build() -> void:
 	# Debajo, el disco macizo, y la junta.
 	_keep_left(_disc(OUTER - 0.05, BASE_TALL, -SLAB - BASE_TALL * 0.5, DARK_METAL))
 	_keep_left(_disc(OUTER + 0.06, 0.12, -SLAB, METAL.darkened(0.25)))
-	_legs()
-	_arms()
 	# La tarima, su escalón y el ascensor.
 	_prism(STEP_R, PLATFORM_TALL * 0.5, PLATFORM_TALL * 0.25, DECK.darkened(0.08))
 	_prism(PLATFORM_R, PLATFORM_TALL, PLATFORM_TALL * 0.5, DECK)
 	var lift := _prism(LIFT_R, 0.04, PLATFORM_TALL + 0.02, LIFT)
 	lift.position.z = LIFT_AT
 	# Las sillas con su anillo: tres adelante, el movimiento arriba.
-	for x: float in [-1.6, 0.0, 1.6]:
-		_post(Vector3(x, 0.0, -2.35), 0.95)
-	_post(Vector3(0.0, PLATFORM_TALL, -0.45), 0.72)
+	# Los tres de adelante siguen la curva: cada uno en su lado, mirando hacia afuera (el usuario: «si es cilíndrico…
+	# quedamos en que siguen al cilindro»).
+	for i in [-1, 0, 1]:
+		var angle: float = TAU * i / SIDES
+		_post(_at(apothem - 0.95, angle, 0.0), -angle)
+	_post(Vector3(0.0, PLATFORM_TALL, -0.45), 0.0)
 	# Atrás, en las paredes: los kits en los cuatro lados de los costados de atrás; las municiones y la batería en el
 	# de atrás de todo.
 	for i in [4, 5, 7, 8]:
@@ -258,10 +276,11 @@ func _on_wall(i: int, apothem: float, shift: float, size: Vector2, y: float, col
 	part.rotation.y = -angle
 
 
-## UN PUESTO: la silla, el que se sienta, el anillo de los elementos (la mitad de adelante, de 200°) y el holograma.
-func _post(at: Vector3, ring: float) -> void:
+## UN PUESTO: la silla y el que se sienta, nada más, girado `turn` (mirando al frente con 0).
+func _post(at: Vector3, turn: float) -> void:
 	var holder := Node3D.new()
 	holder.position = at
+	holder.rotation.y = turn
 	_mech.add_child(holder)
 	Clay.box(holder, Vector3(0.55, 0.12, 0.5), Vector3(0, 0.45, 0.05), SEAT)
 	Clay.box(holder, Vector3(0.55, 0.65, 0.1), Vector3(0, 0.8, 0.3), SEAT)
@@ -270,60 +289,6 @@ func _post(at: Vector3, ring: float) -> void:
 	Clay.box(holder, Vector3(0.4, 0.6, 0.25), Vector3(0, 0.85, 0.15), PERSON)
 	Clay.sphere(holder, 0.13, Vector3(0, 1.3, 0.12), PERSON)
 	Clay.box(holder, Vector3(0.36, 0.14, 0.45), Vector3(0, 0.56, -0.12), PERSON)
-	# El anillo: una banda baja alrededor de la silla, por delante.
-	var band := _band(ring - 0.22, ring, deg_to_rad(-100.0), deg_to_rad(100.0), 0.0, 0.85, RING)
-	band.reparent(holder, false)
-	# El holograma: una placa flotando al frente, a la altura de los ojos.
-	var quad := QuadMesh.new()
-	quad.size = Vector2(0.9, 0.55)
-	var holo := MeshInstance3D.new()
-	holo.mesh = quad
-	var glow := StandardMaterial3D.new()
-	glow.albedo_color = HOLO
-	glow.emission_enabled = true
-	glow.emission = Color(HOLO, 1.0)
-	glow.emission_energy_multiplier = 0.6
-	glow.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	glow.cull_mode = BaseMaterial3D.CULL_DISABLED
-	glow.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	holo.material_override = glow
-	holo.position = Vector3(0, 1.3, -ring + 0.05)
-	holder.add_child(holo)
-
-
-func _legs() -> void:
-	var top := -SLAB - BASE_TALL
-	for way: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
-		var hip := Vector3(way.x * 2.0, top, way.y * 1.9)
-		var foot := Vector3(way.x * 2.6, -_mech.position.y + 0.25, way.y * 2.5)
-		var knee := (hip + foot) * 0.5 + Vector3(way.x * 0.5, 0.2, 0.0)
-		Clay.sphere(_mech, 0.75, hip + Vector3(0, -0.2, 0), DARK_METAL)
-		_limb(hip, knee, 0.55)
-		Clay.sphere(_mech, 0.6, knee, DARK_METAL)
-		_limb(knee, foot, 0.5)
-		Clay.box(_mech, Vector3(1.4, 0.5, 1.7), foot, DARK_METAL)
-
-
-func _arms() -> void:
-	var y := CLEAR * 0.55
-	for side: float in [-1.0, 1.0]:
-		var shoulder := Vector3(side * (OUTER + 0.6), y, 0.0)
-		var ball := Clay.sphere(_mech, 0.85, shoulder, METAL)
-		var elbow := shoulder + Vector3(side * 0.6, -1.9, -0.6)
-		var hand := elbow + Vector3(0.0, -0.4, -2.0)
-		var upper := _limb(shoulder, elbow, 0.5)
-		var sphere := Clay.sphere(_mech, 0.55, elbow, METAL)
-		var lower := _limb(elbow, hand, 0.45)
-		var fist := Clay.box(_mech, Vector3(0.9, 0.9, 0.9), hand, DARK_METAL)
-		if side < 0.0:
-			_left.append_array([ball, upper, sphere, lower, fist])
-
-
-func _limb(from: Vector3, to: Vector3, radius: float) -> Node3D:
-	var part := Clay.limb(_mech, radius, from.distance_to(to), (from + to) * 0.5, METAL)
-	part.look_at_from_position(_mech.global_transform * ((from + to) * 0.5), _mech.global_transform * to,
-		Vector3.UP if absf((to - from).normalized().y) < 0.95 else Vector3.FORWARD)
-	return part
 
 
 ## Lo que se esconde al cortarla de costado: de cada pieza larga, nada (el corte se hace escondiendo enteras las del
