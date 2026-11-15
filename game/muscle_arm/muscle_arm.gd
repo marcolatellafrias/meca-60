@@ -66,17 +66,17 @@ func _ready() -> void:
 	var base := anchor.global_transform
 	var shoulder := base * shoulder_local
 	var pose := _pose(shoulder, shoulder + base.basis * _local(_rest), base.basis)
-	upper = _piece("Brazo", UPPER_MASS * weight, Vector3(MechBody.LEG_THICKNESS, MechBody.LEG_THICKNESS, MechBody.UPPER_ARM), pose["upper"],
+	upper = _piece("Brazo", UPPER_MASS * weight, Vector3(MechBody.LEG_THICKNESS, MechBody.LEG_THICKNESS, upper_length()), pose["upper"],
 		Clay.METAL.darkened(0.1))
-	forearm = _piece("Antebrazo", FOREARM_MASS * weight, Vector3(MechBody.LEG_THICKNESS, MechBody.LEG_THICKNESS, MechBody.FOREARM),
+	forearm = _piece("Antebrazo", FOREARM_MASS * weight, Vector3(MechBody.LEG_THICKNESS, MechBody.LEG_THICKNESS, forearm_length()),
 		pose["forearm"], Clay.METAL.darkened(0.2))
 	# El hombro y el codo, esferas en la punta de arriba de cada pieza; la mano, en la de abajo del antebrazo, con su
 	# forma de choque (el puño).
-	Clay.sphere(upper, MechBody.LEG_THICKNESS * 0.78, Vector3(0, 0, MechBody.UPPER_ARM * 0.5), MechBody.JOINT_COLOR)
-	Clay.sphere(forearm, MechBody.LEG_THICKNESS * 0.66, Vector3(0, 0, MechBody.FOREARM * 0.5), MechBody.JOINT_COLOR)
+	Clay.sphere(upper, MechBody.LEG_THICKNESS * 0.78, Vector3(0, 0, upper_length() * 0.5), MechBody.JOINT_COLOR)
+	Clay.sphere(forearm, MechBody.LEG_THICKNESS * 0.66, Vector3(0, 0, forearm_length() * 0.5), MechBody.JOINT_COLOR)
 	_mount_hand(forearm)
 	Clay.shape_box(forearm, Vector3(MechHand.PALM.y, MechHand.PALM.x * 2.2, MechHand.length() * 0.8) * MechBody.thick,
-		Vector3(0, 0, -MechBody.FOREARM * 0.5 - MechHand.length() * MechBody.thick * 0.4))
+		Vector3(0, 0, -forearm_length() * 0.5 - MechHand.length() * MechBody.thick * 0.4))
 	# El hombro, una bola; el codo, una bisagra sobre su eje (el Z de la articulación).
 	var ball := PinJoint3D.new()
 	_join(ball, anchor, upper, Transform3D(Basis(), shoulder))
@@ -147,7 +147,7 @@ func _physics_process(delta: float) -> void:
 	var k := MuscleArmSettings.current
 	if manual and UIState.gameplay_active():
 		_offset.z -= MechKeys.axis(KEY_W, KEY_S) * k.depth_speed * delta
-		_offset = _offset.limit_length(MechBody.UPPER_ARM + MechBody.FOREARM)
+		_offset = _offset.limit_length(upper_length() + forearm_length())
 	_advance(delta)
 	var base := anchor.global_transform
 	var shoulder := base * shoulder_local
@@ -184,7 +184,7 @@ func _physics_process(delta: float) -> void:
 	forearm.apply_torque(torque)
 	upper.apply_torque(-torque)
 	# Lo que mide.
-	var hand := forearm.global_transform * Vector3(0, 0, -MechBody.FOREARM * 0.5)
+	var hand := forearm.global_transform * Vector3(0, 0, -forearm_length() * 0.5)
 	hand_speed = (forearm.linear_velocity + forearm.angular_velocity.cross(hand - forearm.global_position)).length()
 	top_speed = maxf(top_speed, hand_speed) if punching != Punch.NONE else top_speed
 	off_target = hand.distance_to(pose["wrist"] as Vector3)
@@ -263,5 +263,5 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	var reach := MuscleArmSettings.current.mouse_reach * 0.01 * GameOptions.mouse_sensitivity
 	_offset += Vector3(side * motion.relative.x, -motion.relative.y, 0.0) * reach
-	_offset = _offset.limit_length(MechBody.UPPER_ARM + MechBody.FOREARM)
+	_offset = _offset.limit_length(upper_length() + forearm_length())
 	get_viewport().set_input_as_handled()

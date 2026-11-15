@@ -29,6 +29,13 @@ func _ready() -> void:
 		# Con «-- --redonda», la caja de la cabina redonda.
 		if OS.get_cmdline_user_args().has("--redonda"):
 			mech.cabin_shape = Mech.Cabin.ROUND
+		# Con «-- --vortice», la del vórtice (sus brazos, los de su F2).
+		if OS.get_cmdline_user_args().has("--vortice"):
+			mech.cabin_shape = Mech.Cabin.VORTEX
+		# Con «-- --brazos=N», los brazos de la del vórtice, N veces (VortexCabin.ARMS).
+		for argument in OS.get_cmdline_user_args():
+			if argument.begins_with("--brazos="):
+				VortexCabin.ARMS = float(argument.trim_prefix("--brazos="))
 		mech.position = Vector3(0.0, Mech.standing_height(mech.cabin_shape), 0.0)
 		add_child(mech)
 		await _seconds(2.0)
@@ -36,8 +43,8 @@ func _ready() -> void:
 		for label: String in AIMS:
 			var base := arm.anchor.global_transform
 			var shoulder := base * arm.shoulder_local
-			var point := shoulder + base.basis * arm._local(AIMS[label] * MechBody.reach)
-			var reach := float((MechArm.PUNCHES[MechArm.Punch.STRAIGHT][1][1] as Vector3).length()) * MechBody.reach
+			var point := shoulder + base.basis * arm._local(AIMS[label] * arm.reach())
+			var reach := float((MechArm.PUNCHES[MechArm.Punch.STRAIGHT][1][1] as Vector3).length()) * arm.reach()
 			var goal := shoulder + (point - shoulder).limit_length(reach)
 			var fired := arm.punch_at(point)
 			var closest := INF

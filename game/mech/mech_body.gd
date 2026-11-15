@@ -173,10 +173,10 @@ static func leg(hip_point: Vector3, ground: Vector3, facing: Basis, knee_way := 
 ## UN BRAZO, del hombro `shoulder_point` al puño `fist` (en el mundo, o en el espacio que sea, con `torso_basis` el del
 ## torso en ese espacio). Devuelve `upper` y `forearm` (centro y orientación; el largo por −Z), `elbow` y `wrist` (el
 ## puño, al alcance).
-static func arm(shoulder_point: Vector3, fist: Vector3, side: float, torso_basis: Basis) -> Dictionary:
+static func arm(shoulder_point: Vector3, fist: Vector3, side: float, torso_basis: Basis, arms := 1.0) -> Dictionary:
 	var hint := torso_basis * Vector3(side * ELBOW_HINT.x, ELBOW_HINT.y, ELBOW_HINT.z)
-	var elbow := joint(shoulder_point, fist, UPPER_ARM, FOREARM, hint)
-	var wrist := shoulder_point + (fist - shoulder_point).limit_length(UPPER_ARM + FOREARM - 0.01)
+	var elbow := joint(shoulder_point, fist, UPPER_ARM * arms, FOREARM * arms, hint)
+	var wrist := shoulder_point + (fist - shoulder_point).limit_length((UPPER_ARM + FOREARM) * arms - 0.01)
 	var up := torso_basis * Vector3.UP
 	return {
 		"upper": segment(shoulder_point, elbow, up),

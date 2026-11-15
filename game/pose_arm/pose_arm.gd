@@ -39,11 +39,11 @@ func _ready() -> void:
 	global_transform = Transform3D()
 	_sphere.radius = PoseArmSettings.current.fist_radius * MechBody.thick
 	_rest = stance_at(stance)
-	_upper = Clay.limb(self, MechBody.LEG_THICKNESS * 0.5, MechBody.UPPER_ARM, Vector3.ZERO, Clay.METAL.darkened(0.1))
-	_forearm = Clay.limb(self, MechBody.LEG_THICKNESS * 0.5, MechBody.FOREARM, Vector3.ZERO, Clay.METAL.darkened(0.2))
+	_upper = Clay.limb(self, MechBody.LEG_THICKNESS * 0.5, upper_length(), Vector3.ZERO, Clay.METAL.darkened(0.1))
+	_forearm = Clay.limb(self, MechBody.LEG_THICKNESS * 0.5, forearm_length(), Vector3.ZERO, Clay.METAL.darkened(0.2))
 	# El hombro y el codo, esferas en la punta de arriba de cada pieza; la mano, en la de abajo del antebrazo.
-	Clay.sphere(_upper, MechBody.LEG_THICKNESS * 0.78, Vector3(0, 0, MechBody.UPPER_ARM * 0.5), MechBody.JOINT_COLOR)
-	Clay.sphere(_forearm, MechBody.LEG_THICKNESS * 0.66, Vector3(0, 0, MechBody.FOREARM * 0.5), MechBody.JOINT_COLOR)
+	Clay.sphere(_upper, MechBody.LEG_THICKNESS * 0.78, Vector3(0, 0, upper_length() * 0.5), MechBody.JOINT_COLOR)
+	Clay.sphere(_forearm, MechBody.LEG_THICKNESS * 0.66, Vector3(0, 0, forearm_length() * 0.5), MechBody.JOINT_COLOR)
 	_mount_hand(_forearm)
 	_place(_target())
 
