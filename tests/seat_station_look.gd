@@ -14,7 +14,7 @@ const SLAB := CUBE * 0.5
 const HOLO_SIZE := Vector2(0.66, 0.4)
 const HOLO_PIXELS := Vector2i(660, 400)
 ## El holograma sigue siendo un holograma; lo demás, de taller: chapa pintada, baquelita, lamparitas.
-const HOLO := Color(0.35, 0.95, 1.0)
+const HOLO := Color(1.0, 0.62, 0.25)
 const PAINT := Color(0.42, 0.45, 0.43)
 const PLINTH := Color(0.22, 0.23, 0.23)
 const CAP_LIGHT := Color(0.86, 0.83, 0.74)
@@ -128,7 +128,7 @@ func _module(station: Node3D, at: Vector3, turn: float) -> Node3D:
 	var spot := Node3D.new()
 	station.add_child(spot)
 	spot.position = at
-	spot.rotation_degrees = Vector3(0, -turn * 22.0, 0)
+	spot.rotation_degrees = Vector3(0, turn * 22.0, 0)
 	return spot
 
 
@@ -146,20 +146,22 @@ func _engrave(parent: Node3D, text: String, at: Vector3, height: float) -> void:
 	parent.add_child(label)
 
 
-## LOS BOTONES: un rectángulo con un botón de baquelita por opción y una lamparita al lado del que está elegido.
+## LOS BOTONES: un rectángulo con un botón de baquelita por opción y una lamparita sobre el que está elegido, todo en
+## la cara que mira a la silla (las otras caras, vacías).
 func _buttons(spot: Node3D, names: Array, chosen: int) -> void:
 	_box(spot, Vector3.ZERO, SLAB)
 	for index in names.size():
 		var x := (index + 0.5) / names.size() * CUBE - CUBE * 0.5
 		var on := index == chosen
-		var face := Vector3(x, SLAB, -0.03)
-		Clay.cylinder(spot, 0.034, 0.008, face + Vector3(0, 0.004, 0), RING)
-		Clay.cylinder(spot, 0.027, 0.012 if on else 0.022, face + Vector3(0, 0.006 if on else 0.011, 0),
-			CAP_DARK if on else CAP_LIGHT)
-		Clay.sphere(spot, 0.008, face + Vector3(0, 0.004, -0.05), LAMP_ON if on else LAMP_OFF)
-		var label := StrokeLabel.make(names[index], 0.016, INK)
-		label.max_width = CUBE / names.size() - 0.03
-		label.position = Vector3(x, SLAB * 0.5, CUBE * 0.5 + 0.001)
+		# Todo en la cara que mira a la silla: la lamparita arriba, el botón al medio, el nombre abajo.
+		var face := Vector3(x, SLAB * 0.55, CUBE * 0.5)
+		Clay.cylinder(spot, 0.031, 0.008, face + Vector3(0, 0, 0.004), RING, Vector3(90, 0, 0))
+		Clay.cylinder(spot, 0.024, 0.006 if on else 0.018, face + Vector3(0, 0, 0.011 if on else 0.012),
+			CAP_DARK if on else CAP_LIGHT, Vector3(90, 0, 0))
+		Clay.sphere(spot, 0.007, Vector3(x, SLAB - 0.016, CUBE * 0.5), LAMP_ON if on else LAMP_OFF)
+		var label := StrokeLabel.make(names[index], 0.013, INK)
+		label.max_width = CUBE / names.size() - 0.02
+		label.position = Vector3(x, 0.022, CUBE * 0.5 + 0.001)
 		spot.add_child(label)
 
 
@@ -170,7 +172,7 @@ func _eject(spot: Node3D) -> void:
 	var face := Vector3(0, SLAB * 0.5 + 0.02, CUBE * 0.5)
 	Clay.cylinder(spot, 0.04, 0.01, face + Vector3(0, 0, 0.005), RING, Vector3(90, 0, 0))
 	Clay.cylinder(spot, 0.032, 0.03, face + Vector3(0, 0, 0.018), Clay.RED, Vector3(90, 0, 0))
-	Clay.box(spot, Vector3(0.1, 0.1, 0.045), face + Vector3(0, 0, 0.024), Color(0.75, 0.85, 0.9, 0.22))
+	Clay.box(spot, Vector3(0.09, 0.085, 0.045), face + Vector3(0, 0, 0.024), Color(0.75, 0.85, 0.9, 0.22))
 	var label := StrokeLabel.make("EYECTAR", 0.016, INK)
 	label.position = Vector3(0, 0.022, CUBE * 0.5 + 0.001)
 	spot.add_child(label)
