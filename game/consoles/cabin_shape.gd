@@ -26,6 +26,11 @@ extends Resource
 ## El color del vidrio y cuánto se ve (0, nada; 1, opaco).
 @export var glass_color := Color(0.6, 0.8, 0.92)
 @export_range(0.02, 0.9, 0.01) var glass_opacity := 0.12
+## EL MARCO DEL VIDRIO: nada, sólo las aristas (todo borde de un paño, también donde se junta con la chapa), o las
+## aristas y los parantes entre puestos. El grosor de cada uno, aparte (m).
+@export_enum("sin nada", "sólo las aristas", "aristas y parantes entre puestos") var frame_kind := 1
+@export_range(0.03, 0.3, 0.01) var edge_thickness := 0.12
+@export_range(0.03, 0.3, 0.01) var post_thickness := 0.08
 @export_group("Las sillas")
 ## La altura que buscan igualar las sillas: la de los ojos del que se sienta, sobre el piso (m).
 @export_range(0.9, 1.6, 0.01) var eye_height := 1.15

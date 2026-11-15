@@ -29,6 +29,12 @@ limpio»).*
   del frente cortada a 45° (**dos celdas de trama**), también de vidrio. Paños planos que se tocan justo en las aristas
   (el usuario: «toda esa zona de cristal… el suelo no… en la esquina superior delantera, tenga un chamfer»). Atrás,
   la pared y la mitad de atrás de los costados, de metal.
+- **El marco del vidrio** (`MechCabin._frame`), a elegir en el F2: **sin nada**, **sólo las aristas** o **las aristas y
+  los parantes entre puestos**, con el grosor de las aristas y el de los parantes aparte. La regla de las aristas:
+  **todo borde de un paño lleva marco**, también donde el vidrio se junta con la chapa o con el piso (el usuario,
+  15/11/2026: «yo diría que es con el límite, así tenemos más consistencia»). Los parantes van en las divisiones del
+  tablero (suben por el frente, doblan por el corte y siguen por el vidrio del techo) y en el medio de cada costado:
+  donde nadie mira. Las ideas que se descartaron están en `tests/glass_frame_ideas_look.tscn`.
 - **Adelante, un tablero corrido** de pared a pared, de una celda de fondo, con **tres puestos de cuatro celdas**: el
   brazo izquierdo, la espalda al medio y el brazo derecho (`front_seats`).
 - **Atrás, una tarima de 1,2 m**, de pared a pared y dos celdas de fondo: arriba, al medio, **el movimiento**

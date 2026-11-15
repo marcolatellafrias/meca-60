@@ -64,6 +64,11 @@ static var ROOF_GLASS := 2
 static var PLATFORM_HEIGHT := 1.2
 ## EL COLOR DEL VIDRIO, con cuánto se ve en el alfa.
 static var GLASS_COLOR := Color(0.6, 0.8, 0.92, 0.12)
+## EL MARCO DEL VIDRIO (ver MechCabin._frame): 0 nada, 1 sólo las aristas, 2 las aristas y los parantes entre puestos;
+## y el grosor de las aristas y el de los parantes (m).
+static var FRAME_KIND := 1
+static var EDGE_THICKNESS := 0.12
+static var POST_THICKNESS := 0.08
 ## Una celda de trama (m).
 static var TRAMA := 0.0
 ## Lo de adentro, desde el centro hasta la cara de adentro de la pared.
@@ -108,6 +113,9 @@ static func shape(saved: CabinShape) -> void:
 	LIFT_CELLS = clampi(saved.lift_cells, 1, ACROSS / 4)
 	PLATFORM_HEIGHT = clampf(saved.platform_height, 0.3, HEIGHT_CELLS * CELL - 1.0)
 	GLASS_COLOR = Color(saved.glass_color, saved.glass_opacity)
+	FRAME_KIND = saved.frame_kind
+	EDGE_THICKNESS = saved.edge_thickness
+	POST_THICKNESS = saved.post_thickness
 	TRAMA = TRAMA_CELLS * CELL
 	INNER = ACROSS * 0.5 * TRAMA
 	HALF = INNER + WALL
@@ -131,6 +139,9 @@ static func current() -> CabinShape:
 	now.platform_height = PLATFORM_HEIGHT
 	now.glass_color = Color(GLASS_COLOR, 1.0)
 	now.glass_opacity = GLASS_COLOR.a
+	now.frame_kind = FRAME_KIND
+	now.edge_thickness = EDGE_THICKNESS
+	now.post_thickness = POST_THICKNESS
 	now.eye_height = EYE_HEIGHT
 	now.arm_length = MechBody.arm_size
 	now.leg_length = MechBody.leg_size
@@ -173,6 +184,12 @@ static func front_seats() -> Array[Vector3]:
 	for post in 3:
 		all.append(Vector3(line(POST_CELLS * (post + 0.5) + (ACROSS - POST_CELLS * 3) * 0.5), floor_top(), z))
 	return all
+
+
+## Las divisiones de los puestos de adelante (x de las rayas del tablero), de izquierda a derecha.
+static func post_lines() -> Array[float]:
+	var margin := (ACROSS - POST_CELLS * 3) * 0.5
+	return [line(margin + POST_CELLS), line(margin + POST_CELLS * 2)]
 
 
 ## LA SILLA DE ARRIBA, en el medio de la tarima: la del movimiento.

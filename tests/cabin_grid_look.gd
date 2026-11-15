@@ -5,7 +5,7 @@ extends Node3D
 ## arriba; y desde arriba, sin techo. Imprime las medidas (ver CabinGrid).
 ##   tools/godot_ventana.sh res://tests/cabin_grid_look.tscn -- --salida=C:/carpeta --celdas=13,11
 ## `--celdas=13,11`: las celdas de trama (en celdas chicas) que mira; sin eso, la guardada. Y, si se quiere, la misma
-## forma con otro vidrio o tarima: `--costados=9 --techo=6 --tarima=1.8` (ver CabinShape).
+## forma con otro vidrio, tarima o marco: `--costados=9 --techo=6 --tarima=1.8 --marco=2` (ver CabinShape).
 
 const VIEW := Vector2i(1280, 720)
 
@@ -24,7 +24,7 @@ func _ready() -> void:
 		if argument.begins_with("--celdas="):
 			for each in argument.trim_prefix("--celdas=").split(","):
 				_cells.append(int(each))
-		for knob: String in ["costados:side_glass", "techo:roof_glass", "tarima:platform_height"]:
+		for knob: String in ["costados:side_glass", "techo:roof_glass", "tarima:platform_height", "marco:frame_kind"]:
 			var parts := knob.split(":")
 			if argument.begins_with("--%s=" % parts[0]):
 				_changes[parts[1]] = float(argument.trim_prefix("--%s=" % parts[0]))

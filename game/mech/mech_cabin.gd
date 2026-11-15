@@ -23,6 +23,8 @@ extends Node3D
 const SLAB := CabinGrid.SLAB
 const WALL := CabinGrid.WALL
 const KIT := Color(0.78, 0.27, 0.27)
+## El marco del vidrio: el metal, un poco más oscuro.
+const FRAME := Color(0.36, 0.38, 0.41)
 const BATTERY := Color(0.93, 0.75, 0.16)
 const AMMO := Color(0.47, 0.53, 0.32)
 const SEAT_SCENE := "res://game/interactables/activatable/working_seat.tscn"
@@ -76,6 +78,7 @@ func _ready() -> void:
 			_solid(Vector3(WALL, CabinGrid.CLEAR, back - side_to), Vector3(side * (half - WALL * 0.5), mid, (side_to + back) * 0.5),
 				metal)
 	_glass(cut, side_to, roof_to)
+	_frame(cut, side_to, roof_to)
 	_desk()
 	_platform()
 	_seats()
@@ -112,6 +115,66 @@ func _glass(cut: float, side_to: float, roof_to: float) -> void:
 			Vector3(x, yc, front)])
 		Clay.shape_box(interior, Vector3(0.1, y1 - y0, side_to - front), Vector3(side * (half - 0.02), (y0 + y1) * 0.5,
 			(front + side_to) * 0.5))
+
+
+## EL MARCO DEL VIDRIO (CabinGrid.FRAME_KIND; el usuario, 15/11/2026: «dejaría ambos como opciones… con una tercera
+## opción que sea sin nada… que pueda cambiar el grosor independientemente de los principales… a los de los puestos»).
+##   · LAS ARISTAS, con una sola regla: TODO BORDE DE UN PAÑO lleva marco, también donde el vidrio se junta con la chapa
+##     o con el piso («preferiría que elijas… yo diría que es con el límite, así tenemos más consistencia»).
+##   · LOS PARANTES ENTRE PUESTOS: en cada división del tablero, uno que sube por el frente, dobla por el corte y sigue
+##     por el vidrio del techo; y uno en el medio de cada costado, de piso a techo. Caen donde nadie mira.
+## Son barras cuadradas centradas en la arista; sólo se ven (adentro, se choca con el vidrio).
+func _frame(cut: float, side_to: float, roof_to: float) -> void:
+	if CabinGrid.FRAME_KIND == 0:
+		return
+	var h := CabinGrid.HALF
+	var y0 := CabinGrid.floor_top()
+	var y1 := CabinGrid.HALF_HEIGHT
+	var yc := y1 - cut
+	var f := -h
+	var roof_from := f + cut
+	var edge := CabinGrid.EDGE_THICKNESS
+	# El frente: abajo, el pliegue con el corte y el del corte con el techo; el vidrio del techo, su borde de atrás.
+	_bar(Vector3(-h, y0, f), Vector3(h, y0, f), edge)
+	if cut > 0.0:
+		_bar(Vector3(-h, yc, f), Vector3(h, yc, f), edge)
+	_bar(Vector3(-h, y1, roof_from), Vector3(h, y1, roof_from), edge)
+	if roof_to - roof_from > 0.01:
+		_bar(Vector3(-h, y1, roof_to), Vector3(h, y1, roof_to), edge)
+	for side: float in [-1.0, 1.0]:
+		var x := side * h
+		_bar(Vector3(x, y0, f), Vector3(x, yc, f), edge)
+		if cut > 0.0:
+			_bar(Vector3(x, yc, f), Vector3(x, y1, roof_from), edge)
+		# Arriba, la arista del costado con el techo: hasta donde llegue el vidrio de cualquiera de los dos.
+		_bar(Vector3(x, y1, roof_from), Vector3(x, y1, maxf(side_to, roof_to)), edge)
+		_bar(Vector3(x, y0, f), Vector3(x, y0, side_to), edge)
+		_bar(Vector3(x, y0, side_to), Vector3(x, y1, side_to), edge)
+	if CabinGrid.FRAME_KIND < 2:
+		return
+	var post := CabinGrid.POST_THICKNESS
+	for x in CabinGrid.post_lines():
+		_bar(Vector3(x, y0, f), Vector3(x, yc, f), post)
+		if cut > 0.0:
+			_bar(Vector3(x, yc, f), Vector3(x, y1, roof_from), post)
+		if roof_to - roof_from > 0.01:
+			_bar(Vector3(x, y1, roof_from), Vector3(x, y1, roof_to), post)
+	for side: float in [-1.0, 1.0]:
+		var z := (roof_from + side_to) * 0.5
+		var top := y1 if z >= roof_from else yc + (z - f)
+		_bar(Vector3(side * h, y0, z), Vector3(side * h, top, z), post)
+
+
+## Una barra cuadrada del marco, de `a` a `b`, centrada en la línea.
+func _bar(a: Vector3, b: Vector3, thick: float) -> void:
+	if a.distance_to(b) < 0.01:
+		return
+	var along := (b - a).normalized()
+	var helper := Vector3.UP if absf(along.y) < 0.9 else Vector3.FORWARD
+	var up := (helper - along * helper.dot(along)).normalized()
+	var bar := Clay.box(self, Vector3(thick, thick, a.distance_to(b) + thick), (a + b) * 0.5, FRAME)
+	bar.name = "Marco"
+	bar.basis = Basis(up.cross(along), up, along)
 
 
 ## Un paño de vidrio plano, con sus esquinas en orden (un abanico desde la primera).
