@@ -9,7 +9,11 @@ extends Node3D
 ##   · LA TARIMA CUADRADA AL MEDIO, con un escalón todo alrededor; el ascensor adentro, atrás; el movimiento delante.
 ##   · TRES SILLAS EN FILA, mirando al frente, sin tableros; los recursos al ras de la pared de atrás.
 ## Sobre la meca de verdad (sus piernas y sus brazos; la caja escondida).
-##   tools/godot_ventana.sh res://tests/square_central_look.tscn -- --salida=C:/carpeta
+##   tools/godot_ventana.sh res://tests/square_central_look.tscn -- --salida=C:/carpeta [--escalonada]
+## `--escalonada` (el usuario, 15/11/2026: «toda la parte desde donde está el del medio sea más elevada y tenga
+## escalones, pero que ocupen todo el ancho… solamente hacia la dirección de los del frente… el ascensor sea un recuadro
+## al final de la pared de atrás… de extremo a extremo… los 7 componentes en las paredes izquierda y derecha… reduciría
+## la abertura lateral del vidrio»; y más baja: la cabina de 2,3 m y el disco de 1 m, los de la chata).
 
 const VIEW := Vector2i(1280, 720)
 const IN := 3.07
@@ -43,6 +47,7 @@ var _roof: Node3D = null
 var _clear := 2.3
 var _disc := 1.0
 var _slab := 0.22
+var _stepped := false
 
 
 func _ready() -> void:
@@ -51,8 +56,9 @@ func _ready() -> void:
 			_folder = argument.trim_prefix("--salida=")
 	get_window().size = VIEW
 	_stage()
-	_clear = RoundGrid.CLEAR
-	_disc = RoundGrid.DISC
+	_stepped = OS.get_cmdline_user_args().has("--escalonada")
+	_clear = 2.3 if _stepped else RoundGrid.CLEAR
+	_disc = 1.0 if _stepped else RoundGrid.DISC
 	_slab = RoundGrid.SLAB
 	# La meca de verdad, sin cabina, con la caja de esta (12 celdas de 51 cm por lado y el alto de la redonda).
 	var form := CabinGrid.current()
@@ -77,7 +83,10 @@ func _ready() -> void:
 	_glass_paint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_glass_paint.cull_mode = BaseMaterial3D.CULL_DISABLED
 	_glass_paint.roughness = 0.15
-	_build()
+	if _stepped:
+		_build_stepped()
+	else:
+		_build()
 	print("CUADRADA: %.2f m de lado · cabina %.2f m · disco %.2f m · la caja a %.2f m del piso" % [(IN + WALL) * 2.0, _clear,
 		_disc, Mech.standing_height()])
 	var shots: Array = []
@@ -172,6 +181,64 @@ func _build() -> void:
 	Clay.box(_shell, Vector3(0.4, 0.5, 0.12), Vector3(0.0, 0.6, back), BATTERY)
 
 
+## LA ESCALONADA: de la silla del medio hacia atrás, el piso elevado de pared a pared, con escalones de pared a pared
+## que bajan sólo hacia adelante; el ascensor, una franja contra la pared de atrás, de pared a pared; los siete
+## recursos en las paredes de los costados, sobre lo elevado; el vidrio de los costados, corto.
+const RAISED := 0.45
+const RAISED_FROM := -0.9
+const STEPS := 3
+const TREAD := 0.32
+const LIFT_DEEP := 1.1
+const SIDE_GLASS := 1.3
+
+
+func _build_stepped() -> void:
+	var half := IN + WALL
+	var mid := _clear * 0.5
+	Clay.box(_shell, Vector3(half * 2.0, _disc, half * 2.0), Vector3(0, -_slab - _disc * 0.5, 0), DARK_METAL)
+	Clay.box(_shell, Vector3(half * 2.0 + 0.12, 0.12, half * 2.0 + 0.12), Vector3(0, -_slab, 0), METAL.darkened(0.25))
+	Clay.box(_shell, Vector3(half * 2.0, _slab, half * 2.0), Vector3(0, -_slab * 0.5, 0), FLOOR)
+	_roof = Clay.box(_shell, Vector3(half * 2.0, _slab, half * 2.0), Vector3(0, _clear + _slab * 0.5, 0), METAL)
+	# Las paredes: atrás, metal; los costados, vidrio sólo en su primer tramo; el frente, vidrio.
+	Clay.box(_shell, Vector3(half * 2.0, _clear, WALL), Vector3(0, mid, IN + WALL * 0.5), METAL)
+	var metal_from := -IN + SIDE_GLASS
+	for side: float in [-1.0, 1.0]:
+		Clay.box(_shell, Vector3(WALL, _clear, IN - metal_from), Vector3(side * (IN + WALL * 0.5), mid, (metal_from + IN) * 0.5),
+			METAL)
+		_glass(Vector3(0.04, _clear, SIDE_GLASS + WALL), Vector3(side * (half - 0.02), mid, -half + (SIDE_GLASS + WALL) * 0.5))
+	_glass(Vector3(half * 2.0, _clear, 0.04), Vector3(0, mid, -half + 0.02))
+	# Lo elevado, de pared a pared, desde la silla del medio hacia atrás, hasta el ascensor.
+	var lift_from := IN - LIFT_DEEP
+	Clay.box(_shell, Vector3(IN * 2.0, RAISED, lift_from - RAISED_FROM), Vector3(0, RAISED * 0.5, (RAISED_FROM + lift_from) * 0.5),
+		DECK)
+	# Los escalones, de pared a pared, bajando hacia adelante.
+	for k in STEPS:
+		var tall := RAISED * (k + 1) / (STEPS + 1)
+		var z0 := RAISED_FROM - TREAD * (STEPS - k)
+		Clay.box(_shell, Vector3(IN * 2.0, tall, TREAD), Vector3(0, tall * 0.5, z0 + TREAD * 0.5), DECK.darkened(0.04 * (STEPS - k)))
+	# El ascensor: la franja de atrás, de pared a pared, al ras de lo elevado.
+	Clay.box(_shell, Vector3(IN * 2.0 - 0.1, 0.06, LIFT_DEEP - 0.1), Vector3(0, RAISED - 0.03, (lift_from + IN) * 0.5), LIFT)
+	# Las sillas: tres en fila al frente; el movimiento arriba, al medio, al borde de lo elevado.
+	for x: float in [-1.9, 0.0, 1.9]:
+		_post(Vector3(x, 0.0, -2.25))
+	_post(Vector3(0.0, RAISED, RAISED_FROM + 0.5))
+	# Los siete recursos, en las paredes de los costados, sobre lo elevado: a la izquierda dos kits, una munición y la
+	# batería; a la derecha dos kits y la otra munición.
+	var wall_x := IN - 0.06
+	var along := [RAISED_FROM + 0.6, RAISED_FROM + 1.4, RAISED_FROM + 2.2, RAISED_FROM + 3.0]
+	var left := [KIT, KIT, AMMO, BATTERY]
+	var right := [KIT, KIT, AMMO]
+	for i in left.size():
+		_side_box(-wall_x, along[i], left[i])
+	for i in right.size():
+		_side_box(wall_x, along[i], right[i])
+
+
+func _side_box(x: float, z: float, color: Color) -> void:
+	var size := Vector2(0.5, 0.45) if color == BATTERY else Vector2(0.6, 0.6)
+	Clay.box(_shell, Vector3(0.12, size.y, size.x), Vector3(x, RAISED + 0.5 + size.y * 0.5, z), color)
+
+
 func _glass(size: Vector3, at: Vector3) -> void:
 	var pane := Clay.box(_shell, size, at, Color.WHITE)
 	pane.material_override = _glass_paint
@@ -207,7 +274,7 @@ func _save(shots: Array) -> void:
 		var shot: Image = shots[index]
 		shot.resize(w, h, Image.INTERPOLATE_BILINEAR)
 		sheet.blit_rect(shot, Rect2i(Vector2i.ZERO, shot.get_size()), Vector2i(w * (index % 2), h * (index / 2)))
-	var path := "%s/cuadrada_central.png" % _folder
+	var path := "%s/%s.png" % [_folder, "cuadrada_escalonada" if _stepped else "cuadrada_central"]
 	sheet.save_png(path)
 	print("CAPTURA ", path)
 
