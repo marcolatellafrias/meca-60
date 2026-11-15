@@ -154,7 +154,17 @@ func seat_dummies() -> void:
 	var holder := mech.get_parent() as Node3D
 	if holder == null:
 		return
+	# EL PRIMER PANEL JUGABLE (ver SeatPanels, docs/technical/paneles.md): en la primera silla de la derecha, la del
+	# brazo derecho. Esa silla queda sin maniquí, para sentarse uno con E.
+	SeatPanels.attach(self)
+	var free_chair: SeatInteractable = null
+	for chair_found in chairs:
+		if chair_found.position.x > 0.0:
+			free_chair = chair_found
+			break
 	for i in chairs.size():
+		if chairs[i] == free_chair:
+			continue
 		var dummy := (load(DUMMY_SCENE) as PackedScene).instantiate() as BoneInstantiator
 		dummy.kind = CharacterKind.npc()
 		dummy.master_seed = EntityInstantiation.debug_seed(DUMMY_BODIES[i % DUMMY_BODIES.size()], i)
