@@ -18,6 +18,7 @@ El detalle, en [[partida]].
 |---|---|
 | [[partida]] | El loop, los cuatro finales, la traición y el fuego amigo. |
 | [[tripulacion]] | Cuántos jugadores; personajes de una sola vida, por semilla; la billetera (abierta). |
+| [[dos-paradigmas]] | **Los dos caminos de hoy**: el disco abierto (límite físico, todos hacen todo) y las cabinas separadas (límite de información y estrategia), los dos discretos. |
 | [[la-meca]] | La meca como diseño: equilibrio y no estadísticas, una versión por cantidad de jugadores, una sola vida, eyectarse, los dos caminos. |
 | [[contratos]] | Las mecas enemigas (dificultad y paga, arquetipos con partes y afijos) y la otra tripulación. |
 | [[base]] | La compañía bajo tierra: contratos, mejoras, práctica, reparación (abierta), carga. |
