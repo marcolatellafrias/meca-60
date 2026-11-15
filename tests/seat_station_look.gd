@@ -115,11 +115,13 @@ func _station(station: Node3D) -> void:
 	var back := -0.75 * CabinGrid.TRAMA
 	_hologram(station, Vector3(0, top, back - 0.14))
 	# A la izquierda: eyectar, y el cubo de estado encima.
-	var left := _module(station, Vector3(-0.56, top, back - 0.2), 1.0)
+	# Los módulos, contra los costados del hueco (ver CabinGrid.hole_cells), sobre la franja de adelante.
+	var side := CabinGrid.hole_cells() * CabinGrid.TRAMA * 0.5 - CUBE * 0.5 - 0.03
+	var left := _module(station, Vector3(-side, top, back - 0.2), 1.0)
 	_eject(left)
 	_status(left, Vector3(0, SLAB, 0))
 	# A la derecha: los botones del brazo.
-	var right := _module(station, Vector3(0.56, top, back - 0.2), -1.0)
+	var right := _module(station, Vector3(side, top, back - 0.2), -1.0)
 	_buttons(right, ["PIÑA", "AGARRE", "SIERRA"], 0)
 
 
