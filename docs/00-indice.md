@@ -42,6 +42,7 @@ El detalle, en [[partida]].
 | [[jefe-bola]] | El primer jefe: la bola con su rendija y cuatro tentáculos con su propio IK (el cañón que corre por la rendija y dispara; hecha bola, rueda y pega; el barrido con las paletas; lo maneja la computadora, como un jefe de Souls; vida y barras; la K cambia entre los cuatro tipos de meca). |
 | [[proyectiles]] | Los proyectiles por red y la arena de esquivar. |
 | [[mapa]] | El mapa de pelea: una arena circular con barrios, escaleras y recursos en el borde. |
+| [[sucursal]] | La base en el sandbox: el plano 6 en arcilla (elevador, gimnasio, consolas, casilleros). |
 | [[escaleras]] | La regla de toda escalera (`Stairs`). |
 | [[pixel-art]] | Pintar con píxeles (experimento), cara por cara. |
 | [[sandbox]] | **Las buenas prácticas del sandbox**: supercategorías, filas, panel chico o panel F, teclas reservadas. |

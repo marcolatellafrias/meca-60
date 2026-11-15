@@ -22,15 +22,17 @@ en un **elevador** que la sube derecho a la arena.
   una compuerta y se sale a la arena, sin corte.
 - *Propuesta:* **al volver** (después del cartel, donde sí hay corte) la meca aparece dormida en el elevador.
 
-## El plano (plano 6, 15/11/2026, en revisión con el usuario)
+## El plano (plano 6, 15/11/2026)
+Armado en arcilla en la fila **Base** (ver [[sucursal]]).
 - **Un solo piso, todo al mismo nivel y sin divisiones** (ni vidrios, ni andenes, ni plataforma en un pozo). El
   **elevador** es un cuadrado marcado del mismo piso, donde duerme la meca; al confirmar el contrato, ese piso sube con
   ella. Se camina directo hasta la meca. Debajo del elevador, pared.
+- **Una línea de peligro** en el piso (rayas amarillas y negras) separa el gimnasio de la franja de las consolas.
 - **El gimnasio** sigue al elevador. **La bolsa**, a la derecha, centrada en alto y con margen: si vuela de un golpe
   fuerte, no llega a la pared.
 - **Las consolas, en una franja angosta** (6 m) debajo del gimnasio, contra la pared; al ser angosta, las cosas son más
   anchas:
-  1. **Los contratos**: un tablero ancho en la pared y la mesa delante.
+  1. **Los contratos**: una consola, como las otras.
   2. **Customizar la meca**: dos terminales, **la armería** y **los cosméticos con la pintura** (la pintura es una
      interfaz en esa terminal, sin latas ni pintar a mano).
   3. **Los personajes**: los **casilleros** con la ropa, **el cuadro del empleado del mes**, chiquito, al lado, y el

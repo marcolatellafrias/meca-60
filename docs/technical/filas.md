@@ -12,6 +12,7 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 | Meca cinemática | `MechArchetype` (`Mech.Arms.POSE`, cinemática) | `KinematicMover`, `StompFeet` | `KinematicPanel` (F1), `CabinShapePanel` (F2), `PoseArmPanel` (F3) | `mech_kinematic_look` | la meca entera |
 | Laboratorio cinemático | `KinematicLabArchetype` | la meca simplificada (`Mech` cinemática, sin brazos ni cabina) | `KinematicPanel` (F1), `CabinShapePanel` (F2) | `kinematic_lab_look`, `kinematic_lab_moves_look` | `AreaStrike.loose_in`, `MechKeys.axis` |
 | Mapa de pelea | `BattlefieldArchetype` | `game/battlefield/` (`Battlefield`) | — | `battlefield_check` | la meca, `PackageArchetype`, `Clay`, `Stairs` |
+| Base | `BaseArchetype` | `game/base/` entero (`BaseLayout`) | — | `base_look` | la meca, `Clay` |
 | Brazo | `MuscleArmArchetype` | `game/muscle_arm/` entero | `MuscleArmPanel` (F1) | `muscle_arm_look` | `MechArm`, `MechBody.arm`, `MechHand`, `TestBall`, `Mech.SHOULDER` |
 | Cubo con piernas (archivada) | `LeggedCubeArchetype` | `game/archive/line_cube/` entero | `LeggedCubePanel` (F1) | `legged_check` | `MechBody`, `MechLeg`, `Clay`, `TestBall` |
 | Personajes | `PeopleArchetype` | `CharacterGetUp` | `LocomotionPanel` (F1) y `LocomotionTuner` (F3), los de la fila Locomoción | `people_look`, `sizes_check` | el personaje |
