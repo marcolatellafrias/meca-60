@@ -3,7 +3,7 @@ extends Node3D
 ## LA MECA CON TODO PUESTO, PARA MIRAR (unos 8 segundos, sin el sandbox): una meca parada, vestida con ArmoryParts.dress
 ## (el puño pesado en el izquierdo, el taladro afuera en el derecho, la ametralladora y el lanzamisiles en la espalda, y
 ## las placas en los dos tramos de brazos y piernas). Capturas de adelante, de atrás y de costado.
-##   tools/godot_ventana.sh res://tests/armory_dressed_look.tscn -- --salida=C:/carpeta
+##   tools/godot_ventana.sh res://tests/armory_dressed_look.tscn -- --salida=C:/carpeta [--sin-chanfles] [--alto=5]
 
 var _folder := ""
 
@@ -27,6 +27,30 @@ func _ready() -> void:
 	world.environment.ambient_light_color = Color(0.82, 0.84, 0.87)
 	world.environment.ambient_light_energy = 0.7
 	add_child(world)
+	# LA VARIANTE (el usuario, 15/11/2026: «sin los chamfers de las cuatro esquinas y con la altura rebajada… a 5 metros»):
+	# --sin-chanfles, la caja sin el corte de las esquinas; --alto=5, la altura de la cintura (el «altura» del cartel, de
+	# la caja al piso), con muslo y canilla acortados en la misma proporción. Sólo en esta corrida: no se guarda nada.
+	var waist := 0.0
+	var prefix := "meca_puesta"
+	for argument in OS.get_cmdline_user_args():
+		if argument == "--sin-chanfles":
+			var shape := CabinShape.new()
+			if ResourceLoader.exists(CabinGrid.SAVED):
+				shape = (load(CabinGrid.SAVED) as CabinShape).duplicate() as CabinShape
+			shape.corner_cells = 0
+			CabinGrid.apply(shape)
+			prefix = "meca_variante"
+		elif argument.begins_with("--alto="):
+			waist = float(argument.trim_prefix("--alto="))
+	if waist > 0.0:
+		var fixed := MechBody.ANKLE + MechBody.HIP_DROP
+		var legs := (MechBody.WAIST - fixed) / (MechBody.THIGH + MechBody.SHIN)
+		var factor := (waist - fixed) / ((MechBody.THIGH + MechBody.SHIN) * legs)
+		print("cintura de %.1f a %.1f m: muslo y canilla x %.2f" % [MechBody.WAIST, waist, factor])
+		MechBody.THIGH *= factor
+		MechBody.SHIN *= factor
+		MechBody.WAIST = waist
+		prefix = "meca_variante"
 	var mech := Mech.new()
 	mech.arms_kind = Mech.Arms.POSE
 	mech.scripted = true
@@ -47,12 +71,12 @@ func _ready() -> void:
 	var center := mech.global_position + Vector3(0, -4.0, 0)
 	var forward := -mech.global_basis.z
 	var right := mech.global_basis.x
-	for shot: Array in [["meca_puesta_1_adelante", forward * 30.0 + right * 12.0 + Vector3(0, 8, 0)],
-			["meca_puesta_2_atras", -forward * 30.0 - right * 14.0 + Vector3(0, 14, 0)],
-			["meca_puesta_3_costado", right * 32.0 + forward * 4.0 + Vector3(0, 4, 0)]]:
+	for shot: Array in [["_1_adelante", forward * 30.0 + right * 12.0 + Vector3(0, 8, 0)],
+			["_2_atras", -forward * 30.0 - right * 14.0 + Vector3(0, 14, 0)],
+			["_3_costado", right * 32.0 + forward * 4.0 + Vector3(0, 4, 0)]]:
 		eye.global_position = center + (shot[1] as Vector3)
 		eye.look_at(center)
-		await _shot(shot[0])
+		await _shot(prefix + str(shot[0]))
 	get_tree().quit()
 
 
