@@ -86,6 +86,9 @@ func top_seat() -> Vector3:
 ## adelante a la izquierda, hacia la derecha): el frente, el chanfle de adelante a la derecha, el costado derecho, el de
 ## atrás a la derecha, la pared de atrás, el de atrás a la izquierda, el costado izquierdo, el de adelante a la izquierda.
 static func outline(half: float, cut: float) -> PackedVector2Array:
+	# Sin corte, el cuadrado (sin lados de largo cero).
+	if cut < 0.001:
+		return PackedVector2Array([Vector2(-half, -half), Vector2(half, -half), Vector2(half, half), Vector2(-half, half)])
 	return PackedVector2Array([Vector2(-half + cut, -half), Vector2(half - cut, -half), Vector2(half, -half + cut),
 		Vector2(half, half - cut), Vector2(half - cut, half), Vector2(-half + cut, half), Vector2(-half, half - cut),
 		Vector2(-half, -half + cut)])
@@ -93,7 +96,12 @@ static func outline(half: float, cut: float) -> PackedVector2Array:
 
 ## El borde de afuera de la caja: el de adentro corrido el espesor de la pared (el chanfle a 45° crece un poco menos).
 static func outer_outline() -> PackedVector2Array:
-	return outline(CabinGrid.HALF, corner() + CabinGrid.WALL * (2.0 - sqrt(2.0)))
+	return outline(CabinGrid.HALF, grown_corner(CabinGrid.WALL))
+
+
+## El corte de las esquinas de un borde corrido `by` hacia afuera (a 45°, crece un poco menos; sin corte, sigue sin).
+static func grown_corner(by: float) -> float:
+	return corner() + by * (2.0 - sqrt(2.0)) if corner() > 0.001 else 0.0
 
 
 ## Un octógono regular con un lado al frente, de `reach` de su centro a cada lado.
@@ -161,7 +169,7 @@ func _base(edge: PackedVector2Array, center: Vector2, hole: float) -> void:
 	base.name = "Pelvis de abajo"
 	add_child(base)
 	_ring_shapes(edge, gap, bottom, joint)
-	var belt := _fine(outline(CabinGrid.HALF + 0.06, corner() + CabinGrid.WALL * (2.0 - sqrt(2.0)) + 0.06 * (2.0 - sqrt(2.0))))
+	var belt := _fine(outline(CabinGrid.HALF + 0.06, grown_corner(CabinGrid.WALL + 0.06)))
 	add_child(_plate(belt, edge, joint - 0.06, joint + 0.06, Clay.METAL.darkened(0.35)))
 
 
@@ -305,7 +313,12 @@ func _supplies() -> void:
 	var floor_top := CabinGrid.floor_top()
 	var cut := corner()
 	var kit := minf(0.5, cut * sqrt(2.0) * 0.45)
-	for side: float in [-1.0, 1.0]:
+	# SIN LUGAR EN LOS CHANFLES (el corte chico o cero; el usuario, 15/11/2026, eligió que el corte llegue a 0): los
+	# cuatro kits en la pared de atrás, a los costados de las municiones.
+	if kit < 0.3:
+		for x: float in [-1.8, -1.2, 1.2, 1.8]:
+			Clay.box(self, Vector3(0.5, 0.5, 0.12), Vector3(x, floor_top + 0.7, inner - 0.06), KIT)
+	for side: float in ([] if kit < 0.3 else [-1.0, 1.0]):
 		var middle := Vector2(side * (inner - cut * 0.5), inner - cut * 0.5)
 		var out := Vector2(side, 1.0).normalized()
 		var along := Vector2(-out.y, out.x)

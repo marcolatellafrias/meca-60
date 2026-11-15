@@ -29,7 +29,8 @@ Desde el 15/11/2026 la cuadrada tiene **dos interiores**, a elegir en el F2 (`Ca
 arma es **el del centro octogonal con chanfles** (`ChamferCabin`, el usuario: «tiene que ser en realidad la nueva que
 hicimos… con chamfers y tarima octogonal»): la planta 1 de la maqueta de los chanfles (`tests/chamfer_cabin_look.tscn`)
 en la meca de verdad.
-- **La caja con las cuatro esquinas cortadas** (`corner_cells`, en celdas chicas; 18: 71 cm). Adelante, el vidrio: el
+- **La caja con las cuatro esquinas cortadas** (`corner_cells`, en celdas chicas; 18: 71 cm; puede ir a 0, y entonces
+  los kits pasan a la pared de atrás, a los costados de las municiones). Adelante, el vidrio: el
   frente, los chanfles de adelante y los costados hasta donde diga el vidrio de los costados, con el zócalo abajo.
   Atrás, metal. **La cabeza es un perfil** (`ChamferCabin._top`, la plana con el corte o la rampa): las paredes y el
   techo se parten donde el perfil dobla y donde termina el vidrio, así cada paño es plano. El marco sigue la misma

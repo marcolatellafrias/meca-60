@@ -140,7 +140,7 @@ static func shape(saved: CabinShape) -> void:
 	CHAMFER = clampi(saved.chamfer, 0, ACROSS / 2)
 	HEAD = clampi(saved.head, 0, 1)
 	INTERIOR = clampi(saved.interior, 0, 1)
-	CORNER_CELLS = clampi(saved.corner_cells, 8, 40)
+	CORNER_CELLS = clampi(saved.corner_cells, 0, 40)
 	DECK_CELLS = clampi(saved.deck_cells, 18, 60)
 	DECK_STEPS = clampi(saved.deck_steps, 1, 5)
 	LIFT_BACK_CELLS = clampi(saved.lift_back_cells, 0, 30)

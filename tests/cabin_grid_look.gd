@@ -28,7 +28,7 @@ func _ready() -> void:
 				_cells.append(int(each))
 		for knob: String in ["costados:side_glass", "techo:roof_glass", "tarima:platform_height", "marco:frame_kind",
 				"ascensor_cuadrado:lift_square", "cabeza:head", "frente:front_height_cells", "alto:height_cells", "zocalo:sill_cells",
-				"chanfle:chamfer", "interior:interior", "pelvis:base_cells"]:
+				"chanfle:chamfer", "interior:interior", "pelvis:base_cells", "esquinas:corner_cells"]:
 			var parts := knob.split(":")
 			if argument.begins_with("--%s=" % parts[0]):
 				_changes[parts[1]] = float(argument.trim_prefix("--%s=" % parts[0]))
