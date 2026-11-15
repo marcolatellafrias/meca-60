@@ -15,21 +15,25 @@ extends MechCabin
 ##     adelante, los mandos de los brazos a los costados y las ametralladoras en enchufes del borde (sólo se ven).
 ## Arriba se camina al aire libre: el marco (ver MechCabin) lleva a todos hasta 2,6 m sobre el primer piso.
 
-const OUTER := 3.2
-const WALK := 2.75
+## EL RADIO (m): todo lo del borde, la escalera y la planta baja sale de acá. *Era 3,2; el usuario, al probarla:
+## «está muy chico el radio, agrandalo».*
+const OUTER := 5.5
+const WALK := OUTER - 0.45
 const RIM_OUT := 1.0
 const RIM_IN := 0.8
 const SHELL := 0.15
 const CORE := 0.85
 const TUBE := 0.7
 const TUBE_WALL := 0.12
-const CLEAR := 2.3
+## El alto libre de la planta baja (m). *Era 2,3; el usuario: «aumentá la altura de los pisos, me golpeo con el techo
+## cuando quiero bajar por la escalera».*
+const CLEAR := 3.0
 const DECK_SLAB := 0.25
 const STAIR_FROM := PI / 3.0
 const STAIR_TO := PI * 25.0 / 18.0
 const STEPS := 14
-const STAIR_IN := 1.9
-const STAIR_OUT := 2.7
+const STAIR_OUT := WALK - 0.05
+const STAIR_IN := STAIR_OUT - 1.1
 const HOLE_FROM_STEP := 3
 ## La puerta del tubo, en la planta baja (ángulo desde el frente, hacia la derecha) y su medio ancho.
 const DOOR_AT := PI * 11.0 / 6.0
@@ -231,13 +235,13 @@ func _rooms() -> void:
 	var floor0 := ground_floor()
 	var at := func(degrees: float, reach: float, y: float) -> Vector3:
 		return out(deg_to_rad(degrees)) * reach + Vector3(0, floor0 + y, 0)
-	Clay.box(self, Vector3(1.6, 1.5, 0.9), at.call(0.0, 2.35, 0.75), DARK_METAL.lightened(0.1))
-	Clay.shape_box(interior, Vector3(1.6, 1.5, 0.9), at.call(0.0, 2.35, 0.75))
+	Clay.box(self, Vector3(1.6, 1.5, 0.9), at.call(0.0, OUTER - 0.85, 0.75), DARK_METAL.lightened(0.1))
+	Clay.shape_box(interior, Vector3(1.6, 1.5, 0.9), at.call(0.0, OUTER - 0.85, 0.75))
 	for x: float in [-0.5, 0.0, 0.5]:
-		Clay.cylinder(self, 0.08, 0.7, at.call(0.0, 2.35, 1.85) + Vector3(x, 0, 0), METAL)
-	Clay.cylinder(self, 0.25, 0.4, at.call(0.0, 1.75, 0.9), RED, Vector3(90, 0, 0))
+		Clay.cylinder(self, 0.08, 0.7, at.call(0.0, OUTER - 0.85, 1.85) + Vector3(x, 0, 0), METAL)
+	Clay.cylinder(self, 0.25, 0.4, at.call(0.0, OUTER - 1.45, 0.9), RED, Vector3(90, 0, 0))
 	var bench_angle := deg_to_rad(300.0)
-	var bench := Clay.box(self, Vector3(1.4, 0.9, 0.6), at.call(300.0, 2.6, 0.45), Color(0.5, 0.42, 0.32))
+	var bench := Clay.box(self, Vector3(1.4, 0.9, 0.6), at.call(300.0, OUTER - 0.6, 0.45), Color(0.5, 0.42, 0.32))
 	bench.rotation.y = -bench_angle
 	Clay.shape_box(interior, Vector3(1.4, 0.9, 0.6), bench.position, bench.basis)
 	Clay.box(self, Vector3(0.3, 0.2, 0.3), bench.position + Vector3(0, 0.55, 0), METAL)
@@ -248,7 +252,7 @@ func _rooms() -> void:
 		lever.name = "Palanca %d" % i
 	for i in 4:
 		var angle := 265.0 - i * 9.0
-		var crate := Clay.box(self, Vector3(0.6, 0.45, 0.45), at.call(angle, 2.55, 0.225 + (0.45 if i == 3 else 0.0)), AMMO)
+		var crate := Clay.box(self, Vector3(0.6, 0.45, 0.45), at.call(angle, OUTER - 0.65, 0.225 + (0.45 if i == 3 else 0.0)), AMMO)
 		crate.rotation.y = -deg_to_rad(angle)
 
 
