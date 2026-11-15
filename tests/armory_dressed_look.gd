@@ -3,7 +3,7 @@ extends Node3D
 ## LA MECA CON TODO PUESTO, PARA MIRAR (unos 8 segundos, sin el sandbox): una meca parada, vestida con ArmoryParts.dress
 ## (el puño pesado en el izquierdo, el taladro afuera en el derecho, la ametralladora y el lanzamisiles en la espalda, y
 ## las placas en los dos tramos de brazos y piernas). Capturas de adelante, de atrás y de costado.
-##   tools/godot_ventana.sh res://tests/armory_dressed_look.tscn -- --salida=C:/carpeta [--sin-chanfles] [--alto=5]
+##   tools/godot_ventana.sh res://tests/armory_dressed_look.tscn -- --salida=C:/carpeta [--sin-chanfles] [--alto=5] [--pelvis=40]
 
 var _folder := ""
 
@@ -30,18 +30,27 @@ func _ready() -> void:
 	# LA VARIANTE (el usuario, 15/11/2026: «sin los chamfers de las cuatro esquinas y con la altura rebajada… a 5 metros»):
 	# --sin-chanfles, la caja sin el corte de las esquinas; --alto=5, la altura de la cintura (el «altura» del cartel, de
 	# la caja al piso), con muslo y canilla acortados en la misma proporción. Sólo en esta corrida: no se guarda nada.
+	# --pelvis=40: el alto de la pelvis de abajo, en celdas chicas (el usuario: «que la base sea un poco más alta… la
+	# segunda pelvis»).
 	var waist := 0.0
 	var prefix := "meca_puesta"
+	var shape := CabinShape.new()
+	if ResourceLoader.exists(CabinGrid.SAVED):
+		shape = (load(CabinGrid.SAVED) as CabinShape).duplicate() as CabinShape
+	var reshaped := false
 	for argument in OS.get_cmdline_user_args():
 		if argument == "--sin-chanfles":
-			var shape := CabinShape.new()
-			if ResourceLoader.exists(CabinGrid.SAVED):
-				shape = (load(CabinGrid.SAVED) as CabinShape).duplicate() as CabinShape
 			shape.corner_cells = 0
-			CabinGrid.apply(shape)
-			prefix = "meca_variante"
+			reshaped = true
+		elif argument.begins_with("--pelvis="):
+			shape.base_cells = int(argument.trim_prefix("--pelvis="))
+			reshaped = true
 		elif argument.begins_with("--alto="):
 			waist = float(argument.trim_prefix("--alto="))
+	if reshaped:
+		print("pelvis de abajo: %d celdas (%.2f m)" % [shape.base_cells, shape.base_cells * CabinGrid.CELL])
+		CabinGrid.apply(shape)
+		prefix = "meca_variante"
 	if waist > 0.0:
 		var fixed := MechBody.ANKLE + MechBody.HIP_DROP
 		var legs := (MechBody.WAIST - fixed) / (MechBody.THIGH + MechBody.SHIN)
