@@ -19,6 +19,8 @@ static var current := KnobsFile.load_into(BallBossSettings.new(), SAVED) as Ball
 @export_range(2, 10, 2) var slit_bands := 2
 @export_range(6, 48, 1) var shell_sides := 18
 @export_range(0.0, 4.0, 0.05) var slit_depth := 0.6
+## El casco liso (la rendija sigue plana y su borde, marcado) o con caras planas.
+@export var shell_smooth := true
 @export_range(0.0, 6.0, 0.25) var reach_margin := 1.0
 ## LOS TENTÁCULOS (Tentacle): el grueso en la bola y en el pie (radio, m); el pie: el cubo del medio (radio y alto, m)
 ## y cada paleta (ancho de la base, largo y grueso, m). El largo, en la pestaña Tentáculos.

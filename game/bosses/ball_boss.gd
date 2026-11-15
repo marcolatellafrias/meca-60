@@ -140,7 +140,7 @@ func _dress(k: BallBossSettings) -> void:
 	var bands := maxi(k.shell_bands + k.shell_bands % 2, 4)
 	var slit := clampi(k.slit_bands + k.slit_bands % 2, 2, bands - 2)
 	_shell = MeshInstance3D.new()
-	_shell.mesh = BallShell.mesh(radius, bands, slit, k.shell_sides, k.slit_depth)
+	_shell.mesh = BallShell.mesh(radius, bands, slit, k.shell_sides, k.slit_depth, k.shell_smooth)
 	_shell.set_surface_override_material(0, Clay.material(Clay.METAL.darkened(0.05)))
 	_shell.set_surface_override_material(1, Clay.material(Clay.DARK.darkened(0.4)))
 	_ball.add_child(_shell)

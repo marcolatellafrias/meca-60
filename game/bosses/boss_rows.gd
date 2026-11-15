@@ -13,4 +13,13 @@ static func rows() -> Array[SandboxRow]:
 			.panel(KEY_F2, MechRows.KINEMATIC_PANEL, KinematicPanel.new()) \
 			.panel(KEY_F3, MechRows.CABIN_PANEL, CabinShapePanel.new()) \
 			.panel(KEY_F4, MechRows.LEGS_PANEL, LegsPanel.new()),
+		# LAS MAQUETAS (BossMaquettes): jefes de arcilla, quietos, con sus puntos débiles, sus fases y sus ataques de área.
+		SandboxRow.new(SandboxSuper.Id.BOSSES, "Maquetas de jefes") 			.add(SandboxRow.Build.NEAR, BossRows.maquettes()),
 	]
+
+
+static func maquettes() -> Array:
+	var all := []
+	for i in BossMaquettes.ALL.size():
+		all.append(BossMaquetteArchetype.new(i))
+	return all

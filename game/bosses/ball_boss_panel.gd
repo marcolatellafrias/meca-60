@@ -7,7 +7,7 @@ extends KnobsPanel
 const PANEL_WIDTH := 400.0
 const LABELS := {
 	"radius": "bola: radio (m)", "shell_bands": "bola: franjas de polo a polo", "slit_bands": "rendija: cuántas franjas",
-	"shell_sides": "bola: caras alrededor", "slit_depth": "rendija: se hunde (m)",
+	"shell_sides": "bola: caras alrededor", "slit_depth": "rendija: se hunde (m)", "shell_smooth": "bola: lisa (si no, caras planas)",
 	"reach_margin": "choca con lo fijo a (m más que la bola)",
 	"tentacle_root": "tentáculo: grueso en la bola (m)", "tentacle_tip": "tentáculo: grueso en el pie (m)",
 	"hub_radius": "pie: radio del medio (m)", "hub_height": "pie: alto del medio (m)",

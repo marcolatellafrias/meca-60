@@ -14,6 +14,9 @@ posee (la **O**). La computadora todavía no.
 - **La bola** (`BallBoss`): mide 30 m y su centro va a 20 m del piso, así que el techo queda a 35 m. Es **casi el
   doble de la meca**, que mide 18 m («por lo menos el doble… después podemos cambiar las escalas»), y va **cerca del
   piso**: la panza, a 5 m.
+- **El casco es liso** (15/11/2026; el usuario: «que la esfera sea shade smooth o auto smooth»): la rendija sigue
+  plana y el borde con el casco queda marcado, como un auto smooth. La perilla «bola: lisa» de la pestaña Forma lo vuelve
+  a caras planas.
 - **El casco es una esfera low poly** (`BallShell`, 14/11/2026): 16 franjas de polo a polo, con los polos a los
   costados, y 18 caras alrededor. Las 2 franjas del medio no están: en su lugar va **la rendija**, hundida 0,6 m, con el
   fondo oscuro (mide 5,9 m de ancho). La silueta sigue siendo una esfera, como la hitbox. El usuario: «una esfera más o

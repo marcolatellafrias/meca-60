@@ -21,6 +21,7 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 | Partículas | `ParticleArchetype` | — | — | — | `game/particles/` |
 | Píxeles | `PixelArtArchetype` | `game/pixel_art/` entero, `tools/pixel_art_modelos_prueba.py` | `PixelPaintPanel` (F1) | `pixel_art_look` | `Clay`, `SupplyLook` (colores) |
 | Jefe bola | `BallBossArchetype` | `game/bosses/` entero (`BallBoss`, `BallBrain`, `BallCannon`, `BallRoll`, `BallLegs`, `Health`, `FightBars`, `BallShell`, `Tentacle`, `BallBossSettings`, `BossRows`) | `BallBossPanel` (F1); de la meca que pelea: `KinematicPanel` (F2), `CabinShapePanel` (F3), `LegsPanel` (F4) | `ball_boss_look`, `ball_brain_look` | `MechKeys.axis`, `Clay`, `PhysicsLayers.FIXED` |
+| Maquetas de jefes | `BossMaquetteArchetype` | `game/bosses/maquettes/` entero (`BossMaquettes`, `BossMaquetteArchetype`) | — | `boss_maquettes_look` | `Clay` |
 
 ## La meca (lo que comparten sus dos filas)
 `game/balance_body/` entero (el cuerpo con equilibrio, que comparte con los jefes: `BalanceBody`, `BodyLegs`,
