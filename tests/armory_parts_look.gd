@@ -49,7 +49,9 @@ func _ready() -> void:
 			other.visible = other == piece
 		var bounds := _bounds(piece)
 		var center := bounds.get_center()
-		eye.global_position = center + Vector3(-0.55, 0.45, -1.0).normalized() * maxf(bounds.size.length() * 1.25, 7.0)
+		# los puños, más de frente y más bajo: que se vean los dedos
+		var view := Vector3(-0.7, 0.12, -1.0) if str(piece.name).ends_with("fist") else Vector3(-0.55, 0.45, -1.0)
+		eye.global_position = center + view.normalized() * maxf(bounds.size.length() * 1.25, 7.0)
 		eye.look_at(center)
 		await _shot("componente_%02d_%s" % [number, piece.name])
 		number += 1

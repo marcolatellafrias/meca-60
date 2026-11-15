@@ -23,6 +23,8 @@ const ARM_HALF := 1.05
 ## La boca del antebrazo, por donde sale el puño o la herramienta: su radio y dónde termina (la punta).
 const MOUTH := 1.3
 const TIP := -FOREARM * 0.5 - 0.3
+## Cuánto más gruesas son las falanges y la palma del puño pesado.
+const HEAVY_FINGERS := 1.7
 
 
 ## Arma la maqueta de `id` (ver ArmoryCatalog) colgada de `parent`, con su soporte.
@@ -69,11 +71,32 @@ static func _forearm(root: Node3D, heavy: bool, with_hand := true) -> void:
 	if not heavy:
 		return
 	hand.scale = Vector3.ONE * 1.3
+	# las falanges y la palma más gruesas (el usuario, 15/11/2026: «las falanges más grandes, así da la impresión de un
+	# puño más pesado»). Las piezas son de la mano (MechHand): se engordan cuando ya están armadas.
+	if hand.is_node_ready():
+		_thicken(hand)
+	else:
+		hand.ready.connect(_thicken.bind(hand), CONNECT_ONE_SHOT)
 	# los nudillos: donde cada dedo sale de la palma, al frente
 	for finger in 4:
 		var y := (finger - 1.5) * MechHand.FINGER_RADIUS * 2.2
-		_cone(hand, 0.17, 0.5, Vector3(0, y, -MechHand.PALM.z - MechHand.FINGER_RADIUS - 0.2), Vector3(-90, 0, 0),
-			Clay.DARK.lightened(0.15))
+		_cone(hand, 0.2, 0.55, Vector3(0, y, -MechHand.PALM.z - MechHand.FINGER_RADIUS * HEAVY_FINGERS - 0.22),
+			Vector3(-90, 0, 0), Clay.DARK.lightened(0.15))
+
+
+## Engorda las falanges (los cilindros) y la palma (la caja) de una mano ya armada.
+static func _thicken(hand: MechHand) -> void:
+	for child in hand.get_children():
+		var part := child as MeshInstance3D
+		if part == null:
+			continue
+		var cylinder := part.mesh as CylinderMesh
+		if cylinder and is_equal_approx(cylinder.top_radius, MechHand.FINGER_RADIUS):
+			cylinder.top_radius = MechHand.FINGER_RADIUS * HEAVY_FINGERS
+			cylinder.bottom_radius = MechHand.FINGER_RADIUS * HEAVY_FINGERS
+		var box := part.mesh as BoxMesh
+		if box:
+			box.size.x *= HEAVY_FINGERS
 
 
 ## EL TALADRO: una mecha enorme, ancha y corta, en el eje del antebrazo.
