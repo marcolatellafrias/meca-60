@@ -2,9 +2,10 @@ class_name SeatStation
 extends Node3D
 
 ## EL PUESTO DE UNA SILLA DE ADELANTE (15/11/2026, ver docs/conceptual/armamento.md, «El puesto: holograma, botones y
-## estado», y docs/technical/paneles.md). Reemplaza al panel que se traía (SeatPanels). Va en el hueco del tablero de
-## cada puesto abierto, mirando a su silla:
-##   · AL MEDIO, EL HOLOGRAMA: sube de una ranura del tablero. Es la mira, con LA ENERGÍA SIEMPRE a la izquierda (se
+## estado», y docs/technical/paneles.md). Reemplaza al panel que se traía (SeatPanels). LO LLEVA LA SILLA (el usuario,
+## 15/11/2026: sin tablero en el piso, «los puestos van derechos… no vamos a hacer nada raro por ahora»): una repisa
+## recta delante de las rodillas, sobre un pie, con todo mirando al frente:
+##   · AL MEDIO, EL HOLOGRAMA: sube de una ranura de la repisa. Es la mira, con LA ENERGÍA SIEMPRE a la izquierda (se
 ##     calcula antes de cada acción) y lo del sistema elegido.
 ##   · A LOS COSTADOS, MÓDULOS PAREJOS: un cubo (`CUBE`) y rectángulos de su mismo ancho y fondo y la mitad de alto
 ##     (`SLAB`). A la izquierda, eyectar (un rectángulo) con el cubo de estado encima; a la derecha, los botones. Todo lo
@@ -29,51 +30,66 @@ const LAMP_OFF := Color(0.35, 0.28, 0.2)
 const INK := Color(0.08, 0.08, 0.08)
 const PHOSPHOR := Color(0.45, 1.0, 0.55)
 const EJECT_GLASS := Color(0.75, 0.85, 0.9, 0.22)
+## LA REPISA, en el espacio de la silla: su tapa a `SHELF_HEIGHT`, su borde de este lado a `SHELF_NEAR` adelante del
+## centro del asiento (las rodillas quedan abajo), de `SHELF_DEPTH` de fondo; el pie, al fondo.
+const SHELF_HEIGHT := 0.8
+const SHELF_NEAR := 0.38
+const SHELF_DEPTH := 0.36
+const SHELF_THICK := 0.04
+const GAP := 0.04
 
-## Lo que maneja cada puesto de adelante, en el orden de MechCabin.POSTS: el nombre en el holograma, los botones (el
-## primero, elegido) y la parte de la meca que es suya en la pantalla de estado.
+## Lo que maneja cada silla, de izquierda a derecha (el brazo izquierdo, el movimiento al medio, el brazo derecho; las
+## armas de la espalda se fueron, 15/11/2026): el nombre en el holograma, los botones (el primero, elegido) y la parte
+## de la meca que es suya en la pantalla de estado (el movimiento ve la meca entera).
 const SYSTEMS := [
 	{"name": "BRAZO IZQUIERDO", "buttons": ["PIÑA", "AGARRE", "SIERRA"], "part": "brazo izquierdo"},
-	{"name": "ESPALDA", "buttons": ["AMETRALLADORA", "MISILES"], "part": "espalda"},
+	{"name": "MOVIMIENTO", "buttons": ["ASCENSOR"], "part": "la meca"},
 	{"name": "BRAZO DERECHO", "buttons": ["PIÑA", "AGARRE", "CAÑÓN"], "part": "brazo derecho"},
 ]
 
 var system: Dictionary = {}
 
 
-## Pone un puesto en cada silla de adelante cuyo puesto esté abierto (CabinGrid.OPEN_POSTS).
+## Pone un puesto en cada silla, hija de la silla (va con ella). Sólo las tres primeras (`SYSTEMS`).
 static func attach(cabin: MechCabin) -> void:
-	for post in mini(3, cabin.chairs.size()):
-		if not CabinGrid.OPEN_POSTS[post]:
-			continue
-		var chair := cabin.chairs[post]
+	for post in mini(SYSTEMS.size(), cabin.chairs.size()):
 		var station := SeatStation.new()
-		station.name = "Puesto %s" % MechCabin.POSTS[post]
+		station.name = "Puesto %s" % SYSTEMS[post].name.to_lower()
 		station.system = SYSTEMS[post]
-		station.transform = Transform3D(chair.transform.basis.orthonormalized(), chair.position)
-		cabin.add_child(station)
+		cabin.chairs[post].add_child(station)
 
 
-## Todo en el espacio de la silla (mira a −Z, el piso en y = 0): el tablero tiene su cara de atrás en z = −0,75 trama y
-## su tapa en y = DESK_HEIGHT; los módulos, contra los costados del hueco (CabinGrid.hole_cells).
+## Todo en el espacio de la silla (mira a −Z, el piso en y = 0): la repisa delante de las rodillas, el holograma al
+## medio y los módulos a cada lado, derechos, mirando a la silla.
 func _ready() -> void:
-	var top := CabinGrid.DESK_HEIGHT
-	var back := -0.75 * CabinGrid.TRAMA
-	_hologram(Vector3(0, top, back - 0.14))
-	var side := CabinGrid.hole_cells() * CabinGrid.TRAMA * 0.5 - CUBE * 0.5 - 0.03
-	var left := _module(Vector3(-side, top, back - 0.2), 1.0)
+	var near := -SHELF_NEAR
+	var top := SHELF_HEIGHT
+	var side := HOLO_SIZE.x * 0.5 + GAP + CUBE * 0.5
+	var width := (side + CUBE * 0.5 + GAP) * 2.0
+	_shelf(width, near, top)
+	_hologram(Vector3(0, top, near - SHELF_DEPTH * 0.5))
+	var left := _module(Vector3(-side, top, near - GAP - CUBE * 0.5))
 	_eject(left)
 	_status(left, Vector3(0, SLAB, 0))
-	var right := _module(Vector3(side, top, back - 0.2), -1.0)
+	var right := _module(Vector3(side, top, near - GAP - CUBE * 0.5))
 	_buttons(right, system.buttons, 0)
 
 
-## Un lugar para módulos sobre el tablero, girado hacia la silla (`turn` +1 si está a la izquierda, −1 a la derecha).
-func _module(at: Vector3, turn: float) -> Node3D:
+## LA REPISA: una tabla recta de `width` con su tapa a `top`, el borde de este lado en `near`, y un pie al fondo hasta
+## el piso (las rodillas, libres).
+func _shelf(width: float, near: float, top: float) -> void:
+	Clay.box(self, Vector3(width, SHELF_THICK, SHELF_DEPTH), Vector3(0, top - SHELF_THICK * 0.5, near - SHELF_DEPTH * 0.5),
+		PAINT)
+	var foot := near - SHELF_DEPTH + 0.06
+	Clay.box(self, Vector3(0.12, top - SHELF_THICK, 0.08), Vector3(0, (top - SHELF_THICK) * 0.5, foot), PLINTH)
+	Clay.box(self, Vector3(0.5, 0.03, 0.28), Vector3(0, 0.015, foot), PLINTH)
+
+
+## Un lugar para módulos sobre la repisa, derecho.
+func _module(at: Vector3) -> Node3D:
 	var spot := Node3D.new()
 	add_child(spot)
 	spot.position = at
-	spot.rotation_degrees = Vector3(0, turn * 22.0, 0)
 	return spot
 
 

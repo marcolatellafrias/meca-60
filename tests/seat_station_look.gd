@@ -1,7 +1,7 @@
 extends Node3D
 
 ## LOS PUESTOS DE LA CABINA, SIN EL SANDBOX (ver SeatStation, docs/technical/paneles.md): una meca parada con sus
-## puestos de adelante, como la arma la cabina. Sentado en la silla del brazo derecho, por encima del hombro con un
+## puestos de adelante, cada uno en su silla. Sentado en la silla del brazo derecho, por encima del hombro con un
 ## maniquí sentado, y desde atrás.
 ##   tools/godot_ventana.sh res://tests/seat_station_look.tscn -- --salida=C:/carpeta
 
@@ -55,11 +55,15 @@ func _ready() -> void:
 	if _mech.label != null:
 		_mech.label.visible = false
 	var right := _mech.cabin.chairs[2]
-	print("PUESTOS ", _mech.cabin.find_children("*", "SeatStation", false, false).size())
+	# Si la cabina todavía no los pone (SquareCabin._stations), los pone el test.
+	if _mech.cabin.find_children("*", "SeatStation", true, false).is_empty():
+		SeatStation.attach(_mech.cabin)
+		await get_tree().process_frame
+	print("PUESTOS ", _mech.cabin.find_children("*", "SeatStation", true, false).size())
 	var seat := _frame(right)
 	# 1. Sentado (un poco detrás y arriba de los ojos, para que entre el puesto entero).
 	_look(seat * Vector3(0, right.eye_height + 0.06, 0.18), seat * Vector3(0, 1.0, -0.6))
-	await _shot("1. Sentado: el holograma con la energía; a la izquierda eyectar y el estado, a la derecha los botones", "1")
+	await _shot("1. Sentado en el brazo derecho: la repisa de la silla, derecha", "1")
 	# Un maniquí en la silla, para ver la silla con el puesto.
 	_mech.cabin.dummies[0].intent.seat = right
 	await get_tree().create_timer(1.5).timeout
@@ -69,7 +73,7 @@ func _ready() -> void:
 	# 3. Desde atrás y arriba.
 	var middle := _frame(_mech.cabin.chairs[1])
 	_look(middle * Vector3(0, 2.4, 2.2), middle * Vector3(0, 0.9, -0.5))
-	await _shot("3. Desde atrás: los tres puestos, brazo izquierdo, espalda y brazo derecho", "3")
+	await _shot("3. Desde atrás: brazo izquierdo, movimiento y brazo derecho", "3")
 	get_tree().quit()
 
 
