@@ -146,10 +146,12 @@ static func circle(radius: float, center := Vector2.ZERO, per_side := 4) -> Pack
 	return points
 
 
-## LAS TRES SILLAS DE ADELANTE: en los lados −1, 0 y 1, a `SEAT_IN` de la pared, mirando hacia afuera. [lugar, giro]
+## LAS TRES SILLAS DE ADELANTE: la del medio en el lado del frente y las de los brazos dos lados más allá (−2 y 2; en
+## −1 y 1 quedaban muy pegadas: el usuario, 15/11/2026, «quisiera que estén en los otros segmentos»), a `SEAT_IN` de la
+## pared, mirando hacia afuera. [lugar, giro]
 static func front_seats() -> Array:
 	var all := []
-	for side in [-1, 0, 1]:
+	for side in [-2, 0, 2]:
 		var angle := side_angle(side)
 		all.append([at(APOTHEM - SEAT_IN, angle, floor_top()), -angle])
 	return all

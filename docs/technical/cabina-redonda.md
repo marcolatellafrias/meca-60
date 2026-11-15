@@ -15,7 +15,7 @@ Sale de la maqueta de arcilla (`tests/round_cabin_look.tscn`), donde se decidió
 - **Debajo de la cabina, un disco** del mismo radio (1 m), y recién debajo las piernas: le da volumen a la meca.
 - **Sin tableros ni hologramas**: las sillas solas («si queremos ir con este approach más cilíndrico, no podemos tener
   tableros en el piso y todos los elementos van a pasar a ser cosas de las sillas»). **Las tres de adelante siguen el
-  cilindro**: cada una en su lado, mirando hacia afuera.
+  cilindro**: la del medio en el lado del frente y las de los brazos dos lados más allá, mirando hacia afuera.
 - **La tarima, chica, al centro, baja (30 cm), con un escalón todo alrededor**; para la cápsula, una rampa (como las
   escaleras). Arriba, el movimiento y, **corrido atrás, el ascensor**, que baja por el disco. *Atraviesa la pelvis: se
   arregla después (el usuario: «que atraviese por ahora»).*
