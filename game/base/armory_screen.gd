@@ -10,20 +10,22 @@ extends TerminalScreen
 const SLOT_AT := {
 	"back_left": Vector2(118, 40), "back_right": Vector2(302, 40),
 	"plate_hull": Vector2(210, 140),
-	"plate_arm_left": Vector2(66, 170), "plate_arm_right": Vector2(354, 170),
-	"arm_left": Vector2(66, 318), "arm_right": Vector2(354, 318),
+	"plate_arm_left": Vector2(66, 160), "plate_arm_right": Vector2(354, 160),
+	"tool_left": Vector2(66, 240), "tool_right": Vector2(354, 240),
+	"fist_left": Vector2(66, 320), "fist_right": Vector2(354, 320),
 	"plate_leg_left": Vector2(150, 360), "plate_leg_right": Vector2(270, 360),
 }
 const SLOT_NAMES := {
 	"back_left": "espalda izq.", "back_right": "espalda der.", "plate_hull": "casco",
 	"plate_arm_left": "brazo izq.", "plate_arm_right": "brazo der.",
-	"arm_left": "punta del brazo izq.", "arm_right": "punta del brazo der.",
+	"tool_left": "herramienta izq.", "tool_right": "herramienta der.",
+	"fist_left": "puño izq.", "fist_right": "puño der.",
 	"plate_leg_left": "pierna izq.", "plate_leg_right": "pierna der.",
 }
 const DRAWING_SIZE := Vector2(420, 440)
-const SHOP_ORDER := [ArmoryCatalog.Kind.ARM_TOOL, ArmoryCatalog.Kind.BACK, ArmoryCatalog.Kind.PLATE_HULL]
+const SHOP_ORDER := [ArmoryCatalog.Kind.FIST, ArmoryCatalog.Kind.ARM_TOOL, ArmoryCatalog.Kind.BACK, ArmoryCatalog.Kind.PLATE_HULL]
 const SHOP_HEADINGS := {
-	ArmoryCatalog.Kind.ARM_TOOL: "HERRAMIENTAS DE BRAZO", ArmoryCatalog.Kind.BACK: "ARMAS DE ESPALDA",
+	ArmoryCatalog.Kind.FIST: "PUÑOS", ArmoryCatalog.Kind.ARM_TOOL: "HERRAMIENTAS DEL PUÑO", ArmoryCatalog.Kind.BACK: "ARMAS DE ESPALDA",
 	ArmoryCatalog.Kind.PLATE_HULL: "PLACAS DEL ACORAZADO",
 }
 
@@ -121,7 +123,7 @@ func refresh() -> void:
 		var sub := "$%d" % price if state.in_stock(cell.id) else "vendido"
 		cell.show_item(cell.id, sub, state.can_buy(cell.id))
 	for cell in _slot_cells:
-		var empty := "mano de base" if cell.slot.begins_with("arm_") else "vacío"
+		var empty := "sólo el puño" if cell.slot.begins_with("tool_") else "vacío"
 		cell.show_item(state.loadout[cell.slot], SLOT_NAMES[cell.slot], true, empty)
 	for child in _depot_grid.get_children():
 		child.queue_free()
@@ -168,7 +170,7 @@ func _zone_can_drop(_at: Vector2, data: Variant) -> bool:
 		ArmoryCell.Role.SHOP:
 			return state.can_buy(data.id)
 		ArmoryCell.Role.SLOT:
-			return true
+			return state.removable(data.slot)
 	return false
 
 
@@ -196,8 +198,8 @@ func tooltip_for(cell: ArmoryCell) -> Control:
 		column.add_child(TerminalScreen.label(SLOT_NAMES[cell.slot].capitalize(), 16, TerminalScreen.ACCENT))
 		var kind: int = BaseState.SLOTS[cell.slot]
 		var hint := "Acá va: %s." % ArmoryCatalog.KIND_NAMES[kind]
-		if cell.slot.begins_with("arm_"):
-			hint += " Sin herramienta, pega con la mano de base."
+		if cell.slot.begins_with("tool_"):
+			hint += " Se le agrega al puño; sin herramienta, el brazo pega sólo con el puño."
 		column.add_child(TerminalScreen.label(hint, 14))
 		return panel
 	var entry := ArmoryCatalog.item(cell.id)

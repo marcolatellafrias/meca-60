@@ -47,8 +47,9 @@ Pedido del usuario: «vos te acercás, apretás E y se te abre». La consola de 
 - **La armería** (`ArmoryScreen`, `ArmoryCatalog`) tiene tres partes:
   - A la izquierda, **la tienda**. Hay un ejemplar de cada herramienta de brazo y de cada arma de espalda; las placas se
     compran cuantas veces haga falta.
-  - Al medio, **la meca dibujada de atrás** (`MechDrawing`), con sus nueve huecos encima: la punta de cada brazo, las dos
-    armas de la espalda y las placas del casco, de cada brazo y de cada pierna.
+  - Al medio, **la meca dibujada de atrás** (`MechDrawing`), con sus once huecos encima: el puño de cada brazo (nunca
+    vacío: se cambia soltándole otro encima), la herramienta que se le agrega a cada puño, las dos armas de la espalda y
+    las placas del casco, de cada brazo y de cada pierna. Lo que se vende, en [[progresion]].
   - A la derecha, **el depósito**.
   - **Cómo se usa:**
     - **Comprar:** arrastrar de la tienda a un hueco (se compra y se pone) o al depósito. Doble clic también compra al

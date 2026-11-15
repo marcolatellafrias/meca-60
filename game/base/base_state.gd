@@ -10,9 +10,11 @@ signal changed()
 ## Con lo que arranca la tripulación.
 const START_MONEY := 2500
 
-## LOS HUECOS DE LA MECA: cada uno acepta una sola clase de cosa (ver ArmoryCatalog.Kind).
+## LOS HUECOS DE LA MECA: cada uno acepta una sola clase de cosa (ver ArmoryCatalog.Kind). Cada brazo tiene su puño, que
+## nunca queda vacío (se cambia por otro), y una herramienta encima.
 const SLOTS := {
-	"arm_left": ArmoryCatalog.Kind.ARM_TOOL, "arm_right": ArmoryCatalog.Kind.ARM_TOOL,
+	"fist_left": ArmoryCatalog.Kind.FIST, "fist_right": ArmoryCatalog.Kind.FIST,
+	"tool_left": ArmoryCatalog.Kind.ARM_TOOL, "tool_right": ArmoryCatalog.Kind.ARM_TOOL,
 	"back_left": ArmoryCatalog.Kind.BACK, "back_right": ArmoryCatalog.Kind.BACK,
 	"plate_hull": ArmoryCatalog.Kind.PLATE_HULL,
 	"plate_arm_left": ArmoryCatalog.Kind.PLATE_ARM, "plate_arm_right": ArmoryCatalog.Kind.PLATE_ARM,
@@ -33,7 +35,9 @@ var contract := -1
 func _init() -> void:
 	for slot: String in SLOTS:
 		loadout[slot] = ""
-	# la meca nueva viene con su acorazado completo
+	# la meca nueva viene con sus dos puños comunes y su acorazado completo
+	loadout["fist_left"] = "fist"
+	loadout["fist_right"] = "fist"
 	for slot: String in ["plate_hull", "plate_arm_left", "plate_arm_right", "plate_leg_left", "plate_leg_right"]:
 		loadout[slot] = ArmoryCatalog.plate_for(SLOTS[slot])
 
@@ -94,9 +98,14 @@ func swap_slots(from: String, to: String) -> bool:
 	return true
 
 
+## Si se lo puede sacar a un hueco: el puño no (se lo cambia soltándole otro encima).
+func removable(slot: String) -> bool:
+	return loadout.get(slot, "") != "" and int(SLOTS[slot]) != ArmoryCatalog.Kind.FIST
+
+
 ## Lo saca del hueco y lo guarda en el depósito.
 func unequip(slot: String) -> void:
-	if loadout.get(slot, "") == "":
+	if not removable(slot):
 		return
 	depot.append(loadout[slot])
 	loadout[slot] = ""
