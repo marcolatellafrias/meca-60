@@ -11,7 +11,8 @@ extends RefCounted
 ##     (el usuario, 15/11/2026: «el puño se retrae y queda como adentro del cilindro del antebrazo y sale lo otro»): sale
 ##     por la misma boca, en el eje del antebrazo, y por eso puede ser exagerada.
 ##   · LO DE LA ESPALDA, sobre su montura: el origen en el techo, el caño hacia −Z.
-##   · LAS PLACAS, sobre la parte que cubren (que la maqueta también dibuja).
+##   · LAS PLACAS, sobre la parte que cubren (que la maqueta también dibuja): la de brazo y la de pierna. El torso, por
+##     ahora, sin placa.
 
 const STEEL := Color(0.68, 0.7, 0.72)
 const PLATE := Color(0.6, 0.62, 0.62)
@@ -23,8 +24,10 @@ const ARM_HALF := 1.05
 ## La boca del antebrazo, por donde sale el puño o la herramienta: su radio y dónde termina (la punta).
 const MOUTH := 1.3
 const TIP := -FOREARM * 0.5 - 0.3
-## Cuánto más gruesas son las falanges y la palma del puño pesado.
-const HEAVY_FINGERS := 1.7
+## Cuánto más gruesas son las falanges y la palma del puño pesado (más no: los dedos se tocan).
+const HEAVY_FINGERS := 1.35
+## Y cuánto más largas.
+const HEAVY_LENGTH := 1.45
 
 
 ## Arma la maqueta de `id` (ver ArmoryCatalog) colgada de `parent`, con su soporte.
@@ -45,7 +48,6 @@ static func build(id: String, parent: Node3D) -> Node3D:
 				"machine_gun": _machine_gun(root)
 				"missile_launcher": _missile_launcher(root)
 				"heavy_cannon": _heavy_cannon(root)
-		"plate_hull": _hull_plate(root)
 		"plate_arm": _arm_plate(root)
 		"plate_leg": _leg_plate(root)
 	return root
@@ -84,7 +86,10 @@ static func _forearm(root: Node3D, heavy: bool, with_hand := true) -> void:
 			Vector3(-90, 0, 0), Clay.DARK.lightened(0.15))
 
 
-## Engorda las falanges (los cilindros) y la palma (la caja) de una mano ya armada.
+## Engorda las falanges (los cilindros) y la palma (la caja) de una mano ya armada, y alarga las falanges: engordarlas
+## solas no da (el usuario: «si las engrosas ya no tienen mucho espacio para crecer los costados»), los dedos se tocan.
+## *Lo de los largos toca adentro de MechHand (`_fingers`, `_shown`): es una maqueta; si el puño pesado queda, la mano
+## tiene que saber hacerlo sola.*
 static func _thicken(hand: MechHand) -> void:
 	for child in hand.get_children():
 		var part := child as MeshInstance3D
@@ -94,9 +99,16 @@ static func _thicken(hand: MechHand) -> void:
 		if cylinder and is_equal_approx(cylinder.top_radius, MechHand.FINGER_RADIUS):
 			cylinder.top_radius = MechHand.FINGER_RADIUS * HEAVY_FINGERS
 			cylinder.bottom_radius = MechHand.FINGER_RADIUS * HEAVY_FINGERS
+			cylinder.height = (cylinder.height + 0.06) * HEAVY_LENGTH - 0.06
 		var box := part.mesh as BoxMesh
 		if box:
 			box.size.x *= HEAVY_FINGERS
+	for finger: Dictionary in hand._fingers:
+		var longer: Array = []
+		for length: float in finger["lengths"]:
+			longer.append(length * HEAVY_LENGTH)
+		finger["lengths"] = longer
+	hand._shown = -1.0
 
 
 ## EL TALADRO: una mecha enorme, ancha y corta, en el eje del antebrazo.
@@ -198,48 +210,37 @@ static func _heavy_cannon(root: Node3D) -> void:
 
 
 ## ── LAS PLACAS ──────────────────────────────────────────────────────────────────────────────────────────────────
+## El usuario, 15/11/2026: «literalmente solamente 3 planos de un cilindro octogonal… envuelta alrededor de los brazos,
+## las piernas», y el torso sin placa por ahora. Los miembros de la meca son prismas de ocho caras (Clay.limb): la placa
+## son tres de esas caras, un poco afuera, sobre el lado que mira al golpe.
 
-## La placa del casco: una plancha al frente de la caja, con los cantos doblados hacia atrás y remaches.
-static func _hull_plate(root: Node3D) -> void:
-	Clay.box(root, Vector3(6.0, 4.0, 4.0), Vector3(0, 2.0, 0), FOREARM_COLOR)
-	var front := -2.15
-	Clay.box(root, Vector3(4.4, 3.0, 0.3), Vector3(0, 2.0, front), PLATE)
-	for side: float in [-1.0, 1.0]:
-		var wing := Clay.box(root, Vector3(1.0, 3.0, 0.3), Vector3(side * 2.55, 2.0, front + 0.25), PLATE)
-		wing.basis = Basis(Vector3.UP, side * deg_to_rad(-30.0))
-	_rivets(root, [Vector3(-1.9, 3.2, front - 0.17), Vector3(1.9, 3.2, front - 0.17), Vector3(-1.9, 0.8, front - 0.17),
-		Vector3(1.9, 0.8, front - 0.17)])
-
-
-## La placa de brazo: una teja sobre el antebrazo (arriba y afuera), como un brazal.
+## La placa de brazo: arriba del antebrazo y sus dos caras vecinas.
 static func _arm_plate(root: Node3D) -> void:
 	_forearm(root, false)
-	var length := 3.6
-	Clay.box(root, Vector3(1.7, 0.25, length), Vector3(0, ARM_HALF + 0.15, 0.3), PLATE)
-	var outer := Clay.box(root, Vector3(0.25, 1.5, length), Vector3(ARM_HALF + 0.12, 0.45, 0.3), PLATE)
-	outer.basis = Basis(Vector3.BACK, deg_to_rad(-12.0))
-	var corner := Clay.box(root, Vector3(0.8, 0.25, length), Vector3(ARM_HALF * 0.75, ARM_HALF, 0.3), PLATE)
-	corner.basis = Basis(Vector3.BACK, deg_to_rad(-45.0))
-	_rivets(root, [Vector3(-0.6, ARM_HALF + 0.3, -1.2), Vector3(-0.6, ARM_HALF + 0.3, 1.8),
-		Vector3(ARM_HALF + 0.27, 0.3, -1.2), Vector3(ARM_HALF + 0.27, 0.3, 1.8)])
+	_wrap(root, Transform3D(Basis(), Vector3(0, 0, 0.3)), 3.6)
 
 
-## La placa de pierna: una canillera al frente de la canilla y la rodillera.
+## La placa de pierna: al frente de la canilla y sus dos caras vecinas.
 static func _leg_plate(root: Node3D) -> void:
 	var shin := 4.4
-	var half := ARM_HALF
-	var leg := Clay.limb(root, half, shin, Vector3(0, shin * 0.5 + 0.7, 0), FOREARM_COLOR)
+	var leg := Clay.limb(root, ARM_HALF, shin, Vector3(0, shin * 0.5 + 0.7, 0), FOREARM_COLOR)
 	leg.basis = Basis(Vector3.RIGHT, PI * 0.5)
-	Clay.sphere(root, half * 1.25, Vector3(0, shin + 0.7, 0), MechBody.JOINT_COLOR)
+	Clay.sphere(root, ARM_HALF * 1.25, Vector3(0, shin + 0.7, 0), MechBody.JOINT_COLOR)
 	Clay.box(root, Vector3(2.2, 0.7, 3.4), Vector3(0, 0.35, -0.4), MechBody.JOINT_COLOR)
-	Clay.box(root, Vector3(1.7, 3.2, 0.3), Vector3(0, 2.8, -half - 0.15), PLATE)
-	for side: float in [-1.0, 1.0]:
-		var wing := Clay.box(root, Vector3(0.6, 3.2, 0.25), Vector3(side * 0.95, 2.8, -half + 0.05), PLATE)
-		wing.basis = Basis(Vector3.UP, side * deg_to_rad(-40.0))
-	var knee := Clay.box(root, Vector3(1.6, 1.2, 0.35), Vector3(0, shin + 0.75, -half - 0.35), PLATE)
-	knee.basis = Basis(Vector3.RIGHT, deg_to_rad(-15.0))
-	_rivets(root, [Vector3(-0.55, 4.1, -half - 0.32), Vector3(0.55, 4.1, -half - 0.32),
-		Vector3(-0.55, 1.5, -half - 0.32), Vector3(0.55, 1.5, -half - 0.32)])
+	# el marco de la placa: el largo por Z del marco va hacia arriba, y su +Y (la cara del medio) hacia el frente (−Z)
+	_wrap(root, Transform3D(Basis(Vector3.RIGHT, -PI * 0.5), Vector3(0, shin * 0.5 + 0.7, 0)), 3.4)
+
+
+## Tres caras de un prisma de ocho, alrededor de un miembro de radio ARM_HALF con el largo por Z (en el marco `frame`):
+## la del medio mira a +Y y las otras dos, a 45° de cada lado.
+static func _wrap(root: Node3D, frame: Transform3D, length: float) -> void:
+	var thickness := 0.18
+	var apothem := ARM_HALF * cos(PI / 8.0) + 0.06 + thickness * 0.5
+	var width := 2.0 * apothem * tan(PI / 8.0)
+	for step: int in [-1, 0, 1]:
+		var turn := Basis(Vector3.BACK, step * PI * 0.25)
+		var face := Clay.box(root, Vector3(width, thickness, length), Vector3.ZERO, PLATE)
+		face.transform = frame * Transform3D(turn, turn * Vector3(0, apothem, 0))
 
 
 ## ── AYUDAS ──────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -252,7 +253,3 @@ static func _cone(parent: Node3D, radius: float, height: float, at: Vector3, rot
 	(part.mesh as CylinderMesh).radial_segments = 10
 	return part
 
-
-static func _rivets(parent: Node3D, points: Array) -> void:
-	for point: Vector3 in points:
-		Clay.sphere(parent, 0.1, point, Clay.DARK)

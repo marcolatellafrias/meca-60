@@ -47,9 +47,9 @@ Pedido del usuario: «vos te acercás, apretás E y se te abre». La consola de 
 - **La armería** (`ArmoryScreen`, `ArmoryCatalog`) tiene tres partes:
   - A la izquierda, **la tienda**. Hay un ejemplar de cada herramienta de brazo y de cada arma de espalda; las placas se
     compran cuantas veces haga falta.
-  - Al medio, **la meca dibujada de atrás** (`MechDrawing`), con sus once huecos encima: el puño de cada brazo (nunca
+  - Al medio, **la meca dibujada de atrás** (`MechDrawing`), con sus diez huecos encima: el puño de cada brazo (nunca
     vacío: se cambia soltándole otro encima), la herramienta que se le agrega a cada puño, las dos armas de la espalda y
-    las placas del casco, de cada brazo y de cada pierna. Lo que se vende, en [[progresion]].
+    las placas de cada brazo y de cada pierna. Lo que se vende, en [[progresion]].
   - A la derecha, **el depósito**.
   - **Cómo se usa:**
     - **Comprar:** arrastrar de la tienda a un hueco (se compra y se pone) o al depósito. Doble clic también compra al
@@ -76,10 +76,11 @@ Lo pidió el usuario: «empecemos a hacer maquetas de clay de todos los componen
   - Por ahí sale el puño cerrado o, con el puño guardado adentro, la herramienta. Nunca los dos a la vez.
   - Las herramientas van en el eje del brazo, exageradas: la mecha del taladro es ancha y corta, el doble de ancha que el antebrazo, el cañón
     de energía es un solo cilindro grande, gris oscuro, y la sierra es un disco de 6 m en una horquilla.
-  - El puño pesado es la misma mano, un 30 % más grande, con las falanges y la palma más gruesas y un cono en cada
+  - El puño pesado es la misma mano, un 30 % más grande, con las falanges más gruesas y más largas, y un cono en cada
     nudillo.
 - **Lo de la espalda** va sobre un pedazo del techo con su torreta.
-- **Cada placa** va sobre la parte que cubre.
+- **Cada placa** son tres caras del prisma de ocho del miembro, un poco afuera: arriba del antebrazo, o al frente de la
+  canilla. El torso, por ahora, sin placa.
 - Son maquetas de forma: todavía no se montan en la meca.
 - En el sandbox, en la fila **Componentes de la armería** (`ArmoryPartsArchetype`), numeradas y en tres filas.
 

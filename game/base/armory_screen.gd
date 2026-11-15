@@ -9,24 +9,23 @@ extends TerminalScreen
 ## Dónde va cada hueco sobre el dibujo (su centro), vista de atrás: el brazo izquierdo a la izquierda.
 const SLOT_AT := {
 	"back_left": Vector2(118, 40), "back_right": Vector2(302, 40),
-	"plate_hull": Vector2(210, 140),
 	"plate_arm_left": Vector2(66, 160), "plate_arm_right": Vector2(354, 160),
 	"tool_left": Vector2(66, 240), "tool_right": Vector2(354, 240),
 	"fist_left": Vector2(66, 320), "fist_right": Vector2(354, 320),
 	"plate_leg_left": Vector2(150, 360), "plate_leg_right": Vector2(270, 360),
 }
 const SLOT_NAMES := {
-	"back_left": "espalda izq.", "back_right": "espalda der.", "plate_hull": "casco",
+	"back_left": "espalda izq.", "back_right": "espalda der.",
 	"plate_arm_left": "brazo izq.", "plate_arm_right": "brazo der.",
 	"tool_left": "herramienta izq.", "tool_right": "herramienta der.",
 	"fist_left": "puño izq.", "fist_right": "puño der.",
 	"plate_leg_left": "pierna izq.", "plate_leg_right": "pierna der.",
 }
 const DRAWING_SIZE := Vector2(420, 440)
-const SHOP_ORDER := [ArmoryCatalog.Kind.FIST, ArmoryCatalog.Kind.ARM_TOOL, ArmoryCatalog.Kind.BACK, ArmoryCatalog.Kind.PLATE_HULL]
+const SHOP_ORDER := [ArmoryCatalog.Kind.FIST, ArmoryCatalog.Kind.ARM_TOOL, ArmoryCatalog.Kind.BACK, ArmoryCatalog.Kind.PLATE_ARM]
 const SHOP_HEADINGS := {
 	ArmoryCatalog.Kind.FIST: "PUÑOS", ArmoryCatalog.Kind.ARM_TOOL: "HERRAMIENTAS DEL PUÑO", ArmoryCatalog.Kind.BACK: "ARMAS DE ESPALDA",
-	ArmoryCatalog.Kind.PLATE_HULL: "PLACAS DEL ACORAZADO",
+	ArmoryCatalog.Kind.PLATE_ARM: "PLACAS DEL ACORAZADO",
 }
 
 var _money: Label
@@ -72,7 +71,7 @@ func _shop() -> Control:
 		var grid := GridContainer.new()
 		grid.columns = 3
 		for entry: Dictionary in ArmoryCatalog.ITEMS:
-			var same: bool = int(entry.kind) == kind or (kind == ArmoryCatalog.Kind.PLATE_HULL
+			var same: bool = int(entry.kind) == kind or (kind == ArmoryCatalog.Kind.PLATE_ARM
 				and str(entry.id).begins_with("plate_"))
 			if not same:
 				continue

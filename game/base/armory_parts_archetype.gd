@@ -9,7 +9,7 @@ const ROW_GAP := 15.0
 const ROWS := [
 	["fist", "heavy_fist", "drill", "energy_cannon", "circular_saw"],
 	["machine_gun", "missile_launcher", "heavy_cannon"],
-	["plate_hull", "plate_arm", "plate_leg"],
+	["plate_arm", "plate_leg"],
 ]
 ## A qué alto va lo del brazo (en el aire, sobre un poste).
 const ARM_HEIGHT := 4.0

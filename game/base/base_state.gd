@@ -16,7 +16,6 @@ const SLOTS := {
 	"fist_left": ArmoryCatalog.Kind.FIST, "fist_right": ArmoryCatalog.Kind.FIST,
 	"tool_left": ArmoryCatalog.Kind.ARM_TOOL, "tool_right": ArmoryCatalog.Kind.ARM_TOOL,
 	"back_left": ArmoryCatalog.Kind.BACK, "back_right": ArmoryCatalog.Kind.BACK,
-	"plate_hull": ArmoryCatalog.Kind.PLATE_HULL,
 	"plate_arm_left": ArmoryCatalog.Kind.PLATE_ARM, "plate_arm_right": ArmoryCatalog.Kind.PLATE_ARM,
 	"plate_leg_left": ArmoryCatalog.Kind.PLATE_LEG, "plate_leg_right": ArmoryCatalog.Kind.PLATE_LEG,
 }
@@ -38,7 +37,7 @@ func _init() -> void:
 	# la meca nueva viene con sus dos puños comunes y su acorazado completo
 	loadout["fist_left"] = "fist"
 	loadout["fist_right"] = "fist"
-	for slot: String in ["plate_hull", "plate_arm_left", "plate_arm_right", "plate_leg_left", "plate_leg_right"]:
+	for slot: String in ["plate_arm_left", "plate_arm_right", "plate_leg_left", "plate_leg_right"]:
 		loadout[slot] = ArmoryCatalog.plate_for(SLOTS[slot])
 
 

@@ -57,7 +57,8 @@ Juntas, en la zona de customizar la meca (ver [[base]]):
   sale la herramienta por la misma punta, en el eje del brazo. Así las herramientas pueden ser exageradas. Mientras está
   afuera la herramienta, ese brazo no pega con el puño.
 - **La espalda**: **la ametralladora, el lanzamisiles y el cañón pesado**.
-- Las placas del acorazado.
+- Las placas del acorazado: de brazo y de pierna, **tres caras del cilindro octogonal** del miembro. **El torso, por
+  ahora, sin placa** (15/11/2026, el usuario).
 
 **El depósito de la sucursal** (15/11/2026, el usuario): lo comprado o sacado de la meca queda ahí, no en la meca.
 La armería se usa como un inventario de RPG: la meca dibujada con sus huecos, y se arrastra de la tienda o del depósito
