@@ -25,7 +25,7 @@ const LABELS := {
 	"wave_damage": "te saca (vida)", "wave_push": "te levanta (m/s)",
 	"rip_time": "mete las manos y lo arranca en (s)", "lift_time": "aviso: la tiene arriba (s)",
 	"rock_flight": "vuela (s)", "rock_arc": "el arco sube (m)", "rock_radius": "radio del golpe (m)",
-	"rock_stay": "queda de pared (s)", "throw_recover": "se queda después (s)",
+	"rock_stay": "queda en el piso (s)", "throw_recover": "se queda después (s)",
 	"rock_damage": "te saca (vida)", "rock_push": "te empuja (m/s)",
 }
 const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Ira", "Embestida", "Golpe al piso", "Arrancar el piso",

@@ -15,7 +15,7 @@ extends Node
 ##   · ARRANCAR EL PISO Y TIRARLO (15/11/2026): mete las manos en el piso adelante suyo y arranca un pedazo (queda el
 ##     pozo); AVISO, lo levanta sobre la cabeza y en el piso aparece un círculo rojo que te sigue; GOLPE, lo tira en arco
 ##     y el círculo se queda donde estabas: la piedra (BrawlerRock) cae ahí. Si te alcanza, te saca vida; si no, queda
-##     de pared un rato (te podés esconder atrás).
+##     un rato en el piso (sin chocar con nada) y se hunde.
 ##   · CUÁL: al terminar de rodear, uno de los que tengan tu distancia a tiro, al azar (la L de la parcela deja uno).
 ## LA VIDA, POR CÓDIGO (Health): las piñas de la meca que tocan el cuerpo le sacan poco; en el horno abierto, mucho.
 ## Mientras alguien lo posee, la cabeza no hace nada.
@@ -297,7 +297,7 @@ func _throw() -> void:
 				_begin(Act.STALK)
 
 
-## LAS PIEDRAS QUE CAEN: si te cae encima apoyada, te saca vida y se rompe; si no, queda de pared.
+## LAS PIEDRAS QUE CAEN: si te cae encima apoyada, te saca vida y se rompe; si no, queda un rato.
 func _check_rocks() -> void:
 	var k := BrawlerSettings.current
 	var body := target as BalanceBody
@@ -320,8 +320,6 @@ func _check_rocks() -> void:
 				BalanceBody.hit(body, (away.normalized() + Vector3.UP).normalized() * k.rock_push * body.mass)
 		elif rock.covers(_boss.global_position, Brawler.BOX.x * 0.5):
 			rock.shatter()
-		else:
-			rock.settle()
 
 
 ## LAS ONDAS QUE CORREN: si una te pasa por debajo apoyada, te saca vida (una vez cada una).

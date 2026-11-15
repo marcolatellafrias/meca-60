@@ -74,7 +74,7 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 @export_group("Arrancar el piso")
 ## ARRANCAR EL PISO Y TIRARLO (ver BrawlerBrain, BrawlerRock): cuánto tarda en meter las manos y arrancarlo (s), cuánto
 ## la tiene arriba (s: el aviso, con el círculo rojo que te sigue), cuánto vuela (s: de lejos va más rápido, siempre
-## tarda eso), cuánto sube el arco (m), el radio del golpe (m), cuánto queda de pared si no le pegó a nadie (s) y cuánto
+## tarda eso), cuánto sube el arco (m), el radio del golpe (m), cuánto queda en el piso si no le pegó a nadie (s) y cuánto
 ## se queda después de tirarla (s). Si te alcanza, cuánta vida te saca y cuánto te empuja (m/s; a la meca física).
 ## MEDIDO CONTRA LA MECA CINEMÁTICA (15/11/2026, tests/brawler_dodge_check --solo-piedra): con radio 9 y 1,8 s de vuelo,
 ## quieta le cae encima y caminando de costado (desde el aviso o desde el tiro) o con el dash, no. Es al filo: con 1,3 s

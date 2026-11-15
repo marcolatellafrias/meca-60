@@ -4,7 +4,8 @@ extends Node3D
 ## LA PIEDRA QUE ARRANCA DEL PISO (ver BrawlerBrain): un pedazo de piso que el Luchador saca con las dos manos, levanta
 ## sobre la cabeza y te tira en arco. Deja EL POZO donde la sacó. Mientras la levanta, EL AVISO: un círculo rojo en el
 ## piso que te sigue; al tirarla, el círculo se queda quieto donde estabas y la piedra cae ahí. Si no le pegó a nadie,
-## queda en el piso un rato (es una pared: te podés esconder atrás) y se hunde. Sólo se mueve y se dibuja: si te
+## queda en el piso un rato, sin chocar con nada (el usuario: «que no tenga colisión, porque
+## hace que ella misma se choque contra ella»), y se hunde. Sólo se mueve y se dibuja: si te
 ## alcanza lo decide la cabeza.
 
 enum State { HELD, FLYING, LANDED }
@@ -30,7 +31,6 @@ var _flight := 1.4
 var _clock := 0.0
 var _stay := 6.0
 var _spin := Vector3.ZERO
-var _solid: StaticBody3D = null
 
 
 ## LA ARMA: el pozo en `dig` (el piso, mundo, girado hacia `facing` en radianes) y la piedra todavía adentro.
@@ -106,18 +106,9 @@ func covers(point: Vector3, half: float) -> bool:
 	return Vector2(point.x - spot.x, point.z - spot.z).length() < radius + half
 
 
-## Le pegó a alguien: se rompe (no queda de pared, se hunde ya).
+## Le pegó a alguien: se rompe (no se queda, se hunde ya).
 func shatter() -> void:
 	_stay = 0.0
-
-
-## No le pegó a nadie: queda DE PARED (las mecas y el Luchador chocan con ella) hasta que se hunde.
-func settle() -> void:
-	_solid = StaticBody3D.new()
-	_solid.name = "Pared"
-	_rock.add_child(_solid)
-	Clay.shape_box(_solid, SIZE, Vector3.ZERO)
-	PhysicsLayers.mark_fixed(_solid)
 
 
 func _physics_process(delta: float) -> void:
@@ -139,9 +130,6 @@ func _physics_process(delta: float) -> void:
 				_rock.global_transform = Transform3D(Basis(Vector3.UP, randf() * TAU), spot + Vector3.UP * SIZE.y * 0.4)
 		State.LANDED:
 			if _clock > _stay:
-				if _solid != null:
-					_solid.queue_free()
-					_solid = null
 				_rock.global_position.y -= delta * 3.0
 				_hole.global_position.y -= delta * 0.3
 				if _rock.global_position.y < -SIZE.y:

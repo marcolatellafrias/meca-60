@@ -101,8 +101,9 @@ empezá con el 3er poder» (el tercero de la lista: arrancar el piso y tirarlo).
   agachado, temblando) y saca un pedazo de piso de 14 × 6 × 11 m que sale de a poco; queda **el pozo**. **Aviso**
   (1,1 s): la levanta sobre la cabeza y en el piso aparece **un círculo rojo que te sigue**. **Golpe**: la tira en arco
   (35 m de alto, 1,8 s de vuelo, de cualquier distancia) y el círculo se queda donde estabas. Si te cae encima (radio 9
-  más tu medio ancho), te saca 30 y se rompe; **si no le pegó a nadie, queda de pared** 8 s (las mecas y el Luchador
-  chocan con ella: te podés esconder atrás) y se hunde. Sus perillas, en la pestaña «Arrancar el piso» del F1.
+  más tu medio ancho), te saca 30 y se rompe; si no le pegó a nadie, queda en el piso 8 s y se hunde.
+  **Sin chocar con nada** (el usuario: «que no tenga colisión, porque hace que ella misma se choque contra ella»: el
+  Luchador se trababa con sus propias piedras). Sus perillas, en la pestaña «Arrancar el piso» del F1.
 - **Esquivarla** (`brawler_dodge_check --solo-piedra`): quieta, te cae encima; **caminando de costado** (desde el aviso
   o desde el tiro) **o con el dash, no**. Al filo: con 1,3 s de vuelo, caminando ya no llega y sólo la esquiva el dash.
 - **La L** suma «sólo arrancar el piso». El video (`brawler_charge_movie`) arranca con 20 s de piedras.
