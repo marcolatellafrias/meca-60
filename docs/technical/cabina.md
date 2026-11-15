@@ -52,8 +52,8 @@ limpio»).*
   sólo sobresale el cubo. *Por ahora sólo se ven: los huecos de verdad vienen con los recursos.*
 - **Las sillas** son las de verdad (`working_seat.tscn`), mirando al frente, en el orden de `MechCabin.POSTS`. Buscan
   igualar **la altura de los ojos** del que se sienta (`CabinGrid.EYE_HEIGHT`). En la meca con brazos se sientan
-  maniquíes en todas menos la del brazo derecho, que queda libre para sentarse uno con E: ahí está **el primer panel
-  jugable** (`SeatPanels`, ver [[paneles]]).
+  maniquíes en todas menos la del brazo derecho, que queda libre para sentarse uno con E. En cada hueco abierto
+  va **el puesto** (`SeatStation`, de la sesión Tableros, ver [[paneles]]).
 - **El ascensor en el medio**, aparte de la trama de los puestos: un hueco redondo de **dos celdas de trama de radio
   (1,02 m)** en el piso, y **una plataforma lisa**, sin parantes, aro ni baranda (el usuario: «solamente una plataforma
   sin toda la estructura metálica… después vamos a los detalles»). Dos teclas: **sube** y **baja** (Y / H en el panel
