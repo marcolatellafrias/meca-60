@@ -1,14 +1,16 @@
 extends Node
 
 ## EL VIDEO DE LA PELEA (para mandárselo al usuario): el Luchador contra la meca cinemática, con una cámara que sigue a
-## los dos de costado, y después el choque contra el borde. Primero sólo arranca el piso y lo tira (`ROCKS` s), después
-## todos los ataques. La meca esquiva un ataque sí y otro no (la embestida con un dash cuando le faltan 38 m; la onda del
-## golpe al piso, saltando cuando le faltan 20 m; la piedra, caminando de costado desde que la tira). Se graba con
-## --write-movie:
+## los dos de costado, y después el choque contra el borde. Primero sólo el agarre (`HOOKS` s), después sólo el trompo
+## (`SPINS` s), después todos los ataques. La meca esquiva un ataque sí y otro no (la embestida con un dash cuando le
+## faltan 38 m; la onda del golpe al piso, saltando cuando le faltan 24 m; la piedra, caminando de costado desde que la
+## tira; el trompo, un dash para atrás en el aviso y caminando para atrás; el agarre, saliéndose de la franja cuando
+## apuntó, de cerca con el dash). Se graba con --write-movie:
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/pelea.avi --fixed-fps 30 res://tests/brawler_charge_movie.tscn
 
-const FIGHT := 40.0
-const ROCKS := 20.0
+const FIGHT := 32.0
+const HOOKS := 16.0
+const SPINS := 16.0
 
 var _boss: Brawler = null
 var _brain: BrawlerBrain = null
@@ -18,6 +20,9 @@ var _cam_at := Vector3.ZERO
 var _cam_from := Vector3.ZERO
 var _first := true
 var _dodged := -1
+var _act_was := BrawlerBrain.Act.STALK
+var _attacks := 0
+var _dodge_this := false
 
 
 func _ready() -> void:
@@ -64,8 +69,10 @@ func _ready() -> void:
 	var mech := _brain.target as Mech
 	await _run(mech, 0.5)
 	mech.scripted = true
-	BrawlerBrain.moves = BrawlerBrain.Moves.THROW
-	await _run(mech, ROCKS)
+	BrawlerBrain.moves = BrawlerBrain.Moves.HOOK
+	await _run(mech, HOOKS)
+	BrawlerBrain.moves = BrawlerBrain.Moves.SPIN
+	await _run(mech, SPINS)
 	BrawlerBrain.moves = BrawlerBrain.Moves.ALL
 	await _run(mech, FIGHT)
 	# CONTRA EL BORDE.
@@ -122,17 +129,36 @@ func _tick(mech: Mech) -> float:
 	return delta
 
 
-## Un ataque sí y otro no.
+## Un ataque sí y otro no (se decide al empezar cada uno).
 func _dodging() -> bool:
-	return (_brain.charges + _brain.slams + _brain.throws) % 2 == 0
+	return _dodge_this
 
 
 func _dodge(mech: Mech, ground: Vector3, to_boss: Vector3) -> void:
+	if _brain.act != _act_was:
+		_act_was = _brain.act
+		if _brain.act != BrawlerBrain.Act.STALK:
+			_attacks += 1
+			_dodge_this = _attacks % 2 == 0
+	if not _dodge_this:
+		return
+	var attack := _attacks
 	# La piedra: desde que la tiró hasta que cae, caminando de costado.
-	if not _brain._rocks.is_empty() and (_brain.charges + _brain.slams + _brain.throws) % 2 == 1:
+	if not _brain._rocks.is_empty():
 		mech.move = Vector2(1.0, 0.0)
-	var attack := _brain.charges + _brain.slams + _brain.throws
-	if not _dodging() or _dodged == attack:
+	# El trompo: para atrás todo el ataque, con un dash al empezar.
+	if _brain.act == BrawlerBrain.Act.SPIN and _brain._step < 2:
+		mech.move = Vector2(0.0, -1.0)
+		if _dodged != attack:
+			_dodged = attack
+			mech.dash = true
+	# El agarre: de costado desde que apuntó (de cerca, con el dash).
+	if _brain.act == BrawlerBrain.Act.HOOK and (_brain._step == 1 or _brain.stage.ends_with("apuntó!")):
+		mech.move = Vector2(1.0, 0.0)
+		if _dodged != attack and to_boss.length() < 55.0:
+			_dodged = attack
+			mech.dash = true
+	if _dodged == attack:
 		return
 	if _brain.stage.contains("¡arranca!") and to_boss.length() - Brawler.BOX.z * 0.5 < 38.0:
 		_dodged = attack

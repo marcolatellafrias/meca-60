@@ -16,14 +16,23 @@ extends Node
 ##     pozo); AVISO, lo levanta sobre la cabeza y en el piso aparece un círculo rojo que te sigue; GOLPE, lo tira en arco
 ##     y el círculo se queda donde estabas: la piedra (BrawlerRock) cae ahí. Si te alcanza, te saca vida; si no, queda
 ##     un rato en el piso (sin chocar con nada) y se hunde.
+##   · EL TROMPO (15/11/2026): AVISO, abre los brazos y empieza a girar; GOLPE, gira como un trompo andando hacia vos;
+##     si los brazos te alcanzan, te saca vida. Después queda MAREADO con el horno abierto (la ventana). Se esquiva
+##     alejándose (las orugas andan un poco más rápido que la meca: con el dash).
+##   · EL AGARRE Y REVOLEO (15/11/2026), UN SKILLSHOT (el usuario: «el agarre se debería poder esquivar, es un
+##     skillshot»): AVISO, los brazos atrás y una franja angosta en el piso que sigue a la cintura; al final la franja
+##     se queda quieta y titila (ya apuntó); GOLPE, la mano sale derecho con su cadena (BrawlerHook). Si te toca, te
+##     arrastra hasta él, te revolea dando vueltas y te tira lejos: al caer te saca vida. Si te corriste de la franja,
+##     la mano vuelve vacía.
 ##   · CUÁL: al terminar de rodear, uno de los que tengan tu distancia a tiro, al azar (la L de la parcela deja uno).
 ## LA VIDA, POR CÓDIGO (Health): las piñas de la meca que tocan el cuerpo le sacan poco; en el horno abierto, mucho.
 ## Mientras alguien lo posee, la cabeza no hace nada.
 
-enum Act { STALK, CHARGE, SLAM, THROW }
+enum Act { STALK, CHARGE, SLAM, THROW, SPIN, HOOK }
 ## QUÉ ATAQUES USA (la L de la parcela): todos, o uno solo.
-enum Moves { ALL, CHARGE, SLAM, THROW }
-const MOVES_NAMES := ["todos", "sólo la embestida", "sólo el golpe al piso", "sólo arrancar el piso"]
+enum Moves { ALL, CHARGE, SLAM, THROW, SPIN, HOOK }
+const MOVES_NAMES := ["todos", "sólo la embestida", "sólo el golpe al piso", "sólo arrancar el piso", "sólo el trompo",
+	"sólo el agarre"]
 static var moves := Moves.ALL
 
 ## Las distancias que deciden (m, del medio del Luchador al blanco): se queda entre `KEEP`; embiste entre `CHARGE_RANGE`.
@@ -36,6 +45,11 @@ const SLAM_FALL := 0.15
 const WAVE_AHEAD := 4.0
 ## Arrancar el piso, entre estas (m).
 const THROW_RANGE := Vector2(35.0, 130.0)
+## El trompo y el agarre, entre estas (m).
+const SPIN_RANGE := Vector2(0.0, 65.0)
+const HOOK_RANGE := Vector2(25.0, 80.0)
+## Revoleando: a cuánto adelante de su frente y a qué altura tiene a la meca (m).
+const SWING_HOLD := Vector2(12.0, 8.0)
 ## Rodeando: cuánto (s, entre los dos).
 const STALK_TIME := Vector2(2.0, 4.0)
 ## La embestida: cuánto tiene que estar de frente para arrancar (radianes) y la recuperación (s).
@@ -68,6 +82,10 @@ var slams := 0
 var waved := 0
 var throws := 0
 var rocked := 0
+var spins := 0
+var spun := 0
+var hooks := 0
+var grabbed := 0
 
 var _boss: Brawler = null
 var _clock := 0.0
@@ -83,6 +101,10 @@ var _waves: Array[BrawlerWave] = []
 var _rock: BrawlerRock = null
 var _rocks: Array[BrawlerRock] = []
 var _dig := Vector3.ZERO
+var _hook: BrawlerHook = null
+var _fling_from := Vector3.ZERO
+var _fling_to := Vector3.ZERO
+var _fling_clock := -1.0
 
 
 func _ready() -> void:
@@ -107,6 +129,7 @@ func _physics_process(delta: float) -> void:
 	_check_punches()
 	_check_waves()
 	_check_rocks()
+	_fly_target(delta)
 	if _boss.driven():
 		return
 	if not awake:
@@ -134,6 +157,10 @@ func _physics_process(delta: float) -> void:
 			_slam()
 		Act.THROW:
 			_throw()
+		Act.SPIN:
+			_spin()
+		Act.HOOK:
+			_hook_act()
 
 
 ## ── LOS ACTOS ────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -158,6 +185,10 @@ func _stalk() -> void:
 		can.append(Act.SLAM)
 	if (moves == Moves.ALL or moves == Moves.THROW) and gap > THROW_RANGE.x and gap < THROW_RANGE.y:
 		can.append(Act.THROW)
+	if (moves == Moves.ALL or moves == Moves.SPIN) and gap > SPIN_RANGE.x and gap < SPIN_RANGE.y:
+		can.append(Act.SPIN)
+	if (moves == Moves.ALL or moves == Moves.HOOK) and gap > HOOK_RANGE.x and gap < HOOK_RANGE.y:
+		can.append(Act.HOOK)
 	if not can.is_empty():
 		_begin(can[_random.randi() % can.size()])
 
@@ -297,6 +328,155 @@ func _throw() -> void:
 				_begin(Act.STALK)
 
 
+## EL TROMPO, por tiempos (`_step`): 0 abre los brazos y arranca a girar, 1 gira y avanza, 2 mareado.
+func _spin() -> void:
+	var k := BrawlerSettings.current
+	match _step:
+		0:
+			stage = "trompo: abre los brazos"
+			_boss.pose = Brawler.Pose.SPIN_READY
+			_boss.move = Vector2(clampf(-_error_to(_to_target()) * 3.0, -1.0, 1.0), 0.0)
+			_boss.spin = k.spin_speed * 0.25 * clampf(_clock / maxf(k.spin_windup, 0.01), 0.0, 1.0)
+			if _clock >= k.spin_windup:
+				spins += 1
+				_next(1)
+		1:
+			stage = "¡trompo!"
+			_boss.pose = Brawler.Pose.SPIN
+			_boss.spin = k.spin_speed
+			_drive(_to_target().normalized(), 1.0)
+			_check_spin(k)
+			if _clock >= k.spin_time:
+				_next(2)
+		_:
+			stage = "trompo: mareado"
+			_boss.pose = Brawler.Pose.STUNNED
+			_boss.spin = move_toward(_boss.spin, 0.0, k.spin_speed * 2.0 * get_physics_process_delta_time())
+			_boss.move = Vector2.ZERO
+			_boss.furnace = true
+			if _clock >= k.spin_dizzy:
+				_begin(Act.STALK)
+
+
+## SI LOS BRAZOS DEL TROMPO TE ALCANZAN: una vez por trompo.
+func _check_spin(k: BrawlerSettings) -> void:
+	if _hit_this_act or _distance() > k.spin_reach + _target_half_width():
+		return
+	_hit_this_act = true
+	spun += 1
+	var theirs := Health.of(target)
+	if theirs != null:
+		theirs.hurt(k.spin_damage, "el trompo")
+	var body := target as BalanceBody
+	if body != null and not body.kinematic:
+		var aside := Vector3.UP.cross(_to_target().normalized()) * signf(_boss.spin)
+		BalanceBody.hit(body, (aside + Vector3.UP * 0.3).normalized() * k.spin_push * body.mass)
+
+
+## EL AGARRE, por tiempos (`_step`): 0 apunta (la franja; al final, quieta), 1 la mano sale, 2 te arrastra, 3 te revolea
+## y te tira, 4 se recupera.
+func _hook_act() -> void:
+	var k := BrawlerSettings.current
+	var waist := Basis(Vector3.UP, _boss.waist_yaw) * Vector3.FORWARD
+	match _step:
+		0:
+			_boss.pose = Brawler.Pose.HOOK_READY
+			_boss.move = Vector2(clampf(-_error_to(_to_target()) * 3.0, -1.0, 1.0), 0.0)
+			if _hook == null:
+				_hook = BrawlerHook.new()
+				_hook.name = "Mano"
+				_boss.get_parent().add_child(_hook)
+				_hook.setup(k.hook_width, k.hook_reach)
+			if _clock < k.hook_windup:
+				stage = "agarre: apunta"
+				_hook.aim(_boss.global_position + waist * Brawler.BOX.z * 0.5, waist, false)
+			else:
+				# YA APUNTÓ: la franja (y la cintura) quietas.
+				stage = "agarre: ¡apuntó!"
+				_boss.aim_yaw = atan2(-_hook.way.x, -_hook.way.z)
+				_hook.aim(_hook.origin, _hook.way, true)
+			if _clock >= k.hook_windup + k.hook_lock:
+				hooks += 1
+				_boss.pose = Brawler.Pose.HOOK
+				_hook.launch(k.hook_speed)
+				_next(1)
+		1:
+			stage = "agarre: ¡la mano!"
+			_boss.aim_yaw = atan2(-_hook.way.x, -_hook.way.z)
+			_boss.move = Vector2.ZERO
+			var body := target as BalanceBody
+			if _hook.touches(_ground(), _target_half_width()):
+				grabbed += 1
+				_hook.reel()
+				if body != null and body.mover != null:
+					_next(2)
+				else:
+					# A LA FÍSICA no la lleva: la tira hacia él (y le saca lo mismo).
+					var theirs := Health.of(target)
+					if theirs != null:
+						theirs.hurt(k.fling_damage, "el agarre")
+					if body != null:
+						BalanceBody.hit(body, (-_hook.way + Vector3.UP * 0.5).normalized() * k.spin_push * body.mass)
+					_next(4)
+			elif _hook.state == BrawlerHook.State.BACK:
+				_next(4)
+		2:
+			stage = "agarre: ¡te agarró!"
+			_boss.aim_yaw = atan2(-_hook.way.x, -_hook.way.z)
+			_boss.move = Vector2.ZERO
+			if not is_instance_valid(_hook) or _hook.front <= Brawler.BOX.z * 0.5:
+				_hook = null
+				_next(3)
+			else:
+				_put_target(_hook.tip())
+		3:
+			stage = "¡revoleo!"
+			_boss.pose = Brawler.Pose.SWING
+			_boss.move = Vector2.ZERO
+			_boss.spin = k.swing_speed * clampf(_clock / 0.4, 0.2, 1.0)
+			var hold := _boss.global_position + waist * (Brawler.BOX.z * 0.5 + SWING_HOLD.x) + Vector3.UP * SWING_HOLD.y
+			_put_target(hold)
+			if _clock >= k.swing_time:
+				_boss.spin = 0.0
+				_boss.pose = Brawler.Pose.THROW
+				var to := hold + waist * k.fling_distance
+				to.y = 0.0
+				if _boss.arena != null:
+					to = _boss.arena.hold(to, _target_half_width() + 2.0)
+				_fling_from = hold
+				_fling_to = to
+				_fling_clock = 0.0
+				_next(4)
+		_:
+			stage = "agarre: se recupera"
+			_boss.move = Vector2.ZERO
+			if _clock >= k.hook_recover:
+				_begin(Act.STALK)
+
+
+## TE TIRÓ: vuela en arco hasta donde cae; al caer, te saca vida.
+func _fly_target(delta: float) -> void:
+	if _fling_clock < 0.0:
+		return
+	var k := BrawlerSettings.current
+	_fling_clock += delta
+	var t := minf(_fling_clock / maxf(k.fling_time, 0.01), 1.0)
+	_put_target(_fling_from.lerp(_fling_to, t) + Vector3.UP * k.fling_arc * 4.0 * t * (1.0 - t))
+	if t < 1.0:
+		return
+	_fling_clock = -1.0
+	var theirs := Health.of(target)
+	if theirs != null:
+		theirs.hurt(k.fling_damage, "el revoleo")
+
+
+## LO PONE AL BLANCO en `at` (el piso debajo de sus pies), mirando como mira: sólo una meca cinemática.
+func _put_target(at: Vector3) -> void:
+	var body := target as BalanceBody
+	if body != null and body.mover != null:
+		body.put(Transform3D(Basis(Vector3.UP, body.mover.rotation.y), at))
+
+
 ## LAS PIEDRAS QUE CAEN: si te cae encima apoyada, te saca vida y se rompe; si no, queda un rato.
 func _check_rocks() -> void:
 	var k := BrawlerSettings.current
@@ -385,6 +565,7 @@ func _begin(next: Act) -> void:
 	_step = 0
 	_hit_this_act = false
 	_boss.charging = false
+	_boss.spin = 0.0
 	_boss.pose = Brawler.Pose.REST
 	_drop_warning()
 	if next == Act.STALK:
@@ -498,6 +679,10 @@ func _drop_warning() -> void:
 	if _rock != null and is_instance_valid(_rock):
 		_rock.queue_free()
 	_rock = null
+	# La mano: si todavía apuntaba, se va; si salió, vuelve sola.
+	if _hook != null and is_instance_valid(_hook) and _hook.state == BrawlerHook.State.AIM:
+		_hook.queue_free()
+	_hook = null
 
 
 func _still() -> void:
@@ -506,12 +691,14 @@ func _still() -> void:
 	_boss.move = Vector2.ZERO
 	_boss.charging = false
 	_boss.furnace = false
+	_boss.spin = 0.0
 	stage = "quieto"
 
 
 func _show() -> void:
 	var head := stage if awake or stage == "derrotado" else "quieto (J lo despierta)"
-	_label.text = "%s\nembistió %d · te alcanzó %d · se estrelló %d\ngolpes al piso %d · te alcanzaron %d\npiedras %d · te alcanzaron %d" \
-		% [head, charges, landed, crashes, slams, waved, throws, rocked]
+	_label.text = ("%s\nembistió %d · te alcanzó %d · se estrelló %d\ngolpes al piso %d · te alcanzaron %d\n"
+		+ "piedras %d · te alcanzaron %d\ntrompos %d · te alcanzaron %d\nagarres %d · te agarró %d") % [head, charges,
+		landed, crashes, slams, waved, throws, rocked, spins, spun, hooks, grabbed]
 	_label.modulate = Color(1.0, 0.55, 0.3) if stage.ends_with("abre el horno") or stage.begins_with("¡se") \
-		or stage.ends_with("brazos") or stage.ends_with("la levanta") else Color(1, 1, 1)
+		or stage.ends_with("brazos") or stage.ends_with("la levanta") or stage.ends_with("apuntó!") else Color(1, 1, 1)

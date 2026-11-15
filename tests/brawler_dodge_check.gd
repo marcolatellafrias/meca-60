@@ -3,7 +3,8 @@ extends Node
 ## ESQUIVAR LA EMBESTIDA (sin ventana, unos 2 minutos): la meca cinemática contra el Luchador, que embiste desde
 ## `GAPS`. Cada manera de esquivar, cuántas veces la alcanzó: quieta; caminando de costado desde el aviso; caminando
 ## de costado desde que arranca; y el dash de costado cuando el jefe está a tantos metros (con y sin caminar después).
-## También el golpe al piso (--solo-piso) y la piedra de arrancar el piso (--solo-piedra).
+## También el golpe al piso (--solo-piso), la piedra de arrancar el piso (--solo-piedra), el trompo (--solo-trompo) y
+## el agarre (--solo-agarre).
 ##   godot --headless --path . res://tests/brawler_dodge_check.tscn
 
 const GAPS := [50.0, 80.0, 110.0]
@@ -46,6 +47,13 @@ func _ready() -> void:
 		k.charge_windup, k.charge_speed, k.charge_homing, KinematicSettings.current.walk_speed,
 		KinematicSettings.current.dash_distance, KinematicSettings.current.dash_time])
 	var args := OS.get_cmdline_user_args()
+	if args.has("--solo-trompo") or args.has("--solo-agarre"):
+		if args.has("--solo-trompo"):
+			await _spins(k)
+		if args.has("--solo-agarre"):
+			await _hooks(k)
+		get_tree().quit()
+		return
 	if not args.has("--solo-piso") and not args.has("--solo-embestida"):
 		await _throws(k)
 	if args.has("--solo-piedra"):
@@ -80,6 +88,94 @@ func _ready() -> void:
 				row += " %2.0f m %s" % [at, await _try_slam(gap, how, at)]
 			print(row)
 	get_tree().quit()
+
+
+## EL TROMPO: quieta, caminando para atrás desde el aviso, un dash para atrás al empezar a girar (solo, y después
+## caminando, o dos), y un dash para atrás desde el aviso y después caminando.
+func _spins(k: BrawlerSettings) -> void:
+	print("el trompo: aviso %.2f s, gira %.1f s, los brazos a %.0f m, las orugas a %.0f m/s" % [k.spin_windup,
+		k.spin_time, k.spin_reach, k.spin_move])
+	for gap: float in [30.0, 45.0, 60.0]:
+		var line := "a %3.0f m:" % gap
+		for how: String in ["still", "walk", "dash", "dash_walk", "dash_twice", "dash_aim_walk"]:
+			line += " %s %s" % [how, await _try_spin(gap, how)]
+		print(line)
+
+
+func _try_spin(gap: float, how: String) -> String:
+	await _place(gap)
+	var spun := _brain.spun
+	_brain.awake = true
+	await get_tree().physics_frame
+	_brain._begin(BrawlerBrain.Act.SPIN)
+	var dashes := 0
+	var clock := 0.0
+	while clock < 10.0 and _brain.act == BrawlerBrain.Act.SPIN and _brain.spun == spun:
+		await get_tree().physics_frame
+		clock += 1.0 / Engine.physics_ticks_per_second
+		_face_boss()
+		var spinning := _brain.stage == "¡trompo!"
+		var back := how == "walk" or (how != "still" and how != "dash" and dashes > 0)
+		_mech.move = Vector2(0.0, -1.0) if back else Vector2.ZERO
+		_mech.dash = false
+		var wanted := 0
+		if how == "dash_aim_walk":
+			wanted = 1
+		elif how.begins_with("dash") and spinning:
+			wanted = 2 if how == "dash_twice" and _brain._clock > 0.6 else 1
+		if dashes < wanted:
+			dashes += 1
+			_mech.move = Vector2(0.0, -1.0)
+			_mech.dash = true
+	_mech.move = Vector2.ZERO
+	_mech.dash = false
+	return "X" if _brain.spun > spun else "·"
+
+
+## EL AGARRE: quieta, caminando de costado desde el aviso, desde que apuntó o desde que sale la mano, y el dash de
+## costado cuando apuntó o cuando sale la mano.
+func _hooks(k: BrawlerSettings) -> void:
+	print("el agarre: aviso %.2f s, quieta %.2f s, la mano a %.0f m/s hasta %.0f m, franja de %.0f m" % [k.hook_windup,
+		k.hook_lock, k.hook_speed, k.hook_reach, k.hook_width])
+	for gap: float in [35.0, 55.0, 75.0]:
+		var line := "a %3.0f m:" % gap
+		for how: String in ["still", "walk_aim", "walk_lock", "walk_shot", "dash_lock", "dash_shot"]:
+			line += " %s %s" % [how, await _try_hook(gap, how)]
+		print(line)
+
+
+func _try_hook(gap: float, how: String) -> String:
+	await _place(gap)
+	var grabbed := _brain.grabbed
+	_brain.awake = true
+	await get_tree().physics_frame
+	_brain._begin(BrawlerBrain.Act.HOOK)
+	var dashed := false
+	var clock := 0.0
+	while clock < 8.0 and _brain.act == BrawlerBrain.Act.HOOK and _brain.grabbed == grabbed:
+		await get_tree().physics_frame
+		clock += 1.0 / Engine.physics_ticks_per_second
+		_face_boss()
+		var locked := _brain._step > 0 or _brain.stage.ends_with("apuntó!")
+		var shot := _brain._step > 0
+		var walk := how == "walk_aim" or (how == "walk_lock" and locked) or (how == "walk_shot" and shot)
+		_mech.move = Vector2(1.0, 0.0) if walk else Vector2.ZERO
+		_mech.dash = false
+		if not dashed and ((how == "dash_lock" and locked) or (how == "dash_shot" and shot)):
+			dashed = true
+			_mech.move = Vector2(1.0, 0.0)
+			_mech.dash = true
+	_mech.move = Vector2.ZERO
+	_mech.dash = false
+	var hit := _brain.grabbed > grabbed
+	# Que termine el revoleo antes de la próxima.
+	await _wait(5.0)
+	return "X" if hit else "·"
+
+
+func _face_boss() -> void:
+	var to_boss := _boss.global_position - _mech.mover.global_position
+	_mech.aim_yaw = atan2(-to_boss.x, -to_boss.z)
 
 
 ## ARRANCAR EL PISO: quieta, caminando de costado desde el aviso o desde el tiro, y el dash a tantos segundos del tiro.

@@ -89,11 +89,12 @@ func show(opened: float, angle: float, fury: float) -> void:
 
 
 ## LA POSE: el torso inclinado `lean` grados adelante, los brazos girados `raise` grados en el hombro (adelante y
-## arriba) y el temblor `shake` (m, de lo de arriba).
-func pose(lean: float, raise: float, shake: float) -> void:
+## arriba), el temblor `shake` (m, de lo de arriba) y cuánto se abren los brazos para los costados `spread` (°).
+func pose(lean: float, raise: float, shake: float, spread := 0.0) -> void:
 	bent.basis = Basis(Vector3.RIGHT, -deg_to_rad(HUNCH + lean))
-	for shoulder in shoulders:
-		shoulder.basis = Basis(Vector3.RIGHT, deg_to_rad(raise))
+	for index in shoulders.size():
+		var side := -1.0 if index == 0 else 1.0
+		shoulders[index].basis = Basis(Vector3.BACK, side * deg_to_rad(spread)) * Basis(Vector3.RIGHT, deg_to_rad(raise))
 	var time := Time.get_ticks_msec() * 0.001
 	bent.position = Vector3(sin(time * 41.0), sin(time * 53.0) * 0.5, sin(time * 37.0)) * shake
 

@@ -25,20 +25,27 @@ const GRAVITY := 30.0
 
 ## LAS POSES: parado; agachado para embestir (los brazos atrás, temblando); embistiendo (los puños adelante); los
 ## brazos arriba para el golpe al piso; el golpe (los puños al piso); aturdido (desplomado); las manos en el piso para
-## arrancarlo; la piedra arriba de la cabeza; y el tiro (los brazos adelante).
-enum Pose { REST, CHARGE_READY, CHARGING, SLAM_READY, SLAM, STUNNED, DIG, LIFT, THROW }
+## arrancarlo; la piedra arriba de la cabeza; y el tiro (los brazos adelante); el trompo (los brazos abiertos, antes y
+## girando); el agarre (los brazos atrás y el tiro de la mano); y el revoleo (los brazos adelante, con la meca).
+enum Pose { REST, CHARGE_READY, CHARGING, SLAM_READY, SLAM, STUNNED, DIG, LIFT, THROW, SPIN_READY, SPIN, HOOK_READY,
+	HOOK, SWING }
 ## De cada pose: cuánto se inclina el torso (°, adelante), cuánto giran los brazos en el hombro (°, adelante y arriba),
-## cuánto tiembla (m) y en cuánto llega a ella (s).
+## cuánto tiembla (m), en cuánto llega a ella (s) y cuánto se abren los brazos para los costados (°).
 const POSES := {
-	Pose.REST: [0.0, 0.0, 0.0, 0.5],
-	Pose.CHARGE_READY: [14.0, -35.0, 0.35, 0.6],
-	Pose.CHARGING: [22.0, 70.0, 0.0, 0.25],
-	Pose.SLAM_READY: [-14.0, 165.0, 0.2, 0.8],
-	Pose.SLAM: [32.0, 50.0, 0.0, 0.1],
-	Pose.STUNNED: [28.0, 10.0, 0.0, 0.4],
-	Pose.DIG: [42.0, 25.0, 0.25, 0.5],
-	Pose.LIFT: [-12.0, 175.0, 0.15, 0.6],
-	Pose.THROW: [28.0, 80.0, 0.0, 0.12],
+	Pose.REST: [0.0, 0.0, 0.0, 0.5, 0.0],
+	Pose.CHARGE_READY: [14.0, -35.0, 0.35, 0.6, 0.0],
+	Pose.CHARGING: [22.0, 70.0, 0.0, 0.25, 0.0],
+	Pose.SLAM_READY: [-14.0, 165.0, 0.2, 0.8, 0.0],
+	Pose.SLAM: [32.0, 50.0, 0.0, 0.1, 0.0],
+	Pose.STUNNED: [28.0, 10.0, 0.0, 0.4, 0.0],
+	Pose.DIG: [42.0, 25.0, 0.25, 0.5, 0.0],
+	Pose.LIFT: [-12.0, 175.0, 0.15, 0.6, 0.0],
+	Pose.THROW: [28.0, 80.0, 0.0, 0.12, 0.0],
+	Pose.SPIN_READY: [-6.0, 10.0, 0.25, 0.6, 75.0],
+	Pose.SPIN: [0.0, 0.0, 0.0, 0.3, 88.0],
+	Pose.HOOK_READY: [6.0, -45.0, 0.2, 0.5, 0.0],
+	Pose.HOOK: [14.0, 88.0, 0.0, 0.1, 0.0],
+	Pose.SWING: [-6.0, 88.0, 0.0, 0.3, 0.0],
 }
 
 ## ── LO QUE SE LE PIDE ──
@@ -51,6 +58,8 @@ var rage := false
 ## EMBISTIENDO: las orugas van a la velocidad de la embestida (BrawlerSettings), con su rampa corta.
 var charging := false
 var pose := Pose.REST
+## EL TROMPO: la cintura gira sola a tantos °/s (positivo, a la izquierda), sin mirar a `aim_yaw`; 0, como siempre.
+var spin := 0.0
 
 ## ── LO QUE MIDE ──
 ## A cuánto va adelante (m/s; atrás, negativo).
@@ -77,6 +86,7 @@ var _rage_was := false
 var _lean := 0.0
 var _raise := 0.0
 var _shake := 0.0
+var _spread := 0.0
 
 
 func _init() -> void:
@@ -130,8 +140,9 @@ func _physics_process(delta: float) -> void:
 	hull_yaw = wrapf(hull_yaw - turning * deg_to_rad(k.turn_speed) * hurry * delta, -PI, PI)
 	var wanted := clampf(move.y, -k.reverse_share, 1.0)
 	var braking := wanted * _ahead.level < 0.0
-	var top := k.charge_speed if charging else k.speed * hurry
-	speed = _ahead.step(delta, wanted, k.charge_up_time if charging else k.up_time, k.up_shape,
+	var rushing := charging or spin != 0.0
+	var top := k.charge_speed if charging else (k.spin_move if spin != 0.0 else k.speed * hurry)
+	speed = _ahead.step(delta, wanted, k.charge_up_time if rushing else k.up_time, k.up_shape,
 		k.brake_time if braking else k.coast_time, k.brake_shape if braking else k.coast_shape) * top
 	rotation.y = hull_yaw
 	var heading := Basis(Vector3.UP, hull_yaw) * Vector3.FORWARD
@@ -149,9 +160,12 @@ func _physics_process(delta: float) -> void:
 		_ahead.level = clampf(forward / maxf(top, 0.01), -1.0, 1.0)
 		speed = forward
 	_solid.global_transform = global_transform
-	# LA CINTURA, hacia donde mira, con tope.
+	# LA CINTURA, hacia donde mira, con tope; en el trompo, gira sola.
 	var most := deg_to_rad(k.waist_speed) * hurry * delta
-	waist_yaw = wrapf(waist_yaw + clampf(wrapf(aim_yaw - waist_yaw, -PI, PI), -most, most), -PI, PI)
+	if spin != 0.0:
+		waist_yaw = wrapf(waist_yaw + deg_to_rad(spin) * delta, -PI, PI)
+	else:
+		waist_yaw = wrapf(waist_yaw + clampf(wrapf(aim_yaw - waist_yaw, -PI, PI), -most, most), -PI, PI)
 	opened = move_toward(opened, 1.0 if furnace else 0.0, delta / maxf(k.door_time, 0.01))
 	fury = move_toward(fury, 1.0 if rage else 0.0, delta / maxf(k.rage_time, 0.01))
 	_place_upper()
@@ -161,7 +175,8 @@ func _physics_process(delta: float) -> void:
 	_lean = lerpf(_lean, float(wanted_pose[0]), follow)
 	_raise = lerpf(_raise, float(wanted_pose[1]), follow)
 	_shake = lerpf(_shake, float(wanted_pose[2]), follow)
-	body.pose(_lean, _raise, _shake)
+	_spread = lerpf(_spread, float(wanted_pose[4]), follow)
+	body.pose(_lean, _raise, _shake, _spread)
 
 
 func _place_upper() -> void:

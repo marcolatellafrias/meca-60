@@ -48,6 +48,8 @@ func describe(_seed_value: int) -> PackedStringArray:
 		"te rodea mirándote y TE EMBISTE: antes abre el horno (la ventana para pegarle)",
 		"o GOLPEA EL PISO: la franja roja dice por dónde sale la onda (saltala o corréte)",
 		"o ARRANCA EL PISO y te lo tira: el círculo rojo dice dónde cae (corréte); si no te pega, queda un rato",
+		"de cerca, el TROMPO (alejate; después queda mareado con el horno abierto)",
+		"o el AGARRE: la franja angosta se queda quieta y la mano sale derecho (salite de la franja); si te agarra, te revolea",
 		"si llega al borde de la arena se estrella y queda aturdido, con el horno abierto",
 		"el horno es el punto débil: una piña ahí le saca mucho; en el cuerpo, poco",
 		"J el jefe piensa · K el tipo de meca · L los ataques · O poseer la meca (o al jefe) · F1 las perillas",

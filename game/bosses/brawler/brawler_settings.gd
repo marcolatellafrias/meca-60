@@ -89,6 +89,38 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 @export_range(0.0, 100.0, 1.0) var rock_damage := 30.0
 @export_range(0.0, 60.0, 0.5) var rock_push := 14.0
 
+@export_group("Trompo")
+## EL TROMPO (ver BrawlerBrain): abre los brazos y empieza a girar (s: el aviso), gira tanto tiempo (s) a tantos °/s
+## andando hacia vos con las orugas (a tantos m/s, con su arranque corto: el de la embestida), y después queda MAREADO (s, con el horno abierto: la
+## ventana). Si te alcanzan los brazos (hasta dónde llegan, m desde su medio), cuánta vida te saca y cuánto te empuja
+## (m/s, de costado; a la meca física).
+@export_range(0.2, 4.0, 0.05) var spin_windup := 1.0
+@export_range(0.5, 8.0, 0.1) var spin_time := 3.0
+@export_range(90.0, 1440.0, 10.0) var spin_speed := 540.0
+@export_range(1.0, 40.0, 0.5) var spin_move := 12.0
+@export_range(0.2, 6.0, 0.1) var spin_dizzy := 2.0
+@export_range(10.0, 50.0, 0.5) var spin_reach := 30.0
+@export_range(0.0, 100.0, 1.0) var spin_damage := 20.0
+@export_range(0.0, 60.0, 0.5) var spin_push := 16.0
+
+@export_group("Agarre")
+## EL AGARRE Y REVOLEO (ver BrawlerBrain, BrawlerHook): UN SKILLSHOT. El aviso (s: la franja sigue a la cintura) y, al
+## final, cuánto se queda quieta antes del tiro (s: ya apuntó, corréte); la mano: a qué velocidad sale (m/s), hasta dónde
+## (m) y qué ancho tiene la franja (m). Si te agarra: cuánto te revolea (s, a tantos °/s) y te tira lejos (m), con su
+## arco (m de alto, s de vuelo); al caer, cuánta vida te saca. Después se queda (s).
+@export_range(0.2, 4.0, 0.05) var hook_windup := 1.0
+@export_range(0.0, 2.0, 0.05) var hook_lock := 0.6
+@export_range(20.0, 200.0, 5.0) var hook_speed := 90.0
+@export_range(20.0, 150.0, 5.0) var hook_reach := 85.0
+@export_range(2.0, 20.0, 0.5) var hook_width := 6.0
+@export_range(0.2, 4.0, 0.05) var swing_time := 1.2
+@export_range(90.0, 1080.0, 10.0) var swing_speed := 400.0
+@export_range(10.0, 150.0, 5.0) var fling_distance := 70.0
+@export_range(0.0, 60.0, 1.0) var fling_arc := 25.0
+@export_range(0.3, 4.0, 0.05) var fling_time := 1.3
+@export_range(0.0, 100.0, 1.0) var fling_damage := 35.0
+@export_range(0.2, 4.0, 0.05) var hook_recover := 1.0
+
 @export_group("Golpes")
 ## LO QUE LE SACA UNA PIÑA DE LA MECA: en el cuerpo, y en el horno abierto (el punto débil).
 @export_range(0.0, 100.0, 1.0) var punch_damage := 6.0

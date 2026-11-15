@@ -108,7 +108,26 @@ empezá con el 3er poder» (el tercero de la lista: arrancar el piso y tirarlo).
   o desde el tiro) **o con el dash, no**. Al filo: con 1,3 s de vuelo, caminando ya no llega y sólo la esquiva el dash.
 - **La L** suma «sólo arrancar el piso». El video (`brawler_charge_movie`) arranca con 20 s de piedras.
 
+## Paso 5 (15/11/2026): el trompo y el agarre y revoleo
+El usuario: «hacé el trompo y el agarre y revoleo… obvio que el agarre se debería poder esquivar, es un skillshot».
+- **Las poses** suman cuánto se abren los brazos para los costados (`BrawlerBody.pose`, `spread`), y **la cintura puede
+  girar sola** (`Brawler.spin`, °/s), sin mirar a donde apunta.
+- **El trompo** (`BrawlerBrain._spin`; hasta 65 m): **aviso** (1 s), abre los brazos y empieza a girar despacio;
+  **golpe**, gira a 540°/s durante 3 s y viene hacia vos a 12 m/s, con su arranque corto (la meca camina a 8). Si los
+  brazos te alcanzan (30 m desde su medio, más tu medio ancho), te saca 20 (a la física la empuja de costado). Después
+  queda **mareado 2 s, con el horno abierto**: la ventana. Pestaña «Trompo» del F1.
+- **El agarre y revoleo** (`BrawlerBrain._hook_act`, `BrawlerHook`; entre 25 y 80 m), **un skillshot**: **aviso** (1 s),
+  los brazos atrás y **una franja roja angosta** (6 m) que sigue a la cintura; después **se queda quieta y titila
+  0,6 s** (ya apuntó, y la cintura también queda quieta); **golpe**, la mano sale derecho con su cadena a 90 m/s hasta
+  85 m. Si te toca, vuelve arrastrándote; con vos adelante, **te revolea** (la cintura gira a 400°/s, 1,2 s) y **te
+  tira** 70 m en arco (25 m de alto, 1,3 s; dentro de la arena); al caer te saca 35. Si no, vuelve vacía. A la meca
+  física no la lleva: la tira hacia él y le saca lo mismo. Pestaña «Agarre» del F1.
+- **Esquivarlos** (`brawler_dodge_check --solo-trompo --solo-agarre`): el trompo, quieta te alcanza siempre; **desde
+  45 m, caminando para atrás** te escapás; más cerca, sólo **con un dash para atrás en el aviso** y caminando. El
+  agarre, quieta o caminando desde el aviso te agarra (la franja te sigue); **desde 55 m, salirte caminando cuando
+  apuntó** alcanza; más cerca, **con el dash** (cuando apuntó o cuando sale la mano).
+- **La L** suma «sólo el trompo» y «sólo el agarre». El video arranca con 16 s de agarres y 16 de trompos.
+
 ## Lo que sigue
-Los poderes, de a uno (propuestos, sin confirmar): el agarre y revoleo, el gancho al cielo, la guardia con contraataque
-y el trompo; con ira, combos más largos y el humo como zona que tapa la vista. Sin
+Los poderes, de a uno (propuestos, sin confirmar): el gancho al cielo y la guardia con contraataque; con ira, combos más largos y el humo como zona que tapa la vista. Sin
 ametralladora por ahora.

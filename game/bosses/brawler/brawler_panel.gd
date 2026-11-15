@@ -27,9 +27,16 @@ const LABELS := {
 	"rock_flight": "vuela (s)", "rock_arc": "el arco sube (m)", "rock_radius": "radio del golpe (m)",
 	"rock_stay": "queda en el piso (s)", "throw_recover": "se queda después (s)",
 	"rock_damage": "te saca (vida)", "rock_push": "te empuja (m/s)",
+	"spin_windup": "aviso: abre los brazos (s)", "spin_time": "gira (s)", "spin_speed": "a (°/s)",
+	"spin_move": "las orugas, a (m/s)", "spin_dizzy": "mareado, horno abierto (s)",
+	"spin_reach": "los brazos llegan a (m)", "spin_damage": "te saca (vida)", "spin_push": "te empuja (m/s)",
+	"hook_windup": "aviso: la franja (s)", "hook_lock": "ya apuntó, quieta (s)", "hook_speed": "la mano sale a (m/s)",
+	"hook_reach": "llega hasta (m)", "hook_width": "ancho (m)", "swing_time": "te revolea (s)",
+	"swing_speed": "a (°/s)", "fling_distance": "te tira a (m)", "fling_arc": "el arco sube (m)",
+	"fling_time": "vuelo (s)", "fling_damage": "al caer te saca (vida)", "hook_recover": "se queda después (s)",
 }
 const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Ira", "Embestida", "Golpe al piso", "Arrancar el piso",
-	"Golpes", "Arena"]
+	"Trompo", "Agarre", "Golpes", "Arena"]
 
 
 func setup_panel() -> void:
