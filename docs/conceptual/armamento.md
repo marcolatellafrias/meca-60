@@ -18,6 +18,13 @@ tipo, este boss es de tal elemento… quiero que… sean como universales»). Ca
 cualquiera, y lo que se elige es **qué usar en qué momento**, no qué equipar antes de salir.
 
 ## Los puestos
+- **Un puño con un objeto y un arma (15/11/2026, para este experimento):** la meca lleva de un lado el cañón y del otro
+  **una mano con una espada** (reemplaza al taladro). El usuario: el cañón se aprende (palanca, inercia, física) y el
+  taladro era «apretar un botón o dos»; la espada es «la que más expresión tiene», y en mano, «más antropocéntrico».
+  Pensarlo **como hechizos, pero con la física y los controles torpes encima**: modos estocada (se carga), tajo (el
+  gesto se dibuja con una palanca y el brazo lo sigue con inercia, llega tarde y se pasa) y guardia. La espada es un
+  objeto que la mano agarra: puede soltarla. Paneles en 2D pixelado (grises, pantallas negro y verde), con la forma de
+  la iteración 41: tramo arriba, cajas en los parantes, módulos abajo sobre una franja común con la energía.
 - **Tres pasajeros, sin espalda (15/11/2026, lo último; manda sobre lo de abajo):** la meca cuadrada tiene tres
   sillas, las tres adelante. **Izquierda, el brazo izquierdo; derecha, el derecho; al medio, el movimiento.** Se fue la
   silla de la tarima. **Las armas de la espalda desaparecen** (la ametralladora y los misiles; el usuario: «desaparecen»).
