@@ -39,6 +39,25 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 @export_range(0.1, 5.0, 0.1) var rage_time := 1.2
 @export_range(1.0, 3.0, 0.05) var rage_speed := 1.35
 
+@export_group("Embestida")
+## LA EMBESTIDA (ver BrawlerBrain): el aviso (s: frena, se da vuelta hacia vos y abre el horno: la ventana), la velocidad
+## (m/s) y cuánto tarda en llegar a ella (s), cuánto dura como mucho (s), cuánto corrige hacia vos (°/s: poco) y, si se
+## estrella contra el borde de la arena, cuánto queda aturdido (s, con el horno abierto). Si te alcanza, cuánta vida te
+## saca y cuánto te cambia la velocidad (m/s; a la meca física).
+@export_range(0.2, 4.0, 0.05) var charge_windup := 1.4
+@export_range(5.0, 60.0, 0.5) var charge_speed := 26.0
+@export_range(0.0, 3.0, 0.05) var charge_up_time := 0.5
+@export_range(0.5, 8.0, 0.1) var charge_time := 3.0
+@export_range(0.0, 60.0, 1.0) var charge_homing := 12.0
+@export_range(0.2, 8.0, 0.1) var stun_time := 2.5
+@export_range(0.0, 100.0, 1.0) var charge_damage := 25.0
+@export_range(0.0, 60.0, 0.5) var charge_push := 18.0
+
+@export_group("Golpes")
+## LO QUE LE SACA UNA PIÑA DE LA MECA: en el cuerpo, y en el horno abierto (el punto débil).
+@export_range(0.0, 100.0, 1.0) var punch_damage := 6.0
+@export_range(0.0, 200.0, 1.0) var furnace_damage := 30.0
+
 @export_group("Arena")
 ## EL RADIO DE LA ARENA (m; BossArena): el círculo del que no sale. El anillo del piso lo sigue al guardar; los edificios
 ## de afuera se acomodan regenerando la parcela (R).

@@ -21,7 +21,7 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 | Multijugador | `MultiplayerArchetype` | `SandboxSession` | — | `net_check` | `game/net/` |
 | Partículas | `ParticleArchetype` | — | — | — | `game/particles/` |
 | Píxeles | `PixelArtArchetype` | `game/pixel_art/` entero, `tools/pixel_art_modelos_prueba.py` | `PixelPaintPanel` (F1) | `pixel_art_look` | `Clay`, `SupplyLook` (colores) |
-| Luchador de orugas | `BrawlerArchetype` | `game/bosses/brawler/` entero (`Brawler`, `BrawlerBody`, `BrawlerSettings`, `BrawlerPanel`), y de `game/bosses/`: `Health`, `FightBars`, `BossArena` | `BrawlerPanel` (F1) | `brawler_look` | `MoveRamp`, `MechKeys.axis`, `Clay`, `PhysicsLayers.FIXED`, `ParticleSystems` |
+| Luchador de orugas | `BrawlerArchetype` | `game/bosses/brawler/` entero (`Brawler`, `BrawlerBody`, `BrawlerBrain`, `BrawlerSettings`, `BrawlerPanel`), y de `game/bosses/`: `Health`, `FightBars`, `BossArena` | `BrawlerPanel` (F1) | `brawler_look`, `brawler_fight_look` | `MoveRamp`, `MechKeys.axis`, `Clay`, `PhysicsLayers.FIXED`, `ParticleSystems` |
 | Maquetas de jefes | `BossMaquetteArchetype` | `game/bosses/maquettes/` entero (`BossMaquettes`, `HumanoidMaquettes`, `ArmedMaquettes`, `WalkerMaquettes`, `BossMaquetteArchetype`) | — | `boss_maquettes_look` | `Clay` |
 
 ## La meca (lo que comparten sus dos filas)

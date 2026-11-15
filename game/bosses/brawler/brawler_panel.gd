@@ -14,9 +14,14 @@ const LABELS := {
 	"turn_time": "el giro llega y para en (s)", "waist_speed": "giro de la cintura (°/s)",
 	"door_time": "la puerta tarda (s)", "door_angle": "se abre hasta (°)",
 	"rage_time": "cambia en (s)", "rage_speed": "más rápido (veces)",
+	"charge_windup": "aviso: abre el horno (s)", "charge_speed": "velocidad (m/s)",
+	"charge_up_time": "llega a ella en (s)", "charge_time": "dura como mucho (s)",
+	"charge_homing": "corrige hacia vos (°/s)", "stun_time": "estrellado, aturdido (s)",
+	"charge_damage": "te saca (vida)", "charge_push": "te empuja (m/s)",
+	"punch_damage": "una piña en el cuerpo le saca", "furnace_damage": "una piña en el horno abierto le saca",
 	"arena_radius": "radio de la arena (m; los edificios, con R)",
 }
-const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Ira", "Arena"]
+const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Ira", "Embestida", "Golpes", "Arena"]
 
 
 func setup_panel() -> void:

@@ -17,7 +17,7 @@ extends CharacterBody3D
 ##   · LA IRA (`rage`): otro color, el visor rojo, humo negro por las chimeneas, y anda y gira más rápido.
 
 ## Lo que mide su caja contra lo fijo (m): el ancho de las orugas, el alto y el largo.
-const BOX := Vector3(24.0, 30.0, 24.0)
+const BOX := Vector3(24.0, 30.0, 20.0)
 ## Cuánto cae (m/s²) si no hay piso.
 const GRAVITY := 30.0
 
@@ -28,6 +28,8 @@ var move := Vector2.ZERO
 var aim_yaw := 0.0
 var furnace := false
 var rage := false
+## EMBISTIENDO: las orugas van a la velocidad de la embestida (BrawlerSettings), con su rampa corta.
+var charging := false
 
 ## ── LO QUE MIDE ──
 ## A cuánto va adelante (m/s; atrás, negativo).
@@ -46,6 +48,7 @@ var _ahead := MoveRamp.new()
 var _turn := MoveRamp.new()
 var _box := BoxShape3D.new()
 var _solid: AnimatableBody3D = null
+var _torso_shape: CollisionShape3D = null
 var _driving := false
 var _chase_yaw := 0.0
 var _furnace_was := false
@@ -69,7 +72,8 @@ func _ready() -> void:
 	aim_yaw = hull_yaw
 	body = BrawlerBody.new()
 	body.build(self)
-	# SU CUERPO PARA LAS MECAS: las orugas y un cilindro para lo de arriba (gire como gire la cintura). Nace en su lugar.
+	# SU CUERPO PARA LAS MECAS: las orugas y una caja para lo de arriba, que gira con la cintura (así la meca llega al
+	# pecho, y al horno, de frente). Nace en su lugar.
 	_solid = AnimatableBody3D.new()
 	_solid.name = "Cuerpo"
 	_solid.top_level = true
@@ -80,13 +84,12 @@ func _ready() -> void:
 	var tracks := Vector3((BrawlerBody.WAIST.x * 0.5 + BrawlerBody.TRACK.x + 1.5) * 2.0, BrawlerBody.TRACK.y + 3.0,
 		BrawlerBody.TRACK.z)
 	Clay.shape_box(_solid, tracks, Vector3.UP * tracks.y * 0.5)
-	var torso := CollisionShape3D.new()
-	var cylinder := CylinderShape3D.new()
-	cylinder.radius = BrawlerBody.CHEST.x * 0.5
-	cylinder.height = BOX.y - tracks.y
-	torso.shape = cylinder
-	torso.position.y = tracks.y + cylinder.height * 0.5
-	_solid.add_child(torso)
+	_torso_shape = CollisionShape3D.new()
+	var chest := BoxShape3D.new()
+	chest.size = Vector3(BrawlerBody.CHEST.x + 2.0, BOX.y - tracks.y, BrawlerBody.CHEST.z)
+	_torso_shape.shape = chest
+	_torso_shape.position.y = tracks.y + chest.size.y * 0.5
+	_solid.add_child(_torso_shape)
 	PhysicsLayers.mark_fixed(_solid)
 	add_collision_exception_with(_solid)
 	add_to_group(SandboxPossession.GROUP)
@@ -103,8 +106,9 @@ func _physics_process(delta: float) -> void:
 	hull_yaw = wrapf(hull_yaw - turning * deg_to_rad(k.turn_speed) * hurry * delta, -PI, PI)
 	var wanted := clampf(move.y, -k.reverse_share, 1.0)
 	var braking := wanted * _ahead.level < 0.0
-	speed = _ahead.step(delta, wanted, k.up_time, k.up_shape, k.brake_time if braking else k.coast_time,
-		k.brake_shape if braking else k.coast_shape) * k.speed * hurry
+	var top := k.charge_speed if charging else k.speed * hurry
+	speed = _ahead.step(delta, wanted, k.charge_up_time if charging else k.up_time, k.up_shape,
+		k.brake_time if braking else k.coast_time, k.brake_shape if braking else k.coast_shape) * top
 	rotation.y = hull_yaw
 	var heading := Basis(Vector3.UP, hull_yaw) * Vector3.FORWARD
 	var fall := 0.0 if is_on_floor() else velocity.y - GRAVITY * delta
@@ -118,7 +122,7 @@ func _physics_process(delta: float) -> void:
 	# Lo que de verdad avanzó: si chocó, la rampa baja hasta ahí.
 	var forward := get_real_velocity().dot(heading)
 	if absf(forward) < absf(speed) - 0.5:
-		_ahead.level = clampf(forward / maxf(k.speed * hurry, 0.01), -1.0, 1.0)
+		_ahead.level = clampf(forward / maxf(top, 0.01), -1.0, 1.0)
 		speed = forward
 	_solid.global_transform = global_transform
 	# LA CINTURA, hacia donde mira, con tope.
@@ -131,8 +135,22 @@ func _physics_process(delta: float) -> void:
 
 
 func _place_upper() -> void:
+	if _torso_shape != null:
+		_torso_shape.transform = Transform3D(Basis(Vector3.UP, waist_yaw - hull_yaw), _torso_shape.position)
 	body.upper.global_transform = Transform3D(Basis(Vector3.UP, waist_yaw),
 		global_position + Vector3.UP * BrawlerBody.HIP)
+
+
+## LO PARA EN SECO (se estrelló): sin velocidad.
+func stop() -> void:
+	_ahead.level = 0.0
+	speed = 0.0
+	velocity = Vector3.ZERO
+
+
+## Hacia dónde miran las orugas (de costado, de largo 1).
+func heading() -> Vector3:
+	return Basis(Vector3.UP, hull_yaw) * Vector3.FORWARD
 
 
 ## Dónde está la boca del horno (mundo): el punto débil.

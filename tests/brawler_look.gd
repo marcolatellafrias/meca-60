@@ -45,6 +45,9 @@ func _ready() -> void:
 	add_child(world)
 	var parent := Node3D.new()
 	add_child(parent)
+	# Lo maneja el test: la cabeza, apagada; enfrente, la simplificada.
+	BrawlerArchetype.thinking = false
+	BrawlerArchetype.mech_kind = BrawlerArchetype.Kind.SIMPLE
 	var root := BrawlerArchetype.new().build(0, parent)
 	_boss = root.get_node("Luchador") as Brawler
 	_eye = Camera3D.new()

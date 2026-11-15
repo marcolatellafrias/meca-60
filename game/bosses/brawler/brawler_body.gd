@@ -19,7 +19,7 @@ const RAGE_EYE := Color(1.0, 0.12, 0.08)
 const FIRE := Color(1.0, 0.45, 0.1)
 
 ## LAS MEDIDAS (m), las de la maqueta. El alto de la cintura sobre el piso, el chasis, la oruga, el pecho, los brazos.
-const HIP := 9.0
+const HIP := 7.0
 const WAIST := Vector3(12, 5, 10)
 const CHEST := Vector3(22, 13, 13)
 const HUNCH := 12.0
@@ -28,7 +28,7 @@ const UPPER_ARM := 8.0
 const FOREARM := 9.0
 const REACH := 0.35
 const FIST := 4.8
-const TRACK := Vector3(5.0, 5.5, 24.0)
+const TRACK := Vector3(5.0, 5.5, 18.0)
 ## El horno: la boca (ancho y alto, m) y lo hondo.
 const FURNACE := Vector2(9.0, 5.0)
 
