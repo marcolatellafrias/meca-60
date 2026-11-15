@@ -233,7 +233,8 @@ func _charge() -> void:
 				_clock = 0.0
 		2:
 			stage = "carga: frena"
-			_boss.move = Vector2.ZERO
+			# Frena apretando para atrás (soltando, rodaría un rato largo: la inercia).
+			_boss.move = Vector2(0.0, -1.0) if roll.speed > 2.0 else Vector2.ZERO
 			if absf(roll.speed) < 2.0:
 				_boss.curl = false
 				_count = 3

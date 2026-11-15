@@ -6,8 +6,11 @@ extends RefCounted
 ## doblar», «Shift» lo cambia, y «que haga daño al tocar».
 ##   · PLEGARSE (`fold`, de 0 a 1, en `fold_time`): las patas se acortan hacia adentro de la bola y la bola baja hasta
 ##     apoyarse. Al abrirse, al revés: las patas salen hacia su lugar en el piso.
-##   · RODAR: sólo hecha bola del todo. W acelera hacia adelante hasta `roll_speed`, S frena (y va un poco para atrás),
-##     A/D y el mouse doblan, con su propio tope de giro. La bola se ve girar según lo que avanza (ángulo = camino / radio).
+##   · RODAR: sólo hecha bola del todo. CON RAMPAS (MoveRamp, las curvas de la base común; 14/11/2026, el usuario: «se
+##     siente muy soso… siempre anda igual a la misma velocidad»): W la lleva a `roll_speed` en `roll_up_time`, con su
+##     curva (arranca pesada); SOLTANDO SIGUE RODANDO y se apaga en `roll_coast_time` (la inercia); S frena en
+##     `roll_brake_time` (y va un poco para atrás). A/D y el mouse doblan, y CUANTO MÁS RÁPIDO, MENOS DOBLA. Contra una
+##     pared pierde lo que no pudo avanzar. La bola se ve girar según lo que avanza (ángulo = camino / radio).
 ##   · PEGA AL TOCAR (sin vida: todo es equilibrio): lo suelto que toca la bola rodando a más de `hit_min_speed` sale
 ##     despedido, con un cambio de velocidad de hasta `hit_push` según lo rápido que iba (ver BalanceBody.hit: a una
 ##     meca, su péndulo decide si cae). A cada cosa, una vez por toque (`REHIT` s).
@@ -28,6 +31,7 @@ var hits := 0
 
 var _clock := 0.0
 var _last_hit := {}
+var _ramp := MoveRamp.new()
 
 
 ## Si está hecha bola del todo (rueda).
@@ -39,11 +43,25 @@ func rolling() -> bool:
 func step(k: BallBossSettings, delta: float, curl: bool, push: float, heading: Vector3) -> Vector3:
 	_clock += delta
 	fold = move_toward(fold, 1.0 if curl else 0.0, delta / maxf(k.fold_time, 0.05))
-	var wanted := 0.0
-	if rolling():
-		wanted = clampf(push, -0.4, 1.0) * k.roll_speed
-	speed = move_toward(speed, wanted, k.roll_accel * delta)
+	var wanted := clampf(push, -0.4, 1.0) if rolling() else 0.0
+	# Frenar es pedir lo contrario de para donde va (o abrirse: ahí también frena); soltar es dejarla rodar.
+	var braking := (not rolling()) or (wanted * _ramp.level < 0.0)
+	var down_time := k.roll_brake_time if braking else k.roll_coast_time
+	var down_shape := k.roll_brake_shape if braking else k.roll_coast_shape
+	speed = _ramp.step(delta, wanted, k.roll_up_time, k.roll_up_shape, down_time, down_shape) * k.roll_speed
 	return heading * speed
+
+
+## LO QUE DE VERDAD AVANZÓ hacia adelante (m/s): si chocó y avanzó menos, la rampa baja hasta ahí.
+func moved(forward: float, k: BallBossSettings) -> void:
+	if absf(forward) < absf(speed) - 0.5:
+		_ramp.level = clampf(forward / maxf(k.roll_speed, 0.01), -1.0, 1.0)
+		speed = _ramp.level * k.roll_speed
+
+
+## Cuánto dobla ahora (°/s): menos cuanto más rápido va.
+func turn_rate(k: BallBossSettings) -> float:
+	return lerpf(k.roll_turn, k.roll_turn_fast, absf(_ramp.level))
 
 
 ## LA BOLA GIRA según lo que avanzó (`flat`, m/s); abriéndose, vuelve derecha.

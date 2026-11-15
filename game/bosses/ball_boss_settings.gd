@@ -47,12 +47,20 @@ static var current := KnobsFile.load_into(BallBossSettings.new(), SAVED) as Ball
 @export_range(2.0, 40.0, 0.5) var barrage_spacing := 12.0
 
 @export_group("Bola")
-## HECHA BOLA (BallRoll): cuánto tarda en plegarse o abrirse (s); rodando, la velocidad tope (m/s), cuánto gana por
-## segundo (m/s²) y el giro tope (°/s).
+## HECHA BOLA (BallRoll): cuánto tarda en plegarse o abrirse (s) y, rodando, la velocidad tope (m/s).
 @export_range(0.1, 3.0, 0.05) var fold_time := 0.8
 @export_range(2.0, 60.0, 0.5) var roll_speed := 20.0
-@export_range(1.0, 60.0, 0.5) var roll_accel := 10.0
-@export_range(10.0, 360.0, 5.0) var roll_turn := 70.0
+## LAS RAMPAS DE RODAR (MoveRamp; cada una, de punta a punta, con su curva): llegar a la tope apretando W, apagarse
+## soltando (la inercia) y frenar apretando S (o al abrirse).
+@export_range(0.0, 10.0, 0.05) var roll_up_time := 2.5
+@export var roll_up_shape := MoveCurve.Shape.EASE_IN
+@export_range(0.0, 15.0, 0.05) var roll_coast_time := 4.0
+@export var roll_coast_shape := MoveCurve.Shape.EASE_IN
+@export_range(0.0, 5.0, 0.05) var roll_brake_time := 1.0
+@export var roll_brake_shape := MoveCurve.Shape.LINEAR
+## EL GIRO rodando (°/s): casi quieta y a la velocidad tope.
+@export_range(10.0, 360.0, 5.0) var roll_turn := 80.0
+@export_range(5.0, 360.0, 5.0) var roll_turn_fast := 30.0
 ## PEGA AL TOCAR: desde qué velocidad (m/s) y cuánto le cambia la velocidad a lo que toca, yendo a tope (m/s).
 @export_range(0.0, 20.0, 0.5) var hit_min_speed := 4.0
 @export_range(1.0, 60.0, 0.5) var hit_push := 16.0

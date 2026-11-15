@@ -88,10 +88,14 @@ Van por `ProjectileField` (por red, como los de la arena de esquivar), que es un
 - **Shift** (`curl`) **se hace bola y otra vez se abre**. En 0,8 s, los tentáculos se acortan hacia adentro de la bola
   y la bola baja hasta apoyarse; contra lo fijo, el cilindro pasa a ser del ancho de la bola. Al abrirse, los pies
   salen hacia su lugar en el piso.
-- **Rueda sólo hecha bola del todo**:
-  - W acelera hasta 20 m/s, ganando 10 m/s por segundo;
-  - S frena, y va un poco para atrás;
-  - A/D y el mouse doblan, con su propio tope de giro (70°/s);
+- **Rueda sólo hecha bola del todo, con rampas** (14/11/2026; `MoveRamp`, las curvas de la base común; el usuario: «se
+  siente muy soso… siempre anda igual a la misma velocidad»):
+  - W la lleva a 20 m/s en 2,5 s y arranca pesada (curva «arranca lento»);
+  - **soltando sigue rodando**: se apaga en 4 s (la inercia);
+  - S frena en 1 s, y va un poco para atrás;
+  - A/D y el mouse doblan, y **cuanto más rápido, menos**: de 80°/s casi quieta a 30°/s a la tope;
+  - contra una pared pierde lo que no pudo avanzar.
+  - Cada rampa tiene su tiempo y su curva en la pestaña Bola. En la carga, el jefe frena apretando para atrás.
   - la bola se ve girar según lo que avanza.
   - **El cañón se mete**: corre hacia adentro por su eje hasta quedar dentro de la rendija, y no dispara (el usuario:
     «el cañón se tiene que meter también»).
@@ -100,8 +104,9 @@ Van por `ProjectileField` (por red, como los de la arena de esquivar), que es un
   decide si cae. A cada cosa le pega una vez por toque.
 - En la parcela hay **una fila de ocho cajas** de 3 m y 400 kg para pegarles; la **R** las vuelve a poner.
 - Todo en la pestaña **Bola** del F1.
-- Medido: plegada, el centro queda a 15 m (el radio); rueda hasta 20 m/s; contra las cajas pegó 10 veces y la más
-  rápida salió a 30 m/s; doblando 2,5 s con D giró 145°; abierta, vuelve a 20 m.
+- Medido: plegada, el centro queda a 15 m (el radio); rueda hasta 20 m/s y llega al 90 % a los 2,4 s; contra las cajas
+  pegó 8 veces y la más rápida salió a 30 m/s; doblando 2,5 s con D a la tope giró 68°; soltando a 20 m/s siguió 53 m
+  durante 4 s; abierta, vuelve a 20 m.
 
 ## Paso 5 (13/11/2026): el barrido con las paletas
 `BallLegs`. El usuario: «barrido», con la Q.

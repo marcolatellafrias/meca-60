@@ -152,6 +152,7 @@ func _ready() -> void:
 	for crate in _boss.get_parent().get_node("Cajas").get_children():
 		crates.append(crate as RigidBody3D)
 	_boss.move = Vector2(0, 1)
+	var reached := -1.0
 	var fastest := 0.0
 	var crate_fastest := 0.0
 	clock = 0.0
@@ -160,22 +161,32 @@ func _ready() -> void:
 		await get_tree().physics_frame
 		clock += 1.0 / Engine.physics_ticks_per_second
 		fastest = maxf(fastest, Vector2(_boss.velocity.x, _boss.velocity.z).length())
+		if reached < 0.0 and fastest >= BallBossSettings.current.roll_speed * 0.9:
+			reached = clock
 		for crate in crates:
 			crate_fastest = maxf(crate_fastest, crate.linear_velocity.length())
 		if not rolled_shot and _boss.roll.hits > 0:
 			rolled_shot = true
 			await _shot("rodando contra las cajas: pega al tocar", _boss.global_position + Vector3(70, 25, 10),
 				_boss.global_position + Vector3(0, 8, -15))
-	print("rodando: hasta %.1f m/s, pegó %d veces, la caja más rápida salió a %.1f m/s" % [fastest, _boss.roll.hits,
-		crate_fastest])
+	print("rodando: hasta %.1f m/s (al 90 %% a los %.1f s), pegó %d veces, la caja más rápida salió a %.1f m/s" % [
+		fastest, reached, _boss.roll.hits, crate_fastest])
 	# Dobla con A/D.
 	var yaw_before := _boss.rotation.y
 	_boss.move = Vector2(1, 1)
 	await _wait(2.5)
 	print("doblando 2,5 s con D: giró %.0f°" % rad_to_deg(wrapf(_boss.rotation.y - yaw_before, -PI, PI)))
 	await _shot("rodando, doblando", _boss.global_position + Vector3(0, 60, 70), _boss.global_position)
+	# LA INERCIA: suelta todo y mira cuánto sigue rodando.
 	_boss.move = Vector2.ZERO
-	await _wait(2.5)
+	var coast_from := _boss.global_position
+	var coast_speed := Vector2(_boss.velocity.x, _boss.velocity.z).length()
+	clock = 0.0
+	while clock < 8.0 and Vector2(_boss.velocity.x, _boss.velocity.z).length() > 0.3:
+		await get_tree().physics_frame
+		clock += 1.0 / Engine.physics_ticks_per_second
+	print("soltando a %.1f m/s: siguió %.1f m durante %.1f s" % [coast_speed, coast_from.distance_to(_boss.global_position),
+		clock])
 	_boss.curl = false
 	await _wait(0.5)
 	await _shot("abriéndose: las patas salen a su lugar", _boss.global_position + Vector3(60, 25, 50),

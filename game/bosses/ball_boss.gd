@@ -149,13 +149,15 @@ func _physics_process(delta: float) -> void:
 	_jump_was = jump
 	if roll.rolling():
 		# Rodando, A/D doblan (y el mouse, como siempre).
-		aim_yaw -= move.x * deg_to_rad(k.roll_turn) * delta
-	_turn(k, delta, k.roll_turn if roll.fold > 0.0 else k.turn_speed)
+		aim_yaw -= move.x * deg_to_rad(roll.turn_rate(k)) * delta
+	_turn(k, delta, roll.turn_rate(k) if roll.fold > 0.0 else k.turn_speed)
 	rotation.y = _yaw
 	move_and_slide()
 	grounded = is_on_floor()
 	var flat := get_real_velocity()
 	flat.y = 0.0
+	if roll.fold > 0.0:
+		roll.moved(flat.dot(heading), k)
 	roll.turn_ball(flat, RADIUS, delta)
 	_ball.global_transform = _ball_place()
 	roll.strike(k, get_world_3d().direct_space_state, _ball_place().origin, RADIUS, flat)

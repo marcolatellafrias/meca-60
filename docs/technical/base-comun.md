@@ -40,3 +40,15 @@ siempre `BodyLegs`.
 
 ## Quién
 Es de la sesión de la meca; la de jefes la usa y le pide cambios.
+
+## Las curvas de los movimientos discretos (14/11/2026)
+`MoveCurve` y `MoveRamp`, en `game/balance_body/`. Las escribió el módulo Jefes para rodar hecho bola; son de la base
+común para que las use todo movimiento discreto (el usuario: «si yo hago un dash… y lo tengo activado con easing, que
+haga easing»).
+- **Una curva** (`MoveCurve.Shape`: lineal, arranca lento, frena al final, o las dos) es la forma en el tiempo de un
+  movimiento que ya tiene sus números.
+- **De un tramo** (el dash, el salto, una carga: tantos metros en tantos segundos): `MoveCurve.velocity` da la velocidad
+  en cada momento.
+- **Sostenidos** (caminar, rodar): `MoveRamp` sube hacia la velocidad pedida en un tiempo, con su curva, y baja al
+  soltar en otro, con la suya. Es continua: cambiar de pedido a mitad de camino no salta. Una bajada larga es la inercia.
+- Hoy la usa sólo el jefe bola (rodar). Falta que la usen el dash, el salto y caminar de la meca.
