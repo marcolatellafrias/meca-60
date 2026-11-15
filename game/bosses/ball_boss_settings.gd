@@ -40,6 +40,12 @@ static var current := KnobsFile.load_into(BallBossSettings.new(), SAVED) as Ball
 @export_range(0.3, 8.0, 0.1) var muzzle_radius := 2.4
 @export_range(0.5, 20.0, 0.25) var muzzle_length := 5.5
 
+@export_group("Arena")
+## EL RADIO DE LA ARENA (m; BossArena): el círculo del que no sale. El anillo del piso lo sigue al guardar; los
+## edificios de afuera se acomodan regenerando la parcela (R). 150 m: 300 de punta a punta, diez veces la bola (el
+## usuario, de los 100 primeros: «es muy poco»).
+@export_range(60.0, 180.0, 5.0) var arena_radius := 150.0
+
 @export_group("Moverse")
 ## Una velocidad y el tiempo para llegar a ella y para frenar (0: al instante). En el aire no se mueve de costado.
 @export_range(1.0, 30.0, 0.5) var walk_speed := 6.0

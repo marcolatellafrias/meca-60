@@ -219,3 +219,16 @@ acá la regla era «todo es equilibrio, no hay vida».*
 - Ideas del usuario para más adelante:
   - disparos cargados, rayos;
   - dos cañoncitos al costado.
+
+## La arena (15/11/2026)
+`BossArena` (`game/bosses/boss_arena.gd`): **un círculo conocido de antemano del que el jefe no sale** (el usuario: «un
+radio central en la que pueden moverse… no debería tener un sistema que lee objetos en el momento… de la forma más simple
+que se pueda»). Sin rayos: el jefe le pregunta al círculo.
+- Caminando o rodando, **el borde lo frena y se desliza** (`keep`); si algo lo sacó, vuelve adentro (`hold`).
+- Para lo que viene: embistiendo se estrellará contra el borde (`at_edge`) y el pinball rebotará en él (`bounce`).
+- **El medio, despejado**: el edificio y la pared que había adentro se sacaron (el usuario: «por ahora sacamos los
+  obstáculos entre medio de la arena»); afuera, ocho edificios de lo fijo y el anillo naranja en el piso.
+- **El radio, perilla** (F1, pestaña Arena): 150 m (de los 100 primeros: «es muy poco»). El anillo lo sigue al guardar;
+  los edificios, regenerando la parcela (R).
+- Medido (`ball_boss_look`): caminando contra el borde queda a 134 m del medio (150 menos el cilindro de 16); rodando, a
+  135 (menos el radio de la bola).

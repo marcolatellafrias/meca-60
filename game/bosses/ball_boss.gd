@@ -51,6 +51,8 @@ var center_height := 20.0
 var legs: BallLegs = null
 var cannon: BallCannon = null
 var roll := BallRoll.new()
+## LA ARENA (BossArena): el círculo del que no sale. Sin arena, anda por donde sea.
+var arena: BossArena = null
 ## El radio de la bola (m), el de la pestaña Forma cuando se armó.
 var radius := 15.0
 
@@ -183,7 +185,12 @@ func _physics_process(delta: float) -> void:
 		aim_yaw -= move.x * deg_to_rad(roll.turn_rate(k)) * delta
 	_turn(k, delta, roll.turn_rate(k) if roll.fold > 0.0 else k.turn_speed)
 	rotation.y = _yaw
+	if arena != null:
+		arena.resize(k.arena_radius)
+		velocity = arena.keep(global_position, velocity, _cylinder.radius)
 	move_and_slide()
+	if arena != null:
+		global_position = arena.hold(global_position, _cylinder.radius)
 	grounded = is_on_floor()
 	var flat := get_real_velocity()
 	flat.y = 0.0

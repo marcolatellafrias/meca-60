@@ -1,8 +1,9 @@
 class_name BallBossArchetype
 extends SeededArchetype
 
-## LA PARCELA DEL JEFE BOLA (BallBoss): la bola, con un edificio y una pared larga para ver cómo choca y cómo pisan los
-## tentáculos lo que no es piso parejo; una fila de cajas; y ENFRENTE, UNA MECA, el blanco de su cabeza (BallBrain).
+## LA PARCELA DEL JEFE BOLA (BallBoss): la bola EN SU ARENA (BossArena: un círculo del que no sale, de radio en el F1; los
+## edificios, afuera; el medio, despejado: el usuario, 15/11/2026, «por ahora sacamos los obstáculos entre medio de la
+## arena»); una fila de cajas; y ENFRENTE, UNA MECA, el blanco de su cabeza (BallBrain).
 ## Los dos con vida (Health) y sus barras (FightBars). Mirándolos, la O posee a cualquiera de los dos.
 ##   · LA K CAMBIA LA MECA entre los cuatro tipos (el usuario: «quisiera que pueda cambiar entre los distintos tipos de
 ##     meca»), con los nombres que él les da:
@@ -11,7 +12,8 @@ extends SeededArchetype
 ##       CINEMÁTICA: todo cinemático (el torso lo mueve el motor; brazos de pose; con cabina).
 ##       SIMPLIFICADA: la cinemática, sin brazos ni cabina.
 
-const FOOTPRINT := 180.0
+## Lo que ocupa: la arena más grande del F1 (180 m de radio) y los edificios de afuera.
+const FOOTPRINT := 420.0
 const START := Vector3(0.0, 0.0, 30.0)
 ## Dónde está la meca simplificada, el blanco (el punto del piso; mira al jefe).
 const TARGET_AT := Vector3(0.0, 0.0, -60.0)
@@ -102,13 +104,19 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	bars.boss_name = "JEFE BOLA"
 	root.add_child(bars)
 	BallBossArchetype.swap_mech(brain, mech_kind)
-	# LO FIJO: un edificio a la izquierda (se puede pisar el techo) y una pared larga a la derecha.
+	# LA ARENA: el anillo en el piso y, afuera, los edificios (lo fijo; el jefe no llega).
+	var arena_radius := BallBossSettings.current.arena_radius
+	boss.arena = BossArena.new(root, arena_radius)
+	boss.arena.draw(root)
 	var fixed := StaticBody3D.new()
 	fixed.name = "Fijo"
 	PhysicsLayers.mark_fixed(fixed)
 	root.add_child(fixed)
-	Clay.solid(fixed, Vector3(20.0, 12.0, 40.0), Vector3(-45.0, 6.0, -10.0), Clay.METAL.lightened(0.2))
-	Clay.solid(fixed, Vector3(2.0, 16.0, 70.0), Vector3(50.0, 8.0, 0.0), Clay.METAL.lightened(0.1))
+	for i in 8:
+		var out := Vector3.FORWARD.rotated(Vector3.UP, i * TAU / 8.0 + 0.3)
+		var tall := 20.0 + (i % 3) * 10.0
+		Clay.solid(fixed, Vector3(18.0, tall, 18.0), out * (arena_radius + 18.0) + Vector3.UP * tall * 0.5,
+			Clay.METAL.lightened(0.1 + (i % 2) * 0.1), Basis(Vector3.UP, i * TAU / 8.0 + 0.3))
 	# LO SUELTO: una fila de cajas adelante, para pegarles rodando (la R las vuelve a poner).
 	var crates := Node3D.new()
 	crates.name = "Cajas"

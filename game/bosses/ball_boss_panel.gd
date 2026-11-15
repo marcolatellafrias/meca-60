@@ -15,6 +15,7 @@ const LABELS := {
 	"carriage_height": "cañón: alto del carro (m)", "carriage_depth": "cañón: fondo del carro (m)",
 	"barrel_radius": "cañón: radio del caño (m)", "barrel_length": "cañón: largo del caño (m)",
 	"muzzle_radius": "cañón: radio de la boca (m)", "muzzle_length": "cañón: largo de la boca (m)",
+	"arena_radius": "radio de la arena (m; los edificios, con R)",
 	"walk_speed": "velocidad (m/s)", "reach_time": "tiempo para llegar a ella y para frenar (s; 0: al instante)",
 	"turn_speed": "velocidad tope (°/s)", "turn_accel": "aceleración tope (°/s²)",
 	"jump_height": "sube (m)", "jump_time": "tarda en subir (s)",
@@ -35,7 +36,7 @@ const LABELS := {
 	"tentacle_length": "largo de cada tentáculo (m)", "spread": "el pie, a cuánto del centro (m)",
 	"step_radius": "un pie sale a más de (m)", "step_time": "el paso tarda (s)", "step_lift": "el pie sube (m)",
 }
-const TABS: Array[String] = ["Forma", "Moverse", "Girar", "Saltar", "Agacharse", "Cañón", "Disparos", "Bola", "Barrido", "Tentáculos"]
+const TABS: Array[String] = ["Forma", "Arena", "Moverse", "Girar", "Saltar", "Agacharse", "Cañón", "Disparos", "Bola", "Barrido", "Tentáculos"]
 
 
 func setup_panel() -> void:

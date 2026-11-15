@@ -1,7 +1,7 @@
 extends Node
 
 ## EL JEFE BOLA (unos 60 s, sin el sandbox): quieto de frente y de costado, caminando, agachado, en lo alto de un
-## salto, girando en el lugar, el cañón por la rendija, contra la pared y al lado del edificio. Imprime el centro, la velocidad y los pasos; con
+## salto, girando en el lugar, el cañón por la rendija y contra el borde de la arena. Imprime el centro, la velocidad y los pasos; con
 ## ventana, capturas numeradas.
 ##   tools/godot_ventana.sh res://tests/ball_boss_look.tscn -- --salida=C:/carpeta
 
@@ -213,28 +213,34 @@ func _ready() -> void:
 	await _wait(1.0)
 	await _shot("después del barrido: las cajas, desparramadas", _boss.global_position + Vector3(50, 40, 70),
 		_boss.global_position + Vector3.UP * 6)
-	# CONTRA LA PARED (en x = 50, de 2 m): camina de costado hacia ella.
-	_boss.put(Transform3D(Basis(), Vector3(20.0, 0.0, 0.0)))
+	# CONTRA EL BORDE DE LA ARENA (BossArena, el círculo del F1): camina de costado hacia él y se desliza; rodando,
+	# tampoco sale.
+	_boss.move = Vector2.ZERO
+	var arena := _boss.arena
+	_boss.put(Transform3D(Basis(), Vector3(arena.radius - 40.0, 0.0, 0.0)))
 	await _wait(1.0)
 	_boss.move = Vector2(1, 0)
-	await _wait(6.0)
-	print("contra la pared: el centro quedó a %.2f m de su cara (el cilindro mide %.1f)" % [
-		49.0 - _boss.global_position.x, _boss.reach()])
-	await _shot("contra la pared", _boss.global_position + Vector3(-60, 30, 70), _boss.global_position + Vector3(8, 15, 0))
-	# AL LADO DEL EDIFICIO (de 12 m, su cara en x = -35): los pies pisan su techo.
+	await _wait(8.0)
+	print("contra el borde: el centro quedó a %.2f m del medio (el borde, a %.0f; el cilindro mide %.1f)" % [
+		arena.distance(_boss.global_position), arena.radius, _boss.reach()])
+	await _shot("contra el borde de la arena", _boss.global_position + Vector3(-70, 45, 60), _boss.global_position + Vector3(0, 15, 0))
+	_boss.move = Vector2(1, 1)
+	await _wait(3.0)
+	print("deslizándose por el borde: a %.2f m del medio" % arena.distance(_boss.global_position))
 	_boss.move = Vector2.ZERO
-	_boss.put(Transform3D(Basis(), Vector3(-20.0, 0.0, -10.0)))
-	await _wait(1.0)
-	_boss.move = Vector2(-1, 0)
-	await _wait(4.0)
+	_boss.put(Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(arena.radius - 70.0, 0.0, 20.0)))
+	_boss.curl = true
+	await _wait(1.2)
+	_boss.move = Vector2(0, 1)
+	var farthest := 0.0
+	for i in 80:
+		await _wait(0.1)
+		farthest = maxf(farthest, arena.distance(_boss.global_position))
+	print("rodando contra el borde: lo más lejos, %.2f m del medio (el borde, a %.0f)" % [farthest, arena.radius])
+	await _shot("rodando contra el borde", _boss.global_position + Vector3(-70, 45, 60), _boss.global_position)
 	_boss.move = Vector2.ZERO
-	await _wait(1.5)
-	var tips := []
-	for tentacle in _boss.legs.tentacles:
-		tips.append("%.1f" % tentacle.rotor.global_position.y)
-	print("al lado del edificio: el alto de cada pie ", tips)
-	await _shot("al lado del edificio: un pie en el techo", _boss.global_position + Vector3(10, 30, 85),
-		_boss.global_position + Vector3(-12, 12, 0))
+	_boss.curl = false
+	await _wait(2.0)
 	await _reshaped()
 	get_tree().quit()
 
