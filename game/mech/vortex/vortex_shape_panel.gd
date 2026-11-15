@@ -12,7 +12,7 @@ const LABELS := {
 	"radius": "radio del disco (m)",
 	"floor_height": "alto de la planta baja (m)",
 	"core": "núcleo en el medio del primer piso (arriba se camina en anillo)",
-	"back_raised": "atrás elevado, con un escalón",
+	"back_raised": "atrás, el borde más alto (con un escalón)",
 	"vortex_radius": "radio del vórtice, el hueco de la planta baja (m)",
 	"stair_width": "ancho de la escalera caracol (m)",
 }

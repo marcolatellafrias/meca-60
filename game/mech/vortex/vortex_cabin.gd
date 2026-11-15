@@ -11,8 +11,9 @@ extends MechCabin
 ##   · LA PLANTA BAJA, cerrada: la máquina, el banco de reparación, el tablero de la energía y las municiones (sólo se
 ##     ven). La ESCALERA CARACOL, pegada a la pared, sube al primer piso por un hueco del piso de arriba; se pisa una
 ##     rampa en hélice (los escalones se ven).
-##   · EL PRIMER PISO, abierto: el anillo alrededor de un núcleo opaco que no se cruza; el borde con su bevel; ATRÁS,
-##     ELEVADO con un escalón (el piso y el borde suben juntos); LAS ZONAS DE TABLEROS, piezas paradas en el piso que
+##   · EL PRIMER PISO, abierto: el anillo alrededor de un núcleo opaco que no se cruza; el borde con su bevel, ATRÁS MÁS
+##     ALTO, con un escalón (sólo el borde: el piso, parejo; el usuario: «nunca quise ese medio disco en la parte de
+##     atrás, sacalo»); LAS ZONAS DE TABLEROS, piezas paradas en el piso que
 ##     crecen hasta el canto de afuera del disco, de anchos distintos (el manejo, los brazos, una chica); las
 ##     ametralladoras a la altura del borde, en sus enchufes (sólo se ven). Es la idea 9 de tests/vortex_ideas_look
 ##     (el usuario: «sí, al juego, pero las ametralladoras no me gustan subidas, y las zonas de tableros haría que tengan
@@ -30,7 +31,7 @@ static var CLEAR := 3.0
 static var STAIR_OUT := 5.0
 static var STAIR_IN := 3.2
 static var CORE_ON := true
-## ATRÁS ELEVADO: si va, desde qué z hacia atrás (en partes del radio que se camina) y cuánto sube (m).
+## ATRÁS, EL BORDE MÁS ALTO: si va, desde qué z hacia atrás (en partes del radio que se camina) y cuánto sube (m).
 static var BACK_ON := true
 const BACK_FROM := 0.24
 const RAISE := 0.6
@@ -153,9 +154,9 @@ static func is_back(angle: float, reach: float) -> bool:
 	return BACK_ON and -cos(angle) * reach > back_from()
 
 
-## El piso donde se pisa hacia `angle`, a `reach` del centro: el primer piso, o atrás, más alto.
-static func floor_at(angle: float, reach: float) -> float:
-	return upper_floor() + (RAISE if is_back(angle, reach) else 0.0)
+## El piso donde se pisa hacia `angle`, a `reach` del centro: el primer piso, parejo (atrás sólo sube el borde).
+static func floor_at(_angle: float, _reach: float) -> float:
+	return upper_floor()
 
 
 ## El alto de arriba del borde hacia `angle` (por afuera).
@@ -188,8 +189,6 @@ func _ready() -> void:
 	_stairs()
 	_rooms()
 	_rim()
-	if BACK_ON:
-		_raised_back()
 	for zone: Array in ZONES:
 		_zone(deg_to_rad(zone[0]), maxf(zone[1], MIN_ZONE), zone[2])
 	for degrees: float in GUNS:
@@ -368,48 +367,6 @@ func _rim() -> void:
 		var a0 := TAU * k / pieces
 		var a1 := TAU * (k + 1) / pieces
 		_arc_shapes(WALK, OUTER + 0.5, a0, a1, floor1, rim_top((a0 + a1) * 0.5))
-
-
-## ATRÁS ELEVADO: el trozo de piso detrás de `back_from`, `RAISE` más alto, con su escalón (el canto, marcado); el hueco
-## de la escalera sigue abierto. Se ve y se pisa.
-func _raised_back() -> void:
-	var floor1 := upper_floor()
-	var top := floor1 + RAISE
-	var edge := back_from()
-	var half := acos(edge / WALK)
-	var hole_from := _hole_from()
-	var tool := SurfaceTool.new()
-	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	var pieces := 48
-	for k in pieces:
-		var a0 := PI - half + 2.0 * half * k / pieces
-		var a1 := PI - half + 2.0 * half * (k + 1) / pieces
-		var middle := (a0 + a1) * 0.5
-		var r0 := minf(edge / maxf(-cos(a0), 0.001), WALK)
-		var r1 := minf(edge / maxf(-cos(a1), 0.001), WALK)
-		var spans: Array = [[r0, r1, WALK]]
-		if middle > hole_from and middle < STAIR_TO:
-			spans = [[r0, r1, STAIR_IN], [STAIR_OUT, STAIR_OUT, WALK]]
-		for span: Array in spans:
-			var in0: float = span[0]
-			var in1: float = span[1]
-			var far: float = span[2]
-			if in0 >= far and in1 >= far:
-				continue
-			in0 = minf(in0, far)
-			in1 = minf(in1, far)
-			var p := [out(a0) * in0, out(a1) * in1, out(a1) * far, out(a0) * far]
-			_quad(tool, p[0] + Vector3(0, top, 0), p[3] + Vector3(0, top, 0), p[2] + Vector3(0, top, 0),
-				p[1] + Vector3(0, top, 0), FLAT)
-			_quad(tool, p[0] + Vector3(0, floor1, 0), p[0] + Vector3(0, top, 0), p[1] + Vector3(0, top, 0),
-				p[1] + Vector3(0, floor1, 0), FLAT)
-			var points := PackedVector3Array()
-			for corner: Vector3 in p:
-				points.append_array([corner + Vector3(0, floor1, 0), corner + Vector3(0, top, 0)])
-			_convex(points)
-	add_child(_mesh(tool, DECK.darkened(0.08)))
-	var width := 2.0 * sqrt(WALK * WALK - edge * edge)
-	Clay.box(self, Vector3(width, 0.06, 0.1), Vector3(0.0, top - 0.03, edge + 0.05), YELLOW.darkened(0.3))
 
 
 ## UNA ZONA DE TABLEROS hacia `angle`, de `wide` de ancho: una pieza parada en el piso que sale `ZONE_DEPTH` hacia
