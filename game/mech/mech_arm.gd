@@ -60,6 +60,8 @@ var _from := Vector3.ZERO
 var _rest := Vector3.ZERO
 var _offset := Vector3.ZERO
 var _hand: MechHand = null
+## Los puntos de la piña tirada hacia un lugar (ver `punch_at`); vacío, la piña va por los suyos (`PUNCHES`).
+var _aimed: Array = []
 ## El eje de la bisagra del codo, en el mundo: sale del brazo y el antebrazo pedidos; con el brazo estirado no se puede
 ## calcular y queda el último.
 var _hinge := Vector3.RIGHT
@@ -72,7 +74,26 @@ func punch(kind: Punch) -> bool:
 	_from = _wanted()
 	punching = kind
 	_clock = 0.0
+	_aimed = []
 	return true
+
+
+## TIRA UN DIRECTO HACIA `point` (en el mundo; lo pidió Tableros el 14/11/2026 para la mira del panel del brazo): se
+## arma como el directo y pega donde se apunta, recortado a lo que estira el directo desde el hombro. Devuelve si la tiró.
+func punch_at(point: Vector3) -> bool:
+	var base := anchor.global_transform
+	var straight: Array = PUNCHES[Punch.STRAIGHT]
+	var strike: Vector3 = straight[1][1]
+	var aim := _local(base.basis.inverse() * (point - base * shoulder_local) / MechBody.reach).limit_length(strike.length())
+	if not punch(Punch.STRAIGHT):
+		return false
+	_aimed = [straight[0], [straight[1][0], aim], [straight[2][0], aim]]
+	return true
+
+
+## Por dónde pasa el puño en la piña que está tirando.
+func _steps() -> Array:
+	return _aimed if not _aimed.is_empty() else PUNCHES[punching]
 
 
 ## Cuánto más rápidas van las piñas (×): cada camino tiene su perilla.
@@ -111,7 +132,7 @@ func _wanted() -> Vector3:
 	var speed := _punch_speed()
 	var clock := _clock
 	var from := _from
-	for step: Array in PUNCHES[punching]:
+	for step: Array in _steps():
 		var time := float(step[0]) / speed
 		if clock <= time:
 			return from.lerp((step[1] as Vector3) * MechBody.reach, smoothstep(0.0, 1.0, clock / time))
@@ -125,7 +146,7 @@ func stage() -> Stage:
 	if punching == Punch.NONE:
 		return Stage.IDLE
 	var clock := _clock * _punch_speed()
-	var steps: Array = PUNCHES[punching]
+	var steps := _steps()
 	for index in steps.size():
 		clock -= float(steps[index][0])
 		if clock <= 0.0:
@@ -135,7 +156,7 @@ func stage() -> Stage:
 
 func _punch_time() -> float:
 	var total := RETURN_TIME
-	for step: Array in PUNCHES[punching]:
+	for step: Array in _steps():
 		total += float(step[0])
 	return total / _punch_speed()
 
