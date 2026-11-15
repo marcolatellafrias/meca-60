@@ -19,8 +19,14 @@ extends CharacterBody3D
 ##     el piso y en el aire. Agacharse baja la caja de a poco.
 ## Lee lo que se le pide del cuerpo (`move`, `jump`, `dash`, `crouch`, `aim_yaw`) y le escribe lo que miden las piernas
 ## (el apoyo y su velocidad, si está apoyado) y dónde va la caja (`body_place`).
-## *Los golpes todavía no la mueven (ver BalanceBody.push_impulse): con movimiento discreto, falta decidir qué es un
-## golpe.*
+## LOS GOLPES la mueven por dos puertas (las llama quien pega: los jefes, HitReaction), y mientras duran no se maneja:
+##   · EL EMPUJÓN (`shove`): se corre tantos metros de costado en tanto tiempo, con un saltito o un arco (el revoleo),
+##     por este mismo motor (no atraviesa lo fijo), y termina en el piso.
+##   · LA CAÍDA (`knock_down`): cae de espaldas, queda tirada y se levanta (BalanceBody.State, como la física), animado.
+##     La inclinación es de la caja misma (`body_place`), así los brazos (que se arman desde ella) y las piernas (que se
+##     recogen, como en la física) la siguen solos.
+## *Hasta el 15/11/2026 lo hacía desde afuera el módulo Jefes, después de cada paso, girando encima las piezas ya
+## armadas derechas: los brazos se veían rotos.*
 
 var body: BalanceBody = null
 ## Las barras (0 a 1): la del dash y la del vuelo. Y cuánto está agachada (0 a 1).
@@ -42,6 +48,15 @@ var _dash_velocity := Vector3.ZERO
 var _dash_clock := 0.0
 ## Cuánto le queda sin que se le pueda pegar (s; ver KinematicSettings.dash_untouchable).
 var _untouchable_left := 0.0
+## El empujón de ahora (ver `shove`): cuánto le queda y cuánto dura (s), a qué velocidad de costado va y el saltito (m).
+var _shove_left := 0.0
+var _shove_time := 0.0
+var _shove_flat := Vector3.ZERO
+var _shove_hop := 0.0
+## LA CAÍDA (ver `knock_down`): cuánto está inclinada (°), hacia dónde (de costado) y su reloj (s).
+var lean := 0.0
+var _lean_away := Vector3.BACK
+var _fall_clock := 0.0
 var _cylinder := CylinderShape3D.new()
 var _holder := CollisionShape3D.new()
 var _below := BoxShape3D.new()
@@ -80,9 +95,19 @@ func _fit() -> void:
 	_holder.position.y = _cylinder.height * 0.5
 
 
-## DÓNDE VA LA CAJA: sobre sus piernas, mirando como él.
+## DÓNDE VA LA CAJA: sobre sus piernas, mirando como él. CAYÉNDOSE, inclinada `lean` grados hacia `_lean_away` sobre su
+## cara de abajo, que baja hacia el piso a medida que se inclina (las piernas se recogen), lo justo para que el canto de
+## ese lado no se meta en el piso.
 func body_place() -> Transform3D:
-	return Transform3D(Basis(Vector3.UP, _yaw), global_position + Vector3.UP * (_hover_now() + body.size.y * 0.5))
+	var upright := Basis(Vector3.UP, _yaw)
+	if lean <= 0.0:
+		return Transform3D(upright, global_position + Vector3.UP * (_hover_now() + body.size.y * 0.5))
+	var angle := deg_to_rad(lean)
+	var turn := Basis(Vector3.UP.cross(_lean_away).normalized(), angle)
+	var share := clampf(lean / KinematicSettings.current.fall_lie, 0.0, 1.0)
+	var half_toward := absf(_lean_away.dot(upright.x)) * body.size.x * 0.5 + absf(_lean_away.dot(upright.z)) * body.size.z * 0.5
+	var bottom := global_position + Vector3.UP * (lerpf(_hover_now(), 0.0, share) + half_toward * sin(angle))
+	return Transform3D(turn * upright, bottom + turn * Vector3.UP * (body.size.y * 0.5))
 
 
 ## UN PASO (ver arriba): lo que se le pide, moverse con el motor, y lo que miden las piernas.
@@ -93,7 +118,11 @@ func step(delta: float) -> void:
 	var grounded := is_on_floor()
 	dash_fuel = minf(dash_fuel + delta / k.dash_refill, 1.0)
 	_untouchable_left = maxf(_untouchable_left - delta, 0.0)
-	if _dash_left > 0.0:
+	_fall(k, delta)
+	if _shove_left > 0.0 or body.state != BalanceBody.State.STANDING:
+		# EMPUJADA O EN EL PISO: no se maneja (ver `shove`, `knock_down`).
+		velocity = _pushed(k, delta, grounded)
+	elif _dash_left > 0.0:
 		# EN UN DASH: derecho, sin teclas ni gravedad.
 		_dash_left -= delta
 		velocity = _dash_velocity * _dash_rate(k, delta)
@@ -104,7 +133,11 @@ func step(delta: float) -> void:
 			_dash(k, delta)
 	_dash_was = body.dash
 	_jump_was = body.jump
-	_turn(k, delta)
+	if body.state == BalanceBody.State.STANDING and _shove_left <= 0.0:
+		_turn(k, delta)
+	else:
+		body.aim_yaw = _yaw
+		_yaw_speed = 0.0
 	rotation.y = _yaw
 	move_and_slide()
 	# LO QUE MIDEN LAS PIERNAS (ver BodyLegs): el apoyo es el piso debajo, y va a la velocidad de costado.
@@ -113,7 +146,7 @@ func step(delta: float) -> void:
 	body.airborne = not body.grounded
 	body.support = global_position
 	body.support_speed = Vector3(real.x, 0.0, real.z)
-	body.tilt = 0.0
+	body.tilt = lean
 	body.height = _hover_now()
 	body.moves.rod_scale = (body.size.y * 0.5 + _hover_now()) / (body.size.y * 0.5 + body.hover)
 	# Lo que queda debajo de la caja cuando baja, se achata (ver arriba).
@@ -167,6 +200,64 @@ func _dash(k: KinematicSettings, delta: float) -> void:
 	body.nozzles.show(way, k.dash_time)
 
 
+## UN EMPUJÓN: se corre `offset` (m, de costado) en `time` (s), con un saltito de `hop` m (un arco: sube y baja en
+## ese tiempo), por este motor (no atraviesa lo fijo). Mientras, no se maneja (ni el dash); después cae al piso. Sirve
+## para empujarla (10–22 m en medio segundo) y para revolearla (70 m en 1,3 s, con 25 m de arco).
+func shove(offset: Vector3, time: float, hop := 0.0) -> void:
+	_shove_time = maxf(time, 0.01)
+	_shove_left = _shove_time
+	_shove_flat = Vector3(offset.x, 0.0, offset.z) / _shove_time
+	_shove_hop = hop
+	_dash_left = 0.0
+
+
+## DERRIBADA: cae de espaldas hacia `away` (de costado), queda tirada y se levanta (BalanceBody.State: DOWN, LIFT,
+## RIGHT y otra vez STANDING), en los tiempos de KinematicSettings («Caerse»). Si ya está en el piso, nada.
+func knock_down(away: Vector3) -> void:
+	if body.state != BalanceBody.State.STANDING:
+		return
+	var flat := Vector3(away.x, 0.0, away.z)
+	_lean_away = flat.normalized() if flat.length() > 0.01 else Basis(Vector3.UP, _yaw) * Vector3.BACK
+	_fall_clock = 0.0
+	_dash_left = 0.0
+	body.state = BalanceBody.State.DOWN
+	body.falls += 1
+
+
+## EMPUJADA O EN EL PISO: la velocidad del empujón (de costado, y el arco del saltito: y = 4·h·s·(1 − s)), o quieta
+## de costado y cayendo al piso.
+func _pushed(k: KinematicSettings, delta: float, grounded: bool) -> Vector3:
+	if _shove_left > 0.0:
+		var share := 1.0 - (_shove_left - delta * 0.5) / _shove_time
+		_shove_left -= delta
+		return _shove_flat + Vector3.UP * (4.0 * _shove_hop * (1.0 - 2.0 * share) / _shove_time)
+	var gravity := 2.0 * k.jump_height / (k.jump_time * k.jump_time)
+	return Vector3(0.0, 0.0 if grounded else velocity.y - gravity * delta, 0.0)
+
+
+## LA CAÍDA, paso a paso: cae (acelerando) hasta `fall_lie`, queda tirada, y se levanta; a la mitad de levantarse (ver
+## BalanceBody.LAST_STRETCH) estira las piernas, como la física.
+func _fall(k: KinematicSettings, delta: float) -> void:
+	if body.state == BalanceBody.State.STANDING:
+		lean = 0.0
+		return
+	_fall_clock += delta
+	if body.state == BalanceBody.State.DOWN:
+		var share := clampf(_fall_clock / k.fall_time, 0.0, 1.0)
+		lean = k.fall_lie * share * share
+		if _fall_clock >= k.fall_time + k.down_time:
+			body.state = BalanceBody.State.LIFT
+			_fall_clock = 0.0
+		return
+	lean = k.fall_lie * (1.0 - smoothstep(0.0, 1.0, _fall_clock / k.rise_time))
+	if body.state == BalanceBody.State.LIFT and lean <= BalanceBody.LAST_STRETCH:
+		body.state = BalanceBody.State.RIGHT
+	if _fall_clock >= k.rise_time:
+		lean = 0.0
+		body.state = BalanceBody.State.STANDING
+		body.legs.replant()
+
+
 ## Si ahora no se le puede pegar (al arrancar un dash, ver KinematicSettings.dash_untouchable).
 func untouchable() -> bool:
 	return _untouchable_left > 0.0
@@ -198,6 +289,7 @@ func put(where: Transform3D) -> void:
 	velocity = Vector3.ZERO
 	_dash_left = 0.0
 	_untouchable_left = 0.0
+	_shove_left = 0.0
 	_last_bottom = global_position.y + _hover_now()
 
 

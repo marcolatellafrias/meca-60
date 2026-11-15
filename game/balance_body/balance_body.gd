@@ -466,10 +466,25 @@ func push_impulse(impulse: Vector3, at := Vector3.ZERO) -> void:
 		apply_impulse(impulse, at)
 
 
-## SI AHORA NO SE LE PUEDE PEGAR: la cinemática, al arrancar un dash (ver KinematicSettings.dash_untouchable). Lo
-## pregunta quien pega (los jefes: HitReaction.untouchable); la física, siempre se le puede.
+## SI AHORA NO SE LE PUEDE PEGAR: la cinemática, al arrancar un dash (ver KinematicSettings.dash_untouchable) y
+## mientras no está parada (tirada o levantándose). Lo pregunta quien pega (los jefes: HitReaction.untouchable); la
+## física, siempre se le puede.
 func untouchable() -> bool:
-	return kinematic and mover != null and mover.untouchable()
+	return kinematic and mover != null and (state != State.STANDING or mover.untouchable())
+
+
+## UN EMPUJÓN A LA CINEMÁTICA: se corre `offset` (m, de costado) en `time` (s), con un saltito de `hop` m, sin
+## manejarse (ver KinematicMover.shove). A la física, nada: a ella se le pega con `push_impulse`.
+func shove(offset: Vector3, time: float, hop := 0.0) -> void:
+	if kinematic and mover != null:
+		mover.shove(offset, time, hop)
+
+
+## DERRIBA A LA CINEMÁTICA: cae de espaldas hacia `away`, queda tirada y se levanta, animado (ver
+## KinematicMover.knock_down; `state` dice en qué va). A la física, nada: se cae sola con su física.
+func knock_down(away: Vector3) -> void:
+	if kinematic and mover != null:
+		mover.knock_down(away)
 
 
 ## LE PEGA A CUALQUIER CUERPO: a uno con equilibrio, por su puerta (física o cinemática); a lo demás, de siempre.

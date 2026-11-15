@@ -53,6 +53,15 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 ## más o menos que el dash. Lo pregunta quien pega (BalanceBody.untouchable).
 @export_range(0.0, 1.5, 0.05) var dash_untouchable := 0.35
 
+@export_group("Caerse")
+## DERRIBADA (KinematicMover.knock_down; 15/11/2026, desde el módulo Jefes, con el sí del usuario: «los brazos están mega
+## bugueados cuando se cae… arreglalo de raíz»): cae de espaldas en `fall_time` (s) hasta `fall_lie` (°), queda tirada
+## `down_time` (s) y se levanta en `rise_time` (s). Animado, no físico; las piernas se recogen como en la física.
+@export_range(0.1, 2.0, 0.05) var fall_time := 0.5
+@export_range(30.0, 90.0, 1.0) var fall_lie := 78.0
+@export_range(0.0, 5.0, 0.1) var down_time := 1.1
+@export_range(0.1, 3.0, 0.05) var rise_time := 0.8
+
 @export_group("Agacharse")
 ## Agachada, la altura de la caja que le queda (parte de la de parada) y a qué ritmo cambia (partes por segundo).
 @export_range(0.3, 1.0, 0.05) var crouch_share := 0.6

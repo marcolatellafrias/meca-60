@@ -17,10 +17,12 @@ const LABELS := {
 	"dash_cost": "gasta de la barra (parte)", "dash_refill": "la barra se llena en (s)",
 	"dash_curve": "la curva (lineal: parejo)",
 	"dash_untouchable": "intocable desde que arranca (s)",
+	"fall_time": "cae en (s)", "fall_lie": "queda inclinada (°)", "down_time": "tirada (s)",
+	"rise_time": "se levanta en (s)",
 	"crouch_share": "agachada: la altura que le queda (parte)", "crouch_rate": "ritmo (partes por s)",
 }
 ## Una pestaña por grupo de KinematicSettings.
-const TABS: Array[String] = ["Moverse", "Girar", "Saltar y volar", "Dash", "Agacharse"]
+const TABS: Array[String] = ["Moverse", "Girar", "Saltar y volar", "Dash", "Caerse", "Agacharse"]
 ## LAS CONFIGURACIONES DE UN TOQUE (el usuario: «quiero probar varias combinaciones… pero no un millón de opciones…
 ## pensá configuraciones posibles»): cada botón ESCRIBE las dos perillas de moverse en el borrador; se aplica al
 ## guardar.
