@@ -27,7 +27,8 @@ func _init(arms_kind := Mech.Arms.POSE, moves_kinematic := false, shape := Mech.
 	arms = arms_kind
 	kinematic = moves_kinematic
 	cabin_shape = shape
-	display_name = "Meca cinemática" if kinematic else ("Meca redonda" if shape == Mech.Cabin.ROUND else Mech.NAMES[arms])
+	display_name = "Meca cinemática" if kinematic else ("Meca redonda" if shape == Mech.Cabin.ROUND
+		else ("Meca del vórtice" if shape == Mech.Cabin.VORTEX else Mech.NAMES[arms]))
 
 
 func max_footprint() -> Vector2:
@@ -89,9 +90,9 @@ static func knock_keys() -> Array[SandboxKey]:
 		SandboxKey.action(KEY_M, SandboxKey.Weight.NORMAL, "pegarle fuerte",
 			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: mech.knock(true))),
 		SandboxKey.action(KEY_Y, SandboxKey.Weight.NORMAL, "ascensor: subir una parada",
-			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: if mech.cabin != null: mech.cabin.lift.up())),
+			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: if mech.cabin != null and mech.cabin.lift != null: mech.cabin.lift.up())),
 		SandboxKey.action(KEY_H, SandboxKey.Weight.NORMAL, "ascensor: bajar una parada",
-			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: if mech.cabin != null: mech.cabin.lift.lower())),
+			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: if mech.cabin != null and mech.cabin.lift != null: mech.cabin.lift.lower())),
 	]
 
 

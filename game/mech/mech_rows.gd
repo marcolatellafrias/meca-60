@@ -7,6 +7,13 @@ extends RefCounted
 static func rows() -> Array[SandboxRow]:
 	var arena := DodgeArenaArchetype.new()
 	return [
+		# EL DISCO DE DOS PISOS CON VÓRTICE, la primera del sandbox (el usuario, 15/11/2026: «con brazos reales (con
+		# física), piernas reales, y torso con física en una parcela al principio del sandbox»).
+		SandboxRow.new(SandboxSuper.Id.MECH, "Meca del vórtice") \
+			.add(SandboxRow.Build.NEAR, [MechArchetype.new(Mech.Arms.MUSCLE, false, Mech.Cabin.VORTEX)]) \
+			.panel(KEY_F1, MECH_PANEL, MechPanel.new(Mech.Arms.MUSCLE)) \
+			.panel(KEY_F3, MUSCLE_ARMS_PANEL, MuscleArmPanel.new()) \
+			.panel(KEY_F4, LEGS_PANEL, LegsPanel.new()),
 		SandboxRow.new(SandboxSuper.Id.MECH, "Meca discreta") \
 			.add(SandboxRow.Build.NEAR, [MechArchetype.new(Mech.Arms.POSE)]) \
 			.panel(KEY_F1, MECH_PANEL, MechPanel.new()) \

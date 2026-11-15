@@ -62,9 +62,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if key.physical_keycode == KEY_F:
 		mech.covering = not mech.covering
-	elif key.physical_keycode == KEY_G and mech.cabin != null:
+	elif key.physical_keycode == KEY_G and mech.cabin != null and mech.cabin.lift != null:
 		mech.cabin.lift.up()
-	elif key.physical_keycode == KEY_X and mech.cabin != null:
+	elif key.physical_keycode == KEY_X and mech.cabin != null and mech.cabin.lift != null:
 		mech.cabin.lift.lower()
 	elif PUNCH_KEYS.has(key.physical_keycode):
 		var pick: Array = PUNCH_KEYS[key.physical_keycode]

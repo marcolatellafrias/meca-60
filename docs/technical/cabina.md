@@ -125,3 +125,22 @@ medidas que salen y la altura de la caja sobre el piso, que sale de las piernas.
   de la sesión Meca).
 - Los detalles que se sacaron para simplificar (la estructura del ascensor, las barandas) vuelven después, si hacen
   falta.
+
+## La otra cabina: el disco de dos pisos con vórtice (`VortexCabin`)
+El 15/11/2026 el usuario probó otro camino para la meca (maquetas de arcilla: `tests/small_disc_look`, el disco chico
+sin techo; `tests/four_cabins_look` y `tests/cabin_pods_look`, la meca de cabinas de a uno; `tests/vortex_disc_look`,
+el disco de dos pisos), y pidió el último en la meca de verdad: «ponémelo con brazos reales (con física), piernas
+reales, y torso con física en una parcela al principio del sandbox así lo pruebo». Es la fila **Meca del vórtice**, la
+primera del sandbox (`Mech.Cabin.VORTEX`, brazos físicos):
+- **El vórtice**: una columna opaca en el centro, con la boca debajo del disco. El que se para debajo sube chupado por
+  el tubo (6 m/s, hacia el medio) y queda parado en la planta baja, al lado de la puerta; el que entra al tubo por la
+  puerta baja despacio (4 m/s como mucho) hasta el suelo. Llega al suelo con la meca parada.
+- **La planta baja**, cerrada: la máquina, el banco de reparación, el tablero de la energía y las municiones (se ven y
+  la máquina y el banco chocan). La **escalera caracol**, pegada a la pared, sube al primer piso por un hueco; se pisa
+  una rampa en hélice.
+- **El primer piso**, abierto: un anillo alrededor de un núcleo opaco; el borde con su bevel, el manejo adelante, los
+  mandos de los brazos a los costados y las ametralladoras en enchufes del borde (sólo se ven). El marco lleva a todos
+  hasta 2,6 m sobre el piso.
+- **La U** te deja en la planta baja, al lado de la puerta del vórtice. Sin sillas ni ascensor (G, X, Y, H no hacen
+  nada).
+- `tests/vortex_mech_check.tscn`: uno sube por el vórtice, otro baja por el tubo; imprime dónde está cada uno.

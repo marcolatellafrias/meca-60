@@ -16,7 +16,9 @@ enum Arms { NONE, POSE, MUSCLE }
 ## LA CABINA QUE LLEVA, una pieza más (ver docs/technical/cuerpo-por-piezas.md): la cuadrada (SquareCabin, CabinGrid) o
 ## la redonda (RoundCabin, RoundGrid; el usuario, 15/11/2026: «un "fork" en otra parcela»). Lo que cambia con ella se
 ## pregunta en un solo lugar: `cabin_kit`.
-enum Cabin { SQUARE, ROUND }
+## Y EL DISCO DE DOS PISOS CON VÓRTICE (VortexCabin; el usuario, 15/11/2026: «ponémelo con brazos reales… en una
+## parcela al principio del sandbox»): sin sillas ni ascensor.
+enum Cabin { SQUARE, ROUND, VORTEX }
 
 const MASS := 50000.0
 const NAMES := ["Meca de práctica", "Meca discreta", "Meca física"]
@@ -39,6 +41,8 @@ static func shoulder(shape := Cabin.SQUARE) -> Vector3:
 static func cabin_kit(shape: Cabin) -> Dictionary:
 	if shape == Cabin.ROUND:
 		return {"box": RoundGrid.box(), "shoulder": RoundGrid.shoulder(), "nozzles": false}
+	if shape == Cabin.VORTEX:
+		return {"box": VortexCabin.box(), "shoulder": VortexCabin.shoulder(), "nozzles": false}
 	return {"box": CabinGrid.box(), "shoulder": CabinGrid.shoulder(), "nozzles": true}
 
 
@@ -89,7 +93,13 @@ func _build() -> void:
 		Clay.box(look, Vector3(size.x * 0.6, 0.5, 0.2), Vector3(0.0, size.y * 0.3, -size.z * 0.5 - 0.1), Clay.YELLOW)
 		_build_arms()
 		return
-	cabin = RoundCabin.new() if cabin_shape == Cabin.ROUND else SquareCabin.new()
+	match cabin_shape:
+		Cabin.ROUND:
+			cabin = RoundCabin.new()
+		Cabin.VORTEX:
+			cabin = VortexCabin.new()
+		_:
+			cabin = SquareCabin.new()
 	cabin.mech = self
 	add_child(cabin)
 	_build_arms()
