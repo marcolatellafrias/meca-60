@@ -91,6 +91,6 @@ func strike() -> bool:
 func _hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> void:
 	_struck[body.get_instance_id()] = true
 	var push := lerpf(PUSH_STILL, PUSH_FULL, _strike_spin)
-	BalanceBody.hit(body, velocity * PoseArmSettings.current.hit_mass * push, at - body.global_position)
+	EnergyBolt.lands(body, velocity * PoseArmSettings.current.hit_mass * push, at, "taladro")
 	last_hit_speed = velocity.length()
 	last_hit = body

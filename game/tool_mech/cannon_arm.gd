@@ -213,7 +213,7 @@ func _beam_step(delta: float) -> void:
 		end = hit["position"]
 		var body := EnergyBolt.struck(hit["collider"])
 		if body != null:
-			BalanceBody.hit(body, way * BEAM_PUSH * delta, end - body.global_position)
+			EnergyBolt.lands(body, way * BEAM_PUSH * delta, end, "rayo")
 	var length := from.origin.distance_to(end)
 	_beam.global_transform = Transform3D(from.basis * Basis.from_scale(Vector3(1.0, 1.0, length)), (from.origin + end) * 0.5)
 	_kick(randf_range(-6.0, 6.0))

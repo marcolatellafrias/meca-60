@@ -49,6 +49,9 @@ los músculos, pero sin la colisión».
     golpe.*
 - **Los tiros** (`EnergyBolt`) van derecho y a lo primero que tocan le dan un impulso. Si tocan una pieza de una meca
   (un pie), el empujón va a la meca. **Sólo locales**: todavía no van por la red.
+- **La costura con lo que lleva vida** (`EnergyBolt.lands`, para los tiros, el rayo y el taladro): además del empujón,
+  si lo que recibe (o la meca de la pieza tocada) tiene `take_hit(strength, at, source)`, se lo dice: cuánto empujó, dónde
+  y con qué («cañón», «rayo», «taladro»). Cuánta vida saca lo decide quien recibe (un jefe; lo pidió la sesión Jefes).
 
 ## Las placas de blindaje — `ArmorPlates`
 El usuario: «paneles para brazos y piernas de armadura»; «la placa de blindaje me refiero». Sólo se ven: una funda de

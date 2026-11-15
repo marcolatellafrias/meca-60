@@ -41,7 +41,7 @@ func _physics_process(delta: float) -> void:
 	if not hit.is_empty():
 		var body := struck(hit["collider"])
 		if body != null:
-			BalanceBody.hit(body, -global_basis.z * push, (hit["position"] as Vector3) - body.global_position)
+			lands(body, -global_basis.z * push, hit["position"], "cañón")
 		flash(get_parent(), hit["position"], radius * 3.0, color)
 		queue_free()
 		return
@@ -59,6 +59,16 @@ static func struck(collider: Object) -> RigidBody3D:
 			return node as RigidBody3D
 		node = node.get_parent()
 	return collider as RigidBody3D
+
+
+## UN GOLPE DE LA MECA DE TRES LLEGA A `body`: el empujón (BalanceBody.hit) y, SI LO QUE RECIBE TIENE
+## `take_hit(strength, at, source)`, se lo dice: cuánto empujó (kg·m/s), dónde (mundo) y con qué ("cañón", "rayo",
+## "taladro"). Es la costura con lo que lleva vida (un jefe, ver game/bosses/): lo decide quien recibe, no el arma.
+static func lands(body: RigidBody3D, impulse: Vector3, at: Vector3, source: String) -> void:
+	BalanceBody.hit(body, impulse, at - body.global_position)
+	var owner_of := struck(body)
+	if owner_of != null and owner_of.has_method("take_hit"):
+		owner_of.call("take_hit", impulse.length(), at, source)
 
 
 ## Un material que brilla, sin sombra.
