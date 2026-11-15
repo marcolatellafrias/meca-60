@@ -22,16 +22,20 @@ en un **elevador** que la sube derecho a la arena.
   una compuerta y se sale a la arena, sin corte.
 - *Propuesta:* **al volver** (después del cartel, donde sí hay corte) la meca aparece dormida sobre la plataforma.
 
-## El plano (plano 4, 15/11/2026, en revisión con el usuario)
+## El plano (plano 5, 15/11/2026, en revisión con el usuario)
 - **La nave: el elevador y el gimnasio, nada más.** La meca duerme sobre la plataforma del elevador; sólo se la saca
   para practicar. **La bolsa**, a la derecha del gimnasio, centrada en alto y con margen: si vuela de un golpe fuerte, no
   llega a la pared.
-- **Todo abierto**: un solo piso, sin paredes, con **vidrio hacia la nave**. Desde cualquier punto se ve la meca y al que
-  boxea. Nada de cuartos cerrados.
-- **Tres zonas**, que se distinguen por el piso:
-  1. **Los contratos**, junto a la pasarela a la meca: la mesa grande.
-  2. **Customizar la meca**: dos terminales juntas, **la armería** y **los cosméticos con la pintura** (la pintura es
-     una interfaz en esa terminal, sin latas ni pintar a mano).
-  3. **Los personajes**: el **ascensor de personal empotrado** en la pared (por ahí se aparece), una **isla de
-     casilleros** con la ropa, y **el memorial, chiquito**: un estante con fotos.
-- **Descartado**: el hangar, pintar a mano (pasarelas, latas, pistola), los cuartos cerrados y los puestos en fila.
+- **Debajo del pozo, roca.** El piso de la gente es **del ancho del gimnasio, debajo de él**: abierto, sin paredes
+  adentro, con **vidrio hacia la nave** (desde cualquier punto se ve la meca y al que boxea). Una puerta en la esquina da
+  a **un andén** al pie de la plataforma, por donde se sube a la meca.
+- **Cada zona, contra una pared**; el centro queda libre:
+  1. **Los contratos**, en la pared de al lado del andén: un tablero grande en la pared y la mesa delante.
+  2. **Customizar la meca**, en la pared del fondo: dos terminales, **la armería** y **los cosméticos con la pintura**
+     (la pintura es una interfaz en esa terminal, sin latas ni pintar a mano).
+  3. **Los personajes**, en la otra pared: el **ascensor de personal metido en la pared** (por ahí se aparece), los
+     **casilleros** con la ropa y **el cuadro del empleado del mes**.
+- **Sin memorial**: van a morir muchos y no se quiere esa información. Lo que queda de un muerto, si era el empleado
+  del mes, es su cuadro.
+- **Descartado**: el hangar, pintar a mano (pasarelas, latas, pistola), los cuartos cerrados, los puestos en fila, el
+  memorial.

@@ -5,8 +5,8 @@
 
 ## La idea
 **La plata es lo único continuo.** Se pierde la meca: queda la plata. Se muere alguien: queda la plata. **Se pierde todo
-(la meca y todos los personajes): se borra todo**, y en la sucursal queda, a lo sumo, un cartel del empleado del mes o
-un memorial.
+(la meca y todos los personajes): se borra todo**, y en la sucursal queda, a lo sumo, el cuadro del empleado del mes
+(sin memorial: ver [[base]]).
 
 ## Lo que vuelve de la arena
 - **El casco y los sistemas** (el movimiento y cada brazo) **se reparan solos** al volver. El usuario quiere continuidad
