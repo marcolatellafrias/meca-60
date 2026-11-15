@@ -86,12 +86,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	var boss := BallBoss.new()
 	boss.name = "Bola"
 	boss.position = START
-	# Por donde salen sus tiros: un hijo fijo de la parcela, igual en todas las máquinas (ver ProjectileField).
-	var field := ProjectileField.new()
-	field.name = "Proyectiles"
-	root.add_child(field)
 	root.add_child(boss)
-	boss.cannon.field = field
 	Health.attach(boss, BOSS_HEALTH)
 	# LA CABEZA DEL JEFE, y su blanco: la meca enfrente, del tipo de ahora (la K). O la posee, para pelear.
 	var brain := BallBrain.new()

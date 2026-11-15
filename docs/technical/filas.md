@@ -21,7 +21,7 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 | Multijugador | `MultiplayerArchetype` | `SandboxSession` | — | `net_check` | `game/net/` |
 | Partículas | `ParticleArchetype` | — | — | — | `game/particles/` |
 | Píxeles | `PixelArtArchetype` | `game/pixel_art/` entero, `tools/pixel_art_modelos_prueba.py` | `PixelPaintPanel` (F1) | `pixel_art_look` | `Clay`, `SupplyLook` (colores) |
-| Jefe bola | `BallBossArchetype` | `game/bosses/` entero (`BallBoss`, `BallBrain`, `BallCannon`, `BallRoll`, `BallLegs`, `Health`, `FightBars`, `BallShell`, `Tentacle`, `BallBossSettings`, `BossArena`, `BossRows`) | `BallBossPanel` (F1); de la meca que pelea: `KinematicPanel` (F2), `CabinShapePanel` (F3), `LegsPanel` (F4) | `ball_boss_look`, `ball_brain_look` | `MechKeys.axis`, `Clay`, `PhysicsLayers.FIXED` |
+| Jefe bola | `BallBossArchetype` | `game/bosses/` entero (`BallBoss`, `BallBrain`, `BallRoll`, `BallLegs`, `Health`, `FightBars`, `Tentacle`, `BallBossSettings`, `BossArena`, `BossRows`) | `BallBossPanel` (F1); de la meca que pelea: `KinematicPanel` (F2), `CabinShapePanel` (F3), `LegsPanel` (F4) | `ball_boss_look`, `ball_brain_look` | `MechKeys.axis`, `Clay`, `PhysicsLayers.FIXED` |
 | Maquetas de jefes | `BossMaquetteArchetype` | `game/bosses/maquettes/` entero (`BossMaquettes`, `HumanoidMaquettes`, `ArmedMaquettes`, `WalkerMaquettes`, `BossMaquetteArchetype`) | — | `boss_maquettes_look` | `Clay` |
 
 ## La meca (lo que comparten sus dos filas)

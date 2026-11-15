@@ -6,8 +6,6 @@ extends Node3D
 ## igual sin mandar nada más.
 ##   · EL DE MORTERO (`Kind.MORTAR`, el de los jefes de prueba): sube derecho, se va alto y CAE DE ARRIBA sobre su punto
 ##     (una curva de Bézier con los dos puntos del medio arriba de la salida y de la llegada).
-##   · EL DERECHO (`Kind.SHELL`, el tiro simple del jefe bola; del módulo Jefes, 13/11/2026): va en línea recta de
-##     `from` a `to`, sin subir (`height` 0).
 ##   · LA MARCA: desde que sale, en el piso donde va a caer hay un círculo con su borde, y adentro otro que crece hasta
 ##     llenarlo justo cuando cae (el usuario: «que marque con un círculo donde van a caer… como las peleas de los
 ##     bosses»).
@@ -20,13 +18,12 @@ extends Node3D
 
 signal landed
 
-enum Kind { MORTAR, SHELL }
+enum Kind { MORTAR }
 
 ## LOS DE CADA CLASE: el radio de la explosión y de la marca (m), cuánto le cambia la velocidad a lo que agarra en el
 ## centro (m/s), qué parte de eso va hacia arriba, cuán alto sube (m) y su tamaño (largo, radio).
 const KINDS := {
 	Kind.MORTAR: {"radius": 9.0, "push": 10.0, "up": 0.15, "height": 70.0, "length": 4.0, "thickness": 0.55},
-	Kind.SHELL: {"radius": 6.0, "push": 8.0, "up": 0.2, "height": 0.0, "length": 3.0, "thickness": 0.8},
 }
 ## La marca: su color (de fondo, el que crece y el borde) y cuán gruesa es la línea del borde (m).
 const MARK_COLOR := Color(0.75, 0.3, 0.18, 0.18)

@@ -14,17 +14,14 @@ posee (la **O**). La computadora todavía no.
 - **La bola** (`BallBoss`): mide 30 m y su centro va a 20 m del piso, así que el techo queda a 35 m. Es **casi el
   doble de la meca**, que mide 18 m («por lo menos el doble… después podemos cambiar las escalas»), y va **cerca del
   piso**: la panza, a 5 m.
-- **El casco es liso** (15/11/2026; el usuario: «que la esfera sea shade smooth o auto smooth»): la rendija sigue
-  plana y el borde con el casco queda marcado, como un auto smooth. La perilla «bola: lisa» de la pestaña Forma lo vuelve
-  a caras planas.
-- **El casco es una esfera low poly** (`BallShell`, 14/11/2026): 16 franjas de polo a polo, con los polos a los
-  costados, y 18 caras alrededor. Las 2 franjas del medio no están: en su lugar va **la rendija**, hundida 0,6 m, con el
-  fondo oscuro (mide 5,9 m de ancho). La silueta sigue siendo una esfera, como la hitbox. El usuario: «una esfera más o
-  menos low poly, agarrar una cierta cantidad de segmentos del medio y reemplazarlos por una rendija». *Antes eran dos
-  medias esferas separadas por la rendija, y quedaba raro.* Es provisorio a propósito («no hagas código tan permanente»).
-- **La rendija va de arriba a abajo**: da toda la vuelta de adelante, por arriba, hacia atrás. El cañón va a subir y bajar por ella:
-  disparar adelante o al cielo. **Para apuntar de costado, la bola gira con las patas** (el usuario, 13/11/2026: «la
-  rendija es en la otra dirección, si quiere rotar en y, va a usar las piernas»). El cañón va metido en ella (paso 2).
+- **Rediseñado el 15/11/2026: sin rendija ni cañón.** La bola es una esfera lisa; arriba y adelante asoma **una cabeza
+  de disco** (7 m de radio, 3 de alto) con **el ojo, una tira roja** recortada en su frente, como la Tenaza de las
+  maquetas; y **abajo, entre las patas, el núcleo**, una esfera naranja que brilla, colgada de la bola a 3 m del piso:
+  **el punto débil**, al que se llega caminando (el usuario: «lo único que tiene como armamento son los tentáculos y el
+  ojo… se elimina todo lo de la rendija»; «sacarle el núcleo que queda como abajo, entre las piernas… te la jugás»).
+  Hecha bola, la cabeza y el núcleo se meten. `BallBoss.core()` dice dónde está el núcleo; todavía no se le puede pegar.
+  *Antes: un casco low poly con una rendija de arriba a abajo y un cañón que corría por ella (`BallShell`, `BallCannon`,
+  borrados), con el tiro simple y los misiles del cielo.*
 - **Se mueve como el cubo cinemático** (hoy, la meca simplificada): con el controlador de personaje del motor (`CharacterBody3D`). Contra lo fijo
   del mundo choca con un cilindro de 16 m de radio, que va del piso a lo alto de la bola. Contra lo suelto y los
   personajes choca la bola misma, un `AnimatableBody3D` que la sigue. El movimiento es discreto:
@@ -48,17 +45,16 @@ posee (la **O**). La computadora todavía no.
   - El piso se busca con un rayo a lo fijo del mundo, así que sobre un edificio pisa el techo.
   - Cuando un pie queda a más de 6 m de su lugar, sale **con el de su diagonal**, en arco.
   - En el aire, los pies cuelgan; al caer, apoyan donde estén.
-- **F1**: las perillas (`BallBossPanel`), con una pestaña por grupo: Forma, Moverse, Girar, Saltar, Agacharse, Cañón,
-  Disparos, Bola, Barrido y Tentáculos. Como todos los paneles de perillas (`KnobsPanel`), se mueve un borrador:
+- **F1**: las perillas (`BallBossPanel`), con una pestaña por grupo: Forma, Arena, Moverse, Girar, Saltar, Agacharse,
+  Bola, Barrido y Tentáculos. Como todos los paneles de perillas (`KnobsPanel`), se mueve un borrador:
   **Guardar** lo aplica y lo deja en `game/bosses/ball_boss_settings.tres`, que se carga al arrancar; el archivo es del
   usuario y no va al repositorio.
 - **La pestaña Forma** (14/11/2026; el usuario: «está todo muy hardcodeado… experimentar con tamaños»): el radio de la
-  bola, el casco (franjas, franjas de la rendija, caras alrededor, cuánto se hunde), cuánto más ancho es el cilindro que
-  choca con lo fijo, el grueso de los tentáculos, el pie y sus paletas, y el carro, el caño y la boca del cañón. **Al
-  guardar, cada jefe bola se rearma donde está** (`BallBoss.rebuild`): la bola, el cañón y las patas, con los pies a su
-  lugar. Las franjas se redondean a pares. El centro nunca baja del radio (si la bola crece y la altura parada no, queda
-  apoyada en el piso). Lo demás (velocidades, alturas, el largo de los tentáculos) lo lee en cada paso.
-  `ball_boss_look` termina rearmándola con radio 20, 12 franjas, rendija de 4 y patas y cañón más gruesos, y de vuelta.
+  bola, cuánto más ancho es el cilindro que choca con lo fijo, la cabeza (radio y alto del disco), el núcleo (su radio),
+  el grueso de los tentáculos, el pie y sus paletas. **Al guardar, cada jefe bola se rearma donde está**
+  (`BallBoss.rebuild`): la bola, la cabeza, el núcleo y las patas, con los pies a su lugar. El centro nunca baja del radio.
+  Lo demás (velocidades, alturas, el largo de los tentáculos) lo lee en cada paso. `ball_boss_look` termina rearmándola
+  con radio 20, la cabeza y el núcleo más grandes y las patas más gruesas, y de vuelta.
 
 ### Lo medido (`ball_boss_look`)
 | Prueba | Resultado |
@@ -70,28 +66,10 @@ posee (la **O**). La computadora todavía no.
 | Contra la pared | el centro queda a 16,00 m (el radio del cilindro) |
 | Al lado del edificio de 12 m | dos pies en el techo (a 12,4 m) y dos en el piso |
 
-## Paso 2 (13/11/2026): el cañón por la rendija
-- **El cañón** (`BallCannon`), como de tanque: un carro metido en la rendija, un caño amarillo de 12 m y, en la punta,
-  una boca más gruesa y larga (5,5 m) con el hueco oscuro bien a la vista (el usuario: «así parece más un cañón de
-  tanque»; «más larga la parte ensanchada… y volvamos a los anchos antes de la exageración»). Cuelga del centro de la bola
-  y gira sobre el eje de la rendija: a 0° mira adelante, a 90° al cielo, a 180° atrás, y **da la vuelta entera**.
-  `muzzle()` dice desde dónde y hacia dónde sale el tiro.
-- **Lo que se le pide**: `aim_pitch`, como `aim_yaw` para girar. El cañón va hacia ahí por el camino más corto, con tope
-  de velocidad (60°/s; la pestaña Cañón del F1).
-- **Poseída, el mouse arriba y abajo mueve el cañón**; de costado, el mouse gira la bola entera.
-- Medido: pedido a 0°, 45°, 90°, 180° y −45°, llega a cada uno.
-
-## Paso 3 (13/11/2026): los tiros
-Van por `ProjectileField` (por red, como los de la arena de esquivar), que es un hijo fijo de la parcela.
-- **El simple** (clic izquierdo; `fire`): derecho adonde apunta el cañón, hasta lo primero que encuentra (400 m como
-  mucho), a 120 m/s. Es un proyectil nuevo de `Missile`, `Kind.SHELL`: va en línea recta, con su marca y su explosión.
-- **Los del cielo** (clic derecho; `barrage`): **una sucesión, no una lluvia**, porque es un solo cañón (el usuario:
-  «tendría más sentido que no sea una lluvia sino una sucesión de misiles del cielo»). El cañón sube solo a 90°, tira
-  cinco morteros, uno cada 0,35 s, y vuelve adonde apuntaba. Caen en fila hacia adelante, el primero a 50 m y cada uno
-  12 m más lejos, con su marca en el piso. Cuando la maneje la computadora, van a caer sobre el jugador y adonde va.
-- Entre tiro y tiro, 0,8 s. Todo en la pestaña **Disparos** del F1.
-- Medido: el simple, apuntando a −20°, pega en el edificio a 35 m; los del cielo caen a 50, 62, 74, 86 y 98 m.
-- Todavía no hace daño: empujan lo suelto, como los misiles de la arena.
+## Pasos 2 y 3 (13/11/2026): el cañón y los tiros — *sacados el 15/11/2026*
+Un cañón de tanque corría por la rendija y tiraba el tiro simple (derecho, `Missile.Kind.SHELL`) y una sucesión de
+misiles del cielo. Con la cabeza de disco se fueron el cañón, la rendija, los dos tiros y sus perillas (las pestañas
+Cañón y Disparos); también `Kind.SHELL` de los proyectiles. El ojo y los tentáculos son sus armas.
 
 ## Paso 4 (13/11/2026): hecha bola
 `BallRoll`. El usuario: las patas «se meten adentro», «puede doblar», Shift lo cambia, y «que haga daño al tocar».
@@ -107,8 +85,7 @@ Van por `ProjectileField` (por red, como los de la arena de esquivar), que es un
   - contra una pared pierde lo que no pudo avanzar.
   - Cada rampa tiene su tiempo y su curva en la pestaña Bola. En la carga, el jefe frena apretando para atrás.
   - la bola se ve girar según lo que avanza.
-  - **El cañón se mete**: corre hacia adentro por su eje hasta quedar dentro de la rendija, y no dispara (el usuario:
-    «el cañón se tiene que meter también»).
+  - **La cabeza y el núcleo se meten** en la bola (antes, el cañón: «el cañón se tiene que meter también»).
 - **Pega al tocar** (sin vida: todo es equilibrio): lo suelto que toca rodando a más de 4 m/s sale despedido, con un
   cambio de velocidad de hasta 16 m/s según lo rápido que iba. Es `BalanceBody.hit`, así que a una meca su péndulo
   decide si cae. A cada cosa le pega una vez por toque.
@@ -146,8 +123,6 @@ posee al jefe, la cabeza no hace nada.
 
 | Ataque | Aviso | Golpe | Recuperación |
 |---|---|---|---|
-| Ráfaga | apunta el cañón, 0,8 s | tres tiros derechos, uno cada 0,9 s | 1,2 s |
-| Los del cielo | el cañón sube | cinco: uno donde estás y los otros adonde vas | 1,6 s |
 | Barrido | la bola se hunde, 0,7 s | el barrido entero | 1,3 s |
 | Carga | se pliega | rueda hacia vos hasta 3,5 s, corrigiendo poco | frena, se abre y queda 1,8 s |
 
@@ -232,3 +207,6 @@ que se pueda»). Sin rayos: el jefe le pregunta al círculo.
   los edificios, regenerando la parcela (R).
 - Medido (`ball_boss_look`): caminando contra el borde queda a 134 m del medio (150 menos el cilindro de 16); rodando, a
   135 (menos el radio de la bola).
+- **La cabeza que pelea** (`BallBrain`), sin cañón: cerca, el barrido o la carga; más lejos, la carga; si no, se acerca.
+  Los poderes nuevos (el pisotón con onda, el agarre, el láser del ojo, el remolino, el salto aplastante y las variantes
+  de la bola: rebotando, pinball y pinball furioso) vienen de a uno.

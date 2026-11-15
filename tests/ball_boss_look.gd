@@ -1,7 +1,7 @@
 extends Node
 
 ## EL JEFE BOLA (unos 60 s, sin el sandbox): quieto de frente y de costado, caminando, agachado, en lo alto de un
-## salto, girando en el lugar, el cañón por la rendija y contra el borde de la arena. Imprime el centro, la velocidad y los pasos; con
+## salto, girando en el lugar, la cabeza y el núcleo, y contra el borde de la arena. Imprime el centro, la velocidad y los pasos; con
 ## ventana, capturas numeradas.
 ##   tools/godot_ventana.sh res://tests/ball_boss_look.tscn -- --salida=C:/carpeta
 
@@ -10,7 +10,6 @@ var _boss: BallBoss = null
 var _eye: Camera3D = null
 var _title: Label = null
 var _shots := 0
-var _blasts: Array[String] = []
 
 
 func _ready() -> void:
@@ -48,9 +47,6 @@ func _ready() -> void:
 	BallBossArchetype.thinking = false
 	var root := BallBossArchetype.new().build(0, parent)
 	_boss = root.get_node("Bola") as BallBoss
-	(root.get_node("Proyectiles") as ProjectileField).exploded.connect(func(at: Vector3, kind: Missile.Kind) -> void:
-		_blasts.append("%s a %.0f m" % [Missile.Kind.keys()[kind], Vector2(at.x - _boss.global_position.x,
-			at.z - _boss.global_position.z).length()]))
 	# Un cubo de 18 m, el alto de la meca, para comparar.
 	Clay.box(root, Vector3(6.0, 18.0, 6.0), Vector3(-22.0, 9.0, 50.0), Clay.RED.lightened(0.2))
 	_eye = Camera3D.new()
@@ -102,41 +98,15 @@ func _ready() -> void:
 	print("giro de 90°: quedó a %.0f°, %d pasos" % [rad_to_deg(_boss.rotation.y), _boss.legs.steps - steps_before])
 	await _shot("giró 90° en el lugar (la marca amarilla es el frente)", _boss.global_position + Vector3(0, 40, 80),
 		_boss.global_position + Vector3.UP * 15)
-	# EL CAÑÓN por la rendija: adelante, a 45°, al cielo, atrás y abajo.
+	# LA CABEZA Y EL NÚCLEO (15/11/2026): de frente, y de abajo, entre las patas.
 	_boss.aim_yaw = _boss.rotation.y
-	for angle: float in [0.0, 45.0, 90.0, 180.0, -45.0]:
-		_boss.aim_pitch = deg_to_rad(angle)
-		await _wait(3.5)
-		print("cañón: pedido %.0f°, llegó a %.0f°" % [angle, rad_to_deg(_boss.cannon.pitch)])
-		await _shot("el cañón a %.0f° (0 adelante, 90 al cielo)" % angle, _boss.global_position
-			+ Basis(Vector3.UP, _boss.rotation.y) * Vector3(75, 25, 0), _boss.global_position + Vector3.UP * 20)
-	# LOS TIROS: el simple, un poco para abajo, y los del cielo, uno tras otro.
-	_boss.aim_pitch = deg_to_rad(-20.0)
 	await _wait(2.0)
-	_blasts.clear()
-	_boss.fire = true
-	await _wait(0.15)
-	_boss.fire = false
-	await _shot("el tiro simple, derecho adonde apunta", _boss.global_position
-		+ Basis(Vector3.UP, _boss.rotation.y) * Vector3(70, 30, -30), _boss.global_position + Basis(Vector3.UP,
-		_boss.rotation.y) * Vector3(0, 10, -30))
-	await _wait(1.5)
-	print("tiro simple: ", _blasts)
-	_blasts.clear()
-	_boss.barrage = true
-	await _wait(0.15)
-	_boss.barrage = false
-	await _wait(3.2)
-	await _shot("los del cielo: el cañón arriba, salen uno tras otro", _boss.global_position
-		+ Basis(Vector3.UP, _boss.rotation.y) * Vector3(110, 45, -40), _boss.global_position + Basis(Vector3.UP,
-		_boss.rotation.y) * Vector3(0, 25, -55))
-	await _wait(1.2)
-	await _shot("los del cielo: caen en fila, cada uno con su marca", _boss.global_position
-		+ Basis(Vector3.UP, _boss.rotation.y) * Vector3(110, 45, -40), _boss.global_position + Basis(Vector3.UP,
-		_boss.rotation.y) * Vector3(0, 10, -75))
-	await _wait(4.0)
-	print("del cielo: ", _blasts, " · salieron %d tiros en total" % _boss.cannon.fired)
-	_boss.aim_pitch = 0.0
+	print("el núcleo: a %.1f m del piso, %.1f m debajo del centro de la bola" % [_boss.core().y - _boss.global_position.y,
+		_boss.center_height - (_boss.core().y - _boss.global_position.y)])
+	await _shot("la cabeza de disco, con el ojo", _boss.global_position + Basis(Vector3.UP, _boss.rotation.y)
+		* Vector3(18, 40, -55), _boss.global_position + Vector3.UP * 28)
+	await _shot("el núcleo, abajo entre las patas", _boss.global_position + Basis(Vector3.UP, _boss.rotation.y)
+		* Vector3(10, 3, -32), _boss.core() + Vector3.UP * 2)
 	# HECHA BOLA: se pliega, rueda contra las cajas, dobla y se abre.
 	_boss.put(Transform3D(Basis(), Vector3(0.0, 0.0, 40.0)))
 	await _wait(1.0)
@@ -146,7 +116,7 @@ func _ready() -> void:
 		_boss.global_position + Vector3.UP * 12)
 	await _wait(1.0)
 	print("hecha bola: centro a %.1f m, plegada %.2f" % [_boss.center_height, _boss.roll.fold])
-	await _shot("hecha bola: las patas y el cañón adentro", _boss.global_position + Vector3(-30, 20, -60),
+	await _shot("hecha bola: las patas, la cabeza y el núcleo adentro", _boss.global_position + Vector3(-30, 20, -60),
 		_boss.global_position + Vector3.UP * 12)
 	var crates: Array[RigidBody3D] = []
 	for crate in _boss.get_parent().get_node("Cajas").get_children():
@@ -245,7 +215,7 @@ func _ready() -> void:
 	get_tree().quit()
 
 
-## LA PESTAÑA FORMA: otra bola (más grande, más caras, rendija más ancha, patas y cañón más gruesos), rearmada donde está
+## LA PESTAÑA FORMA: otra bola (más grande, con la cabeza y el núcleo más grandes y las patas más gruesas), rearmada donde está
 ## (como al guardar el F1), y de vuelta a la de antes.
 func _reshaped() -> void:
 	var k := BallBossSettings.current
@@ -253,19 +223,17 @@ func _reshaped() -> void:
 	_boss.put(Transform3D(Basis(), Vector3(0.0, 0.0, 30.0)))
 	k.radius = 20.0
 	k.stand_height = 26.0
-	k.shell_bands = 12
-	k.slit_bands = 4
-	k.shell_sides = 12
+	k.head_radius = 9.0
+	k.head_height = 4.0
+	k.core_radius = 3.5
 	k.tentacle_root = 4.5
 	k.tentacle_tip = 3.0
 	k.blade_length = 10.0
-	k.barrel_radius = 2.4
-	k.barrel_length = 16.0
 	_boss.rebuild()
 	await _wait(2.0)
 	print("rearmada: radio %.1f · centro a %.1f m · cilindro de %.1f · %d piezas en la bola" % [_boss.radius,
 		_boss.center_height, _boss.reach(), _boss.ball().get_child_count()])
-	await _shot("rearmada con otra forma (radio 20, 12 caras, rendija de 4 franjas)", Vector3(-40, 30, -80),
+	await _shot("rearmada con otra forma (radio 20, cabeza y núcleo más grandes)", Vector3(-40, 30, -80),
 		_boss.global_position + Vector3.UP * 22)
 	for property in k.get_property_list():
 		if property["usage"] & PROPERTY_USAGE_STORAGE:

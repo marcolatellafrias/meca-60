@@ -3,38 +3,30 @@ extends Node
 
 ## LA CABEZA DEL JEFE BOLA (13/11/2026), PASO 6: lo maneja la computadora. El usuario: «poné las variantes vos, pensá en
 ## bosses del Dark Souls». Lo que se toma de ahí:
-##   · CADA ATAQUE TIENE TRES TIEMPOS: el AVISO (se ve venir: el cañón apunta, la bola se hunde, se pliega), el GOLPE y la
+##   · CADA ATAQUE TIENE TRES TIEMPOS: el AVISO (se ve venir: la bola se hunde, se pliega), el GOLPE y la
 ##     RECUPERACIÓN, el hueco para castigarlo. Los avisos son claros y las recuperaciones, largas en lo más fuerte.
 ##   · ELIGE POR DISTANCIA, con algo de azar, y NO REPITE el mismo ataque tres veces seguidas.
 ##   · ENTRE ATAQUES TE RODEA: de lejos se acerca, de cerca se aleja un poco, en el medio camina de costado mirándote.
 ##   · GIRA LENTO (su tope de giro): ponerse atrás es la forma de esquivarlo… salvo el barrido, que da la vuelta entera.
 ## Los ataques, por distancia (horizontal, del centro de la bola al blanco):
 ##   · CERCA (menos de `NEAR`): el BARRIDO (se hunde y barre) o, a veces, la CARGA.
-##   · EN EL MEDIO: la RÁFAGA (apunta y tira tres derechos), la CARGA (se hace bola y rueda hacia vos, corrigiendo poco)
-##     o los DEL CIELO.
-##   · LEJOS (más de `FAR`): los DEL CIELO (uno donde estás y los otros adonde vas) o la ráfaga; si no, se acerca.
+##   · MÁS LEJOS: la CARGA (se hace bola y rueda hacia vos, corrigiendo poco); si no, se acerca.
+## *Sin cañón desde el 15/11/2026 (se fueron la ráfaga y los del cielo); los poderes nuevos (el pisotón con onda, el
+## agarre, el láser de los ojos, el remolino, el salto aplastante y las variantes de la bola) vienen de a uno.*
 ## LA VIDA (Health), TODO POR CÓDIGO: lo que agarra al blanco le saca vida según `DAMAGE` (y se cuenta, «te pegó»);
 ## las piñas del blanco que tocan la bola le sacan `PUNCH_DAMAGE` al jefe. A lo suelto lo empuja como siempre. Sin vida
 ## el jefe, se queda quieto; sin vida el blanco, deja de pelear. *El blanco de hoy es la meca simplificada, cinemática, que no se empuja: por eso sólo se cuenta.*
 ## Mientras alguien lo posee, la cabeza no hace nada.
 
-enum Act { STALK, SHOTS, SKY, SWEEP, CHARGE }
+enum Act { STALK, SWEEP, CHARGE }
 
-const ACT_NAMES := {Act.STALK: "rodea", Act.SHOTS: "ráfaga", Act.SKY: "los del cielo", Act.SWEEP: "barrido",
-	Act.CHARGE: "carga"}
+const ACT_NAMES := {Act.STALK: "rodea", Act.SWEEP: "barrido", Act.CHARGE: "carga"}
 ## Las distancias que deciden (m).
 const NEAR := 40.0
 const FAR := 85.0
 ## Rodeando: cuánto (s, entre los dos) y a qué distancia se queda (m).
 const STALK_TIME := Vector2(0.8, 1.8)
 const STALK_KEEP := Vector2(30.0, 70.0)
-## LA RÁFAGA: aviso (s), cuántos tiros, entre uno y otro (s) y la recuperación (s).
-const SHOTS_WINDUP := 0.8
-const SHOTS := 3
-const SHOTS_GAP := 0.9
-const SHOTS_RECOVER := 1.2
-## LOS DEL CIELO: la recuperación (s) después del último (el aviso es el cañón subiendo).
-const SKY_RECOVER := 1.6
 ## EL BARRIDO: aviso (s, la bola se hunde) y recuperación (s).
 const SWEEP_WINDUP := 0.7
 const SWEEP_RECOVER := 1.3
@@ -44,7 +36,7 @@ const CHARGE_TIME := 3.5
 const CHARGE_HOMING := 0.12
 const CHARGE_RECOVER := 1.8
 ## CUÁNTA VIDA SACA cada cosa (de 100 que tiene la meca).
-const DAMAGE := {"el tiro": 6.0, "los del cielo": 10.0, "el barrido": 20.0, "la carga": 25.0}
+const DAMAGE := {"el barrido": 20.0, "la carga": 25.0}
 ## Lo que le saca al jefe una piña de la meca que toca la bola, y a cuánto de la bola cuenta (m).
 const PUNCH_DAMAGE := 12.0
 const PUNCH_REACH := 2.0
@@ -88,8 +80,6 @@ func _ready() -> void:
 	_label.pixel_size = 0.02
 	_label.no_depth_test = true
 	_boss.add_child(_label)
-	if _boss.cannon.field != null:
-		_boss.cannon.field.exploded.connect(_on_blast)
 	_begin(Act.STALK)
 
 
@@ -122,10 +112,6 @@ func _physics_process(delta: float) -> void:
 	match act:
 		Act.STALK:
 			_stalk()
-		Act.SHOTS:
-			_shots()
-		Act.SKY:
-			_sky()
 		Act.SWEEP:
 			_sweep()
 		Act.CHARGE:
@@ -147,44 +133,6 @@ func _stalk() -> void:
 	_boss.move = move
 	if _clock >= _stalk_time:
 		_begin(_pick(gap))
-
-
-## LA RÁFAGA: apunta (aviso), tira de a uno y se queda.
-func _shots() -> void:
-	_boss.move = Vector2.ZERO
-	_face()
-	_boss.aim_pitch = _pitch_to_target()
-	if _clock < SHOTS_WINDUP:
-		stage = "ráfaga: apunta"
-		return
-	if _count < SHOTS:
-		stage = "ráfaga: tira"
-		if _clock >= SHOTS_WINDUP + _count * SHOTS_GAP:
-			_boss.cannon.shoot(BallBossSettings.current)
-			_count += 1
-		return
-	stage = "ráfaga: se recupera"
-	if _clock >= SHOTS_WINDUP + SHOTS * SHOTS_GAP + SHOTS_RECOVER:
-		_boss.aim_pitch = 0.0
-		_begin(Act.STALK)
-
-
-## LOS DEL CIELO: uno donde estás y los otros adonde vas; el cañón sube solo (el aviso) y vuelve.
-func _sky() -> void:
-	_boss.move = Vector2.ZERO
-	_face()
-	if _count == 0:
-		_boss.aim_pitch = 0.0
-		_boss.cannon.barrage(BallBossSettings.current, _sky_targets())
-		_count = 1
-		_clock = 0.0
-	if _boss.cannon.busy():
-		stage = "los del cielo: tira"
-		_clock = 0.0
-		return
-	stage = "los del cielo: se recupera"
-	if _clock >= SKY_RECOVER:
-		_begin(Act.STALK)
 
 
 ## EL BARRIDO: se hunde (el aviso), barre y se queda quieto mientras los pies vuelven.
@@ -252,9 +200,9 @@ func _pick(gap: float) -> Act:
 	if gap < NEAR:
 		weights = {Act.SWEEP: 3.0, Act.CHARGE: 1.0}
 	elif gap < FAR:
-		weights = {Act.SHOTS: 2.0, Act.CHARGE: 2.0, Act.SKY: 1.0}
+		weights = {Act.CHARGE: 2.0}
 	else:
-		weights = {Act.SKY: 2.0, Act.SHOTS: 1.0}
+		weights = {Act.CHARGE: 1.0}
 	# No el mismo tres veces seguidas.
 	if _history.size() >= 2 and _history[-1] == _history[-2] and weights.size() > 1:
 		weights.erase(_history[-1])
@@ -313,32 +261,6 @@ func _face() -> void:
 	_boss.aim_yaw = _yaw_to_target()
 
 
-## El ángulo del cañón para apuntarle al medio del blanco (desde el centro de la bola, que es donde gira).
-func _pitch_to_target() -> float:
-	var centre := _boss.global_position + Vector3.UP * _boss.center_height
-	var aim := _ground() + Vector3.UP * _target_height() * 0.5
-	return atan2(aim.y - centre.y, Vector2(aim.x - centre.x, aim.z - centre.z).length())
-
-
-## LOS DEL CIELO: el primero donde estás y los otros adonde vas (cada uno cae un poco después), con algo de desorden.
-func _sky_targets() -> Array[Vector3]:
-	var k := BallBossSettings.current
-	var out: Array[Vector3] = []
-	var flat := _target_velocity
-	flat.y = 0.0
-	var space := _boss.get_world_3d().direct_space_state
-	for i in k.barrage_count:
-		var lead := 0.0 if i == 0 else (k.barrage_flight + i * k.barrage_gap) * 0.8
-		var point := _ground() + flat * lead + Vector3(_random.randf_range(-4.0, 4.0), 0.0,
-			_random.randf_range(-4.0, 4.0)) * float(mini(i, 1))
-		var ray := PhysicsRayQueryParameters3D.create(point + Vector3.UP * 100.0, point + Vector3.DOWN * 100.0,
-			PhysicsLayers.FIXED)
-		ray.exclude = [_boss.ball().get_rid()]
-		var hit := space.intersect_ray(ray)
-		out.append(hit["position"] if not hit.is_empty() else point)
-	return out
-
-
 ## EL PUNTO DEL PISO debajo del blanco: de una meca cinemática, el de lo que la mueve (su caja va arriba).
 func _ground() -> Vector3:
 	var body := target as BalanceBody
@@ -371,16 +293,6 @@ func _target_height() -> float:
 
 
 ## ── LO QUE LE PEGA AL BLANCO (se cuenta; ver arriba) ─────────────────────────────────────────────────────────────
-
-func _on_blast(at: Vector3, kind: Missile.Kind) -> void:
-	if target == null or not is_instance_valid(target):
-		return
-	var reach: float = Missile.KINDS[kind]["radius"]
-	var flat := Vector2(at.x - _ground().x, at.z - _ground().z).length()
-	var height := at.y - _ground().y
-	if flat < reach + _target_radius() and height > -2.0 and height < _target_height() + 2.0:
-		_hit("el tiro" if kind == Missile.Kind.SHELL else "los del cielo")
-
 
 ## El barrido y la bola rodando: si la paleta o la bola tocan al blanco.
 func _check_touch() -> void:
@@ -445,7 +357,6 @@ func _end(why: String) -> void:
 	if stage == why:
 		return
 	_still()
-	_boss.cannon.cancel()
 	stage = why
 
 
@@ -460,5 +371,5 @@ func _show() -> void:
 	_label.position = Vector3.UP * (_boss.center_height + _boss.radius + 6.0)
 	var head := stage if awake or stage == "derrotado" else "quieto (P lo despierta)"
 	_label.text = "%s\nte pegó %d%s" % [head, landed, (" · %s" % last_hit) if landed > 0 else ""]
-	_label.modulate = Color(1.0, 0.55, 0.3) if stage.ends_with("apunta") or stage.ends_with("se hunde") \
+	_label.modulate = Color(1.0, 0.55, 0.3) if stage.ends_with("se hunde") \
 		or stage.ends_with("se pliega") else Color(1, 1, 1)

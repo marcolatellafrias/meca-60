@@ -1,11 +1,12 @@
 class_name BallBoss
 extends CharacterBody3D
 
-## EL JEFE BOLA (13/11/2026), PASO 1: la bola con su rendija y las cuatro patas, para ver la forma, cómo camina, cómo
-## choca y cómo se mueve. Lo pensó el usuario: «una bola con una rendija en el medio que le da toda la vuelta y ahí tiene
-## un cañón que puede girar toda la circunferencia, y que tenga cuatro patas… como tentáculos con hélices al final»;
-## «vamos a ir agregando cosas de a poco… empezar con la bola y las piernas solamente». Por ahora sin cañón, sin dash ni
-## vuelo, y lo maneja quien lo posee (la O): la computadora, después.
+## EL JEFE BOLA (13/11/2026): la bola con cuatro patas. Lo pensó el usuario: «una bola… y que tenga cuatro patas… como
+## tentáculos con hélices al final». La maneja su cabeza (BallBrain) o quien lo posee (la O).
+## REDISEÑADO EL 15/11/2026: SIN RENDIJA NI CAÑÓN; arriba, UNA CABEZA DE DISCO con el ojo (una tira roja), y ABAJO, ENTRE
+## LAS PATAS, EL NÚCLEO, su punto débil (el usuario: «lo único que tiene como armamento son los tentáculos y el ojo… se
+## elimina todo lo de la rendija»; «el punto débil sea básicamente ir caminando y sacarle el núcleo que queda como abajo,
+## entre las piernas… te la jugás, no tenés que saltar desde ningún lado»). Hecha bola, la cabeza y el núcleo se meten.
 ##
 ## SE MUEVE COMO LA MECA SIMPLIFICADA (ver KinematicMover): el controlador de personaje del motor, con un cilindro que mira
 ## sólo lo fijo del mundo (PhysicsLayers.FIXED), del piso a lo alto de la bola. Contra lo suelto y los personajes, la
@@ -19,29 +20,19 @@ extends CharacterBody3D
 ##     bajar la bola, porque el IK de los tentáculos es como que actúa solo»).
 ## Es MÁS DEL DOBLE DE LA MECA («quiero que sea más grande que la meca… por lo menos el doble»): la bola mide 30 m y su
 ## techo queda a 35 m (el cubo de la meca, 18 m). Las patas son gruesas y cortas, para que vaya cerca del piso.
-##
-## LA RENDIJA VA DE ARRIBA A ABAJO, de adelante hacia atrás por arriba: el cañón va a subir y bajar por ella (adelante, al
-## cielo). Para apuntar de costado gira la bola entera, con las patas (el usuario: «la rendija es en la otra dirección, si
-## quiere rotar en y, va a usar las piernas»).
 
-## LA FORMA SON PERILLAS (BallBossSettings, pestaña Forma; 14/11/2026): el radio, el casco y la rendija (ancha y poco
-## hundida; el usuario: «la rendija más gruesa y menos indentada»), los tentáculos y el cañón. Se arma al nacer y se
-## rearma al guardar el F1 (`rebuild`).
+## LA FORMA SON PERILLAS (BallBossSettings, pestaña Forma; 14/11/2026): el radio, la cabeza, el núcleo y los tentáculos.
+## Se arma al nacer y se rearma al guardar el F1 (`rebuild`).
 
 ## ── LO QUE SE LE PIDE ──
 var move := Vector2.ZERO
 var crouch := false
 var jump := false
 var aim_yaw := 0.0
-## Hacia dónde apunta el cañón por la rendija (radianes: 0 adelante, positivo para arriba, da la vuelta entera).
-var aim_pitch := 0.0
-## Los tiros (de a un toque): el simple, derecho adonde apunta, y los del cielo, uno tras otro (ver BallCannon).
-var fire := false
 ## Hecha bola (ver BallRoll): mete las patas y rueda. Poseída, Shift lo cambia.
 var curl := false
 ## El barrido con las paletas (de a un toque; ver BallLegs). Poseída, la Q.
 var sweep := false
-var barrage := false
 
 ## ── LO QUE MIDE ──
 var grounded := false
@@ -49,7 +40,6 @@ var grounded := false
 var crouched := 0.0
 var center_height := 20.0
 var legs: BallLegs = null
-var cannon: BallCannon = null
 var roll := BallRoll.new()
 ## LA ARENA (BossArena): el círculo del que no sale. Sin arena, anda por donde sea.
 var arena: BossArena = null
@@ -59,11 +49,9 @@ var radius := 15.0
 var _yaw := 0.0
 var _yaw_speed := 0.0
 var _jump_was := false
-var _fire_was := false
 var _shift_was := false
 var _sweep_was := false
 var _was_rolling := false
-var _barrage_was := false
 var _cylinder := CylinderShape3D.new()
 var _holder: CollisionShape3D = null
 var _ball: AnimatableBody3D = null
@@ -72,6 +60,8 @@ var _chase_yaw := 0.0
 var _reach := 16.0
 var _shell: MeshInstance3D = null
 var _sphere: CollisionShape3D = null
+var _head: Node3D = null
+var _core: Node3D = null
 
 
 func _init() -> void:
@@ -105,10 +95,6 @@ func _ready() -> void:
 	# es el doble). Él no se choca con su propia bola.
 	PhysicsLayers.mark_fixed(_ball)
 	add_collision_exception_with(_ball)
-	cannon = BallCannon.new()
-	cannon.name = "Cañón"
-	_ball.add_child(cannon)
-	cannon.build(BallBossSettings.current, radius, _slit(BallBossSettings.current), BallBossSettings.current.slit_depth)
 	legs = BallLegs.new()
 	add_child(legs)
 	legs.place_now(BallBossSettings.current, _ball_place().origin, _yaw, radius)
@@ -121,31 +107,77 @@ func _measure(k: BallBossSettings) -> void:
 	_reach = k.radius + k.reach_margin
 
 
-## El ancho de la rendija (m): 2·radio·sen de media rendija (cada franja abarca 180° / franjas).
-func _slit(k: BallBossSettings) -> float:
-	var bands := maxi(k.shell_bands, 4)
-	return 2.0 * radius * sin(PI * clampi(k.slit_bands, 2, bands - 2) * 0.5 / bands)
-
-
-## LA BOLA DE ARCILLA: el casco low poly con la rendija hundida, que le da toda la vuelta de arriba a abajo, con su fondo
-## oscuro (BallShell), y su esfera para chocar. El cañón (BallCannon) va metido en ella. Rearmándola, saca lo de antes.
+## LA BOLA DE ARCILLA: una esfera lisa, su esfera para chocar, la cabeza de disco con el ojo y el núcleo de abajo (los
+## dos, aparte: no giran con la bola). Rearmándola, saca lo de antes.
 func _dress(k: BallBossSettings) -> void:
-	if _sphere != null:
-		_sphere.queue_free()
-		_shell.queue_free()
+	for old in [_sphere, _shell, _head, _core]:
+		if old != null:
+			old.queue_free()
 	_sphere = CollisionShape3D.new()
 	var sphere := SphereShape3D.new()
 	sphere.radius = radius
 	_sphere.shape = sphere
 	_ball.add_child(_sphere)
-	# Las franjas, pares, y la rendija, par y con casco a los dos lados.
-	var bands := maxi(k.shell_bands + k.shell_bands % 2, 4)
-	var slit := clampi(k.slit_bands + k.slit_bands % 2, 2, bands - 2)
-	_shell = MeshInstance3D.new()
-	_shell.mesh = BallShell.mesh(radius, bands, slit, k.shell_sides, k.slit_depth, k.shell_smooth)
-	_shell.set_surface_override_material(0, Clay.material(Clay.METAL.darkened(0.05)))
-	_shell.set_surface_override_material(1, Clay.material(Clay.DARK.darkened(0.4)))
-	_ball.add_child(_shell)
+	_shell = Clay.sphere(_ball, radius, Vector3.ZERO, Clay.METAL.darkened(0.05))
+	(_shell.mesh as SphereMesh).radial_segments = 48
+	(_shell.mesh as SphereMesh).rings = 24
+	# LA CABEZA: un disco arriba, adelante, con el ojo como una tira roja recortada en su frente (como la Tenaza).
+	_head = Node3D.new()
+	_head.name = "Disco del ojo"
+	_head.top_level = true
+	add_child(_head)
+	Clay.cylinder(_head, k.head_radius, k.head_height, Vector3.ZERO, Clay.METAL.lightened(0.1))
+	Clay.cylinder(_head, k.head_radius + 0.25, 0.6, Vector3.DOWN * k.head_height * 0.5, Clay.DARK)
+	var red := BallBoss._glow(Color(1.0, 0.12, 0.08))
+	for i in 13:
+		var angle := deg_to_rad(-60.0 + i * 10.0)
+		var out := Vector3(sin(angle), 0.0, -cos(angle))
+		var bit := Clay.box(_head, Vector3(k.head_radius * 2.0 * sin(deg_to_rad(5.0)) + 0.08, k.head_height * 0.28, 0.3),
+			out * (k.head_radius - 0.05) + Vector3.UP * k.head_height * 0.08, red.albedo_color)
+		bit.basis = Basis.looking_at(out, Vector3.UP)
+		bit.material_override = red
+	# EL NÚCLEO: abajo, entre las patas, colgado de la bola; brilla.
+	_core = Node3D.new()
+	_core.name = "Núcleo"
+	_core.top_level = true
+	add_child(_core)
+	var glow := Clay.sphere(_core, k.core_radius, Vector3.ZERO, Color(1.0, 0.5, 0.1))
+	glow.material_override = BallBoss._glow(Color(1.0, 0.5, 0.1))
+	Clay.cylinder(_core, k.core_radius * 0.5, 4.0, Vector3.UP * (k.core_radius + 1.5), Clay.DARK)
+	_place_parts()
+
+
+## Un material que brilla, de `color` (uno por pieza: nada estático, que al cerrar Godot se caía).
+static func _glow(color: Color) -> StandardMaterial3D:
+	var made := StandardMaterial3D.new()
+	made.albedo_color = color
+	made.emission_enabled = true
+	made.emission = color
+	made.emission_energy_multiplier = 2.2
+	return made
+
+
+## LA CABEZA Y EL NÚCLEO en su lugar: la cabeza arriba y adelante de la bola (asoma al frente, como una cara), mirando
+## adonde mira; el núcleo debajo, sin tocar el piso. Hecha bola, los dos se meten adentro.
+func _place_parts() -> void:
+	if _head == null:
+		return
+	var k := BallBossSettings.current
+	var center := _ball_place().origin
+	var tuck := smoothstep(0.0, 0.6, roll.fold)
+	var facing := Basis(Vector3.UP, _yaw)
+	var top := center + facing * Vector3(0.0, radius * 0.8, -radius * 0.45)
+	_head.global_transform = Transform3D(facing, top.lerp(center, tuck))
+	_head.visible = tuck < 0.9
+	var low := center + Vector3.DOWN * (radius + k.core_radius + 1.0)
+	low.y = maxf(low.y, global_position.y + k.core_radius + 0.8)
+	_core.global_transform = Transform3D(facing, low.lerp(center, tuck))
+	_core.visible = tuck < 0.9
+
+
+## Dónde está el núcleo (mundo): el punto débil.
+func core() -> Vector3:
+	return _core.global_position if _core != null else global_position
 
 
 ## LA REARMA con la pestaña Forma de sus perillas, donde está: la bola, el cañón y las patas, y los pies a su lugar.
@@ -153,7 +185,6 @@ func rebuild() -> void:
 	var k := BallBossSettings.current
 	_measure(k)
 	_dress(k)
-	cannon.build(k, radius, _slit(k), k.slit_depth)
 	legs.rebuild(k)
 	_fit(k)
 	put(Transform3D(Basis(Vector3.UP, _yaw), global_position))
@@ -199,13 +230,7 @@ func _physics_process(delta: float) -> void:
 	roll.turn_ball(flat, radius, delta)
 	_ball.global_transform = _ball_place()
 	roll.strike(k, get_world_3d().direct_space_state, _ball_place().origin, radius, flat)
-	cannon.step(k, aim_pitch, delta, roll.fold)
-	if fire and not _fire_was and roll.fold <= 0.0:
-		cannon.shoot(k)
-	if barrage and not _barrage_was and roll.fold <= 0.0:
-		cannon.barrage(k, _barrage_targets(k))
-	_fire_was = fire
-	_barrage_was = barrage
+	_place_parts()
 	if roll.fold <= 0.0:
 		legs.step(k, delta, _ball_place().origin, _yaw, flat, grounded, radius)
 	else:
@@ -257,21 +282,6 @@ func _turn(k: BallBossSettings, delta: float, top_speed: float) -> void:
 	_yaw += _yaw_speed * delta
 
 
-## DÓNDE CAEN LOS DEL CIELO: en fila hacia adelante, en el piso. *Cuando la maneje la computadora: al jugador y adonde
-## va.*
-func _barrage_targets(k: BallBossSettings) -> Array[Vector3]:
-	var out: Array[Vector3] = []
-	var ahead := Basis(Vector3.UP, _yaw) * Vector3.FORWARD
-	for i in k.barrage_count:
-		var point := global_position + ahead * (k.barrage_distance + i * k.barrage_spacing)
-		var ray := PhysicsRayQueryParameters3D.create(point + Vector3.UP * 100.0, point + Vector3.DOWN * 100.0,
-			PhysicsLayers.FIXED)
-		ray.exclude = [_ball.get_rid()]
-		var hit := get_world_3d().direct_space_state.intersect_ray(ray)
-		out.append(hit["position"] if not hit.is_empty() else point)
-	return out
-
-
 ## LA PONE en `where` (el punto del piso debajo de su centro), quieta, con los pies en su lugar.
 func put(where: Transform3D) -> void:
 	global_position = where.origin
@@ -300,9 +310,6 @@ func _read() -> void:
 	if shift and not _shift_was:
 		curl = not curl
 	_shift_was = shift
-	var aiming := Input.mouse_mode == Input.MOUSE_MODE_CAPTURED
-	fire = aiming and Input.is_mouse_button_pressed(MOUSE_BUTTON_LEFT)
-	barrage = aiming and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -310,7 +317,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not _driving or motion == null or Input.mouse_mode != Input.MOUSE_MODE_CAPTURED:
 		return
 	aim_yaw -= motion.relative.x * 0.0025 * GameOptions.mouse_sensitivity
-	aim_pitch = wrapf(aim_pitch - motion.relative.y * 0.0025 * GameOptions.mouse_sensitivity, -PI, PI)
 	get_viewport().set_input_as_handled()
 
 
@@ -331,8 +337,6 @@ func possess_name() -> String:
 func possess_controls() -> PackedStringArray:
 	return PackedStringArray([
 		"W/S adelante y atrás · A/D de costado · mouse gira (con tope)",
-		"mouse arriba y abajo: el cañón corre por la rendija (da la vuelta entera)",
-		"clic izquierdo: el tiro simple, adonde apunta · clic derecho: misiles del cielo, uno tras otro",
 		"Q: el barrido, las paletas giran y dan la vuelta alrededor",
 		"Ctrl se agacha (baja la bola) · espacio salta (sólo para arriba)",
 		"Shift: hecha bola (las patas adentro) y otra vez se abre · rodando: W acelera, S frena, A/D y el mouse doblan",
@@ -340,8 +344,8 @@ func possess_controls() -> PackedStringArray:
 
 
 func possess_status() -> String:
-	return "%.1f m/s · centro a %.1f m%s · %d pasos · cañón a %.0f°%s" % [Vector2(velocity.x, velocity.z).length(),
-		center_height, "" if grounded else " · en el aire", legs.steps, rad_to_deg(cannon.pitch),
+	return "%.1f m/s · centro a %.1f m%s · %d pasos%s" % [Vector2(velocity.x, velocity.z).length(),
+		center_height, "" if grounded else " · en el aire", legs.steps,
 		(" · hecha bola, pegó %d" % roll.hits) if roll.fold > 0.0 else (" · barrido, pegó %d" % legs.sweep_hits
 		if legs.sweeping else "")]
 
@@ -356,8 +360,6 @@ func possess_end() -> void:
 	move = Vector2.ZERO
 	crouch = false
 	jump = false
-	fire = false
-	barrage = false
 	_shift_was = false
 	sweep = false
 
