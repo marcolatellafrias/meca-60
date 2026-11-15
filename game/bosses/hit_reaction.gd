@@ -54,6 +54,8 @@ var _land_what := ""
 var _flash := 0.0
 var _last := Vector3.ZERO
 var _hold := Vector3.ZERO
+## De cada pieza suelta inclinada: su pose de pie y cómo quedó inclinada (ver _lean).
+var _tilted := {}
 var _painted: Array[MeshInstance3D] = []
 var _white := StandardMaterial3D.new()
 
@@ -186,6 +188,7 @@ func clear() -> void:
 	state = State.FREE
 	_flash = 0.0
 	_paint(false)
+	_tilted.clear()
 
 
 func _physics_process(delta: float) -> void:
@@ -223,6 +226,7 @@ func _physics_process(delta: float) -> void:
 			_lean(LIE * (1.0 - up * up * (3.0 - 2.0 * up)))
 			if up >= 1.0:
 				state = State.FREE
+				_tilted.clear()
 		State.FLYING:
 			_slide(_from.lerp(_to, t) + Vector3.UP * _arc * 4.0 * t * (1.0 - t))
 			_lean(LIE * 0.5 * sin(t * PI))
@@ -262,8 +266,10 @@ func _slide(point: Vector3) -> void:
 
 
 ## LA INCLINA `degrees` para el lado de `_away` (cae de espaldas al golpe), sobre el piso de sus pies: ENTERA, la caja
-## y las piezas sueltas de las piernas (`top_level`: la pelvis, cada pierna, los pies con choque), que su paso pone
-## aparte en el mundo. *Antes se inclinaba sólo la caja: el torso se salía de las piernas, que quedaban paradas.*
+## y todas sus piezas sueltas (`top_level`: la pelvis, las piernas, los pies con choque; de los brazos, sus piezas, que
+## cada brazo pone en el mundo, y que además caen con el peso), que se ponen aparte. Cada pieza se inclina desde SU POSE DE PIE: si este paso no se movió (un brazo que no se recalcula en
+## cada paso, como el cañón), desde la de antes, para no inclinarla dos veces. *La primera vez se inclinaba sólo la
+## caja (el torso se salía de las piernas); después, la caja y las piernas (los brazos quedaban en el aire).*
 func _lean(degrees: float) -> void:
 	var axis := Vector3.UP.cross(_away).normalized()
 	if axis == Vector3.ZERO:
@@ -272,11 +278,32 @@ func _lean(degrees: float) -> void:
 	var tilt := Transform3D(Basis(axis, deg_to_rad(degrees)), Vector3.ZERO)
 	var turn := Transform3D(Basis(), pivot) * tilt * Transform3D(Basis(), -pivot)
 	_body.global_transform = turn * _body.global_transform
-	# Las piernas (la pelvis, cada pierna, los pies con choque): las pone su paso desde el piso. Los brazos no: se
-	# ponen solos desde la caja, ya inclinada.
+	# LOS BRAZOS CAEN CON EL PESO: además, giran otro tanto sobre el pecho (ya inclinado), y quedan tirados por arriba
+	# de la cabeza (si no, apuntando adelante, la meca de espaldas los tenía al cielo).
+	var chest := _body.global_position
+	var limp := Transform3D(Basis(), chest) * tilt * Transform3D(Basis(), -chest) * turn
+	var pieces: Array[Node3D] = []
+	var arm_parts := {}
 	for piece: Node3D in _body.find_children("*", "Node3D", true, false):
-		if piece.top_level and (piece is MechLeg or piece is StompFeet or piece.get_parent() is BodyLegs):
-			piece.global_transform = turn * piece.global_transform
+		if not piece.top_level or piece is Label3D or piece is GPUParticles3D or piece is CPUParticles3D:
+			continue
+		if piece is MechArm:
+			# UN BRAZO se queda en el origen y pone sus piezas en el mundo en cada paso: se inclinan ellas.
+			for part in piece.get_children():
+				if part is Node3D:
+					pieces.append(part)
+					arm_parts[part] = true
+		else:
+			pieces.append(piece)
+	for piece in pieces:
+		var key := piece.get_instance_id()
+		var now := piece.global_transform
+		var standing := now
+		if _tilted.has(key) and now.is_equal_approx(_tilted[key][1]):
+			standing = _tilted[key][0]
+		var leaned := (limp if arm_parts.has(piece) else turn) * standing
+		piece.global_transform = leaned
+		_tilted[key] = [standing, leaned]
 
 
 ## El piso debajo de `point` (lo fijo); si no hay, el mismo punto.

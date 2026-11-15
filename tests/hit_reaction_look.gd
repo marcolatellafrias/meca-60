@@ -33,11 +33,11 @@ func _ready() -> void:
 	_eye.make_current()
 	await _wait(1.0)
 	await _shot("0_parada")
-	HitReaction.land(_mech, 10.0, "prueba", HitReaction.Kind.PUSH, Vector3.FORWARD, 10.0, _mech.global_position)
+	HitReaction.land(_mech, 10.0, "prueba", HitReaction.Kind.PUSH, Vector3.BACK, 10.0, _mech.global_position)
 	await _wait(0.05)
 	await _shot("1_empujada_blanca")
 	await _wait(0.6)
-	HitReaction.land(_mech, 10.0, "prueba", HitReaction.Kind.KNOCKDOWN, Vector3.FORWARD, 12.0, _mech.global_position)
+	HitReaction.land(_mech, 10.0, "prueba", HitReaction.Kind.KNOCKDOWN, Vector3.BACK, 12.0, _mech.global_position)
 	await _wait(0.25)
 	await _shot("2_cayendo")
 	await _wait(0.5)
@@ -57,6 +57,8 @@ func _measure() -> void:
 	var high := -INF
 	var lowest := ""
 	for piece: Node3D in _mech.find_children("*", "MeshInstance3D", true, false):
+		if not piece.is_visible_in_tree():
+			continue
 		if piece.global_position.y < low:
 			var top := piece.get_parent().get_parent() as Node3D
 			lowest = "%s visible %s · %s top_level %s script %s" % [_mech.get_path_to(piece), piece.is_visible_in_tree(),
@@ -66,6 +68,12 @@ func _measure() -> void:
 	print("lo más bajo: ", lowest)
 	print("tirada: la caja a %.1f m · las mallas de %.1f a %.1f m · el motor a %.1f m" % [_mech.global_position.y, low,
 		high, _mech.mover.global_position.y])
+	for arm: Node3D in _mech.find_children("*", "MechArm", true, false):
+		var top := -INF
+		for mesh: Node3D in arm.find_children("*", "MeshInstance3D", true, false):
+			if mesh.is_visible_in_tree():
+				top = maxf(top, mesh.global_position.y)
+		print("   brazo %s: lo más alto a %.1f m" % [arm.get_script().resource_path.get_file(), top])
 
 
 func _shot(name: String) -> void:
