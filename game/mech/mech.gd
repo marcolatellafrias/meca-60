@@ -89,7 +89,11 @@ func _build() -> void:
 		Clay.box(look, Vector3(size.x * 0.6, 0.5, 0.2), Vector3(0.0, size.y * 0.3, -size.z * 0.5 - 0.1), Clay.YELLOW)
 		_build_arms()
 		return
-	cabin = RoundCabin.new() if cabin_shape == Cabin.ROUND else MechCabin.new()
+	# La cuadrada, con su interior: el de escaleras (MechCabin) o el del centro octogonal con chanfles (ChamferCabin).
+	if cabin_shape == Cabin.ROUND:
+		cabin = RoundCabin.new()
+	else:
+		cabin = ChamferCabin.new() if CabinGrid.chamfered() else MechCabin.new()
 	cabin.mech = self
 	add_child(cabin)
 	_build_arms()

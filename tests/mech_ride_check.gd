@@ -3,6 +3,8 @@ extends Node
 ## IR ADENTRO DE LA MECA PÉNDULO, PROBADO POR CÓDIGO (unos 30 segundos): el jugador con cuerpo sube (la U), queda parado
 ## en el piso del medio, y se mira qué le pasa mientras la meca se corre, salta y se cae. Con ventana, capturas.
 ##   tools/godot_ventana.sh res://tests/pendulum_ride_check.tscn -- --salida=C:/carpeta
+## `--interior=0|1`: la cuadrada con el interior de escaleras o el del centro octogonal (sin eso, el guardado). En el
+## octogonal, la tarima y su escalera son la tarima del medio y sus escalones (ver ChamferCabin).
 
 var _folder := ""
 var _mech: Mech = null
@@ -13,6 +15,10 @@ func _ready() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--salida="):
 			_folder = argument.trim_prefix("--salida=")
+		if argument.begins_with("--interior="):
+			var form := CabinGrid.current()
+			form.interior = int(argument.trim_prefix("--interior="))
+			CabinGrid.shape(form)
 	var sandbox := (load("res://game/sandbox/sandbox.tscn") as PackedScene).instantiate() as DesignSandbox
 	add_child(sandbox)
 	await _frames(10)
@@ -47,8 +53,11 @@ func _ready() -> void:
 		MotionFrame.frame_of(_body) == _mech.cabin.frame, player.ragdoll_util.is_active])
 	# LA TARIMA Y SU ESCALERA (ver MechCabin): parado arriba de la tarima; y desde el pie de la escalera de la derecha,
 	# caminando hacia atrás, sube a la tarima.
-	var top_at := CabinGrid.floor_top() + CabinGrid.PLATFORM_HEIGHT
+	var octagonal := CabinGrid.chamfered()
+	var top_at := CabinGrid.floor_top() + (ChamferCabin.deck_tall() if octagonal else CabinGrid.PLATFORM_HEIGHT)
 	var on_top := Vector3(-1.0, top_at + 0.1, CabinGrid.INNER - CabinGrid.TRAMA)
+	if octagonal:
+		on_top = Vector3(ChamferCabin.deck_reach() * 0.6, top_at + 0.1, 0.0)
 	player.place_at(_mech.global_transform * on_top, _mech.yaw())
 	await _seconds(1.5)
 	print("ARRIBA DE LA TARIMA: en el marco %s · pies a %.2f m de la tarima · caído %s" % [
@@ -56,6 +65,8 @@ func _ready() -> void:
 	await _shot("1b_tarima")
 	var stair_x := CabinGrid.INNER - CabinGrid.STAIR_CELLS * CabinGrid.TRAMA * 0.5
 	var foot := Vector3(stair_x, CabinGrid.floor_top() + 0.1, CabinGrid.platform_front() - Stairs.run_for(CabinGrid.PLATFORM_HEIGHT) - 0.6)
+	if octagonal:
+		foot = Vector3(0.5, CabinGrid.floor_top() + 0.1, -ChamferCabin.deck_foot() - 0.4)
 	player.place_at(_mech.global_transform * foot, _mech.yaw() + PI)
 	await _seconds(1.0)
 	var key := InputEventKey.new()
@@ -71,7 +82,8 @@ func _ready() -> void:
 	Input.parse_input_event(key)
 	await _seconds(0.5)
 	print("SUBIÓ LA ESCALERA caminando: quedó a z = %.1f (la tarima empieza en %.1f) · pies a %.2f m de la tarima · caído %s" % [
-		_local().z, CabinGrid.platform_front(), _feet() - top_at, player.ragdoll_util.is_active])
+		_local().z, -ChamferCabin.deck_reach() if octagonal else CabinGrid.platform_front(), _feet() - top_at,
+		player.ragdoll_util.is_active])
 	await _shot("1c_escalera")
 	_mech.cabin.board()
 	await _seconds(1.5)

@@ -20,12 +20,6 @@ const FLOOR := Color(0.62, 0.63, 0.65)
 const DECK := Color(0.7, 0.71, 0.73)
 ## Cuántos puntos por lado tienen las placas y los cilindros.
 const PER_SIDE := 4
-## EL SOMBREADO, COMO EL AUTO SMOOTH DE BLENDER (el usuario, 15/11/2026: «veo que tienen shade smooth, debería ser auto
-## smooth»): cada cara curva (la de afuera de un cilindro, la de adentro, el borde de un hueco redondo) es un grupo
-## suave; las tapas y los cantos, planos, con su arista marcada. Ver SurfaceTool.set_smooth_group.
-const FLAT := 4294967295
-const SMOOTH_IN := 1
-const SMOOTH_OUT := 2
 
 
 func top_seat() -> Vector3:
@@ -261,58 +255,6 @@ func board() -> void:
 
 ## ── LAS PIEZAS ───────────────────────────────────────────────────────────────────────────────────────────────────
 
-func _v(point: Vector2, y: float) -> Vector3:
-	return Vector3(point.x, y, point.y)
-
-
-## Una forma de choque convexa en `interior`.
-func _convex(points: PackedVector3Array) -> void:
-	var shape := CollisionShape3D.new()
-	var hull := ConvexPolygonShape3D.new()
-	hull.points = points
-	shape.shape = hull
-	interior.add_child(shape)
-
-
-## Formas de choque de un anillo entre `outer` y `inner` (de la misma cantidad de puntos), de `bottom` a `top`.
-func _ring_shapes(outer: PackedVector2Array, inner: PackedVector2Array, bottom: float, top: float) -> void:
-	for i in outer.size():
-		var j := (i + 1) % outer.size()
-		_convex(PackedVector3Array([_v(outer[i], bottom), _v(outer[j], bottom), _v(inner[i], bottom), _v(inner[j], bottom),
-			_v(outer[i], top), _v(outer[j], top), _v(inner[i], top), _v(inner[j], top)]))
-
-
-## UNA PLACA entre el borde `outer` y el `inner` (de la misma cantidad de puntos), de `bottom` a `top`: las dos caras y
-## los dos cantos. El canto de afuera, suave si `round_outer` (un círculo) o con sus aristas (un polígono); el de
-## adentro, el hueco del ascensor, siempre redondo.
-func _plate(outer: PackedVector2Array, inner: PackedVector2Array, bottom: float, top: float, color: Color,
-		round_outer := false) -> MeshInstance3D:
-	var tool := SurfaceTool.new()
-	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for i in outer.size():
-		var j := (i + 1) % outer.size()
-		_quad(tool, _v(inner[i], top), _v(inner[j], top), _v(outer[j], top), _v(outer[i], top), FLAT)
-		_quad(tool, _v(inner[i], bottom), _v(outer[i], bottom), _v(outer[j], bottom), _v(inner[j], bottom), FLAT)
-		_quad(tool, _v(outer[i], bottom), _v(outer[i], top), _v(outer[j], top), _v(outer[j], bottom),
-			SMOOTH_OUT if round_outer else FLAT)
-		_quad(tool, _v(inner[i], bottom), _v(inner[j], bottom), _v(inner[j], top), _v(inner[i], top),
-			SMOOTH_IN if inner_round(inner) else FLAT)
-	return _mesh(tool, color)
-
-
-## Si un borde es redondo (el hueco del ascensor) o un polígono (el borde de la tarima, que también va de hueco del
-## escalón): todos sus puntos a la misma distancia de su centro.
-func inner_round(edge: PackedVector2Array) -> bool:
-	var center := Vector2.ZERO
-	for point in edge:
-		center += point
-	center /= edge.size()
-	var reach := edge[0].distance_to(center)
-	for point in edge:
-		if absf(point.distance_to(center) - reach) > 0.01:
-			return false
-	return true
-
 
 ## Una banda de cilindro de `r0` a `r1`, de los ángulos `a0` a `a1` (0 al frente, positivo a la derecha), de `y0` a `y1`.
 func _band(r0: float, r1: float, a0: float, a1: float, y0: float, y1: float, color: Color) -> MeshInstance3D:
@@ -333,19 +275,3 @@ func _band(r0: float, r1: float, a0: float, a1: float, y0: float, y1: float, col
 	for b: float in [a0, a1]:
 		_quad(tool, RoundGrid.at(r0, b, y0), RoundGrid.at(r1, b, y0), RoundGrid.at(r1, b, y1), RoundGrid.at(r0, b, y1), FLAT)
 	return _mesh(tool, color)
-
-
-func _quad(tool: SurfaceTool, a: Vector3, b: Vector3, c: Vector3, d: Vector3, group: int) -> void:
-	tool.set_smooth_group(group)
-	for point: Vector3 in [a, b, c, a, c, d]:
-		tool.add_vertex(point)
-
-
-func _mesh(tool: SurfaceTool, color: Color) -> MeshInstance3D:
-	tool.generate_normals()
-	var part := MeshInstance3D.new()
-	part.mesh = tool.commit()
-	var paint := Clay.material(color).duplicate() as StandardMaterial3D
-	paint.cull_mode = BaseMaterial3D.CULL_DISABLED
-	part.material_override = paint
-	return part

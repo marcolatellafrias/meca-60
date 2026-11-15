@@ -24,7 +24,30 @@ limpio»).*
   *El usuario eligió esta escala entre cuatro maquetas (14/11/2026: celdas de 63 a 50 cm): «me parece demasiado
   grande todo… quisiera… un sentido de escala un poco más acorde».*
 
-## Qué hay adentro (`MechCabin`)
+## Dos interiores: con chanfles (el de ahora) o con escaleras
+Desde el 15/11/2026 la cuadrada tiene **dos interiores**, a elegir en el F2 (`CabinShape.interior`). El primero que se
+arma es **el del centro octogonal con chanfles** (`ChamferCabin`, el usuario: «tiene que ser en realidad la nueva que
+hicimos… con chamfers y tarima octogonal»): la planta 1 de la maqueta de los chanfles (`tests/chamfer_cabin_look.tscn`)
+en la meca de verdad.
+- **La caja con las cuatro esquinas cortadas** (`corner_cells`, en celdas chicas; 18: 71 cm). Adelante, el vidrio: el
+  frente, los chanfles de adelante y los costados hasta donde diga el vidrio de los costados, con el zócalo abajo.
+  Atrás, metal. **La cabeza es un perfil** (`ChamferCabin._top`, la plana con el corte o la rampa): las paredes y el
+  techo se parten donde el perfil dobla y donde termina el vidrio, así cada paño es plano. El marco sigue la misma
+  regla (todo borde de un paño), una sola barra por arista; los parantes, entre la silla del medio y cada brazo.
+- **Al medio, la tarima octogonal** (`deck_cells`, de su centro a cada lado) con escalones alrededor (`deck_steps`, de
+  15 cm de alto y una pisada de escalera); para la cápsula, una rampa de cada lado. **Adentro, corrido atrás
+  (`lift_back_cells`), el ascensor**, redondo: su radio es el de la forma o menos, si no entra (deja 12 cm de tarima
+  atrás). Atraviesa la pelvis, como en la redonda: después se arregla. Arriba, delante del ascensor, el movimiento.
+- **Adelante, tres sillas sin tablero** (lo que aprendió la redonda): la del medio a 1,2 celdas de trama del vidrio;
+  los brazos un paso atrás (2,2) y a 2,3 de los costados. **Sin puestos por ahora**: los de `SeatStation` (sesión
+  Tableros) se apoyan en el tablero.
+- **Atrás**: dos kits en cada chanfle de atrás; las municiones arriba y la batería al medio en la pared de atrás.
+- Las placas con hueco y sus choques (`_plate`, `_ring_shapes`, `_convex`) son de `MechCabin`; las usan la redonda y
+  ésta.
+
+El otro, **el de la tarima atrás con escaleras**, es el de abajo.
+
+## Qué hay adentro con escaleras (`MechCabin`)
 - **Adelante, el vidrio, sin marcos**: el frente y los costados hasta la mitad, de piso a techo, y la arista de arriba
   del frente cortada a 45° (**dos celdas de trama**), también de vidrio. Paños planos que se tocan justo en las aristas
   (el usuario: «toda esa zona de cristal… el suelo no… en la esquina superior delantera, tenga un chamfer»). Atrás,
@@ -87,7 +110,9 @@ En las filas de la meca, **F2** (`CabinShapePanel`), en cuatro pestañas (el cor
   la tarima** (de a un escalón; las escaleras lo siguen). Arriba, **la cabeza**: plana con el corte, o en rampa.
   **Cada cabeza muestra sus perillas** (el usuario: «cuando cambie la opción cambien los sliders»): en rampa no están
   el corte ni el vidrio del techo (la rampa llega hasta donde el de los costados) y aparece **el alto del frente**; el
-  alto libre pasa a ser **el de atrás**. El zócalo, en **El vidrio**.
+  alto libre pasa a ser **el de atrás**. El zócalo, en **El vidrio**. Y **el interior**: con escaleras, o el centro
+  octogonal con chanfles; cada uno con lo suyo (el octogonal no tiene el alto de la tarima de atrás ni el ascensor
+  cuadrado; tiene el corte de las esquinas, la tarima, los escalones y lo corrido del ascensor).
   Las sillas, los kits, la batería y la munición se acomodan solos (los kits, de 1,2 celdas de trama o menos si no
   entran; la munición, de 1,6).
 - **Las sillas**: la altura de los ojos que buscan.
@@ -103,7 +128,9 @@ medidas que salen y la altura de la caja sobre el piso, que sale de las piernas.
   desde la silla del movimiento y desde arriba sin techo; escribe las medidas. Afuera, también de perfil, de tres cuartos
   de atrás y de frente de cerca. La cabeza: `--cabeza=1 --frente=73 --alto=96 --zocalo=12`.
 - `tests/cabin_shape_check.tscn`: el panel rearma las mecas sin tocar el resto de las parcelas.
-- `tests/mech_ride_check.tscn`: caminar adentro, el ascensor, la tarima y la escalera, con la meca en movimiento.
+- `tests/mech_ride_check.tscn`: caminar adentro, el ascensor, la tarima y la escalera, con la meca en movimiento
+  (`--interior=0|1`; en el octogonal, la tarima del medio y sus escalones). Con los dos interiores, el de adentro se
+  cae cuando a la meca la empujan fuerte: es lo de siempre, no del interior.
 - `tests/two_cabins_look.tscn`: la maqueta de arcilla de la cabina, en cuatro escalas (de donde salió esta).
 
 ## Lo que sigue

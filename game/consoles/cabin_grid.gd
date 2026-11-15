@@ -67,6 +67,14 @@ static var HEAD := 0
 static var FRONT_CELLS := 73
 ## EL ZÓCALO abajo del vidrio, en celdas chicas.
 static var SILL_CELLS := 0
+## EL INTERIOR (ver CabinShape.interior, ChamferCabin): 0 la tarima atrás con escaleras; 1 el centro octogonal con
+## chanfles (`chamfered`). Sus medidas, en celdas chicas: el corte de las esquinas, la tarima y lo corrido atrás del
+## ascensor; y cuántos escalones.
+static var INTERIOR := 1
+static var CORNER_CELLS := 18
+static var DECK_CELLS := 29
+static var DECK_STEPS := 3
+static var LIFT_BACK_CELLS := 13
 static var LIFT_CELLS := 26
 ## Hasta dónde llega el vidrio, desde el frente de adentro, en celdas de trama: el de los costados y el del techo.
 static var SIDE_GLASS := 6
@@ -127,6 +135,11 @@ static func shape(saved: CabinShape) -> void:
 	HEIGHT_CELLS = maxi(saved.height_cells, 60)
 	CHAMFER = clampi(saved.chamfer, 0, ACROSS / 2)
 	HEAD = clampi(saved.head, 0, 1)
+	INTERIOR = clampi(saved.interior, 0, 1)
+	CORNER_CELLS = clampi(saved.corner_cells, 8, 40)
+	DECK_CELLS = clampi(saved.deck_cells, 18, 60)
+	DECK_STEPS = clampi(saved.deck_steps, 1, 5)
+	LIFT_BACK_CELLS = clampi(saved.lift_back_cells, 0, 30)
 	FRONT_CELLS = clampi(saved.front_height_cells, 40, HEIGHT_CELLS)
 	SILL_CELLS = clampi(saved.sill_cells, 0, (FRONT_CELLS if HEAD == 1 else HEIGHT_CELLS) - 30)
 	# En rampa, el vidrio de los costados llega por lo menos a una celda (es donde termina la rampa).
@@ -157,6 +170,11 @@ static func current() -> CabinShape:
 	now.height_cells = HEIGHT_CELLS
 	now.chamfer = CHAMFER
 	now.head = HEAD
+	now.interior = INTERIOR
+	now.corner_cells = CORNER_CELLS
+	now.deck_cells = DECK_CELLS
+	now.deck_steps = DECK_STEPS
+	now.lift_back_cells = LIFT_BACK_CELLS
 	now.front_height_cells = FRONT_CELLS
 	now.sill_cells = SILL_CELLS
 	now.lift_radius = LIFT_CELLS
@@ -181,6 +199,11 @@ static func current() -> CabinShape:
 ## Si la cabeza va en rampa (ver CabinShape.head).
 static func ramp() -> bool:
 	return HEAD == 1
+
+
+## Si el interior es el del centro octogonal con chanfles (ver ChamferCabin).
+static func chamfered() -> bool:
+	return INTERIOR == 1
 
 
 ## El zócalo abajo del vidrio (m).

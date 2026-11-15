@@ -11,6 +11,18 @@ extends Resource
 ## usuario, 15/11/2026, de la maqueta de los chanfles, la cabeza 2: «me gusta la segunda… como una opción más, no como
 ## reemplazo»). Cada una muestra sus perillas en el F2.
 @export_enum("plana con el corte", "en rampa") var head := 0
+## EL INTERIOR: el de la tarima atrás con dos escaleras (el primero), o EL CENTRO OCTOGONAL CON CHANFLES: las cuatro
+## esquinas de la caja cortadas, la tarima octogonal al medio con escalones alrededor y el ascensor adentro, la silla
+## del medio más adelante (el usuario, 15/11/2026: «tiene que ser en realidad la nueva… con chamfers y tarima
+## octogonal»; ChamferCabin). Cada uno muestra sus perillas en el F2.
+@export_enum("tarima atrás con escaleras", "centro octogonal con chanfles") var interior := 1
+## CON CHANFLES: el corte de las cuatro esquinas, de cada lado de la esquina, por dentro, en celdas chicas (18: 71 cm).
+@export_range(8, 40, 1) var corner_cells := 18
+## CON CHANFLES: la tarima, de su centro a cada lado, en celdas chicas (29: 1,14 m); cuántos escalones (de 15 cm de
+## alto y 31 de pisada) suben a ella, contando la tarima; y cuánto atrás del centro va el ascensor (13: 51 cm).
+@export_range(18, 60, 1) var deck_cells := 29
+@export_range(1, 5, 1) var deck_steps := 3
+@export_range(0, 30, 1) var lift_back_cells := 13
 ## Una celda de la trama, en celdas chicas de 3,9 cm (13: 51 cm).
 @export_range(8, 20, 1) var cell := 13
 ## Cuántas celdas de trama por lado (la planta es cuadrada; siempre par; los tres puestos de adelante piden 12).

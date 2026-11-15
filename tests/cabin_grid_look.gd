@@ -28,7 +28,7 @@ func _ready() -> void:
 				_cells.append(int(each))
 		for knob: String in ["costados:side_glass", "techo:roof_glass", "tarima:platform_height", "marco:frame_kind",
 				"ascensor_cuadrado:lift_square", "cabeza:head", "frente:front_height_cells", "alto:height_cells", "zocalo:sill_cells",
-				"chanfle:chamfer"]:
+				"chanfle:chamfer", "interior:interior"]:
 			var parts := knob.split(":")
 			if argument.begins_with("--%s=" % parts[0]):
 				_changes[parts[1]] = float(argument.trim_prefix("--%s=" % parts[0]))
@@ -103,7 +103,7 @@ func _ready() -> void:
 		for dummy in find_children("*", "BoneInstantiator", true, false):
 			(dummy as Node3D).visible = false
 		_title.text = "Desde la silla del movimiento"
-		var top := CabinGrid.top_seat()
+		var top := _mech.cabin.top_seat()
 		_look(top + Vector3(0.0, 1.25, 0.1), top + Vector3(0.0, 0.2, -4.0), 80.0)
 		shots.append(await _grab())
 		_title.text = "Desde arriba, sin techo"
@@ -125,7 +125,7 @@ func _hide_left_and_roof() -> Array[Node3D]:
 		var mesh := part as MeshInstance3D
 		if mesh == null:
 			continue
-		if mesh.name.begins_with("Vidrio") or mesh.position.x < -CabinGrid.HALF + 0.5 or mesh.position.y > CabinGrid.ceiling():
+		if mesh.name.begins_with("Vidrio") or mesh.name.begins_with("Techo") or mesh.position.x < -CabinGrid.HALF + 0.5 or mesh.position.y > CabinGrid.ceiling():
 			mesh.visible = false
 			hidden.append(mesh)
 	if not _mech.arms.is_empty():
