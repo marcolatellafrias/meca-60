@@ -35,8 +35,13 @@ limpio»).*
   15/11/2026: «yo diría que es con el límite, así tenemos más consistencia»). Los parantes van en las divisiones del
   tablero (suben por el frente, doblan por el corte y siguen por el vidrio del techo) y en el medio de cada costado:
   donde nadie mira. Las ideas que se descartaron están en `tests/glass_frame_ideas_look.tscn`.
-- **Adelante, un tablero corrido** de pared a pared, de una celda de fondo, con **tres puestos de cuatro celdas**: el
-  brazo izquierdo, la espalda al medio y el brazo derecho (`front_seats`).
+- **Adelante, el tablero de los tres puestos** (el brazo izquierdo, la espalda al medio y el brazo derecho): una franja
+  de pared a pared, de una celda de fondo, y **cuatro divisores** que salen hacia atrás hasta 2,5 celdas, todos de una
+  celda de ancho, también los de las puntas contra la pared (el usuario, 15/11/2026, por la sesión Tableros: «es
+  exactamente eso»; de las puntas a la mitad, «queda raro»). Entre ellos, **el hueco de cada puesto** (lo que dejan los
+  divisores, repartido en tres: con 12 celdas por lado, de 2,67), con la silla adentro, en su medio (`front_seats`). Un
+  puesto cerrado se rellena hasta la punta de los divisores y queda parejo (`CabinGrid.OPEN_POSTS`; todavía no lo cambia
+  nada: con dos jugadores, abierto sólo el del medio). Los módulos de cada puesto van en la franja (sesión Tableros).
 - **Atrás, una tarima de 1,2 m**, de pared a pared y dos celdas de fondo: arriba, al medio, **el movimiento**
   (`top_seat`), que ve a todos y por el vidrio por encima de ellos. El puesto de atrás se lee con más jerarquía y el que
   mueve la meca es el que ve todo (el usuario, 14/11/2026).

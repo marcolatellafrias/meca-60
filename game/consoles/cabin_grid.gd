@@ -16,8 +16,11 @@ extends RefCounted
 ##     marcos; la arista de arriba del frente, cortada a 45° (`CHAMFER` celdas de trama), también de vidrio, y el techo
 ##     de vidrio hasta `ROOF_GLASS` celdas (el corte, nada más). Cada uno, aparte (el usuario, 14/11/2026: «también
 ##     tengo que elegir hasta dónde llega el vidrio de arriba y yo decido si coincido o no con la de los costados»).
-##   · ADELANTE, UN TABLERO CORRIDO de una celda de fondo, con TRES PUESTOS de cuatro celdas cada uno: un brazo a cada
-##     lado y la espalda al medio (`front_seats`).
+##   · ADELANTE, UN TABLERO de una celda de fondo, con TRES PUESTOS: un brazo a cada lado y la espalda al medio. Cada
+##     puesto es UN HUECO entre DIVISORES que salen hacia atrás (todos de una celda, también los de las puntas contra la
+##     pared), y la silla va adentro (`front_seats`). Un puesto cerrado (`OPEN_POSTS`) se rellena hasta la punta de los
+##     divisores (el usuario, 15/11/2026, por la sesión Tableros: «es exactamente eso»; los de las puntas, del mismo
+##     ancho: «queda raro»).
 ##   · ATRÁS, UNA TARIMA de dos celdas de fondo, de pared a pared, de `PLATFORM_HEIGHT` de alto: arriba, al medio, el movimiento
 ##     (`top_seat`). Dos escaleras rectas contra las paredes de los costados (dos celdas de ancho) suben a ella. En el
 ##     frente de la tarima, de cara al ascensor, los cuatro kits y la batería; arriba, en la pared de atrás, la munición.
@@ -37,12 +40,14 @@ const WALL := WALL_CELLS * CELL
 const SLAB := SLAB_CELLS * CELL
 ## LA TARIMA DE ATRÁS: su fondo (celdas de trama). Su alto, en la forma (`PLATFORM_HEIGHT`).
 const PLATFORM_ROWS := 2
-## El tablero de adelante: su fondo (celdas de trama) y su alto (m). Los puestos, de cuatro celdas de ancho: los tres
-## necesitan `MIN_ACROSS` celdas por lado (menos, no se puede).
+## El tablero de adelante: su fondo (celdas de trama) y su alto (m). Los divisores: su ancho y hasta dónde llegan hacia
+## atrás (celdas de trama, desde el vidrio). Los tres huecos se reparten lo que dejan los cuatro divisores (con 12 por
+## lado, de 2,67). Menos de `MIN_ACROSS` por lado, no se puede.
 const DESK_ROWS := 1
 const DESK_HEIGHT := 0.8
-const POST_CELLS := 4
-const MIN_ACROSS := POST_CELLS * 3
+const DIVIDER_CELLS := 1.0
+const DIVIDER_ROWS := 2.5
+const MIN_ACROSS := 12
 ## Las escaleras: su ancho (celdas de trama).
 const STAIR_CELLS := 2
 ## EL HOMBRO: a qué parte del alto libre, en el medio del costado.
@@ -62,6 +67,9 @@ static var SIDE_GLASS := 6
 static var ROOF_GLASS := 2
 ## El alto de la tarima de atrás (m).
 static var PLATFORM_HEIGHT := 1.2
+## Qué puestos de adelante están abiertos (con su hueco y su silla), de izquierda a derecha. Los cerrados se rellenan.
+## *Todavía no lo cambia nada: con dos jugadores, sólo el del medio (el usuario, 15/11/2026).*
+static var OPEN_POSTS: Array[bool] = [true, true, true]
 ## EL COLOR DEL VIDRIO, con cuánto se ve en el alfa.
 static var GLASS_COLOR := Color(0.6, 0.8, 0.92, 0.12)
 ## EL MARCO DEL VIDRIO (ver MechCabin._frame): 0 nada, 1 sólo las aristas, 2 las aristas y los parantes entre puestos;
@@ -175,21 +183,30 @@ static func platform_front() -> float:
 	return INNER - PLATFORM_ROWS * TRAMA
 
 
+## El ancho de cada hueco de los puestos de adelante (celdas de trama).
+static func hole_cells() -> float:
+	return (ACROSS - DIVIDER_CELLS * 4.0) / 3.0
+
+
+## Donde empieza (a la izquierda) el divisor `index` (0 el de la pared izquierda, 3 el de la derecha), en celdas.
+static func divider_cell(index: int) -> float:
+	return index * (DIVIDER_CELLS + hole_cells())
+
+
 ## LOS TRES PUESTOS DE ADELANTE: dónde va cada silla (en el piso), mirando al frente, de izquierda a derecha (el brazo
-## izquierdo, la espalda, el brazo derecho). Cada puesto ocupa `POST_CELLS` de ancho, y la silla va en su medio, media
-## celda detrás del tablero.
+## izquierdo, la espalda, el brazo derecho). En el medio de su hueco, a 0,75 celdas detrás del tablero (adentro del
+## hueco, que llega hasta `DIVIDER_ROWS`).
 static func front_seats() -> Array[Vector3]:
 	var all: Array[Vector3] = []
 	var z := line(DESK_ROWS + 0.75)
 	for post in 3:
-		all.append(Vector3(line(POST_CELLS * (post + 0.5) + (ACROSS - POST_CELLS * 3) * 0.5), floor_top(), z))
+		all.append(Vector3(line(divider_cell(post) + DIVIDER_CELLS + hole_cells() * 0.5), floor_top(), z))
 	return all
 
 
-## Las divisiones de los puestos de adelante (x de las rayas del tablero), de izquierda a derecha.
+## Los divisores entre puestos (los dos del medio): x de su centro, de izquierda a derecha.
 static func post_lines() -> Array[float]:
-	var margin := (ACROSS - POST_CELLS * 3) * 0.5
-	return [line(margin + POST_CELLS), line(margin + POST_CELLS * 2)]
+	return [line(divider_cell(1) + DIVIDER_CELLS * 0.5), line(divider_cell(2) + DIVIDER_CELLS * 0.5)]
 
 
 ## LA SILLA DE ARRIBA, en el medio de la tarima: la del movimiento.

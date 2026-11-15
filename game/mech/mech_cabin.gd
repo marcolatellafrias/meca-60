@@ -200,18 +200,28 @@ func _pane(corners: Array) -> void:
 	add_child(pane)
 
 
-## EL TABLERO CORRIDO DE ADELANTE, de pared a pared, con una raya donde termina cada puesto.
+## EL TABLERO DE ADELANTE: la franja de pared a pared y, hacia atrás, los cuatro divisores, todos iguales; entre ellos,
+## el hueco de cada puesto, con la silla adentro. Un puesto cerrado se rellena hasta la punta de los divisores y queda
+## parejo (ver CabinGrid.OPEN_POSTS). Los módulos de cada puesto se apoyan en la franja (sesión Tableros).
 func _desk() -> void:
 	var trama := CabinGrid.TRAMA
 	var depth := CabinGrid.DESK_ROWS * trama
-	var floor_top := CabinGrid.floor_top()
-	_solid(Vector3(CabinGrid.INNER * 2.0, CabinGrid.DESK_HEIGHT, depth),
-		Vector3(0, floor_top + CabinGrid.DESK_HEIGHT * 0.5, CabinGrid.line(0) + depth * 0.5), Clay.DARK)
-	var margin := (CabinGrid.ACROSS - CabinGrid.POST_CELLS * 3) * 0.5
-	for post in [1, 2]:
-		Clay.box(self, Vector3(0.04, CabinGrid.DESK_HEIGHT + 0.02, depth),
-			Vector3(CabinGrid.line(margin + CabinGrid.POST_CELLS * post), floor_top + CabinGrid.DESK_HEIGHT * 0.5 + 0.01,
-			CabinGrid.line(0) + depth * 0.5), Clay.METAL)
+	var reach := CabinGrid.DIVIDER_ROWS * trama
+	var tall := CabinGrid.DESK_HEIGHT
+	var y := CabinGrid.floor_top() + tall * 0.5
+	var front := CabinGrid.line(0)
+	_solid(Vector3(CabinGrid.INNER * 2.0, tall, depth), Vector3(0, y, front + depth * 0.5), Clay.DARK)
+	var back := reach - depth
+	var behind := front + depth + back * 0.5
+	for index in 4:
+		var left := CabinGrid.divider_cell(index)
+		var x := CabinGrid.line(left + CabinGrid.DIVIDER_CELLS * 0.5)
+		_solid(Vector3(CabinGrid.DIVIDER_CELLS * trama, tall, back), Vector3(x, y, behind), Clay.DARK)
+	for post in 3:
+		if CabinGrid.OPEN_POSTS[post]:
+			continue
+		var x := CabinGrid.line(CabinGrid.divider_cell(post) + CabinGrid.DIVIDER_CELLS + CabinGrid.hole_cells() * 0.5)
+		_solid(Vector3(CabinGrid.hole_cells() * trama, tall, back), Vector3(x, y, behind), Clay.DARK)
 
 
 ## LA TARIMA DE ATRÁS, de pared a pared, y una escalera recta contra cada costado (con `Stairs`, la regla de toda
