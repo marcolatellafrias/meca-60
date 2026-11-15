@@ -33,8 +33,8 @@ limpio»).*
   los parantes entre puestos**, con el grosor de las aristas y el de los parantes aparte. La regla de las aristas:
   **todo borde de un paño lleva marco**, también donde el vidrio se junta con la chapa o con el piso (el usuario,
   15/11/2026: «yo diría que es con el límite, así tenemos más consistencia»). Los parantes van en las divisiones del
-  tablero (suben por el frente, doblan por el corte y siguen por el vidrio del techo) y en el medio de cada costado:
-  donde nadie mira. Las ideas que se descartaron están en `tests/glass_frame_ideas_look.tscn`.
+  tablero (suben por el frente, doblan por el corte y siguen por el vidrio del techo): donde nadie mira. En los
+  costados, ninguno: sólo el marco del límite con la chapa (el usuario: «solamente el del límite»). Las ideas que se descartaron están en `tests/glass_frame_ideas_look.tscn`.
 - **Adelante, el tablero de los tres puestos** (el brazo izquierdo, la espalda al medio y el brazo derecho): una franja
   de pared a pared, de una celda de fondo, y **cuatro divisores** que salen hacia atrás hasta 2,5 celdas, todos de una
   celda de ancho, también los de las puntas contra la pared (el usuario, 15/11/2026, por la sesión Tableros: «es
