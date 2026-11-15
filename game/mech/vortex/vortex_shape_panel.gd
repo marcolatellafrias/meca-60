@@ -2,18 +2,18 @@ class_name VortexShapePanel
 extends TunerPanel
 
 ## LA FORMA DE LA MECA DEL VÓRTICE (F2 en su fila; ver VortexCabin, VortexShape): el radio, el alto de la planta baja,
-## el núcleo del medio, el ancho de la escalera y el largo de los brazos y las piernas de esta meca. Como el de la
-## redonda (RoundShapePanel): los números se mueven sin rearmar nada, y GUARDAR la escribe en `VortexCabin.SAVED` y
-## rearma las mecas (las otras no cambian: esta tiene su forma y su cuerpo aparte).
+## el núcleo y el vórtice, el ancho de la escalera y, en la pestaña «Brazos y piernas», LA MISMA DEL F2 DE LAS OTRAS
+## (CabinShapePanel: los mismos campos y nombres), pero de esta meca sola. Como el de la redonda (RoundShapePanel): los
+## números se mueven sin rearmar nada, y GUARDAR la escribe en `VortexCabin.SAVED` y rearma las mecas (las otras no
+## cambian: esta tiene su forma y su cuerpo aparte).
 
 const PANEL_WIDTH := 380.0
 const LABELS := {
 	"radius": "radio del disco (m)",
 	"floor_height": "alto de la planta baja (m)",
 	"core": "núcleo en el medio del primer piso (arriba se camina en anillo)",
+	"vortex_radius": "radio del vórtice, el hueco de la planta baja (m)",
 	"stair_width": "ancho de la escalera caracol (m)",
-	"legs": "largo de las piernas (1 = el de las otras mecas)",
-	"arms": "largo de los brazos (1 = el de las otras mecas)",
 }
 const PARTS := ["El disco", "La escalera", "Brazos y piernas"]
 
@@ -34,7 +34,8 @@ func setup_panel() -> void:
 func sections() -> Array[Dictionary]:
 	var all: Array[Dictionary] = []
 	for part: String in PARTS:
-		all.append({"title": part.to_upper(), "tab": part, "target": _draft, "labels": LABELS,
+		all.append({"title": part.to_upper(), "tab": part, "target": _draft,
+			"labels": CabinShapePanel.LABELS if part == "Brazos y piernas" else LABELS,
 			"include": PackedStringArray([part]), "headers": false, "defaults": VortexShape.new(), "on_change": _measure})
 	return all
 

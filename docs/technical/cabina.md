@@ -132,15 +132,19 @@ sin techo; `tests/four_cabins_look` y `tests/cabin_pods_look`, la meca de cabina
 el disco de dos pisos), y pidió el último en la meca de verdad: «ponémelo con brazos reales (con física), piernas
 reales, y torso con física en una parcela al principio del sandbox así lo pruebo». Es la fila **Meca del vórtice**, la
 primera del sandbox (`Mech.Cabin.VORTEX`, brazos físicos):
-- **El vórtice**: una columna opaca en el centro, con la boca debajo del disco. El que se para debajo sube chupado por
-  el tubo (6 m/s, hacia el medio) y queda parado en la planta baja, al lado de la puerta; el que entra al tubo por la
-  puerta baja despacio (4 m/s como mucho) hasta el suelo. Llega al suelo con la meca parada.
+- **El vórtice**: la boca debajo del disco y un hueco redondo en el piso de la planta baja (su radio, en el F2); en la
+  planta baja no hay nada que tape la vista. El que se para debajo sube chupado (6 m/s, hacia el medio) y queda parado
+  al lado del hueco; el que pisa el hueco baja despacio (4 m/s como mucho) hasta el suelo. Después irá una tapa de hojas
+  que se abre en círculo.
+- **El F2** (VortexShapePanel, guarda en `game/mech/vortex/vortex_shape.tres`, del usuario): el radio, el alto de la
+  planta baja, el núcleo de arriba (sí o no), el radio del vórtice, el ancho de la escalera y la pestaña «Brazos y
+  piernas» de las otras mecas, pero de esta sola.
 - **La planta baja**, cerrada: la máquina, el banco de reparación, el tablero de la energía y las municiones (se ven y
   la máquina y el banco chocan). La **escalera caracol**, pegada a la pared, sube al primer piso por un hueco; se pisa
   una rampa en hélice.
 - **El primer piso**, abierto: un anillo alrededor de un núcleo opaco; el borde con su bevel, el manejo adelante, los
   mandos de los brazos a los costados y las ametralladoras en enchufes del borde (sólo se ven). El marco lleva a todos
   hasta 2,6 m sobre el piso.
-- **La U** te deja en la planta baja, al lado de la puerta del vórtice. Sin sillas ni ascensor (G, X, Y, H no hacen
+- **La U** te deja en la planta baja, al lado del hueco del vórtice. Sin sillas ni ascensor (G, X, Y, H no hacen
   nada).
 - `tests/vortex_mech_check.tscn`: uno sube por el vórtice, otro baja por el tubo; imprime dónde está cada uno.

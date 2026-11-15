@@ -6,8 +6,8 @@ extends MechCabin
 ## del sandbox así lo pruebo y veo cómo se siente»). Una cabina más de la meca (ver Mech.Cabin.VORTEX), sin sillas ni
 ## ascensor:
 ##   · EL VÓRTICE: una columna opaca en el centro, con la boca abajo del disco. El que se para debajo sube chupado por
-##     adentro del tubo y sale a la planta baja por su puerta; el que entra al tubo por la puerta baja despacio hasta el
-##     suelo (ver `_physics_process`). Llega hasta el suelo con la meca parada: por ahora no hace falta agacharla.
+##     adentro de la boca y sale a la planta baja por un hueco del piso (de radio `TUBE`); el que pisa el hueco baja
+##     despacio hasta el suelo (ver `_physics_process`). Llega hasta el suelo con la meca parada: por ahora no hace falta agacharla.
 ##   · LA PLANTA BAJA, cerrada: la máquina, el banco de reparación, el tablero de la energía y las municiones (sólo se
 ##     ven). La ESCALERA CARACOL, pegada a la pared, sube al primer piso por un hueco del piso de arriba; se pisa una
 ##     rampa en hélice (los escalones se ven).
@@ -19,28 +19,31 @@ extends MechCabin
 ## alto de la planta baja, el núcleo del medio, el ancho de la escalera y el largo de los brazos y las piernas de esta
 ## meca. Lo demás sale de acá. *El radio era 3,2 y la planta baja 2,3; el usuario los fue subiendo al probarla.*
 const SAVED := "res://game/mech/vortex/vortex_shape.tres"
+const BODY_FIELDS: Array[String] = ["arm_length", "leg_length", "thickness", "leg_stretch", "shoulder_out"]
 static var OUTER := 5.5
 static var WALK := 5.05
 static var CLEAR := 3.0
 static var STAIR_OUT := 5.0
 static var STAIR_IN := 3.2
 static var CORE_ON := true
-## El largo de las piernas y de los brazos de esta meca, en partes de los de las otras (los lee Mech.cabin_kit).
-static var LEGS := 0.6
+## EL CUERPO DE ESTA MECA (los campos de la pestaña «Brazos y piernas», ver VortexShape) y lo que sale de él: el largo
+## de las piernas y de los brazos en partes de los de las otras (los lee Mech.cabin_kit).
+static var BODY := VortexShape.new()
+static var LEGS := 0.75
 static var ARMS := 1.0
 const RIM_OUT := 1.0
 const RIM_IN := 0.8
 const SHELL := 0.15
 const CORE := 0.85
-const TUBE := 0.7
+## El radio del vórtice (m): el hueco del piso de la planta baja por donde sube; aparte del núcleo de arriba.
+static var TUBE := 0.7
 const TUBE_WALL := 0.12
 const DECK_SLAB := 0.25
 const STAIR_FROM := PI / 3.0
 const STAIR_TO := PI * 25.0 / 18.0
 const STEPS := 14
-## La puerta del tubo, en la planta baja (ángulo desde el frente, hacia la derecha) y su medio ancho.
-const DOOR_AT := PI * 11.0 / 6.0
-const DOOR_HALF := 0.5
+## Hacia dónde te deja el vórtice, al lado del hueco (ángulo desde el frente, hacia la derecha).
+const EXIT_AT := PI * 11.0 / 6.0
 ## LO QUE HACE EL VÓRTICE: sube a esto (m/s) y baja a no más de esto.
 const RISE := 6.0
 const SINK := 4.0
@@ -72,12 +75,15 @@ static func apply(shape: VortexShape) -> void:
 	OUTER = shape.radius
 	WALK = OUTER - 0.45
 	CLEAR = shape.floor_height
+	TUBE = shape.vortex_radius
 	STAIR_OUT = WALK - 0.05
 	# La escalera deja por lo menos un paso de 0,9 m entre ella y el tubo del vórtice.
 	STAIR_IN = maxf(STAIR_OUT - shape.stair_width, TUBE + TUBE_WALL + 0.9)
 	CORE_ON = shape.core
-	LEGS = shape.legs
-	ARMS = shape.arms
+	for field: String in BODY_FIELDS:
+		BODY.set(field, shape.get(field))
+	LEGS = MechBody.SIZES[clampi(shape.leg_length, 0, 2)] / MechBody.stride
+	ARMS = MechBody.SIZES[clampi(shape.arm_length, 0, 2)] / MechBody.reach
 
 
 ## La forma de hoy, para guardarla.
@@ -86,9 +92,10 @@ static func current() -> VortexShape:
 	now.radius = OUTER
 	now.floor_height = CLEAR
 	now.core = CORE_ON
+	now.vortex_radius = TUBE
 	now.stair_width = STAIR_OUT - STAIR_IN
-	now.legs = LEGS
-	now.arms = ARMS
+	for field: String in BODY_FIELDS:
+		now.set(field, BODY.get(field))
 	return now
 
 
@@ -152,7 +159,8 @@ func _ready() -> void:
 	# Hasta el suelo con la meca parada, y un poco más (la tiene agachada o en un pozo).
 	var low := -Mech.standing_height(Mech.Cabin.VORTEX) - 1.0
 	var high := ground_floor() + 1.4
-	cylinder.radius = TUBE + 0.4
+	# Del ancho del hueco: el que está parado al lado, en la planta baja, no se cae.
+	cylinder.radius = TUBE
 	cylinder.height = high - low
 	shape.shape = cylinder
 	shape.position.y = (low + high) * 0.5
@@ -210,29 +218,26 @@ func _upstairs() -> void:
 	_arc_shapes(0.0, CORE, 0.0, TAU, floor1, floor1 + 2.05)
 
 
-## EL VÓRTICE: la boca acampanada debajo del disco y el tubo hasta el techo de la planta baja, con su puerta. Choca su
-## pared (menos la puerta, en la planta baja); adentro no hay piso.
+## EL VÓRTICE: la boca acampanada debajo del disco y un hueco redondo en el piso de la planta baja, con un borde que se
+## ve; adentro de la planta baja no hay nada que tape la vista (el usuario: «que el vórtice te lleve… y que no haya nada
+## obstruyendo la vista en planta baja… eso violeta que está en planta baja hasta el primer piso lo sacás»; después
+## irá una tapa de hojas que se abre en círculo). El que pisa el hueco cae despacio hasta el suelo.
 func _tube() -> void:
 	var low := bottom()
 	var floor0 := ground_floor()
-	var top := upper_floor() - DECK_SLAB
-	_revolve(self, [Vector2(1.3, low - 0.3), Vector2(TUBE + TUBE_WALL, low - 0.05), Vector2(TUBE + TUBE_WALL, top)],
+	_revolve(self, [Vector2(TUBE + 0.6, low - 0.3), Vector2(TUBE + TUBE_WALL, low - 0.05), Vector2(TUBE + TUBE_WALL, floor0)],
 		VORTEX)
-	_revolve(self, [Vector2(TUBE, top), Vector2(TUBE, low - 0.05), Vector2(1.15, low - 0.3)], VORTEX.darkened(0.5))
-	var door := Clay.box(self, Vector3(0.75, 1.9, 0.06), out(DOOR_AT) * (TUBE + TUBE_WALL + 0.02)
-		+ Vector3(0, floor0 + 0.95, 0), Color(0.12, 0.1, 0.16))
-	door.rotation.y = -DOOR_AT
+	_revolve(self, [Vector2(TUBE, floor0), Vector2(TUBE, low - 0.05), Vector2(TUBE + 0.45, low - 0.3)], VORTEX.darkened(0.5))
+	_revolve(self, [Vector2(TUBE + 0.25, floor0 + 0.02), Vector2(TUBE, floor0 + 0.02)], YELLOW.darkened(0.25))
 	_arc_shapes(TUBE, TUBE + TUBE_WALL, 0.0, TAU, low - 0.3, floor0)
-	_arc_shapes(TUBE, TUBE + TUBE_WALL, DOOR_AT + DOOR_HALF, DOOR_AT - DOOR_HALF + TAU, floor0, top)
-	_arc_shapes(TUBE, TUBE + TUBE_WALL, DOOR_AT - DOOR_HALF, DOOR_AT + DOOR_HALF, floor0 + 2.0, top)
 	# La corriente que chupa, del suelo a la boca: se ve a través (es aire).
 	var pull := StandardMaterial3D.new()
 	pull.albedo_color = Color(0.6, 0.5, 0.9, 0.16)
 	pull.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	pull.cull_mode = BaseMaterial3D.CULL_DISABLED
 	pull.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	var air := _revolve(self, [Vector2(1.0, low - Mech.standing_height(Mech.Cabin.VORTEX) + height() * 0.5 + 0.02),
-		Vector2(1.1, low - 0.3)], Color.WHITE)
+	var air := _revolve(self, [Vector2(TUBE * 1.3, low - Mech.standing_height(Mech.Cabin.VORTEX) + height() * 0.5 + 0.02),
+		Vector2(TUBE * 1.45, low - 0.3)], Color.WHITE)
 	air.material_override = pull
 	air.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
 
@@ -368,7 +373,7 @@ func seat_dummies() -> void:
 		dummies.append(person)
 
 
-## LA U: a la planta baja, al lado de la puerta del vórtice, mirándola.
+## LA U: a la planta baja, al lado del hueco del vórtice, mirándolo.
 func board() -> void:
 	var player := DesignSandbox.player_of(get_tree())
 	if player == null:
@@ -377,8 +382,8 @@ func board() -> void:
 		SandboxPossession.of(get_tree()).release()
 	if player.is_seated and player.current_seat is SeatInteractable:
 		(player.current_seat as SeatInteractable).release_occupant_in_place()
-	var spot := out(DOOR_AT) * 1.7 + Vector3(0.0, ground_floor() + 0.05, 0.0)
-	player.place_at(mech.global_transform * spot, mech.yaw() - DOOR_AT + PI)
+	var spot := out(EXIT_AT) * (TUBE + 1.0) + Vector3(0.0, ground_floor() + 0.05, 0.0)
+	player.place_at(mech.global_transform * spot, mech.yaw() - EXIT_AT + PI)
 
 
 ## LA CAJA NO CHOCA CON LOS QUE VAN ADENTRO (ver MechCabin.ride) NI CON LOS QUE ESTÁ LLEVANDO EL VÓRTICE: suben por
@@ -391,7 +396,7 @@ func ride() -> void:
 
 
 ## EL VÓRTICE, en cada paso: a quien entra desde abajo lo sube por el tubo, hacia el medio, y arriba lo deja en la planta
-## baja, al lado de la puerta; a quien entra desde la planta baja (por la puerta) lo deja caer despacio hasta el suelo.
+## baja, al lado del hueco; a quien entra desde la planta baja (pisando el hueco) lo deja caer despacio hasta el suelo.
 func _physics_process(_delta: float) -> void:
 	if mech == null or _vortex == null:
 		return
@@ -410,7 +415,7 @@ func _physics_process(_delta: float) -> void:
 		var relative := body.linear_velocity - carried
 		var toward := mech.global_basis * Vector3(-local.x, 0.0, -local.z)
 		if _pulled[body]:
-			if local.y >= ground_floor() + 0.95:
+			if local.y >= ground_floor() + 1.0:
 				_pop(body)
 				continue
 			body.linear_velocity = carried + toward * 4.0 + up * RISE
@@ -425,14 +430,14 @@ func _physics_process(_delta: float) -> void:
 			mech.remove_collision_exception_with(body as PhysicsBody3D)
 
 
-## Arriba del tubo: lo para en la planta baja, al lado de la puerta, mirando hacia afuera de ella.
+## Arriba del hueco: lo para en la planta baja, al lado, mirando hacia afuera.
 func _pop(body: CharacterRigidBody3D) -> void:
 	_pulled.erase(body)
 	for found in get_tree().root.find_children("*", "BoneInstantiator", true, false):
 		var person := found as BoneInstantiator
 		if person.char_rigidbody == body:
-			var spot := out(DOOR_AT) * 1.7 + Vector3(0.0, ground_floor() + 0.05, 0.0)
-			person.place_at(mech.global_transform * spot, mech.yaw() - DOOR_AT)
+			var spot := out(EXIT_AT) * (TUBE + 1.0) + Vector3(0.0, ground_floor() + 0.05, 0.0)
+			person.place_at(mech.global_transform * spot, mech.yaw() - EXIT_AT)
 			return
 
 

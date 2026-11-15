@@ -1,7 +1,7 @@
 extends Node3D
 
 ## LA MECA DEL VÓRTICE, DE VERDAD (ver VortexCabin): la meca con brazos físicos parada sobre un piso, una persona
-## debajo de la boca del vórtice y otra en la planta baja que entra al tubo por la puerta. Imprime cada segundo dónde
+## debajo de la boca del vórtice y otra en la planta baja que pisa el hueco del vórtice. Imprime cada segundo dónde
 ## está cada una (en el espacio de la meca) y si la meca sigue parada; con ventana, capturas.
 ##   tools/godot_ventana.sh res://tests/vortex_mech_check.tscn -- --salida=C:/carpeta
 
@@ -43,13 +43,13 @@ func _ready() -> void:
 	add_child(_mech)
 	await get_tree().create_timer(1.5).timeout
 	var below := PeopleArchetype.spawn(self, EntityArchetype.Archetype.buff, Vector3(0.1, 0.0, 0.0), 0.0)
-	var door := VortexCabin.out(VortexCabin.DOOR_AT)
+	var door := VortexCabin.out(VortexCabin.EXIT_AT)
 	var inside := PeopleArchetype.spawn(self, EntityArchetype.Archetype.lanky,
-		_mech.global_transform * (door * 1.6 + Vector3(0, VortexCabin.ground_floor() + 0.05, 0)), 0.0)
+		_mech.global_transform * (door * (VortexCabin.TUBE + 1.0) + Vector3(0, VortexCabin.ground_floor() + 0.05, 0)), 0.0)
 	var shots: Array = []
 	for second in 8:
 		await get_tree().create_timer(1.0).timeout
-		# El de adentro camina hacia la puerta del tubo a partir del segundo 3 (lo empuja hacia el centro).
+		# El de adentro camina hacia el hueco a partir del segundo 3 (lo empuja hacia el centro).
 		if second >= 3 and second < 5:
 			inside.char_rigidbody.linear_velocity = _mech.global_basis * (-door * 1.5)
 		print("SEG %d · meca a %.2f m (%s) · de abajo %s · de adentro %s" % [second + 1, _mech.global_position.y,
