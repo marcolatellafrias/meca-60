@@ -49,6 +49,10 @@ Juntas, en la zona de customizar la meca (ver [[base]]):
 2. **Los cosméticos y la pintura**: el banderín, los efectos de los propulsores, cosas para el interior, y **la pintura,
    con una interfaz en la misma terminal**. Por ahora nada de pintar a mano (ni latas, ni pasarelas, ni pistola).
 
+**El depósito de la sucursal** (15/11/2026, el usuario): lo comprado o sacado de la meca queda ahí, no en la meca.
+La armería se usa como un inventario de RPG: la meca dibujada con sus huecos, y se arrastra de la tienda o del depósito
+a los huecos (ver [[sucursal]]). *Propuesta:* lo del depósito se pierde con la meca, como lo comprado.
+
 Aparte, **los casilleros**, en la zona de los personajes: la ropa de cada personaje (cosméticos de personaje).
 
 ## Abierto

@@ -226,17 +226,27 @@ static func _bag(body: StaticBody3D) -> void:
 
 ## LAS TRES CONSOLAS, contra la pared de la franja: una caja con la pantalla inclinada encima y su cartel.
 static func _consoles(body: StaticBody3D) -> void:
-	_console(body, 30.75, 6.0, "Contratos")
-	_console(body, 41.0, 4.5, "Armería")
+	_console(body, 30.75, 6.0, "Contratos", BaseTerminal.Screen.CONTRACTS)
+	_console(body, 41.0, 4.5, "Armería", BaseTerminal.Screen.ARMORY)
 	_console(body, 47.0, 4.5, "Cosméticos y pintura")
 
 
-static func _console(body: StaticBody3D, x: float, width: float, label: String) -> void:
+## Una consola: su mueble y su pantalla inclinada, en un cuerpo propio para que se contornee sola al mirarla. Con
+## `screen`, se usa con E (BaseTerminal); sin, es de adorno por ahora.
+static func _console(body: StaticBody3D, x: float, width: float, label: String, screen := -1) -> void:
 	var z := NAVE + strip - WALL * 0.5 - 0.5
-	Clay.solid(body, Vector3(width, 1.0, 1.0), at(x, z, 0.5), CONSOLE_COLOR)
+	var console := StaticBody3D.new()
+	console.name = label
+	body.add_child(console)
+	Clay.solid(console, Vector3(width, 1.0, 1.0), at(x, z, 0.5), CONSOLE_COLOR)
 	var tilt := Basis(Vector3.RIGHT, deg_to_rad(-35.0))
-	Clay.solid(body, Vector3(width * 0.9, 0.9, 0.08), at(x, z + 0.15, 1.35), SCREEN_COLOR, tilt)
+	Clay.solid(console, Vector3(width * 0.9, 0.9, 0.08), at(x, z + 0.15, 1.35), SCREEN_COLOR, tilt)
 	_sign(body, label, at(x, z, 2.6))
+	if screen >= 0:
+		var terminal := BaseTerminal.new()
+		terminal.screen = screen as BaseTerminal.Screen
+		terminal.position = at(x, z, 1.2)
+		console.add_child(terminal)
 
 
 ## LOS PERSONAJES: los casilleros contra la pared, el cuadro chiquito al lado y el ascensor de personal en su hueco.

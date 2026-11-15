@@ -34,7 +34,42 @@ En `BaseLayout`, en metros sobre el plano (`at(x, z, alto)` pasa a la parcela).
 - La parcela se mide con la franja más honda (30 m): con una menos honda, la base se arrima a la pared del fondo.
 - Los paneles F2 a F4 son los de la meca propia (como en los jefes), para modificarla desde la base.
 
+## Las terminales (15/11/2026)
+La armería y los contratos se usan: se mira la consola, se aprieta **E** y se abre su pantalla; **E o Esc** la cierra.
+Pedido del usuario: «vos te acercás, apretás E y se te abre». La consola de cosméticos y pintura todavía es de adorno.
+- **`BaseTerminal`** (un `ActivatableInteractable`) cuelga del cuerpo de cada consola, que es lo que se contornea.
+- **`TerminalScreen`** es la base de las pantallas: una sola abierta a la vez, y mientras está abierta el mouse queda suelto
+  (`UIState`, capa `base_terminal`).
+- **`BaseState.current`** guarda lo de la sucursal: la plata de la tripulación (arranca con $2500), **el depósito de la
+  sucursal**, lo que tiene puesto la meca y el contrato firmado.
+  - Vive mientras corre el juego: no se guarda a disco.
+  - No pasa por la red: compra el que abre la terminal. *Después, sólo el capitán* (ver [[progresion]]).
+- **La armería** (`ArmoryScreen`, `ArmoryCatalog`) tiene tres partes:
+  - A la izquierda, **la tienda**. Hay un ejemplar de cada herramienta de brazo y de cada arma de espalda; las placas se
+    compran cuantas veces haga falta.
+  - Al medio, **la meca dibujada de atrás** (`MechDrawing`), con sus nueve huecos encima: la punta de cada brazo, las dos
+    armas de la espalda y las placas del casco, de cada brazo y de cada pierna.
+  - A la derecha, **el depósito**.
+  - **Cómo se usa:**
+    - **Comprar:** arrastrar de la tienda a un hueco (se compra y se pone) o al depósito. Doble clic también compra al
+      depósito.
+    - **Poner:** arrastrar del depósito a un hueco. Lo que había en el hueco vuelve al depósito.
+    - **Sacar:** arrastrar del hueco al depósito.
+    - **Cambiar de lado:** arrastrar de un brazo al otro.
+    - Con el mouse encima de algo se ve qué es, qué hace y cuánto cuesta.
+  - El depósito es la respuesta a la duda del usuario: dónde queda lo que se saca si la meca no tiene inventario. Es de la
+    sucursal, no de la meca.
+  - **Los nombres, los precios y los textos son de prueba**, y lo que se pone todavía **no cambia la meca** de la
+    parcela.
+- **Los contratos** (`ContractsScreen`, `ContractsCatalog`):
+  - Una lista a mano con los jefes que hay: el peleador y las maquetas. Cada contrato tiene su dificultad, su paga y
+    afijos de prueba.
+  - **«Firmar»** deja firmado el contrato elegido.
+  - **«Salir a la arena»**, con un contrato firmado, abre la compuerta del techo. Todavía no hay arena detrás.
+
 ## Para mirarla
 `tests/base_look.tscn` (con ventana, unos 8 s): cuatro capturas, desde afuera con la compuerta abierta, desde la
 franja de las consolas, desde el gimnasio hacia la compuerta, y otra vez desde afuera con otras medidas (lo que hace el
 F1 al guardar, sin guardarlas).
+`tests/base_terminals_look.tscn` (con ventana, unos 5 s): la armería con unas compras hechas y lo que dice con el mouse
+encima, y los contratos con uno firmado.
