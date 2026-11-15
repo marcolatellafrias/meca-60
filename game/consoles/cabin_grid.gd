@@ -12,11 +12,13 @@ extends RefCounted
 ##     `ACROSS` × `ACROSS` celdas de trama, cada una de `TRAMA_CELLS` celdas chicas (13: 51 cm). Todo ocupa celdas de
 ##     trama enteras. EJES: X a la derecha, Y arriba, −Z al frente; el origen en el centro de la caja.
 ##   · UN SOLO PISO, de `HEIGHT_CELLS` celdas chicas libres (96: 3,78 m), entre la losa del piso y la del techo.
-##   · ADELANTE, EL VIDRIO: el frente y los costados hasta la mitad, de piso a techo, sin marcos; la arista de arriba
-##     del frente, cortada a 45° (`CHAMFER` celdas de trama), también de vidrio.
+##   · ADELANTE, EL VIDRIO: el frente y los costados hasta `SIDE_GLASS` celdas de trama (la mitad), de piso a techo, sin
+##     marcos; la arista de arriba del frente, cortada a 45° (`CHAMFER` celdas de trama), también de vidrio, y el techo
+##     de vidrio hasta `ROOF_GLASS` celdas (el corte, nada más). Cada uno, aparte (el usuario, 14/11/2026: «también
+##     tengo que elegir hasta dónde llega el vidrio de arriba y yo decido si coincido o no con la de los costados»).
 ##   · ADELANTE, UN TABLERO CORRIDO de una celda de fondo, con TRES PUESTOS de cuatro celdas cada uno: un brazo a cada
 ##     lado y la espalda al medio (`front_seats`).
-##   · ATRÁS, UNA TARIMA de dos celdas de fondo, de pared a pared, a `PLATFORM_HEIGHT`: arriba, al medio, el movimiento
+##   · ATRÁS, UNA TARIMA de dos celdas de fondo, de pared a pared, de `PLATFORM_HEIGHT` de alto: arriba, al medio, el movimiento
 ##     (`top_seat`). Dos escaleras rectas contra las paredes de los costados (dos celdas de ancho) suben a ella. En el
 ##     frente de la tarima, de cara al ascensor, los cuatro kits y la batería; arriba, en la pared de atrás, la munición.
 ##   · EL ASCENSOR EN EL MEDIO, aparte de la trama de los puestos: un hueco redondo de `LIFT_CELLS` celdas de trama de
@@ -33,13 +35,14 @@ const WALL_CELLS := 6
 const SLAB_CELLS := 5
 const WALL := WALL_CELLS * CELL
 const SLAB := SLAB_CELLS * CELL
-## LA TARIMA DE ATRÁS: su alto (m; ocho escalones de los de siempre) y su fondo (celdas de trama).
-const PLATFORM_HEIGHT := 1.2
+## LA TARIMA DE ATRÁS: su fondo (celdas de trama). Su alto, en la forma (`PLATFORM_HEIGHT`).
 const PLATFORM_ROWS := 2
-## El tablero de adelante: su fondo (celdas de trama) y su alto (m). Los puestos, de cuatro celdas de ancho.
+## El tablero de adelante: su fondo (celdas de trama) y su alto (m). Los puestos, de cuatro celdas de ancho: los tres
+## necesitan `MIN_ACROSS` celdas por lado (menos, no se puede).
 const DESK_ROWS := 1
 const DESK_HEIGHT := 0.8
 const POST_CELLS := 4
+const MIN_ACROSS := POST_CELLS * 3
 ## Las escaleras: su ancho (celdas de trama).
 const STAIR_CELLS := 2
 ## EL HOMBRO: a qué parte del alto libre, en el medio del costado.
@@ -54,6 +57,11 @@ static var ACROSS := 12
 static var HEIGHT_CELLS := 96
 static var CHAMFER := 2
 static var LIFT_CELLS := 2
+## Hasta dónde llega el vidrio, desde el frente de adentro, en celdas de trama: el de los costados y el del techo.
+static var SIDE_GLASS := 6
+static var ROOF_GLASS := 2
+## El alto de la tarima de atrás (m).
+static var PLATFORM_HEIGHT := 1.2
 ## Una celda de trama (m).
 static var TRAMA := 0.0
 ## Lo de adentro, desde el centro hasta la cara de adentro de la pared.
@@ -80,19 +88,23 @@ static func _static_init() -> void:
 ## TOMA TODA LA FORMA GUARDADA: la cabina (`shape`), las sillas y el cuerpo (MechBody.dress). Las mecas que ya estaban
 ## no cambian: hay que rearmarlas (ver CabinShapePanel).
 static func apply(saved: CabinShape) -> void:
-	shape(saved.cell, saved.across, saved.height_cells, saved.chamfer, saved.lift_cells)
+	shape(saved)
 	EYE_HEIGHT = saved.eye_height
 	MechBody.dress(saved.thickness, saved.arm_length, saved.leg_length, saved.leg_stretch)
 
 
-## CAMBIA LA FORMA: celdas de trama de `cell` celdas chicas, `across` por lado, `height_cells` libres de alto, el corte
-## del vidrio de `chamfer` celdas de trama y el ascensor de `lift_cells` de radio.
-static func shape(cell: int, across: int, height_cells: int, chamfer: int, lift_cells: int) -> void:
-	TRAMA_CELLS = maxi(cell, 4)
-	ACROSS = maxi(across, 8) / 2 * 2
-	HEIGHT_CELLS = maxi(height_cells, 60)
-	CHAMFER = clampi(chamfer, 0, ACROSS / 2)
-	LIFT_CELLS = clampi(lift_cells, 1, ACROSS / 4)
+## CAMBIA LA FORMA DE LA CAJA (ver CabinShape, «La caja»): la celda de trama, cuántas por lado, el alto libre, el corte
+## del vidrio, hasta dónde llega el vidrio de los costados y el del techo, el ascensor y el alto de la tarima. Lo que no
+## entra se corrige: el vidrio llega por lo menos hasta el corte.
+static func shape(saved: CabinShape) -> void:
+	TRAMA_CELLS = maxi(saved.cell, 4)
+	ACROSS = maxi(saved.across, MIN_ACROSS) / 2 * 2
+	HEIGHT_CELLS = maxi(saved.height_cells, 60)
+	CHAMFER = clampi(saved.chamfer, 0, ACROSS / 2)
+	SIDE_GLASS = clampi(saved.side_glass, CHAMFER, ACROSS - PLATFORM_ROWS)
+	ROOF_GLASS = clampi(saved.roof_glass, CHAMFER, ACROSS)
+	LIFT_CELLS = clampi(saved.lift_cells, 1, ACROSS / 4)
+	PLATFORM_HEIGHT = clampf(saved.platform_height, 0.3, HEIGHT_CELLS * CELL - 1.0)
 	TRAMA = TRAMA_CELLS * CELL
 	INNER = ACROSS * 0.5 * TRAMA
 	HALF = INNER + WALL
@@ -111,6 +123,9 @@ static func current() -> CabinShape:
 	now.height_cells = HEIGHT_CELLS
 	now.chamfer = CHAMFER
 	now.lift_cells = LIFT_CELLS
+	now.side_glass = SIDE_GLASS
+	now.roof_glass = ROOF_GLASS
+	now.platform_height = PLATFORM_HEIGHT
 	now.eye_height = EYE_HEIGHT
 	now.arm_length = MechBody.arm_size
 	now.leg_length = MechBody.leg_size

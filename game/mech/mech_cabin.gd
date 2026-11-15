@@ -4,10 +4,10 @@ extends Node3D
 ## LA CABINA DE LA MECA: lo que se ve de la caja y por donde se camina. Este nodo es EL DIBUJO (va con la caja). Las
 ## medidas salen de la trama (CabinGrid), que se cambia jugando (el F2).
 ##   · UN SOLO PISO, con el recorte del ascensor en el medio (PelvisLift), y el techo.
-##   · ADELANTE, EL VIDRIO, SIN MARCOS (`_glass`): el frente y los costados hasta la mitad, de piso a techo, y la arista
-##     de arriba del frente cortada a 45°, también de vidrio. Paños planos que se tocan justo en las aristas (el usuario,
-##     14/11/2026: «toda esa zona de cristal… el suelo no… en la esquina superior delantera, tenga un chamfer»). Atrás,
-##     la pared y la mitad de atrás de los costados, de metal.
+##   · ADELANTE, EL VIDRIO, SIN MARCOS (`_glass`): el frente y los costados (hasta CabinGrid.SIDE_GLASS), de piso a
+##     techo, la arista de arriba del frente cortada a 45° y el techo hasta CabinGrid.ROOF_GLASS, también de vidrio. Paños planos que se tocan justo en las aristas (el usuario,
+##     14/11/2026: «toda esa zona de cristal… el suelo no… en la esquina superior delantera, tenga un chamfer»). Lo
+##     demás, de metal: la pared de atrás, los costados y el techo desde donde termina el vidrio.
 ##   · ADELANTE, EL TABLERO CORRIDO con sus tres puestos (un brazo a cada lado y la espalda al medio).
 ##   · ATRÁS, LA TARIMA de pared a pared, con el movimiento arriba al medio, y una escalera recta contra cada costado. En
 ##     el frente de la tarima, de cara al ascensor, los cuatro kits y la batería; arriba, en la pared de atrás, la
@@ -62,16 +62,21 @@ func _ready() -> void:
 	var half := CabinGrid.HALF
 	var trama := CabinGrid.TRAMA
 	var cut := CabinGrid.CHAMFER * trama
-	# El piso, con el recorte del ascensor; el techo, de donde termina el corte del vidrio hasta atrás.
+	# Hasta dónde llega el vidrio de los costados y el del techo (el del techo, por lo menos hasta el corte).
+	var side_to := CabinGrid.line(CabinGrid.SIDE_GLASS)
+	var roof_to := maxf(CabinGrid.line(CabinGrid.ROOF_GLASS), -half + cut)
+	# El piso, con el recorte del ascensor; el techo de metal, de donde termina el vidrio hasta atrás.
 	PelvisLift.build_floor(self, interior, floor_top - SLAB * 0.5, SLAB, metal.darkened(0.12))
-	var roof_from := -half + cut
-	_solid(Vector3(CabinGrid.SIZE, SLAB, half - roof_from), Vector3(0, ceiling + SLAB * 0.5, (roof_from + half) * 0.5), metal)
-	# Atrás, de metal: la pared y la mitad de atrás de los costados.
+	_solid(Vector3(CabinGrid.SIZE, SLAB, half - roof_to), Vector3(0, ceiling + SLAB * 0.5, (roof_to + half) * 0.5), metal)
+	# De metal: la pared de atrás y los costados de donde termina el vidrio hasta ella.
 	var mid := (floor_top + ceiling) * 0.5
 	_solid(Vector3(CabinGrid.SIZE, CabinGrid.CLEAR, WALL), Vector3(0, mid, half - WALL * 0.5), metal)
-	for side: float in [-1.0, 1.0]:
-		_solid(Vector3(WALL, CabinGrid.CLEAR, half - WALL), Vector3(side * (half - WALL * 0.5), mid, (half - WALL) * 0.5), metal)
-	_glass(cut)
+	var back := half - WALL
+	if back - side_to > 0.01:
+		for side: float in [-1.0, 1.0]:
+			_solid(Vector3(WALL, CabinGrid.CLEAR, back - side_to), Vector3(side * (half - WALL * 0.5), mid, (side_to + back) * 0.5),
+				metal)
+	_glass(cut, side_to, roof_to)
 	_desk()
 	_platform()
 	_seats()
@@ -80,9 +85,10 @@ func _ready() -> void:
 	add_child(lift)
 
 
-## EL VIDRIO, EN PAÑOS EXACTOS Y SIN MARCOS: el frente hasta el corte, el corte a 45° de arista a arista, y cada costado
-## de adelante con su esquina cortada igual. Todos van en la cara de afuera de la caja y se tocan justo en las aristas.
-func _glass(cut: float) -> void:
+## EL VIDRIO, EN PAÑOS EXACTOS Y SIN MARCOS: el frente hasta el corte, el corte a 45° de arista a arista, el techo
+## hasta `roof_to` y cada costado hasta `side_to`, con su esquina cortada igual. Todos van en la cara de afuera de la
+## caja y se tocan justo en las aristas.
+func _glass(cut: float, side_to: float, roof_to: float) -> void:
 	var half := CabinGrid.HALF
 	var y0 := CabinGrid.floor_top()
 	var y1 := CabinGrid.HALF_HEIGHT
@@ -96,10 +102,17 @@ func _glass(cut: float) -> void:
 		Clay.shape_box(interior, Vector3(CabinGrid.SIZE, 0.1, cut * sqrt(2.0)), Vector3(0, yc + cut * 0.5, front + cut * 0.5),
 			Basis(Vector3.RIGHT, PI * 0.25))
 	Clay.shape_box(interior, Vector3(CabinGrid.SIZE, yc - y0, 0.1), Vector3(0, (y0 + yc) * 0.5, front - 0.03))
+	var roof_from := front + cut
+	if roof_to - roof_from > 0.01:
+		_pane([Vector3(-side_x, y1, roof_from), Vector3(side_x, y1, roof_from), Vector3(side_x, y1, roof_to),
+			Vector3(-side_x, y1, roof_to)])
+		Clay.shape_box(interior, Vector3(CabinGrid.SIZE, 0.1, roof_to - roof_from), Vector3(0, y1 - 0.05, (roof_from + roof_to) * 0.5))
 	for side: float in [-1.0, 1.0]:
 		var x := side * side_x
-		_pane([Vector3(x, y0, front), Vector3(x, y0, 0.0), Vector3(x, y1, 0.0), Vector3(x, y1, front + cut), Vector3(x, yc, front)])
-		Clay.shape_box(interior, Vector3(0.1, y1 - y0, half), Vector3(side * (half - 0.02), (y0 + y1) * 0.5, -half * 0.5))
+		_pane([Vector3(x, y0, front), Vector3(x, y0, side_to), Vector3(x, y1, side_to), Vector3(x, y1, front + cut),
+			Vector3(x, yc, front)])
+		Clay.shape_box(interior, Vector3(0.1, y1 - y0, side_to - front), Vector3(side * (half - 0.02), (y0 + y1) * 0.5,
+			(front + side_to) * 0.5))
 
 
 ## Un paño de vidrio plano, con sus esquinas en orden (un abanico desde la primera).
@@ -153,14 +166,20 @@ func _platform() -> void:
 	for side: float in [-1.0, 1.0]:
 		Stairs.flight(self, Vector3(side * (CabinGrid.INNER - width * 0.5), floor_top, front - run), Vector3.BACK, tall, width,
 			Clay.METAL.lightened(0.15))
+	# Los kits y la batería, cuadrados, en celdas: de 1,2 celdas de trama (61 cm), o menos si no entran a lo ancho o a lo
+	# alto de la tarima.
 	var free := (CabinGrid.INNER - width) * 2.0
+	var kit := minf(1.2 * trama, minf(free / 5.0 * 0.85, tall - 2.0 * CabinGrid.CELL))
 	for index in 5:
 		var x := -free * 0.5 + free * (index + 0.5) / 5.0
-		Clay.box(self, Vector3(0.6, 0.6, 0.06), Vector3(x, floor_top + 0.32, front - 0.03), BATTERY if index == 2 else KIT)
+		Clay.box(self, Vector3(kit, kit, 0.06), Vector3(x, floor_top + CabinGrid.CELL + kit * 0.5, front - 0.03),
+			BATTERY if index == 2 else KIT)
+	# La munición: un cubo de 1,6 celdas de trama (82 cm) que sobresale de la pared de atrás, con su tapa de adentro.
+	var ammo := 1.6 * trama
 	for side: float in [-1.0, 1.0]:
-		var at := Vector3(side * 2.5 * trama, floor_top + tall + 0.42, CabinGrid.HALF + 0.3)
-		Clay.box(self, Vector3(0.8, 0.8, 0.6), at, Clay.METAL)
-		Clay.box(self, Vector3(0.6, 0.6, 0.06), at + Vector3(0, 0, -0.62), AMMO)
+		var at := Vector3(side * 2.5 * trama, floor_top + tall + CabinGrid.CELL * 0.5 + ammo * 0.5, CabinGrid.HALF + ammo * 0.375)
+		Clay.box(self, Vector3(ammo, ammo, ammo * 0.75), at, Clay.METAL)
+		Clay.box(self, Vector3(ammo * 0.75, ammo * 0.75, 0.06), at + Vector3(0, 0, -ammo * 0.775), AMMO)
 
 
 ## LAS SILLAS (las de verdad, las de las consolas, `SEAT_SCENE`), mirando al frente: las tres de adelante y la de arriba,
