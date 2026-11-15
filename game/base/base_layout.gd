@@ -15,7 +15,10 @@ const ELEVATOR := 24.0          # el lado del cuadrado del elevador
 const LENGTH := 60.0            # el largo del elevador más el gimnasio
 const NAVE := 24.0              # el fondo del elevador y del gimnasio
 const STRIP := 12.0             # el fondo de la franja de las consolas (el doble que en el plano 6: quedaba angosta)
-const HEIGHT := 22.0            # el alto de las paredes (el techo, cuando lo haya)
+const HEIGHT := 22.0            # el alto de la nave (el elevador y el gimnasio), hasta el techo
+## El alto de la franja de las consolas: a escala de persona, no de meca (el usuario, 15/11/2026). Encima de su borde
+## abierto, la pared de la nave baja hasta ahí, como un dintel.
+const STRIP_HEIGHT := 5.0
 const WALL := 0.5
 ## El hueco del ascensor de personal, metido en la pared de la punta: de Z1 a Z2, y PERSONNEL_DEPTH hacia afuera.
 const PERSONNEL_Z1 := NAVE + STRIP - 6.4
@@ -108,7 +111,7 @@ static func _slab(body: StaticBody3D, x1: float, x2: float, z1: float, z2: float
 ## LAS PAREDES, por el contorno de la L y del hueco del ascensor de personal.
 static func _walls(body: StaticBody3D) -> void:
 	var outline: Array[Vector2] = [
-		Vector2(0, 0), Vector2(LENGTH, 0), Vector2(LENGTH, PERSONNEL_Z1),
+		Vector2(0, 0), Vector2(LENGTH, 0), Vector2(LENGTH, NAVE), Vector2(LENGTH, PERSONNEL_Z1),
 		Vector2(LENGTH + PERSONNEL_DEPTH, PERSONNEL_Z1), Vector2(LENGTH + PERSONNEL_DEPTH, PERSONNEL_Z2),
 		Vector2(LENGTH, PERSONNEL_Z2), Vector2(LENGTH, NAVE + STRIP), Vector2(ELEVATOR, NAVE + STRIP),
 		Vector2(ELEVATOR, NAVE), Vector2(0, NAVE), Vector2(0, 0),
@@ -116,16 +119,23 @@ static func _walls(body: StaticBody3D) -> void:
 	for i in outline.size() - 1:
 		var a := outline[i]
 		var b := outline[i + 1]
-		# las tres del hueco del ascensor de personal, sólo de su alto
-		var high := PERSONNEL_HEIGHT if i in [2, 3, 4] else HEIGHT
+		# las tres del hueco del ascensor de personal, sólo de su alto; las de la franja, del alto de la franja
+		var high := HEIGHT
+		if i in [3, 4, 5]:
+			high = PERSONNEL_HEIGHT
+		elif minf(a.y, b.y) >= NAVE - 0.01 and minf(a.x, b.x) >= ELEVATOR - 0.01:
+			high = STRIP_HEIGHT
 		var mid := (a + b) * 0.5
 		var length := a.distance_to(b) + WALL
 		var size := Vector3(length, high, WALL) if is_equal_approx(a.y, b.y) else Vector3(WALL, high, length)
 		Clay.solid(body, size, at(mid.x, mid.y, high * 0.5), WALL_COLOR)
-	# encima del hueco sigue la pared, y el hueco tiene su techito
+	# encima del hueco sigue la pared de la franja, y el hueco tiene su techito
 	var gap := PERSONNEL_Z2 - PERSONNEL_Z1
-	Clay.solid(body, Vector3(WALL, HEIGHT - PERSONNEL_HEIGHT, gap), at(LENGTH, (PERSONNEL_Z1 + PERSONNEL_Z2) * 0.5,
-		(HEIGHT + PERSONNEL_HEIGHT) * 0.5), WALL_COLOR)
+	Clay.solid(body, Vector3(WALL, STRIP_HEIGHT - PERSONNEL_HEIGHT, gap), at(LENGTH, (PERSONNEL_Z1 + PERSONNEL_Z2) * 0.5,
+		(STRIP_HEIGHT + PERSONNEL_HEIGHT) * 0.5), WALL_COLOR)
+	# el dintel: la pared de la nave sobre el borde abierto de la franja
+	Clay.solid(body, Vector3(LENGTH - ELEVATOR + WALL, HEIGHT - STRIP_HEIGHT, WALL),
+		at((ELEVATOR + LENGTH) * 0.5, NAVE, (HEIGHT + STRIP_HEIGHT) * 0.5), WALL_COLOR)
 	Clay.solid(body, Vector3(PERSONNEL_DEPTH + WALL, 0.3, gap + WALL), at(LENGTH + PERSONNEL_DEPTH * 0.5,
 		(PERSONNEL_Z1 + PERSONNEL_Z2) * 0.5, PERSONNEL_HEIGHT + 0.15), WALL_COLOR)
 
@@ -138,15 +148,18 @@ static func _roof(body: StaticBody3D) -> void:
 			Rect2(0, 0, HATCH_INSET, NAVE), Rect2(far, 0, HATCH_INSET, NAVE),
 			Rect2(HATCH_INSET, 0, far - HATCH_INSET, HATCH_INSET),
 			Rect2(HATCH_INSET, NAVE - HATCH_INSET, far - HATCH_INSET, HATCH_INSET),
-			Rect2(ELEVATOR, 0, LENGTH - ELEVATOR, NAVE + STRIP)]:
+			Rect2(ELEVATOR, 0, LENGTH - ELEVATOR, NAVE)]:
 		Clay.solid(body, Vector3(piece.size.x, ROOF, piece.size.y), at(piece.get_center().x, piece.get_center().y, y),
 			WALL_COLOR)
+	# el techo bajo de la franja
+	Clay.solid(body, Vector3(LENGTH - ELEVATOR, ROOF, STRIP), at((ELEVATOR + LENGTH) * 0.5, NAVE + STRIP * 0.5,
+		STRIP_HEIGHT + ROOF * 0.5), WALL_COLOR)
 
 
 ## LAS LUCES: con techo, el sol no entra. Lámparas colgadas, sin sombras.
 static func _lights(body: StaticBody3D) -> void:
-	for spot: Vector3 in [Vector3(12, 12, 18), Vector3(36, 8, 18), Vector3(52, 18, 18), Vector3(34, 30, 8),
-			Vector3(52, 30, 8)]:
+	for spot: Vector3 in [Vector3(12, 12, 18), Vector3(36, 8, 18), Vector3(52, 18, 18), Vector3(34, 30, 4.3),
+			Vector3(52, 30, 4.3)]:
 		var where := at(spot.x, spot.y, spot.z)
 		Clay.sphere(body, 0.4, where, Color(1.0, 0.95, 0.8))
 		var lamp := OmniLight3D.new()

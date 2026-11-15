@@ -7,7 +7,8 @@ Lo estético de cada cosa lo agrega el usuario después.
 
 ## Qué hay
 - **Un solo piso, todo al mismo nivel**, en L: el elevador (24 × 24 m) y el gimnasio (36 × 24 m) en fila, y debajo
-  del gimnasio la franja de las consolas (12 m de fondo). Debajo del elevador, pared. Paredes de 22 m y **techo**; adentro,
+  del gimnasio la franja de las consolas (12 m de fondo y **5 m de alto**, a escala de persona: sobre su borde abierto,
+  la pared de la nave baja hasta ahí, como un dintel). Debajo del elevador, pared. La nave, de 22 m, y **techo**; adentro,
   cinco lámparas colgadas (el sol no entra).
 - **El elevador**: un cuadrado del piso con el borde amarillo a rayas. Ahí duerme la meca, mirando al gimnasio.
   Todavía no sube.
