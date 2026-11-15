@@ -31,7 +31,8 @@ cualquiera, y lo que se elige es **qué usar en qué momento**, no qué equipar 
   - **Con tres**: el movimiento con el ascensor, eyectarse **y el escudo** (elige entre esquivar y aguantar); cada brazo
     suma un arma de la espalda (el izquierdo la ametralladora, el derecho el lanzamisiles). El usuario: con el
     movimiento cargando también la espalda, los brazos quedaban «medios deshilachados».
-  - **Con dos**: el movimiento con el ascensor, eyectarse y el escudo; **el otro, los dos brazos y la espalda**: cuando
+  - **Con dos**: **uno adelante, al medio, y el otro atrás** (el usuario, 15/11/2026: ya no los dos adelante con un hueco
+    entre medio). El movimiento con el ascensor, eyectarse y el escudo; **el otro, los dos brazos y la espalda**: cuando
     tira un misil deja los brazos, mientras el otro sigue moviendo. *Antes la espalda iba con el que mueve, que tendría
     que dejar de moverse para tirar. La espalda en automático se descartó: le quita expresión.*
 - Con menos jugadores, cada uno maneja más cosas, pero más simples; con más, menos cosas, con más libertad.
@@ -160,6 +161,13 @@ tiene **módulos fijos**, que no van atados a la silla, y se arma con los que le
     que más justifica el sistema.
   - **El movimiento**, aparte: es el único que mueve su silla arriba y abajo (la meca mira para arriba o para abajo),
     así que su silla acepta esa inclinación. Después.
+- **Iteración 2** (15/11/2026; el usuario: iterar sobre la disposición 1, una sola maqueta, `tests/seat_station_look`):
+  - **La energía está en todos los hologramas, siempre**: se calcula antes de cada acción.
+  - **Módulos parejos**: un cubo (más grande, 28 cm) y rectángulos de su mismo ancho y fondo y la mitad de alto.
+  - **Eyectar es un rectángulo bajo el cubo de estado**, con el botón al frente. *En el apoyabrazos, no*: los brazos
+    van apoyados en reposo, y apretarlo se vería raro.
+  - **De taller, no futurista**: chapa pintada, botones de baquelita, lamparitas. El holograma sigue siendo holograma.
+  - **La letra del juego** (`StrokeFont`, copiada de character-parametric) en todo lo escrito.
 - **Botones extra, sólo el ascensor** (en la silla del movimiento). **Eyectarse lo tienen todos, bajo un vidrio.**
   *Descartados*: el gatillo de la batería, el selector de munición, el cambio de herramienta, la flecha al enemigo en la
   pantalla de estado, la sierra con botón de encendido (una sierra con el brazo retraído no tiene sentido), arrojar el
