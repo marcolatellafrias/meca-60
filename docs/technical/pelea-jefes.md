@@ -2,7 +2,7 @@
 
 **Módulo Jefes, 15/11/2026.** Las piezas de la pelea que quedaron del jefe bola (borrado ese día: el usuario, «la
 trayectoria del juego va a ser más con pelear enemigos más humanoides… borraría todo lo de la bola») y que va a usar el
-que sigue, el Luchador de orugas ([[maquetas-jefes]]). Hoy no las usa ninguna parcela.
+que sigue, el Luchador de orugas ([[luchador]]), que ya las usa.
 
 - **La vida** (`Health`, `game/bosses/health.gd`): cuánta tiene algo y cuánta le queda, colgada como hijo («Vida») del
   jefe o de la meca. **Todo por código**: la baja quien decide que algo pegó (la cabeza del jefe), no los choques (el
