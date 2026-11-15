@@ -1,6 +1,6 @@
 # La base en el sandbox
 
-`game/base/` (`BaseLayout`, `BaseHatch`, `BaseArchetype`) · fila **Base** (Mundo) · el diseño, en [[base]] · ver [[filas]]
+`game/base/` (`BaseLayout`, `BaseHatch`, `BaseSettings`, `BasePanel`, `BaseArchetype`) · fila **Base** (Mundo) · el diseño, en [[base]] · ver [[filas]]
 
 La sucursal en arcilla, **sin estética**: el plano 6 de [[base]] armado de cajas, para recorrerlo con la meca y a pie.
 Lo estético de cada cosa lo agrega el usuario después.
@@ -25,8 +25,16 @@ Lo estético de cada cosa lo agrega el usuario después.
   ilusión de continuidad, no un pozo.
 
 ## Las medidas
-En `BaseLayout`, en metros sobre el plano (`at(x, z, alto)` pasa a la parcela). Para cambiar el plano se cambian ahí.
+En `BaseLayout`, en metros sobre el plano (`at(x, z, alto)` pasa a la parcela).
+- **Se mueven con el F1** de la fila (`BasePanel`, perillas en `BaseSettings`): **el alto de la nave** (16 a 45 m), **el
+  fondo de la franja** (6 a 30 m) y **su alto** (3,5 a 20 m). Al guardar, cada base armada se vuelve a armar en su
+  lugar (`BaseLayout.rebuild`; la meca se queda). Lo guardado, `game/base/base_settings.tres`, es del usuario: no va al
+  repositorio.
+- Lo demás (el elevador, el largo, el hueco del ascensor de personal, la bolsa), en las constantes de `BaseLayout`.
+- La parcela se mide con la franja más honda (30 m): con una menos honda, la base se arrima a la pared del fondo.
+- Los paneles F2 a F4 son los de la meca propia (como en los jefes), para modificarla desde la base.
 
 ## Para mirarla
-`tests/base_look.tscn` (con ventana, unos 8 s): tres capturas, desde afuera con la compuerta abierta, desde la franja
-de las consolas y desde el gimnasio hacia la compuerta.
+`tests/base_look.tscn` (con ventana, unos 8 s): cuatro capturas, desde afuera con la compuerta abierta, desde la
+franja de las consolas, desde el gimnasio hacia la compuerta, y otra vez desde afuera con otras medidas (lo que hace el
+F1 al guardar, sin guardarlas).

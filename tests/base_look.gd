@@ -36,7 +36,7 @@ func _ready() -> void:
 	add_child(eye)
 	eye.make_current()
 	await get_tree().create_timer(5.0).timeout
-	(base.get_node("Compuerta") as BaseHatch).snap_open()
+	(base.get_node("Plano/Compuerta") as BaseHatch).snap_open()
 	eye.global_position = BaseLayout.at(70.0, 62.0, 60.0)
 	eye.look_at(BaseLayout.at(30.0, 14.0, 10.0))
 	await _shot("base_arriba")
@@ -46,6 +46,14 @@ func _ready() -> void:
 	eye.global_position = BaseLayout.at(40.0, 20.0, 1.7)
 	eye.look_at(BaseLayout.at(12.0, 12.0, 22.0))
 	await _shot("base_la_compuerta")
+	# lo que hace el F1 al guardar: otras medidas (sin guardarlas) y la base se vuelve a armar en su lugar
+	BaseSettings.current.strip_depth = 18.0
+	BaseSettings.current.strip_height = 10.0
+	BaseSettings.current.nave_height = 28.0
+	BaseLayout.rebuild(base.get_node("Plano") as Node3D)
+	eye.global_position = BaseLayout.at(70.0, 62.0, 60.0)
+	eye.look_at(BaseLayout.at(30.0, 14.0, 10.0))
+	await _shot("base_otras_medidas")
 	get_tree().quit()
 
 

@@ -25,7 +25,7 @@ func build() -> void:
 	var inset := BaseLayout.HATCH_INSET
 	var span := BaseLayout.ELEVATOR - inset * 2.0
 	var half := span * 0.5
-	var y := BaseLayout.HEIGHT + BaseLayout.ROOF * 0.5
+	var y := BaseLayout.height + BaseLayout.ROOF * 0.5
 	var middle := BaseLayout.ELEVATOR * 0.5
 	var pockets := StaticBody3D.new()
 	pockets.name = "Bolsillos"
@@ -46,7 +46,7 @@ func build() -> void:
 		_open_x.append(BaseLayout.at(opened, middle).x)
 		# el bolsillo: tapa la hoja abierta, apoyado en el techo (del lado de afuera, en la roca)
 		var pocket_size := Vector3(half + POCKET_SLACK * 2.0, BaseLayout.ROOF + POCKET_RISE, span + POCKET_SLACK * 2.0)
-		var pocket_at := BaseLayout.at(opened, middle, BaseLayout.HEIGHT + pocket_size.y * 0.5)
+		var pocket_at := BaseLayout.at(opened, middle, BaseLayout.height + pocket_size.y * 0.5)
 		Clay.solid(pockets, pocket_size, pocket_at, BaseLayout.WALL_COLOR)
 
 

@@ -7,8 +7,8 @@ extends SeededArchetype
 
 ## Las reglas de la meca (sus teclas y los tiros de la bola), de su propia parcela.
 var _mech_rules := MechArchetype.new(Mech.Arms.POSE)
-## La compuerta de la base armada (se vuelve a buscar si se regeneró).
-var _hatch: BaseHatch
+## La raíz de la base armada: la compuerta se busca ahí cada vez (el F1 la vuelve a armar).
+var _root: Node3D
 
 
 func _init() -> void:
@@ -32,8 +32,8 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	var root := Node3D.new()
 	root.name = "Base"
 	parent.add_child(root)
-	BaseLayout.build(root)
-	_hatch = root.get_node("Compuerta") as BaseHatch
+	BaseLayout.build_into(root)
+	_root = root
 	var mech := Mech.new()
 	mech.arms_kind = Mech.Arms.POSE
 	var spot := BaseLayout.at(BaseLayout.MECH_AT.x, BaseLayout.MECH_AT.y, Mech.standing_height())
@@ -45,12 +45,21 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 func keys() -> Array[SandboxKey]:
 	var out := _mech_rules.keys()
 	out.append(SandboxKey.toggle(KEY_G, SandboxKey.Weight.NORMAL, "compuerta del techo",
-		func() -> bool: return is_instance_valid(_hatch) and _hatch.is_open,
+		func() -> bool:
+			var hatch := _hatch()
+			return hatch != null and hatch.is_open,
 		func(_parcel: SandboxParcel, on: bool) -> void:
-			if is_instance_valid(_hatch):
-				_hatch.set_open(on)))
+			var hatch := _hatch()
+			if hatch != null:
+				hatch.set_open(on)))
 	return out
 
 
 func ball_shots() -> Array[Dictionary]:
 	return _mech_rules.ball_shots()
+
+
+func _hatch() -> BaseHatch:
+	if not is_instance_valid(_root):
+		return null
+	return _root.get_node_or_null("Plano/Compuerta") as BaseHatch
