@@ -26,11 +26,11 @@ const NAMES := ["Meca de práctica", "Meca discreta", "Meca física"]
 ## adelante, y el usuario lo volvió («estaban bien los brazos a la mitad, no me gusta el sacrificio en rango»). Del 13 al
 ## 14/11/2026 se elegía en el panel F2 (el piso y el módulo); con la cabina de un piso, va en el medio.* Y cuánto pesan los físicos, en partes de lo que pesa el brazo solo (ver
 ## MuscleArm.weight).
-const SHOULDER_OUT := 1.0
+## *Era una constante (1 m); desde el 15/11/2026 se cambia jugando (CabinGrid.SHOULDER_OUT, el F2: «Brazos y piernas»).*
 
 
 static func shoulder(shape := Cabin.SQUARE) -> Vector3:
-	return (cabin_kit(shape)["shoulder"] as Vector3) + Vector3(SHOULDER_OUT * MechBody.thick, 0.0, 0.0)
+	return (cabin_kit(shape)["shoulder"] as Vector3) + Vector3(CabinGrid.SHOULDER_OUT * MechBody.thick, 0.0, 0.0)
 
 
 ## LO QUE CAMBIA CON LA CABINA, en un solo lugar: la caja (`box`), el hombro sin lo que lo corre afuera (`shoulder`) y si

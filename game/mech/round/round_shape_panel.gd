@@ -73,7 +73,7 @@ func _save() -> void:
 	# El cuerpo, para todas las mecas: se guarda con la forma de la cuadrada, la de AHORA (si se la cambió en su F2
 	# después de abrir este, no se la pisa): de acá, sólo los campos del cuerpo.
 	var square := CabinGrid.current()
-	for field: String in ["arm_length", "leg_length", "thickness", "leg_stretch"]:
+	for field: String in ["arm_length", "leg_length", "thickness", "leg_stretch", "shoulder_out"]:
 		square.set(field, _body.get(field))
 	CabinGrid.apply(square)
 	var body_error := ResourceSaver.save(CabinGrid.current(), CabinGrid.SAVED)

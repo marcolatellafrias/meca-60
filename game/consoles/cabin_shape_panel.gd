@@ -31,6 +31,7 @@ const LABELS := {
 	"leg_length": "largo de las piernas",
 	"thickness": "ancho (de los dos)",
 	"leg_stretch": "cuánto se estiran las piernas paradas",
+	"shoulder_out": "cuánto salen los hombros del costado (m)",
 }
 
 ## Las partes del panel: los grupos de CabinShape, en orden.

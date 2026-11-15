@@ -94,6 +94,8 @@ static var LIFT_HOLE := 0.0
 static var LIFT_SQUARE := false
 ## LAS SILLAS: la altura de los ojos que buscan igualar (m, sobre su piso).
 static var EYE_HEIGHT := 1.15
+## CUÁNTO SALEN LOS HOMBROS del costado (ver CabinShape.shoulder_out, Mech.shoulder): es del cuerpo, para todas las mecas.
+static var SHOULDER_OUT := 1.0
 
 
 static func _static_init() -> void:
@@ -107,6 +109,7 @@ static func apply(saved: CabinShape) -> void:
 	shape(saved)
 	EYE_HEIGHT = saved.eye_height
 	MechBody.dress(saved.thickness, saved.arm_length, saved.leg_length, saved.leg_stretch)
+	SHOULDER_OUT = saved.shoulder_out
 
 
 ## CAMBIA LA FORMA DE LA CAJA (ver CabinShape, «La caja»): la celda de trama, cuántas por lado, el alto libre, el corte
@@ -158,6 +161,7 @@ static func current() -> CabinShape:
 	now.leg_length = MechBody.leg_size
 	now.thickness = MechBody.thick_size
 	now.leg_stretch = MechBody.stretch
+	now.shoulder_out = SHOULDER_OUT
 	return now
 
 
