@@ -7,8 +7,9 @@ extends RefCounted
 ##
 ## Cada una se arma en el marco de su soporte:
 ##   · LO DEL BRAZO, en el del ANTEBRAZO: su centro en el origen, el largo por Z y la mano hacia −Z; +Y arriba y +X
-##     afuera (es un brazo derecho). El puño es la mano de la meca cerrada; la herramienta se le suma sin taparlo: el
-##     taladro arriba del antebrazo, el cañón abajo y la sierra afuera, al costado del puño.
+##     afuera (es un brazo derecho). El puño es la mano de la meca cerrada. LA HERRAMIENTA NO ESTÁ A LA VEZ QUE EL PUÑO
+##     (el usuario, 15/11/2026: «el puño se retrae y queda como adentro del cilindro del antebrazo y sale lo otro»): sale
+##     por la misma boca, en el eje del antebrazo, y por eso puede ser exagerada.
 ##   · LO DE LA ESPALDA, sobre su montura: el origen en el techo, el caño hacia −Z.
 ##   · LAS PLACAS, sobre la parte que cubren (que la maqueta también dibuja).
 
@@ -19,6 +20,9 @@ const FOREARM_COLOR := Color(0.47, 0.49, 0.52)
 ## El antebrazo y la mano de la meca, en su medida base.
 const FOREARM := 5.5
 const ARM_HALF := 1.05
+## La boca del antebrazo, por donde sale el puño o la herramienta: su radio y dónde termina (la punta).
+const MOUTH := 1.3
+const TIP := -FOREARM * 0.5 - 0.3
 
 
 ## Arma la maqueta de `id` (ver ArmoryCatalog) colgada de `parent`, con su soporte.
@@ -28,7 +32,7 @@ static func build(id: String, parent: Node3D) -> Node3D:
 	parent.add_child(root)
 	match id:
 		"fist", "heavy_fist", "drill", "energy_cannon", "circular_saw":
-			_forearm(root, id == "heavy_fist")
+			_forearm(root, id == "heavy_fist", id == "fist" or id == "heavy_fist")
 			match id:
 				"drill": _drill(root)
 				"energy_cannon": _energy_cannon(root)
@@ -47,13 +51,21 @@ static func build(id: String, parent: Node3D) -> Node3D:
 
 ## ── EL BRAZO ────────────────────────────────────────────────────────────────────────────────────────────────────
 
-## El antebrazo y la mano cerrada. El puño pesado es la misma mano, más grande, con un pinche (un cono) en cada nudillo.
-static func _forearm(root: Node3D, heavy: bool) -> void:
+## El antebrazo, con su boca en la punta: una virola más ancha por donde sale el puño, o por donde el puño se mete y sale
+## la herramienta (`with_hand` en falso: la boca queda con el eje de la herramienta). El puño pesado es la misma mano, más
+## grande, con un pinche (un cono) en cada nudillo.
+static func _forearm(root: Node3D, heavy: bool, with_hand := true) -> void:
 	Clay.limb(root, ARM_HALF, FOREARM, Vector3.ZERO, FOREARM_COLOR)
 	Clay.sphere(root, ARM_HALF * 1.25, Vector3(0, 0, FOREARM * 0.5), MechBody.JOINT_COLOR)
+	Clay.cylinder(root, MOUTH, 0.7, Vector3(0, 0, TIP + 0.35), FOREARM_COLOR.darkened(0.15), Vector3(90, 0, 0))
+	if not with_hand:
+		# el eje que empuja la herramienta afuera, desde adentro del antebrazo
+		Clay.cylinder(root, 0.8, 1.2, Vector3(0, 0, TIP - 0.4), Clay.DARK, Vector3(90, 0, 0))
+		return
 	var hand := MechHand.build(root, 1.0)
 	hand.fist = true
-	hand.transform = Transform3D(Basis(Vector3.BACK, PI * 0.5), Vector3(0, 0, -FOREARM * 0.5))
+	# la muñeca apenas adentro de la boca: el puño se ve salir de ella
+	hand.transform = Transform3D(Basis(Vector3.BACK, PI * 0.5), Vector3(0, 0, TIP + 0.15))
 	if not heavy:
 		return
 	hand.scale = Vector3.ONE * 1.3
@@ -64,50 +76,52 @@ static func _forearm(root: Node3D, heavy: bool) -> void:
 			Clay.DARK.lightened(0.15))
 
 
-## EL TALADRO: arriba del antebrazo, la mecha pasa por encima del puño.
+## EL TALADRO: una mecha enorme, en el eje del antebrazo, casi el doble de larga que él.
 static func _drill(root: Node3D) -> void:
-	var y := ARM_HALF + 0.55
-	Clay.cylinder(root, 0.6, 4.2, Vector3(0, y, -0.4), Clay.METAL.darkened(0.1), Vector3(90, 0, 0))
-	Clay.box(root, Vector3(0.7, 0.5, 2.0), Vector3(0, ARM_HALF + 0.1, 0.2), MechBody.JOINT_COLOR)
-	Clay.cylinder(root, 0.78, 0.5, Vector3(0, y, -2.7), MechBody.JOINT_COLOR, Vector3(90, 0, 0))
-	_cone(root, 0.55, 3.0, Vector3(0, y, -4.45), Vector3(-90, 0, 0), STEEL)
+	Clay.cylinder(root, 1.15, 0.6, Vector3(0, 0, TIP - 1.1), MechBody.JOINT_COLOR, Vector3(90, 0, 0))
+	Clay.cylinder(root, 1.45, 0.9, Vector3(0, 0, TIP - 1.8), Clay.METAL.darkened(0.1), Vector3(90, 0, 0))
+	var bit_start := TIP - 2.25
+	var bit := 6.5
+	_cone(root, 1.3, bit, Vector3(0, 0, bit_start - bit * 0.5), Vector3(-90, 0, 0), STEEL)
 	# la espiral, en anillos que se achican hacia la punta
-	for i in 4:
-		var t := i / 4.0
-		Clay.cylinder(root, lerpf(0.55, 0.18, t) + 0.06, 0.1, Vector3(0, y, -3.2 - t * 2.4), STEEL.darkened(0.25),
-			Vector3(90, 0, 18))
+	for i in 7:
+		var t := (i + 0.5) / 7.0
+		Clay.cylinder(root, 1.3 * (1.0 - t) + 0.1, 0.16, Vector3(0, 0, bit_start - t * bit), STEEL.darkened(0.3),
+			Vector3(90, 0, 14))
 
 
-## EL CAÑÓN DE ENERGÍA: abajo del antebrazo, con tres bobinas que se ven de lejos.
+## EL CAÑÓN DE ENERGÍA: un caño grueso en el eje, con cuatro bobinas que se ven de lejos.
 static func _energy_cannon(root: Node3D) -> void:
-	var y := -ARM_HALF - 0.5
-	Clay.box(root, Vector3(1.2, 0.9, 3.4), Vector3(0, y, 0.2), Clay.METAL.darkened(0.12))
-	Clay.cylinder(root, 0.34, 3.8, Vector3(0, y, -3.2), Clay.DARK, Vector3(90, 0, 0))
-	for z: float in [-2.1, -2.8, -3.5]:
-		Clay.cylinder(root, 0.55, 0.22, Vector3(0, y, z), ENERGY, Vector3(90, 0, 0))
-	Clay.cylinder(root, 0.46, 0.35, Vector3(0, y, -5.0), MechBody.JOINT_COLOR, Vector3(90, 0, 0))
-	# el cable que le lleva la energía, por el costado
-	Clay.box(root, Vector3(0.22, 0.22, 3.0), Vector3(0.7, y + 0.35, 0.8), Clay.DARK)
+	Clay.cylinder(root, 1.2, 1.0, Vector3(0, 0, TIP - 1.2), Clay.METAL.darkened(0.1), Vector3(90, 0, 0))
+	var length := 5.6
+	var start := TIP - 1.7
+	Clay.cylinder(root, 0.75, length, Vector3(0, 0, start - length * 0.5), Clay.DARK, Vector3(90, 0, 0))
+	for i in 4:
+		Clay.cylinder(root, 1.45, 0.4, Vector3(0, 0, start - 0.7 - i * 1.05), ENERGY, Vector3(90, 0, 0))
+	Clay.cylinder(root, 1.05, 0.8, Vector3(0, 0, start - length), MechBody.JOINT_COLOR, Vector3(90, 0, 0))
+	Clay.cylinder(root, 0.6, 0.1, Vector3(0, 0, start - length - 0.42), ENERGY.lightened(0.3), Vector3(90, 0, 0))
 
 
-## LA SIERRA: un disco al costado de afuera, adelante del puño, con su brazo y su motor.
+## LA SIERRA: un disco grande, parado en el eje del antebrazo, sostenido por una horquilla.
 static func _saw(root: Node3D) -> void:
-	var x := ARM_HALF + 0.45
-	var at := Vector3(x + 0.35, 0.2, -4.0)
-	Clay.box(root, Vector3(0.35, 0.6, 3.6), Vector3(x, 0.2, -2.0), Clay.METAL.darkened(0.1))
-	Clay.cylinder(root, 0.6, 0.8, Vector3(x, 0.2, -4.0), MechBody.JOINT_COLOR, Vector3(0, 0, 90))
-	Clay.cylinder(root, 1.8, 0.1, at, STEEL, Vector3(0, 0, 90))
-	Clay.cylinder(root, 0.4, 0.3, at + Vector3(0.15, 0, 0), Clay.DARK, Vector3(0, 0, 90))
-	var teeth := 20
+	var radius := 3.0
+	var at := Vector3(0, 0, TIP - 1.6 - radius)
+	Clay.box(root, Vector3(1.6, 1.4, 1.2), Vector3(0, 0, TIP - 1.0), Clay.METAL.darkened(0.1))
+	for side: float in [-1.0, 1.0]:
+		Clay.box(root, Vector3(0.3, 0.7, radius + 1.0), Vector3(side * 0.45, 0, TIP - 1.1 - (radius + 1.0) * 0.5),
+			Clay.METAL.darkened(0.1))
+		Clay.cylinder(root, 0.55, 0.3, at + Vector3(side * 0.45, 0, 0), MechBody.JOINT_COLOR, Vector3(0, 0, 90))
+	Clay.cylinder(root, radius, 0.14, at, STEEL, Vector3(0, 0, 90))
+	var teeth := 30
 	for i in teeth:
 		var angle := TAU * i / teeth
-		var tooth := Clay.box(root, Vector3(0.1, 0.24, 0.3), at + Vector3(0, cos(angle), sin(angle)) * 1.85,
+		var tooth := Clay.box(root, Vector3(0.14, 0.3, 0.42), at + Vector3(0, cos(angle), sin(angle)) * (radius + 0.08),
 			STEEL.darkened(0.3))
 		tooth.basis = Basis(Vector3.RIGHT, -angle)
 	# la guarda: un cuarto de vuelta arriba y atrás, para que se lea de qué lado corta
-	for i in 5:
-		var angle := lerpf(0.1, PI * 0.6, i / 4.0)
-		var guard := Clay.box(root, Vector3(0.5, 0.15, 0.9), at + Vector3(0.05, cos(angle), sin(angle)) * 2.1,
+	for i in 7:
+		var angle := lerpf(0.0, PI * 0.55, i / 6.0)
+		var guard := Clay.box(root, Vector3(0.9, 0.2, 0.95), at + Vector3(0, cos(angle), sin(angle)) * (radius + 0.4),
 			Clay.METAL.darkened(0.05))
 		guard.basis = Basis(Vector3.RIGHT, -angle)
 

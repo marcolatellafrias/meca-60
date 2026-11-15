@@ -53,6 +53,9 @@ Juntas, en la zona de customizar la meca (ver [[base]]):
 - **El puño, la base de los dos brazos**, en dos variantes del mismo puño: **el común** y **el pesado**, más grande y
   con pinches en los nudillos (conos), para que se distingan. *Quizás un puño liviano, cuando se sepa cómo se ve.*
 - **Lo que se le agrega al puño**: **el taladro, el cañón de energía y la sierra**. Nada más por ahora.
+- **El puño y la herramienta no están a la vez** (15/11/2026, el usuario): el puño se mete adentro del antebrazo y
+  sale la herramienta por la misma punta, en el eje del brazo. Así las herramientas pueden ser exageradas. Mientras está
+  afuera la herramienta, ese brazo no pega con el puño.
 - **La espalda**: **la ametralladora, el lanzamisiles y el cañón pesado**.
 - Las placas del acorazado.
 

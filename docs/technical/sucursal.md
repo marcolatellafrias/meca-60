@@ -72,9 +72,11 @@ Pedido del usuario: «vos te acercás, apretás E y se te abre». La consola de 
 Lo pidió el usuario: «empecemos a hacer maquetas de clay de todos los componentes».
 - **`ArmoryParts`** tiene una maqueta por cosa que vende la armería, a la escala de la meca: el antebrazo de `MechBody`
   y la mano de `MechHand`.
-- **Lo del brazo** va sobre un antebrazo con el puño cerrado. La herramienta se le suma sin tapar el puño: el taladro
-  arriba, el cañón de energía abajo y la sierra afuera, al costado. El puño pesado es la misma mano, un 30 % más grande,
-  con un cono en cada nudillo.
+- **Lo del brazo** va sobre un antebrazo con una boca más ancha en la punta.
+  - Por ahí sale el puño cerrado o, con el puño guardado adentro, la herramienta. Nunca los dos a la vez.
+  - Las herramientas van en el eje del brazo, exageradas: la mecha del taladro es más larga que el antebrazo, el cañón
+    de energía tiene cuatro bobinas y la sierra es un disco de 6 m en una horquilla.
+  - El puño pesado es la misma mano, un 30 % más grande, con un cono en cada nudillo.
 - **Lo de la espalda** va sobre un pedazo del techo con su torreta.
 - **Cada placa** va sobre la parte que cubre.
 - Son maquetas de forma: todavía no se montan en la meca.
