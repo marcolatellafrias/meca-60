@@ -92,16 +92,48 @@ func _cockpit(title: String, boss_x: float) -> Node3D:
 		Clay.box(boss, Vector3(0.18, 0.36, 0.3), Vector3(side * 0.18, 0.18, 0), Color(0.2, 0.19, 0.2))
 	for side: float in [-1.0, 1.0]:
 		Clay.box(root, Vector3(0.3, 3.2, 0.34), Vector3(side * 1.9, 0.2, 0.2), FRAME)
-		for y in [0.3, 0.9]:
-			Clay.box(root, Vector3(0.34, 0.04, 0.38), Vector3(side * 1.9, y, 0.2), METAL)
+		# El parante: un canto más claro hacia el vidrio y dos caños de cables que bajan, con sus abrazaderas.
+		Clay.box(root, Vector3(0.03, 3.2, 0.35), Vector3(side * 1.76, 0.2, 0.2), METAL)
+		for dx: float in [0.1, 0.14]:
+			Clay.cylinder(root, 0.014, 3.0, Vector3(side * (1.9 + dx), 0.2, 0.38), BLACK)
+		for y in [-0.55, 0.75, 1.0]:
+			Clay.box(root, Vector3(0.1, 0.03, 0.06), Vector3(side * 2.02, y, 0.39), METAL)
+		for y in [0.62, 0.98]:
+			_rivet(root, Vector3(side * 1.84, y, 0.38))
+			_rivet(root, Vector3(side * 1.96, y, 0.38))
+	# La visera: oscura, con su canto, una fila de remaches y dos plafones a los lados del nombre.
 	Clay.box(root, Vector3(4.4, 0.42, 0.6), Vector3(0, 1.3, 0.3), FRAME)
 	Clay.box(root, Vector3(4.0, 0.05, 0.64), Vector3(0, 1.08, 0.32), METAL)
+	for k in 15:
+		_rivet(root, Vector3(-1.68 + k * 0.24, 1.14, 0.6))
+	for x: float in [-0.62, 0.62]:
+		Clay.cylinder(root, 0.07, 0.03, Vector3(x, 1.27, 0.6), METAL, Vector3(90, 0, 0))
+		var dome := Clay.sphere(root, 0.055, Vector3(x, 1.27, 0.61), CREAM)
+		dome.scale = Vector3(1, 1, 0.45)
+		for g in 3:
+			Clay.box(root, Vector3(0.12, 0.008, 0.01), Vector3(x, 1.245 + g * 0.025, 0.64), FRAME)
 	_plaque(root, title, Vector3(0, 1.26, 0.61), 0.075)
 	# La pared de instrumentos y, abajo, la consola donde van los pies.
 	var tall := WALL_TOP - WALL_BOTTOM
 	Clay.box(root, Vector3(4.4, tall, 0.3), Vector3(0, WALL_BOTTOM + tall * 0.5, WALL_FRONT - 0.15), METAL)
 	Clay.box(root, Vector3(4.4, 0.04, 0.34), Vector3(0, WALL_TOP, WALL_FRONT - 0.15), LIGHT)
 	Clay.box(root, Vector3(4.4, 0.6, 1.0), Vector3(0, WALL_BOTTOM - 0.3, 0.5), FRAME)
+	# Las costuras de la chapa, la franja de peligro abajo, las rejillas y la placa del taller.
+	for x: float in [-1.66, 1.66]:
+		Clay.box(root, Vector3(0.012, WALL_TOP - WALL_BOTTOM, 0.01), Vector3(x, (WALL_TOP + WALL_BOTTOM) * 0.5, WALL_FRONT + 0.001), FRAME)
+	for k in 44:
+		var stripe := Clay.box(root, Vector3(0.05, 0.12, 0.01), Vector3(-2.15 + k * 0.1, WALL_BOTTOM - 0.06, 1.002),
+			Clay.YELLOW if k % 2 else BLACK)
+		stripe.rotation_degrees = Vector3(0, 0, 40)
+	Clay.box(root, Vector3(4.4, 0.02, 0.02), Vector3(0, WALL_BOTTOM - 0.005, 1.0), FRAME)
+	Clay.box(root, Vector3(4.4, 0.02, 0.02), Vector3(0, WALL_BOTTOM - 0.115, 1.0), FRAME)
+	for side: float in [-1.0, 1.0]:
+		for k in 6:
+			Clay.box(root, Vector3(0.36, 0.014, 0.01), Vector3(side * 1.25, WALL_BOTTOM - 0.18 - k * 0.03, 1.002), BLACK)
+	var maker := StrokeLabel.make("TALLERES NUEVOS AIRES", 0.022, INK)
+	maker.position = Vector3(0, WALL_BOTTOM - 0.25, 1.014)
+	root.add_child(maker)
+	Clay.box(root, Vector3(0.42, 0.05, 0.01), Vector3(0, WALL_BOTTOM - 0.25, 1.006), CREAM)
 	# La energía, común a todos: una barra de luces al medio de la pared.
 	_zone(root, Vector2(0, -0.8), Vector2(1.0, 0.24), "")
 	_lights(root, Vector3(0, -0.78, FACE), 20, 12, GREEN, "ENERGÍA", false)
@@ -122,9 +154,17 @@ const ZONE := Color(0.40, 0.42, 0.44)
 const FACE := WALL_FRONT + 0.025
 
 
+func _rivet(parent: Node3D, at: Vector3) -> void:
+	Clay.cylinder(parent, 0.011, 0.012, at, LIGHT, Vector3(90, 0, 0))
+
+
 func _zone(parent: Node3D, center: Vector2, size: Vector2, title: String, z := WALL_FRONT) -> void:
 	Clay.box(parent, Vector3(size.x + 0.05, size.y + 0.05, 0.02), Vector3(center.x, center.y, z + 0.005), FRAME)
 	Clay.box(parent, Vector3(size.x, size.y, 0.02), Vector3(center.x, center.y, z + 0.012), ZONE)
+	Clay.box(parent, Vector3(size.x, 0.008, 0.022), Vector3(center.x, center.y - size.y * 0.5 + 0.004, z + 0.013), BLACK)
+	for sx: float in [-1.0, 1.0]:
+		for sy: float in [-1.0, 1.0]:
+			_rivet(parent, Vector3(center.x + sx * (size.x * 0.5 - 0.025), center.y + sy * (size.y * 0.5 - 0.025), z + 0.024))
 	if title.is_empty():
 		return
 	Clay.box(parent, Vector3(size.x, 0.07, 0.01), Vector3(center.x, center.y + size.y * 0.5 - 0.035, z + 0.024), BLACK)
@@ -200,7 +240,12 @@ func _stick(parent: Node3D, at: Vector3, lean: Vector2, title: String, trigger: 
 	Clay.box(parent, Vector3(0.3, 0.3, 0.02), at + Vector3(0, 0, 0.02), BLACK)
 	Clay.box(parent, Vector3(0.26, 0.02, 0.01), at + Vector3(0, 0, 0.032), METAL)
 	Clay.box(parent, Vector3(0.02, 0.26, 0.01), at + Vector3(0, 0, 0.032), METAL)
-	Clay.sphere(parent, 0.07, at + Vector3(0, 0, 0.04), Color(0.16, 0.16, 0.17))
+	for sx: float in [-1.0, 1.0]:
+		for sy: float in [-1.0, 1.0]:
+			_rivet(parent, at + Vector3(sx * 0.15, sy * 0.15, 0.03))
+	# El fuelle de goma, en anillos.
+	for k in 3:
+		Clay.cylinder(parent, 0.085 - k * 0.015, 0.025, at + Vector3(0, 0, 0.045 + k * 0.025), Color(0.16, 0.16, 0.17), Vector3(90, 0, 0))
 	var tip := at + Vector3(lean.x * 0.1, lean.y * 0.1, 0.28)
 	var shaft := MeshInstance3D.new()
 	shaft.mesh = BoxMesh.new()
@@ -217,34 +262,66 @@ func _stick(parent: Node3D, at: Vector3, lean: Vector2, title: String, trigger: 
 	parent.add_child(tag)
 
 
+## UNA FLECHA en relieve, apuntando a `angle` (grados, 0 a la derecha).
+func _arrow(parent: Node3D, at: Vector3, angle: float, color: Color) -> void:
+	var holder := Node3D.new()
+	parent.add_child(holder)
+	holder.position = at
+	holder.rotation_degrees = Vector3(0, 0, angle)
+	Clay.box(holder, Vector3(0.04, 0.011, 0.008), Vector3(-0.004, 0, 0), color)
+	for side: float in [-1.0, 1.0]:
+		var head := Clay.box(holder, Vector3(0.026, 0.011, 0.008), Vector3(0.01, side * 0.008, 0), color)
+		head.rotation_degrees = Vector3(0, 0, -side * 45.0)
+
+
+## EL DASH: ocho botones cuadrados con su flecha, en tres por tres; al medio, la lamparita de listo.
+func _dash_pad(parent: Node3D, at: Vector3, pressed: int) -> void:
+	var k := 0
+	for row in 3:
+		for col in 3:
+			var spot := at + Vector3((col - 1) * 0.115, (1 - row) * 0.115, 0)
+			if row == 1 and col == 1:
+				_lamp(parent, spot, true)
+				continue
+			var angle := rad_to_deg(atan2(1 - row, col - 1))
+			var down := k == pressed
+			Clay.box(parent, Vector3(0.1, 0.1, 0.02), spot, FRAME)
+			Clay.box(parent, Vector3(0.085, 0.085, 0.02 if down else 0.04), spot + Vector3(0, 0, 0.015 if down else 0.025),
+				AMBER if down else CREAM)
+			_arrow(parent, spot + Vector3(0, 0, 0.05 if not down else 0.03), angle, INK)
+			k += 1
+
+
 ## UNA MANIJA QUE CUELGA DE LA VISERA: dos cordones y una T rayada (eyectar: se tira una vez y no hay vuelta).
 func _pull(parent: Node3D, x: float, title: String) -> void:
 	for dx: float in [-0.12, 0.12]:
 		Clay.box(parent, Vector3(0.015, 0.22, 0.015), Vector3(x + dx, 0.97, 0.45), BLACK)
 	for k in 8:
 		Clay.box(parent, Vector3(0.05, 0.07, 0.07), Vector3(x - 0.175 + k * 0.05, 0.84, 0.45), Clay.YELLOW if k % 2 else BLACK)
+	# La guarda: un estribo de chapa alrededor de la manija, para no tirarla sin querer.
+	Clay.box(parent, Vector3(0.52, 0.025, 0.04), Vector3(x, 0.79, 0.5), METAL)
+	for dx: float in [-0.26, 0.26]:
+		Clay.box(parent, Vector3(0.025, 0.28, 0.04), Vector3(x + dx, 0.92, 0.5), METAL)
 	_plaque(parent, title, Vector3(x, 0.74, 0.47), 0.035)
 
 
 # ── 1. EL MOVIMIENTO ─────────────────────────────────────────────────────────────────────────────────────────────
 func _movement() -> Node3D:
 	var root := _cockpit("MOVIMIENTO", 0.0)
-	_zone(root, Vector2(-1.15, -0.52), Vector2(1.1, 0.74), "CAMINAR Y DASH")
-	var walk := Vector3(-1.15, -0.46, FACE)
-	_stick(root, walk, Vector2(-0.3, 0.8), "CAMINAR", "SALTAR")
-	# El dash: ocho botones en aro alrededor de la placa, cada uno del lado hacia donde sale.
-	for i in 8:
-		var angle := TAU * i / 8.0
-		_push(root, walk + Vector3(cos(angle) * 0.25, sin(angle) * 0.22, 0.0), 0.028, AMBER if i == 1 else CREAM, "")
+	_zone(root, Vector2(-1.33, -0.52), Vector2(0.72, 0.74), "CAMINAR")
+	_stick(root, Vector3(-1.33, -0.46, FACE), Vector2(-0.3, 0.8), "CAMINAR", "SALTAR")
+	# El dash, aparte de caminar: ocho botones con flecha, cada uno hacia donde sale.
+	_zone(root, Vector2(-0.6, -0.39), Vector2(0.56, 0.48), "DASH")
+	_dash_pad(root, Vector3(-0.6, -0.42, FACE), 2)
 	# El cuerpo: agacharse se traba; el giro, mientras se lo aprieta.
 	_zone(root, Vector2(0.95, -0.36), Vector2(1.3, 0.44), "CUERPO")
 	_latch(root, Vector3(0.45, -0.38, FACE), false, "AGACHAR")
 	_push(root, Vector3(0.9, -0.38, FACE), 0.06, CREAM, "GIRO IZQUIERDA")
 	_push(root, Vector3(1.38, -0.38, FACE), 0.06, CREAM, "GIRO DERECHA")
 	# El ascensor, en la visera.
-	_zone(root, Vector2(-0.98, 0.98), Vector2(0.5, 0.2), "", 0.6)
-	_push(root, Vector3(-1.1, 0.98, 0.63), 0.045, CREAM, "SUBIR")
-	_push(root, Vector3(-0.86, 0.98, 0.63), 0.045, CREAM, "BAJAR")
+	_zone(root, Vector2(-0.98, 0.95), Vector2(0.5, 0.28), "", 0.6)
+	_push(root, Vector3(-1.1, 1.0, 0.63), 0.045, CREAM, "SUBIR")
+	_push(root, Vector3(-0.86, 1.0, 0.63), 0.045, CREAM, "BAJAR")
 	_pull(root, 1.0, "EYECTAR")
 	# Los parantes: la carga del salto y el propulsor, en luces.
 	_pillar_lights(root, -1.9, 5, GREEN, "SALTO")
