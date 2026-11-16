@@ -131,8 +131,8 @@ func step(delta: float) -> void:
 	else:
 		var flat := _walk(k, delta, grounded)
 		velocity = Vector3(flat.x, _rise(k, delta, grounded), flat.z)
-		if body.dash and not _dash_was and body.move.length() > 0.1 and dash_fuel >= k.dash_cost \
-				and _dash_wait <= 0.0:
+		# Una sola regla de cuándo sale (la lee también la Meca de tres: ToolMechKeys).
+		if body.dash and not _dash_was and dash_ready():
 			_dash(k, delta)
 	_dash_was = body.dash
 	_jump_was = body.jump
