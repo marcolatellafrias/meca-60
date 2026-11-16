@@ -14,11 +14,13 @@ const SAVED := "res://game/balance_body/kinematic_settings.tres"
 static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as KinematicSettings
 
 @export_group("Moverse")
-## UNA velocidad, y el TIEMPO PARA LLEGAR a ella, el mismo para arrancar y para frenar (0: al instante). Sin correr: para
+## UNA velocidad, y CON PESO (el usuario, 15/11/2026: «más de esquivar y momentum»): tarda `start_time` (s) en llegar a
+## ella y `stop_time` (s) en frenar de ella; cambiar de dirección cuesta como frenar (0: al instante). Sin correr: para
 ## esquivar está el dash. En el aire no se mueve de costado: el salto es sólo vertical («luego lo complejizamos si
-## queremos»). Las configuraciones de un toque, en el F1.
+## queremos»). Las configuraciones de un toque, en el F1. *Hasta el 15/11/2026, un solo tiempo para las dos cosas.*
 @export_range(1.0, 30.0, 0.5) var walk_speed := 8.0
-@export_range(0.0, 2.0, 0.05) var reach_time := 0.0
+@export_range(0.0, 2.0, 0.05) var start_time := 0.3
+@export_range(0.0, 3.0, 0.05) var stop_time := 0.6
 
 @export_group("Girar")
 ## Velocidad tope (grados por segundo) y aceleración tope (grados por segundo al cuadrado).
@@ -36,22 +38,21 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 @export_range(0.2, 10.0, 0.1) var fly_refill := 3.0
 
 @export_group("Dash")
-## EL DASH (Shift, con una dirección): recorre `dash_distance` (m) en `dash_time` (s), en línea recta; mientras dura no
-## lo afectan ni las teclas ni la gravedad. Gasta `dash_cost` de su barra, que se llena sola en `dash_refill` (s).
+## EL DASH (Shift, con una dirección), UN EMPUJÓN CON INERCIA (el usuario, 15/11/2026: «más de esquivar y momentum»):
+## sale disparada y se va frenando sola en `dash_time` (s) hasta la velocidad de caminar, recorriendo unos
+## `dash_distance` (m), y de ahí sigue caminando con su peso (sin freno en seco). Mientras dura no la afecta la gravedad,
+## y la dirección SE TUERCE hacia donde se pide, a lo más `dash_steer` grados por segundo. Gasta `dash_cost` de su barra, que se llena sola en `dash_refill` (s).
 ## 18 m (15/11/2026, desde el módulo Jefes, con el sí del usuario): con 12 un dash solo nunca esquivaba la embestida del
 ## Luchador, que mide 24 m de ancho (ver docs/technical/luchador.md).
 @export_range(1.0, 40.0, 0.5) var dash_distance := 18.0
 @export_range(0.05, 1.5, 0.05) var dash_time := 0.35
+@export_range(0.0, 720.0, 5.0) var dash_steer := 90.0
 @export_range(0.05, 1.0, 0.05) var dash_cost := 0.35
 @export_range(0.2, 20.0, 0.1) var dash_refill := 3.0
 ## LA ESPERA ENTRE DASHES (s), desde que termina uno: mientras corre, no sale otro aunque haya barra (el usuario,
 ## 15/11/2026, por el módulo Jefes: «me parece mala práctica hacer varios dashes seguidos… preferiría que haya un delay
 ## mínimo entre dashes, y diseñar todo para un dash, así es más consciente la esquivada»).
 @export_range(0.0, 5.0, 0.05) var dash_cooldown := 1.0
-## LA CURVA DEL DASH (14/11/2026; ver MoveCurve, de la base común; el usuario: «si yo hago un dash… y lo tengo activado
-## con easing, que haga easing»): recorre lo mismo en lo mismo, pero arrancando lento, frenando al final o las dos.
-## Lineal: parejo, como antes.
-@export var dash_curve := MoveCurve.Shape.LINEAR
 
 @export_group("Caerse")
 ## DERRIBADA (KinematicMover.knock_down; 15/11/2026, desde el módulo Jefes, con el sí del usuario: «los brazos están

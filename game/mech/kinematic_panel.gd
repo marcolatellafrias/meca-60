@@ -8,7 +8,8 @@ extends KnobsPanel
 
 const PANEL_WIDTH := 400.0
 const LABELS := {
-	"walk_speed": "velocidad (m/s)", "reach_time": "tiempo para llegar a ella y para frenar (s; 0: al instante)",
+	"walk_speed": "velocidad (m/s)", "start_time": "tarda en arrancar (s; 0: al instante)",
+	"stop_time": "tarda en frenar o cambiar de dirección (s)",
 	"turn_speed": "velocidad tope (°/s)", "turn_accel": "aceleración tope (°/s²)",
 	"jump_height": "salto: sube (m)", "jump_time": "salto: tarda en subir (s)",
 	"fly_speed": "vuelo: sube a (m/s)", "fly_time": "vuelo: la barra dura (s)",
@@ -16,7 +17,7 @@ const LABELS := {
 	"dash_distance": "recorre (m)", "dash_time": "en (s)",
 	"dash_cost": "gasta de la barra (parte)", "dash_refill": "la barra se llena en (s)",
 	"dash_cooldown": "espera entre dashes (s)",
-	"dash_curve": "la curva (lineal: parejo)",
+	"dash_steer": "se tuerce a lo más (°/s)",
 	"fall_time": "cae en (s)", "fall_lie": "queda inclinada (°)", "down_time": "tirada (s)",
 	"rise_time": "se levanta en (s)",
 	"crouch_share": "agachada: la altura que le queda (parte)", "crouch_rate": "ritmo (partes por s)",
@@ -27,9 +28,10 @@ const TABS: Array[String] = ["Moverse", "Girar", "Saltar y volar", "Dash", "Caer
 ## pensá configuraciones posibles»): cada botón ESCRIBE las dos perillas de moverse en el borrador; se aplica al
 ## guardar.
 const PRESETS := [
-	{"name": "Instantánea", "walk_speed": 8.0, "reach_time": 0.0},
-	{"name": "Casi instantánea", "walk_speed": 8.0, "reach_time": 0.15},
-	{"name": "Pesada", "walk_speed": 6.0, "reach_time": 0.6},
+	{"name": "Instantánea", "walk_speed": 8.0, "start_time": 0.0, "stop_time": 0.0},
+	{"name": "Casi instantánea", "walk_speed": 8.0, "start_time": 0.15, "stop_time": 0.15},
+	{"name": "Con peso", "walk_speed": 8.0, "start_time": 0.3, "stop_time": 0.6},
+	{"name": "Pesada", "walk_speed": 6.0, "start_time": 0.6, "stop_time": 1.2},
 ]
 
 
@@ -63,7 +65,7 @@ func note() -> String:
 
 ## Una configuración de un toque: escribe el borrador (se aplica al guardar).
 func _apply(preset: Dictionary) -> void:
-	for name: String in ["walk_speed", "reach_time"]:
+	for name: String in ["walk_speed", "start_time", "stop_time"]:
 		draft().set(name, preset[name])
 	rebuild()
 

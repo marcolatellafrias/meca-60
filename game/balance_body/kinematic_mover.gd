@@ -43,8 +43,8 @@ var _dash_was := false
 var _fly_armed := false
 ## El dash de ahora: cuánto le queda (s) y a qué velocidad va.
 var _dash_left := 0.0
-var _dash_velocity := Vector3.ZERO
-## Cuánto lleva el dash (s), para su curva (ver KinematicSettings.dash_curve).
+var _dash_way := Vector3.FORWARD
+## Cuánto lleva el dash (s; ver `_dashing`).
 var _dash_clock := 0.0
 ## Cuánto falta para que pueda salir otro dash (s; el que dura más la espera: ver KinematicSettings.dash_cooldown).
 var _dash_wait := 0.0
@@ -126,9 +126,8 @@ func step(delta: float) -> void:
 		# EMPUJADA O EN EL PISO: no se maneja (ver `shove`, `knock_down`).
 		velocity = _pushed(k, delta, grounded)
 	elif _dash_left > 0.0:
-		# EN UN DASH: derecho, sin teclas ni gravedad.
-		_dash_left -= delta
-		velocity = _dash_velocity * _dash_rate(k, delta)
+		# EN UN DASH: frenándose sola, torciéndose hacia donde se pide, sin gravedad.
+		velocity = _dashing(k, delta)
 	else:
 		var flat := _walk(k, delta, grounded)
 		velocity = Vector3(flat.x, _rise(k, delta, grounded), flat.z)
@@ -160,14 +159,23 @@ func step(delta: float) -> void:
 	_last_bottom = bottom
 
 
-## MOVERSE: de costado, hacia la velocidad pedida, en `reach_time` (0: al instante). En el aire, nada.
+## MOVERSE: de costado, hacia la velocidad pedida, CON PESO: acelerando, en `start_time`; frenando o cambiando de
+## dirección, en `stop_time` (0: al instante). En el aire, nada.
 func _walk(k: KinematicSettings, delta: float, grounded: bool) -> Vector3:
 	if not grounded:
 		return Vector3.ZERO
-	var wanted := Basis(Vector3.UP, _yaw) * Vector3(body.move.x, 0.0, -body.move.y).limit_length(1.0) * k.walk_speed
-	if k.reach_time <= 0.0:
+	var wanted := _wanted() * k.walk_speed
+	var now := Vector3(velocity.x, 0.0, velocity.z)
+	var speeding := wanted.length() > now.length() + 0.01 and wanted.dot(now) >= 0.0
+	var time := k.start_time if speeding else k.stop_time
+	if time <= 0.0:
 		return wanted
-	return Vector3(velocity.x, 0.0, velocity.z).move_toward(wanted, k.walk_speed / k.reach_time * delta)
+	return now.move_toward(wanted, k.walk_speed / time * delta)
+
+
+## Hacia dónde y cuánto se pide moverse (de costado, en el mundo; largo 0 a 1).
+func _wanted() -> Vector3:
+	return Basis(Vector3.UP, _yaw) * Vector3(body.move.x, 0.0, -body.move.y).limit_length(1.0)
 
 
 ## SUBIR Y BAJAR: el salto (al apretar, apoyada), el vuelo (apretando otra vez en el aire) y la caída. Devuelve la
@@ -191,17 +199,31 @@ func _rise(k: KinematicSettings, delta: float, grounded: bool) -> float:
 	return velocity.y - gravity * delta
 
 
-## EL DASH: hacia donde se pide (en el espacio de la caja), `dash_distance` en `dash_time`.
+## EL DASH: hacia donde se pide (ver KinematicSettings, «Dash»).
 func _dash(k: KinematicSettings, delta: float) -> void:
-	var stick := Vector3(body.move.x, 0.0, -body.move.y).normalized()
-	var way := Basis(Vector3.UP, _yaw) * stick
-	_dash_velocity = way * (k.dash_distance / k.dash_time)
+	_dash_way = _wanted().normalized()
 	_dash_left = k.dash_time
 	_dash_clock = 0.0
 	_dash_wait = k.dash_time + k.dash_cooldown
-	velocity = _dash_velocity * _dash_rate(k, delta)
+	velocity = _dashing(k, delta)
 	dash_fuel -= k.dash_cost
-	body.nozzles.show(way, k.dash_time)
+	body.nozzles.show(_dash_way, k.dash_time)
+
+
+## UN PASO DEL DASH: la velocidad baja pareja de la de salida a la de caminar (`walk_speed`) en `dash_time`, así recorre
+## `dash_distance` (la de salida sale de eso: d = t · (salida + caminar) / 2); la dirección se tuerce hacia donde se
+## pide, a lo más `dash_steer` grados por segundo.
+func _dashing(k: KinematicSettings, delta: float) -> Vector3:
+	var wanted := _wanted()
+	if wanted.length() > 0.1:
+		var angle := _dash_way.signed_angle_to(wanted, Vector3.UP)
+		var most := deg_to_rad(k.dash_steer) * delta
+		_dash_way = _dash_way.rotated(Vector3.UP, clampf(angle, -most, most)).normalized()
+	var share := clampf((_dash_clock + delta * 0.5) / k.dash_time, 0.0, 1.0)
+	var start := maxf(2.0 * k.dash_distance / k.dash_time - k.walk_speed, k.walk_speed)
+	_dash_clock += delta
+	_dash_left -= delta
+	return _dash_way * lerpf(start, k.walk_speed, share)
 
 
 ## UN EMPUJÓN: se corre `offset` (m, de costado) en `time` (s), con un saltito de `hop` m (un arco: sube y baja en
@@ -258,13 +280,6 @@ func _fall(k: KinematicSettings, delta: float) -> void:
 		lean = 0.0
 		body.state = BalanceBody.State.STANDING
 		body.legs.replant()
-
-
-## Por cuánto multiplicar la velocidad pareja del dash este paso, según su curva (a la mitad del paso; lineal: 1).
-func _dash_rate(k: KinematicSettings, delta: float) -> float:
-	var rate := MoveCurve.rate(k.dash_curve, (_dash_clock + delta * 0.5) / k.dash_time)
-	_dash_clock += delta
-	return rate
 
 
 ## EL GIRO: hacia `aim_yaw`, con tope de velocidad y de aceleración. Nada lo traba: contra el mundo es un cilindro.
