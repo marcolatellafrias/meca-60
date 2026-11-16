@@ -15,6 +15,7 @@ const LABELS := {
 	"fly_refill": "vuelo: se llena apoyada en (s)",
 	"dash_distance": "recorre (m)", "dash_time": "en (s)",
 	"dash_cost": "gasta de la barra (parte)", "dash_refill": "la barra se llena en (s)",
+	"dash_cooldown": "espera entre dashes (s)",
 	"dash_curve": "la curva (lineal: parejo)",
 	"dash_untouchable": "intocable desde que arranca (s)",
 	"fall_time": "cae en (s)", "fall_lie": "queda inclinada (°)", "down_time": "tirada (s)",

@@ -48,6 +48,8 @@ var _dash_velocity := Vector3.ZERO
 var _dash_clock := 0.0
 ## Cuánto le queda sin que se le pueda pegar (s; ver KinematicSettings.dash_untouchable).
 var _untouchable_left := 0.0
+## Cuánto falta para que pueda salir otro dash (s; el que dura más la espera: ver KinematicSettings.dash_cooldown).
+var _dash_wait := 0.0
 ## El empujón de ahora (ver `shove`): cuánto le queda y cuánto dura (s), a qué velocidad de costado va y el saltito (m).
 var _shove_left := 0.0
 var _shove_time := 0.0
@@ -121,6 +123,7 @@ func step(delta: float) -> void:
 	var grounded := is_on_floor()
 	dash_fuel = minf(dash_fuel + delta / k.dash_refill, 1.0)
 	_untouchable_left = maxf(_untouchable_left - delta, 0.0)
+	_dash_wait = maxf(_dash_wait - delta, 0.0)
 	_fall(k, delta)
 	if _shove_left > 0.0 or body.state != BalanceBody.State.STANDING:
 		# EMPUJADA O EN EL PISO: no se maneja (ver `shove`, `knock_down`).
@@ -132,7 +135,8 @@ func step(delta: float) -> void:
 	else:
 		var flat := _walk(k, delta, grounded)
 		velocity = Vector3(flat.x, _rise(k, delta, grounded), flat.z)
-		if body.dash and not _dash_was and body.move.length() > 0.1 and dash_fuel >= k.dash_cost:
+		if body.dash and not _dash_was and body.move.length() > 0.1 and dash_fuel >= k.dash_cost \
+				and _dash_wait <= 0.0:
 			_dash(k, delta)
 	_dash_was = body.dash
 	_jump_was = body.jump
@@ -198,6 +202,7 @@ func _dash(k: KinematicSettings, delta: float) -> void:
 	_dash_left = k.dash_time
 	_dash_clock = 0.0
 	_untouchable_left = k.dash_untouchable
+	_dash_wait = k.dash_time + k.dash_cooldown
 	velocity = _dash_velocity * _dash_rate(k, delta)
 	dash_fuel -= k.dash_cost
 	body.nozzles.show(way, k.dash_time)
