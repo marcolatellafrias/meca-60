@@ -95,9 +95,11 @@ func _fit() -> void:
 	_holder.position.y = _cylinder.height * 0.5
 
 
-## DÓNDE VA LA CAJA: sobre sus piernas, mirando como él. CAYÉNDOSE, toda la meca (la caja y las piernas estiradas) se
-## vuelca `lean` grados hacia `_lean_away` sobre sus pies, como un árbol; si el canto de la caja de ese lado se metería
-## en el piso, sube lo justo.
+## DÓNDE VA LA CAJA: sobre sus piernas, mirando como él. CAYÉNDOSE, toda la meca de una pieza (la caja y las piernas
+## estiradas) gira `lean` grados hacia `_lean_away` sobre la cadera (la cara de abajo de la caja), que baja lo justo
+## para que lo más bajo —los pies o el canto de la caja de ese lado— quede en el piso: cae sentada y de espaldas, y los
+## pies se levantan, como en los juegos (el usuario, 15/11/2026: «los pies quedan como pegados al piso, queda feo,
+## prefiero que sea algo más simple, como los juegos normales»).
 func body_place() -> Transform3D:
 	var upright := Basis(Vector3.UP, _yaw)
 	if lean <= 0.0:
@@ -105,8 +107,7 @@ func body_place() -> Transform3D:
 	var angle := deg_to_rad(lean)
 	var turn := Basis(Vector3.UP.cross(_lean_away).normalized(), angle)
 	var half_toward := absf(_lean_away.dot(upright.x)) * body.size.x * 0.5 + absf(_lean_away.dot(upright.z)) * body.size.z * 0.5
-	var bottom := global_position + turn * Vector3.UP * _hover_now()
-	bottom.y += maxf(half_toward * sin(angle) - (bottom.y - global_position.y), 0.0)
+	var bottom := global_position + Vector3.UP * maxf(_hover_now() * cos(angle), half_toward * sin(angle))
 	return Transform3D(turn * upright, bottom + turn * Vector3.UP * (body.size.y * 0.5))
 
 
