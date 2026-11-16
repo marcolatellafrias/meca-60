@@ -56,6 +56,9 @@ func _ready() -> void:
 		{"letter": "A", "name": "el brazo sale de atrás de la cápsula", "pod": SPREAD, "pod_pitch": 0.0, "shoulder": SPREAD * 2.0, "shoulder_pitch": 0.0},
 		{"letter": "B", "name": "el brazo sale de abajo de la cápsula", "pod": SPREAD, "pod_pitch": 0.0, "shoulder": SPREAD, "shoulder_pitch": -52.0},
 		{"letter": "C", "name": "cápsula y hombro cambiados de lugar", "pod": SPREAD * 2.0, "pod_pitch": 0.0, "shoulder": SPREAD, "shoulder_pitch": 0.0},
+		# La cuarta (el usuario: «en la misma línea que la de arriba, pero más hacia abajo»): el hombro sobre el aro que
+		# pasa por la cápsula de arriba y los costados (rumbo 90°), bajado.
+		{"letter": "D", "name": "el hombro en la línea de la de arriba, más abajo", "pod": SPREAD, "pod_pitch": 0.0, "shoulder": 90.0, "shoulder_pitch": -30.0},
 	]
 	for variant in variants:
 		_build(variant)
