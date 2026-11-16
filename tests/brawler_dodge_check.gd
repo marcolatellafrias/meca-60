@@ -376,6 +376,11 @@ func _place(gap: float) -> void:
 	Health.of(_mech).left = BrawlerArchetype.MECH_HEALTH
 	(_mech.mover as KinematicMover).dash_fuel = 1.0
 	HitReaction.of(_mech).clear()
+	# Si quedó tirada, que se levante (la caída es de ella: ver BalanceBody.knock_down).
+	var clock := 0.0
+	while _mech.state != BalanceBody.State.STANDING and clock < 5.0:
+		await get_tree().physics_frame
+		clock += 1.0 / Engine.physics_ticks_per_second
 	if _mech is ToolMech:
 		(_mech as ToolMech).energy.level = 1.0
 		(_mech as ToolMech).energy.stunned = 0.0

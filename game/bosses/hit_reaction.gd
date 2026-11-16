@@ -5,36 +5,32 @@ extends Node
 ## cabeza del jefe (sus zonas de golpe, ver docs/technical/pelea-jefes.md) y acá pasa lo que se ve. Se cuelga solo
 ## («Reacción») de quien recibe la primera vez. El usuario: «la mecha se hace hacia atrás… pero que sea algo cinemático…
 ## con un indicador que muestre cuando le pegan un golpe, como que se vuelve blanca por un segundo… una partícula… una
-## audio cue… el estado de la nave que se cae y se levanta, que también tiene que ser cinemático… una animación bien
-## simple».
+## audio cue».
 ##   · SIEMPRE: SE PONE BLANCA un momento (un material encima de todas sus mallas), CHISPAS donde pegó y un SONIDO
 ##     (BossSounds).
-##   · LA REACCIÓN (`Kind`), según el ataque: AGUANTA (no se mueve); EMPUJADA, se corre tantos metros, parada, en un
-##     momento; DERRIBADA, sale para atrás con un saltito y cae de espaldas, queda TIRADA y SE LEVANTA (mientras, no se
-##     le puede pegar ni se maneja). Y las del agarre: AGARRADA (la lleva el jefe) y REVOLEADA (vuela en arco y, al caer,
-##     derribada).
-##   · A LA MECA CINEMÁTICA LA MUEVE ESTO, no la física: corre después de ella en cada paso, la vuelve a donde estaba y
-##     la mueve por su motor con choque (no atraviesa edificios), y la inclina para caerse. A la física (y a lo demás) le
-##     da un impulso: se cae con su física.
-## *Es una puerta provisoria del módulo Jefes: «qué le hace un golpe» a la cinemática es del módulo Meca (ver
-## BalanceBody.push_impulse); cuando lo decida, esto le pasa la posta.*
+##   · LA REACCIÓN (`Kind`), según el ataque: AGUANTA (no se mueve); EMPUJADA, se corre tantos metros, parada; DERRIBADA,
+##     sale para atrás con un saltito y cae de espaldas, tirada, y se levanta. Y las del agarre: AGARRADA (la lleva el
+##     jefe) y REVOLEADA (vuela en arco y, al caer, derribada).
+##   · MOVERLA Y CAERSE LO HACE LA MECA (módulo Meca, a pedido de este; el usuario: «estás peleando contra un sistema de
+##     gravedad y IK… arreglalo de raíz»): `BalanceBody.shove` (la corre su motor, sin manejarse) y
+##     `BalanceBody.knock_down` (cae, tirada y se levanta; los brazos y las piernas la siguen solos). Acá sólo se le pide.
+##     A la física, un impulso: se cae con su física.
+## *Antes esto la movía e inclinaba desde afuera, pieza por pieza, después de su paso: se peleaba con sus piernas y sus
+## brazos (el torso se salía, los brazos quedaban en el aire).*
 
 enum Kind { FLINCH, PUSH, KNOCKDOWN }
-enum State { FREE, PUSHED, FALLING, DOWN, RISING, HELD, FLYING }
+enum State { FREE, HELD, FLYING }
 
 const NODE_NAME := "Reacción"
-## El destello (s), empujada (s), derribada: cuánto tarda en caer (s), el saltito (m), cuánto queda tirada y cuánto
-## tarda en levantarse (s), y cuánto se inclina (°).
+## El destello (s); empujada, en cuánto se corre (s); derribada, en cuánto sale para atrás (s) y su saltito (m).
 const FLASH_TIME := 0.3
 const PUSH_TIME := 0.35
 const FALL_TIME := 0.5
 const FALL_HOP := 3.0
-const DOWN_TIME := 1.1
-const RISE_TIME := 0.8
-const LIE := 78.0
 ## Lo que se corre la física por cada metro de empuje (m/s).
 const PHYSICAL_SPEED := 1.2
 
+## Agarrada o revoleada (lo demás lo sabe la meca).
 var state := State.FREE
 ## Cuántos golpes recibió (para mirar).
 var hits := 0
@@ -42,20 +38,12 @@ var hits := 0
 var _target: Node3D = null
 var _body: BalanceBody = null
 var _clock := 0.0
-var _from := Vector3.ZERO
-var _to := Vector3.ZERO
-var _arc := 0.0
 var _time := 0.0
 var _away := Vector3.BACK
-var _yaw := 0.0
-var _at := Vector3.ZERO
+var _hold := Vector3.ZERO
 var _land_damage := 0.0
 var _land_what := ""
 var _flash := 0.0
-var _last := Vector3.ZERO
-var _hold := Vector3.ZERO
-## De cada pieza suelta inclinada: su pose de pie y cómo quedó inclinada (ver _lean).
-var _tilted := {}
 var _painted: Array[MeshInstance3D] = []
 var _white := StandardMaterial3D.new()
 
@@ -71,7 +59,7 @@ static func of(node: Node3D) -> HitReaction:
 
 
 ## UN GOLPE A `target`: le saca `damage` por `what` y reacciona con `kind`, empujado `distance` m hacia `away` (de
-## costado); `at`, dónde pegó (las chispas). Si no se le puede pegar (tirada, agarrada), nada: devuelve false.
+## costado); `at`, dónde pegó (las chispas). Si no se le puede pegar (tirada, agarrada, en el dash), nada: devuelve false.
 static func land(target: Node3D, damage: float, what: String, kind: Kind, away: Vector3, distance: float,
 		at: Vector3) -> bool:
 	var reaction := of(target)
@@ -87,57 +75,41 @@ static func land(target: Node3D, damage: float, what: String, kind: Kind, away: 
 func _ready() -> void:
 	_target = get_parent() as Node3D
 	_body = _target as BalanceBody
-	# Después de que ella se movió en el paso (ver arriba).
+	# Agarrada, la pone donde la lleva el jefe después de que ella se movió en su paso.
 	process_physics_priority = 50
 	_white.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_white.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_white.albedo_color = Color(1, 1, 1, 0)
 
 
-## Si ahora no se le puede pegar: tirada, agarrada, volando, o EN EL DASH (intocable un momento, como la rodada de
-## Souls: lo dice el cuerpo, BalanceBody.untouchable, del módulo Meca).
+## Si ahora no se le puede pegar: agarrada, volando, o lo que diga ella (tirada, levantándose, en el dash).
 func untouchable() -> bool:
-	return down() or (_body != null and _body.untouchable())
+	return state != State.FREE or (_body != null and _body.untouchable())
 
 
-## Si está tirada, agarrada o volando (el jefe no la frena: pasa).
+## Si está en el piso, agarrada o volando (el jefe no la frena: pasa).
 func down() -> bool:
-	return state in [State.FALLING, State.DOWN, State.RISING, State.HELD, State.FLYING]
-
-
-## Si la está moviendo esto (no se maneja).
-func busy() -> bool:
-	return state != State.FREE
+	return state != State.FREE or (_body != null and _body.state != BalanceBody.State.STANDING)
 
 
 ## LO QUE SE VE Y SE OYE, y la reacción.
 func react(kind: Kind, away: Vector3, distance: float, at: Vector3) -> void:
 	hits += 1
-	_at = at
 	show_hit(at, kind == Kind.KNOCKDOWN)
 	_away = Vector3(away.x, 0.0, away.z).normalized()
 	if _away == Vector3.ZERO:
 		_away = Vector3.BACK
-	if kind == Kind.FLINCH:
+	if kind == Kind.FLINCH or _body == null:
 		return
 	if not _kinematic():
-		if _body != null:
-			var lift := 0.45 if kind == Kind.KNOCKDOWN else 0.15
-			BalanceBody.hit(_body, (_away + Vector3.UP * lift).normalized() * distance * PHYSICAL_SPEED * _body.mass)
+		var lift := 0.45 if kind == Kind.KNOCKDOWN else 0.15
+		BalanceBody.hit(_body, (_away + Vector3.UP * lift).normalized() * distance * PHYSICAL_SPEED * _body.mass)
 		return
-	_from = _ground()
-	_last = _from
-	_to = _floor(_from + _away * distance)
-	_yaw = _body.mover.rotation.y
-	_clock = 0.0
 	if kind == Kind.PUSH:
-		state = State.PUSHED
-		_time = PUSH_TIME
-		_arc = 0.0
+		_body.shove(_away * distance, PUSH_TIME)
 	else:
-		state = State.FALLING
-		_time = FALL_TIME
-		_arc = FALL_HOP
+		_body.shove(_away * distance, FALL_TIME, FALL_HOP)
+		_body.knock_down(_away)
 
 
 ## Sólo lo que se ve y se oye (también para el jefe cuando le pegan).
@@ -148,39 +120,36 @@ func show_hit(at: Vector3, heavy: bool) -> void:
 	BossSounds.play(BossSounds.Kind.KNOCKDOWN if heavy else BossSounds.Kind.HIT, at, _target)
 
 
-## AGARRADA: la lleva quien la agarró (`hold_at` en cada paso).
+## AGARRADA: la lleva quien la agarró (`hold_at` en cada paso). Sólo la cinemática.
 func grab(at: Vector3) -> void:
 	hits += 1
 	show_hit(at, false)
 	BossSounds.play(BossSounds.Kind.GRAB, at, _target)
-	if not _kinematic():
-		return
-	state = State.HELD
-	_yaw = _body.mover.rotation.y
-	_hold = _ground()
+	if _kinematic():
+		state = State.HELD
+		_hold = _body.mover.global_position
 
 
-## AGARRADA, va a `at` (el piso debajo de sus pies; la pone ahí en su paso, después de que ella se movió).
+## AGARRADA, va a `at` (el piso debajo de sus pies).
 func hold_at(at: Vector3) -> void:
 	_hold = at
 
 
-## REVOLEADA: de donde está, vuela en arco hasta `to` (el piso) en `time` s, subiendo `arc` m; al caer le saca
-## `damage` por `what` y queda derribada.
+## REVOLEADA: de donde está, vuela en arco hasta `to` (el piso) en `time` s, subiendo `arc` m (la mueve ella:
+## `shove`); al caer le saca `damage` por `what` y queda derribada.
 func fling(to: Vector3, arc: float, time: float, damage: float, what: String) -> void:
 	if not _kinematic():
 		state = State.FREE
 		return
+	var from := _body.mover.global_position
+	var offset := Vector3(to.x - from.x, 0.0, to.z - from.z)
 	state = State.FLYING
-	_from = _ground()
-	_last = _from
-	_to = _floor(to)
-	_away = Vector3(_to.x - _from.x, 0.0, _to.z - _from.z).normalized()
-	_arc = arc
-	_time = maxf(time, 0.1)
+	_away = offset.normalized() if offset.length() > 0.01 else Vector3.BACK
 	_clock = 0.0
+	_time = maxf(time, 0.1)
 	_land_damage = damage
 	_land_what = what
+	_body.shove(offset, _time, arc)
 
 
 ## Suelta todo (para las pruebas).
@@ -188,7 +157,6 @@ func clear() -> void:
 	state = State.FREE
 	_flash = 0.0
 	_paint(false)
-	_tilted.clear()
 
 
 func _physics_process(delta: float) -> void:
@@ -197,132 +165,21 @@ func _physics_process(delta: float) -> void:
 		_white.albedo_color.a = 0.85 * clampf(_flash / FLASH_TIME, 0.0, 1.0)
 		if _flash <= 0.0:
 			_paint(false)
-	if state == State.FREE or not _kinematic():
+	if not _kinematic():
 		return
-	if state == State.HELD:
-		_body.put(Transform3D(Basis(Vector3.UP, _yaw), _hold))
-		return
-	_clock += delta
-	var t := clampf(_clock / _time, 0.0, 1.0)
 	match state:
-		State.PUSHED:
-			_slide(_from.lerp(_to, 1.0 - (1.0 - t) * (1.0 - t)))
-			if t >= 1.0:
-				state = State.FREE
-		State.FALLING:
-			_slide(_from.lerp(_to, 1.0 - (1.0 - t) * (1.0 - t)) + Vector3.UP * _arc * 4.0 * t * (1.0 - t))
-			_lean(LIE * t * t)
-			if t >= 1.0:
-				BossSounds.play(BossSounds.Kind.LAND, _ground(), _target)
-				_next(State.DOWN)
-		State.DOWN:
-			_slide(_last)
-			_lean(LIE)
-			if _clock >= DOWN_TIME:
-				_next(State.RISING)
-		State.RISING:
-			_slide(_last)
-			var up := clampf(_clock / RISE_TIME, 0.0, 1.0)
-			_lean(LIE * (1.0 - up * up * (3.0 - 2.0 * up)))
-			if up >= 1.0:
-				state = State.FREE
-				_tilted.clear()
+		State.HELD:
+			_body.put(Transform3D(Basis(Vector3.UP, _body.mover.rotation.y), _hold))
 		State.FLYING:
-			_slide(_from.lerp(_to, t) + Vector3.UP * _arc * 4.0 * t * (1.0 - t))
-			_lean(LIE * 0.5 * sin(t * PI))
-			if t >= 1.0:
+			_clock += delta
+			if _clock >= _time:
+				state = State.FREE
 				var health := Health.of(_target)
 				if health != null:
 					health.hurt(_land_damage, _land_what)
-				show_hit(_ground() + Vector3.UP * 4.0, true)
-				_from = _ground()
-				_last = _from
-				_to = _floor(_from + _away * 6.0)
-				_arc = 1.5
-				_time = FALL_TIME * 0.6
-				_clock = 0.0
-				state = State.FALLING
-				# Al caer de un vuelo ya está casi tirada.
-				_lean(LIE * 0.5)
-
-
-func _next(next: State) -> void:
-	state = next
-	_clock = 0.0
-	_from = _ground()
-	_last = _from
-
-
-## LA LLEVA a `point` (el piso debajo de sus pies) por su motor, con choque contra lo fijo: vuelve a donde estaba
-## (deshace lo que caminó en este paso) y se corre desde ahí.
-func _slide(point: Vector3) -> void:
-	var mover := _body.mover
-	# De costado, por su motor, con choque contra lo fijo; la altura, la del camino (el saltito, el vuelo).
-	mover.global_position = Vector3(_last.x, maxf(_last.y, point.y), _last.z)
-	mover.move_and_collide(Vector3(point.x - _last.x, 0.0, point.z - _last.z))
-	_last = Vector3(mover.global_position.x, point.y, mover.global_position.z)
-	_body.put(Transform3D(Basis(Vector3.UP, _yaw), _last))
-
-
-
-## LA INCLINA `degrees` para el lado de `_away` (cae de espaldas al golpe), sobre el piso de sus pies: ENTERA, la caja
-## y todas sus piezas sueltas (`top_level`: la pelvis, las piernas, los pies con choque; de los brazos, sus piezas, que
-## cada brazo pone en el mundo, y que además caen con el peso), que se ponen aparte. Cada pieza se inclina desde SU POSE DE PIE: si este paso no se movió (un brazo que no se recalcula en
-## cada paso, como el cañón), desde la de antes, para no inclinarla dos veces. *La primera vez se inclinaba sólo la
-## caja (el torso se salía de las piernas); después, la caja y las piernas (los brazos quedaban en el aire).*
-func _lean(degrees: float) -> void:
-	var axis := Vector3.UP.cross(_away).normalized()
-	if axis == Vector3.ZERO:
-		return
-	var pivot := _body.mover.global_position
-	var tilt := Transform3D(Basis(axis, deg_to_rad(degrees)), Vector3.ZERO)
-	var turn := Transform3D(Basis(), pivot) * tilt * Transform3D(Basis(), -pivot)
-	_body.global_transform = turn * _body.global_transform
-	# LOS BRAZOS CAEN CON EL PESO: además, giran otro tanto sobre el pecho (ya inclinado), y quedan tirados por arriba
-	# de la cabeza (si no, apuntando adelante, la meca de espaldas los tenía al cielo).
-	var chest := _body.global_position
-	var limp := Transform3D(Basis(), chest) * tilt * Transform3D(Basis(), -chest) * turn
-	var pieces: Array[Node3D] = []
-	var arm_parts := {}
-	for piece: Node3D in _body.find_children("*", "Node3D", true, false):
-		if not piece.top_level or piece is Label3D or piece is GPUParticles3D or piece is CPUParticles3D:
-			continue
-		if piece is MechArm:
-			# UN BRAZO se queda en el origen y pone sus piezas en el mundo en cada paso: se inclinan ellas.
-			for part in piece.get_children():
-				if part is Node3D:
-					pieces.append(part)
-					arm_parts[part] = true
-		else:
-			pieces.append(piece)
-	for piece in pieces:
-		var key := piece.get_instance_id()
-		var now := piece.global_transform
-		var standing := now
-		if _tilted.has(key) and now.is_equal_approx(_tilted[key][1]):
-			standing = _tilted[key][0]
-		var leaned := (limp if arm_parts.has(piece) else turn) * standing
-		piece.global_transform = leaned
-		_tilted[key] = [standing, leaned]
-
-
-## El piso debajo de `point` (lo fijo); si no hay, el mismo punto.
-func _floor(point: Vector3) -> Vector3:
-	var from := point + Vector3.UP * 2.0
-	var ray := PhysicsRayQueryParameters3D.create(from, point + Vector3.DOWN * 80.0, PhysicsLayers.FIXED)
-	# Sin sus propias piezas (la caja, los pies con choque).
-	var own: Array[RID] = []
-	for piece: CollisionObject3D in _target.find_children("*", "CollisionObject3D", true, false):
-		own.append(piece.get_rid())
-	if _target is CollisionObject3D:
-		own.append((_target as CollisionObject3D).get_rid())
-	ray.exclude = own
-	var hit := _target.get_world_3d().direct_space_state.intersect_ray(ray)
-	return hit["position"] if not hit.is_empty() else point
-
-
-func _ground() -> Vector3:
-	return _body.mover.global_position if _kinematic() else _target.global_position
+				# En la caja (tirada, queda lejos de sus pies).
+				show_hit(_body.global_position, true)
+				_body.knock_down(_away)
 
 
 func _kinematic() -> bool:

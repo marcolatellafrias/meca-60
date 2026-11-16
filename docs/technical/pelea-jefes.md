@@ -44,16 +44,16 @@ Cómo lo hacen los Souls, y cómo queda acá:
   **te derriba** (salís para atrás, caés, quedás tirado y te levantás; **tirado no se te puede pegar** y no manejás).
 - **Que se note**: el que recibe **se pone blanco** un momento, **chispas** donde pegó y **un sonido** (`BossSounds`,
   sintetizados por código). En los Souls además se frena el tiempo unos cuadros y tiembla la cámara: todavía no.
-- **Todo cinemático**: a la meca cinemática la mueve `HitReaction` (corre después de ella en cada paso y la mueve por su
-  motor, con choque de costado; la altura, la del saltito), y la caída es una animación simple: se inclina **entera**
-  de espaldas al golpe (la caja y las piezas sueltas de las piernas; los brazos la siguen solos), queda, se endereza.
-  *La primera vez se inclinaba sólo la caja: el torso se salía de las piernas (el usuario: «se le sale el torso… y el
-  otro se queda quieto»); y el motor se trepaba a sus propias piezas. Después, los brazos quedaban en el aire (cada
-  brazo pone sus piezas en el mundo en cada paso: se inclinan ellas, desde su pose de pie para no inclinarlas dos
-  veces), y tirada de espaldas el cañón apuntaba al cielo: ahora los brazos caen con el peso, por arriba de la cabeza.* `tests/hit_reaction_look` (con ventana, unos 10
-  s): capturas de empujada, cayendo, tirada y levantándose, y a qué altura queda tirada. A la física
-  le da un impulso y cae con su física. *Es una puerta provisoria del módulo Jefes: «qué le hace un golpe» a la cinemática
-  es del módulo Meca; cuando lo decida, `HitReaction` le pasa la posta.*
+- **Todo cinemático, y de la meca**: moverla y caerse lo hace ella (módulo Meca, a pedido de este; aa5da23):
+  `BalanceBody.shove(offset, time, hop)` la corre su motor sin manejarse (también el revoleo), y
+  `BalanceBody.knock_down(away)` la tira de espaldas, tirada, y se levanta (DOWN, LIFT, RIGHT: la inclinación es de su
+  caja, así sus brazos y sus piernas la siguen solos; tirada no se le pega, `untouchable()`). `HitReaction` sólo elige
+  qué pedirle según el ataque y pone el destello, las chispas y el sonido. A la física le da un impulso y cae con su
+  física. *Antes `HitReaction` la movía e inclinaba desde afuera, pieza por pieza, después de su paso: se peleaba con
+  sus piernas y la IK de sus brazos (el torso se salía, los brazos quedaban en el aire; el usuario: «estás peleando
+  contra un sistema de gravedad y IK… arreglalo de raíz… coordiná con otros»). Tirada, el cañón apunta al cielo: la
+  postura de los brazos al caerse la decide el módulo Meca.* `tests/hit_reaction_look` (con ventana, unos 10 s):
+  capturas de empujada, cayendo, tirada y levantándose, y a qué altura queda tirada.
 
 | Ataque del Luchador | Zona de golpe | Qué te hace |
 |---|---|---|
