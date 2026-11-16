@@ -13,6 +13,7 @@ extends RefCounted
 ## largo de lo de munición o brazos… el del frente sí se ensancharía para igualar el vestíbulo, pero el de cabeza no…
 ## un formato un poquito más cuadrado». Las celdas de los costados (brazo y munición) son cuadradas, CELLS por lado: el
 ## brazo adelante y la munición en las demás; artillería y el succionador más cortos para cuadrar la planta.
+## Con gente sentada en cada silla (de arcilla) y una persona parada en el suelo al lado (de arcilla, para que no se caiga), para la escala.
 ## Todo con choque (pisos, paredes, techos): se recorre volando en modo creativo. Piernas y brazos de arcilla, sin choque.
 
 const LIMBS := 0.65
@@ -21,7 +22,7 @@ const GUNNER_LONG := 1.6
 const ARM := Vector2(1.8, 1.8)
 const CELLS := 3
 const HEAD := Vector2(1.6, 1.8)
-const TALL := 2.0
+const TALL := 2.7
 const HEAD_TALL := 1.7
 const SILL := 0.4
 const ROOF := 0.15
@@ -37,6 +38,7 @@ const HEAD_COLOR := Color(0.4, 0.6, 0.85)
 const PACK_COLOR := Color(0.55, 0.42, 0.7)
 const AMMO_COLOR := Color(0.85, 0.72, 0.3)
 const SEAT := Color(0.25, 0.42, 0.7)
+const SKIN := Color(0.86, 0.66, 0.5)
 const RIM := Color(0.22, 0.23, 0.25)
 const JOINT := Color(0.36, 0.375, 0.4)
 const SUCTION := Color(0.45, 0.35, 0.65, 0.25)
@@ -102,8 +104,7 @@ static func build(parent: Node3D) -> Node3D:
 			Clay.box(root, Vector3(0.06, 0.7, 0.9), at.call(Vector3(s * (half - WALL - 0.03), floor_y + 1.1, z)), RIM)
 			Clay.box(root, Vector3(0.04, 0.5, 0.7), at.call(Vector3(s * (half - WALL - 0.07), floor_y + 1.1, z)),
 				AMMO_COLOR.darkened(0.3))
-			solid.call(Vector3(0.5, 0.35, 0.6), Vector3(s * (half - WALL - 0.35), floor_y + 0.175, z + 0.1), AMMO_COLOR)
-		_arm(root, at.call(Vector3(s * (half + ARM.x + body.LEG_THICKNESS * LIMBS * 0.72), floor_y + 1.2, arm_z)), s)
+		_arm(root, at.call(Vector3(s * (half + ARM.x + body.LEG_THICKNESS * LIMBS * 0.72), floor_y + TALL * 0.6, arm_z)), s)
 	# LA CABEZA, arriba de los brazos y del frente del vestíbulo: cerrada.
 	var head_floor := top + 0.06
 	solid.call(Vector3(HEAD.x, 0.1, HEAD.y), Vector3(0.0, head_floor - 0.05, HEAD.y * 0.5), HEAD_COLOR.darkened(0.15))
@@ -140,16 +141,33 @@ static func build(parent: Node3D) -> Node3D:
 		for y: float in [top - 0.55, top - 1.4]:
 			Clay.cylinder(root, NOZZLE, 0.45, at.call(Vector3(x, y, lobby_long + PACK_LONG + 0.22)), RIM,
 				Vector3(90.0, 0.0, 0.0))
+	# Una persona parada en el suelo, al lado de la meca, para la escala.
+	_standing(root, at.call(Vector3(-half - ARM.x - 2.5, 0.0, -1.0)))
 	_legs(root, hip_line, bottom, at.call(Vector3(0.0, 0.0, (-GUNNER_LONG + lobby_long + PACK_LONG) * 0.5)))
 	return root
 
 
-## UNA SILLA con su tablero adelante (mirando a −Z): `at`, el piso debajo del asiento.
+## UNA SILLA con su tablero adelante (mirando a −Z) y alguien sentado, de arcilla: `at`, el piso debajo del asiento.
 static func _chair(root: Node3D, at: Vector3) -> void:
+	Clay.box(root, Vector3(0.38, 0.55, 0.24), at + Vector3(0.0, 0.76, 0.14), SKIN)
+	Clay.sphere(root, 0.12, at + Vector3(0.0, 1.17, 0.12), SKIN)
+	Clay.box(root, Vector3(0.34, 0.14, 0.42), at + Vector3(0.0, 0.54, -0.1), SKIN)
+	for side: float in [-1.0, 1.0]:
+		Clay.box(root, Vector3(0.12, 0.42, 0.12), at + Vector3(side * 0.1, 0.27, -0.28), SKIN)
+		Clay.box(root, Vector3(0.1, 0.1, 0.38), at + Vector3(side * 0.24, 0.8, -0.12), SKIN)
 	Clay.box(root, Vector3(0.5, 0.1, 0.48), at + Vector3(0.0, 0.42, 0.05), SEAT)
 	Clay.box(root, Vector3(0.5, 0.7, 0.1), at + Vector3(0.0, 0.8, 0.3), SEAT)
 	Clay.box(root, Vector3(0.08, 0.42, 0.08), at + Vector3(0.0, 0.21, 0.05), RIM)
 	Clay.box(root, Vector3(0.9, 0.1, 0.35), at + Vector3(0.0, 0.75, -0.6), RIM)
+
+
+## UNA PERSONA PARADA, de arcilla (1,75 m): `at`, el piso entre los pies.
+static func _standing(root: Node3D, at: Vector3) -> void:
+	for side: float in [-1.0, 1.0]:
+		Clay.box(root, Vector3(0.14, 0.85, 0.16), at + Vector3(side * 0.1, 0.425, 0.0), SKIN)
+		Clay.box(root, Vector3(0.1, 0.6, 0.1), at + Vector3(side * 0.27, 1.15, 0.0), SKIN)
+	Clay.box(root, Vector3(0.4, 0.6, 0.24), at + Vector3(0.0, 1.15, 0.0), SKIN)
+	Clay.sphere(root, 0.13, at + Vector3(0.0, 1.62, 0.0), SKIN)
 
 
 ## UN BRAZO de arcilla desde el hombro, en la pared de afuera del módulo: el antebrazo hacia adelante.
