@@ -222,7 +222,6 @@ func _main_control() -> void:
 	# El cuerpo del mando, que mira a quien está sentado, con su franja amarilla.
 	var body := _facing(Vector3(0, 0.84, -0.17))
 	Clay.box(body, Vector3(0.5, 0.17, 0.2), Vector3.ZERO, DARK)
-	Clay.box(body, Vector3(0.5, 0.025, 0.205), Vector3(0, -0.06, 0.0), ACCENT)
 	# La energía, la munición del cañón: una tira fina y apagada en el canto de arriba, siempre a la vista pero sin gritar.
 	var strip := Node3D.new()
 	body.add_child(strip)
@@ -307,17 +306,17 @@ func _status_cube() -> void:
 	cube.add_child(sheet)
 
 
-## EYECTAR: una manija rayada que cuelga del techo, adelante a la derecha, fuera del camino de la vista.
+## EYECTAR: una caja chica como las otras, en su brazo desde el piso, abajo a la derecha del mando: el hongo rojo bajo
+## una tapa de vidrio.
 func _eject() -> void:
-	var at := Vector3(0.38, 1.78, -0.45)
-	for dx: float in [-0.09, 0.09]:
-		_link(Vector3(at.x + dx, CELL.y, at.z), Vector3(at.x + dx, at.y + 0.02, at.z), 0.006, INK)
-	for k in 6:
-		Clay.box(self, Vector3(0.04, 0.04, 0.04), Vector3(at.x - 0.1 + k * 0.04, at.y, at.z), ACCENT if k % 2 else INK)
-	var tag := StrokeLabel.make("EYECTAR", 0.022, CREAM)
-	tag.position = Vector3(at.x, at.y - 0.06, at.z + 0.02)
-	add_child(tag)
-	Clay.box(self, Vector3(0.16, 0.035, 0.005), Vector3(at.x, at.y - 0.06, at.z + 0.015), INK)
+	var at := Vector3(0.36, 0.72, -0.12)
+	_floor_arm(Vector3(0.5, 0.0, -0.2), _behind(at, 0.08))
+	var cube := _cube(at, Vector3(0.14, 0.12, 0.09))
+	Clay.cylinder(cube, 0.028, 0.012, Vector3(0, -0.005, 0.006), LINK, Vector3(90, 0, 0))
+	Clay.cylinder(cube, 0.022, 0.03, Vector3(0, -0.005, 0.02), RED, Vector3(90, 0, 0))
+	Clay.box(cube, Vector3(0.07, 0.065, 0.045), Vector3(0, -0.005, 0.024), GLASS)
+	Clay.box(cube, Vector3(0.14, 0.026, 0.004), Vector3(0, 0.044, 0.002), INK)
+	_text(cube, "EYECTAR", Vector3(0, 0.044, 0.005), 0.012, CREAM)
 
 
 # ── ALGUIEN SENTADO (para las cortadas) ──────────────────────────────────────────────────────────────────────────
