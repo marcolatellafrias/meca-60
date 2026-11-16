@@ -66,11 +66,16 @@ func _ready() -> void:
 	get_tree().quit()
 
 
-# ── LO COMÚN: el mundo, el marco y la energía ────────────────────────────────────────────────────────────────────
+# ── LO COMÚN: el mundo, el marco, la pared de instrumentos y la energía ─────────────────────────────────────────
+## La pared de instrumentos: una cara vertical que mira al jugador, donde va todo lo que se toca y se lee.
+const WALL_FRONT := 0.38
+const WALL_TOP := -0.1
+const WALL_BOTTOM := -0.78
+
+
 func _cockpit(title: String, boss_x: float) -> Node3D:
 	var root := Node3D.new()
 	add_child(root)
-	# El mundo: el piso, unos edificios y la meca enemiga.
 	Clay.box(root, Vector3(9, 0.1, 5), Vector3(0, -0.45, -4.5), Color(0.46, 0.43, 0.39))
 	var heights := [0.9, 1.4, 0.7, 1.8, 1.1, 0.8, 1.6, 1.0, 1.3, 0.75]
 	for k in heights.size():
@@ -85,26 +90,20 @@ func _cockpit(title: String, boss_x: float) -> Node3D:
 	for side: float in [-1.0, 1.0]:
 		Clay.box(boss, Vector3(0.14, 0.5, 0.3), Vector3(side * 0.44, 0.7, 0), Color(0.2, 0.19, 0.2))
 		Clay.box(boss, Vector3(0.18, 0.36, 0.3), Vector3(side * 0.18, 0.18, 0), Color(0.2, 0.19, 0.2))
-	# Los parantes, con sus bandas.
 	for side: float in [-1.0, 1.0]:
 		Clay.box(root, Vector3(0.3, 3.2, 0.34), Vector3(side * 1.9, 0.2, 0.2), FRAME)
-		for y in [-0.3, 0.3, 0.9]:
+		for y in [0.3, 0.9]:
 			Clay.box(root, Vector3(0.34, 0.04, 0.38), Vector3(side * 1.9, y, 0.2), METAL)
-	# Arriba, la visera: oscura, con su canto.
 	Clay.box(root, Vector3(4.4, 0.42, 0.6), Vector3(0, 1.3, 0.3), FRAME)
 	Clay.box(root, Vector3(4.0, 0.05, 0.64), Vector3(0, 1.08, 0.32), METAL)
 	_plaque(root, title, Vector3(0, 1.26, 0.61), 0.075)
-	# Abajo, la consola: una sola pieza ancha, con su baranda adelante.
-	Clay.box(root, Vector3(4.4, 0.6, 1.0), Vector3(0, -1.0, 0.5), METAL)
-	Clay.box(root, Vector3(4.4, 0.05, 1.02), Vector3(0, -0.72, 0.5), LIGHT)
-	Clay.box(root, Vector3(3.6, 0.07, 0.07), Vector3(0, -0.76, 1.03), FRAME)
-	# La energía, común a todos: un tubo de vidrio acostado en el frente de la consola.
-	Clay.box(root, Vector3(1.5, 0.16, 0.06), Vector3(0, -1.0, 1.02), FRAME)
-	Clay.cylinder(root, 0.05, 1.3, Vector3(0, -1.0, 1.1), GLASS, Vector3(0, 0, 90))
-	Clay.cylinder(root, 0.042, 1.3 * 0.62, Vector3(-0.65 + 0.65 * 0.62, -1.0, 1.1), GREEN, Vector3(0, 0, 90))
-	for x: float in [-0.68, 0.68]:
-		Clay.cylinder(root, 0.065, 0.05, Vector3(x, -1.0, 1.1), FRAME, Vector3(0, 0, 90))
-	_plaque(root, "ENERGÍA", Vector3(0, -1.13, 1.06), 0.04)
+	# La pared de instrumentos y, abajo, la consola donde van los pies.
+	var tall := WALL_TOP - WALL_BOTTOM
+	Clay.box(root, Vector3(4.4, tall, 0.3), Vector3(0, WALL_BOTTOM + tall * 0.5, WALL_FRONT - 0.15), METAL)
+	Clay.box(root, Vector3(4.4, 0.04, 0.34), Vector3(0, WALL_TOP, WALL_FRONT - 0.15), LIGHT)
+	Clay.box(root, Vector3(4.4, 0.6, 1.0), Vector3(0, WALL_BOTTOM - 0.3, 0.5), FRAME)
+	# La energía, común a todos: una barra de luces al medio de la pared.
+	_lights(root, Vector3(0, -0.66, WALL_FRONT), 20, 12, GREEN, "ENERGÍA", false)
 	return root
 
 
@@ -117,133 +116,143 @@ func _plaque(parent: Node3D, text: String, at: Vector3, height: float) -> void:
 	Clay.box(parent, Vector3(width, height * 1.8, 0.02), at, BLACK)
 
 
+func _glow(color: Color) -> StandardMaterial3D:
+	var made := StandardMaterial3D.new()
+	made.albedo_color = color
+	made.emission_enabled = true
+	made.emission = color
+	made.emission_energy_multiplier = 1.6
+	return made
+
+
 func _lamp(parent: Node3D, at: Vector3, on: bool) -> void:
-	var lamp := Clay.sphere(parent, 0.03, at, AMBER if on else OFF)
+	Clay.cylinder(parent, 0.04, 0.02, at, FRAME, Vector3(90, 0, 0))
+	var lamp := Clay.sphere(parent, 0.028, at + Vector3(0, 0, 0.015), AMBER if on else OFF)
 	if on:
-		var glow := StandardMaterial3D.new()
-		glow.albedo_color = AMBER
-		glow.emission_enabled = true
-		glow.emission = AMBER
-		glow.emission_energy_multiplier = 1.5
-		lamp.material_override = glow
-	Clay.cylinder(parent, 0.04, 0.02, at - Vector3(0, 0, 0.02), FRAME, Vector3(90, 0, 0))
+		lamp.material_override = _glow(AMBER)
 
 
-## LA PALANCA: una base redonda sobre la consola, el palo inclinado y la bocha con el gatillo rojo adelante.
+## UNA BARRA DE LUCES en un marco: `count` celdas, `lit` prendidas; acostada o parada.
+func _lights(parent: Node3D, at: Vector3, count: int, lit: int, color: Color, title: String, upright: bool) -> void:
+	var cell := Vector2(0.05, 0.035) if upright else Vector2(0.035, 0.07)
+	var step := (cell.y if upright else cell.x) + 0.012
+	var length := count * step + 0.03
+	var frame_size := Vector3(cell.x + 0.04, length, 0.03) if upright else Vector3(length, cell.y + 0.04, 0.03)
+	Clay.box(parent, frame_size, at, BLACK)
+	var dim := Color(color.r * 0.22, color.g * 0.22, color.b * 0.22)
+	for k in count:
+		var offset := -length * 0.5 + 0.015 + step * (k + 0.5)
+		var place := at + (Vector3(0, offset, 0.018) if upright else Vector3(offset, 0, 0.018))
+		var piece := Clay.box(parent, Vector3(cell.x, cell.y, 0.01), place, dim)
+		if k < lit:
+			piece.material_override = _glow(color)
+	var below := (length if upright else cell.y + 0.04) * 0.5 + 0.05
+	_plaque(parent, title, at + Vector3(0, -below, 0.01), 0.032)
+
+
+## UN BOTÓN QUE SE TRABA: cuadrado, con su lamparita arriba; hundido y con la luz prendida si está puesto.
+func _latch(parent: Node3D, at: Vector3, on: bool, title: String, size := Vector2(0.16, 0.11)) -> void:
+	Clay.box(parent, Vector3(size.x + 0.04, size.y + 0.04, 0.02), at, FRAME)
+	Clay.box(parent, Vector3(size.x, size.y, 0.03 if on else 0.06), at + Vector3(0, 0, 0.02 if on else 0.035), BLACK if on else CREAM)
+	_lamp(parent, at + Vector3(0, size.y * 0.5 + 0.06, 0), on)
+	var tag := StrokeLabel.make(title, 0.03, INK)
+	tag.position = at + Vector3(0, -size.y * 0.5 - 0.05, 0.012)
+	parent.add_child(tag)
+
+
+## UN BOTÓN DE APRETAR (no se traba): redondo, con su aro.
+func _push(parent: Node3D, at: Vector3, radius: float, cap: Color, title: String) -> void:
+	Clay.cylinder(parent, radius + 0.02, 0.02, at, FRAME, Vector3(90, 0, 0))
+	Clay.cylinder(parent, radius, 0.05, at + Vector3(0, 0, 0.03), cap, Vector3(90, 0, 0))
+	if not title.is_empty():
+		var tag := StrokeLabel.make(title, 0.03, INK)
+		tag.position = at + Vector3(0, -radius - 0.05, 0.012)
+		parent.add_child(tag)
+
+
+## LA PALANCA DE DOS EJES, EN LA PARED: sale hacia el jugador, de una placa con su ranura en cruz; la bocha se corre
+## hacia donde quedó (`lean`, de −1 a 1) y lleva el gatillo rojo arriba.
 func _stick(parent: Node3D, at: Vector3, lean: Vector2, title: String, trigger: String) -> void:
-	Clay.cylinder(parent, 0.24, 0.06, at + Vector3(0, 0.03, 0), FRAME)
-	Clay.sphere(parent, 0.13, at + Vector3(0, 0.04, 0), BLACK)
-	var top := at + Vector3(lean.x * 0.14, 0.46, lean.y * 0.14)
+	Clay.box(parent, Vector3(0.36, 0.36, 0.03), at, FRAME)
+	Clay.box(parent, Vector3(0.3, 0.3, 0.02), at + Vector3(0, 0, 0.02), BLACK)
+	Clay.box(parent, Vector3(0.26, 0.02, 0.01), at + Vector3(0, 0, 0.032), METAL)
+	Clay.box(parent, Vector3(0.02, 0.26, 0.01), at + Vector3(0, 0, 0.032), METAL)
+	Clay.sphere(parent, 0.07, at + Vector3(0, 0, 0.04), Color(0.16, 0.16, 0.17))
+	var tip := at + Vector3(lean.x * 0.1, lean.y * 0.1, 0.28)
 	var shaft := MeshInstance3D.new()
 	shaft.mesh = BoxMesh.new()
 	shaft.material_override = Clay.material(LIGHT)
 	parent.add_child(shaft)
-	Clay.segment(shaft, at + Vector3(0, 0.08, 0), top, 0.05)
-	Clay.sphere(parent, 0.085, top + Vector3(0, 0.05, 0), BLACK)
-	Clay.box(parent, Vector3(0.05, 0.05, 0.05), top + Vector3(0, 0.04, 0.08), TRIGGER)
-	_plaque(parent, title, at + Vector3(0, -0.12, 0.48), 0.045)
-	var tag := StrokeLabel.make("GATILLO: " + trigger, 0.03, INK)
-	tag.position = at + Vector3(0, -0.2, 0.49)
+	Clay.segment(shaft, at + Vector3(0, 0, 0.05), tip, 0.04)
+	Clay.sphere(parent, 0.075, tip, BLACK)
+	Clay.box(parent, Vector3(0.04, 0.04, 0.04), tip + Vector3(0, 0.07, 0.0), TRIGGER)
+	_plaque(parent, title, at + Vector3(0.54, 0.04, 0.0), 0.04)
+	var tag := StrokeLabel.make("GATILLO: " + trigger, 0.026, INK)
+	tag.position = at + Vector3(0.54, -0.04, 0.012)
 	parent.add_child(tag)
 
 
-## UN TUBO EN EL PARANTE: el vidrio, lo que tiene adentro y las abrazaderas.
-func _pod(parent: Node3D, x: float, y: float, frac: float, color: Color, title: String) -> void:
-	var at := Vector3(x, y, 0.5)
-	for dy: float in [-0.24, 0.24]:
-		Clay.cylinder(parent, 0.1, 0.05, at + Vector3(0, dy, 0), FRAME)
-		Clay.box(parent, Vector3(0.06, 0.04, 0.3), at + Vector3(signf(-x) * -0.0, dy, -0.16), METAL)
-	Clay.cylinder(parent, 0.08, 0.44, at, GLASS)
-	Clay.cylinder(parent, 0.07, 0.44 * frac, at + Vector3(0, -0.22 + 0.22 * frac, 0), color)
-	_plaque(parent, title, at + Vector3(0, -0.34, 0.06), 0.035)
-
-
-## UNA MANIJA QUE CUELGA DE LA VISERA: dos cordones y una T; rayada si es peligrosa.
-func _pull(parent: Node3D, x: float, title: String, striped: bool) -> void:
+## UNA MANIJA QUE CUELGA DE LA VISERA: dos cordones y una T rayada (eyectar: se tira una vez y no hay vuelta).
+func _pull(parent: Node3D, x: float, title: String) -> void:
 	for dx: float in [-0.12, 0.12]:
 		Clay.box(parent, Vector3(0.015, 0.22, 0.015), Vector3(x + dx, 0.97, 0.45), BLACK)
-	if striped:
-		for k in 8:
-			Clay.box(parent, Vector3(0.05, 0.07, 0.07), Vector3(x - 0.175 + k * 0.05, 0.84, 0.45), Clay.YELLOW if k % 2 else BLACK)
-	else:
-		Clay.box(parent, Vector3(0.4, 0.07, 0.07), Vector3(x, 0.84, 0.45), LIGHT)
+	for k in 8:
+		Clay.box(parent, Vector3(0.05, 0.07, 0.07), Vector3(x - 0.175 + k * 0.05, 0.84, 0.45), Clay.YELLOW if k % 2 else BLACK)
 	_plaque(parent, title, Vector3(x, 0.74, 0.47), 0.035)
 
 
 # ── 1. EL MOVIMIENTO ─────────────────────────────────────────────────────────────────────────────────────────────
 func _movement() -> Node3D:
 	var root := _cockpit("MOVIMIENTO", 0.0)
-	var base := Vector3(-0.75, -0.7, 0.55)
-	_stick(root, base, Vector2(-0.4, -0.8), "CAMINAR", "SALTAR")
-	# El dash: ocho teclas en aro alrededor de la base de la palanca, cada una en su dirección.
+	var walk := Vector3(-0.95, -0.38, WALL_FRONT)
+	_stick(root, walk, Vector2(-0.3, 0.8), "CAMINAR", "SALTAR")
+	# El dash: ocho botones en aro alrededor de la placa, cada uno del lado hacia donde sale.
 	for i in 8:
 		var angle := TAU * i / 8.0
-		var key := Clay.box(root, Vector3(0.14, 0.07 if i != 1 else 0.035, 0.1), base + Vector3(cos(angle) * 0.4, 0.03, -sin(angle) * 0.28),
-			AMBER if i == 1 else CREAM)
-		key.rotation.y = angle
-	_plaque(root, "DASH", base + Vector3(0.62, 0.02, 0.2), 0.035)
-	# Agacharse: una palanca grande a la derecha, que se tira para abajo.
-	var crouch := Vector3(0.95, -0.7, 0.6)
-	Clay.box(root, Vector3(0.12, 0.04, 0.36), crouch + Vector3(0, 0.02, 0), BLACK)
-	var arm := MeshInstance3D.new()
-	arm.mesh = BoxMesh.new()
-	arm.material_override = Clay.material(LIGHT)
-	root.add_child(arm)
-	Clay.segment(arm, crouch + Vector3(0, 0.04, 0.1), crouch + Vector3(0, 0.36, 0.22), 0.045)
-	Clay.sphere(root, 0.06, crouch + Vector3(0, 0.38, 0.23), BLACK)
-	_plaque(root, "AGACHAR", crouch + Vector3(0, -0.12, 0.43), 0.04)
-	# El giro: dos pedales abajo, a los pies.
-	for side: float in [-1.0, 1.0]:
-		var pedal := Vector3(side * 0.32 + 0.0, -1.22, 1.2)
-		Clay.box(root, Vector3(0.26, 0.12, 0.06), pedal, BLACK)
-		for k in 3:
-			Clay.box(root, Vector3(0.22, 0.012, 0.02), pedal + Vector3(0, -0.04 + k * 0.04, 0.035), FRAME)
-	_plaque(root, "GIRO", Vector3(0, -1.22, 1.22), 0.035)
-	# Arriba: el ascensor y eyectar, manijas que cuelgan.
-	_pull(root, -1.0, "ASCENSOR", false)
-	_pull(root, 1.0, "EYECTAR", true)
-	# Los parantes: la carga del salto y el propulsor.
-	_pod(root, -1.9, 0.2, 0.55, GREEN, "SALTO")
-	_pod(root, 1.9, 0.2, 0.8, AMBER, "PROPULSOR")
-	_lamp(root, Vector3(1.9, 0.58, 0.52), false)
+		var spot := walk + Vector3(cos(angle) * 0.29, sin(angle) * 0.29, 0.0)
+		_push(root, spot, 0.03, AMBER if i == 1 else CREAM, "")
+	_plaque(root, "DASH", walk + Vector3(-0.44, 0.0, 0.0), 0.035)
+	# Agacharse se traba; el giro, mientras se lo aprieta.
+	_latch(root, Vector3(0.15, -0.3, WALL_FRONT), false, "AGACHAR")
+	_plaque(root, "GIRO", Vector3(0.85, -0.2, WALL_FRONT), 0.035)
+	_push(root, Vector3(0.68, -0.34, WALL_FRONT), 0.06, CREAM, "IZQUIERDA")
+	_push(root, Vector3(1.02, -0.34, WALL_FRONT), 0.06, CREAM, "DERECHA")
+	# El ascensor, en la visera: subir y bajar.
+	_push(root, Vector3(-1.1, 0.95, 0.62), 0.05, CREAM, "SUBIR")
+	_push(root, Vector3(-0.85, 0.95, 0.62), 0.05, CREAM, "BAJAR")
+	_pull(root, 1.0, "EYECTAR")
+	# Los parantes: la carga del salto y el propulsor, en luces.
+	_lights(root, Vector3(-1.9, 0.25, 0.38), 10, 5, GREEN, "SALTO", true)
+	_lights(root, Vector3(1.9, 0.25, 0.38), 10, 8, AMBER, "PROPULSOR", true)
+	_lamp(root, Vector3(1.9, 0.62, 0.38), false)
 	return root
 
 
 # ── 2. EL CAÑÓN ──────────────────────────────────────────────────────────────────────────────────────────────────
 func _cannon() -> Node3D:
 	var root := _cockpit("BRAZO IZQUIERDO", 0.45)
-	# El caño entra desde abajo a la izquierda.
-	var barrel := Clay.cylinder(root, 0.16, 2.4, Vector3(-1.1, -0.35, -1.2), Color(0.28, 0.29, 0.3), Vector3(70, 0, 28))
+	var barrel := Clay.cylinder(root, 0.16, 2.4, Vector3(-1.1, -0.2, -1.2), Color(0.28, 0.29, 0.3), Vector3(70, 0, 28))
 	barrel.name = "Caño"
-	# La mira pintada en el vidrio, donde apunta el brazo (atrasada de la palanca).
 	for k in 16:
 		var angle := TAU * k / 16.0
 		Clay.box(root, Vector3(0.025, 0.025, 0.01), Vector3(0.5 + cos(angle) * 0.13, 0.42 + sin(angle) * 0.13, 0.0), AMBER)
 	for way: Vector2 in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
 		Clay.box(root, Vector3(0.025 + absf(way.x) * 0.06, 0.025 + absf(way.y) * 0.06, 0.01),
 			Vector3(0.5 + way.x * 0.2, 0.42 + way.y * 0.2, 0.0), AMBER)
-	_stick(root, Vector3(-0.8, -0.7, 0.55), Vector2(0.5, -0.3), "APUNTAR", "DISPARAR")
-	# Los modos: cuatro teclas de piano; la elegida queda abajo, con su lamparita.
+	_stick(root, Vector3(-0.95, -0.38, WALL_FRONT), Vector2(0.6, 0.3), "APUNTAR", "DISPARAR")
+	# Los modos: cuatro botones que se traban, uno solo puesto a la vez.
 	var names := ["SIMPLE", "RÁFAGA", "BARRIDO", "SÚPER"]
 	for i in names.size():
-		var x := 0.35 + i * 0.27
-		var down := i == 0
-		Clay.box(root, Vector3(0.22, 0.08 if not down else 0.04, 0.42), Vector3(x, -0.66 if not down else -0.68, 0.62), BLACK if down else CREAM)
-		_lamp(root, Vector3(x, -0.6, 0.38), down)
-		var tag := StrokeLabel.make(names[i], 0.03, INK)
-		tag.position = Vector3(x, -0.86, 1.01)
-		root.add_child(tag)
-	_plaque(root, "MODO", Vector3(0.75, -0.92, 1.01), 0.035)
-	_pull(root, 1.0, "EYECTAR", true)
-	_pod(root, 1.9, 0.2, 0.3, AMBER, "SÚPER")
+		_latch(root, Vector3(0.3 + i * 0.26, -0.3, WALL_FRONT), i == 0, names[i])
+	_pull(root, 1.0, "EYECTAR")
+	_lights(root, Vector3(1.9, 0.25, 0.38), 10, 3, AMBER, "SÚPER", true)
 	return root
 
 
 # ── 3. LA ESPADA ─────────────────────────────────────────────────────────────────────────────────────────────────
 func _sword() -> Node3D:
 	var root := _cockpit("BRAZO DERECHO", -0.4)
-	# El puño de la meca abajo a la derecha, con la espada hacia arriba a la izquierda.
-	var fist := Vector3(0.75, -0.42, -0.6)
+	var fist := Vector3(0.6, 0.05, -0.6)
 	Clay.box(root, Vector3(0.36, 0.3, 0.3), fist, Color(0.28, 0.29, 0.3))
 	for k in 4:
 		Clay.box(root, Vector3(0.37, 0.02, 0.31), fist + Vector3(0, -0.11 + k * 0.07, 0), FRAME)
@@ -251,35 +260,13 @@ func _sword() -> Node3D:
 	blade.rotation_degrees = Vector3(0, 0, 24)
 	var guard := Clay.box(root, Vector3(0.5, 0.06, 0.1), fist + Vector3(-0.03, 0.2, 0), FRAME)
 	guard.rotation_degrees = Vector3(0, 0, 24)
-	_stick(root, Vector3(0.85, -0.7, 0.55), Vector2(-0.6, -0.5), "HOJA", "ESTOCADA")
-	# Atacar o cubrirse: una palanca de cuchilla con dos posiciones.
-	var knife := Vector3(-0.85, -0.7, 0.6)
-	Clay.box(root, Vector3(0.36, 0.04, 0.3), knife + Vector3(0, 0.02, 0), FRAME)
-	for side: float in [-1.0, 1.0]:
-		Clay.box(root, Vector3(0.03, 0.12, 0.08), knife + Vector3(side * 0.08, 0.08, -0.08), METAL)
-	var arm := MeshInstance3D.new()
-	arm.mesh = BoxMesh.new()
-	arm.material_override = Clay.material(LIGHT)
-	root.add_child(arm)
-	Clay.segment(arm, knife + Vector3(0, 0.1, -0.08), knife + Vector3(0, 0.34, 0.12), 0.04)
-	Clay.box(root, Vector3(0.2, 0.05, 0.05), knife + Vector3(0, 0.36, 0.13), BLACK)
-	var up := StrokeLabel.make("ATAQUE", 0.03, INK)
-	up.position = knife + Vector3(0.26, 0.36, 0.13)
-	root.add_child(up)
-	var down := StrokeLabel.make("GUARDIA", 0.03, INK)
-	down.position = knife + Vector3(0.26, 0.06, 0.2)
-	root.add_child(down)
-	_lamp(root, knife + Vector3(-0.22, 0.04, 0.3), true)
-	# La mano: un gatillo grande de agarrar en el parante izquierdo, con su lamparita de empuñada.
-	var grip := Vector3(-1.9, 0.25, 0.5)
-	Clay.box(root, Vector3(0.18, 0.4, 0.14), grip, BLACK)
-	for k in 4:
-		Clay.box(root, Vector3(0.19, 0.03, 0.15), grip + Vector3(0, -0.15 + k * 0.1, 0), FRAME)
-	Clay.box(root, Vector3(0.08, 0.2, 0.1), grip + Vector3(0.1, -0.02, 0.1), TRIGGER)
-	_lamp(root, grip + Vector3(0, 0.3, 0.06), true)
-	_plaque(root, "AGARRAR", grip + Vector3(0, -0.32, 0.08), 0.035)
-	_pull(root, 1.0, "EYECTAR", true)
-	_pod(root, 1.9, 0.2, 0.4, AMBER, "ESTOCADA")
+	_stick(root, Vector3(0.95, -0.38, WALL_FRONT), Vector2(-0.7, 0.5), "HOJA", "ESTOCADA")
+	# Atacar o cubrirse: dos botones que se traban, uno u otro. La mano: agarrar se traba.
+	_latch(root, Vector3(-0.95, -0.3, WALL_FRONT), true, "ATAQUE")
+	_latch(root, Vector3(-0.7, -0.3, WALL_FRONT), false, "GUARDIA")
+	_latch(root, Vector3(-0.3, -0.3, WALL_FRONT), true, "AGARRAR")
+	_pull(root, -1.0, "EYECTAR")
+	_lights(root, Vector3(1.9, 0.25, 0.38), 10, 4, AMBER, "ESTOCADA", true)
 	return root
 
 
