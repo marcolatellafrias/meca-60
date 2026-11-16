@@ -11,9 +11,11 @@ extends MechKeys
 ##   G / X: el ascensor sube / baja.
 ## Aturdida (sin energía), no hace nada.
 
-## Lo que gastan el salto y el dash, y levitar por segundo.
+## Lo que gastan el salto y el dash, y levitar por segundo. El dash, caro (el usuario, 15/11/2026: «diseñar todo para
+## un dash… que cueste más energía»): dos seguidos, y queda casi sin energía para tirar. Además, entre dash y dash, la
+## espera de la cinemática (KinematicSettings.dash_cooldown): con energía de sobra, tampoco salen dos seguidos.
 const JUMP_COST := 0.05
-const DASH_COST := 0.16
+const DASH_COST := 0.4
 const FLY_COST := 0.22
 const MODE_KEYS := {KEY_1: CannonArm.Mode.SIMPLE, KEY_2: CannonArm.Mode.BURST, KEY_3: CannonArm.Mode.BEAM,
 	KEY_4: CannonArm.Mode.SUPER}
@@ -35,8 +37,7 @@ func read() -> void:
 	mech.crouch = mine and Input.is_physical_key_pressed(KEY_CTRL)
 	# EL DASH: al apretar Shift con una dirección, si alcanza la energía (y su barra).
 	var shift := mine and Input.is_physical_key_pressed(KEY_SHIFT)
-	if shift and not _shift_was and mech.move.length() > 0.1 and mech.mover != null \
-			and mech.mover.dash_fuel >= KinematicSettings.current.dash_cost:
+	if shift and not _shift_was and mech.move.length() > 0.1 and mech.mover != null and mech.mover.dash_ready():
 		_dash_on = energy.spend(DASH_COST)
 	if not shift:
 		_dash_on = false

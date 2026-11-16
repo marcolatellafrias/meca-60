@@ -309,6 +309,14 @@ func speed() -> float:
 	return Vector2(velocity.x, velocity.z).length()
 
 
+## SI UN DASH SALDRÍA AHORA, si se apretara: lo mismo que pide step() (parada, sin empujón ni otro dash en curso, con una
+## dirección, con barra y pasada la espera entre dashes). Para quien cobra el dash aparte, como la Meca de tres con su
+## energía: así no cobra uno que no sale.
+func dash_ready() -> bool:
+	return body.state == BalanceBody.State.STANDING and _shove_left <= 0.0 and _dash_left <= 0.0 \
+			and body.move.length() > 0.1 and dash_fuel >= KinematicSettings.current.dash_cost and _dash_wait <= 0.0
+
+
 ## LO QUE QUEDA DEBAJO de la caja cuando baja (agachándose, o cayendo): se achata.
 func _squash() -> void:
 	var place := body_place()

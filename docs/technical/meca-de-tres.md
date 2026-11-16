@@ -22,6 +22,11 @@ El movimiento de la cinemática ([[meca-cinematica]]): caminar, girar, agacharse
 dirección) y **levitar**, que es su vuelo (espacio otra vez en el aire): la mejora de **propulsores en las pantorrillas,
 atrás**, que no se modelan. El dash, el salto y levitar, además de sus barras, gastan energía.
 
+**El dash, una decisión** (el usuario, por Jefes: «diseñar todo para un dash… que cueste más energía»): gasta **el 40 %
+de la energía común**, dos seguidos dejan a la meca casi sin nada para tirar. Y entre dash y dash está **la espera de la
+cinemática** (`dash_cooldown`, 1 s desde que termina uno, en el F1): aunque sobre energía, no salen dos seguidos. Shift
+sólo cobra si el dash sale de verdad (`KinematicMover.dash_ready()`).
+
 ## El taladro, brazo derecho — `DrillArm`
 Un brazo discreto (`PoseArm`) con una mecha en vez de mano. El usuario: «con el clic derecho… lo cargas y con el otro
 clic… lo usas, porque no lo puedes usar de una porque tarda en agarrar velocidad… su propia barra, y mientras más tiempo
