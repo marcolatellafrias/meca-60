@@ -36,10 +36,10 @@ func _ready() -> void:
 	print("PISO ", floor_y)
 	await get_tree().create_timer(2.0).timeout
 	var shots: Array = []
-	shots.append(await _view(Vector3(-11.0, 10.0, -13.0), Vector3(0.0, floor_y - 1.0, 0.0), 45.0))
+	shots.append(await _view(Vector3(-15.0, 13.0, -17.0), Vector3(0.0, floor_y - 2.0, 0.0), 45.0))
 	var stand := Vector3(0.0, floor_y + 1.65, ModulesMaquette.ARM.y * ModulesMaquette.CELLS - 0.3 + shift)
 	shots.append(await _view(stand, stand + Vector3(0.0, -0.2, -1.0), 80.0))
-	shots.append(await _view(Vector3(0.0, 40.0, 0.01), Vector3.ZERO, 0.0, 14.0))
+	shots.append(await _view(Vector3(0.0, 40.0, 0.01), Vector3.ZERO, 0.0, 17.0))
 	var seat := Vector3(0.8, floor_y + 1.2, -ModulesMaquette.GUNNER_LONG + 0.95 + shift)
 	shots.append(await _view(seat, seat + Vector3(-1.0, -0.1, 0.2), 80.0))
 	_save(shots)

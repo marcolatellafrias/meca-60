@@ -7,7 +7,8 @@ extends RefCounted
 ##   · ARTILLERÍA adelante, del ancho del vestíbulo, con dos sillas lado a lado; abierta al vestíbulo.
 ##   · EL VESTÍBULO, de dos brazos de largo; adelante, abierto a los dos BRAZOS (sus paredes divisorias no están);
 ##     atrás, a cada lado, la MUNICIÓN maciza con su boca de recarga.
-##   · LA CABEZA arriba, alineada con los brazos, cerrada (sin acceso todavía).
+##   · LA CABEZA arriba, centrada sobre toda la meca: un domo sobre un tramo corto de cilindro, cerrada (sin acceso
+##     todavía).
 ##   · EL SUCCIONADOR sigue al vestíbulo de su mismo ancho, sin pared: el piso se termina y abajo, la boca.
 ## 16/11, más grande y más cuadrada vista de arriba: «aumentar… el ancho del vestíbulo y el largo también… 3 módulos de
 ## largo de lo de munición o brazos… el del frente sí se ensancharía para igualar el vestíbulo, pero el de cabeza no…
@@ -16,14 +17,15 @@ extends RefCounted
 ## Con gente sentada en cada silla (de arcilla) y una persona parada en el suelo al lado (de arcilla, para que no se caiga), para la escala.
 ## Todo con choque (pisos, paredes, techos): se recorre volando en modo creativo. Piernas y brazos de arcilla, sin choque.
 
-const LIMBS := 0.65
+const LIMBS := 0.8
 const WIDTH := 4.0
 const GUNNER_LONG := 1.6
 const ARM := Vector2(1.8, 1.8)
 const CELLS := 3
-const HEAD := Vector2(1.6, 1.8)
+## La cabeza: el radio del domo y el alto del tramo de cilindro debajo.
+const HEAD_RADIUS := 1.7
+const HEAD_DRUM := 0.6
 const TALL := 2.7
-const HEAD_TALL := 1.7
 const SILL := 0.4
 const ROOF := 0.15
 const WALL := 0.12
@@ -46,7 +48,7 @@ const SUCTION := Color(0.45, 0.35, 0.65, 0.25)
 
 ## Cuánto ocupa en el suelo (ancho, fondo), con los brazos y los pies.
 static func footprint() -> Vector2:
-	return Vector2(20.0, 20.0)
+	return Vector2(24.0, 24.0)
 
 
 ## Arma la maqueta colgada de `parent`, centrada y apoyada en y = 0.
@@ -105,18 +107,30 @@ static func build(parent: Node3D) -> Node3D:
 			Clay.box(root, Vector3(0.04, 0.5, 0.7), at.call(Vector3(s * (half - WALL - 0.07), floor_y + 1.1, z)),
 				AMMO_COLOR.darkened(0.3))
 		_arm(root, at.call(Vector3(s * (half + ARM.x + body.LEG_THICKNESS * LIMBS * 0.72), floor_y + TALL * 0.6, arm_z)), s)
-	# LA CABEZA, arriba de los brazos y del frente del vestíbulo: cerrada.
+	# LA CABEZA: un domo sobre un tramo corto de cilindro (gana altura sin ensancharse), con su marco negro abajo,
+	# centrada sobre toda la meca; cerrada. Choca como un cilindro de su alto.
 	var head_floor := top + 0.06
-	solid.call(Vector3(HEAD.x, 0.1, HEAD.y), Vector3(0.0, head_floor - 0.05, HEAD.y * 0.5), HEAD_COLOR.darkened(0.15))
-	solid.call(Vector3(HEAD.x, ROOF, HEAD.y), Vector3(0.0, head_floor + HEAD_TALL + ROOF * 0.5, HEAD.y * 0.5),
-		HEAD_COLOR)
-	var head_y := head_floor + HEAD_TALL * 0.5
-	for z: float in [WALL * 0.5, HEAD.y - WALL * 0.5]:
-		solid.call(Vector3(HEAD.x, HEAD_TALL, WALL), Vector3(0.0, head_y, z), HEAD_COLOR)
-	for s: float in [-1.0, 1.0]:
-		solid.call(Vector3(WALL, HEAD_TALL, HEAD.y), Vector3(s * (HEAD.x - WALL) * 0.5, head_y, HEAD.y * 0.5),
-			HEAD_COLOR)
-	_chair(root, at.call(Vector3(0.0, head_floor, 0.95)))
+	var head_z := (-GUNNER_LONG + lobby_long + PACK_LONG) * 0.5
+	var head_at: Vector3 = at.call(Vector3(0.0, head_floor, head_z))
+	Clay.cylinder(root, HEAD_RADIUS, HEAD_DRUM, head_at + Vector3(0.0, HEAD_DRUM * 0.5, 0.0), HEAD_COLOR)
+	Clay.cylinder(root, HEAD_RADIUS + 0.06, 0.16, head_at + Vector3(0.0, 0.08, 0.0), RIM)
+	var dome := MeshInstance3D.new()
+	var cap := SphereMesh.new()
+	cap.radius = HEAD_RADIUS
+	cap.height = HEAD_RADIUS
+	cap.is_hemisphere = true
+	dome.mesh = cap
+	dome.material_override = Clay.material(HEAD_COLOR)
+	dome.position = head_at + Vector3(0.0, HEAD_DRUM, 0.0)
+	root.add_child(dome)
+	var shape := CollisionShape3D.new()
+	var drum := CylinderShape3D.new()
+	drum.radius = HEAD_RADIUS
+	drum.height = HEAD_DRUM + HEAD_RADIUS
+	shape.shape = drum
+	shape.position = head_at + Vector3(0.0, drum.height * 0.5, 0.0)
+	root.add_child(shape)
+	_chair(root, head_at + Vector3(0.0, 0.0, 0.3))
 	# EL SUCCIONADOR, continuo con el vestíbulo: sin piso; sus costados, el fondo, el techo y, abajo, la boca.
 	var low := bottom - PACK_DROP
 	var pack_z := lobby_long + PACK_LONG * 0.5
