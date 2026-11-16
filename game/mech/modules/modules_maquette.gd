@@ -4,7 +4,8 @@ extends RefCounted
 ## LA MECA POR MÓDULOS, MAQUETA CAMINABLE A ESCALA REAL (16/11/2026; el bloqueo 76 de tests/modules_look, sin las paredes
 ## divisorias). El usuario: «sacá las paredes divisorias entre vestíbulo y hombros y cabina artillería y pasámelo a esta
 ## maqueta a escala real en una parcela al principio del sandbox así veo cómo se siente».
-##   · ARTILLERÍA adelante, del ancho del vestíbulo, con dos sillas lado a lado; abierta al vestíbulo.
+##   · ARTILLERÍA adelante, del ancho del vestíbulo, con dos sillas lado a lado; abierta al vestíbulo. La arista de
+##     arriba y adelante, bajada; el frente, ese chanfle y el techo, de vidrio. LOS BRAZOS, una ventana adelante.
 ##   · EL VESTÍBULO, de dos brazos de largo; adelante, abierto a los dos BRAZOS (sus paredes divisorias no están);
 ##     atrás, a cada lado, la MUNICIÓN maciza con su boca de recarga.
 ##   · LA CABEZA arriba, centrada sobre toda la meca: un domo sobre un tramo corto de cilindro, cerrada (sin acceso
@@ -22,6 +23,12 @@ const WIDTH := 4.0
 const GUNNER_LONG := 1.6
 const ARM := Vector2(1.8, 1.8)
 const CELLS := 3
+## Artillería: el alto del frente de vidrio (de ahí sube el chanfle) y cuánto fondo ocupa el chanfle.
+const GUNNER_NOSE := 1.3
+const GUNNER_SLOPE := 1.1
+## La ventana del frente de cada brazo: ancho y alto, y a qué altura del piso empieza.
+const ARM_WINDOW := Vector2(1.2, 1.1)
+const ARM_WINDOW_FROM := 0.9
 ## La cabeza: el radio del domo y el alto del tramo de cilindro debajo.
 const HEAD_RADIUS := 1.7
 const HEAD_DRUM := 0.6
@@ -43,6 +50,7 @@ const SEAT := Color(0.25, 0.42, 0.7)
 const SKIN := Color(0.86, 0.66, 0.5)
 const RIM := Color(0.22, 0.23, 0.25)
 const JOINT := Color(0.36, 0.375, 0.4)
+const GLASS := Color(0.62, 0.8, 0.92, 0.28)
 const SUCTION := Color(0.45, 0.35, 0.65, 0.25)
 
 
@@ -77,23 +85,44 @@ static func build(parent: Node3D) -> Node3D:
 		solid.call(Vector3(ARM.x, SILL, ARM.y), Vector3(s * (half + ARM.x * 0.5), bottom + SILL * 0.5, ARM.y * 0.5),
 			ARM_COLOR.darkened(0.15))
 	# LOS TECHOS.
-	solid.call(Vector3(WIDTH, ROOF, GUNNER_LONG), Vector3(0.0, top - ROOF * 0.5, -GUNNER_LONG * 0.5), GUNNER_COLOR)
 	solid.call(Vector3(WIDTH, ROOF, lobby_long), Vector3(0.0, top - ROOF * 0.5, lobby_long * 0.5), LOBBY_COLOR)
 	for s: float in [-1.0, 1.0]:
 		solid.call(Vector3(ARM.x, ROOF, ARM.y), Vector3(s * (half + ARM.x * 0.5), top - ROOF * 0.5, ARM.y * 0.5),
 			ARM_COLOR)
 	var wall_y := floor_y + TALL * 0.5
-	# ARTILLERÍA: el frente y sus dos costados; atrás, abierta al vestíbulo. Dos sillas lado a lado.
-	solid.call(Vector3(WIDTH, TALL, WALL), Vector3(0.0, wall_y, -GUNNER_LONG + WALL * 0.5), GUNNER_COLOR)
+	# ARTILLERÍA: la arista de arriba y adelante, bajada (un chanfle); el frente, el chanfle y el techo, de vidrio; los
+	# costados, macizos con esa forma; atrás, abierta al vestíbulo. Dos sillas lado a lado.
+	var nose := floor_y + GUNNER_NOSE
+	var slope_end := -GUNNER_LONG + GUNNER_SLOPE
+	solid.call(Vector3(WIDTH, GUNNER_NOSE, 0.05), Vector3(0.0, floor_y + GUNNER_NOSE * 0.5, -GUNNER_LONG + 0.025), GLASS)
+	var rise := Vector2(GUNNER_SLOPE, top - nose)
+	var tilt := Basis(Vector3.RIGHT, -atan2(rise.y, rise.x))
+	Clay.solid(root, Vector3(WIDTH, 0.05, rise.length()), at.call(Vector3(0.0, (nose + top) * 0.5,
+		-GUNNER_LONG + GUNNER_SLOPE * 0.5)), GLASS, tilt)
+	solid.call(Vector3(WIDTH, 0.05, -slope_end), Vector3(0.0, top - 0.025, slope_end * 0.5), GLASS)
+	# Los marcos de las aristas del vidrio.
+	Clay.box(root, Vector3(WIDTH, 0.1, 0.1), at.call(Vector3(0.0, nose, -GUNNER_LONG + 0.05)), RIM)
+	Clay.box(root, Vector3(WIDTH, 0.1, 0.1), at.call(Vector3(0.0, top - 0.05, slope_end)), RIM)
 	for s: float in [-1.0, 1.0]:
-		solid.call(Vector3(WALL, TALL, GUNNER_LONG), Vector3(s * (half - WALL * 0.5), wall_y, -GUNNER_LONG * 0.5),
-			GUNNER_COLOR)
+		_side(root, at.call(Vector3(s * (half - WALL * 0.5), 0.0, 0.0)), PackedVector2Array([
+			Vector2(-GUNNER_LONG, floor_y), Vector2(-GUNNER_LONG, nose), Vector2(slope_end, top), Vector2(0.0, top),
+			Vector2(0.0, floor_y)]), GUNNER_COLOR)
 		_chair(root, at.call(Vector3(s * 0.8, floor_y, -GUNNER_LONG + 0.95)))
 	# LOS BRAZOS: el frente, la pared de afuera (de ahí sale el brazo) y atrás la munición; adentro, abiertos.
 	var arm_z := ARM.y * 0.5
 	for s: float in [-1.0, 1.0]:
 		var x := s * (half + ARM.x * 0.5)
-		solid.call(Vector3(ARM.x, TALL, WALL), Vector3(x, wall_y, WALL * 0.5), ARM_COLOR)
+		# El frente, con una ventana (sólo adelante): abajo, arriba, dos parantes y el vidrio.
+		var sill_y := floor_y + ARM_WINDOW_FROM
+		var head_y := sill_y + ARM_WINDOW.y
+		var post := (ARM.x - ARM_WINDOW.x) * 0.5
+		solid.call(Vector3(ARM.x, ARM_WINDOW_FROM, WALL), Vector3(x, floor_y + ARM_WINDOW_FROM * 0.5, WALL * 0.5),
+			ARM_COLOR)
+		solid.call(Vector3(ARM.x, top - head_y, WALL), Vector3(x, (head_y + top) * 0.5, WALL * 0.5), ARM_COLOR)
+		for side: float in [-1.0, 1.0]:
+			solid.call(Vector3(post, ARM_WINDOW.y, WALL), Vector3(x + side * (ARM.x - post) * 0.5,
+				(sill_y + head_y) * 0.5, WALL * 0.5), ARM_COLOR)
+		solid.call(Vector3(ARM_WINDOW.x, ARM_WINDOW.y, 0.04), Vector3(x, (sill_y + head_y) * 0.5, WALL * 0.5), GLASS)
 		solid.call(Vector3(WALL, TALL, ARM.y), Vector3(s * (half + ARM.x - WALL * 0.5), wall_y, arm_z), ARM_COLOR)
 		_chair(root, at.call(Vector3(x, floor_y, arm_z - 0.1)))
 		# LA MUNICIÓN, maciza, de la panza al techo, en las celdas de atrás del brazo; el vestíbulo tiene pared hacia
@@ -159,6 +188,41 @@ static func build(parent: Node3D) -> Node3D:
 	_standing(root, at.call(Vector3(-half - ARM.x - 2.5, 0.0, -1.0)))
 	_legs(root, hip_line, bottom, at.call(Vector3(0.0, 0.0, (-GUNNER_LONG + lobby_long + PACK_LONG) * 0.5)))
 	return root
+
+
+## UN COSTADO MACIZO con forma (un prisma de grosor WALL en x): `profile`, el contorno convexo en (z, y), centrado en
+## `at` (sólo cuentan su x y su z).
+static func _side(root: StaticBody3D, at: Vector3, profile: PackedVector2Array, color: Color) -> void:
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var points := PackedVector3Array()
+	var count := profile.size()
+	for x: float in [-WALL * 0.5, WALL * 0.5]:
+		for point in profile:
+			points.append(Vector3(x, point.y, point.x))
+	# Las dos tapas (abanicos) y las caras de alrededor; las dos caras de cada triángulo, para no pensar el orden.
+	for i in range(1, count - 1):
+		for cap in [0, count]:
+			for tri: Array in [[cap, cap + i, cap + i + 1], [cap, cap + i + 1, cap + i]]:
+				for index: int in tri:
+					tool.add_vertex(points[index])
+	for i in count:
+		var j := (i + 1) % count
+		for tri: Array in [[i, j, count + j], [i, count + j, count + i], [i, count + j, j], [i, count + i, count + j]]:
+			for index: int in tri:
+				tool.add_vertex(points[index])
+	tool.generate_normals()
+	var mesh := MeshInstance3D.new()
+	mesh.mesh = tool.commit()
+	mesh.material_override = Clay.material(color)
+	mesh.position = Vector3(at.x, 0.0, at.z)
+	root.add_child(mesh)
+	var shape := CollisionShape3D.new()
+	var hull := ConvexPolygonShape3D.new()
+	hull.points = points
+	shape.shape = hull
+	shape.position = mesh.position
+	root.add_child(shape)
 
 
 ## UNA SILLA con su tablero adelante (mirando a −Z) y alguien sentado, de arcilla: `at`, el piso debajo del asiento.
