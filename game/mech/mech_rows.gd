@@ -7,6 +7,11 @@ extends RefCounted
 static func rows() -> Array[SandboxRow]:
 	var arena := DodgeArenaArchetype.new()
 	return [
+		# LA MECA JAULA (CageMech, CageCabin; el usuario, 16/11/2026: «empezar a migrar esta meca a algo funcional»): la
+		# de tests/cage_ideas_look, chica, cinemática con brazos físicos, con su propio F1 de moverse.
+		SandboxRow.new(SandboxSuper.Id.MECH, "Meca jaula") \
+			.add(SandboxRow.Build.NEAR, [CageMechArchetype.new()]) \
+			.panel(KEY_F1, CAGE_PANEL, CageMovesPanel.new()),
 		# LA MECA POR MÓDULOS, la primera del sandbox (ModulesMaquette; el usuario, 16/11/2026: «pasámelo a esta maqueta
 		# a escala real en una parcela al principio del sandbox así veo cómo se siente»): quieta, para recorrerla.
 		SandboxRow.new(SandboxSuper.Id.MECH, "Meca por módulos") \
@@ -89,4 +94,5 @@ const MECH_PANEL := "la meca: moverse, el equilibrio, las piernas, saltar y caer
 const LEGS_PANEL := "las piernas: los pasos (los mismos para todas las mecas)"
 const POSE_ARMS_PANEL := "los brazos discretos: lo rápido de las piñas y cuánto empujan"
 const MUSCLE_ARMS_PANEL := "los brazos con músculos: el resorte, el freno y la fuerza"
+const CAGE_PANEL := "la meca jaula: moverse, girar, saltar y volar, el dash, agacharse (sólo ella)"
 const KINEMATIC_PANEL := "la meca cinemática: moverse, girar, saltar y volar, el dash, agacharse"

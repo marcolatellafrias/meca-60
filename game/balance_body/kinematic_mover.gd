@@ -85,7 +85,7 @@ func _ready() -> void:
 
 ## A QUÉ ALTURA VA LA CARA DE ABAJO DE LA CAJA, ahora (agachada, más bajo).
 func _hover_now() -> float:
-	return body.hover * lerpf(1.0, KinematicSettings.current.crouch_share, crouched)
+	return body.hover * lerpf(1.0, body.kinematic_settings().crouch_share, crouched)
 
 
 ## El cilindro, del piso al techo de la caja.
@@ -115,7 +115,7 @@ func standing_place() -> Transform3D:
 
 ## UN PASO (ver arriba): lo que se le pide, moverse con el motor, y lo que miden las piernas.
 func step(delta: float) -> void:
-	var k := KinematicSettings.current
+	var k := body.kinematic_settings()
 	crouched = move_toward(crouched, 1.0 if body.crouch else 0.0, k.crouch_rate * delta)
 	_fit()
 	var grounded := is_on_floor()
@@ -315,7 +315,7 @@ func speed() -> float:
 ## energía: así no cobra uno que no sale.
 func dash_ready() -> bool:
 	return body.state == BalanceBody.State.STANDING and _shove_left <= 0.0 and _dash_left <= 0.0 \
-			and body.move.length() > 0.1 and dash_fuel >= KinematicSettings.current.dash_cost and _dash_wait <= 0.0
+			and body.move.length() > 0.1 and dash_fuel >= body.kinematic_settings().dash_cost and _dash_wait <= 0.0
 
 
 ## LO QUE QUEDA DEBAJO de la caja cuando baja (agachándose, o cayendo): se achata.

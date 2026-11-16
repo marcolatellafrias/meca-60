@@ -37,6 +37,7 @@ El detalle, en [[partida]].
 | [[base-comun]] | Lo que comparten la meca propia y los jefes (`BalanceBody`), y el resto en piezas. |
 | [[cuerpo-por-piezas]] | La regla común (acordada, sin hacer): motor del torso discreto o físico, brazos y dibujo, por separado. |
 | [[meca-de-tres]] | **La meca de ejemplo**: la cabina de tres, el cañón de energía de cuatro modos, el taladro, la energía común y las placas, manejados poseyéndola. |
+| [[meca-jaula]] | **La jaula de las maquetas, hecha meca**: chica, cinemática con brazos físicos (el cañón en lugar del antebrazo, el palo en el puño pesado), tres cabinas, su propio F1 de moverse. |
 | [[meca-de-capsulas]] | **La meca sin interior**: el torso macizo con una cápsula empotrada por puesto, el radial de cápsulas y hombros, la forma en el F2. |
 | [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto. |
 | [[cabina]] | La cabina sobre su grilla (módulo Interior): celdas, módulos, pisos y asientos. |

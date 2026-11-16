@@ -20,7 +20,10 @@ enum Arms { NONE, POSE, MUSCLE }
 ## parcela al principio del sandbox»): sin sillas ni ascensor.
 ## Y LA DE CÁPSULAS (PodCabin; el usuario, 15/11/2026: «pasemos esta maqueta de forma paramétrica y ordenada al
 ## sistema de la nave»): el torso macizo, sin interior ni ascensor, con una cápsula empotrada por puesto.
-enum Cabin { SQUARE, ROUND, VORTEX, PODS }
+## Y LA JAULA (CageCabin; el usuario, 16/11/2026: «empezar a migrar esta meca a algo funcional»): la de las maquetas de
+## tests/cage_ideas_look, chica, con brazos y piernas al 30 %: el que maneja abajo, el de los brazos arriba y el artillero
+## atrás.
+enum Cabin { SQUARE, ROUND, VORTEX, PODS, CAGE }
 
 const MASS := 50000.0
 const NAMES := ["Meca de práctica", "Meca discreta", "Meca física"]
@@ -52,6 +55,8 @@ static func cabin_kit(shape: Cabin) -> Dictionary:
 	if shape == Cabin.PODS:
 		return {"box": PodCabin.box(), "shoulder": PodCabin.shoulder(), "nozzles": false,
 			"body": MechBody.from_shape(PodCabin.BODY)}
+	if shape == Cabin.CAGE:
+		return {"box": CageCabin.box(), "shoulder": CageCabin.shoulder(), "nozzles": false, "body": CageCabin.BODY}
 	return {"box": CabinGrid.box(), "shoulder": CabinGrid.shoulder(), "nozzles": true, "body": MechBody.current}
 
 
@@ -111,6 +116,8 @@ func _build() -> void:
 			cabin = VortexCabin.new()
 		Cabin.PODS:
 			cabin = PodCabin.new()
+		Cabin.CAGE:
+			cabin = CageCabin.new()
 		_:
 			cabin = SquareCabin.new()
 	cabin.mech = self

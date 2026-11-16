@@ -60,6 +60,10 @@ var knobs: BodySettings = null
 ## agregarlo al árbol.
 var kinematic := false
 var mover: KinematicMover = null
+## LAS PERILLAS DE MOVERSE DE ESTA (ver KinematicSettings): si es null, las de todas (`KinematicSettings.current`). La
+## meca jaula lleva las suyas (el usuario, 16/11/2026: «si un panel lo quiero modificar para este mecha, me gustaría
+## que sea solamente para esta»). Se pone antes de agregarla.
+var kinematic_knobs: KinematicSettings = null
 var stomp: StompFeet = null
 ## Lo que sobresale de la caja hacia adelante (m; el vidrio de la meca): el cilindro de la cinemática lo envuelve.
 var outline_extra := 0.0
@@ -549,3 +553,8 @@ func ray(from: Vector3, to: Vector3) -> Dictionary:
 
 static func gravity() -> float:
 	return float(ProjectSettings.get_setting("physics/3d/default_gravity"))
+
+
+## Las perillas de moverse que usa (las suyas, o las de todas).
+func kinematic_settings() -> KinematicSettings:
+	return kinematic_knobs if kinematic_knobs != null else KinematicSettings.current

@@ -49,6 +49,32 @@ static func from_shape(shape: Resource) -> MechBody:
 	return body
 
 
+## UN CUERPO ACHICADO PAREJO: todas las medidas de siempre (`BASE`) por `k`, y los factores (el ancho, el alcance y el
+## paso) también `k`. La meca jaula va al 30 % (el usuario, 16/11/2026: «mantener estos grosores y estos largos de
+## brazos que me gustan»), con los hombros donde los pone su cabina (`shoulder_out` 0).
+static func scaled(k: float) -> MechBody:
+	var body := MechBody.new()
+	body.thick = k
+	body.reach = k
+	body.stride = k
+	body.shoulder_out = 0.0
+	body.HIP_X = float(BASE["HIP_X"]) * k
+	body.HIP_DROP = float(BASE["HIP_DROP"]) * k
+	body.LEG_THICKNESS = float(BASE["LEG_THICKNESS"]) * k
+	body.JOINT_RADIUS = body.LEG_THICKNESS * 0.62
+	body.PELVIS_SIZE = Vector3(body.HIP_X * 2.0 - body.LEG_THICKNESS, 1.8 * k, 3.6 * k)
+	body.ANKLE = float(BASE["ANKLE"]) * k
+	body.FOOT_SIZE = (BASE["FOOT_SIZE"] as Vector3) * k
+	body.FOOT_AHEAD = float(BASE["FOOT_AHEAD"]) * k
+	body.STANCE_X = body.HIP_X + 0.3 * k
+	body.THIGH = float(BASE["THIGH"]) * k
+	body.SHIN = float(BASE["SHIN"]) * k
+	body.UPPER_ARM = float(BASE["UPPER_ARM"]) * k
+	body.FOREARM = float(BASE["FOREARM"]) * k
+	body.WAIST = float(BASE["WAIST"]) * k
+	return body
+
+
 ## LO QUE SE ELIGIÓ: el tamaño (0, 1, 2) del ancho, del largo de los brazos y del de las piernas, y cuánto se estiran
 ## las piernas paradas (de la cadera al tobillo, en partes del largo de la pierna; con 0,64 queda la de siempre).
 var thick_size := 1

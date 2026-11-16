@@ -6,6 +6,7 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 
 | Fila | Arquetipo | Código propio | Paneles | Tests | Usa (compartido) |
 |---|---|---|---|---|---|
+| Meca jaula | `CageMechArchetype` | `game/mech/cage/` entero (`CageCabin`, `CageMech`, `CageMechKeys`, `CageCannonArm`, `PoleArm`, `CageMovesPanel`) | `CageMovesPanel` (F1) | `cage_mech_look` | la meca entera, `ToolMech`, `CannonArm`, `MuscleArm`, `MechBody.scaled`, `BalanceBody.kinematic_knobs` |
 | Meca de tres | `ToolMechArchetype` | `game/tool_mech/` entero (`ToolMech`, `ToolMechKeys`, `MechEnergy`, `DrillArm`, `CannonArm`, `EnergyBolt`, `ArmorPlates`) | `KinematicPanel` (F1), `CabinShapePanel` (F2), `PoseArmPanel` (F3), `LegsPanel` (F4) | `tool_mech_look` | la meca entera, `PoseArm` |
 | Meca de cápsulas | `ToolMechArchetype` (con la de cápsulas) | `game/mech/pods/` entero (`PodCabin`, `PodShape`, `PodShapePanel`, `PodMech`) | `KinematicPanel` (F1), `PodShapePanel` (F2), `PoseArmPanel` (F3), `LegsPanel` (F4) | `pod_mech_look` | la meca entera, `ToolMech` |
 | Meca discreta | `MechArchetype` (`Mech.Arms.POSE`) | `game/pose_arm/` | `MechPanel` (F1), `CabinShapePanel` (F2), `PoseArmPanel` (F3) | `mech_fork_look` | la meca (abajo) |

@@ -40,7 +40,12 @@ func _build() -> void:
 	keys.mech = self
 	add_child(keys)
 	# Las piernas arman sus piezas al entrar al árbol: las placas, después.
-	ArmorPlates.dress_legs.call_deferred(self)
+	_dress.call_deferred()
+
+
+## LAS PLACAS DE BLINDAJE de las piernas (otra meca puede llevar otras; ver CageMech).
+func _dress() -> void:
+	ArmorPlates.dress_legs(self)
 
 
 ## LOS DOS BRAZOS: el cañón a la izquierda y el taladro a la derecha, armados como los de siempre (ver Mech._build_arms).
