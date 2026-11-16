@@ -8,7 +8,7 @@ extends Node3D
 
 ## El cuerpo: una esfera grande con la base chata (cortada en el piso, a `BASE` abajo del centro).
 ## Las piernas lo levantan `LEG` del piso.
-const LEG := 3.2
+const LEG := 5.0
 const BODY_RADIUS := 5.0
 const BASE := 3.8
 const BODY_CENTER := Vector3(0, LEG + BASE, 0)
@@ -59,15 +59,16 @@ func _ready() -> void:
 	var variants := [
 		# El usuario (15/11/2026): la esfera bastante más grande y con base chata; los brazos donde estaban las cápsulas
 		# de los costados; las cápsulas en Y hacia arriba desde la del centro, en diagonal (ni arriba ni abajo).
-		{"letter": "F", "name": "hombros a la altura de las cápsulas, esfera más grande, con piernas", "shoulder": 72.0,
-			"shoulder_pitch": 30.0,
-			"pods": [["ADELANTE", 0.0, 0.0], ["IZQUIERDA", 30.0, 30.0], ["DERECHA", -30.0, 30.0], ["ARRIBA", 0.0, 90.0]]},
+		# El usuario: las tres cápsulas en el mismo anillo que la del centro, y los brazos también; más la de la cúspide.
+		{"letter": "G", "name": "cápsulas y brazos en el anillo del medio, más la de arriba", "shoulder": 72.0,
+			"shoulder_pitch": 0.0,
+			"pods": [["ADELANTE", 0.0, 0.0], ["IZQUIERDA", 34.0, 0.0], ["DERECHA", -34.0, 0.0], ["ARRIBA", 0.0, 90.0]]},
 	]
 	for variant in variants:
 		_build(variant)
 		await get_tree().process_frame
 		var tag: String = variant.letter + ". " + variant.name
-		_view_from(BODY_CENTER + Vector3(-13.0, -1.0, -15.0), BODY_CENTER + Vector3(-0.8, -2.6, 0))
+		_view_from(BODY_CENTER + Vector3(-15.0, -1.5, -17.0), BODY_CENTER + Vector3(-0.8, -3.6, 0))
 		await _shot(tag + ": desde afuera", variant.letter + "1")
 		_look_from_pod(1, _elbow_left + Vector3(0, -0.6, 0))
 		await _shot(tag + ": desde la cápsula izquierda, mirando al brazo", variant.letter + "2")
@@ -182,14 +183,14 @@ void fragment() {
 	Clay.cylinder(_root, base_radius + 0.08, 0.06, Vector3(BODY_CENTER.x, BODY_CENTER.y - BASE + 0.03, BODY_CENTER.z), STEEL)
 	# Las piernas: cadera bajo la base, muslo, rodilla, canilla y pie.
 	for side: float in [-1.0, 1.0]:
-		var hip := Vector3(side * 1.8, LEG - 0.3, 0.2)
-		Clay.box(_root, Vector3(1.4, 0.6, 1.6), hip, STEEL)
-		var knee := Vector3(side * 2.0, LEG * 0.5, -0.5)
-		_bar(hip, knee, 0.55, Color(0.3, 0.31, 0.33))
-		Clay.sphere(_root, 0.62, knee, DARK)
-		var ankle := Vector3(side * 2.0, 0.55, 0.3)
-		_bar(knee, ankle, 0.5, Color(0.3, 0.31, 0.33))
-		Clay.box(_root, Vector3(1.4, 0.5, 2.4), Vector3(side * 2.0, 0.25, -0.2), DARK)
+		var hip := Vector3(side * 2.0, LEG - 0.4, 0.2)
+		Clay.box(_root, Vector3(2.2, 0.9, 2.4), hip, STEEL)
+		var knee := Vector3(side * 2.4, LEG * 0.52, -0.8)
+		_bar(hip, knee, 0.95, Color(0.3, 0.31, 0.33))
+		Clay.sphere(_root, 1.05, knee, DARK)
+		var ankle := Vector3(side * 2.4, 0.9, 0.4)
+		_bar(knee, ankle, 0.85, Color(0.3, 0.31, 0.33))
+		Clay.box(_root, Vector3(2.2, 0.8, 3.6), Vector3(side * 2.4, 0.4, -0.4), DARK)
 
 
 # ── UNA CÁPSULA: la mitad de afuera del cuerpo es vidrio; la de adentro, pared con controles. Su silla y alguien. ──
