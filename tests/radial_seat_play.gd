@@ -67,6 +67,8 @@ var _lamps := {}
 var _bars := {}
 
 var _demo := false
+## La cámara de afuera (en la demo): `_process` no la toca.
+var _outside := false
 var _folder := ""
 
 
@@ -406,7 +408,8 @@ func _trigger(mode: String) -> void:
 
 # ── CADA CUADRO ──────────────────────────────────────────────────────────────────────────────────────────────────
 func _process(delta: float) -> void:
-	_eye.rotation_degrees = Vector3(_pitch, _yaw, 0.0)
+	if not _outside:
+		_eye.rotation_degrees = Vector3(_pitch, _yaw, 0.0)
 	_hover()
 	_spring(delta)
 	_shoot(delta)
@@ -595,7 +598,40 @@ func _play_demo() -> void:
 	_set_look(-70.0, -20.0)
 	await _wait(0.3)
 	await _capture("7. Mirando a la derecha: el tope", "7")
+	# Desde afuera, con alguien sentado.
+	_sit_dummy()
+	_outside = true
+	_view_from(Vector3(1.6, 2.1, -3.2), Vector3(0, 1.0, 0))
+	await _capture("9. Desde afuera, de frente", "9")
+	_view_from(Vector3(3.4, 1.7, 0.4), Vector3(0, 1.0, 0))
+	await _capture("10. Desde afuera, de costado", "10")
+	_view_from(Vector3(-1.6, 3.6, 2.6), Vector3(0, 0.9, -0.2))
+	await _capture("11. Desde atrás y arriba", "11")
 	get_tree().quit()
+
+
+func _view_from(from: Vector3, to: Vector3) -> void:
+	_eye.global_position = from
+	_eye.look_at(to, Vector3.UP)
+
+
+## Un maniquí de arcilla sentado en la silla, con la mano izquierda en la empuñadura.
+func _sit_dummy() -> void:
+	var skin := Color(0.78, 0.62, 0.5)
+	var suit := Color(0.32, 0.36, 0.42)
+	Clay.box(self, Vector3(0.36, 0.5, 0.24), Vector3(0, 0.85, 0.24), suit)
+	Clay.sphere(self, 0.12, Vector3(0, 1.2, 0.2), skin)
+	Clay.box(self, Vector3(0.26, 0.06, 0.3), Vector3(0, 1.17, 0.27), Color(0.15, 0.12, 0.1))
+	for side: float in [-1.0, 1.0]:
+		Clay.box(self, Vector3(0.14, 0.14, 0.42), Vector3(side * 0.11, 0.6, -0.02), suit)
+		Clay.box(self, Vector3(0.12, 0.42, 0.13), Vector3(side * 0.11, 0.3, -0.2), suit)
+		Clay.box(self, Vector3(0.12, 0.06, 0.2), Vector3(side * 0.11, 0.06, -0.25), INK)
+	_bar(self, Vector3(-0.2, 1.0, 0.2), Vector3(-0.3, 0.82, -0.15), 0.05, suit)
+	_bar(self, Vector3(-0.3, 0.82, -0.15), Vector3(-0.38, 0.86, -0.52), 0.045, suit)
+	Clay.sphere(self, 0.05, Vector3(-0.39, 0.86, -0.56), skin)
+	_bar(self, Vector3(0.2, 1.0, 0.2), Vector3(0.28, 0.78, -0.05), 0.05, suit)
+	_bar(self, Vector3(0.28, 0.78, -0.05), Vector3(0.3, 0.74, -0.3), 0.045, suit)
+	Clay.sphere(self, 0.05, Vector3(0.3, 0.74, -0.33), skin)
 
 
 func _set_look(yaw: float, pitch: float) -> void:
