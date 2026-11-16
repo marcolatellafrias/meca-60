@@ -36,7 +36,7 @@ cualquiera, y lo que se elige es **qué usar en qué momento**, no qué equipar 
   se mira atrás), sólo clic izquierdo. **Agarrar un control que apunta (cañón, espada) hace de la cámara la mira**; el
   brazo la sigue con su resorte. Uno que no apunta (caminar) mueve sólo la palanca, con la cámara quieta.
 - **Los modos del cañón, así (el usuario, 15/11/2026; reemplazan a simple, ráfaga, barrido y súper):**
-  1. **Continuo**: se prende o se apaga (un botón) y se apunta agarrando el control.
+  1. **Ráfaga**: tiros seguidos; se prende o se apaga (un botón que se traba) y se apunta agarrando el control.
   2. **Barrido**: se carga; después hay que agarrar el control y moverlo, y dura un tiempo.
   3. **Súper**: se carga; se agarra el control, se apunta y tira una sola vez, muy fuerte.
 - **La espada, dos modos (el usuario, 15/11/2026; la guardia se va):**
