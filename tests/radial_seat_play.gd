@@ -136,45 +136,190 @@ func _world() -> void:
 		Clay.box(_target, Vector3(2, 9, 2.6), Vector3(side * 1.8, 4.5, 0), body)
 
 
-# ── LA CABINA: un disco, un techo redondo con su luz, cuatro postes y cables ──────────────────────────────────────
+# ── LA CÁPSULA: una esfera ceñida al que va sentado, con una ventana al frente; la silla gira adentro, en su aro ──
+## La esfera: su centro y su radio de adentro; la ventana, hacia dónde mira y su medio ángulo.
+const SPHERE_CENTER := Vector3(0, 0.95, 0.08)
+const SPHERE_RADIUS := 0.92
+const WINDOW_DIR := Vector3(0, -0.1, -1)
+const WINDOW_HALF := 36.0
+
+var _shell: ShaderMaterial = null
+var _seat: Node3D = null
+
+
 func _cabin() -> void:
-	Clay.cylinder(self, 1.7, 0.14, Vector3(0, -0.07, 0), Color(0.2, 0.2, 0.21))
-	Clay.cylinder(self, 1.74, 0.05, Vector3(0, -0.04, 0), LIGHT)
-	for k in 36:
-		var angle := TAU * k / 36.0
-		var stripe := Clay.box(self, Vector3(0.12, 0.012, 0.06), Vector3(sin(angle) * 1.62, 0.03, cos(angle) * 1.62),
-			Clay.YELLOW if k % 2 else DARK)
-		stripe.rotation.y = angle
-	Clay.cylinder(self, 1.5, 0.22, Vector3(0, 2.62, 0), STEEL)
-	Clay.cylinder(self, 1.56, 0.05, Vector3(0, 2.5, 0), LIGHT)
-	var ring := Clay.cylinder(self, 0.7, 0.03, Vector3(0, 2.495, 0), CREAM)
-	ring.material_override = _glow(Color(1.0, 0.92, 0.8), 2.0)
-	var lamp := OmniLight3D.new()
-	lamp.position = Vector3(0, 2.3, 0)
-	lamp.light_color = Color(1.0, 0.9, 0.78)
-	lamp.light_energy = 2.2
-	lamp.omni_range = 4.0
-	lamp.shadow_enabled = true
-	add_child(lamp)
-	# Los postes: dos atrás y dos a los costados, un poco inclinados hacia adentro arriba.
-	for angle_deg: float in [-75.0, 75.0, -145.0, 145.0]:
-		var angle := deg_to_rad(angle_deg)
-		var foot := Vector3(sin(angle) * 1.5, 0.0, -cos(angle) * 1.5)
-		var head := Vector3(sin(angle) * 1.3, 2.5, -cos(angle) * 1.3)
-		_bar(self, foot, head, 0.07, DARK)
-		for y in [0.6, 1.6]:
-			var at := foot.lerp(head, y / 2.5)
-			Clay.cylinder(self, 0.085, 0.06, at, LIGHT)
-	# Cables que cuelgan del techo.
-	for k in 6:
-		var angle := deg_to_rad(110.0 + k * 28.0)
-		_bar(self, Vector3(sin(angle) * 1.1, 2.5, -cos(angle) * 1.1), Vector3(sin(angle) * 1.2, 1.7, -cos(angle) * 1.2), 0.012, INK)
-	# La silla.
-	Clay.cylinder(self, 0.12, 0.42, Vector3(0, 0.21, 0.15), DARK)
-	Clay.box(self, Vector3(0.56, 0.12, 0.56), Vector3(0, 0.48, 0.15), STEEL)
-	Clay.box(self, Vector3(0.56, 0.8, 0.12), Vector3(0, 0.9, 0.46), STEEL)
+	# La cáscara: chapa con sus costuras; la ventana, un hueco redondo adelante (y un corte para mirarla desde afuera).
+	var shader := Shader.new()
+	shader.code = """
+shader_type spatial;
+render_mode cull_disabled;
+uniform vec3 center;
+uniform vec3 window_dir;
+uniform float window_cos;
+uniform float cut_z = 99.0;
+varying vec3 world;
+void vertex() { world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+void fragment() {
+	vec3 d = normalize(world - center);
+	if (dot(d, normalize(window_dir)) > window_cos || world.z > cut_z) { discard; }
+	float lon = atan(d.x, -d.z) * 57.2958;
+	float lat = asin(clamp(d.y, -1.0, 1.0)) * 57.2958;
+	float seam = step(abs(mod(lon + 15.0, 30.0) - 15.0), 0.35) + step(abs(mod(lat + 10.0, 20.0) - 10.0), 0.3);
+	vec3 inner = mix(vec3(0.24, 0.25, 0.26), vec3(0.09, 0.09, 0.1), clamp(seam, 0.0, 1.0));
+	vec3 outer = mix(vec3(0.42, 0.43, 0.45), vec3(0.25, 0.25, 0.26), clamp(seam, 0.0, 1.0));
+	ALBEDO = FRONT_FACING ? outer : inner;
+	ROUGHNESS = 0.7;
+	METALLIC = 0.35;
+}
+"""
+	_shell = ShaderMaterial.new()
+	_shell.shader = shader
+	_shell.set_shader_parameter("center", SPHERE_CENTER)
+	_shell.set_shader_parameter("window_dir", WINDOW_DIR)
+	_shell.set_shader_parameter("window_cos", cos(deg_to_rad(WINDOW_HALF)))
+	var shell := MeshInstance3D.new()
+	var ball := SphereMesh.new()
+	ball.radius = SPHERE_RADIUS + 0.03
+	ball.height = (SPHERE_RADIUS + 0.03) * 2.0
+	ball.radial_segments = 96
+	ball.rings = 48
+	shell.mesh = ball
+	shell.material_override = _shell
+	shell.position = SPHERE_CENTER
+	add_child(shell)
+	# El marco de la ventana: un aro grueso con su franja de peligro y remaches.
+	var window := WINDOW_DIR.normalized()
+	var rim_center := SPHERE_CENTER + window * SPHERE_RADIUS * cos(deg_to_rad(WINDOW_HALF))
+	var rim_radius := SPHERE_RADIUS * sin(deg_to_rad(WINDOW_HALF))
+	var rim := _ring(rim_center, window, rim_radius, 0.045, DARK)
+	rim.name = "Marco de la ventana"
+	_ring(rim_center - window * 0.02, window, rim_radius - 0.05, 0.012, Clay.YELLOW)
+	for k in 24:
+		var angle := TAU * k / 24.0
+		var side := window.cross(Vector3.UP).normalized()
+		var up := side.cross(window).normalized()
+		Clay.sphere(self, 0.012, rim_center - window * 0.03 + (side * cos(angle) + up * sin(angle)) * (rim_radius - 0.02), LIGHT)
+	# Las costillas: dos aros que abrazan la cabeza (adelante y atrás de los ojos) y dos de latitud, con remaches.
+	for z: float in [-0.15, 0.3]:
+		var reach := sqrt(SPHERE_RADIUS * SPHERE_RADIUS - pow(z - SPHERE_CENTER.z, 2.0)) - 0.02
+		_ring(Vector3(SPHERE_CENTER.x, SPHERE_CENTER.y, z), Vector3.BACK, reach, 0.028, STEEL)
+		for k in 20:
+			var angle := TAU * k / 20.0
+			Clay.sphere(self, 0.01, Vector3(cos(angle) * (reach - 0.025), SPHERE_CENTER.y + sin(angle) * (reach - 0.025), z - 0.02), LIGHT)
+	for pitch: float in [-38.0, 42.0]:
+		var y := SPHERE_CENTER.y + sin(deg_to_rad(pitch)) * SPHERE_RADIUS
+		_ring(Vector3(SPHERE_CENTER.x, y, SPHERE_CENTER.z), Vector3.UP, cos(deg_to_rad(pitch)) * SPHERE_RADIUS - 0.02, 0.022, STEEL)
+	# Caños de cables que corren por la pared, de abajo hacia arriba, por atrás y los costados.
+	for yaw: float in [-120.0, -95.0, 95.0, 120.0, 170.0]:
+		for k in 10:
+			var from := _on_wall(yaw, -60.0 + k * 13.0, 0.04)
+			var to := _on_wall(yaw, -60.0 + (k + 1) * 13.0, 0.04)
+			_bar(self, from, to, 0.016, INK)
+		for pitch: float in [-30.0, 10.0, 50.0]:
+			Clay.sphere(self, 0.024, _on_wall(yaw, pitch, 0.04), STEEL)
+	# Dos lámparas enjauladas arriba, de luz cálida.
+	for yaw: float in [40.0, -40.0]:
+		var lamp_at := _wall(yaw, 35.0, 0.03)
+		Clay.cylinder(lamp_at, 0.05, 0.03, Vector3(0, 0, 0.0), DARK, Vector3(90, 0, 0))
+		var bulb := Clay.sphere(lamp_at, 0.035, Vector3(0, 0, 0.03), CREAM)
+		bulb.material_override = _glow(Color(1.0, 0.85, 0.6), 2.2)
+		for k in 4:
+			var cage := Clay.box(lamp_at, Vector3(0.008, 0.09, 0.008), Vector3(0, 0, 0.05), DARK)
+			cage.rotation_degrees = Vector3(0, 0, k * 45.0)
+		var light := OmniLight3D.new()
+		light.light_color = Color(1.0, 0.85, 0.65)
+		light.light_energy = 0.3
+		light.omni_range = 1.1
+		light.position = Vector3(0, 0, 0.12)
+		lamp_at.add_child(light)
+	# Placas atornilladas que cubren la pared, en dos bandas, y cajas de empalme sobre los caños (donde no hay controles).
+	var busy: Array[Vector2] = [Vector2(58, -14), Vector2(-58, -4), Vector2(0, 50), Vector2(-22, 58), Vector2(40, 35),
+		Vector2(-40, 35), Vector2(105, -28), Vector2(-105, -28), Vector2(150, 15), Vector2(80, 18), Vector2(-80, 22)]
+	for band: float in [-26.0, 14.0]:
+		for k in 14:
+			var yaw := -165.0 + k * 25.0 + (12.0 if band > 0.0 else 0.0)
+			if absf(yaw) < 44.0 and band > -40.0:
+				continue
+			var near := false
+			for spot in busy:
+				if absf(spot.x - yaw) < 22.0 and absf(spot.y - band) < 22.0:
+					near = true
+			if near:
+				continue
+			var plate := _wall(yaw, band, 0.02)
+			Clay.box(plate, Vector3(0.2, 0.16, 0.015), Vector3.ZERO, Color(0.3, 0.31, 0.32))
+			for sx: float in [-1.0, 1.0]:
+				for sy: float in [-1.0, 1.0]:
+					Clay.cylinder(plate, 0.007, 0.01, Vector3(sx * 0.085, sy * 0.065, 0.01), LIGHT, Vector3(90, 0, 0))
+	for yaw: float in [-120.0, 95.0, 170.0]:
+		var junction := _wall(yaw, -5.0, 0.07)
+		Clay.box(junction, Vector3(0.1, 0.12, 0.06), Vector3.ZERO, DARK)
+		Clay.box(junction, Vector3(0.08, 0.02, 0.062), Vector3(0, 0.04, 0.001), Clay.YELLOW)
+	# Rejillas y placas de datos donde no hay controles.
+	for spot: Vector2 in [Vector2(105, -28), Vector2(-105, -28), Vector2(150, 15)]:
+		var grille := _wall(spot.x, spot.y, 0.03)
+		Clay.box(grille, Vector3(0.22, 0.14, 0.02), Vector3.ZERO, DARK)
+		for k in 6:
+			Clay.box(grille, Vector3(0.19, 0.008, 0.01), Vector3(0, -0.05 + k * 0.02, 0.012), INK)
+	for spot: Vector3 in [Vector3(80, 18, 0), Vector3(-80, 22, 1)]:
+		var plate := _wall(spot.x, spot.y, 0.03)
+		Clay.box(plate, Vector3(0.16, 0.07, 0.01), Vector3.ZERO, CREAM)
+		_label(plate, "TALLERES N. A." if spot.z < 0.5 else "NO PISAR", Vector3(0, 0, 0.006), 0.016, INK, false)
+	# La silla: el pie fijo con su aro, y arriba lo que gira con la mirada (la silla y la empuñadura).
+	Clay.cylinder(self, 0.09, 0.32, Vector3(0, 0.2, 0.12), DARK)
+	_ring(Vector3(0, 0.36, 0.12), Vector3.UP, 0.26, 0.03, STEEL)
+	for k in 12:
+		var angle := TAU * k / 12.0
+		Clay.sphere(self, 0.012, Vector3(cos(angle) * 0.26, 0.39, 0.12 + sin(angle) * 0.26), LIGHT)
+	_seat = Node3D.new()
+	_seat.position = Vector3(0, 0, 0.12)
+	add_child(_seat)
+	Clay.cylinder(_seat, 0.2, 0.06, Vector3(0, 0.4, 0), DARK)
+	Clay.box(_seat, Vector3(0.5, 0.1, 0.5), Vector3(0, 0.48, 0), STEEL)
+	Clay.box(_seat, Vector3(0.46, 0.04, 0.44), Vector3(0, 0.55, -0.02), Color(0.2, 0.18, 0.17))
+	Clay.box(_seat, Vector3(0.5, 0.74, 0.1), Vector3(0, 0.9, 0.3), STEEL)
+	Clay.box(_seat, Vector3(0.42, 0.6, 0.04), Vector3(0, 0.92, 0.24), Color(0.2, 0.18, 0.17))
+	Clay.box(_seat, Vector3(0.3, 0.16, 0.12), Vector3(0, 1.36, 0.3), STEEL)
 	for side: float in [-1.0, 1.0]:
-		Clay.box(self, Vector3(0.08, 0.06, 0.5), Vector3(side * 0.32, 0.72, 0.15), DARK)
+		Clay.box(_seat, Vector3(0.08, 0.06, 0.46), Vector3(side * 0.29, 0.72, -0.02), DARK)
+		Clay.box(_seat, Vector3(0.06, 0.2, 0.06), Vector3(side * 0.29, 0.6, 0.15), STEEL)
+		for k in 3:
+			Clay.box(_seat, Vector3(0.02, 0.025, 0.4), Vector3(side * 0.24 + side * k * -0.0, 0.88 + k * 0.12, 0.25), INK)
+
+
+## Un aro (toro) con centro, eje y radio.
+func _ring(at: Vector3, axis: Vector3, radius: float, thick: float, color: Color) -> MeshInstance3D:
+	var mesh := TorusMesh.new()
+	mesh.inner_radius = radius - thick
+	mesh.outer_radius = radius + thick
+	mesh.rings = 64
+	mesh.ring_segments = 10
+	var ring := MeshInstance3D.new()
+	ring.mesh = mesh
+	ring.material_override = Clay.material(color)
+	add_child(ring)
+	var up := axis.normalized()
+	var side := up.cross(Vector3.FORWARD if absf(up.dot(Vector3.FORWARD)) < 0.9 else Vector3.RIGHT).normalized()
+	ring.transform = Transform3D(Basis(side, up, side.cross(up)).orthonormalized(), at)
+	return ring
+
+
+## Un punto de la pared de adentro, a `inset` de ella: `yaw` grados a la izquierda del frente, `pitch` para arriba.
+func _on_wall(yaw: float, pitch: float, inset: float) -> Vector3:
+	var y := deg_to_rad(yaw)
+	var p := deg_to_rad(pitch)
+	var way := Vector3(-sin(y) * cos(p), sin(p), -cos(y) * cos(p))
+	return SPHERE_CENTER + way * (SPHERE_RADIUS - inset)
+
+
+## Un lugar en la pared para montar algo: su +Z mira al centro de la esfera.
+func _wall(yaw: float, pitch: float, inset: float) -> Node3D:
+	var spot := Node3D.new()
+	add_child(spot)
+	spot.position = _on_wall(yaw, pitch, inset)
+	spot.look_at(SPHERE_CENTER, Vector3.UP if absf(pitch) < 80.0 else Vector3.FORWARD)
+	spot.rotate_object_local(Vector3.UP, PI)
+	return spot
 
 
 ## Un tubo entre dos puntos.
@@ -206,7 +351,7 @@ func _glow(color: Color, energy := 1.6) -> StandardMaterial3D:
 # ── EL CAÑÓN (brazo izquierdo de la meca, afuera, a la izquierda de la cabina) ─────────────────────────────────────
 func _cannon() -> void:
 	_shoulder = Node3D.new()
-	_shoulder.position = Vector3(-3.4, -0.6, -1.6)
+	_shoulder.position = Vector3(-1.9, 0.5, -0.5)
 	add_child(_shoulder)
 	Clay.sphere(_shoulder, 0.55, Vector3.ZERO, STEEL)
 	var arm := Node3D.new()
@@ -236,61 +381,55 @@ func _cannon() -> void:
 	add_child(_beam)
 
 
-# ── EL PUESTO: los controles en brazos alrededor de la silla, cada uno mirando a los ojos ──────────────────────
-func _pod(at: Vector3, from_post: Vector3) -> Node3D:
-	var pod := Node3D.new()
-	add_child(pod)
-	pod.position = at
-	pod.look_at(EYE + Vector3(0, -0.15, 0), Vector3.UP)
-	pod.rotate_object_local(Vector3.UP, PI)
-	# El brazo que lo sostiene, con su articulación.
-	var back := at + (at - EYE).normalized() * 0.07
-	var elbow := back.lerp(from_post, 0.5) + Vector3(0, 0.18, 0)
-	_bar(self, from_post, elbow, 0.03, LIGHT)
-	_bar(self, elbow, back, 0.03, LIGHT)
-	Clay.sphere(self, 0.05, elbow, DARK)
-	Clay.sphere(self, 0.045, from_post, DARK)
-	return pod
+# ── EL PUESTO: la empuñadura en el apoyabrazos (gira con la silla); lo demás, montado en la pared de la esfera ──
+## Una placa de montaje: un respaldo oscuro un poco más grande, con sus tornillos, donde se apoya lo que va encima.
+func _mount(spot: Node3D, size: Vector2) -> void:
+	Clay.box(spot, Vector3(size.x + 0.04, size.y + 0.04, 0.025), Vector3(0, 0, -0.03), DARK)
+	for sx: float in [-1.0, 1.0]:
+		for sy: float in [-1.0, 1.0]:
+			Clay.cylinder(spot, 0.008, 0.01, Vector3(sx * (size.x * 0.5 + 0.005), sy * (size.y * 0.5 + 0.005), -0.015), LIGHT,
+				Vector3(90, 0, 0))
 
 
 func _station() -> void:
-	# 1. La empuñadura del cañón, abajo adelante a la izquierda (el brazo izquierdo): se agarra y lo que mirás es la mira.
-	var grip_pod := _pod(Vector3(-0.4, 0.74, -0.6), Vector3(-1.45, 0.5, -0.5))
-	Clay.cylinder(grip_pod, 0.07, 0.04, Vector3(0, -0.03, 0), DARK)
+	# 1. La empuñadura del cañón, en el apoyabrazos izquierdo: se agarra y lo que mirás es la mira.
+	var grip_base := Node3D.new()
+	_seat.add_child(grip_base)
+	grip_base.position = Vector3(-0.29, 0.76, -0.22)
+	Clay.cylinder(grip_base, 0.05, 0.03, Vector3.ZERO, DARK)
 	var grip := Node3D.new()
-	grip_pod.add_child(grip)
-	var handle := Clay.box(grip, Vector3(0.045, 0.13, 0.055), Vector3(0, 0.05, 0), INK)
+	grip_base.add_child(grip)
+	var handle := Clay.box(grip, Vector3(0.045, 0.13, 0.055), Vector3(0, 0.07, 0), INK)
 	handle.rotation_degrees = Vector3(-15, 0, 0)
 	for k in 3:
-		Clay.box(grip, Vector3(0.05, 0.008, 0.06), Vector3(0, 0.0 + k * 0.035, 0.005), DARK)
-	Clay.box(grip, Vector3(0.055, 0.03, 0.07), Vector3(0, 0.13, -0.015), RED)
-	_label(grip_pod, "APUNTAR", Vector3(0, -0.08, 0.05), 0.022, CREAM, true)
-	_controls.append({"name": "empuñadura", "kind": "grip", "node": grip, "radius": 0.1})
-	# 2. Los modos, a la izquierda: ráfaga se traba; barrido y súper se aprietan y se cargan.
-	var modes := _pod(Vector3(-0.78, 1.05, -0.42), Vector3(-1.4, 1.3, 0.2))
-	Clay.box(modes, Vector3(0.38, 0.3, 0.05), Vector3(0, 0, -0.03), STEEL)
-	Clay.box(modes, Vector3(0.38, 0.05, 0.052), Vector3(0, 0.125, -0.03), INK)
-	_label(modes, "CAÑÓN", Vector3(0, 0.125, 0.0), 0.026, CREAM, false)
+		Clay.box(grip, Vector3(0.05, 0.008, 0.06), Vector3(0, 0.03 + k * 0.035, 0.005), DARK)
+	Clay.box(grip, Vector3(0.055, 0.03, 0.07), Vector3(0, 0.15, -0.015), RED)
+	_controls.append({"name": "empuñadura", "kind": "grip", "node": grip, "radius": 0.09})
+	# 2. Los modos, en la pared a la izquierda: ráfaga se traba; barrido y súper se aprietan y se cargan.
+	var modes := _wall(58.0, -14.0, 0.06)
+	_mount(modes, Vector2(0.38, 0.3))
+	Clay.box(modes, Vector3(0.38, 0.3, 0.05), Vector3(0, 0, -0.01), STEEL)
+	Clay.box(modes, Vector3(0.38, 0.05, 0.052), Vector3(0, 0.125, -0.01), INK)
+	_label(modes, "CAÑÓN", Vector3(0, 0.125, 0.018), 0.026, CREAM, false)
 	var names := ["RÁFAGA", "BARRIDO", "SÚPER"]
 	for i in names.size():
 		var x := -0.12 + i * 0.12
-		var key := Clay.box(modes, Vector3(0.08, 0.07, 0.04), Vector3(x, 0.0, 0.0), CREAM)
-		_lamps[names[i]] = Clay.sphere(modes, 0.016, Vector3(x, 0.07, 0.0), Color(0.3, 0.22, 0.14))
-		_label(modes, names[i], Vector3(x, -0.06, 0.0), 0.016, INK, false)
+		var key := Clay.box(modes, Vector3(0.08, 0.07, 0.04), Vector3(x, 0.0, 0.02), CREAM)
+		_lamps[names[i]] = Clay.sphere(modes, 0.016, Vector3(x, 0.07, 0.02), Color(0.3, 0.22, 0.14))
+		_label(modes, names[i], Vector3(x, -0.06, 0.016), 0.016, INK, false)
 		_controls.append({"name": names[i], "kind": "button", "node": key, "radius": 0.06})
-		_bars[names[i]] = _light_row(modes, Vector3(x, -0.1, 0.0), 5, 0.018)
-	# 3. La energía, adelante arriba: una pantallita verde.
-	var screen := _pod(Vector3(0.12, 1.62, -0.85), Vector3(0.6, 2.5, -1.1))
-	Clay.box(screen, Vector3(0.36, 0.16, 0.05), Vector3(0, 0, -0.03), DARK)
-	Clay.box(screen, Vector3(0.32, 0.12, 0.01), Vector3(0, 0, 0.0), Color(0.03, 0.06, 0.04))
-	_label(screen, "ENERGÍA", Vector3(-0.08, 0.035, 0.008), 0.018, GREEN, false)
-	_bars["energía"] = _light_row(screen, Vector3(0, -0.02, 0.008), 14, 0.018)
-	# 4. El estado de la meca, a la derecha: la meca de frente, en formas llenas; cada parte, sana, dañada o rota.
-	var status := _pod(Vector3(0.66, 1.2, -0.5), Vector3(1.45, 1.0, -0.45))
-	Clay.box(status, Vector3(0.42, 0.38, 0.06), Vector3(0, 0, -0.035), DARK)
-	for sx: float in [-1.0, 1.0]:
-		for sy: float in [-1.0, 1.0]:
-			Clay.cylinder(status, 0.008, 0.01, Vector3(sx * 0.19, sy * 0.17, 0.0), LIGHT, Vector3(90, 0, 0))
+		_bars[names[i]] = _light_row(modes, Vector3(x, -0.1, 0.016), 5, 0.018)
+	# 3. La energía, arriba de la ventana: una pantallita verde.
+	var screen := _wall(0.0, 50.0, 0.06)
+	_mount(screen, Vector2(0.36, 0.16))
+	Clay.box(screen, Vector3(0.36, 0.16, 0.05), Vector3(0, 0, -0.01), DARK)
+	Clay.box(screen, Vector3(0.32, 0.12, 0.01), Vector3(0, 0, 0.016), Color(0.03, 0.06, 0.04))
+	_label(screen, "ENERGÍA", Vector3(-0.08, 0.035, 0.024), 0.018, GREEN, false)
+	_bars["energía"] = _light_row(screen, Vector3(0, -0.02, 0.024), 14, 0.018)
+	# 4. El estado de la meca, en la pared a la derecha.
+	var status := _wall(-58.0, -4.0, 0.06)
+	_mount(status, Vector2(0.42, 0.38))
+	Clay.box(status, Vector3(0.42, 0.38, 0.06), Vector3(0, 0, -0.015), DARK)
 	var drawing := _StatusDrawing.new()
 	var view := SubViewport.new()
 	view.size = Vector2i(360, 330)
@@ -306,17 +445,16 @@ func _station() -> void:
 	look.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	look.albedo_texture = view.get_texture()
 	sheet.material_override = look
-	sheet.position = Vector3(0, 0, 0.002)
+	sheet.position = Vector3(0, 0, 0.017)
 	status.add_child(sheet)
-	# 5. Eyectar, arriba: una manija rayada colgada del techo.
+	# 5. Eyectar: arriba adelante, una manija rayada que cuelga de un soporte, a mano y a la vista mirando arriba.
+	var eject := _wall(-22.0, 58.0, 0.05)
+	_mount(eject, Vector2(0.3, 0.1))
 	for dx: float in [-0.1, 0.1]:
-		_bar(self, Vector3(0.35 + dx, 2.5, -0.35), Vector3(0.35 + dx, 2.0, -0.35), 0.006, INK)
+		Clay.box(eject, Vector3(0.01, 0.01, 0.16), Vector3(dx, 0, 0.08), INK)
 	for k in 6:
-		Clay.box(self, Vector3(0.05, 0.05, 0.05), Vector3(0.22 + k * 0.05, 2.0, -0.35), Clay.YELLOW if k % 2 else INK)
-	var eject_tag := StrokeLabel.make("EYECTAR", 0.03, CREAM)
-	eject_tag.position = Vector3(0.35, 1.94, -0.33)
-	eject_tag.rotation_degrees = Vector3(-60, 0, 0)
-	add_child(eject_tag)
+		Clay.box(eject, Vector3(0.045, 0.045, 0.045), Vector3(-0.125 + k * 0.05, 0, 0.17), Clay.YELLOW if k % 2 else INK)
+	_label(eject, "EYECTAR", Vector3(0, 0.07, 0.0), 0.022, CREAM, true)
 
 
 func _label(parent: Node3D, text: String, at: Vector3, height: float, color: Color, plate: bool) -> void:
@@ -410,6 +548,7 @@ func _trigger(mode: String) -> void:
 func _process(delta: float) -> void:
 	if not _outside:
 		_eye.rotation_degrees = Vector3(_pitch, _yaw, 0.0)
+	_seat.rotation_degrees.y = _yaw
 	_hover()
 	_spring(delta)
 	_shoot(delta)
@@ -599,14 +738,25 @@ func _play_demo() -> void:
 	await _wait(0.3)
 	await _capture("7. Mirando a la derecha: el tope", "7")
 	# Desde afuera, con alguien sentado.
+	_set_look(0.0, -8.0)
 	_sit_dummy()
 	_outside = true
-	_view_from(Vector3(1.6, 2.1, -3.2), Vector3(0, 1.0, 0))
-	await _capture("9. Desde afuera, de frente", "9")
-	_view_from(Vector3(3.4, 1.7, 0.4), Vector3(0, 1.0, 0))
+	_view_from(Vector3(1.2, 1.6, -2.6), Vector3(0, 1.0, 0))
+	await _capture("9. Desde afuera, por la ventana", "9")
+	_view_from(Vector3(2.6, 1.4, 0.6), Vector3(0, 0.95, 0))
 	await _capture("10. Desde afuera, de costado", "10")
-	_view_from(Vector3(-1.6, 3.6, 2.6), Vector3(0, 0.9, -0.2))
-	await _capture("11. Desde atrás y arriba", "11")
+	_shell.set_shader_parameter("cut_z", 0.05)
+	for piece in get_children():
+		var part := piece as Node3D
+		if part == null or part == _seat or (part is MeshInstance3D and (part as MeshInstance3D).material_override == _shell):
+			continue
+		if part.global_position.z > 0.05 and part.global_position.distance_to(SPHERE_CENTER) < 1.2:
+			part.visible = false
+	_view_from(Vector3(1.7, 1.7, 1.9), Vector3(0, 0.9, -0.1))
+	await _capture("11. Cortada al medio: la silla en su aro, mirando al frente", "11")
+	_set_look(45.0, -8.0)
+	await _wait(0.1)
+	await _capture("12. Cortada: la silla girada a la izquierda, hacia los modos", "12")
 	get_tree().quit()
 
 
@@ -619,19 +769,24 @@ func _view_from(from: Vector3, to: Vector3) -> void:
 func _sit_dummy() -> void:
 	var skin := Color(0.78, 0.62, 0.5)
 	var suit := Color(0.32, 0.36, 0.42)
-	Clay.box(self, Vector3(0.36, 0.5, 0.24), Vector3(0, 0.85, 0.24), suit)
-	Clay.sphere(self, 0.12, Vector3(0, 1.2, 0.2), skin)
-	Clay.box(self, Vector3(0.26, 0.06, 0.3), Vector3(0, 1.17, 0.27), Color(0.15, 0.12, 0.1))
+	var body := _seat
+	Clay.box(body, Vector3(0.36, 0.5, 0.24), Vector3(0, 0.85, 0.12), suit)
+	Clay.sphere(body, 0.12, Vector3(0, 1.2, 0.06), skin)
+	Clay.box(body, Vector3(0.26, 0.06, 0.3), Vector3(0, 1.17, 0.13), Color(0.15, 0.12, 0.1))
 	for side: float in [-1.0, 1.0]:
-		Clay.box(self, Vector3(0.14, 0.14, 0.42), Vector3(side * 0.11, 0.6, -0.02), suit)
-		Clay.box(self, Vector3(0.12, 0.42, 0.13), Vector3(side * 0.11, 0.3, -0.2), suit)
-		Clay.box(self, Vector3(0.12, 0.06, 0.2), Vector3(side * 0.11, 0.06, -0.25), INK)
-	_bar(self, Vector3(-0.2, 1.0, 0.2), Vector3(-0.3, 0.82, -0.15), 0.05, suit)
-	_bar(self, Vector3(-0.3, 0.82, -0.15), Vector3(-0.38, 0.86, -0.52), 0.045, suit)
-	Clay.sphere(self, 0.05, Vector3(-0.39, 0.86, -0.56), skin)
-	_bar(self, Vector3(0.2, 1.0, 0.2), Vector3(0.28, 0.78, -0.05), 0.05, suit)
-	_bar(self, Vector3(0.28, 0.78, -0.05), Vector3(0.3, 0.74, -0.3), 0.045, suit)
-	Clay.sphere(self, 0.05, Vector3(0.3, 0.74, -0.33), skin)
+		Clay.box(body, Vector3(0.14, 0.14, 0.42), Vector3(side * 0.11, 0.6, -0.12), suit)
+		Clay.box(body, Vector3(0.12, 0.42, 0.13), Vector3(side * 0.11, 0.32, -0.3), suit)
+		Clay.box(body, Vector3(0.12, 0.06, 0.2), Vector3(side * 0.11, 0.1, -0.35), INK)
+	for side: float in [-1.0, 1.0]:
+		_seat_bar(Vector3(side * 0.2, 1.0, 0.1), Vector3(side * 0.28, 0.82, -0.05), suit)
+		_seat_bar(Vector3(side * 0.28, 0.82, -0.05), Vector3(side * 0.29, 0.86, -0.24), suit)
+		Clay.sphere(body, 0.05, Vector3(side * 0.29, 0.88, -0.26), skin)
+
+
+func _seat_bar(from: Vector3, to: Vector3, color: Color) -> void:
+	var piece := _bar(self, from, to, 0.045, color)
+	remove_child(piece)
+	_seat.add_child(piece)
 
 
 func _set_look(yaw: float, pitch: float) -> void:
