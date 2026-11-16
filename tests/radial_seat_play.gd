@@ -477,10 +477,10 @@ func _shoot(delta: float) -> void:
 		_sweep_left -= delta
 		_energy = maxf(0.0, _energy - delta * 0.12)
 		var end := _marker.global_position
-		_beam.global_position = (tip + end) * 0.5
-		_beam.scale = Vector3(1, tip.distance_to(end), 1)
-		_beam.look_at(end, Vector3.UP if absf(_aim.y) < 0.95 else Vector3.FORWARD)
-		_beam.rotate_object_local(Vector3.RIGHT, PI * 0.5)
+		var along := (end - tip).normalized()
+		var side := along.cross(Vector3.UP if absf(along.y) < 0.95 else Vector3.RIGHT).normalized()
+		var basis := Basis(side, along, side.cross(along)).orthonormalized()
+		_beam.global_transform = Transform3D(basis.scaled_local(Vector3(1, tip.distance_to(end), 1)), (tip + end) * 0.5)
 		if _hits_target(end):
 			_target_flash = 1.0
 	# Súper: se carga más y sale uno solo, grande.
