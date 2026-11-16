@@ -39,6 +39,8 @@ cualquiera, y lo que se elige es **qué usar en qué momento**, no qué equipar 
   un tiempo fijo y sale solo**. No depende de agarrar ni de soltar nada: agarrar el control sólo apunta. Cada ataque tiene
   su demora (el súper, más larga), y quien lo maneja no decide cuándo sale: apunta para que, cuando salga, dé.
 - **Los modos del cañón, así (el usuario, 15/11/2026; reemplazan a simple, ráfaga, barrido y súper):**
+  *Corrección del usuario (15/11/2026): el barrido y el súper se cargan **mientras se los aprieta**: cuanto más, más
+  fuerte (un súper a medias o al máximo); por eso sólo esos dos llevan barra. La ráfaga, no.*
   1. **Ráfaga**: tiros seguidos; se prende o se apaga (un botón que se traba) y se apunta agarrando el control.
   2. **Barrido**: se carga; después hay que agarrar el control y moverlo, y dura un tiempo.
   3. **Súper**: se carga; se agarra el control, se apunta y tira una sola vez, muy fuerte.

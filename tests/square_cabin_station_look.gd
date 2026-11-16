@@ -106,7 +106,8 @@ func _cabin() -> void:
 	var half := CELL * 0.5
 	Clay.box(self, Vector3(CELL.x + 0.2, 0.1, CELL.z + 0.2), Vector3(0, -0.05, 0), WALL)
 	_hide.append(Clay.box(self, Vector3(CELL.x + 0.2, 0.12, CELL.z + 0.2), Vector3(0, CELL.y + 0.06, 0), WALL))
-	Clay.box(self, Vector3(CELL.x + 0.2, CELL.y, 0.1), Vector3(0, half.y, half.z + 0.05), WALL)
+	# Atrás, abierta: sólo el canto del techo y el del piso.
+	Clay.box(self, Vector3(CELL.x + 0.2, 0.07, 0.07), Vector3(0, CELL.y, half.z + 0.06), DARK)
 	Clay.box(self, Vector3(CELL.x, CELL.y, 0.02), Vector3(0, half.y, -half.z), GLASS)
 	_hide.append(Clay.box(self, Vector3(0.02, CELL.y, CELL.z), Vector3(half.x, half.y, 0), GLASS))
 	Clay.box(self, Vector3(0.02, CELL.y, CELL.z), Vector3(-half.x, half.y, 0), GLASS)
@@ -159,6 +160,20 @@ func _arm(points: Array[Vector3], radius := 0.028) -> void:
 	Clay.sphere(self, radius * 1.7, base, JOINT)
 
 
+## UN BRAZO DESDE EL PISO, en una esquina de adelante: una columna que sube pegada al vidrio y un codo que lleva el
+## cubo hacia la silla, tomado por detrás.
+func _floor_arm(foot: Vector3, to: Vector3) -> void:
+	Clay.cylinder(self, 0.09, 0.04, foot + Vector3(0, 0.02, 0), DARK)
+	var top := Vector3(foot.x, to.y - 0.12, foot.z)
+	_link(foot, top, 0.035, STEEL)
+	Clay.sphere(self, 0.055, top, JOINT)
+	var elbow := top.lerp(to, 0.5) + Vector3(0, 0.08, 0)
+	_link(top, elbow, 0.028)
+	Clay.sphere(self, 0.045, elbow, JOINT)
+	_link(elbow, to, 0.028)
+	Clay.sphere(self, 0.045, to, JOINT)
+
+
 ## El punto detrás de un módulo en `at` (del lado contrario a los ojos), donde se toma su brazo.
 func _behind(at: Vector3, depth: float) -> Vector3:
 	return at + (at - EYE).normalized() * depth
@@ -208,10 +223,14 @@ func _main_control() -> void:
 	var body := _facing(Vector3(0, 0.84, -0.17))
 	Clay.box(body, Vector3(0.5, 0.17, 0.2), Vector3.ZERO, DARK)
 	Clay.box(body, Vector3(0.5, 0.025, 0.205), Vector3(0, -0.06, 0.0), ACCENT)
-	Clay.box(body, Vector3(0.42, 0.11, 0.01), Vector3(0, 0.01, 0.102), Color(0.2, 0.2, 0.21))
-	# La energía, la munición del cañón: una barra grande al frente del mando.
-	_lights(body, Vector3(0, 0.025, 0.108), 16, 11, GREEN, Vector2(0.02, 0.04))
-	_text(body, "ENERGÍA", Vector3(0, -0.028, 0.108), 0.016, CREAM)
+	# La energía, la munición del cañón: una tira fina y apagada en el canto de arriba, siempre a la vista pero sin gritar.
+	var strip := Node3D.new()
+	body.add_child(strip)
+	strip.position = Vector3(0, 0.066, 0.103)
+	for k in 16:
+		var piece := Clay.box(strip, Vector3(0.016, 0.01, 0.004), Vector3(-0.135 + k * 0.018, 0, 0), Color(0.06, 0.14, 0.08))
+		if k < 11:
+			piece.material_override = _glow(GREEN, 0.6)
 	# Las dos empuñaduras, a los costados, con el gatillo rojo arriba (el clic derecho).
 	for side: float in [-1.0, 1.0]:
 		Clay.box(body, Vector3(0.05, 0.08, 0.08), Vector3(side * 0.27, 0.0, 0.0), JOINT)
@@ -220,7 +239,8 @@ func _main_control() -> void:
 		for k in 3:
 			Clay.cylinder(body, 0.034, 0.012, Vector3(side * 0.3, 0.05 + k * 0.035, 0.02 - k * 0.008), JOINT)
 		Clay.box(body, Vector3(0.05, 0.025, 0.06), Vector3(side * 0.3, 0.19, 0.0), RED)
-	_text(body, "CAÑÓN", Vector3(0, 0.074, 0.06), 0.022, CREAM)
+	Clay.box(body, Vector3(0.24, 0.05, 0.004), Vector3(0, 0.015, 0.102), INK)
+	_text(body, "CAÑÓN", Vector3(0, 0.015, 0.106), 0.026, CREAM)
 
 
 # ── LOS CUBOS EN SUS BRAZOS ──────────────────────────────────────────────────────────────────────────────────────
@@ -239,25 +259,34 @@ func _cube(at: Vector3, size: Vector3) -> Node3D:
 ## LOS MODOS, a la izquierda: un cubo con tres botones grandes; ráfaga se traba (puesta), barrido y súper se cargan.
 func _modes_cube() -> void:
 	var at := Vector3(-0.47, 1.08, -0.22)
-	_arm([Vector3(-0.66, 1.75, 0.74), Vector3(-0.62, 1.8, 0.05), Vector3(-0.6, 1.45, -0.42), _behind(at, 0.16)])
+	_floor_arm(Vector3(-0.55, 0.0, -0.62), _behind(at, 0.13))
 	var cube := _cube(at, Vector3(0.3, 0.24, 0.14))
 	Clay.box(cube, Vector3(0.3, 0.045, 0.004), Vector3(0, 0.098, 0.002), INK)
 	_text(cube, "MODO", Vector3(0, 0.098, 0.005), 0.018, CREAM)
+	# Botones grandes que se prenden, con el nombre adentro: ráfaga se traba (prendida mientras tira); barrido y súper se
+	# cargan mientras se los aprieta, con su barra abajo (el súper sale más fuerte cuanto más se lo carga).
 	var names := ["RÁFAGA", "BARRIDO", "SÚPER"]
+	var lit := [true, false, true]
 	for k in names.size():
-		var x := -0.09 + k * 0.09
-		var on := k == 0
-		Clay.box(cube, Vector3(0.074, 0.066, 0.012), Vector3(x, 0.01, 0.004), DARK)
-		Clay.box(cube, Vector3(0.062, 0.054, 0.012 if on else 0.03), Vector3(x, 0.01, 0.012 if on else 0.02), INK if on else CREAM)
-		_lamp(cube, Vector3(x, 0.062, 0.006), on, 0.01)
-		_text(cube, names[k], Vector3(x, -0.04, 0.004), 0.012)
-		_lights(cube, Vector3(x, -0.075, 0.003), 5, 5 if on else (2 if k == 2 else 0), AMBER, Vector2(0.01, 0.012))
+		var x := -0.093 + k * 0.093
+		var on: bool = lit[k]
+		Clay.box(cube, Vector3(0.086, 0.1, 0.012), Vector3(x, 0.0, 0.004), DARK)
+		var cap := Clay.box(cube, Vector3(0.076, 0.09, 0.012 if k == 0 else 0.024), Vector3(x, 0.0, 0.012 if k == 0 else 0.018),
+			CREAM)
+		cap.material_override = _glow(Color(1.0, 0.82, 0.5), 1.2) if on else Clay.material(Color(0.55, 0.5, 0.42))
+		var depth := 0.019 if k == 0 else 0.031
+		var name_label := StrokeLabel.make(names[k], 0.012, INK)
+		name_label.max_width = 0.068
+		name_label.position = Vector3(x, 0.0, depth)
+		cube.add_child(name_label)
+		if k > 0:
+			_lights(cube, Vector3(x, -0.076, 0.004), 5, 3 if k == 2 else 0, AMBER, Vector2(0.012, 0.012))
 
 
 ## EL ESTADO, a la derecha: un cubo con la pantalla de la meca de frente (formas llenas).
 func _status_cube() -> void:
 	var at := Vector3(0.47, 1.12, -0.22)
-	_arm([Vector3(0.66, 1.75, 0.74), Vector3(0.62, 1.8, 0.05), Vector3(0.6, 1.48, -0.42), _behind(at, 0.18)])
+	_floor_arm(Vector3(0.55, 0.0, -0.62), _behind(at, 0.15))
 	var cube := _cube(at, Vector3(0.3, 0.28, 0.16))
 	var drawing: Control = STATUS._StatusDrawing.new()
 	var view := SubViewport.new()
