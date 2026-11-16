@@ -32,24 +32,29 @@ func _ready() -> void:
 	ModulesMaquette.build(self)
 	var body := MechBody.current
 	var floor_y := (body.WAIST - body.HIP_DROP) * ModulesMaquette.LIMBS + 0.66 + ModulesMaquette.SILL
-	var shift := -(ModulesMaquette.ARM.y * 2.0 + ModulesMaquette.PACK_LONG - ModulesMaquette.GUNNER_LONG) * 0.5
+	var shift := -(ModulesMaquette.ARM.y * ModulesMaquette.CELLS + ModulesMaquette.PACK_LONG - ModulesMaquette.GUNNER_LONG) * 0.5
 	print("PISO ", floor_y)
 	await get_tree().create_timer(2.0).timeout
 	var shots: Array = []
 	shots.append(await _view(Vector3(-11.0, 10.0, -13.0), Vector3(0.0, floor_y - 1.0, 0.0), 45.0))
-	var stand := Vector3(0.0, floor_y + 1.65, 3.2 + shift)
+	var stand := Vector3(0.0, floor_y + 1.65, ModulesMaquette.ARM.y * ModulesMaquette.CELLS - 0.3 + shift)
 	shots.append(await _view(stand, stand + Vector3(0.0, -0.2, -1.0), 80.0))
-	shots.append(await _view(stand, stand + Vector3(-1.0, -0.2, -0.6), 80.0))
-	var seat := Vector3(0.62, floor_y + 1.2, -1.8 + 0.95 + shift)
+	shots.append(await _view(Vector3(0.0, 40.0, 0.01), Vector3.ZERO, 0.0, 14.0))
+	var seat := Vector3(0.8, floor_y + 1.2, -ModulesMaquette.GUNNER_LONG + 0.95 + shift)
 	shots.append(await _view(seat, seat + Vector3(-1.0, -0.1, 0.2), 80.0))
 	_save(shots)
 	get_tree().quit()
 
 
-func _view(from: Vector3, to: Vector3, fov: float) -> Image:
-	_eye.fov = fov
+func _view(from: Vector3, to: Vector3, fov: float, ortho := 0.0) -> Image:
+	if fov > 0.0:
+		_eye.projection = Camera3D.PROJECTION_PERSPECTIVE
+		_eye.fov = fov
+	else:
+		_eye.projection = Camera3D.PROJECTION_ORTHOGONAL
+		_eye.size = ortho
 	_eye.global_position = from
-	_eye.look_at(to, Vector3.UP)
+	_eye.look_at(to, Vector3.UP if absf((to - from).normalized().y) < 0.99 else Vector3.FORWARD)
 	for i in 4:
 		await get_tree().process_frame
 	await RenderingServer.frame_post_draw

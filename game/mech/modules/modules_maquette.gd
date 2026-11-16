@@ -9,19 +9,24 @@ extends RefCounted
 ##     atrás, a cada lado, la MUNICIÓN maciza con su boca de recarga.
 ##   · LA CABEZA arriba, alineada con los brazos, cerrada (sin acceso todavía).
 ##   · EL SUCCIONADOR sigue al vestíbulo de su mismo ancho, sin pared: el piso se termina y abajo, la boca.
+## 16/11, más grande y más cuadrada vista de arriba: «aumentar… el ancho del vestíbulo y el largo también… 3 módulos de
+## largo de lo de munición o brazos… el del frente sí se ensancharía para igualar el vestíbulo, pero el de cabeza no…
+## un formato un poquito más cuadrado». Las celdas de los costados (brazo y munición) son cuadradas, CELLS por lado: el
+## brazo adelante y la munición en las demás; artillería y el succionador más cortos para cuadrar la planta.
 ## Todo con choque (pisos, paredes, techos): se recorre volando en modo creativo. Piernas y brazos de arcilla, sin choque.
 
 const LIMBS := 0.65
-const WIDTH := 2.6
-const GUNNER_LONG := 1.8
-const ARM := Vector2(1.5, 1.8)
+const WIDTH := 4.0
+const GUNNER_LONG := 1.6
+const ARM := Vector2(1.8, 1.8)
+const CELLS := 3
 const HEAD := Vector2(1.6, 1.8)
 const TALL := 2.0
 const HEAD_TALL := 1.7
 const SILL := 0.4
 const ROOF := 0.15
 const WALL := 0.12
-const PACK_LONG := 1.3
+const PACK_LONG := 1.2
 const PACK_DROP := 1.2
 const NOZZLE := 0.26
 
@@ -39,7 +44,7 @@ const SUCTION := Color(0.45, 0.35, 0.65, 0.25)
 
 ## Cuánto ocupa en el suelo (ancho, fondo), con los brazos y los pies.
 static func footprint() -> Vector2:
-	return Vector2(16.0, 16.0)
+	return Vector2(20.0, 20.0)
 
 
 ## Arma la maqueta colgada de `parent`, centrada y apoyada en y = 0.
@@ -53,7 +58,7 @@ static func build(parent: Node3D) -> Node3D:
 	var floor_y := bottom + SILL
 	var top := floor_y + TALL + ROOF
 	var half := WIDTH * 0.5
-	var lobby_long := ARM.y * 2.0
+	var lobby_long := ARM.y * CELLS
 	# Todo corrido hacia atrás para que la meca quede centrada en la parcela.
 	var shift := Vector3(0.0, 0.0, -(lobby_long + PACK_LONG - GUNNER_LONG) * 0.5)
 	var at := func(p: Vector3) -> Vector3: return p + shift
@@ -79,7 +84,7 @@ static func build(parent: Node3D) -> Node3D:
 	for s: float in [-1.0, 1.0]:
 		solid.call(Vector3(WALL, TALL, GUNNER_LONG), Vector3(s * (half - WALL * 0.5), wall_y, -GUNNER_LONG * 0.5),
 			GUNNER_COLOR)
-		_chair(root, at.call(Vector3(s * 0.62, floor_y, -GUNNER_LONG + 0.95)))
+		_chair(root, at.call(Vector3(s * 0.8, floor_y, -GUNNER_LONG + 0.95)))
 	# LOS BRAZOS: el frente, la pared de afuera (de ahí sale el brazo) y atrás la munición; adentro, abiertos.
 	var arm_z := ARM.y * 0.5
 	for s: float in [-1.0, 1.0]:
@@ -87,17 +92,17 @@ static func build(parent: Node3D) -> Node3D:
 		solid.call(Vector3(ARM.x, TALL, WALL), Vector3(x, wall_y, WALL * 0.5), ARM_COLOR)
 		solid.call(Vector3(WALL, TALL, ARM.y), Vector3(s * (half + ARM.x - WALL * 0.5), wall_y, arm_z), ARM_COLOR)
 		_chair(root, at.call(Vector3(x, floor_y, arm_z - 0.1)))
-		# LA MUNICIÓN, maciza, de la panza al techo.
-		solid.call(Vector3(ARM.x, top - bottom, ARM.y), Vector3(x, (top + bottom) * 0.5, ARM.y * 1.5), AMMO_COLOR)
-		# El vestíbulo, atrás, tiene pared hacia la munición, con la boca de recarga y una caja de balas al pie.
+		# LA MUNICIÓN, maciza, de la panza al techo, en las celdas de atrás del brazo; el vestíbulo tiene pared hacia
+		# ella, con la boca de recarga y una caja de balas al pie.
 		var wx := s * (half - WALL * 0.5)
-		solid.call(Vector3(WALL, TALL, ARM.y), Vector3(wx, wall_y, ARM.y * 1.5), LOBBY_COLOR)
-		Clay.box(root, Vector3(0.06, 0.7, 0.9), at.call(Vector3(s * (half - WALL - 0.03), floor_y + 1.1, ARM.y * 1.5)),
-			RIM)
-		Clay.box(root, Vector3(0.04, 0.5, 0.7), at.call(Vector3(s * (half - WALL - 0.07), floor_y + 1.1, ARM.y * 1.5)),
-			AMMO_COLOR.darkened(0.3))
-		solid.call(Vector3(0.5, 0.35, 0.6), Vector3(s * (half - WALL - 0.35), floor_y + 0.175, ARM.y * 1.5 + 0.1),
-			AMMO_COLOR)
+		for cell in range(1, CELLS):
+			var z := ARM.y * (cell + 0.5)
+			solid.call(Vector3(ARM.x, top - bottom, ARM.y), Vector3(x, (top + bottom) * 0.5, z), AMMO_COLOR)
+			solid.call(Vector3(WALL, TALL, ARM.y), Vector3(wx, wall_y, z), LOBBY_COLOR)
+			Clay.box(root, Vector3(0.06, 0.7, 0.9), at.call(Vector3(s * (half - WALL - 0.03), floor_y + 1.1, z)), RIM)
+			Clay.box(root, Vector3(0.04, 0.5, 0.7), at.call(Vector3(s * (half - WALL - 0.07), floor_y + 1.1, z)),
+				AMMO_COLOR.darkened(0.3))
+			solid.call(Vector3(0.5, 0.35, 0.6), Vector3(s * (half - WALL - 0.35), floor_y + 0.175, z + 0.1), AMMO_COLOR)
 		_arm(root, at.call(Vector3(s * (half + ARM.x + body.LEG_THICKNESS * LIMBS * 0.72), floor_y + 1.2, arm_z)), s)
 	# LA CABEZA, arriba de los brazos y del frente del vestíbulo: cerrada.
 	var head_floor := top + 0.06
@@ -131,7 +136,7 @@ static func build(parent: Node3D) -> Node3D:
 	column.material_override = Clay.material(SUCTION)
 	column.position = at.call(Vector3(0.0, floor_y * 0.5, pack_z))
 	root.add_child(column)
-	for x: float in [-0.7, 0.7]:
+	for x: float in [-1.0, 1.0]:
 		for y: float in [top - 0.55, top - 1.4]:
 			Clay.cylinder(root, NOZZLE, 0.45, at.call(Vector3(x, y, lobby_long + PACK_LONG + 0.22)), RIM,
 				Vector3(90.0, 0.0, 0.0))
