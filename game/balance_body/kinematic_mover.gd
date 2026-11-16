@@ -160,10 +160,11 @@ func step(delta: float) -> void:
 
 
 ## MOVERSE: de costado, hacia la velocidad pedida, CON PESO: acelerando, en `start_time`; frenando o cambiando de
-## dirección, en `stop_time` (0: al instante). En el aire, nada.
+## dirección, en `stop_time` (0: al instante). EN EL AIRE NO SE MANEJA, PERO SIGUE CON SU IMPULSO: lo que traía de
+## costado (de caminar o de un dash) no cambia hasta tocar el piso.
 func _walk(k: KinematicSettings, delta: float, grounded: bool) -> Vector3:
 	if not grounded:
-		return Vector3.ZERO
+		return Vector3(velocity.x, 0.0, velocity.z)
 	var wanted := _wanted() * k.walk_speed
 	var now := Vector3(velocity.x, 0.0, velocity.z)
 	var speeding := wanted.length() > now.length() + 0.01 and wanted.dot(now) >= 0.0

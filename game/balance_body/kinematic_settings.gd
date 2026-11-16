@@ -16,8 +16,9 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 @export_group("Moverse")
 ## UNA velocidad, y CON PESO (el usuario, 15/11/2026: «más de esquivar y momentum»): tarda `start_time` (s) en llegar a
 ## ella y `stop_time` (s) en frenar de ella; cambiar de dirección cuesta como frenar (0: al instante). Sin correr: para
-## esquivar está el dash. En el aire no se mueve de costado: el salto es sólo vertical («luego lo complejizamos si
-## queremos»). Las configuraciones de un toque, en el F1. *Hasta el 15/11/2026, un solo tiempo para las dos cosas.*
+## esquivar está el dash. En el aire no se maneja, pero sigue con el impulso que traía (de caminar o de un dash: el
+## usuario, 15/11/2026: «el dash es algo que sucede y listo… seguiría con el impulso»). Las configuraciones de un
+## toque, en el F1. *Hasta el 15/11/2026, un solo tiempo para las dos cosas, y en el aire se frenaba en seco.*
 @export_range(1.0, 30.0, 0.5) var walk_speed := 8.0
 @export_range(0.0, 2.0, 0.05) var start_time := 0.3
 @export_range(0.0, 3.0, 0.05) var stop_time := 0.6
