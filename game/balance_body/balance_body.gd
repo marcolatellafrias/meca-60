@@ -480,11 +480,11 @@ func shove(offset: Vector3, time: float, hop := 0.0) -> void:
 		mover.shove(offset, time, hop)
 
 
-## DERRIBA A LA CINEMÁTICA: cae de espaldas hacia `away`, queda tirada y se levanta, animado (ver
+## DERRIBA A LA CINEMÁTICA: cae siempre de espaldas, queda tirada y se levanta, animado (ver
 ## KinematicMover.knock_down; `state` dice en qué va). A la física, nada: se cae sola con su física.
-func knock_down(away: Vector3) -> void:
+func knock_down() -> void:
 	if kinematic and mover != null:
-		mover.knock_down(away)
+		mover.knock_down()
 
 
 ## LE PEGA A CUALQUIER CUERPO: a uno con equilibrio, por su puerta (física o cinemática); a lo demás, de siempre.

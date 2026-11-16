@@ -53,9 +53,8 @@ var _shove_left := 0.0
 var _shove_time := 0.0
 var _shove_flat := Vector3.ZERO
 var _shove_hop := 0.0
-## LA CAÍDA (ver `knock_down`): cuánto está inclinada (°), hacia dónde (de costado) y su reloj (s).
+## LA CAÍDA (ver `knock_down`): cuánto está inclinada para atrás (°) y su reloj (s).
 var lean := 0.0
-var _lean_away := Vector3.BACK
 var _fall_clock := 0.0
 var _cylinder := CylinderShape3D.new()
 var _holder := CollisionShape3D.new()
@@ -95,21 +94,18 @@ func _fit() -> void:
 	_holder.position.y = _cylinder.height * 0.5
 
 
-## DÓNDE VA LA CAJA: sobre sus piernas, mirando como él. CAYÉNDOSE, toda la meca de una pieza (la caja y las piernas
-## estiradas) gira `lean` grados hacia `_lean_away` sobre la cadera (la cara de abajo de la caja), que baja lo justo
-## para que lo más bajo —los pies o el canto de la caja de ese lado— quede en el piso: cae sentada y de espaldas, y las
-## piernas se levantan más que ella (BodyLegs.LYING_LIFT), los pies para arriba, como en los juegos (el usuario, 15/11/2026: «los pies quedan como pegados al piso, queda feo,
-## prefiero que sea algo más simple, como los juegos normales»).
+## DÓNDE VA LA CAJA: sobre sus piernas, mirando como él. CAYÉNDOSE, LA POSE DE REPOSO DE UNA PIEZA (la caja, las
+## piernas y los brazos como parada) se vuelca `lean` grados PARA ATRÁS, siempre de espaldas, sobre el canto del piso
+## debajo de su espalda: con 90°, la espalda en el piso (el usuario, 15/11/2026: «la animación debería ser mucho más
+## simple, agarrar la pose de reposo, y hacer que siempre se caiga hacia arriba (espalda al suelo)»).
 func body_place() -> Transform3D:
 	var upright := Basis(Vector3.UP, _yaw)
+	var standing := Vector3.UP * (_hover_now() + body.size.y * 0.5)
 	if lean <= 0.0:
-		return Transform3D(upright, global_position + Vector3.UP * (_hover_now() + body.size.y * 0.5))
-	var angle := deg_to_rad(lean)
-	var turn := Basis(Vector3.UP.cross(_lean_away).normalized(), angle)
-	var half_toward := absf(_lean_away.dot(upright.x)) * body.size.x * 0.5 + absf(_lean_away.dot(upright.z)) * body.size.z * 0.5
-	var legs := minf(angle + deg_to_rad(BodyLegs.LYING_LIFT * lean / KinematicSettings.current.fall_lie), PI * 0.5)
-	var bottom := global_position + Vector3.UP * maxf(_hover_now() * cos(legs), half_toward * sin(angle))
-	return Transform3D(turn * upright, bottom + turn * Vector3.UP * (body.size.y * 0.5))
+		return Transform3D(upright, global_position + standing)
+	var back := upright.z * body.size.z * 0.5
+	var turn := Basis(upright.x, deg_to_rad(lean))
+	return Transform3D(turn * upright, global_position + back + turn * (standing - back))
 
 
 ## UN PASO (ver arriba): lo que se le pide, moverse con el motor, y lo que miden las piernas.
@@ -213,22 +209,15 @@ func shove(offset: Vector3, time: float, hop := 0.0) -> void:
 	_dash_left = 0.0
 
 
-## DERRIBADA: cae de espaldas hacia `away` (de costado), queda tirada y se levanta (BalanceBody.State: DOWN, LIFT,
-## RIGHT y otra vez STANDING), en los tiempos de KinematicSettings («Caerse»). Si ya está en el piso, nada.
-func knock_down(away: Vector3) -> void:
+## DERRIBADA: cae de espaldas (ver `body_place`), queda tirada y se levanta (BalanceBody.State: DOWN, LIFT, RIGHT y
+## otra vez STANDING), en los tiempos de KinematicSettings («Caerse»). Si ya está en el piso, nada.
+func knock_down() -> void:
 	if body.state != BalanceBody.State.STANDING:
 		return
-	var flat := Vector3(away.x, 0.0, away.z)
-	_lean_away = flat.normalized() if flat.length() > 0.01 else Basis(Vector3.UP, _yaw) * Vector3.BACK
 	_fall_clock = 0.0
 	_dash_left = 0.0
 	body.state = BalanceBody.State.DOWN
 	body.falls += 1
-
-
-## Hacia dónde se cae (de costado; ver `knock_down`).
-func lean_away() -> Vector3:
-	return _lean_away
 
 
 ## EMPUJADA O EN EL PISO: la velocidad del empujón (de costado, y el arco del saltito: y = 4·h·s·(1 − s)), o quieta

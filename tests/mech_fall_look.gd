@@ -40,7 +40,7 @@ func _ready() -> void:
 	print("empujada 10 m: se corrió %.1f m" % _mech.mover.global_position.z)
 	var from := _mech.mover.global_position.z
 	_mech.shove(Vector3.BACK * 12.0, 0.5, 3.0)
-	_mech.knock_down(Vector3.BACK)
+	_mech.knock_down()
 	await _wait(0.25)
 	await _shot("2_cayendo")
 	await _wait(0.6)
