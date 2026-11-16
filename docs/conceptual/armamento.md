@@ -31,6 +31,18 @@ cualquiera, y lo que se elige es **qué usar en qué momento**, no qué equipar 
   saltar (en el aire, levitar); en el cañón, disparar (mantenido carga el súper); en la espada, la estocada (mantenida
   carga). El tajo sale de mover la palanca de la hoja. Se fueron los botones de salto, levitar, gatillo y golpe, y la
   pantalla del gesto (se ve en el vidrio). **Una mano, un control a la vez**: para cambiar de modo hay que soltar.
+- **Controles en radio alrededor de la silla, mirados en 3D (15/11/2026, a probar):** como la cabina de Getter Robo de
+  las referencias del usuario: brazos con controles y pantallitas alrededor de la silla, la cámara libre con tope (no
+  se mira atrás), sólo clic izquierdo. **Agarrar un control que apunta (cañón, espada) hace de la cámara la mira**; el
+  brazo la sigue con su resorte. Uno que no apunta (caminar) mueve sólo la palanca, con la cámara quieta.
+- **Los modos del cañón, así (el usuario, 15/11/2026; reemplazan a simple, ráfaga, barrido y súper):**
+  1. **Continuo**: se prende o se apaga (un botón) y se apunta agarrando el control.
+  2. **Barrido**: se carga; después hay que agarrar el control y moverlo, y dura un tiempo.
+  3. **Súper**: se carga; se agarra el control, se apunta y tira una sola vez, muy fuerte.
+- **La espada, dos modos (el usuario, 15/11/2026; la guardia se va):**
+  1. **Tajo**: se agarra el control y se lo mueve directamente, **con menos sensibilidad** (el `drag_gain` de los
+     controles de character-parametric: cuánto mouse lleva un recorrido entero; el mouse se lee como intención).
+  2. **Estocada certera**: como el súper del cañón: se aprieta, se carga, se apunta y apuñala.
 - **Tres pasajeros, sin espalda (15/11/2026, lo último; manda sobre lo de abajo):** la meca cuadrada tiene tres
   sillas, las tres adelante. **Izquierda, el brazo izquierdo; derecha, el derecho; al medio, el movimiento.** Se fue la
   silla de la tarima. **Las armas de la espalda desaparecen** (la ametralladora y los misiles; el usuario: «desaparecen»).
