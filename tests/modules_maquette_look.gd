@@ -40,8 +40,8 @@ func _ready() -> void:
 	var stand := Vector3(0.0, floor_y + 1.65, ModulesMaquette.LOBBY_LONG - 0.3 + shift)
 	shots.append(await _view(stand, stand + Vector3(0.0, -0.2, -1.0), 80.0))
 	shots.append(await _view(Vector3(-40.0, floor_y, 0.0), Vector3(0.0, floor_y, 0.0), 0.0, 9.0))
-	var seat := Vector3(0.55, floor_y + 1.2, -ModulesMaquette.FRONT_LONG + 0.95 + shift)
-	shots.append(await _view(seat, seat + Vector3(-1.0, -0.1, 0.2), 80.0))
+	var seat := Vector3(0.0, floor_y + 1.5, -ModulesMaquette.FRONT_LONG + 1.6 + shift)
+	shots.append(await _view(seat, seat + Vector3(0.0, -0.2, -1.0), 80.0))
 	_save(shots)
 	get_tree().quit()
 

@@ -8,7 +8,7 @@ extends RefCounted
 ## que todos se accedan desde el vestíbulo, en la misma cara… ensancharía el vestíbulo y después achicaría todo. Y
 ## sacaría las municiones».
 ##   · ADELANTE, EN FILA: brazo, ARTILLERÍA y brazo, separados entre sí y abiertos atrás, al vestíbulo.
-##     Artillería, con la arista de arriba y adelante bajada: el frente, ese chanfle y el techo, de vidrio; dos sillas.
+##     Artillería, con la arista de arriba y adelante bajada: el frente, ese chanfle y el techo, de vidrio; una silla.
 ##     Cada brazo, una ventana sólo adelante; el brazo sale de su pared de afuera.
 ##   · EL VESTÍBULO, detrás, del ancho de la fila; sigue sin pared en el SUCCIONADOR: el piso se termina y abajo, la boca.
 ##   · LA CABEZA arriba, centrada sobre toda la meca: un domo sobre un tramo corto de cilindro, cerrada (sin acceso).
@@ -40,11 +40,12 @@ const PACK_LONG := 1.1
 const PACK_DROP := 1.0
 const NOZZLE := 0.24
 
-const GUNNER_COLOR := Color(0.85, 0.5, 0.3)
-const LOBBY_COLOR := Color(0.7, 0.7, 0.66)
-const ARM_COLOR := Color(0.45, 0.7, 0.4)
-const HEAD_COLOR := Color(0.4, 0.6, 0.85)
-const PACK_COLOR := Color(0.55, 0.42, 0.7)
+## Los colores de cada módulo: grises, cada uno apenas teñido (naranja, verde, azul, violeta) para distinguirlos.
+const GUNNER_COLOR := Color(0.66, 0.6, 0.56)
+const LOBBY_COLOR := Color(0.62, 0.62, 0.61)
+const ARM_COLOR := Color(0.57, 0.62, 0.56)
+const HEAD_COLOR := Color(0.55, 0.59, 0.65)
+const PACK_COLOR := Color(0.6, 0.57, 0.64)
 const SEAT := Color(0.25, 0.42, 0.7)
 const SKIN := Color(0.86, 0.66, 0.5)
 const RIM := Color(0.22, 0.23, 0.25)
@@ -90,7 +91,7 @@ static func build(parent: Node3D) -> Node3D:
 	for s: float in [-1.0, 1.0]:
 		solid.call(Vector3(WALL, TALL, LOBBY_LONG), Vector3(s * (half - WALL * 0.5), wall_y, LOBBY_LONG * 0.5),
 			LOBBY_COLOR)
-	# ARTILLERÍA, al medio: el chanfle de vidrio; sus costados macizos con esa forma; atrás, abierta. Dos sillas.
+	# ARTILLERÍA, al medio: el chanfle de vidrio; sus costados macizos con esa forma; atrás, abierta. Una silla, al medio.
 	var nose := floor_y + GUNNER_NOSE
 	var slope_end := -FRONT_LONG + GUNNER_SLOPE
 	solid.call(Vector3(GUNNER_WIDTH, GUNNER_NOSE, 0.05), Vector3(0.0, floor_y + GUNNER_NOSE * 0.5, -FRONT_LONG + 0.025),
@@ -106,7 +107,7 @@ static func build(parent: Node3D) -> Node3D:
 		_side(root, at.call(Vector3(s * (gunner_half - WALL * 0.5), 0.0, 0.0)), PackedVector2Array([
 			Vector2(-FRONT_LONG, floor_y), Vector2(-FRONT_LONG, nose), Vector2(slope_end, top), Vector2(0.0, top),
 			Vector2(0.0, floor_y)]), GUNNER_COLOR)
-		_chair(root, at.call(Vector3(s * 0.55, floor_y, -FRONT_LONG + 0.95)))
+	_chair(root, at.call(Vector3(0.0, floor_y, -FRONT_LONG + 0.95)))
 	# LOS BRAZOS, a los costados de artillería: piso, techo, el frente con una ventana, la pared de afuera (de ahí sale
 	# el brazo) y la de adentro, contra artillería; atrás, abiertos al vestíbulo.
 	for s: float in [-1.0, 1.0]:
