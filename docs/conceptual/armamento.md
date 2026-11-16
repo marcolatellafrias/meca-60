@@ -35,6 +35,9 @@ cualquiera, y lo que se elige es **qué usar en qué momento**, no qué equipar 
   las referencias del usuario: brazos con controles y pantallitas alrededor de la silla, la cámara libre con tope (no
   se mira atrás), sólo clic izquierdo. **Agarrar un control que apunta (cañón, espada) hace de la cámara la mira**; el
   brazo la sigue con su resorte. Uno que no apunta (caminar) mueve sólo la palanca, con la cámara quieta.
+- **La regla de los ataques, una sola para todos (el usuario, 15/11/2026):** se aprieta el botón del ataque, **se carga
+  un tiempo fijo y sale solo**. No depende de agarrar ni de soltar nada: agarrar el control sólo apunta. Cada ataque tiene
+  su demora (el súper, más larga), y quien lo maneja no decide cuándo sale: apunta para que, cuando salga, dé.
 - **Los modos del cañón, así (el usuario, 15/11/2026; reemplazan a simple, ráfaga, barrido y súper):**
   1. **Ráfaga**: tiros seguidos; se prende o se apaga (un botón que se traba) y se apunta agarrando el control.
   2. **Barrido**: se carga; después hay que agarrar el control y moverlo, y dura un tiempo.
