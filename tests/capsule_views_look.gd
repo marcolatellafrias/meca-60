@@ -27,6 +27,9 @@ var _eye: Camera3D = null
 var _title: Label = null
 ## Cada cápsula: su nombre, hacia dónde sale del cuerpo y su centro.
 var _pods: Array[Dictionary] = []
+## Todo lo de la meca de la variante que se está mirando (se rehace en cada una).
+var _root: Node3D = null
+var _elbow_left := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -35,13 +38,6 @@ func _ready() -> void:
 			_folder = argument.trim_prefix("--salida=")
 	get_window().size = Vector2i(1280, 720)
 	_world()
-	for spec in [["ADELANTE", 0.0, 0.0], ["BRAZO IZQUIERDO", SPREAD, 0.0], ["BRAZO DERECHO", -SPREAD, 0.0], ["ARRIBA", 0.0, 90.0]]:
-		var way := _direction(spec[1], spec[2])
-		_pods.append({"name": spec[0], "way": way, "center": BODY_CENTER + way * (BODY_RADIUS + POD_RADIUS * (POD_OUT * 2.0 - 1.0))})
-	_body()
-	for pod in _pods:
-		_pod(pod)
-	_arms()
 	_eye = Camera3D.new()
 	_eye.fov = 78.0
 	add_child(_eye)
@@ -54,28 +50,47 @@ func _ready() -> void:
 	_title.add_theme_color_override("font_outline_color", Color.BLACK)
 	_title.add_theme_constant_override("outline_size", 6)
 	layer.add_child(_title)
-	await get_tree().process_frame
-	_view_from(Vector3(5.5, 5.0, -7.5), BODY_CENTER + Vector3(0, 0.4, 0))
-	await _shot("1. Desde afuera: las cuatro cápsulas, la mitad afuera (vidrio) y la mitad adentro", "1")
-	_view_from(Vector3(-7.0, 4.2, -3.5), BODY_CENTER)
-	await _shot("2. Desde afuera, del lado del brazo izquierdo", "2")
-	_inside(0, 0.0, -6.0)
-	await _shot("3. Adelante, mirando al frente", "3")
-	_inside(1, 0.0, -8.0)
-	await _shot("4. Brazo izquierdo, mirando hacia afuera (a su brazo)", "4")
-	_inside(1, 32.0, -18.0)
-	await _shot("4b. Brazo izquierdo, girado hacia su hombro", "4b")
-	_inside(1, -50.0, -6.0)
-	await _shot("5. Brazo izquierdo, girado hacia el frente", "5")
-	_inside(1, 70.0, -5.0)
-	await _shot("6. Brazo izquierdo, girado hacia atrás: la pared con los controles", "6")
-	_inside(2, 0.0, -8.0)
-	await _shot("7. Brazo derecho, mirando hacia afuera (a su brazo)", "7")
-	_inside(3, 0.0, -10.0, true)
-	await _shot("8. Arriba, mirando al frente por encima del cuerpo", "8")
-	_inside(3, 0.0, -40.0, true)
-	await _shot("9. Arriba, mirando abajo: el cuerpo tapa", "9")
+	# Las tres maneras de poner los brazos (el usuario, 15/11/2026): el hombro sobre la misma línea que las cápsulas,
+	# con el mismo espaciado.
+	var variants := [
+		{"letter": "A", "name": "el brazo sale de atrás de la cápsula", "pod": SPREAD, "pod_pitch": 0.0, "shoulder": SPREAD * 2.0, "shoulder_pitch": 0.0},
+		{"letter": "B", "name": "el brazo sale de abajo de la cápsula", "pod": SPREAD, "pod_pitch": 0.0, "shoulder": SPREAD, "shoulder_pitch": -52.0},
+		{"letter": "C", "name": "cápsula y hombro cambiados de lugar", "pod": SPREAD * 2.0, "pod_pitch": 0.0, "shoulder": SPREAD, "shoulder_pitch": 0.0},
+	]
+	for variant in variants:
+		_build(variant)
+		await get_tree().process_frame
+		var tag: String = variant.letter + ". " + variant.name
+		_view_from(BODY_CENTER + Vector3(-5.6, 0.9, -5.0), BODY_CENTER + Vector3(-0.6, -0.8, 0))
+		await _shot(tag + ": desde afuera", variant.letter + "1")
+		_look_from_pod(1, _elbow_left + Vector3(0, -0.6, 0))
+		await _shot(tag + ": desde la cápsula izquierda, mirando al brazo", variant.letter + "2")
+		_look_from_pod(1, _pods[1].eye + Vector3(0, -0.12, -1.0))
+		await _shot(tag + ": desde la cápsula izquierda, mirando al frente", variant.letter + "3")
 	get_tree().quit()
+
+
+func _build(variant: Dictionary) -> void:
+	if _root != null:
+		_root.free()
+	_root = Node3D.new()
+	add_child(_root)
+	_pods.clear()
+	for spec in [["ADELANTE", 0.0, 0.0], ["BRAZO IZQUIERDO", variant.pod, variant.pod_pitch],
+			["BRAZO DERECHO", -float(variant.pod), variant.pod_pitch], ["ARRIBA", 0.0, 90.0]]:
+		var way := _direction(spec[1], spec[2])
+		_pods.append({"name": spec[0], "way": way, "center": BODY_CENTER + way * (BODY_RADIUS + POD_RADIUS * (POD_OUT * 2.0 - 1.0))})
+	_body()
+	for pod in _pods:
+		_pod(pod)
+	_arms(variant.shoulder, variant.shoulder_pitch)
+
+
+func _look_from_pod(index: int, target: Vector3) -> void:
+	# En primera persona no se ve uno mismo: la silla y el que va sentado, ocultos.
+	(_pods[index].seat as Node3D).visible = false
+	_eye.global_position = _pods[index].eye
+	_eye.look_at(target, Vector3.UP)
 
 
 func _direction(yaw: float, pitch: float) -> Vector3:
@@ -152,10 +167,10 @@ void fragment() {
 	body.mesh = ball
 	body.material_override = material
 	body.position = BODY_CENTER
-	add_child(body)
+	_root.add_child(body)
 	for side: float in [-1.0, 1.0]:
-		Clay.box(self, Vector3(1.0, 1.6, 1.2), Vector3(side * 1.1, 0.8, 0), STEEL)
-		Clay.box(self, Vector3(1.4, 0.3, 1.8), Vector3(side * 1.1, 0.15, -0.2), DARK)
+		Clay.box(_root, Vector3(1.0, 1.6, 1.2), Vector3(side * 1.1, 0.8, 0), STEEL)
+		Clay.box(_root, Vector3(1.4, 0.3, 1.8), Vector3(side * 1.1, 0.15, -0.2), DARK)
 
 
 # ── UNA CÁPSULA: la mitad de afuera del cuerpo es vidrio; la de adentro, pared con controles. Su silla y alguien. ──
@@ -201,7 +216,7 @@ void fragment() {
 	shell.mesh = ball
 	shell.material_override = material
 	shell.position = center
-	add_child(shell)
+	_root.add_child(shell)
 	# El aro donde la cápsula se mete en el cuerpo: el canto entre vidrio y pared.
 	var way: Vector3 = pod.way
 	var cut := (BODY_RADIUS * BODY_RADIUS - POD_RADIUS * POD_RADIUS + center.distance_squared_to(BODY_CENTER)) / (2.0 * center.distance_to(BODY_CENTER))
@@ -218,7 +233,7 @@ void fragment() {
 		if at.distance_to(BODY_CENTER) > BODY_RADIUS - 0.02:
 			continue
 		var plate := Node3D.new()
-		add_child(plate)
+		_root.add_child(plate)
 		plate.position = at
 		plate.look_at(center, Vector3.UP if absf((center - at).normalized().y) < 0.95 else Vector3.FORWARD)
 		plate.rotate_object_local(Vector3.UP, PI)
@@ -229,7 +244,7 @@ void fragment() {
 		Clay.box(plate, Vector3(0.24, 0.04, 0.02), Vector3(0, 0.085, 0.022), INK)
 	# La silla, mirando hacia afuera del cuerpo (lo que tiene que ver), y alguien sentado.
 	var seat := Node3D.new()
-	add_child(seat)
+	_root.add_child(seat)
 	seat.position = center + Vector3(0, -0.62, 0)
 	var flat := Vector3(way.x, 0, way.z)
 	if flat.length() > 0.1:
@@ -246,11 +261,7 @@ void fragment() {
 		Clay.box(seat, Vector3(0.12, 0.38, 0.12), Vector3(side * 0.1, 0.22, -0.14), suit)
 	pod["eye"] = seat.position + seat.global_basis * Vector3(0, 0.98 + EYE_UP * 0.0, 0.12)
 	pod["seat_basis"] = seat.global_basis
-	var tag := StrokeLabel.make(pod.name, 0.12, CREAM)
-	add_child(tag)
-	tag.position = center + way * (POD_RADIUS + 0.25)
-	tag.look_at(tag.position - Vector3(0.4, -0.1, 1).normalized(), Vector3.UP)
-	tag.rotate_object_local(Vector3.UP, PI)
+	pod["seat"] = seat
 
 
 ## Una base con el eje −Z hacia `way`.
@@ -268,34 +279,41 @@ func _ring(at: Vector3, axis: Vector3, radius: float, thick: float, color: Color
 	var ring := MeshInstance3D.new()
 	ring.mesh = mesh
 	ring.material_override = Clay.material(color)
-	add_child(ring)
+	_root.add_child(ring)
 	var up := axis.normalized()
 	var side := up.cross(Vector3.FORWARD if absf(up.dot(Vector3.FORWARD)) < 0.9 else Vector3.RIGHT).normalized()
 	ring.transform = Transform3D(Basis(side, up, side.cross(up)).orthonormalized(), at)
 
 
-# ── LOS BRAZOS: a los costados del cuerpo, atrás de las cápsulas de los brazos; el cañón y la espada ─────────────
-func _arms() -> void:
+# ── LOS BRAZOS: el hombro es una esfera puesta con las reglas de las cápsulas (sobre el cuerpo, la mitad afuera) ──
+const SHOULDER_RADIUS := 0.8
+
+
+func _arms(shoulder_yaw: float, shoulder_pitch: float) -> void:
 	for side: float in [-1.0, 1.0]:
-		var shoulder := BODY_CENTER + _direction(side * 92.0, -5.0) * (BODY_RADIUS + 0.2)
-		Clay.sphere(self, 0.75, shoulder, STEEL)
-		var elbow := shoulder + Vector3(side * -0.5, -1.4, -0.9)
-		_bar(shoulder, elbow, 0.38, Color(0.3, 0.31, 0.33))
-		Clay.sphere(self, 0.42, elbow, DARK)
+		var way := _direction(side * shoulder_yaw, shoulder_pitch)
+		var shoulder := BODY_CENTER + way * BODY_RADIUS
+		Clay.sphere(_root, SHOULDER_RADIUS, shoulder, STEEL)
+		_ring(shoulder - way * 0.05, way, SHOULDER_RADIUS * 0.96, 0.05, DARK)
+		var out := Vector3(way.x, 0, way.z).normalized()
+		var elbow := shoulder + out * 0.5 + Vector3(0, -1.3, 0) + Vector3(0, 0, -0.5)
+		elbow.y = maxf(elbow.y, 1.4)
+		_bar(shoulder, elbow, 0.36, Color(0.3, 0.31, 0.33))
+		Clay.sphere(_root, 0.4, elbow, DARK)
 		if side > 0.0:
 			# Brazo izquierdo: el cañón, apuntando al frente.
-			var tip := elbow + Vector3(0.1, 0.3, -2.6)
-			_bar(elbow, tip, 0.34, Color(0.24, 0.25, 0.26))
+			var tip := elbow + Vector3(0.0, 0.3, -2.6)
+			_bar(elbow, tip, 0.32, Color(0.24, 0.25, 0.26))
 			for k in 4:
-				var at := elbow.lerp(tip, 0.25 + k * 0.18)
-				Clay.sphere(self, 0.38, at, DARK).scale = Vector3(1, 1, 0.25)
+				Clay.sphere(_root, 0.36, elbow.lerp(tip, 0.25 + k * 0.18), DARK).scale = Vector3(1, 1, 0.25)
 		else:
 			# Brazo derecho: la mano con la espada.
 			var fist := elbow + Vector3(0.0, 0.2, -1.6)
-			_bar(elbow, fist, 0.32, Color(0.3, 0.31, 0.33))
-			Clay.box(self, Vector3(0.6, 0.6, 0.6), fist, Color(0.26, 0.27, 0.28))
-			Clay.box(self, Vector3(1.2, 0.12, 0.25), fist + Vector3(0, 0.36, -0.1), DARK)
+			_bar(elbow, fist, 0.3, Color(0.3, 0.31, 0.33))
+			Clay.box(_root, Vector3(0.6, 0.6, 0.6), fist, Color(0.26, 0.27, 0.28))
+			Clay.box(_root, Vector3(1.2, 0.12, 0.25), fist + Vector3(0, 0.36, -0.1), DARK)
 			_bar(fist + Vector3(0, 0.4, -0.1), fist + Vector3(-0.6, 3.6, -1.4), 0.09, Color(0.82, 0.84, 0.86))
+	_elbow_left = BODY_CENTER + _direction(shoulder_yaw, shoulder_pitch) * BODY_RADIUS
 
 
 func _bar(from: Vector3, to: Vector3, radius: float, color: Color) -> void:
@@ -306,7 +324,7 @@ func _bar(from: Vector3, to: Vector3, radius: float, color: Color) -> void:
 	var piece := MeshInstance3D.new()
 	piece.mesh = mesh
 	piece.material_override = Clay.material(color)
-	add_child(piece)
+	_root.add_child(piece)
 	var up := (to - from).normalized()
 	var side := up.cross(Vector3.FORWARD if absf(up.dot(Vector3.FORWARD)) < 0.9 else Vector3.RIGHT).normalized()
 	piece.transform = Transform3D(Basis(side, up, side.cross(up)).orthonormalized(), (from + to) * 0.5)
