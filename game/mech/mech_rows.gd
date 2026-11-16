@@ -7,7 +7,11 @@ extends RefCounted
 static func rows() -> Array[SandboxRow]:
 	var arena := DodgeArenaArchetype.new()
 	return [
-		# EL DISCO DE DOS PISOS CON VÓRTICE, la primera del sandbox (el usuario, 15/11/2026: «con brazos reales (con
+		# LA MECA POR MÓDULOS, la primera del sandbox (ModulesMaquette; el usuario, 16/11/2026: «pasámelo a esta maqueta
+		# a escala real en una parcela al principio del sandbox así veo cómo se siente»): quieta, para recorrerla.
+		SandboxRow.new(SandboxSuper.Id.MECH, "Meca por módulos") \
+			.add(SandboxRow.Build.NEAR, [ModulesMaquetteArchetype.new()]),
+		# EL DISCO DE DOS PISOS CON VÓRTICE, la segunda del sandbox (el usuario, 15/11/2026: «con brazos reales (con
 		# física), piernas reales, y torso con física en una parcela al principio del sandbox»).
 		SandboxRow.new(SandboxSuper.Id.MECH, "Meca del vórtice") \
 			.add(SandboxRow.Build.NEAR, [MechArchetype.new(Mech.Arms.MUSCLE, false, Mech.Cabin.VORTEX)]) \
