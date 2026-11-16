@@ -10,7 +10,7 @@ enum State { AIM, OUT, BACK }
 
 ## El puño (m) y a qué altura va la cadena (m sobre el piso).
 const FIST := 6.0
-const HEIGHT := 12.0
+const HEIGHT := 12.0 * Brawler.SCALE
 const COLOR := Color(0.62, 0.2, 0.18)
 
 var state := State.AIM

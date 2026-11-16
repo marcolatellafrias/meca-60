@@ -28,9 +28,9 @@ extends Node
 ##     diferencie»), como la segunda fase de un jefe de Souls: ENCADENA (al terminar un ataque, a veces sigue con otro
 ##     sin rodearte, hasta dos), el golpe al piso larga TRES ONDAS en abanico, tira DOS PIEDRAS (adonde estás y adonde
 ##     vas) y la embestida REBOTA en el borde una vez y vuelve, en vez de estrellarse. Viene por tiempos. Y SU PROPIO
-##     ATAQUE, EL LANZALLAMAS (el usuario lo eligió): AVISO, abre el horno y gira la cintura hacia donde empieza, con el
-##     abanico en el piso; GOLPE, un chorro de fuego en cono (BrawlerFlame) que barre; si te toca, te saca vida y te
-##     empuja. Se esquiva alejándose o cruzando el chorro con el dash (intocable). El horno queda abierto: la ventana.
+##     ATAQUE, EL LANZALLAMAS (el usuario lo eligió): abre el horno y larga BOCANADAS: cada una te sigue con la cintura
+##     (el cono en el piso), se queda quieta y titila (apuntó) y quema en esa dirección (BrawlerFlame); si te toca, te
+##     saca vida y te empuja. Se esquiva con un dash de costado cuando apuntó. El horno queda abierto: la ventana.
 ##   · CUÁL: al terminar de rodear, uno de los que tengan tu distancia a tiro, al azar (la L de la parcela deja uno).
 ## LA VIDA, POR CÓDIGO (Health): las piñas de la meca que tocan el cuerpo le sacan poco; en el horno abierto, mucho.
 ## Mientras alguien lo posee, la cabeza no hace nada.
@@ -116,6 +116,7 @@ var _waves: Array[BrawlerWave] = []
 var _rock: BrawlerRock = null
 var _rocks: Array[BrawlerRock] = []
 var _dig := Vector3.ZERO
+var _dirt_clock := 0.0
 var _hook: BrawlerHook = null
 var _arms_were: Array[Vector3] = []
 var _rage_clock := 0.0
@@ -124,8 +125,8 @@ var _shown_at := 0
 var _bounced := false
 var _wave_sides: Array[BrawlerWave] = []
 var _flame: BrawlerFlame = null
-var _flame_start := 0.0
-var _flame_turn := 1.0
+var _flame_yaw := 0.0
+var _bursts_left := 0
 
 
 func _ready() -> void:
@@ -137,7 +138,7 @@ func _ready() -> void:
 	_label.outline_size = 80
 	_label.pixel_size = 0.02
 	_label.no_depth_test = true
-	_label.position = Vector3.UP * 40.0
+	_label.position = Vector3.UP * (Brawler.BOX.y + 12.0)
 	_boss.add_child(_label)
 	_begin(Act.STALK)
 
@@ -337,7 +338,7 @@ func _slam() -> void:
 			_boss.move = Vector2.ZERO
 			# LOS PUÑOS: si estás justo adelante, te pegan ellos (derriba).
 			for fist in _boss.body.fists():
-				if not _hit_this_act and _touches_target(fist, BrawlerBody.FIST * 1.5):
+				if not _hit_this_act and _touches_target(fist, BrawlerBody.FIST * Brawler.SCALE * 1.5):
 					# Si no entró (en el dash), puede entrar en el paso que sigue.
 					_hit_this_act = _strike(k.wave_damage, "los puños al piso", HitReaction.Kind.KNOCKDOWN,
 						_to_target(), k.wave_push, fist)
@@ -372,8 +373,13 @@ func _throw() -> void:
 				_rock.name = "Piedra"
 				_boss.get_parent().add_child(_rock)
 				_rock.setup(_dig, _boss.waist_yaw, k.rock_radius)
-			# Sale del piso de a poco.
+			# Sale del piso de a poco, levantando tierra.
 			var up := clampf(_clock / maxf(k.rip_time, 0.01), 0.0, 1.0)
+			_dirt_clock -= get_physics_process_delta_time()
+			if _dirt_clock <= 0.0:
+				_dirt_clock = 0.25
+				BossBursts.dirt(_boss.get_parent(), _dig + Vector3(_random.randf_range(-6.0, 6.0), 0.0,
+					_random.randf_range(-5.0, 5.0)), 0.8)
 			_rock.hold(_dig + Vector3.UP * lerpf(-BrawlerRock.SIZE.y * 0.5, BrawlerRock.SIZE.y * 0.5, up),
 				_boss.waist_yaw, null)
 			if _clock >= k.rip_time:
@@ -473,7 +479,7 @@ func _check_spin(k: BrawlerSettings) -> void:
 			var to := were[pair + 1].lerp(arms[pair + 1], t)
 			for along in 7:
 				var point := from.lerp(to, along / 6.0)
-				if _touches_target(point, BrawlerBody.FIST * 0.8):
+				if _touches_target(point, BrawlerBody.FIST * Brawler.SCALE * 0.8):
 					# Si no entró (en el dash), el brazo sigue y puede entrar cuando se le termine.
 					if _strike(k.spin_damage, "el trompo", HitReaction.Kind.PUSH,
 							Vector3.UP.cross(_to_target().normalized()) * signf(_boss.spin), k.spin_push, point):
@@ -562,52 +568,61 @@ func _hook_act() -> void:
 				_begin(Act.STALK)
 
 
-## EL LANZALLAMAS (sólo con ira), por tiempos (`_step`): 0 abre el horno y gira hacia donde empieza (el abanico), 1 el
-## chorro barre, 2 se queda con el horno abierto.
+## EL LANZALLAMAS (sólo con ira), EN BOCANADAS, por tiempos (`_step`): 0 abre el horno; 1 la bocanada te sigue (el cono
+## en el piso); 2 apuntó, quieta (titila); 3 quema en esa dirección; y otra vez 1, hasta `flame_bursts`; 4 se queda con el
+## horno abierto.
 func _flame_act() -> void:
 	var k := BrawlerSettings.current
 	var waist := Basis(Vector3.UP, _boss.waist_yaw) * Vector3.FORWARD
-	var center := _yaw_to_target()
 	if _flame == null:
 		_flame = BrawlerFlame.new()
 		_flame.name = "Lanzallamas"
 		_boss.get_parent().add_child(_flame)
-		_flame.setup(k.flame_reach, k.flame_angle, k.flame_sweep)
-		_flame_turn = -1.0 if _random.randf() < 0.5 else 1.0
-		_flame_start = center - _flame_turn * deg_to_rad(k.flame_sweep * 0.5)
+		_flame.setup(k.flame_reach, k.flame_angle, 0.0)
+		_bursts_left = k.flame_bursts
+	_boss.furnace = true
+	_boss.move = Vector2.ZERO
 	match _step:
 		0:
 			stage = "lanzallamas: abre el horno"
 			_boss.pose = Brawler.Pose.FLAME_READY
-			_boss.furnace = true
 			_boss.move = Vector2(clampf(-_error_to(_to_target()) * 3.0, -1.0, 1.0), 0.0)
-			# Mientras avisa, el centro sigue a la meca; la cintura va hacia donde empieza.
-			_flame_start = center - _flame_turn * deg_to_rad(k.flame_sweep * 0.5)
-			_boss.aim_yaw = _flame_start
-			_flame.warn(_boss.global_position, Basis(Vector3.UP, center) * Vector3.FORWARD)
 			if _clock >= k.flame_windup:
 				flames += 1
-				BossSounds.play(BossSounds.Kind.FLAME, _boss.furnace_point(), _boss.get_parent())
 				_next(1)
 		1:
+			stage = "lanzallamas: apunta"
+			_boss.pose = Brawler.Pose.FLAME_READY
+			_boss.move = Vector2(clampf(-_error_to(_to_target()) * 3.0, -1.0, 1.0), 0.0)
+			_flame.warn(_boss.global_position, waist)
+			if _clock >= k.flame_aim:
+				_flame_yaw = _boss.waist_yaw
+				_next(2)
+		2:
+			# APUNTÓ: la cintura y el cono quietos; el cono titila.
+			stage = "lanzallamas: ¡apuntó!"
+			_boss.aim_yaw = _flame_yaw
+			_flame.warn(_boss.global_position, waist, true)
+			if _clock >= k.flame_lock:
+				BossSounds.play(BossSounds.Kind.FLAME, _boss.furnace_point(), _boss.get_parent(), -2.0)
+				_hit_this_act = false
+				_next(3)
+		3:
 			stage = "¡lanzallamas!"
 			_boss.pose = Brawler.Pose.FLAME
-			_boss.move = Vector2.ZERO
-			var share := clampf(_clock / maxf(k.flame_time, 0.01), 0.0, 1.0)
-			_boss.aim_yaw = _flame_start + _flame_turn * deg_to_rad(k.flame_sweep) * share
+			_boss.aim_yaw = _flame_yaw
 			_flame.blow(_boss.furnace_point(), waist, true)
 			if not _hit_this_act and _flame.covers(_ground(), _target_half_width()):
-				var away := _to_target()
-				_hit_this_act = _strike(k.flame_damage, "el lanzallamas", HitReaction.Kind.PUSH, away, k.flame_push,
-					_ground() + Vector3.UP * 8.0)
+				_hit_this_act = _strike(k.flame_damage, "el lanzallamas", HitReaction.Kind.PUSH, _to_target(),
+					k.flame_push, _ground() + Vector3.UP * 8.0)
 				burned += int(_hit_this_act)
-			if _clock >= k.flame_time:
+			if _clock >= k.flame_burn:
 				_flame.blow(_boss.furnace_point(), waist, false)
-				_next(2)
+				_bursts_left -= 1
+				_next(1 if _bursts_left > 0 else 4)
 		_:
 			stage = "lanzallamas: horno abierto"
 			_boss.pose = Brawler.Pose.STUNNED
-			_boss.move = Vector2.ZERO
 			if _clock >= k.flame_recover:
 				_begin(Act.STALK)
 

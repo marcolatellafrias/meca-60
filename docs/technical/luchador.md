@@ -161,13 +161,47 @@ lanzallamas, el salto que aplasta, el humo), eligió «el lanzallamas».
 - **El lanzallamas del horno** (`BrawlerBrain._flame_act`, `BrawlerFlame`; **sólo con ira**, entre 20 y 60 m; la L lo
   deja solo aunque no tenga ira): **aviso** (1 s), abre el horno, se echa atrás con los brazos abiertos y **gira la
   cintura hacia donde va a empezar**; en el piso, **el abanico rojo** con todo lo que va a barrer (sigue a la meca).
-  **Golpe**: un chorro de fuego en cono desde la boca del horno (45 m, 12° de medio ancho, con su rugido) que **barre
+  **Golpe**: un chorro de fuego en cono desde la boca del horno (65 m, 16° de medio ancho: antes 45 y 12, el usuario
+  lo pidió más grande; con fuego de partículas y su rugido) que **barre
   100° en 2,2 s** con la cintura. Si te toca, te saca 25 y te empuja 12 m. Después queda **1,8 s con el horno
   abierto** (y lo tuvo abierto todo el ataque): la ventana para pegarle donde más le duele. Pestaña «Lanzallamas» del F1.
 - **Esquivarlo** (`brawler_dodge_check --solo-fuego`): quieta, caminando de costado (con el barrido o contra él) te
   alcanza; **desde 45 m, alejándote**, no; de cerca, **el dash contra el chorro** (intocable, lo cruza) cuando el chorro
   está a unos 20–25° tuyo (a 45 m, 15–20°): antes, te alcanza cuando se te terminó; después, ya te tocó.
 - El video, con ira, empieza con 14 s de lanzallamas.
+
+## Paso 8 (15/11/2026): todo para un dash
+El usuario, después de pedir un análisis de la pelea: «me parece mala práctica hacer varios dashes seguidos… diseñar
+todo para un dash, así es más consciente la esquivada»; «la invulnerabilidad pasajera en el dash no se lee realista en
+la meca, se siente tonto… lo sacaría y tomaría otro ángulo… más de esquivar y momentum»; y antes, «bajar un poco la
+escala del jefe e igualarla un poco más a la meca».
+- **El análisis**: la rodada de Souls esquiva por tiempo (un golpe activo un instante y la rodada intocable); acá las
+  zonas son grandes y duran, y la meca es pesada. Esquivar por **posición**: un ataque se esquiva si el medio ancho
+  del golpe más el de la meca (3,5 m) entra en un dash más lo que se camina en el aviso. Lo que mejor anda: angosto,
+  **apunta y se queda quieto** antes de pegar, y el golpe dura poco.
+- **La meca** (módulo Meca, con el sí del usuario): una espera de 1 s entre dashes (`dash_cooldown`), sin el dash
+  intocable, y con momentum: caminar tarda en arrancar y en frenar, y el dash es un empujón que se frena solo (unos
+  20,7 m en total). El gasto de energía del dash de la meca de tres lo decide el usuario con la sesión Cabinas separadas.
+- **El jefe, a 0,6** (`Brawler.SCALE`): de 30 m de alto a 18 (la meca de tres, 14). Una sola escala: el dibujo, su
+  caja, su cuerpo para las mecas, la cámara y el alcance de sus golpes (salen de sus puños).
+- **La piedra**: 12 m de radio (de 18: nada la esquivaba). **El trompo**: derecho, sin corregir. **El lanzallamas, en
+  bocanadas**: abre el horno y larga tres, y cada una **te sigue** con la cintura (el cono en el piso, 0,9 s), **se
+  queda quieta y titila** (0,45 s: apuntó) y **quema** en esa dirección (0,8 s; 60 m, 14° de medio ancho). Sin dash
+  intocable, un barrido no se cruza.
+- **Medido** (`brawler_dodge_check`, cada uno con un dash solo; ya no mide «dos dashes seguidos»):
+
+| Ataque | Lo esquiva | No lo esquiva |
+|---|---|---|
+| Embestida | el dash cuando le faltan 16–45 m | quieta, caminando, el dash a 8 m |
+| Golpe al piso (la onda) | saltar cuando le faltan 15–40 m; el dash cuando le faltan 8 m o más | quieta, caminando (salvo desde 115 m) |
+| Piedra | el dash en cualquier momento del vuelo | quieta, caminando |
+| Trompo | el dash de costado y seguir caminando; de lejos (70 m), caminando | quieta; el dash solo, si después te quedás |
+| Agarre | caminar de costado desde el aviso; el dash cuando apuntó o cuando sale la mano | quieta; caminar cuando ya salió |
+| Lanzallamas | el dash cuando cada bocanada apunta | quieta, caminando; el dash cuando ya quema |
+
+- **Más partículas** (el usuario: «tirar más partículas»; `BossBursts`): tierra y polvo cuando arranca la piedra y
+  cuando cae, chispas en los golpes, y fuego en el lanzallamas. El video: `brawler_charge_movie` (con `-- --corto`,
+  sólo la piedra y el lanzallamas).
 
 ## Lo que sigue
 Los poderes, de a uno (propuestos, sin confirmar): el gancho al cielo y la guardia con contraataque; para la ira, si

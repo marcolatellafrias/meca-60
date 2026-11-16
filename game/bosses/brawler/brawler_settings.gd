@@ -90,7 +90,7 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 @export_range(0.2, 4.0, 0.05) var lift_time := 1.1
 @export_range(0.3, 4.0, 0.05) var rock_flight := 1.8
 @export_range(0.0, 80.0, 1.0) var rock_arc := 35.0
-@export_range(3.0, 25.0, 0.5) var rock_radius := 9.0
+@export_range(3.0, 25.0, 0.5) var rock_radius := 12.0
 @export_range(0.0, 30.0, 0.5) var rock_stay := 8.0
 @export_range(0.2, 4.0, 0.05) var throw_recover := 1.2
 @export_range(0.0, 100.0, 1.0) var rock_damage := 30.0
@@ -108,7 +108,7 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 @export_range(90.0, 1440.0, 10.0) var spin_speed := 1080.0
 @export_range(1.0, 40.0, 0.5) var spin_move := 20.0
 ## Cuánto corrige hacia vos girando (°/s: poco, como la embestida; si no, no se esquiva).
-@export_range(0.0, 90.0, 1.0) var spin_homing := 4.0
+@export_range(0.0, 90.0, 1.0) var spin_homing := 0.0
 @export_range(0.2, 6.0, 0.1) var spin_dizzy := 2.0
 @export_range(0.0, 100.0, 1.0) var spin_damage := 20.0
 @export_range(0.0, 60.0, 0.5) var spin_push := 16.0
@@ -133,14 +133,18 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 
 @export_group("Lanzallamas")
 ## EL LANZALLAMAS DEL HORNO (ver BrawlerBrain, BrawlerFlame), SÓLO CON IRA (el usuario eligió «el lanzallamas» como lo
-## propio de la ira, 15/11/2026): el aviso (s: abre el horno y gira la cintura hacia donde empieza, con el abanico en el
-## piso), cuánto dura el chorro (s) y cuánto barre (°), hasta dónde llega (m) y la mitad de su ancho (°). Si te toca,
-## cuánta vida te saca y cuánto te empuja (m). Después se queda con el horno abierto (s: la ventana).
-@export_range(0.2, 4.0, 0.05) var flame_windup := 1.0
-@export_range(0.3, 6.0, 0.1) var flame_time := 2.2
-@export_range(0.0, 270.0, 5.0) var flame_sweep := 100.0
-@export_range(10.0, 120.0, 1.0) var flame_reach := 45.0
-@export_range(2.0, 45.0, 0.5) var flame_angle := 12.0
+## propio de la ira, 15/11/2026). EN BOCANADAS QUE APUNTAN (sin dash intocable no se cruza un barrido; el usuario:
+## «diseñar todo para un dash»): abre el horno (s), y cada bocanada te sigue con la cintura (s, el cono en el piso),
+## se queda quieta y titila (s: apuntó, corréte) y quema en esa dirección (s). Cuántas bocanadas, hasta dónde llega (m)
+## y la mitad de su ancho (°). Si te toca, cuánta vida te saca y cuánto te empuja (m). Después se queda con el horno
+## abierto (s: la ventana).
+@export_range(0.2, 4.0, 0.05) var flame_windup := 0.8
+@export_range(0.2, 3.0, 0.05) var flame_aim := 0.9
+@export_range(0.0, 2.0, 0.05) var flame_lock := 0.45
+@export_range(0.1, 3.0, 0.05) var flame_burn := 0.8
+@export_range(1, 6, 1) var flame_bursts := 3
+@export_range(10.0, 120.0, 1.0) var flame_reach := 60.0
+@export_range(2.0, 45.0, 0.5) var flame_angle := 14.0
 @export_range(0.0, 100.0, 1.0) var flame_damage := 25.0
 @export_range(0.0, 40.0, 0.5) var flame_push := 12.0
 @export_range(0.2, 6.0, 0.1) var flame_recover := 1.8

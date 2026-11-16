@@ -11,13 +11,13 @@ extends Node3D
 enum State { HELD, FLYING, LANDED }
 
 ## Lo que mide la piedra (m: ancho, alto, largo).
-const SIZE := Vector3(14.0, 6.0, 11.0)
+const SIZE := Vector3(18.0, 7.0, 14.0)
 const DIRT := Color(0.5, 0.42, 0.33)
 
 var state := State.HELD
 ## Dónde cae (mundo, en el piso) y el radio del golpe (m).
 var spot := Vector3.ZERO
-var radius := 9.0
+var radius := 18.0
 ## Recién cayó (la cabeza lo mira una vez y lo apaga).
 var just_landed := false
 
@@ -128,6 +128,9 @@ func _physics_process(delta: float) -> void:
 				_clock = 0.0
 				_ring.visible = false
 				_rock.global_transform = Transform3D(Basis(Vector3.UP, randf() * TAU), spot + Vector3.UP * SIZE.y * 0.4)
+				# AL CAER: tierra para todos lados, a la medida del golpe, y el ruido.
+				BossBursts.dirt(get_parent(), spot, radius / 6.0)
+				BossSounds.play(BossSounds.Kind.KNOCKDOWN, spot, get_parent(), 4.0)
 		State.LANDED:
 			if _clock > _stay:
 				_rock.global_position.y -= delta * 3.0

@@ -18,8 +18,13 @@ extends CharacterBody3D
 ##     cabeza, y el cuerpo va hacia ellas en su tiempo (POSES).
 ##   · LA IRA (`rage`): otro color, el visor rojo, humo negro por las chimeneas, y anda y gira más rápido.
 
+## SU ESCALA: el dibujo (BrawlerBody) está en las medidas de la maqueta, y el Luchador entero va a esta escala (el
+## dibujo, su caja, su cuerpo para las mecas y el alcance de sus golpes, que salen de sus puños). 0,6 (15/11/2026, el
+## usuario: «bajar un poco la escala del jefe e igualarla un poco más a la meca, así es más fácil de esquivarla y los
+## dashes no se sienten tan inútiles»): de 30 m de alto a 18 (la meca de tres, 14).
+const SCALE := 0.6
 ## Lo que mide su caja contra lo fijo (m): el ancho de las orugas, el alto y el largo.
-const BOX := Vector3(24.0, 30.0, 20.0)
+const BOX := Vector3(24.0, 30.0, 20.0) * SCALE
 ## Cuánto cae (m/s²) si no hay piso.
 const GRAVITY := 30.0
 
@@ -115,6 +120,7 @@ func _ready() -> void:
 	aim_yaw = hull_yaw
 	body = BrawlerBody.new()
 	body.build(self)
+	body.hull.scale = Vector3.ONE * SCALE
 	# SU CUERPO PARA LAS MECAS: las orugas y una caja para lo de arriba, que gira con la cintura (así la meca llega al
 	# pecho, y al horno, de frente). Nace en su lugar.
 	_solid = AnimatableBody3D.new()
@@ -125,11 +131,11 @@ func _ready() -> void:
 	add_child(_solid)
 	_solid.sync_to_physics = true
 	var tracks := Vector3((BrawlerBody.WAIST.x * 0.5 + BrawlerBody.TRACK.x + 1.5) * 2.0, BrawlerBody.TRACK.y + 3.0,
-		BrawlerBody.TRACK.z)
+		BrawlerBody.TRACK.z) * SCALE
 	Clay.shape_box(_solid, tracks, Vector3.UP * tracks.y * 0.5)
 	_torso_shape = CollisionShape3D.new()
 	var chest := BoxShape3D.new()
-	chest.size = Vector3(BrawlerBody.CHEST.x + 2.0, BOX.y - tracks.y, BrawlerBody.CHEST.z)
+	chest.size = Vector3((BrawlerBody.CHEST.x + 2.0) * SCALE, BOX.y - tracks.y, BrawlerBody.CHEST.z * SCALE)
 	_torso_shape.shape = chest
 	_torso_shape.position.y = tracks.y + chest.size.y * 0.5
 	_solid.add_child(_torso_shape)
@@ -196,8 +202,8 @@ func _physics_process(delta: float) -> void:
 func _place_upper() -> void:
 	if _torso_shape != null:
 		_torso_shape.transform = Transform3D(Basis(Vector3.UP, waist_yaw - hull_yaw), _torso_shape.position)
-	body.upper.global_transform = Transform3D(Basis(Vector3.UP, waist_yaw),
-		global_position + Vector3.UP * BrawlerBody.HIP)
+	body.upper.global_transform = Transform3D(Basis(Vector3.UP, waist_yaw).scaled(Vector3.ONE * SCALE),
+		global_position + Vector3.UP * BrawlerBody.HIP * SCALE)
 
 
 ## Sin lo que lo metería dentro de `block_at`: si su caja está a menos de su radio (y un poco), no avanza hacia él.
@@ -307,9 +313,9 @@ func possess_end() -> void:
 
 func possess_camera(first: bool, delta: float) -> Transform3D:
 	if first:
-		var eye := global_position + Vector3.UP * 27.0 + Basis(Vector3.UP, waist_yaw) * Vector3(0.0, 0.0, -5.0)
+		var eye := global_position + Vector3.UP * 27.0 * SCALE + Basis(Vector3.UP, waist_yaw) * Vector3(0.0, 0.0, -5.0 * SCALE)
 		return Transform3D(Basis(Vector3.UP, waist_yaw), eye)
 	_chase_yaw = lerp_angle(_chase_yaw, waist_yaw, 1.0 - exp(-3.0 * delta))
-	var at := global_position + Vector3.UP * 18.0
-	var from := at + Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 25.0, 70.0)
+	var at := global_position + Vector3.UP * 18.0 * SCALE
+	var from := at + Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 25.0, 70.0) * SCALE
 	return Transform3D(Basis(), from).looking_at(at, Vector3.UP)

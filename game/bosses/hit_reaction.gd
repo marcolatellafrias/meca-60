@@ -109,7 +109,7 @@ func react(kind: Kind, away: Vector3, distance: float, at: Vector3) -> void:
 		_body.shove(_away * distance, PUSH_TIME)
 	else:
 		_body.shove(_away * distance, FALL_TIME, FALL_HOP)
-		_body.knock_down(_away)
+		_body.knock_down()
 
 
 ## Sólo lo que se ve y se oye (también para el jefe cuando le pegan).
@@ -179,7 +179,7 @@ func _physics_process(delta: float) -> void:
 					health.hurt(_land_damage, _land_what)
 				# En la caja (tirada, queda lejos de sus pies).
 				show_hit(_body.global_position, true)
-				_body.knock_down(_away)
+				_body.knock_down()
 
 
 func _kinematic() -> bool:
@@ -203,36 +203,6 @@ func _paint(on: bool) -> void:
 			_painted.append(mesh)
 
 
-## CHISPAS en `at`: cuadraditos blancos y naranjas que saltan y caen (más, si es fuerte).
+## CHISPAS en `at` (más, si es fuerte; BossBursts).
 func _sparks(at: Vector3, heavy: bool) -> void:
-	var world := _target.get_parent()
-	if world == null:
-		return
-	var sparks := CPUParticles3D.new()
-	sparks.name = "Chispas"
-	var cube := BoxMesh.new()
-	cube.size = Vector3.ONE * (0.9 if heavy else 0.6)
-	var paint := StandardMaterial3D.new()
-	paint.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	paint.vertex_color_use_as_albedo = true
-	cube.material = paint
-	sparks.mesh = cube
-	sparks.one_shot = true
-	sparks.explosiveness = 1.0
-	sparks.amount = 60 if heavy else 35
-	sparks.lifetime = 0.7
-	sparks.direction = Vector3.UP
-	sparks.spread = 180.0
-	sparks.initial_velocity_min = 14.0
-	sparks.initial_velocity_max = 34.0 if heavy else 26.0
-	sparks.gravity = Vector3(0.0, -40.0, 0.0)
-	sparks.scale_amount_min = 0.6
-	sparks.scale_amount_max = 1.4
-	var ramp := Gradient.new()
-	ramp.set_color(0, Color(1.0, 1.0, 0.9))
-	ramp.set_color(1, Color(1.0, 0.45, 0.1))
-	sparks.color_ramp = ramp
-	world.add_child(sparks)
-	sparks.global_position = at
-	sparks.emitting = true
-	world.get_tree().create_timer(1.5).timeout.connect(sparks.queue_free)
+	BossBursts.sparks(_target.get_parent(), at, heavy)

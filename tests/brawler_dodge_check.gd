@@ -2,7 +2,8 @@ extends Node
 
 ## ESQUIVAR LA EMBESTIDA (sin ventana, unos 2 minutos): la meca cinemática contra el Luchador, que embiste desde
 ## `GAPS`. Cada manera de esquivar, cuántas veces la alcanzó: quieta; caminando de costado desde el aviso; caminando
-## de costado desde que arranca; y el dash de costado cuando el jefe está a tantos metros (con y sin caminar después).
+## de costado desde que arranca; y UN dash de costado cuando el jefe está a tantos metros (solo, o y después caminando;
+## nunca dos seguidos: el usuario quiere todo para un dash).
 ## También el golpe al piso (--solo-piso), la piedra de arrancar el piso (--solo-piedra), el trompo (--solo-trompo) y
 ## el agarre (--solo-agarre) y el lanzallamas (--solo-fuego).
 ##   godot --headless --path . res://tests/brawler_dodge_check.tscn
@@ -73,9 +74,8 @@ func _ready() -> void:
 		print(line)
 		var dash := "        dash a:"
 		for at: float in DASH_AT:
-			dash += " %2.0f m %s/%s/%s" % [at, await _try(gap, "dash", at), await _try(gap, "dash_walk", at),
-				await _try(gap, "dash_twice", at)]
-		print(dash + "   (sólo el dash / el dash y después camina / dos dashes seguidos)")
+			dash += " %2.0f m %s/%s" % [at, await _try(gap, "dash", at), await _try(gap, "dash_walk", at)]
+		print(dash + "   (sólo el dash / el dash y después camina)")
 	if args.has("--solo-embestida"):
 		get_tree().quit()
 		return
@@ -96,16 +96,11 @@ func _ready() -> void:
 	get_tree().quit()
 
 
-## EL TROMPO (ahora rápido y andando, 15/11/2026): quieta, caminando de costado o para atrás desde el aviso, el dash de
-## costado cuando su medio está a tantos metros, y el dash hacia él (intocable, cruzando el anillo de los puños) y
-## caminando pegada. --solo-pegada: sólo eso, desde 70 m.
+## EL TROMPO (rápido, andando derecho): quieta, caminando de costado o para atrás desde el aviso, y un dash de costado
+## cuando su medio está a tantos metros (solo, o y después caminando).
 func _spins(k: BrawlerSettings) -> void:
 	print("el trompo: aviso %.2f s, gira %.1f s a %.0f°/s, las orugas a %.0f m/s" % [k.spin_windup,
 		k.spin_time, k.spin_speed, k.spin_move])
-	if OS.get_cmdline_user_args().has("--solo-pegada"):
-		for at: float in [32.0, 38.0, 44.0]:
-			print("dash hacia él a %.0f m: %s" % [at, await _try_spin(70.0, "dash_in", at)])
-		return
 	for gap: float in [40.0, 70.0, 95.0]:
 		var line := "a %3.0f m:" % gap
 		for how: String in ["still", "walk_side", "walk_back"]:
@@ -113,9 +108,6 @@ func _spins(k: BrawlerSettings) -> void:
 		line += " · dash de costado (solo / y caminando) a"
 		for at: float in [45.0, 60.0, 80.0]:
 			line += " %.0f m %s/%s" % [at, await _try_spin(gap, "dash", at), await _try_spin(gap, "dash_walk", at)]
-		line += " · dash hacia él (y caminando pegada) a"
-		for at: float in [32.0, 38.0, 44.0]:
-			line += " %.0f m %s" % [at, await _try_spin(gap, "dash_in", at)]
 		print(line)
 
 
@@ -132,19 +124,13 @@ func _try_spin(gap: float, how: String, at: float) -> String:
 		clock += 1.0 / Engine.physics_ticks_per_second
 		_face_boss()
 		_mech.move = Vector2.ZERO
-		if how == "dash_in" and dashed:
-			_mech.move = Vector2(0.0, 1.0)
-		elif how == "walk_side" or (how == "dash_walk" and dashed):
+		if how == "walk_side" or (how == "dash_walk" and dashed):
 			_mech.move = Vector2(1.0, 0.0)
 		elif how == "walk_back":
 			_mech.move = Vector2(0.0, -1.0)
 		_mech.dash = false
 		var gap_now := (_boss.global_position - _mech.mover.global_position) * Vector3(1, 0, 1)
-		if how == "dash_in" and not dashed and _brain.stage == "¡trompo!" and gap_now.length() <= at:
-			dashed = true
-			_mech.move = Vector2(0.0, 1.0)
-			_mech.dash = true
-		elif how.begins_with("dash") and how != "dash_in" and not dashed and _brain.stage == "¡trompo!" and gap_now.length() <= at:
+		if how.begins_with("dash") and not dashed and _brain.stage == "¡trompo!" and gap_now.length() <= at:
 			dashed = true
 			_mech.move = Vector2(1.0, 0.0)
 			_mech.dash = true
@@ -157,62 +143,43 @@ func _try_spin(gap: float, how: String, at: float) -> String:
 	return "X" if _brain.spun > spun else "·"
 
 
-## EL LANZALLAMAS (sólo con ira): quieta, caminando para atrás, de costado con el barrido o contra él, y el dash contra
-## el barrido (intocable, cruzando el chorro) cuando el chorro está a tantos grados.
+## EL LANZALLAMAS (sólo con ira), EN BOCANADAS: quieta, caminando de costado todo el tiempo o sólo desde que cada
+## bocanada apuntó, y un dash de costado cuando apuntó o cuando empieza a quemar (uno por bocanada: entre bocanadas
+## pasa más que la espera entre dashes).
 func _flames(k: BrawlerSettings) -> void:
-	print("el lanzallamas: aviso %.2f s, barre %.0f° en %.1f s, llega a %.0f m, medio ancho %.0f°" % [k.flame_windup,
-		k.flame_sweep, k.flame_time, k.flame_reach, k.flame_angle])
-	for gap: float in [30.0, 45.0]:
+	print("el lanzallamas: %d bocanadas · apunta %.2f s, quieta %.2f s, quema %.2f s · llega a %.0f m, medio ancho %.0f°" % [
+		k.flame_bursts, k.flame_aim, k.flame_lock, k.flame_burn, k.flame_reach, k.flame_angle])
+	for gap: float in [25.0, 40.0, 55.0]:
 		var line := "a %3.0f m:" % gap
-		for how: String in ["still", "walk_back", "walk_with", "walk_against"]:
-			line += " %s %s" % [how, await _try_flame(gap, how, 0.0)]
-		line += " · dash contra el chorro a"
-		for at: float in [15.0, 25.0, 40.0]:
-			line += " %.0f° %s" % [at, await _try_flame(gap, "dash_against", at)]
+		for how: String in ["still", "walk_side", "walk_lock", "dash_lock", "dash_burn"]:
+			line += " %s %s" % [how, await _try_flame(gap, how)]
 		print(line)
 
 
-func _try_flame(gap: float, how: String, at: float) -> String:
+func _try_flame(gap: float, how: String) -> String:
 	await _place(gap)
 	var burned := _brain.burned
 	_brain.awake = true
 	await get_tree().physics_frame
 	_brain._begin(BrawlerBrain.Act.FLAME)
-	var dashed := false
+	var step_was := -1
 	var clock := 0.0
-	while clock < 8.0 and _brain.act == BrawlerBrain.Act.FLAME and _brain.burned == burned:
+	while clock < 14.0 and _brain.act == BrawlerBrain.Act.FLAME and _brain.burned == burned:
 		await get_tree().physics_frame
 		clock += 1.0 / Engine.physics_ticks_per_second
 		_face_boss()
+		var step := _brain._step
+		var started := step != step_was
+		step_was = step
 		_mech.move = Vector2.ZERO
 		_mech.dash = false
-		var flame := _brain._flame
-		if flame == null:
-			continue
-		# Hacia qué lado (de costado, en el mundo) viene el chorro, visto desde la meca.
-		var to_mech := (_mech.mover.global_position - _boss.global_position) * Vector3(1, 0, 1)
-		var way := Basis(Vector3.UP, _boss.waist_yaw) * Vector3.FORWARD
-		var coming := to_mech.normalized().cross(Vector3.UP) * signf(to_mech.cross(way).y)
-		var right := _mech.global_basis.x
-		var against := Vector2(-signf(coming.dot(right)), 0.0)
-		if how == "walk_back":
-			_mech.move = Vector2(0.0, -1.0)
-		elif how == "walk_with":
-			_mech.move = -against
-		elif how == "walk_against":
-			_mech.move = against
-		elif how == "dash_against" and not dashed and _brain._step == 1:
-			if rad_to_deg(way.angle_to(to_mech.normalized())) <= at:
-				dashed = true
-				_mech.move = against
-				_mech.dash = true
+		if how == "walk_side" or (how == "walk_lock" and step >= 2):
+			_mech.move = Vector2(1.0, 0.0)
+		if (how == "dash_lock" and started and step == 2) or (how == "dash_burn" and started and step == 3):
+			_mech.move = Vector2(1.0, 0.0)
+			_mech.dash = true
 	_mech.move = Vector2.ZERO
 	_mech.dash = false
-	if OS.get_cmdline_user_args().has("--ver") and _brain.burned > burned:
-		var off := (_mech.mover.global_position - _boss.global_position) * Vector3(1, 0, 1)
-		var way := Basis(Vector3.UP, _boss.waist_yaw) * Vector3.FORWARD
-		print("   %s %.0f: a los %.2f s (paso %d), a %.1f m, el chorro a %.0f° de la meca%s" % [how, at, clock,
-			_brain._step, off.length(), rad_to_deg(way.angle_to(off.normalized())), ", con el dash" if dashed else ""])
 	return "X" if _brain.burned > burned else "·"
 
 
@@ -402,7 +369,6 @@ func _try(gap: float, how: String, dash_at: float) -> String:
 	await get_tree().physics_frame
 	_brain._begin(BrawlerBrain.Act.CHARGE)
 	var dashed := false
-	var again := 0.0
 	var clock := 0.0
 	while clock < 8.0 and _brain.act == BrawlerBrain.Act.CHARGE and _brain.landed == landed:
 		await get_tree().physics_frame
@@ -415,12 +381,6 @@ func _try(gap: float, how: String, dash_at: float) -> String:
 		var walk := how == "walk_early" or (how == "walk_late" and started) or (how == "dash_walk" and dashed)
 		_mech.move = Vector2(1.0, 0.0) if walk else Vector2.ZERO
 		_mech.dash = false
-		if how == "dash_twice" and dashed and again >= 0.0:
-			again += 1.0 / Engine.physics_ticks_per_second
-			_mech.move = Vector2(1.0, 0.0)
-			if again > KinematicSettings.current.dash_time + 0.05:
-				_mech.dash = true
-				again = -1.0
 		if how.begins_with("dash") and started and not dashed and to_boss.length() - Brawler.BOX.z * 0.5 <= dash_at:
 			dashed = true
 			_mech.move = Vector2(1.0, 0.0)

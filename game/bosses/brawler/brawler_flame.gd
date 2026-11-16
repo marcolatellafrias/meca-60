@@ -20,6 +20,7 @@ var burning := false
 var _fan: MeshInstance3D = null
 var _fan_paint := StandardMaterial3D.new()
 var _cones: Array[MeshInstance3D] = []
+var _fire: CPUParticles3D = null
 
 
 ## LO ARMA: el abanico del piso (de `sweep` grados, centrado adelante) y el chorro, apagado.
@@ -59,13 +60,54 @@ func setup(length: float, half: float, sweep: float) -> void:
 		cone.visible = false
 		add_child(cone)
 		_cones.append(cone)
+	# EL FUEGO: bolas que salen de la boca por el cono, crecen y se oscurecen en humo.
+	_fire = CPUParticles3D.new()
+	_fire.name = "Fuego"
+	var ball := SphereMesh.new()
+	ball.radius = 1.5
+	ball.height = 3.0
+	ball.radial_segments = 8
+	ball.rings = 4
+	var paint := StandardMaterial3D.new()
+	paint.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	paint.vertex_color_use_as_albedo = true
+	paint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	ball.material = paint
+	_fire.mesh = ball
+	_fire.local_coords = false
+	_fire.amount = 260
+	_fire.lifetime = 0.9
+	_fire.direction = Vector3(0.0, 0.0, -1.0)
+	_fire.spread = half * 0.8
+	_fire.initial_velocity_min = length / 0.9 * 0.85
+	_fire.initial_velocity_max = length / 0.9 * 1.05
+	_fire.gravity = Vector3(0.0, 6.0, 0.0)
+	_fire.scale_amount_min = 0.8
+	_fire.scale_amount_max = 1.6
+	var grow := Curve.new()
+	grow.max_value = 6.0
+	grow.add_point(Vector2(0.0, 0.5))
+	grow.add_point(Vector2(1.0, 5.0))
+	_fire.scale_amount_curve = grow
+	var life := Gradient.new()
+	life.set_color(0, Color(1.0, 0.95, 0.6, 0.95))
+	life.add_point(0.35, Color(1.0, 0.55, 0.1, 0.85))
+	life.add_point(0.7, Color(0.8, 0.2, 0.05, 0.6))
+	life.set_color(life.get_point_count() - 1, Color(0.2, 0.18, 0.18, 0.0))
+	_fire.color_ramp = life
+	_fire.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	_fire.emitting = false
+	_fire.top_level = true
+	add_child(_fire)
 
 
-## EL AVISO: el abanico desde `from` (el piso), centrado hacia `center` (de costado).
-func warn(from: Vector3, center: Vector3) -> void:
+## EL AVISO: el abanico desde `from` (el piso), centrado hacia `center` (de costado). `locked`: ya apuntó (titila
+## rápido y más fuerte).
+func warn(from: Vector3, center: Vector3, locked := false) -> void:
 	var flat := Vector3(center.x, 0.0, center.z).normalized()
 	_fan.global_transform = Transform3D(Basis.looking_at(flat, Vector3.UP), Vector3(from.x, 0.08, from.z))
-	_fan_paint.albedo_color.a = (0.3 if burning else 0.2) + 0.1 * sin(Time.get_ticks_msec() * 0.015)
+	var beat := 0.04 if locked else 0.012
+	_fan_paint.albedo_color.a = (0.38 if locked else 0.2) + 0.12 * sin(Time.get_ticks_msec() * beat)
 
 
 ## EL CHORRO, de `from` (la boca del horno) hacia `toward` (de costado): prendido o no.
@@ -73,6 +115,9 @@ func blow(from: Vector3, toward: Vector3, on: bool) -> void:
 	burning = on
 	mouth = from
 	way = Vector3(toward.x, 0.0, toward.z).normalized()
+	var aim := (way + Vector3.DOWN * 0.18).normalized()
+	_fire.global_transform = Transform3D(Basis.looking_at(aim, Vector3.UP), from)
+	_fire.emitting = on
 	for index in _cones.size():
 		var cone := _cones[index]
 		cone.visible = on
