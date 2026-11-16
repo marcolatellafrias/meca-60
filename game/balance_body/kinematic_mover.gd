@@ -99,13 +99,18 @@ func _fit() -> void:
 ## debajo de su espalda: con 90°, la espalda en el piso (el usuario, 15/11/2026: «la animación debería ser mucho más
 ## simple, agarrar la pose de reposo, y hacer que siempre se caiga hacia arriba (espalda al suelo)»).
 func body_place() -> Transform3D:
-	var upright := Basis(Vector3.UP, _yaw)
-	var standing := Vector3.UP * (_hover_now() + body.size.y * 0.5)
+	var upright := standing_place()
 	if lean <= 0.0:
-		return Transform3D(upright, global_position + standing)
-	var back := upright.z * body.size.z * 0.5
-	var turn := Basis(upright.x, deg_to_rad(lean))
-	return Transform3D(turn * upright, global_position + back + turn * (standing - back))
+		return upright
+	var back := upright.basis.z * body.size.z * 0.5
+	var turn := Basis(upright.basis.x, deg_to_rad(lean))
+	var pivot := global_position + back
+	return Transform3D(turn * upright.basis, pivot + turn * (upright.origin - pivot))
+
+
+## DÓNDE IRÍA LA CAJA PARADA, aunque esté caída (la pose de reposo se arma ahí y se vuelca: ver BodyLegs.place).
+func standing_place() -> Transform3D:
+	return Transform3D(Basis(Vector3.UP, _yaw), global_position + Vector3.UP * (_hover_now() + body.size.y * 0.5))
 
 
 ## UN PASO (ver arriba): lo que se le pide, moverse con el motor, y lo que miden las piernas.

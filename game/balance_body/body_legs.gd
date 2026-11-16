@@ -78,9 +78,10 @@ func replant() -> void:
 
 func place(k: BodySettings, delta: float) -> void:
 	var standing := body.state == BalanceBody.State.STANDING and body.grounded
-	# RECOGIDAS tirada y subiendo; ESTIRADAS parada y ya al empezar a enderezarse. LA CINEMÁTICA, SIEMPRE ESTIRADAS: se
-	# cae con las piernas como paradas, inclinadas con la caja (el usuario, 15/11/2026: «las piernas no me gustan tan
-	# retiradas, estaban bien antes estiradas»).
+	# RECOGIDAS tirada y subiendo; ESTIRADAS parada y ya al empezar a enderezarse. LA CINEMÁTICA, NUNCA RECOGIDAS: se
+	# cae en su POSE DE REPOSO, la de parada quieta (las rodillas dobladas a su altura de siempre, los pies planos), y
+	# esa pose entera se vuelca con la caja: tirada de espaldas, los pies apuntan para arriba (el usuario, 15/11/2026:
+	# «agarrar la pose de reposo… las piernas deberían quedar flexionadas como con el factor de distancia del piso»).
 	var folded := (body.state == BalanceBody.State.DOWN or body.state == BalanceBody.State.LIFT) and not body.kinematic
 	var lying := body.kinematic and not standing and body.state != BalanceBody.State.STANDING
 	_tuck = move_toward(_tuck, 1.0 if folded else 0.0, delta / maxf(k.fold_time if folded else k.unfold_time, 0.01))
@@ -89,9 +90,12 @@ func place(k: BodySettings, delta: float) -> void:
 	var centre := body.global_position
 	var under := body.support if standing else Vector3(centre.x, centre.y - body.ground_distance(centre), centre.z)
 	var root := Transform3D(Basis(Vector3.UP, yaw), under)
+	# Tirada: se arma parada (sobre el motor, como si no se hubiera caído) y después se vuelca con la caja (`fall`).
+	var upright := body.mover.standing_place() if lying else Transform3D()
+	var fall := body.global_transform * upright.affine_inverse() if lying else Transform3D()
 	if lying:
-		# La pose de reposo, volcada con la caja (ver KinematicMover.body_place).
-		root = body.global_transform * Transform3D(Basis(), Vector3.DOWN * (body.size.y * 0.5 + body.hover))
+		yaw = upright.basis.get_euler().y
+		root = Transform3D(upright.basis, body.mover.global_position)
 	if standing:
 		var classic := LegSettings.current.new_steps
 		if not _planted:
@@ -115,9 +119,11 @@ func place(k: BodySettings, delta: float) -> void:
 	var leaning := Basis(Quaternion(Vector3.UP, body.global_basis.y.normalized())) if body.tilt > 0.01 else Basis()
 	var waist := Transform3D(leaning * Basis(Vector3.UP, pelvis_yaw),
 		body.global_transform * Vector3(0.0, -body.size.y * 0.5, 0.0))
-	if not standing:
+	if lying:
+		waist = Transform3D(upright.basis, upright * Vector3(0.0, -body.size.y * 0.5, 0.0))
+	elif not standing:
 		waist.basis = body.global_basis
-	_pelvis.global_transform = body.measures.pelvis(waist)
+	_pelvis.global_transform = fall * body.measures.pelvis(waist)
 	var crouched := clampf((1.0 - body.moves.rod_scale) / maxf(1.0 - k.crouch_rod, 0.01), 0.0, 1.0)
 	var out := lerpf(k.knee_out, k.knee_out_crouched, crouched)
 	for i in 2:
@@ -135,6 +141,8 @@ func place(k: BodySettings, delta: float) -> void:
 		ahead.y = 0.0
 		var knee_way := ahead.normalized() + waist.basis.x * side * out
 		var open := body.measures.leg(hip, ground, facing, knee_way)
+		if lying:
+			open = BodyLegs._moved(open, fall)
 		_legs[i].pose(BodyLegs._blend(open, _tucked_leg(waist, side), share) if share > 0.001 else open)
 
 
@@ -319,6 +327,17 @@ func _tucked_leg(waist: Transform3D, side: float) -> Dictionary:
 		"foot": Transform3D(waist.basis, waist * (ankle + Vector3(0.0, body.measures.FOOT_SIZE.y * 0.5 - body.measures.ANKLE,
 			-body.measures.FOOT_AHEAD))),
 		"knee": waist * knee,
+	}
+
+
+## UNA PIERNA ARMADA, movida entera por `by` (tirada: la pose de parada, volcada con la caja).
+static func _moved(pose: Dictionary, by: Transform3D) -> Dictionary:
+	return {
+		"thigh": by * (pose["thigh"] as Transform3D),
+		"shin": by * (pose["shin"] as Transform3D),
+		"foot": by * (pose["foot"] as Transform3D),
+		"knee": by * (pose["knee"] as Vector3),
+		"ankle": by * (pose["ankle"] as Vector3),
 	}
 
 
