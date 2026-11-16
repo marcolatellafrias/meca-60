@@ -283,7 +283,30 @@ func _station() -> void:
 	Clay.box(screen, Vector3(0.32, 0.12, 0.01), Vector3(0, 0, 0.0), Color(0.03, 0.06, 0.04))
 	_label(screen, "ENERGÍA", Vector3(-0.08, 0.035, 0.008), 0.018, GREEN, false)
 	_bars["energía"] = _light_row(screen, Vector3(0, -0.02, 0.008), 14, 0.018)
-	# 4. Eyectar, arriba: una manija rayada colgada del techo.
+	# 4. El estado de la meca, a la derecha: la meca de frente, en formas llenas; cada parte, sana, dañada o rota.
+	var status := _pod(Vector3(0.66, 1.2, -0.5), Vector3(1.45, 1.0, -0.45))
+	Clay.box(status, Vector3(0.42, 0.38, 0.06), Vector3(0, 0, -0.035), DARK)
+	for sx: float in [-1.0, 1.0]:
+		for sy: float in [-1.0, 1.0]:
+			Clay.cylinder(status, 0.008, 0.01, Vector3(sx * 0.19, sy * 0.17, 0.0), LIGHT, Vector3(90, 0, 0))
+	var drawing := _StatusDrawing.new()
+	var view := SubViewport.new()
+	view.size = Vector2i(360, 330)
+	view.render_target_update_mode = SubViewport.UPDATE_ALWAYS
+	drawing.size = Vector2(view.size)
+	view.add_child(drawing)
+	status.add_child(view)
+	var sheet := MeshInstance3D.new()
+	var quad := QuadMesh.new()
+	quad.size = Vector2(0.36, 0.33)
+	sheet.mesh = quad
+	var look := StandardMaterial3D.new()
+	look.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	look.albedo_texture = view.get_texture()
+	sheet.material_override = look
+	sheet.position = Vector3(0, 0, 0.002)
+	status.add_child(sheet)
+	# 5. Eyectar, arriba: una manija rayada colgada del techo.
 	for dx: float in [-0.1, 0.1]:
 		_bar(self, Vector3(0.35 + dx, 2.5, -0.35), Vector3(0.35 + dx, 2.0, -0.35), 0.006, INK)
 	for k in 6:
@@ -566,6 +589,9 @@ func _play_demo() -> void:
 	_set_look(14.0, 1.0)
 	await _wait(0.4)
 	await _capture("6. El barrido", "6")
+	_set_look(-38.0, -10.0)
+	await _wait(0.6)
+	await _capture("7. El estado de la meca, a la derecha", "8")
 	_set_look(-70.0, -20.0)
 	await _wait(0.3)
 	await _capture("7. Mirando a la derecha: el tope", "7")
@@ -591,3 +617,129 @@ func _capture(title: String, file_name: String) -> void:
 	var path := "%s/%s.png" % [_folder, file_name]
 	get_viewport().get_texture().get_image().save_png(path)
 	print("CAPTURA ", path)
+
+
+## LA PANTALLA DE ESTADO: la meca de frente con formas llenas, a lo dibujo de mechas (la cresta en V, el visor, las
+## hombreras, el núcleo en el pecho, la falda de placas): cada parte del color de cómo está (verde sana, ámbar dañada
+## y titilando, rojo rota), con sus paneles más oscuros adentro. A la izquierda de la pantalla, el brazo derecho con la
+## espada; a la derecha, el izquierdo con el cañón (se la mira de frente).
+class _StatusDrawing extends Control:
+	const BACK := Color(0.02, 0.05, 0.03)
+	const GRID := Color(0.06, 0.14, 0.08)
+	const OK := Color(0.22, 0.78, 0.36)
+	const HURT := Color(1.0, 0.62, 0.15)
+	const BROKEN := Color(0.9, 0.2, 0.15)
+	const TEXT := Color(0.45, 1.0, 0.55)
+	const FIN := Color(0.95, 0.85, 0.4)
+
+	## Cómo está cada parte: 0 sana, 1 dañada, 2 rota.
+	var states := {"cabeza": 0, "pecho": 0, "hombro derecho": 0, "hombro izquierdo": 0, "espada": 0, "cañón": 0,
+		"cintura": 0, "pierna derecha": 0, "pierna izquierda": 1}
+	var _blink := 0.0
+
+	func _process(delta: float) -> void:
+		_blink += delta
+		queue_redraw()
+
+	func _draw() -> void:
+		draw_rect(Rect2(Vector2.ZERO, size), BACK)
+		for x in range(0, int(size.x), 20):
+			draw_line(Vector2(x, 0), Vector2(x, size.y), GRID, 1.0)
+		for y in range(0, int(size.y), 20):
+			draw_line(Vector2(0, y), Vector2(size.x, y), GRID, 1.0)
+		# Las esquinas del visor.
+		for corner: Vector2 in [Vector2(8, 8), Vector2(size.x - 8, 8), Vector2(8, size.y - 8), Vector2(size.x - 8, size.y - 8)]:
+			var sx := 1.0 if corner.x < size.x * 0.5 else -1.0
+			var sy := 1.0 if corner.y < size.y * 0.5 else -1.0
+			draw_line(corner, corner + Vector2(sx * 22, 0), TEXT, 3.0)
+			draw_line(corner, corner + Vector2(0, sy * 22), TEXT, 3.0)
+		_write("ESTADO", Vector2(22, 34), 16, TEXT)
+		var c := 180.0
+		# Las piernas.
+		for side: float in [-1.0, 1.0]:
+			var leg := "pierna derecha" if side < 0.0 else "pierna izquierda"
+			_part(leg, [Vector2(c + side * 14, 178), Vector2(c + side * 44, 178), Vector2(c + side * 46, 226), Vector2(c + side * 16, 226)])
+			_part(leg, [Vector2(c + side * 12, 230), Vector2(c + side * 48, 230), Vector2(c + side * 54, 290), Vector2(c + side * 50, 300),
+				Vector2(c + side * 18, 300), Vector2(c + side * 14, 290)])
+			_part(leg, [Vector2(c + side * 22, 214), Vector2(c + side * 40, 214), Vector2(c + side * 44, 232), Vector2(c + side * 31, 240),
+				Vector2(c + side * 18, 232)], 0.55)
+			_part(leg, [Vector2(c + side * 10, 302), Vector2(c + side * 58, 302), Vector2(c + side * 64, 318), Vector2(c + side * 6, 318)])
+		# La cintura y la falda de placas.
+		_part("cintura", [Vector2(c - 30, 150), Vector2(c + 30, 150), Vector2(c + 26, 166), Vector2(c - 26, 166)])
+		for side: float in [-1.0, 1.0]:
+			_part("cintura", [Vector2(c + side * 8, 168), Vector2(c + side * 46, 166), Vector2(c + side * 50, 196), Vector2(c + side * 14, 192)])
+		_part("cintura", [Vector2(c - 8, 168), Vector2(c + 8, 168), Vector2(c + 6, 192), Vector2(c - 6, 192)])
+		# El pecho, con su collar y el núcleo.
+		_part("pecho", [Vector2(c - 44, 74), Vector2(c + 44, 74), Vector2(c + 54, 110), Vector2(c + 34, 146), Vector2(c - 34, 146),
+			Vector2(c - 54, 110)])
+		for side: float in [-1.0, 1.0]:
+			_part("pecho", [Vector2(c + side * 8, 112), Vector2(c + side * 34, 106), Vector2(c + side * 30, 138), Vector2(c + side * 10, 140)], 0.7)
+		draw_circle(Vector2(c, 98), 11, Color(0.04, 0.1, 0.06))
+		draw_circle(Vector2(c, 98), 7, FIN)
+		# La cabeza: el visor y la cresta en V.
+		_part("cabeza", [Vector2(c - 16, 40), Vector2(c + 16, 40), Vector2(c + 22, 54), Vector2(c + 16, 72), Vector2(c - 16, 72), Vector2(c - 22, 54)])
+		draw_rect(Rect2(c - 15, 52, 30, 7), Color(0.02, 0.05, 0.03))
+		draw_rect(Rect2(c - 12, 54, 24, 3), FIN)
+		for side: float in [-1.0, 1.0]:
+			draw_colored_polygon(PackedVector2Array([Vector2(c + side * 2, 46), Vector2(c + side * 40, 18), Vector2(c + side * 36, 26),
+				Vector2(c + side * 6, 50)]), FIN)
+		draw_colored_polygon(PackedVector2Array([Vector2(c - 5, 44), Vector2(c + 5, 44), Vector2(c, 54)]), BROKEN)
+		# Las hombreras y los brazos: a la izquierda de la pantalla la espada, a la derecha el cañón.
+		for side: float in [-1.0, 1.0]:
+			var shoulder := "hombro derecho" if side < 0.0 else "hombro izquierdo"
+			_part(shoulder, [Vector2(c + side * 48, 66), Vector2(c + side * 86, 62), Vector2(c + side * 98, 82), Vector2(c + side * 92, 108),
+				Vector2(c + side * 56, 110), Vector2(c + side * 46, 90)])
+			_part(shoulder, [Vector2(c + side * 62, 112), Vector2(c + side * 84, 112), Vector2(c + side * 82, 146), Vector2(c + side * 64, 146)])
+		_part("espada", [Vector2(c - 90, 148), Vector2(c - 58, 148), Vector2(c - 56, 190), Vector2(c - 92, 190)])
+		_part("espada", [Vector2(c - 94, 192), Vector2(c - 54, 192), Vector2(c - 56, 214), Vector2(c - 92, 214)])
+		draw_colored_polygon(PackedVector2Array([Vector2(c - 100, 204), Vector2(c - 46, 204), Vector2(c - 46, 210), Vector2(c - 100, 210)]),
+			_color("espada").darkened(0.3))
+		_part("espada", [Vector2(c - 77, 214), Vector2(c - 69, 214), Vector2(c - 66, 300), Vector2(c - 73, 316), Vector2(c - 80, 300)], 1.0)
+		_part("cañón", [Vector2(c + 58, 148), Vector2(c + 92, 148), Vector2(c + 96, 176), Vector2(c + 88, 184), Vector2(c + 62, 184),
+			Vector2(c + 54, 176)])
+		_part("cañón", [Vector2(c + 64, 184), Vector2(c + 86, 184), Vector2(c + 84, 262), Vector2(c + 66, 262)])
+		for ring in 3:
+			draw_rect(Rect2(c + 61, 196 + ring * 22, 28, 6), _color("cañón").darkened(0.45))
+		draw_rect(Rect2(c + 68, 262, 14, 12), Color(0.02, 0.05, 0.03))
+		# Los rótulos, con su línea.
+		_callout("ESPADA", Vector2(c - 80, 250), Vector2(24, 262), TEXT)
+		_callout("CAÑÓN", Vector2(c + 86, 230), Vector2(size.x - 92, 246), TEXT)
+		_callout("PIERNA", Vector2(c + 50, 266), Vector2(size.x - 92, 300), _color("pierna izquierda"))
+
+	## El color de una parte según cómo está; la dañada titila.
+	func _color(part: String) -> Color:
+		match int(states.get(part, 0)):
+			1:
+				return HURT if fmod(_blink, 0.8) < 0.5 else HURT.darkened(0.55)
+			2:
+				return BROKEN
+		return OK
+
+	## Una pieza llena, con un panel más oscuro adentro (la misma forma, más chica).
+	func _part(part: String, points: Array, inset := 0.68) -> void:
+		var shape := PackedVector2Array(points)
+		var color := _color(part)
+		draw_colored_polygon(shape, color.darkened(0.55))
+		var middle := Vector2.ZERO
+		for point in shape:
+			middle += point
+		middle /= shape.size()
+		var outer := PackedVector2Array()
+		var inner := PackedVector2Array()
+		for point in shape:
+			outer.append(middle + (point - middle) * 0.9)
+			inner.append(middle + (point - middle) * inset)
+		draw_colored_polygon(outer, color)
+		if inset < 1.0:
+			draw_colored_polygon(inner, color.darkened(0.28))
+
+	func _callout(text: String, from: Vector2, to: Vector2, color: Color) -> void:
+		draw_line(from, Vector2(from.x + (to.x - from.x) * 0.6, to.y), color, 2.0)
+		draw_line(Vector2(from.x + (to.x - from.x) * 0.6, to.y), to + Vector2(0 if to.x > from.x else 70, 0), color, 2.0)
+		_write(text, to + Vector2(2, -12), 11, color)
+
+	func _write(text: String, at: Vector2, height: float, color: Color) -> void:
+		var lines := StrokeFont.segments(text, height, StrokeFont.Align.LEFT)
+		for k in range(0, lines.size(), 2):
+			draw_line(at + Vector2(lines[k].x, -lines[k].y - height * 0.5), at + Vector2(lines[k + 1].x, -lines[k + 1].y - height * 0.5),
+				color, 2.0)
