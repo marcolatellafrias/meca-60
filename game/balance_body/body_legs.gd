@@ -54,6 +54,8 @@ var _swing_clock := 0.0
 var _swing_time := 1.0
 var _planted := false
 var _tuck := 0.0
+## TIRADA, LA CINEMÁTICA, cuánto levanta las piernas estiradas sobre la caja (°; ver `place`).
+const LYING_LIFT := 70.0
 ## Pasos nuevos: cuánto lleva quieta (s).
 var _still_clock := 0.0
 var _pelvis: MeshInstance3D = null
@@ -90,8 +92,14 @@ func place(k: BodySettings, delta: float) -> void:
 	var under := body.support if standing else Vector3(centre.x, centre.y - body.ground_distance(centre), centre.z)
 	var root := Transform3D(Basis(Vector3.UP, yaw), under)
 	if lying:
-		# Debajo de la caja como si estuviera parada, inclinada con ella.
-		root = body.global_transform * Transform3D(Basis(), Vector3.DOWN * (body.size.y * 0.5 + body.hover))
+		# Debajo de la caja como si estuviera parada, inclinada con ella, y LEVANTADAS: giran sobre la cadera, hacia
+		# adelante, hasta `LYING_LIFT` grados de más con la meca tirada, y los pies apuntan para arriba (el usuario,
+		# 15/11/2026: «los pies siguen pegados al piso… se estiran cuando se cae, en vez de apuntar hacia arriba»).
+		var share_lying := clampf(body.tilt / KinematicSettings.current.fall_lie, 0.0, 1.0)
+		var axis := body.global_basis.orthonormalized().inverse() * Vector3.UP.cross(body.mover.lean_away())
+		var hip := body.global_transform * Transform3D(Basis(axis.normalized(), deg_to_rad(LYING_LIFT * share_lying)),
+			Vector3.DOWN * body.size.y * 0.5)
+		root = hip * Transform3D(Basis(), Vector3.DOWN * body.hover)
 	if standing:
 		var classic := LegSettings.current.new_steps
 		if not _planted:
