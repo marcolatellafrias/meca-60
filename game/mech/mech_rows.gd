@@ -23,6 +23,14 @@ static func rows() -> Array[SandboxRow]:
 			.panel(KEY_F2, CABIN_PANEL, CabinShapePanel.new()) \
 			.panel(KEY_F3, POSE_ARMS_PANEL, PoseArmPanel.new()) \
 			.panel(KEY_F4, LEGS_PANEL, LegsPanel.new()),
+		# LA MECA DE CÁPSULAS (PodMech, PodCabin; el usuario, 15/11/2026: «pasemos esta maqueta de forma paramétrica y
+		# ordenada al sistema de la nave»): la 37 de tests/sphere_pods_look, con su forma en el F2.
+		SandboxRow.new(SandboxSuper.Id.MECH, "Meca de cápsulas") \
+			.add(SandboxRow.Build.NEAR, [ToolMechArchetype.new(true)]) \
+			.panel(KEY_F1, KINEMATIC_PANEL, KinematicPanel.new()) \
+			.panel(KEY_F2, PODS_PANEL, PodShapePanel.new()) \
+			.panel(KEY_F3, POSE_ARMS_PANEL, PoseArmPanel.new()) \
+			.panel(KEY_F4, LEGS_PANEL, LegsPanel.new()),
 		SandboxRow.new(SandboxSuper.Id.MECH, "Meca discreta") \
 			.add(SandboxRow.Build.NEAR, [MechArchetype.new(Mech.Arms.POSE)]) \
 			.panel(KEY_F1, MECH_PANEL, MechPanel.new()) \
@@ -71,6 +79,7 @@ static func rows() -> Array[SandboxRow]:
 ## La forma de la cabina (módulo Interior): cambia todas las mecas.
 const CABIN_PANEL := "la cabina: módulos, pisos y el vidrio; guardar cambia todas las mecas"
 const VORTEX_PANEL := "la meca del vórtice: el radio, los pisos, el núcleo, la escalera, y sus brazos y piernas"
+const PODS_PANEL := "la meca de cápsulas: el torso, los radiales de las cápsulas y los hombros, y sus brazos y piernas"
 const ROUND_PANEL := "la cabina redonda: el radio, el alto, el disco, la tarima, el ascensor y el vidrio"
 const MECH_PANEL := "la meca: moverse, el equilibrio, las piernas, saltar y caerse (cada variante las suyas)"
 const LEGS_PANEL := "las piernas: los pasos (los mismos para todas las mecas)"

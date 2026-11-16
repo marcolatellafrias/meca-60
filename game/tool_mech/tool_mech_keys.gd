@@ -63,7 +63,8 @@ func read() -> void:
 	_space_was = space
 	mech.jump = _jump_on
 	# LOS BRAZOS.
-	tool.drill.charging = mine and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
+	if tool.drill != null:
+		tool.drill.charging = mine and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
 	tool.cannon.trigger = mine and Input.is_physical_key_pressed(KEY_F)
 	if mine:
 		tool.cannon.move_lever(Vector2(MechKeys.axis(KEY_RIGHT, KEY_LEFT), MechKeys.axis(KEY_UP, KEY_DOWN)), delta)
@@ -86,7 +87,7 @@ func _unhandled_input(event: InputEvent) -> void:
 	if not UIState.gameplay_active():
 		return
 	var click := event as InputEventMouseButton
-	if click != null and click.pressed and click.button_index == MOUSE_BUTTON_LEFT:
+	if click != null and click.pressed and click.button_index == MOUSE_BUTTON_LEFT and tool.drill != null:
 		tool.drill.strike()
 		get_viewport().set_input_as_handled()
 		return
@@ -111,7 +112,8 @@ func _unhandled_input(event: InputEvent) -> void:
 func controls() -> PackedStringArray:
 	return PackedStringArray([
 		"PIERNAS: WASD · mouse gira · Shift+dirección dash · espacio salta, y en el aire levita · Ctrl se agacha",
-		"TALADRO (der.): clic derecho mantenido carga · clic izquierdo descarga",
+		"TALADRO (der.): clic derecho mantenido carga · clic izquierdo descarga" if (mech as ToolMech).drill != null
+			else "PUÑO (der.): sólo se ve",
 		"CAÑÓN (izq.): flechas la palanca · 1 simple, 2 ráfaga, 3 barrido, 4 súper · F el gatillo",
 		"todo gasta la energía común; vacía, la meca queda aturdida · G / X el ascensor",
 	])

@@ -47,10 +47,9 @@ func _build() -> void:
 func _build_arms() -> void:
 	cannon = CannonArm.new()
 	cannon.energy = energy
-	drill = DrillArm.new()
-	drill.energy = energy
+	var right := _right_arm()
 	var at := Mech.shoulder(cabin_shape)
-	for pair: Array in [[cannon, -1.0], [drill, 1.0]]:
+	for pair: Array in [[cannon, -1.0], [right, 1.0]]:
 		var arm: MechArm = pair[0]
 		var side: float = pair[1]
 		arm.side = side
@@ -62,9 +61,18 @@ func _build_arms() -> void:
 		arms.append(arm)
 
 
+## EL BRAZO DERECHO: el taladro (otra meca puede llevar otro; ver PodMech).
+func _right_arm() -> MechArm:
+	drill = DrillArm.new()
+	drill.energy = energy
+	return drill
+
+
 func possess_status() -> String:
 	var line := "energía %s" % energy.bar()
-	line += "\ncañón: %s%s · taladro %s" % [CannonArm.MODE_NAMES[cannon.mode],
-		(" %s" % BodyMoves._bar(cannon.charge)) if cannon.mode == CannonArm.Mode.SUPER else "", BodyMoves._bar(drill.spin)]
+	line += "\ncañón: %s%s" % [CannonArm.MODE_NAMES[cannon.mode],
+		(" %s" % BodyMoves._bar(cannon.charge)) if cannon.mode == CannonArm.Mode.SUPER else ""]
+	if drill != null:
+		line += " · taladro %s" % BodyMoves._bar(drill.spin)
 	line += "\n" + super()
 	return line
