@@ -466,11 +466,11 @@ func push_impulse(impulse: Vector3, at := Vector3.ZERO) -> void:
 		apply_impulse(impulse, at)
 
 
-## SI AHORA NO SE LE PUEDE PEGAR: la cinemática, al arrancar un dash (ver KinematicSettings.dash_untouchable) y
-## mientras no está parada (tirada o levantándose). Lo pregunta quien pega (los jefes: HitReaction.untouchable); la
-## física, siempre se le puede.
+## SI AHORA NO SE LE PUEDE PEGAR: la cinemática, mientras no está parada (tirada o levantándose). Lo pregunta quien
+## pega (los jefes: HitReaction.untouchable); la física, siempre se le puede. *El dash la dejaba intocable un momento
+## (15/11/2026); el usuario lo sacó el mismo día: «no se lee realista en la meca, se siente tonto».*
 func untouchable() -> bool:
-	return kinematic and mover != null and (state != State.STANDING or mover.untouchable())
+	return kinematic and state != State.STANDING
 
 
 ## UN EMPUJÓN A LA CINEMÁTICA: se corre `offset` (m, de costado) en `time` (s), con un saltito de `hop` m, sin

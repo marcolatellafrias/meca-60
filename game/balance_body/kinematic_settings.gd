@@ -52,15 +52,11 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 ## con easing, que haga easing»): recorre lo mismo en lo mismo, pero arrancando lento, frenando al final o las dos.
 ## Lineal: parejo, como antes.
 @export var dash_curve := MoveCurve.Shape.LINEAR
-## INTOCABLE (s): desde que arranca el dash, tanto tiempo no se le puede pegar, como la rodada de Souls (15/11/2026, desde
-## el módulo Jefes, con el sí del usuario: sin eso el trompo del Luchador no se esquiva de cerca). 0: nunca. Puede durar
-## más o menos que el dash. Lo pregunta quien pega (BalanceBody.untouchable).
-@export_range(0.0, 1.5, 0.05) var dash_untouchable := 0.35
 
 @export_group("Caerse")
-## DERRIBADA, SIEMPRE DE ESPALDAS, de una pieza en su pose de reposo (KinematicMover.knock_down; 15/11/2026, desde el módulo Jefes, con el sí del usuario: «los brazos están mega
-## bugueados cuando se cae… arreglalo de raíz»): cae de espaldas en `fall_time` (s) hasta `fall_lie` (°), queda tirada
-## `down_time` (s) y se levanta en `rise_time` (s). Animado, no físico; las piernas se recogen como en la física.
+## DERRIBADA (KinematicMover.knock_down; 15/11/2026, desde el módulo Jefes, con el sí del usuario: «los brazos están
+## mega bugueados cuando se cae… arreglalo de raíz»): SIEMPRE DE ESPALDAS, la pose de reposo de una pieza; cae en
+## `fall_time` (s) hasta `fall_lie` (°), queda tirada `down_time` (s) y se levanta en `rise_time` (s). Animado, no físico.
 @export_range(0.1, 2.0, 0.05) var fall_time := 0.5
 @export_range(30.0, 90.0, 1.0) var fall_lie := 90.0
 @export_range(0.0, 5.0, 0.1) var down_time := 1.1

@@ -46,8 +46,6 @@ var _dash_left := 0.0
 var _dash_velocity := Vector3.ZERO
 ## Cuánto lleva el dash (s), para su curva (ver KinematicSettings.dash_curve).
 var _dash_clock := 0.0
-## Cuánto le queda sin que se le pueda pegar (s; ver KinematicSettings.dash_untouchable).
-var _untouchable_left := 0.0
 ## Cuánto falta para que pueda salir otro dash (s; el que dura más la espera: ver KinematicSettings.dash_cooldown).
 var _dash_wait := 0.0
 ## El empujón de ahora (ver `shove`): cuánto le queda y cuánto dura (s), a qué velocidad de costado va y el saltito (m).
@@ -122,7 +120,6 @@ func step(delta: float) -> void:
 	_fit()
 	var grounded := is_on_floor()
 	dash_fuel = minf(dash_fuel + delta / k.dash_refill, 1.0)
-	_untouchable_left = maxf(_untouchable_left - delta, 0.0)
 	_dash_wait = maxf(_dash_wait - delta, 0.0)
 	_fall(k, delta)
 	if _shove_left > 0.0 or body.state != BalanceBody.State.STANDING:
@@ -201,7 +198,6 @@ func _dash(k: KinematicSettings, delta: float) -> void:
 	_dash_velocity = way * (k.dash_distance / k.dash_time)
 	_dash_left = k.dash_time
 	_dash_clock = 0.0
-	_untouchable_left = k.dash_untouchable
 	_dash_wait = k.dash_time + k.dash_cooldown
 	velocity = _dash_velocity * _dash_rate(k, delta)
 	dash_fuel -= k.dash_cost
@@ -264,11 +260,6 @@ func _fall(k: KinematicSettings, delta: float) -> void:
 		body.legs.replant()
 
 
-## Si ahora no se le puede pegar (al arrancar un dash, ver KinematicSettings.dash_untouchable).
-func untouchable() -> bool:
-	return _untouchable_left > 0.0
-
-
 ## Por cuánto multiplicar la velocidad pareja del dash este paso, según su curva (a la mitad del paso; lineal: 1).
 func _dash_rate(k: KinematicSettings, delta: float) -> float:
 	var rate := MoveCurve.rate(k.dash_curve, (_dash_clock + delta * 0.5) / k.dash_time)
@@ -294,7 +285,6 @@ func put(where: Transform3D) -> void:
 	_yaw_speed = 0.0
 	velocity = Vector3.ZERO
 	_dash_left = 0.0
-	_untouchable_left = 0.0
 	_shove_left = 0.0
 	_last_bottom = global_position.y + _hover_now()
 
