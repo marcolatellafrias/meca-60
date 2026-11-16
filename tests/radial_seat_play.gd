@@ -80,9 +80,19 @@ func _ready() -> void:
 			_folder = argument.trim_prefix("--salida=")
 	get_window().size = Vector2i(1280, 720)
 	_world()
-	_cabin()
 	_cannon()
+	var before := get_child_count()
+	_cabin()
 	_station()
+	# Todo lo que se armó en la cabina y el puesto va montado en la esfera, que gira alrededor de su centro.
+	_sphere = Node3D.new()
+	_sphere.name = "Esfera"
+	_sphere.position = SPHERE_CENTER
+	var pieces := get_children().slice(before)
+	add_child(_sphere)
+	for piece in pieces:
+		piece.reparent(_sphere, true)
+	_build_seat()
 	_eye = Camera3D.new()
 	_eye.fov = 74.0
 	_eye.position = EYE
@@ -141,10 +151,12 @@ func _world() -> void:
 const SPHERE_CENTER := Vector3(0, 0.95, 0.08)
 const SPHERE_RADIUS := 0.92
 const WINDOW_DIR := Vector3(0, -0.1, -1)
-const WINDOW_HALF := 36.0
+const WINDOW_HALF := 48.0
 
 var _shell: ShaderMaterial = null
 var _seat: Node3D = null
+## La esfera entera (la cáscara y todo lo montado en ella): gira cuando se apunta con el control del frente.
+var _sphere: Node3D = null
 
 
 func _cabin() -> void:
@@ -158,9 +170,10 @@ uniform vec3 window_dir;
 uniform float window_cos;
 uniform float cut_z = 99.0;
 varying vec3 world;
-void vertex() { world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; }
+varying vec3 local;
+void vertex() { world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz; local = VERTEX; }
 void fragment() {
-	vec3 d = normalize(world - center);
+	vec3 d = normalize(local);
 	if (dot(d, normalize(window_dir)) > window_cos || world.z > cut_z) { discard; }
 	float lon = atan(d.x, -d.z) * 57.2958;
 	float lat = asin(clamp(d.y, -1.0, 1.0)) * 57.2958;
@@ -206,7 +219,7 @@ void fragment() {
 		for k in 20:
 			var angle := TAU * k / 20.0
 			Clay.sphere(self, 0.01, Vector3(cos(angle) * (reach - 0.025), SPHERE_CENTER.y + sin(angle) * (reach - 0.025), z - 0.02), LIGHT)
-	for pitch: float in [-38.0, 42.0]:
+	for pitch: float in [-42.0, 58.0]:
 		var y := SPHERE_CENTER.y + sin(deg_to_rad(pitch)) * SPHERE_RADIUS
 		_ring(Vector3(SPHERE_CENTER.x, y, SPHERE_CENTER.z), Vector3.UP, cos(deg_to_rad(pitch)) * SPHERE_RADIUS - 0.02, 0.022, STEEL)
 	# Caños de cables que corren por la pared, de abajo hacia arriba, por atrás y los costados.
@@ -238,7 +251,7 @@ void fragment() {
 	for band: float in [-26.0, 14.0]:
 		for k in 14:
 			var yaw := -165.0 + k * 25.0 + (12.0 if band > 0.0 else 0.0)
-			if absf(yaw) < 44.0 and band > -40.0:
+			if absf(yaw) < 58.0:
 				continue
 			var near := false
 			for spot in busy:
@@ -265,7 +278,10 @@ void fragment() {
 		var plate := _wall(spot.x, spot.y, 0.03)
 		Clay.box(plate, Vector3(0.16, 0.07, 0.01), Vector3.ZERO, CREAM)
 		_label(plate, "TALLERES N. A." if spot.z < 0.5 else "NO PISAR", Vector3(0, 0, 0.006), 0.016, INK, false)
-	# La silla: el pie fijo con su aro, y arriba lo que gira con la mirada (la silla y la empuñadura).
+
+
+## LA SILLA: el pie fijo con su aro (atraviesa la esfera, que gira alrededor), y arriba la silla, que gira con la mirada.
+func _build_seat() -> void:
 	Clay.cylinder(self, 0.09, 0.32, Vector3(0, 0.2, 0.12), DARK)
 	_ring(Vector3(0, 0.36, 0.12), Vector3.UP, 0.26, 0.03, STEEL)
 	for k in 12:
@@ -310,6 +326,21 @@ func _on_wall(yaw: float, pitch: float, inset: float) -> Vector3:
 	var p := deg_to_rad(pitch)
 	var way := Vector3(-sin(y) * cos(p), sin(p), -cos(y) * cos(p))
 	return SPHERE_CENTER + way * (SPHERE_RADIUS - inset)
+
+
+## Un lugar sobre el canto de la ventana, a `angle` grados (0 a la derecha, 90 arriba), corrido `out` hacia afuera del
+## hueco; su +Z mira al centro de la esfera.
+func _rim_spot(angle: float, out: float) -> Node3D:
+	var window := WINDOW_DIR.normalized()
+	var side := window.cross(Vector3.UP).normalized()
+	var up := side.cross(window).normalized()
+	var radial := side * cos(deg_to_rad(angle)) + up * sin(deg_to_rad(angle))
+	var rim_center := SPHERE_CENTER + window * SPHERE_RADIUS * cos(deg_to_rad(WINDOW_HALF)) - window * 0.04
+	var spot := Node3D.new()
+	add_child(spot)
+	spot.position = rim_center + radial * (SPHERE_RADIUS * sin(deg_to_rad(WINDOW_HALF)) + out)
+	spot.look_at(spot.position + window, up)
+	return spot
 
 
 ## Un lugar en la pared para montar algo: su +Z mira al centro de la esfera.
@@ -392,19 +423,44 @@ func _mount(spot: Node3D, size: Vector2) -> void:
 
 
 func _station() -> void:
-	# 1. La empuñadura del cañón, en el apoyabrazos izquierdo: se agarra y lo que mirás es la mira.
-	var grip_base := Node3D.new()
-	_seat.add_child(grip_base)
-	grip_base.position = Vector3(-0.29, 0.76, -0.22)
-	Clay.cylinder(grip_base, 0.05, 0.03, Vector3.ZERO, DARK)
-	var grip := Node3D.new()
-	grip_base.add_child(grip)
-	var handle := Clay.box(grip, Vector3(0.045, 0.13, 0.055), Vector3(0, 0.07, 0), INK)
-	handle.rotation_degrees = Vector3(-15, 0, 0)
+	# 1. EL CONTROL DEL CAÑÓN, al frente, en el canto de abajo de la ventana: un manubrio con dos empuñaduras y el botón
+	# rojo. Agarrarlo hace de la cámara la mira y gira la esfera entera con el cañón.
+	var yoke := _rim_spot(270.0, 0.02)
+	# Una columna que sube del canto de abajo hasta la altura de las manos, con el manubrio arriba.
+	Clay.box(yoke, Vector3(0.14, 0.06, 0.12), Vector3(0, 0.02, 0.05), DARK)
+	Clay.box(yoke, Vector3(0.07, 0.48, 0.07), Vector3(0, 0.26, 0.12), STEEL)
 	for k in 3:
-		Clay.box(grip, Vector3(0.05, 0.008, 0.06), Vector3(0, 0.03 + k * 0.035, 0.005), DARK)
-	Clay.box(grip, Vector3(0.055, 0.03, 0.07), Vector3(0, 0.15, -0.015), RED)
-	_controls.append({"name": "empuñadura", "kind": "grip", "node": grip, "radius": 0.09})
+		Clay.box(yoke, Vector3(0.085, 0.02, 0.085), Vector3(0, 0.1 + k * 0.13, 0.12), DARK)
+	Clay.box(yoke, Vector3(0.12, 0.08, 0.1), Vector3(0, 0.5, 0.13), DARK)
+	var bar := Node3D.new()
+	yoke.add_child(bar)
+	bar.position = Vector3(0, 0.55, 0.15)
+	Clay.cylinder(bar, 0.022, 0.42, Vector3.ZERO, STEEL, Vector3(0, 0, 90))
+	for side: float in [-1.0, 1.0]:
+		var hand := Clay.cylinder(bar, 0.03, 0.12, Vector3(side * 0.2, 0.05, 0.0), INK)
+		hand.rotation_degrees = Vector3(-20, 0, 0)
+		for k in 3:
+			Clay.cylinder(bar, 0.032, 0.01, Vector3(side * 0.2, 0.01 + k * 0.035, 0.012 - k * 0.012), DARK)
+	Clay.box(bar, Vector3(0.06, 0.03, 0.04), Vector3(0, 0.03, 0.0), RED)
+	_controls.append({"name": "control del cañón", "kind": "grip", "node": bar, "radius": 0.16})
+	# Alrededor de la ventana: cuatro orejas abulonadas, dos asas a los costados y la energía en arco arriba del canto.
+	for k in 4:
+		var lug := _rim_spot(45.0 + k * 90.0, 0.05)
+		Clay.box(lug, Vector3(0.08, 0.06, 0.05), Vector3.ZERO, DARK)
+		Clay.cylinder(lug, 0.012, 0.02, Vector3(0, 0, 0.03), LIGHT, Vector3(90, 0, 0))
+	for angle: float in [180.0, 0.0]:
+		var handle := _rim_spot(angle, 0.08)
+		Clay.cylinder(handle, 0.016, 0.22, Vector3(0, 0, 0.05), LIGHT)
+		Clay.box(handle, Vector3(0.03, 0.03, 0.06), Vector3(0, 0.1, 0.02), DARK)
+		Clay.box(handle, Vector3(0.03, 0.03, 0.06), Vector3(0, -0.1, 0.02), DARK)
+	var arc: Array[MeshInstance3D] = []
+	for k in 16:
+		var cell := _rim_spot(130.0 - k * (80.0 / 15.0), 0.04)
+		Clay.box(cell, Vector3(0.042, 0.026, 0.012), Vector3.ZERO, INK)
+		arc.append(Clay.box(cell, Vector3(0.034, 0.018, 0.006), Vector3(0, 0, 0.008), Color(0.1, 0.2, 0.1)))
+	_bars["energía"] = arc
+	var energy_tag := _rim_spot(90.0, 0.09)
+	_label(energy_tag, "ENERGÍA", Vector3(0, 0.0, 0.0), 0.02, CREAM, true)
 	# 2. Los modos, en la pared a la izquierda: ráfaga se traba; barrido y súper se aprietan y se cargan.
 	var modes := _wall(58.0, -14.0, 0.06)
 	_mount(modes, Vector2(0.38, 0.3))
@@ -419,13 +475,6 @@ func _station() -> void:
 		_label(modes, names[i], Vector3(x, -0.06, 0.016), 0.016, INK, false)
 		_controls.append({"name": names[i], "kind": "button", "node": key, "radius": 0.06})
 		_bars[names[i]] = _light_row(modes, Vector3(x, -0.1, 0.016), 5, 0.018)
-	# 3. La energía, arriba de la ventana: una pantallita verde.
-	var screen := _wall(0.0, 50.0, 0.06)
-	_mount(screen, Vector2(0.36, 0.16))
-	Clay.box(screen, Vector3(0.36, 0.16, 0.05), Vector3(0, 0, -0.01), DARK)
-	Clay.box(screen, Vector3(0.32, 0.12, 0.01), Vector3(0, 0, 0.016), Color(0.03, 0.06, 0.04))
-	_label(screen, "ENERGÍA", Vector3(-0.08, 0.035, 0.024), 0.018, GREEN, false)
-	_bars["energía"] = _light_row(screen, Vector3(0, -0.02, 0.024), 14, 0.018)
 	# 4. El estado de la meca, en la pared a la derecha.
 	var status := _wall(-58.0, -4.0, 0.06)
 	_mount(status, Vector2(0.42, 0.38))
@@ -608,6 +657,9 @@ func _spring(delta: float) -> void:
 	_aim_speed += (wanted - _aim) * 38.0 * delta
 	_aim_speed *= exp(-4.5 * delta)
 	_aim = (_aim + _aim_speed * delta).normalized()
+	# Mientras se agarra el control del frente, la esfera entera gira con el cañón: la ventana queda donde apunta.
+	if not _holding.is_empty():
+		_sphere.global_basis = Basis.looking_at(_aim, Vector3.UP)
 	var target := _shoulder.global_position + _aim
 	if not _aim.is_equal_approx(Vector3.UP):
 		_shoulder.look_at(target, Vector3.UP)
@@ -709,6 +761,8 @@ func _play_demo() -> void:
 	await _wait(0.5)
 	_set_look(0.0, -8.0)
 	await _capture("1. Sentado, mirando al frente", "1")
+	_set_look(0.0, -30.0)
+	await _capture("1b. Mirando abajo: el control del cañón, en el canto de la ventana", "1b")
 	_set_look(38.0, -22.0)
 	await _capture("2. Mirando los modos, a la izquierda", "2")
 	for control in _controls:
@@ -716,8 +770,8 @@ func _play_demo() -> void:
 			_holding = control
 	await _wait(0.2)
 	_trigger("RÁFAGA")
-	_set_look(6.0, 2.0)
-	await _wait(0.8)
+	_set_look(28.0, 6.0)
+	await _wait(1.2)
 	await _capture("3. Agarrando la empuñadura, con la ráfaga prendida", "3")
 	_trigger("RÁFAGA")
 	_trigger("SÚPER")
@@ -731,6 +785,8 @@ func _play_demo() -> void:
 	_set_look(14.0, 1.0)
 	await _wait(0.4)
 	await _capture("6. El barrido", "6")
+	# Suelta el control: ahora mirar gira sólo la silla; la esfera queda donde quedó.
+	_holding = {}
 	_set_look(-38.0, -10.0)
 	await _wait(0.6)
 	await _capture("7. El estado de la meca, a la derecha", "8")
@@ -746,7 +802,7 @@ func _play_demo() -> void:
 	_view_from(Vector3(2.6, 1.4, 0.6), Vector3(0, 0.95, 0))
 	await _capture("10. Desde afuera, de costado", "10")
 	_shell.set_shader_parameter("cut_z", 0.05)
-	for piece in get_children():
+	for piece in _sphere.get_children():
 		var part := piece as Node3D
 		if part == null or part == _seat or (part is MeshInstance3D and (part as MeshInstance3D).material_override == _shell):
 			continue
