@@ -70,7 +70,7 @@ func _ready() -> void:
 ## La pared de instrumentos: una cara vertical que mira al jugador, donde va todo lo que se toca y se lee.
 const WALL_FRONT := 0.38
 const WALL_TOP := -0.1
-const WALL_BOTTOM := -0.78
+const WALL_BOTTOM := -0.95
 
 
 func _cockpit(title: String, boss_x: float) -> Node3D:
@@ -103,7 +103,8 @@ func _cockpit(title: String, boss_x: float) -> Node3D:
 	Clay.box(root, Vector3(4.4, 0.04, 0.34), Vector3(0, WALL_TOP, WALL_FRONT - 0.15), LIGHT)
 	Clay.box(root, Vector3(4.4, 0.6, 1.0), Vector3(0, WALL_BOTTOM - 0.3, 0.5), FRAME)
 	# La energía, común a todos: una barra de luces al medio de la pared.
-	_lights(root, Vector3(0, -0.66, WALL_FRONT), 20, 12, GREEN, "ENERGÍA", false)
+	_zone(root, Vector2(0, -0.8), Vector2(1.0, 0.24), "")
+	_lights(root, Vector3(0, -0.78, FACE), 20, 12, GREEN, "ENERGÍA", false)
 	return root
 
 
@@ -114,6 +115,22 @@ func _plaque(parent: Node3D, text: String, at: Vector3, height: float) -> void:
 	parent.add_child(label)
 	var width := text.length() * height * 0.75 + height
 	Clay.box(parent, Vector3(width, height * 1.8, 0.02), at, BLACK)
+
+
+## UNA ZONA: una placa más oscura, apenas saliente, con su marco y su título arriba; lo que va junto, adentro.
+const ZONE := Color(0.40, 0.42, 0.44)
+const FACE := WALL_FRONT + 0.025
+
+
+func _zone(parent: Node3D, center: Vector2, size: Vector2, title: String, z := WALL_FRONT) -> void:
+	Clay.box(parent, Vector3(size.x + 0.05, size.y + 0.05, 0.02), Vector3(center.x, center.y, z + 0.005), FRAME)
+	Clay.box(parent, Vector3(size.x, size.y, 0.02), Vector3(center.x, center.y, z + 0.012), ZONE)
+	if title.is_empty():
+		return
+	Clay.box(parent, Vector3(size.x, 0.07, 0.01), Vector3(center.x, center.y + size.y * 0.5 - 0.035, z + 0.024), BLACK)
+	var label := StrokeLabel.make(title, 0.034, CREAM)
+	label.position = Vector3(center.x, center.y + size.y * 0.5 - 0.035, z + 0.03)
+	parent.add_child(label)
 
 
 func _glow(color: Color) -> StandardMaterial3D:
@@ -133,6 +150,11 @@ func _lamp(parent: Node3D, at: Vector3, on: bool) -> void:
 
 
 ## UNA BARRA DE LUCES en un marco: `count` celdas, `lit` prendidas; acostada o parada.
+func _pillar_lights(parent: Node3D, x: float, lit: int, color: Color, title: String) -> void:
+	_zone(parent, Vector2(x, 0.2), Vector2(0.24, 0.72), "", 0.37)
+	_lights(parent, Vector3(x, 0.26, 0.4), 10, lit, color, title, true)
+
+
 func _lights(parent: Node3D, at: Vector3, count: int, lit: int, color: Color, title: String, upright: bool) -> void:
 	var cell := Vector2(0.05, 0.035) if upright else Vector2(0.035, 0.07)
 	var step := (cell.y if upright else cell.x) + 0.012
@@ -173,6 +195,7 @@ func _push(parent: Node3D, at: Vector3, radius: float, cap: Color, title: String
 ## LA PALANCA DE DOS EJES, EN LA PARED: sale hacia el jugador, de una placa con su ranura en cruz; la bocha se corre
 ## hacia donde quedó (`lean`, de −1 a 1) y lleva el gatillo rojo arriba.
 func _stick(parent: Node3D, at: Vector3, lean: Vector2, title: String, trigger: String) -> void:
+	# El nombre lo pone la zona; acá, lo que hace el gatillo.
 	Clay.box(parent, Vector3(0.36, 0.36, 0.03), at, FRAME)
 	Clay.box(parent, Vector3(0.3, 0.3, 0.02), at + Vector3(0, 0, 0.02), BLACK)
 	Clay.box(parent, Vector3(0.26, 0.02, 0.01), at + Vector3(0, 0, 0.032), METAL)
@@ -186,9 +209,11 @@ func _stick(parent: Node3D, at: Vector3, lean: Vector2, title: String, trigger: 
 	Clay.segment(shaft, at + Vector3(0, 0, 0.05), tip, 0.04)
 	Clay.sphere(parent, 0.075, tip, BLACK)
 	Clay.box(parent, Vector3(0.04, 0.04, 0.04), tip + Vector3(0, 0.07, 0.0), TRIGGER)
-	_plaque(parent, title, at + Vector3(0.54, 0.04, 0.0), 0.04)
-	var tag := StrokeLabel.make("GATILLO: " + trigger, 0.026, INK)
-	tag.position = at + Vector3(0.54, -0.04, 0.012)
+	var tag := StrokeLabel.make("GATILLO", 0.026, INK)
+	tag.position = at + Vector3(0.0, -0.33, 0.012)
+	parent.add_child(tag)
+	tag = StrokeLabel.make(trigger, 0.03, TRIGGER.darkened(0.3))
+	tag.position = at + Vector3(0.0, -0.38, 0.012)
 	parent.add_child(tag)
 
 
@@ -204,27 +229,27 @@ func _pull(parent: Node3D, x: float, title: String) -> void:
 # ── 1. EL MOVIMIENTO ─────────────────────────────────────────────────────────────────────────────────────────────
 func _movement() -> Node3D:
 	var root := _cockpit("MOVIMIENTO", 0.0)
-	var walk := Vector3(-0.95, -0.38, WALL_FRONT)
+	_zone(root, Vector2(-1.15, -0.52), Vector2(1.1, 0.74), "CAMINAR Y DASH")
+	var walk := Vector3(-1.15, -0.46, FACE)
 	_stick(root, walk, Vector2(-0.3, 0.8), "CAMINAR", "SALTAR")
 	# El dash: ocho botones en aro alrededor de la placa, cada uno del lado hacia donde sale.
 	for i in 8:
 		var angle := TAU * i / 8.0
-		var spot := walk + Vector3(cos(angle) * 0.29, sin(angle) * 0.29, 0.0)
-		_push(root, spot, 0.03, AMBER if i == 1 else CREAM, "")
-	_plaque(root, "DASH", walk + Vector3(-0.44, 0.0, 0.0), 0.035)
-	# Agacharse se traba; el giro, mientras se lo aprieta.
-	_latch(root, Vector3(0.15, -0.3, WALL_FRONT), false, "AGACHAR")
-	_plaque(root, "GIRO", Vector3(0.85, -0.2, WALL_FRONT), 0.035)
-	_push(root, Vector3(0.68, -0.34, WALL_FRONT), 0.06, CREAM, "IZQUIERDA")
-	_push(root, Vector3(1.02, -0.34, WALL_FRONT), 0.06, CREAM, "DERECHA")
-	# El ascensor, en la visera: subir y bajar.
-	_push(root, Vector3(-1.1, 0.95, 0.62), 0.05, CREAM, "SUBIR")
-	_push(root, Vector3(-0.85, 0.95, 0.62), 0.05, CREAM, "BAJAR")
+		_push(root, walk + Vector3(cos(angle) * 0.25, sin(angle) * 0.22, 0.0), 0.028, AMBER if i == 1 else CREAM, "")
+	# El cuerpo: agacharse se traba; el giro, mientras se lo aprieta.
+	_zone(root, Vector2(0.95, -0.36), Vector2(1.3, 0.44), "CUERPO")
+	_latch(root, Vector3(0.45, -0.38, FACE), false, "AGACHAR")
+	_push(root, Vector3(0.9, -0.38, FACE), 0.06, CREAM, "GIRO IZQUIERDA")
+	_push(root, Vector3(1.38, -0.38, FACE), 0.06, CREAM, "GIRO DERECHA")
+	# El ascensor, en la visera.
+	_zone(root, Vector2(-0.98, 0.98), Vector2(0.5, 0.2), "", 0.6)
+	_push(root, Vector3(-1.1, 0.98, 0.63), 0.045, CREAM, "SUBIR")
+	_push(root, Vector3(-0.86, 0.98, 0.63), 0.045, CREAM, "BAJAR")
 	_pull(root, 1.0, "EYECTAR")
 	# Los parantes: la carga del salto y el propulsor, en luces.
-	_lights(root, Vector3(-1.9, 0.25, 0.38), 10, 5, GREEN, "SALTO", true)
-	_lights(root, Vector3(1.9, 0.25, 0.38), 10, 8, AMBER, "PROPULSOR", true)
-	_lamp(root, Vector3(1.9, 0.62, 0.38), false)
+	_pillar_lights(root, -1.9, 5, GREEN, "SALTO")
+	_pillar_lights(root, 1.9, 8, AMBER, "PROPULSOR")
+	_lamp(root, Vector3(1.9, 0.62, 0.4), false)
 	return root
 
 
@@ -239,13 +264,15 @@ func _cannon() -> Node3D:
 	for way: Vector2 in [Vector2.LEFT, Vector2.RIGHT, Vector2.UP, Vector2.DOWN]:
 		Clay.box(root, Vector3(0.025 + absf(way.x) * 0.06, 0.025 + absf(way.y) * 0.06, 0.01),
 			Vector3(0.5 + way.x * 0.2, 0.42 + way.y * 0.2, 0.0), AMBER)
-	_stick(root, Vector3(-0.95, -0.38, WALL_FRONT), Vector2(0.6, 0.3), "APUNTAR", "DISPARAR")
+	_zone(root, Vector2(-1.15, -0.52), Vector2(1.1, 0.74), "APUNTAR")
+	_stick(root, Vector3(-1.15, -0.46, FACE), Vector2(0.6, 0.3), "APUNTAR", "DISPARAR")
 	# Los modos: cuatro botones que se traban, uno solo puesto a la vez.
+	_zone(root, Vector2(0.95, -0.36), Vector2(1.3, 0.44), "MODO")
 	var names := ["SIMPLE", "RÁFAGA", "BARRIDO", "SÚPER"]
 	for i in names.size():
-		_latch(root, Vector3(0.3 + i * 0.26, -0.3, WALL_FRONT), i == 0, names[i])
+		_latch(root, Vector3(0.53 + i * 0.28, -0.38, FACE), i == 0, names[i])
 	_pull(root, 1.0, "EYECTAR")
-	_lights(root, Vector3(1.9, 0.25, 0.38), 10, 3, AMBER, "SÚPER", true)
+	_pillar_lights(root, 1.9, 3, AMBER, "SÚPER")
 	return root
 
 
@@ -260,13 +287,16 @@ func _sword() -> Node3D:
 	blade.rotation_degrees = Vector3(0, 0, 24)
 	var guard := Clay.box(root, Vector3(0.5, 0.06, 0.1), fist + Vector3(-0.03, 0.2, 0), FRAME)
 	guard.rotation_degrees = Vector3(0, 0, 24)
-	_stick(root, Vector3(0.95, -0.38, WALL_FRONT), Vector2(-0.7, 0.5), "HOJA", "ESTOCADA")
+	_zone(root, Vector2(1.15, -0.52), Vector2(1.1, 0.74), "HOJA")
+	_stick(root, Vector3(1.15, -0.46, FACE), Vector2(-0.7, 0.5), "HOJA", "ESTOCADA")
 	# Atacar o cubrirse: dos botones que se traban, uno u otro. La mano: agarrar se traba.
-	_latch(root, Vector3(-0.95, -0.3, WALL_FRONT), true, "ATAQUE")
-	_latch(root, Vector3(-0.7, -0.3, WALL_FRONT), false, "GUARDIA")
-	_latch(root, Vector3(-0.3, -0.3, WALL_FRONT), true, "AGARRAR")
+	_zone(root, Vector2(-1.2, -0.36), Vector2(0.95, 0.44), "POSTURA")
+	_latch(root, Vector3(-1.42, -0.38, FACE), true, "ATAQUE")
+	_latch(root, Vector3(-0.98, -0.38, FACE), false, "GUARDIA")
+	_zone(root, Vector2(-0.25, -0.36), Vector2(0.55, 0.44), "MANO")
+	_latch(root, Vector3(-0.25, -0.38, FACE), true, "AGARRAR")
 	_pull(root, -1.0, "EYECTAR")
-	_lights(root, Vector3(1.9, 0.25, 0.38), 10, 4, AMBER, "ESTOCADA", true)
+	_pillar_lights(root, 1.9, 4, AMBER, "ESTOCADA")
 	return root
 
 
