@@ -137,6 +137,9 @@ func _tick(mech: Mech) -> float:
 		# Que no se termine la pelea: con poca vida, vuelve a llenarse.
 		if Health.of(mech).left < 30.0:
 			Health.of(mech).left = BrawlerArchetype.MECH_HEALTH
+		# Ni la energía (el dash gasta el 40 % de la de la meca de tres): el video muestra cómo se esquiva.
+		if mech is ToolMech and (mech as ToolMech).energy.level < 0.5:
+			(mech as ToolMech).energy.level = 1.0
 	# LA CÁMARA: de costado a la línea entre los dos, más lejos cuanto más separados.
 	var line := ground - _boss.global_position
 	line.y = 0.0
