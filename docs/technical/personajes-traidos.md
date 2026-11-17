@@ -94,6 +94,8 @@ el agarre del volante y la válvula, y el freno al aterrizar.
 intención, cámara, estamina, HUD, el ente y el vuelo libre—; `PlayerDebug` (sólo con `debug_enabled`) tiene el panel
 de depuración (F9), tirarse (G), volver a nacer (P), pasarse al cuerpo que se mira (F), los spawns y el panel de
 impactos. *La pose de sostener algo con la mano que figuraba como pendiente no existe: el agarre ya está resuelto
-(cubos de tamaño fijo, las manos a los costados de donde se lo agarró).* *Un problema que ya estaba*: a veces, al levantarse del ragdoll, cientos de
-errores «Basis must be normalized» (`RagdollUtil._update_recovery`); intermitente.
+(cubos de tamaño fijo, las manos a los costados de donde se lo agarró).* *Arreglado el 17/11/2026*: a veces, al levantarse del ragdoll, salían cientos de errores «Basis must be normalized».
+La recuperación mezclaba bases de huesos (con escala) y de cuerpos compuestos cuadro a cuadro (que se desvían de una
+rotación pura) con `Basis.slerp`, que exige rotaciones puras. Ahora toda mezcla pasa por `RagdollUtil._blend`, que toma
+sólo el giro de cada base: ninguna base deformada puede llegar a la mezcla.
 
