@@ -76,16 +76,18 @@ static func bottom() -> float:
 	return -shape().height() * 0.5
 
 
-## EL HOMBRO (el derecho; el izquierdo, espejado): afuera del costado, centrado en la cara sin el piso ni el techo (el
-## usuario: «los hombros deberían ir centrados en la cara del módulo sin techo y sin piso»): a la altura del centro de la
-## esfera, la de los ojos del que maneja. Y ADELANTADO `shoulder_forward` (16/11/2026, el usuario: «que se sienta un
-## poquito más conectado con los brazos… en cero, los hombros al medio… al máximo, adelantados al máximo sin que
-## sobresalgan de la caja… va a actuar como un offset»): de 0, al medio, a 1, con la bola del hombro tocando el frente.
+## EL HOMBRO (el derecho; el izquierdo, espejado), CON UNA SOLA REGLA PARA LOS DOS TORSOS (17/11/2026, el usuario: «que
+## el plano de ese cuadrado se centre en ese cuadrado y que el offset del parámetro que tengo para adelantar el hombro
+## funcione ahí… tenés las dos con una sola regla»): afuera de la cara del costado, en su centro —en la cuadrada, la cara
+## sin el piso ni el techo («centrados en la cara del módulo sin techo y sin piso»); en la redonda, el cuadrado del
+## costado del cubo chanfleado—, a la altura de los ojos del que maneja. Y ADELANTADO `shoulder_forward` (16/11/2026:
+## «en cero, los hombros al medio… al máximo, adelantados al máximo sin que sobresalgan… va a actuar como un offset»):
+## de 0, al medio, a 1, con la bola del hombro tocando el borde de adelante de esa cara (`side_face_half`).
 static func shoulder() -> Vector3:
 	var form := shape()
 	var lift := form.bubble_y() - form.height() * 0.5
 	var limbs := body()
-	var room := maxf(form.side() * 0.5 - limbs.LEG_THICKNESS * MechBody.JOINT_SHARE, 0.0)
+	var room := maxf(form.side_face_half() - limbs.LEG_THICKNESS * MechBody.JOINT_SHARE, 0.0)
 	return Vector3(form.side() * 0.5 + limbs.LEG_THICKNESS * 0.7 + limbs.shoulder_out * limbs.thick, lift,
 		-room * form.shoulder_forward)
 
@@ -94,6 +96,9 @@ static func shoulder() -> Vector3:
 static func pit_of(form: CageShape) -> DeskPit:
 	var pit := DeskPit.new()
 	pit.side = form.side()
+	if form.is_round():
+		pit.outer_octagon = form.octagon_apothem()
+		pit.sink = form.octagon_sink()
 	pit.radius = form.pit_apothem()
 	pit.tilt = form.desk_tilt
 	pit.eye = form.arms_eye
@@ -143,7 +148,6 @@ func _ready() -> void:
 	_root.position = Vector3(0.0, bottom(), 0.0)
 	add_child(_root)
 	var form := shape()
-	var side := form.side()
 	var tall := form.height()
 	_cube(form)
 	var pit := pit_of(form)
@@ -151,10 +155,10 @@ func _ready() -> void:
 	# LOS TABLEROS DE VERDAD en las caras de la cápsula y del bloque de arriba (CageBoards; el usuario, 17/11/2026: «está
 	# bien ahora el sistema… lo pases a la meca»).
 	CageBoards.dress(_root, form)
-	_tower(form, side, tall, pit)
-	_back(side, tall)
+	_tower(form, tall, pit)
+	_back(form)
 	_chair(0, Vector3(0.0, tall, 0.05), form.arms_eye)
-	_chair(1, Vector3(0.0, tower_top(form) + tall, side * 0.5 - form.tower_deep() * 0.5 + 0.05), GUNNER_SEATED)
+	_chair(1, Vector3(0.0, tower_top(form) + tall, form.upper_back() - form.tower_deep() * 0.5 + 0.05), GUNNER_SEATED)
 	# LA DEL QUE MANEJA, la de siempre (BubbleSeat), en el piso de la cabina debajo de la cápsula (sale por su hueco de
 	# abajo), un poco detrás de los ojos, que van con el anillo de atrás.
 	var driver := BubbleSeat.new()
@@ -227,6 +231,8 @@ func board_root() -> Node3D:
 ##   · EL VIDRIO: liso o facetado (`glass_smooth`), con su degradé y sus manchas (cage_glass.gdshader).
 ##   · LOS TABLEROS: en sus caras opacas, cada una con su grilla (ver CageBoards).
 ##   · EL MARCO en la cara de la caja, con la forma del corte, y la tapa de la panza.
+## EN LA REDONDA, el cuerpo es el cubo chanfleado (CageMesh.chamfered_body) en lugar de la caja: la cápsula, en su cara
+## de adelante; el resto, igual.
 func _cube(form: CageShape) -> void:
 	var edge := form.side() * 0.5
 	var tall := form.height()
@@ -259,24 +265,37 @@ func _cube(form: CageShape) -> void:
 			continue
 		CageMesh.face(inner, points, normal)
 	var outline := _around(cut)
-	# La caja.
-	var middle_box := Vector3(0.0, tall * 0.5, 0.0)
-	var half := Vector3(edge, tall * 0.5, edge)
-	for normal: Vector3 in [Vector3.BACK, Vector3.LEFT, Vector3.RIGHT, Vector3.UP, Vector3.DOWN]:
-		var u := Vector3(normal.y, normal.z, normal.x)
-		var v := normal.cross(u)
-		var middle := middle_box + normal * half
-		u *= half
-		v *= half
-		CageMesh.face(shell_tool, [middle - u - v, middle + u - v, middle + u + v, middle - u + v], normal)
-	if outline.size() >= 3:
-		CageMesh.fill_to_rect(shell_tool, outline, Vector2(-edge, -center.y), Vector2(edge, tall - center.y),
-			func(p: Vector2) -> Vector3: return Vector3(p.x, center.y + p.y, front), Vector3.FORWARD)
-	# EL PISO DE LA CABINA, donde está la silla (ver CageShape.cabin_floor): una cara por encima del fondo.
+	var place := func(p: Vector2) -> Vector3: return Vector3(p.x, center.y + p.y, front)
+	# EL PISO DE LA CABINA, donde está la silla (ver CageShape.cabin_floor): una cara por encima del fondo; en la redonda,
+	# sólo lo de abajo de la cápsula (el cuerpo se angosta abajo).
 	var floor_y := form.cabin_floor()
+	var floor_half := edge
+	if form.is_round():
+		var face_half := form.side_face_half()
+		floor_half = minf(face_half, radius + 0.3)
+		for face: Dictionary in CageMesh.chamfered_body(Vector3(0.0, center.y, 0.0), edge, form.body_chamfer):
+			if not (face["normal"] as Vector3).is_equal_approx(Vector3.FORWARD):
+				CageMesh.face(shell_tool, face["points"], face["normal"])
+		if outline.size() >= 3:
+			CageMesh.fill_to_rect(shell_tool, outline, Vector2(-face_half, -face_half), Vector2(face_half, face_half),
+				place, Vector3.FORWARD)
+	else:
+		# La caja.
+		var middle_box := Vector3(0.0, tall * 0.5, 0.0)
+		var half := Vector3(edge, tall * 0.5, edge)
+		for normal: Vector3 in [Vector3.BACK, Vector3.LEFT, Vector3.RIGHT, Vector3.UP, Vector3.DOWN]:
+			var u := Vector3(normal.y, normal.z, normal.x)
+			var v := normal.cross(u)
+			var middle := middle_box + normal * half
+			u *= half
+			v *= half
+			CageMesh.face(shell_tool, [middle - u - v, middle + u - v, middle + u + v, middle - u + v], normal)
+		if outline.size() >= 3:
+			CageMesh.fill_to_rect(shell_tool, outline, Vector2(-edge, -center.y), Vector2(edge, tall - center.y), place,
+				Vector3.FORWARD)
 	if floor_y > 0.01:
-		CageMesh.face(shell_tool, [Vector3(-edge, floor_y, -edge), Vector3(edge, floor_y, -edge),
-			Vector3(edge, floor_y, edge), Vector3(-edge, floor_y, edge)], Vector3.UP)
+		CageMesh.face(shell_tool, [Vector3(-floor_half, floor_y, -floor_half), Vector3(floor_half, floor_y, -floor_half),
+			Vector3(floor_half, floor_y, floor_half), Vector3(-floor_half, floor_y, floor_half)], Vector3.UP)
 	_both_sides(shell_tool, SHELL, "Caja de abajo")
 	_both_sides(inner, INSIDE, "Cápsula")
 	var tinted := GLASS_PAINT.duplicate() as ShaderMaterial
@@ -358,10 +377,10 @@ func _upper(pit: DeskPit, tall: float) -> void:
 
 ## LA TORRE, contra el borde de atrás (redonda o cuadrada, de su lado); arriba, el rulemán y el plato que gira, con la
 ## silla y, al frente, el pie del arma con su horquilla y el arma (sólo se ve).
-func _tower(form: CageShape, side: float, tall: float, pit: DeskPit) -> void:
+func _tower(form: CageShape, tall: float, pit: DeskPit) -> void:
 	var wide := form.tower_width
 	var deep := form.tower_deep()
-	var middle := Vector2(0.0, side * 0.5 - deep * 0.5)
+	var middle := Vector2(0.0, form.upper_back() - deep * 0.5)
 	var outline := CageMesh.polygon(1.0, 32) if form.tower_round \
 		else CageMesh.polygon(sqrt(2.0), 4, PI * 0.25)
 	# Redonda: la elipse del ancho y el fondo; cuadrada: el rectángulo.
@@ -408,19 +427,27 @@ func _tower(form: CageShape, side: float, tall: float, pit: DeskPit) -> void:
 ## ── LA ESPALDA ──────────────────────────────────────────────────────────────────────────────────────────────────
 
 ## El hueco de un recurso y la batería metida, abajo; arriba, la mochila del jetpack con el bisel abajo y tres toberas
-## cortas en el bisel (sólo se ven).
-func _back(side: float, tall: float) -> void:
-	var half := side * 0.5
+## cortas en el bisel (sólo se ven). En la cara de atrás: en la cuadrada, la de la caja; en la redonda, el cuadrado de atrás
+## del cubo chanfleado (`low` a `tall`, de `side` de ancho).
+func _back(form: CageShape) -> void:
+	var half := form.side() * 0.5
+	var low := 0.0
+	var tall := form.height()
+	var side := form.side()
+	if form.is_round():
+		low = form.bubble_y() - form.side_face_half()
+		tall = form.bubble_y() + form.side_face_half()
+		side = form.side_face_half() * 2.0
 	var face := half + 0.005
 	var size := 0.72 * SLOTS_K
-	for at: Vector3 in [Vector3(-SLOTS_X, SLOTS_Y, face), Vector3(SLOTS_X, SLOTS_Y, face)]:
+	for at: Vector3 in [Vector3(-SLOTS_X, low + SLOTS_Y, face), Vector3(SLOTS_X, low + SLOTS_Y, face)]:
 		for s: float in [-1.0, 1.0]:
 			_part(Vector3(0.08, size + 0.16, 0.06), at + Vector3(s * (size + 0.08) * 0.5, 0.0, 0.02), RIM_COLOR)
 			_part(Vector3(size + 0.16, 0.08, 0.06), at + Vector3(0.0, s * (size + 0.08) * 0.5, 0.02), RIM_COLOR)
 		_part(Vector3(size, size, 0.02), at, HOLE)
-	var hole := Vector3(-SLOTS_X, SLOTS_Y, face)
+	var hole := Vector3(-SLOTS_X, low + SLOTS_Y, face)
 	_part(Vector3(size + 0.16, 0.05, 0.22 * SLOTS_K), hole + Vector3(0.0, -(size + 0.16) * 0.5, 0.12 * SLOTS_K), DARK)
-	var slot := Vector3(SLOTS_X, SLOTS_Y, face)
+	var slot := Vector3(SLOTS_X, low + SLOTS_Y, face)
 	var k := SLOTS_K
 	_part(Vector3(0.63, 0.63, 0.3) * k, slot, CELL)
 	_part(Vector3(0.65, 0.08, 0.32) * k, slot + Vector3(0.0, 0.18 * k, 0.0), CELL.darkened(0.3))
@@ -428,7 +455,7 @@ func _back(side: float, tall: float) -> void:
 		Clay.cylinder(_root, 0.05 * k, 0.08 * k, slot + Vector3(bx * k, 0.355 * k, 0.05 * k), DARK)
 	_part(Vector3(0.3, 0.05, 0.04) * k, slot + Vector3(0.0, -0.1 * k, 0.16 * k), DARK)
 	# La mochila: del hueco + 40 cm de aire hasta arriba del cubo.
-	var from := SLOTS_Y + 0.33 + 0.4 + 0.1
+	var from := low + SLOTS_Y + 0.33 + 0.4 + 0.1
 	var to := tall - 0.05
 	var wide := minf(1.6, side - 0.4)
 	_prism(0.0, wide, PackedVector2Array([Vector2(half, from), Vector2(half, to), Vector2(half + PACK_DEPTH, to),

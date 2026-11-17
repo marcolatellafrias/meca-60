@@ -15,12 +15,35 @@ extends Resource
 ##   · ATRÁS, LA TORRE DEL ARTILLERO, siempre contra el borde de atrás: redonda o cuadrada, su ancho y su fondo (nunca
 ##     más hondo que ancho) y los ojos del artillero sobre el piso de arriba. Si es más grande de lo que deja el
 ##     octógono, se mete en el pozo: se ve.
+##   · DOS TORSOS (`torso`, 17/11/2026, el usuario: «dos torsos distintos para la meca y que yo pueda irlos cambiando en
+##     base a mis necesidades»): LA CUADRADA, la caja de siempre (el padding, el piso y el techo); y LA REDONDA, un cuerpo
+##     de cubo chanfleado que es el pegamento entre la cápsula y el módulo de arriba («el cuerpo es como la glue…
+##     podés aumentar su tamaño para que los otros módulos encajen bien»): su talle (`body_size`, de la cápsula con su
+##     marco al octógono de arriba) y su chanfle (`body_chamfer`). Arriba, en la redonda, el pozo va en un octógono
+##     (`octagon_apothem`) que más adelante puede girar aparte. Todo lo demás (la cápsula, el pozo, la torre, los
+##     tableros, los brazos y las piernas) es lo mismo en las dos; las medidas del cuerpo (`side`, `height`,
+##     `bubble_y`, `side_face_half`) las da cada torso.
 ## *Hasta el 16/11/2026 la burbuja era una esfera donde iba la persona entera, y su radio salía del cuerpo (1,45 m
 ## sentado derecho; 0,85 a 1,00 recostado).*
 
 const SAVED := "res://game/mech/cage/cage_shape.tres"
 static var current := CageShape.saved()
 
+@export_group("El cuerpo")
+## EL TORSO: la cuadrada (la caja) o la redonda (el cubo chanfleado).
+@export_enum("cuadrada", "redonda") var torso := 0
+## LA REDONDA: EL TALLE DEL CUERPO, de 0 (su cara de adelante, justo la cápsula con su marco) a 1 (su cara de arriba,
+## justo el octógono de arriba); más de 1, más grande.
+@export_range(0.0, 1.5, 0.01) var body_size := 1.0
+## LA REDONDA: EL CHANFLE, de 0 (parejo: el rombicuboctaedro, como la cápsula) a 1 (el cubo, sin chanfle). Las caras de
+## adelante y de arriba quedan del mismo tamaño: el talle no cambia lo que encaja.
+@export_range(0.0, 0.95, 0.01) var body_chamfer := 0.0
+## LA CUADRADA: el espacio entre la burbuja y los costados (m).
+@export_range(0.05, 1.5, 0.01) var padding := 0.35
+## LA CUADRADA: el grosor del piso, debajo de la burbuja (m).
+@export_range(0.05, 1.5, 0.01) var floor_thick := 0.25
+## LA CUADRADA: el grosor del techo, encima de la burbuja (m): sobre él va el módulo de arriba.
+@export_range(0.05, 1.5, 0.01) var ceiling_thick := 0.25
 @export_group("La cápsula de abajo")
 ## LA CÁPSULA FACETADA del que maneja (ver CageCabin._capsule): del centro (los ojos) a sus caras (m).
 @export_range(0.5, 1.5, 0.01) var bubble_radius := 0.75
@@ -34,19 +57,13 @@ static var current := CageShape.saved()
 @export_range(0.05, 2.0, 0.01) var glass_spread := 0.8
 @export_range(0.0, 0.6, 0.01) var glass_smudges := 0.3
 @export_range(0.01, 0.15, 0.005) var glass_pixel := 0.035
-## El espacio entre la burbuja y los costados (m).
-@export_range(0.05, 1.5, 0.01) var padding := 0.35
-## El grosor del piso, debajo de la burbuja (m).
-@export_range(0.05, 1.5, 0.01) var floor_thick := 0.25
-## EL MARGEN EXTRA: cuánto baja el piso de la cabina por debajo de la burbuja, dentro del piso (m; nunca más que el
+## EL MARGEN EXTRA: cuánto baja el piso de la cabina por debajo de la burbuja (m; en la cuadrada, nunca más que el
 ## piso). No cambia el módulo: baja al que va sentado (el usuario, 16/11/2026: «aprovechar el padding de abajo del
 ## piso… para bajar la silla»).
 @export_range(0.0, 1.5, 0.01) var floor_gap := 0.25
 ## LA ALTURA DE LA SILLA: la pelvis sobre el piso de la cabina (m), la misma para todos. Con un tope por abajo para
 ## cada uno: el largo de su canilla hasta la suela, así los pies no atraviesan el piso (ver BubbleSeat).
 @export_range(0.2, 1.2, 0.01) var seat_height := 0.42
-## El grosor del techo, encima de la burbuja (m): sobre él va el módulo de arriba.
-@export_range(0.05, 1.5, 0.01) var ceiling_thick := 0.25
 ## EL MARCO DE LA BURBUJA (el de la maqueta 166): un anillo sobre la cara, centrado en el borde del vidrio; su ancho y
 ## cuánto sobresale de la cara (m). Con ancho 0, no hay marco.
 @export_range(0.0, 0.4, 0.005) var rim_width := 0.09
@@ -77,8 +94,8 @@ static var current := CageShape.saved()
 @export_range(0.45, 0.98, 0.01) var leg_stretch := 0.64
 ## Cuánto salen los hombros del costado (m de la meca grande, con el grosor de mediano; se achica con el cuerpo).
 @export_range(0.0, 3.0, 0.05) var shoulder_out := 0.0
-## Cuánto se adelantan los hombros (ver CageCabin.shoulder): 0, al medio del costado; 1, lo más adelante sin salirse de
-## la caja.
+## Cuánto se adelantan los hombros (ver CageCabin.shoulder): 0, al medio de la cara del costado; 1, lo más adelante sin
+## salirse de ella. La misma regla en los dos torsos.
 @export_range(0.0, 1.0, 0.01) var shoulder_forward := 0.0
 
 
@@ -109,25 +126,88 @@ func pit_apothem() -> float:
 	return edge * cell / (2.0 * tan(PI / 8.0))
 
 
-## El lado del módulo de abajo (y del de arriba), de ancho y de fondo.
+## ── LAS MEDIDAS DEL CUERPO, LAS DE CADA TORSO ──────────────────────────────────────────────────────────────────────
+
+func is_round() -> bool:
+	return torso == 1
+
+
+## El lado del cuerpo, de ancho y de fondo (en la cuadrada, también el del módulo de arriba).
 func side() -> float:
+	if is_round():
+		return 2.0 * body_half()
 	return 2.0 * (capsule_radius() + padding)
 
 
-## El alto del módulo de abajo: piso, burbuja y techo (el usuario: «el grosor del piso y el techo del módulo de abajo…
-## dos perillas independientes»).
+## El alto del cuerpo; arriba de él va el piso del módulo de arriba. La cuadrada: piso, burbuja y techo (el usuario: «el
+## grosor del piso y el techo del módulo de abajo… dos perillas independientes»); la redonda, su cubo.
 func height() -> float:
+	if is_round():
+		return 2.0 * body_half()
 	return floor_thick + 2.0 * capsule_radius() + ceiling_thick
+
+
+## La altura del centro del vidrio, desde el fondo: en la redonda, el centro del cuerpo.
+func bubble_y() -> float:
+	if is_round():
+		return body_half()
+	return floor_thick + capsule_radius()
 
 
 ## El piso de la cabina, desde el fondo: debajo de la burbuja lo que diga el margen extra.
 func cabin_floor() -> float:
-	return maxf(floor_thick - floor_gap, 0.0)
+	return maxf(bubble_y() - capsule_radius() - floor_gap, 0.0)
 
 
-## La altura del centro del vidrio, desde el fondo.
-func bubble_y() -> float:
-	return floor_thick + capsule_radius()
+## LA MITAD DEL ANCHO DE LA CARA DEL COSTADO, donde va el hombro (ver CageCabin.shoulder): en la cuadrada, la del cubo;
+## en la redonda, la del cuadrado del costado del cubo chanfleado.
+func side_face_half() -> float:
+	if is_round():
+		return body_half() * _chamfer_share()
+	return side() * 0.5
+
+
+## ── LA REDONDA ─────────────────────────────────────────────────────────────────────────────────────────────────────
+
+## La cápsula con su marco, de mitad: hasta el borde de afuera del marco (CageMesh.outline_ring lo corre hacia afuera
+## por las puntas del octógono).
+func framed_capsule() -> float:
+	return capsule_radius() + rim_width * cos(PI / 8.0)
+
+
+## LO QUE EL OCTÓGONO DE ARRIBA TIENE DE PARED alrededor del tablero del pozo (m).
+const OCTAGON_WALL := 0.15
+
+
+## EL APOTEMA DEL OCTÓGONO DE ARRIBA de la redonda: el borde del tablero del pozo (DeskPit.rim) y su pared.
+func octagon_apothem() -> float:
+	return pit_apothem() + DeskPit.DEPTH * cos(deg_to_rad(desk_tilt)) + OCTAGON_WALL
+
+
+## La mitad de la cara de adelante (y de arriba) en partes de la mitad del cuerpo: donde la corta el chanfle de la arista.
+func _chamfer_share() -> float:
+	return sqrt(2.0) * lerpf(1.0, sqrt(2.0), body_chamfer) - 1.0
+
+
+## LA MITAD DEL CUERPO REDONDO: la que hace que su cara mida, de mitad, lo de la cápsula con su marco (talle 0) o lo del
+## octógono (talle 1).
+func body_half() -> float:
+	return lerpf(framed_capsule(), octagon_apothem(), body_size) / _chamfer_share()
+
+
+## CUÁNTO SE HUNDE EL OCTÓGONO EN EL CUERPO, debajo de su cara de arriba: nada si entra en ella; si es más ancho, lo
+## que hace falta para que el cuerpo lo cubra (el chanfle de la arista lo abraza).
+func octagon_sink() -> float:
+	if not is_round():
+		return 0.0
+	var half := body_half()
+	var edge := half * sqrt(2.0) * lerpf(1.0, sqrt(2.0), body_chamfer)
+	return maxf(half - (edge - octagon_apothem()), 0.0)
+
+
+## EL BORDE DE ATRÁS DEL MÓDULO DE ARRIBA, desde el centro (la torre va contra él): el de la caja o el del octógono.
+func upper_back() -> float:
+	return octagon_apothem() if is_round() else side() * 0.5
 
 
 ## El fondo de la torre: nunca más que su ancho.

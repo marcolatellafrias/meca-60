@@ -17,6 +17,10 @@ extends RefCounted
 const DEPTH := 11 * ProceduralDashboard.CELL
 
 var side := 3.2
+## EN LA REDONDA, AFUERA ES UN OCTÓGONO de este apotema (0: el cuadrado de `side`), y sus paredes bajan `sink` por
+## debajo del piso (lo que se hunde en el cuerpo; ver CageShape.octagon_sink).
+var outer_octagon := 0.0
+var sink := 0.0
 var radius := 0.6
 var tilt := 45.0
 var eye := 1.38
@@ -76,6 +80,16 @@ func build(tool: SurfaceTool) -> void:
 			normal = -normal
 		CageMesh.face(tool, [_at(inner[k], bottom), _at(inner[j], bottom), _at(outer[j], high), _at(outer[k], high)],
 			normal)
+	if outer_octagon > 0.0:
+		# LA REDONDA: lo alto, del borde del tablero al octógono de afuera; y sus ocho paredes, hasta abajo del piso.
+		var ring := _octagon(outer_octagon)
+		for k in 8:
+			var j := (k + 1) % 8
+			CageMesh.face(tool, [_at(outer[k], high), _at(outer[j], high), _at(ring[j], high), _at(ring[k], high)],
+				Vector3.UP)
+			var out := _at((ring[k] + ring[j]) * 0.5, 0.0).normalized()
+			CageMesh.face(tool, [_at(ring[k], -sink), _at(ring[j], -sink), _at(ring[j], high), _at(ring[k], high)], out)
+		return
 	# Lo alto: del octógono al cuadrado.
 	CageMesh.fill_to_square(tool, outer, side * 0.5, func(p: Vector2) -> Vector3: return _at(p, high), Vector3.UP)
 	# Las cuatro paredes de afuera.

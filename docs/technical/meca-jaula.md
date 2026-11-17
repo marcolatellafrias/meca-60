@@ -20,6 +20,23 @@ Los brazos y las piernas son **los de sus perillas de «Brazos y piernas» al 30
 las piernas y cuánto salen los hombros; `CageCabin.body`, `MechBody.shrink`). La cabina
 **sale de pocas perillas** (`CageShape`, guardadas en `game/mech/cage/cage_shape.tres`; el F2 de su fila,
 `CageShapePanel`; el usuario: «controlar el tamaño de la meca y de los módulos sin tener tantos sliders»):
+- **El cuerpo: dos torsos** (17/11/2026, el usuario: «dos torsos distintos para la meca y que yo pueda irlos cambiando
+  en base a mis necesidades»; `torso`). Comparten la cápsula, el pozo, la torre, los tableros, las sillas, los brazos y
+  las piernas; cambia sólo el cuerpo, y cada uno da sus medidas (`side`, `height`, `bubble_y`, `side_face_half`):
+  - **La cuadrada**: la caja de siempre (el padding, el piso y el techo).
+  - **La redonda**: un **cubo chanfleado** (`CageMesh.chamfered_body`) que es **el pegamento** entre la cápsula y el
+    módulo de arriba («el cuerpo es como la glue… podés aumentar su tamaño para que los otros módulos encajen bien»).
+    Dos perillas: **el talle** (`body_size`: 0, su cara de adelante es justo la cápsula con su marco; 1, su cara de
+    arriba es justo el octógono de arriba; más, más grande) y **el chanfle** (`body_chamfer`: 0, parejo como la
+    cápsula; hacia 1, un cubo con las esquinas cortadas). La cápsula va en la cara de adelante, como en la caja. Arriba,
+    el pozo de siempre en **un octógono** (`octagon_apothem`: el borde del tablero y 15 cm de pared; `DeskPit.outer_octagon`)
+    que, si es más ancho que la cara de arriba, sale de más adentro del cuerpo (`octagon_sink`); más adelante puede girar
+    aparte del cuerpo («gira independientemente de esa sección cilíndrica sin que desentone tanto con la parte de
+    abajo»). Las medidas: a la medida del octógono, 5,0 m; a la de la cápsula, 4,6 m; con el chanfle a la mitad, 2,9 m.
+  - **El hombro, una sola regla** («que el plano de ese cuadrado se centre en ese cuadrado y que el offset… funcione
+    ahí»): en el centro de la cara del costado (en la redonda, su cuadrado), adelantado `shoulder_forward` hasta el borde
+    de adelante de esa cara.
+  - *La caja física de la meca (la de los golpes) sigue siendo una caja del tamaño del cuerpo también en la redonda.*
 - **La cápsula de abajo**: el radio de la cápsula, el vidrio (liso o facetado, su degradé y sus manchas), su marco (ancho y cuánto sale de la cara; un
   anillo, `CageMesh.ring`), el padding de los costados, los grosores del piso
   y del techo, el margen extra (cuánto baja el piso de la cabina por
@@ -143,7 +160,8 @@ Medido ese día: un golpe suave la inclina 18° y vuelve; uno fuerte la tira y s
 con el cañón, imprime lo que mide y saca una hoja (de afuera, desde los ojos del que maneja, caminando, el palo, el
 cañón). Medido el 17/11/2026, antes y después de borrar la meca grande, igual: la caja de 3,08 × 2,48 × 3,08 m, la
 cintura a 3,07 m, camina 7,6 m en 2 s y la mano del palo llega a 20 m/s.
-Más: `tests/cage_boards_look` (los tableros), `tests/folding_arm_check` (los brazos plegables),
+Más: `tests/cage_torsos_look` (los dos torsos: la cuadrada y tres redondas, con sus medidas, de afuera y desde los
+dos puestos), `tests/cage_boards_look` (los tableros), `tests/folding_arm_check` (los brazos plegables),
 `tests/cage_boarding_check` (subirse con la E), `tests/frame_rebuild_check` (rearmarla con gente adentro),
 `tests/crouch_time_check`, `tests/feet_ground_check`, `tests/equipment_check`, `tests/arm_tips_look`.
 

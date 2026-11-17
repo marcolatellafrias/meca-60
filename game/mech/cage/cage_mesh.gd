@@ -245,3 +245,62 @@ static func commit(tool: SurfaceTool, color: Color) -> ArrayMesh:
 	var mesh := tool.commit()
 	mesh.surface_set_material(0, Clay.material(color))
 	return mesh
+
+
+## ── EL CUERPO CHANFLEADO (el torso redondo; ver CageShape.torso) ────────────────────────────────────────────────────
+## Lo que se corta del triángulo de la esquina en un cubo chanfleado parejo (el rombicuboctaedro), en apotemas.
+const CORNER_UNIFORM := 1.0557
+
+
+## UN CUBO DE MITAD `half` CON LAS ARISTAS Y LAS ESQUINAS CORTADAS, centrado en `center`: con `chamfer` 0, el
+## rombicuboctaedro (todas las caras cuadradas iguales, como la cápsula); con 1, el cubo. Cada cara es su plano recortado
+## por los demás: [{points, normal}].
+static func chamfered_body(center: Vector3, half: float, chamfer: float) -> Array[Dictionary]:
+	var planes: Array = []
+	for axis: Vector3 in [Vector3.RIGHT, Vector3.UP, Vector3.BACK]:
+		planes.append([axis, half])
+		planes.append([-axis, half])
+	var edge := half * lerpf(1.0, sqrt(2.0), chamfer)
+	for a: float in [-1.0, 1.0]:
+		for b: float in [-1.0, 1.0]:
+			for normal: Vector3 in [Vector3(a, b, 0.0), Vector3(a, 0.0, b), Vector3(0.0, a, b)]:
+				planes.append([normal.normalized(), edge])
+	var corner := half * lerpf(CORNER_UNIFORM, sqrt(3.0), chamfer)
+	for a: float in [-1.0, 1.0]:
+		for b: float in [-1.0, 1.0]:
+			for c: float in [-1.0, 1.0]:
+				planes.append([Vector3(a, b, c).normalized(), corner])
+	var out: Array[Dictionary] = []
+	for i in planes.size():
+		var normal: Vector3 = planes[i][0]
+		var u := normal.cross(Vector3.UP if absf(normal.y) < 0.9 else Vector3.RIGHT).normalized()
+		var w := normal.cross(u)
+		var big := half * 10.0
+		var origin: Vector3 = normal * planes[i][1]
+		var points: Array = [origin + (u + w) * big, origin + (u - w) * big, origin + (-u - w) * big, origin + (-u + w) * big]
+		for j in planes.size():
+			if j != i:
+				points = _clip(points, planes[j][0], planes[j][1])
+			if points.size() < 3:
+				break
+		if points.size() >= 3:
+			var moved: Array = []
+			for p: Vector3 in points:
+				moved.append(center + p)
+			out.append({"points": moved, "normal": normal})
+	return out
+
+
+## Lo de `points` que queda del lado de adentro del plano (normal · p ≤ distancia).
+static func _clip(points: Array, normal: Vector3, distance: float) -> Array:
+	var out: Array = []
+	for i in points.size():
+		var a: Vector3 = points[i]
+		var b: Vector3 = points[(i + 1) % points.size()]
+		var da := normal.dot(a) - distance
+		var db := normal.dot(b) - distance
+		if da <= 1e-5:
+			out.append(a)
+		if (da <= 1e-5) != (db <= 1e-5):
+			out.append(a.lerp(b, da / (da - db)))
+	return out

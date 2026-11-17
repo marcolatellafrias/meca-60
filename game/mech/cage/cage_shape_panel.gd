@@ -1,11 +1,15 @@
 class_name CageShapePanel
 extends KnobsPanel
 
-## LA FORMA DE LA MECA JAULA (F2 en su fila; ver CageShape, CageCabin): una pestaña por módulo. Como todos los paneles de
-## perillas (KnobsPanel): se mueve un borrador, y «Guardar» o «Volver a lo guardado» rearman las mecas con eso.
+## LA FORMA DE LA MECA JAULA (F2 en su fila; ver CageShape, CageCabin): una pestaña por módulo, y la primera, EL CUERPO:
+## el torso (la cuadrada o la redonda) y las perillas de cada uno. Como todos los paneles de perillas (KnobsPanel): se
+## mueve un borrador, y «Guardar» o «Volver a lo guardado» rearman las mecas con eso.
 
 const PANEL_WIDTH := 400.0
 const LABELS := {
+	"torso": "el torso: la cuadrada (la caja) o la redonda (el cubo chanfleado)",
+	"body_size": "la redonda: el talle (0, la cápsula con su marco; 1, el octógono de arriba)",
+	"body_chamfer": "la redonda: el chanfle (0, parejo como la cápsula; 1, casi un cubo)",
 	"bubble_radius": "cápsula: del centro a las caras (m)",
 	"glass_smooth": "vidrio liso (si no, facetado)",
 	"glass_clear": "vidrio: lo claro, adelante",
@@ -13,9 +17,9 @@ const LABELS := {
 	"glass_spread": "vidrio: cuánto ocupa lo claro",
 	"glass_smudges": "vidrio: cuánto se notan las manchas",
 	"glass_pixel": "vidrio: el tamaño de los cuadraditos de las manchas (m)",
-	"padding": "padding de los costados (m)",
-	"floor_thick": "grosor del piso, debajo de la burbuja (m)",
-	"ceiling_thick": "grosor del techo, encima de la burbuja (m)",
+	"padding": "la cuadrada: padding de los costados (m)",
+	"floor_thick": "la cuadrada: grosor del piso, debajo de la burbuja (m)",
+	"ceiling_thick": "la cuadrada: grosor del techo, encima de la burbuja (m)",
 	"floor_gap": "margen extra: el piso de la cabina, debajo de la burbuja (m)",
 	"seat_height": "altura de la silla: la pelvis sobre el piso (m; nunca con los pies abajo del piso)",
 	"rim_width": "marco de la cápsula en la cara: ancho (m; 0, sin marco)",
@@ -38,7 +42,7 @@ const LIMB_LABELS := {
 	"shoulder_out": "cuánto salen los hombros del costado (m)",
 	"shoulder_forward": "cuánto se adelantan los hombros (0, al medio; 1, al frente sin salirse)",
 }
-const TABS: Array[String] = ["La cápsula de abajo", "El tablero de arriba", "La torre", "Brazos y piernas"]
+const TABS: Array[String] = ["El cuerpo", "La cápsula de abajo", "El tablero de arriba", "La torre", "Brazos y piernas"]
 
 
 func setup_panel() -> void:
@@ -79,5 +83,7 @@ func _measure() -> void:
 	if shape == null:
 		return
 	var pit := CageCabin.pit_of(shape)
-	say("abajo: %.2f m de lado y %.2f de alto · el bloque de arriba: %.2f m de alto · la torre deja %.2f m hasta el pozo" % [
-		shape.side(), shape.height(), pit.top(), shape.side() * 0.5 - pit.rim() - shape.tower_deep()])
+	var torso := "redonda" if shape.is_round() else "cuadrada"
+	var sunk := " (se hunde %.2f m en el cuerpo)" % shape.octagon_sink() if shape.octagon_sink() > 0.0 else ""
+	say("%s: el cuerpo, %.2f m de lado y %.2f de alto · arriba, %.2f m de alto%s · la torre deja %.2f m hasta el pozo" % [
+		torso, shape.side(), shape.height(), pit.top(), sunk, shape.upper_back() - pit.rim() - shape.tower_deep()])
