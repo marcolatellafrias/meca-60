@@ -7,7 +7,7 @@ extends RefCounted
 ## «Volver a lo guardado». Una sola pieza para todos, así se guarda igual en todos lados.
 ##   · `skip`: perillas que no se guardan ni se vuelven a lo guardado, porque las pone otra cosa. En el archivo quedan las
 ##     del código. (Hoy no lo usa nadie: cada número tiene un solo dueño.)
-##   · LOS ARCHIVOS SON DEL USUARIO: no se suben al repositorio (como el de la forma, game/consoles/cabin_shape.tres).
+##   · LOS ARCHIVOS SON DEL USUARIO: no se suben al repositorio (como el de la forma de la jaula, game/mech/cage/cage_shape.tres).
 ##   · Los paneles que las muestran son KnobsPanel: borrador, «Guardar» y «Volver a lo guardado».
 
 

@@ -1,15 +1,22 @@
 # Meca
 
-Juego cooperativo (de 1 a 4 jugadores) de una **meca gigante manejada desde adentro** contra **mecas enemigas** (los
-jefes, que maneja la computadora) en una arena. Cada jugador maneja una parte de la meca desde su puesto (piernas, brazos…); cuando algo se rompe hay que
-reacomodarse, salir afuera a reparar o ir a buscar recursos. Entre peleas, un hangar con oficina: contratos,
-reparaciones con plata y cargar la meca. Hecho en **Godot 4.5** (GDScript), física con **Jolt**. Empezado el 11/11/2026;
-hoy es un **boceto para probar la idea**, de a uno.
+Juego cooperativo de **1 a 3 jugadores** que manejan **una meca a escala humana desde adentro** —la **meca jaula**—
+contra **mecas enemigas** (los jefes, que maneja la computadora) en una arena. Cada jugador maneja una parte desde su
+puesto, y los tres van apilados y centrados: **abajo la cápsula del que maneja**, **arriba el pozo del de los brazos** y
+**atrás la torre del artillero** (para uno, sólo la cápsula; para dos, la cápsula y el pozo). Cuando algo se rompe hay
+que reacomodarse, salir afuera a reparar o ir a buscar recursos. Entre peleas, la sucursal: contratos, reparaciones con
+plata y cargar la meca. Hecho en **Godot 4.5** (GDScript), física con **Jolt**. Empezado el 11/11/2026; hoy es un
+**boceto para probar la idea**, de a uno.
 
 Varias piezas vienen de `D:\Godot\taxi` (el sandbox, las opciones, el lanzador de ventana), que a su vez las trajo de
-`D:\Godot\character-parametric`. Y de character-parametric directo, el 11/11/2026, **el personaje, agarrar, sentarse y
-la red** (con la pausa y el menú de inicio de allá): el jugador es el personaje de allá. Qué se trajo, qué se adaptó y
-dónde se cortó (la ciudad, el tránsito, la nave), en `docs/technical/personajes-traidos.md`.
+`D:\Godot\character-parametric`. Y de character-parametric directo, **el personaje, agarrar, sentarse y la red** (con la
+pausa y el menú de inicio de allá; el jugador es el personaje de allá) y, el 17/11/2026, **los controles** (botón,
+palanca, perilla, volante, la inercia, la red de los controles). Qué se trajo y qué se adaptó, en
+`docs/technical/personajes-traidos.md` y `docs/technical/tableros.md`.
+
+*Hasta el 17/11/2026 había una meca grande (de 14 m, con cinco cabinas, la arena de esquivar y el laboratorio
+cinemático): se borró entera (el usuario: «limitarnos solamente a un approach de meca a una escala más humana»); está en
+el commit `0bcaeaf`.*
 
 ## La documentación: `docs/`
 Una bóveda de Obsidian, separada en **conceptual** (`docs/conceptual/`: el diseño del juego —el loop, la tripulación, la
@@ -24,157 +31,105 @@ fila en `docs/technical/filas.md` (lo pidió el usuario el 12/11/2026: «me gust
 también»). Nada queda huérfano.
 
 ## Decisiones tomadas
-- **Todo es equilibrio, no estadísticas**: no hay vida. La caja de la meca es **un cuerpo físico 1:1** (los jugadores
-  caminan adentro y por afuera): se mueve sólo con fuerzas e impulsos, nunca por código. Vale para caminar, saltar,
-  los propulsores y los dashes.
-- **El equilibrio es un péndulo** (12/11/2026, en `Mech`): el torso siempre va adelante y un punto de apoyo en el
-  piso lo sigue. Una piña saca al torso de arriba de los pies (se inclina y, si no lo alcanzan, cae); una pared lo frena
-  y los pies se plantan (no cae a ninguna velocidad). La otra variante, la línea de equilibrio, queda en la fila Cubo
-  con piernas por si se vuelve a ella.
-- **DOS CAMINOS, BIFURCADOS** (13/11/2026: «bifurcar el progreso… un approach más físico o más discreto»). Comparten
-  todo —el péndulo, los pisos, el afuera, el ascensor, las piernas— menos los brazos:
-  - **Meca discreta** (el más probable): peleas contra jefes NPC, con zonas que esquivar y proyectiles. Los brazos
-    (`PoseArm`) se dibujan en su pose, atraviesan lo que haya y, al conectar, le dan un impulso a lo que tocan.
-  - **Meca física**: arena entre dos grupos de jugadores. Los brazos (`MuscleArm`) son cuerpos con músculos que chocan,
-    se traban y ceden.
-  Lo que se le pide a un brazo (posturas, piñas, la pose) está una sola vez, en `MechArm`. Los límites de cada camino
-  moldean sus features; lo común (consolas, reparación, energía) se hace una vez.
-- **Toda escalera se arma con `Stairs`** (13/11/2026; ver docs/technical/escaleras.md): los escalones de 15 cm los ven sólo los
-  pies (capa Escalones) y la cápsula pisa una rampa invisible por los rincones de abajo (capa Rampa). Nunca una rampa
-  sola ni escalones sólidos para la cápsula.
+- **De 1 a 3 jugadores, una sola meca** (17/11/2026): la meca jaula. Más de tres puestos no dejan ver bien; cada puesto
+  ve, y van apilados y centrados (ver docs/conceptual/la-meca.md y tripulacion.md).
+- **Dos torsos** para la misma meca, a elegir en su F2: **la cuadrada** (la caja de hoy) y **la redonda** (el cuerpo
+  de cubo chanfleado como pegamento, con la misma cápsula abajo y el octógono del pozo arriba, que más adelante puede
+  girar aparte). Comparten la cápsula, el pozo, la torre, los tableros, los brazos y las piernas.
+- **Los controles son de tres botones**: **E** subir y bajar; **clic izquierdo** interactuar; **clic derecho mantenido**
+  el modo de un control (la mano va a él, la mirada se va sola adonde se lo maneja). Para jugar solo, más adelante,
+  modos que capturan el teclado. Ver docs/conceptual/la-meca.md.
+- **Los tableros van en las caras, en una grilla de 4 cm** (`FaceBoard`), y cada pieza sobre su base de exactamente
+  sus celdas (`FaceMount`), como la nave de character-parametric; lo que lleva tableros se mide en celdas enteras. Lo
+  otro que se muestra va en la punta de un brazo de dos articulaciones (`FoldingArm`). Ver docs/technical/tableros.md.
+- **Los brazos de la meca, uno por uno**: cada brazo elige ser discreto (`PoseArm`, se dibuja en su pose) o físico
+  (`MuscleArm`, músculos que persiguen la pose) y qué lleva en la punta (puño, puño pesado, palo, taladro, sierra,
+  cañón; ver docs/technical/brazo.md). Lo que se le pide a un brazo está una sola vez, en `MechArm`.
+- **El cuerpo con equilibrio es la base común de la meca y los jefes** (`BalanceBody`, ver docs/technical/base-comun.md):
+  la jaula se mueve cinemática (`KinematicMover`) y la de práctica con el péndulo físico.
+- **Toda escalera se arma con `Stairs`** (13/11/2026; ver docs/technical/escaleras.md).
 - **El cuerpo de la meca se define una sola vez** (`MechBody`: medidas, piernas, brazos). Sin cabeza.
-- Los jefes, cuando lleguen: **pocos arquetipos hechos a mano**, con **las partes por semilla**, **partes que se
-  rompen** y **afijos** encima. Nada de piezas del bicho en la meca ni de sistema Némesis por ahora.
-- Entre peleas: el hangar como oficina, los contratos, los arreglos que cuestan plata y cargar la meca (con espacio
+- Los jefes: **pocos arquetipos hechos a mano**, con **las partes por semilla**, **partes que se rompen** y **afijos**
+  encima.
+- Entre peleas: la sucursal como oficina, los contratos, los arreglos que cuestan plata y cargar la meca (con espacio
   limitado, sin sistema de peso).
-- **Falta**: las consolas, la reparación, la energía, propulsores laterales y dashes.
-- *Borrado el 13/11/2026: la meca de pelea vieja con su rival (de ahí salió la regla del puño que barre su camino, hoy
-  en `PoseArm`), la meca de equilibrio, el cubo físico y las filas Cubo y Cubo péndulo (sus clases quedan: son la base
-  de la meca).*
 
 ## Cómo se prueba hoy
 **El jugador es el personaje de character-parametric**: arranca como ente (sin cuerpo, movimiento directo, **V** o la
 **B** corta vuelan) y la **B** larga lo vuelve cuerpo (el gordo atlético: se cae, agarra con el clic izquierdo, se sienta con la **E**, empuja con
-la **R**). Sus teclas son las de allá (WASD, espacio, Ctrl, shift, E, R, V); Escape la pausa, que no frena el mundo.
-Las teclas **F** son de los **paneles** (TunerPanel): de parcela y de fila F1–F7, globales F9–F12. **Antes de agregar una
-fila, una tecla o un panel, leé `docs/technical/sandbox.md`** (las reglas se chequean al arrancar).
+la **R**). Sus teclas son las de allá (WASD, espacio, Ctrl, shift, E, R, V); Escape la pausa, que no frena el mundo;
+**Tab oculta toda la pantalla**. Las teclas **F** son de los **paneles** (TunerPanel): de parcela y de fila F1–F7,
+globales F9–F12. **Antes de agregar una fila, una tecla o un panel, leé `docs/technical/sandbox.md`** (las reglas se
+chequean al arrancar).
 
-**Poseer** (`SandboxPossession`): para probar de a uno lo que en el juego se maneja desde adentro. **Mirando** una meca
-o un cubo, la **O** lo posee (las teclas pasan a él y el jugador se apaga donde está); **O** otra vez lo suelta, y **se
-acuerda**: **O** sin mirar nada lo retoma. Poseyendo, la **T** pasa por tres vistas: **libre**, **tercera persona** y
-**primera persona** (sentado adentro). Un cartel abajo a la derecha dice qué se posee, la vista y **sus controles**. Se
-puede poseer lo que está en el grupo `possessable` y contesta `possess_name`, `possess_controls`, `possess_begin`,
-`possess_end` y `possess_camera(first, delta)`. Los personajes, todavía no.
+**Poseer** (`SandboxPossession`): **mirando** la meca, la **O** la posee (las teclas pasan a ella y el jugador se apaga
+donde está); **O** otra vez la suelta, y **se acuerda**: **O** sin mirar nada la retoma. Poseyendo, la **T** pasa por
+tres vistas: **libre**, **tercera persona** y **primera persona**. Un cartel abajo a la derecha dice qué se posee, la
+vista y **sus controles**. Se puede poseer lo que está en el grupo `possessable`.
 
-Las filas del sandbox (el detalle, en `docs/technical/filas.md`):
-
-**Meca discreta** y **Meca física** (`Mech`; una fila por camino, misma parcela con otros brazos, `Mech.Arms`): el péndulo con **tres pisos** de paredes de verdad (vidrio y parantes al frente, la puerta atrás),
-brazos, y una **meca de práctica adelante, sin brazos, para pegarle**. Poseída: W/S y A/D, el mouse gira el torso; **Shift corre**, **Ctrl
-se agacha** (acorta el palo del péndulo), **espacio** carga y suelta el **salto** y, en el aire, el **propulsor**. **F**
-cambia la postura de los brazos (normal, a los costados; cubriéndose, los puños cerrados adelante), y las piñas van por
-brazo: clic izquierdo / derecho el directo, Q / E el gancho, Z / C el uppercut, 1 / 3 desde arriba. Caída, se recogen.
-**F1** su panel; **N/M** pegarle arriba suave o fuerte, **L** el ascensor, **J/K** los tiros.
-**Afuera** (`MechExterior`): la pasarela en U de planta baja y, atrás, dos tramos paralelos con un balcón por piso
-(armado de superficies pisables, con la altura libre medida y las barandas donde hay caída). **El ascensor de la
-pelvis** (`PelvisLift`): la pelvis es un tambor redondo, la losa de abajo tiene un recorte con su baranda, y un piso
-redondo con cuatro parantes baja hasta quedar a un salto del suelo con la meca agachada; **G** poseída o la **L** lo mueven. **Adentro y afuera se camina** (**U** sube al piso del medio): es un marco (`MotionFrame`, en `MechCabin`); sus losas
-y paredes no chocan con el mundo (eso es de la caja 1:1), son de donde el marco copia su sombra, y la caja deja de
-chocar con los que van adentro. **El rayo al piso saltea lo que se mueve** (una persona en el ascensor no es piso).
-
-**Brazo** (`MuscleArm`): el brazo físico, solo en su fila. La idea de PuppetMaster: la IK (`MechBody.arm`) dice la pose
-y el cuerpo físico la persigue con músculos. El brazo y el antebrazo (con la mano) son cuerpos sueltos; **el hombro es
-una bola y el codo una bisagra**; un músculo por articulación, con resorte, freno y fuerza tope. De ahí sale solo que se
-trabe contra algo fijo, que ceda si le pegan, y que la piña valga la velocidad de la mano. **1–4** las piñas, **N** una
-pared, **J/K** bolas, **F1** su panel; poseído, el mouse lleva la mano. La mano (`MechHand`) es izquierda o derecha, una
-el espejo de la otra, montada por regla (el pulgar hacia donde dobla el codo, la palma hacia el cuerpo).
-
-**Cubo con piernas** (`LeggedCube`, en `game/archive/line_cube/`, hereda de `HoverCube`): **la otra variante de equilibrio, la línea** (no el péndulo), que
-se guarda por si se vuelve a ella. El cubo flota con un resorte vertical y parado no gira; un golpe lo corre y aparte lo
-inclina con la línea de equilibrio; al pasarla tropieza, cae con física y se recupera con toberas. Con pelvis, dos
-piernas de dibujo (pasos por radio) y el torso que gira aparte. **F1** su panel, **N/M** volcarlo, **J/K** las bolas. Archivada.
+**La fila Meca jaula** (`CageMech`, `CageCabin`; ver docs/technical/meca-jaula.md): la meca, la de práctica adelante y
+cajas para tirarles. **E** sobre la meca sienta en el primer puesto libre (manejo, brazos, artillero; 1–3 cambia);
+**U** sube a la cubierta; adentro se camina. Paneles: **F1** cómo se mueve, **F2** su forma (los dos torsos), **F3**
+los brazos, **F4** las piernas, **F5** lo que lleva cada brazo, **F6** las poses (temporal). **L** muestra la grilla de
+los tableros.
 
 **Las parcelas tienen paredes invisibles** (`SandboxParcel`): las ve lo que se mueve con física y vive en una parcela;
 el jugador y la bola pasan.
 
-**Recursos** (13/11/2026, `SupplyLook`; ver docs/conceptual/recursos.md): lo que se trae a la meca, sueltos para agarrarlos. **Todos son
-un cubo de 63 cm** que se agarra igual: la batería, el componente eléctrico, la caja de misiles, la caja de balas y la
-bomba (dinamita); al fondo, fijos, los cubos de la meca que muestran la munición que queda. Todavía no se enchufan en
-nada: la mecánica acordada (el indicador, acomodarse solo, un tipo por hueco, sacar el viejo antes, el gastado se
-desvanece) está en la nota.
-
-Más filas: **Personajes** (los seis arquetipos de allá, que se caen y se levantan; también con la bola), **Locomoción** (los seis corriendo, saltando, cayendo, llevando, tirando, atajando y chocando, solos; ver docs/technical/personajes-traidos.md), **Multijugador** (la red de allá: **H** abre sesión en esta
-compu y otra instancia se une con **J**, **G** abre por Steam, **K** va al menú de inicio para unirse por código, **L**
-sale) y **Partículas** (cada sistema en su poste; **M** cambia la malla de toda la fila). Por la red van los personajes
-y los objetos de esa parcela; **las mecas todavía no**.
+Más filas: **Recursos** (los cubos de 63 cm, ver docs/conceptual/recursos.md), **Personajes** y **Locomoción** (ver
+docs/technical/personajes-traidos.md), **Multijugador** (la red de allá: **H** abre sesión en esta compu y otra
+instancia se une con **J**, **G** abre por Steam, **K** va al menú de inicio, **L** sale), **Partículas**, **Píxeles**,
+el **Mapa de pelea**, la **Base** (la sucursal) y los **jefes** (el **Luchador de orugas** y las maquetas). Por la red
+van los personajes y los objetos de esa parcela; **la meca todavía no**.
 
 ## Dónde va cada cosa
 **El proyecto se trabaja en módulos, una sesión por módulo, en la misma carpeta y rama**: qué es de quién y por dónde
 se tocan, en [docs/modulos.md](docs/modulos.md). Tocar sólo lo propio; commitear sólo los archivos propios.
 
 Por feature: `game/<feature>/` (código y escenas juntos), los tests en `tests/`. La tabla completa, con las reglas que la
-ordenan y lo que todavía se le critica, en [docs/technical/estructura.md](docs/technical/estructura.md).
-- `game/balance_body/` — **el cuerpo con equilibrio, la base común de la meca y los jefes** (ver docs/technical/base-comun.md):
-  `BalanceBody` (la caja, el péndulo, caerse y volver, lo que se le pide; ganchos `_build`, `_think`, `_after_step`),
-  `BodyLegs`, `BodyNozzles`, `BodyMoves` (acá van los dashes) y `BodySettings` (las perillas).
-- `game/mech/` — **la meca, una clase con sus piezas aparte** (aplanada el 13/11/2026; antes eran tres clases apiladas):
-  `Mech` (hereda de `BalanceBody`; agrega cabina, teclas y brazos), `MechCabin` (los pisos, el marco;
-  con `MechExterior` y `PelvisLift`), `MechLeg` (una pierna), `MechKeys` (**el
-  único lugar que lee teclas**, y la cámara de poseer), `MechArm` (lo que se le pide a un brazo), `MechHand`,
-  `MechBody` (medidas e IK), `MechPanel` (F1),
-  `MechArchetype` (la parcela de las dos filas) y `Clay` (la arcilla de los bocetos).
-  **Lo que se le pide a la meca son variables** (`move`, `sprint`, `crouch`, `jump`, `aim_yaw`, `covering`, y `punch()`
-  en sus brazos): hoy las escribe `MechKeys`; mañana, las consolas o un jefe. Nada más lee teclas.
-- `game/pose_arm/` — **el brazo discreto**: `PoseArm` (se dibuja en la pose; el puño barre su camino y da un impulso).
-- `game/muscle_arm/` — **el brazo físico**: `MuscleArm` (las piezas, las articulaciones, los músculos y llevarlo a
-  mano), `MuscleArmSettings`, `MuscleArmPanel` (su F1) y `MuscleArmArchetype` (el torso fijo, el bloque y la pared).
-- `game/archive/` — **lo archivado** (como la fila Archivo del sandbox). Hoy, `line_cube/`: **la otra variante de
-  equilibrio, la línea, congelada y aparte**: `HoverCube` (flotar con resorte,
-  la línea, tropezar, recuperarse) y `LeggedCube` (pelvis, piernas, torso aparte), con sus perillas, paneles y parcela.
-  No comparte nada con la meca salvo `MechBody`, `MechLeg` y `Clay`. No se toca salvo que se vuelva a ella.
-- `game/supplies/` — **los recursos**: `SupplyLook` (el dibujo de cada cubo, lo que se lleva y lo que va en la meca),
-  `PackageArchetype` (el cuerpo que se agarra; su catálogo son esos cinco cubos), `PackageDamage` y `ObjectLotArchetype`
-  (el lote de recursos del sandbox).
-- `game/character/` también tiene `PeopleArchetype` (las personas del sandbox) y `CharacterGetUp` (que se levanten
-  solas).
-- `game/sandbox/` — el sandbox de parcelas (ver `docs/technical/sandbox.md`: cada módulo declara sus filas en su archivo de
-  filas; `SandboxCatalogue` las junta y chequea las reglas; crea al jugador), poseer (`SandboxPossession`), la bola de la J (`TestBall`) y la sesión de
-  red del sandbox (`SandboxSession`, `MultiplayerArchetype`). Las teclas reservadas, en `SandboxKey.RESERVED`. Poseyendo
-  sólo valen las de lo poseído.
-- `game/ui/` — la pausa (autoload `PauseMenu`, Escape), el menú de inicio (`main_menu.tscn`), las Opciones
-  (`GameOptions`, `user://opciones.cfg`), `UIState` y la consola.
-- Lo traído de character-parametric: `game/character/`, `game/interactables/`, `game/net/`,
-  `game/common/`, `game/debug/`… (ver `docs/technical/personajes-traidos.md`). **Ya es código de la meca**
-  (el usuario, 12/11/2026: «debería ser su propio código además, mejorado, simplificado, tailoreado para nuestro
-  caso»): se edita cuando hace falta, y lo que no se usa acá se puede ir sacando.
+ordenan, en [docs/technical/estructura.md](docs/technical/estructura.md).
+- `game/mech/` — **la meca**: `Mech` (hereda de `BalanceBody`; agrega la cabina, las teclas y los brazos), `MechCabin`
+  (la base de la cabina: el marco por el que se camina adentro), `MechLeg`, `MechKeys` (**el único lugar que lee
+  teclas**), `MechArm`, `MechHand`, `MechBody` (medidas e IK), `MechArchetype` (lo común de la parcela) y `Clay` (la
+  arcilla de los bocetos). **Lo que se le pide a la meca son variables** (`move`, `sprint`, `crouch`, `jump`, `aim_yaw`,
+  y `punch()` en sus brazos): hoy las escriben las teclas; mañana, los controles de los tableros.
+  - `game/mech/cage/` — **la meca jaula**: `CageMech`, `CageCabin` (la caja o el cuerpo, la cápsula, el pozo, la torre,
+    las sillas), `CageShape` (la forma, el F2), `CageBoards` (sus tableros), `CageBoarding` (subirse con la E),
+    `BubbleSeat`, `DeskPit`, `CageMesh`.
+  - `game/mech/boards/` — **las caras con tablero**: `FaceBoard`, `FaceMount`, `FoldingArm`.
+  - `game/mech/arm_tips/` — **lo que lleva cada brazo en la punta** y el panel de equipo.
+- `game/tool_mech/` — `ToolMech` (la energía común, el dash, saltar y levitar), del que hereda la jaula.
+- `game/pose_arm/`, `game/muscle_arm/` — los dos brazos.
+- `game/balance_body/` — **el cuerpo con equilibrio, la base común de la meca y los jefes**: `BalanceBody`, `BodyLegs`,
+  `BodyMoves`, `BodySettings`, `KinematicMover`, `KinematicSettings`.
+- `game/interactables/` — agarrar, sentarse y **los controles** (`ControllableInteractable` con su modo, el tablero de
+  character-parametric, el botón y la palanca).
+- `game/bosses/` — los jefes; `game/base/` — la sucursal; `game/battlefield/` — el mapa de pelea.
+- `game/supplies/` — **los recursos**: `SupplyLook`, `PackageArchetype`, `PackageDamage`, `ObjectLotArchetype`.
+- `game/sandbox/` — el sandbox de parcelas (ver `docs/technical/sandbox.md`), poseer (`SandboxPossession`), la bola de
+  la J (`TestBall`) y la sesión de red del sandbox. Las teclas reservadas, en `SandboxKey.RESERVED`.
+- `game/ui/` — la pausa (autoload `PauseMenu`, Escape), el menú de inicio, las Opciones (`GameOptions`), `UIState`
+  (dueño del mouse, de los overlays y de la pantalla limpia) y la consola.
+- Lo traído de character-parametric: `game/character/`, `game/interactables/`, `game/net/`, `game/common/`,
+  `game/debug/`… **Ya es código de la meca** (el usuario, 12/11/2026: «debería ser su propio código además, mejorado,
+  simplificado, tailoreado para nuestro caso»): se edita cuando hace falta, y lo que no se usa acá se puede ir sacando.
 
 ## Verificación
 - **Todo Godot con ventana se lanza con `tools/godot_ventana.sh`** (no le roba el foco al usuario; carpeta de los
   agentes `D:/Godot/agentes/meca`).
 - **Nunca cerrar un Godot que no sea de los agentes**: sólo los de `--path D:/Godot/agentes/...`.
-- Chequeo de compilación: `godot --headless --path . --editor --quit`; los warnings son errores.
-- `tests/legged_check.tscn` (headless o con ventana): el cubo con piernas camina, gira las piernas con el torso quieto,
-  camina con el torso girado y para atrás, un golpe suave y uno que lo vuelca; cuenta los pasos y lo lejos que queda un
-  pie de su lugar; con ventana, capturas.
-- `tests/mech_balance_check.tscn` (headless o con ventana, unos 5 minutos): el equilibrio de la meca, sola en su parcela; la escala de golpes en el
-  centro y arriba, contra la pared a 8, 14 y 20 m/s (no tiene que caer), arrancar y frenar, el giro, un golpe
-  descentrado, sus tiros, el volcarlo (N/M) y la recuperación.
-- `tests/mech_look.tscn` (con ventana, unos 100 segundos, sin el sandbox): la meca física de frente, de atrás y
-  desde el asiento; agacharse, el salto (un toque y cargado), el propulsor y correr, con sus números.
-- `tests/mech_ride_check.tscn` (con ventana, unos 30 segundos): ir adentro y afuera de la meca; el jugador con cuerpo
-  sube, y se mira qué le pasa mientras la meca se corre, salta y se cae.
-- `tests/mech_fork_look.tscn` (con ventana, unos 25 segundos, sin el sandbox): las dos filas de la meca lado a lado; la
-  discreta le tira un directo y un gancho a su cubo e imprime a cuánto conectó y cuánto lo inclinó.
-- `tests/mech_hands_look.tscn` (con ventana, unos 10 segundos): las manos de la meca física, en reposo y cubriéndose.
-- `tests/muscle_arm_look.tscn` (con ventana, unos 30 segundos, sin el sandbox): el brazo con músculos; la guardia, las
-  cuatro piñas (velocidad de la mano, cuánto corre el bloque), la pared (se traba y vuelve) y un empujón (cede y vuelve).
-- `tests/supplies_look.tscn` (con ventana, unos 5 segundos, sin el sandbox): el lote de recursos; imprime de cada cubo su
-  caja, su peso y sus seis puntos de agarre.
-- `tests/pixel_art_look.tscn` (con ventana, unos 15 segundos, sin el sandbox): pintar con píxeles (ver docs/technical/pixel-art.md);
-  las caras que detecta en el cubo y en la caja de Blender, pintar, releer, la versión 2 con la misma pintura, el panel
-  tres resoluciones y los dos modos de cara (cuadrícula y estirada) en la caja, la cuña y el chanfle. Guarda en user://.
-- `tests/hand_look.tscn` (con ventana, unos 5 segundos): la mano abierta y en puño, de tres lados.
-- `tests/possess_check.tscn` (con ventana, unos 15 segundos): poseer; mirar la meca, la O, las tres vistas con
-  la T, soltar y retomar sin mirar; capturas del cartel.
+- Chequeo de compilación: `godot --headless --path . --editor --quit`; los warnings son errores (correrlo dos veces
+  después de agregar o borrar clases: la primera puede no ver los errores).
+- `tests/cage_mech_look.tscn` (con ventana, unos 15 s, sin el sandbox): la meca jaula; imprime su huella (la caja, el
+  hombro, el alto, las sillas, los maniquíes, lo que camina, el palo) y saca una hoja. Si un cambio no debería tocar la
+  meca, la huella tiene que dar igual antes y después.
+- `tests/cage_boards_look.tscn`: los tableros de la jaula, con la grilla y tres caras de frente.
+- `tests/folding_arm_check.tscn`: los brazos plegables, plegados y traídos.
+- `tests/cage_boarding_check.tscn`: subirse con la E (en el sandbox entero).
+- `tests/sandbox_check.tscn`: las reglas del sandbox (filas, teclas, paneles); dice «SANDBOX OK».
+- `tests/supplies_look.tscn`, `tests/pixel_art_look.tscn`, `tests/hand_look.tscn`, `tests/possess_check.tscn`,
+  `tests/mech_fall_look.tscn`: los recursos, pintar con píxeles, la mano, poseer y la caída de la meca.
 - `tests/net_check.tscn`: dos instancias sin ventana, una con `--host-local` y otra con `--join-local` (antes del
   `--`); cada una dice cuántos jugadores, personajes y objetos compartidos ve.
-- `tests/load_all.tscn`: carga todos los scripts del juego y de los tests uno por uno (el chequeo del editor no los compila a todos).
+- `tests/load_all.tscn`: carga todos los scripts del juego y de los tests uno por uno (el chequeo del editor no los
+  compila a todos).
