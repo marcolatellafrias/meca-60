@@ -1,15 +1,14 @@
 class_name MechArchetype
 extends SeededArchetype
 
-## LA PARCELA DE LA MECA (ver Mech): la meca en el medio y, adelante, UNA MECA DE PRÁCTICA sin brazos para pegarle. DOS
-## FILAS LA USAN, una por camino (`arms`): la Meca discreta, con brazos de pose, y la Meca física, con brazos de
-## músculos. Mirándola, O la posee; U sube al jugador; J tira una bola y K pasa por los cuatro tiros; F1 sus perillas,
-## N/M pegarle arriba, L el ascensor; R la vuelve a poner.
+## LAS REGLAS DE TODA PARCELA CON LA MECA PROPIA: sus teclas (la bola, U subirse, N/M pegarle), los tiros de la bola y
+## su medida. La arma la de la meca jaula (CageMechArchetype, que la hereda); el Mapa de pelea y la Base las toman de
+## acá para sus mecas.
+## *Hasta el 17/11/2026 era también la parcela de las dos filas de la meca grande (la discreta y la física, con la
+## cinemática y la de cápsulas por encima); se borraron con ella (están en el commit 0bcaeaf).*
 
 ## Grande: corre y salta.
 const FOOTPRINT := 120.0
-## A cuánto de la meca va la de práctica, adelante de ella (m, de centro a centro).
-const SPARRING := 16.0
 ## LOS CUATRO TIROS (el usuario: «lento que no voltee, lento que voltee, rápido que no voltee y rápido que voltee»): la
 ## bola va lenta o rápida (m/s) y el golpe es chico o grande (m/s que le cambiaría la velocidad a la caja suelta).
 const SLOW := 30.0
@@ -17,67 +16,19 @@ const FAST := 100.0
 const SMALL := 5.0
 const BIG := 14.0
 
-## El camino: qué brazos lleva. Y si se mueve cinemática (ver KinematicMover). Y qué cabina (ver Mech.Cabin).
-var arms := Mech.Arms.POSE
-var kinematic := false
-var cabin_shape := Mech.Cabin.SQUARE
-
-
-func _init(arms_kind := Mech.Arms.POSE, moves_kinematic := false, shape := Mech.Cabin.SQUARE) -> void:
-	arms = arms_kind
-	kinematic = moves_kinematic
-	cabin_shape = shape
-	display_name = "Meca cinemática" if kinematic else ("Meca redonda" if shape == Mech.Cabin.ROUND
-		else ("Meca del vórtice" if shape == Mech.Cabin.VORTEX else Mech.NAMES[arms]))
-
 
 func max_footprint() -> Vector2:
 	return Vector2(FOOTPRINT, FOOTPRINT)
 
 
-func describe(_seed_value: int) -> PackedStringArray:
-	if kinematic:
-		return PackedStringArray([
-			"la mueve el controlador de personaje del motor: contra lo fijo, un cilindro; sus pies patean y achatan",
-			"movimiento discreto: Shift dash (con dirección) · espacio salta (y en el aire vuela) · Ctrl se agacha",
-			"mirándola, O la posee (T cambia la vista) · U subirse",
-		])
-	return PackedStringArray([
-		"una caja física que es un péndulo sobre su apoyo: una piña la saca de arriba de los pies, una pared no",
-		"brazos %s" % ("físicos: chocan y se traban" if arms == Mech.Arms.MUSCLE else "discretos: atraviesan, y al conectar empujan"),
-		"mirándola, O la posee (T cambia la vista) · U subirse (adentro y por afuera se camina)",
-		"Shift corre · Ctrl se agacha · espacio carga el salto y, en el aire, propulsor",
-	])
-
-
-func build(_seed_value: int, parent: Node3D) -> Node3D:
-	var root := Node3D.new()
-	root.name = "Meca"
-	parent.add_child(root)
-	var standing := Mech.standing_height()
-	# Nace donde va parada, mirando hacia donde uno llega (−X); la de práctica, adelante, mirándola.
-	var mech := Mech.new()
-	mech.arms_kind = arms
-	mech.kinematic = kinematic
-	mech.cabin_shape = cabin_shape
-	mech.equipment = display_name
-	mech.transform = Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(0.0, Mech.standing_height(cabin_shape), 0.0))
-	root.add_child(mech)
-	var target := Mech.new()
-	target.arms_kind = Mech.Arms.NONE
-	target.transform = Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(-SPARRING, standing, 0.0))
-	root.add_child(target)
-	return root
-
-
 ## LO QUE LLEVA SU MECA SIN NADA GUARDADO (ver Mech.default_loadout): lo que muestra el panel de equipamiento al volver
 ## a lo del código.
 func default_loadout() -> Array[ArmLoadout]:
-	return Mech.fists(arms)
+	return Mech.fists()
 
 
-## La bola, subirse, y pegarle arriba suave o fuerte y el ascensor (eran el panel F2, MechKnockPanel: acciones de
-## prueba, van en el panel chico; el usuario, 13/11/2026: «empuje liviano, empuje fuerte… deberían ir en panel chico»).
+## La bola, subirse, y pegarle arriba suave o fuerte (eran el panel F2, MechKnockPanel: acciones de prueba, van en el
+## panel chico; el usuario, 13/11/2026: «empuje liviano, empuje fuerte… deberían ir en panel chico»).
 func keys() -> Array[SandboxKey]:
 	var out := TestBall.keys(self)
 	out.append(SandboxKey.action(KEY_U, SandboxKey.Weight.MAIN, "subirse a la meca (adentro)",
@@ -89,17 +40,13 @@ func keys() -> Array[SandboxKey]:
 	return out
 
 
-## PEGARLE Y EL ASCENSOR, para toda parcela con mecas (la Arena de esquivar también las usa).
+## PEGARLE, para toda parcela con mecas. *Hasta el 17/11/2026 también subían y bajaban el ascensor de la meca grande.*
 static func knock_keys() -> Array[SandboxKey]:
 	return [
 		SandboxKey.action(KEY_N, SandboxKey.Weight.NORMAL, "pegarle suave",
 			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: mech.knock(false))),
 		SandboxKey.action(KEY_M, SandboxKey.Weight.NORMAL, "pegarle fuerte",
 			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: mech.knock(true))),
-		SandboxKey.action(KEY_Y, SandboxKey.Weight.NORMAL, "ascensor: subir una parada",
-			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: if mech.cabin != null and mech.cabin.lift != null: mech.cabin.lift.up())),
-		SandboxKey.action(KEY_H, SandboxKey.Weight.NORMAL, "ascensor: bajar una parada",
-			func(parcel: SandboxParcel) -> void: _each(parcel, func(mech: Mech) -> void: if mech.cabin != null and mech.cabin.lift != null: mech.cabin.lift.lower())),
 	]
 
 

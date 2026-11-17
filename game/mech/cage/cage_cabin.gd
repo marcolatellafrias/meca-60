@@ -540,8 +540,12 @@ func build_frame() -> void:
 	frame.cast_shadow(self)
 	interior.collision_layer = 0
 	interior.collision_mask = 0
-	for body in find_children("*", "RigidBody3D", true, false):
-		mech.add_collision_exception_with(body as RigidBody3D)
+	# LA CAJA NO CHOCA CON NADA DE LO SUYO: los cuerpos sueltos (las sillas) y también los fijos y los animados (las bases
+	# de los tableros, los brazos plegables), que van adentro de ella. *Hasta el 17/11/2026, sólo los sueltos: la jaula
+	# es cinemática y lo fijo no la toca; la de práctica, física desde que es una jaula (ese día, al borrarse la meca
+	# grande), salía despedida por los 75 cuerpos fijos de sus tableros.*
+	for body in find_children("*", "PhysicsBody3D", true, false):
+		mech.add_collision_exception_with(body as PhysicsBody3D)
 
 
 ## LA U: arriba, en el pozo, al lado de la silla de los brazos.

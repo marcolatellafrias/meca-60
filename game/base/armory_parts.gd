@@ -279,7 +279,9 @@ static func _wrap(root: Node3D, frame: Transform3D, length: float) -> void:
 ## de cada miembro (el brazo y el antebrazo, el muslo y la canilla). `tool_out`: el brazo (−1 o 1) que tiene la
 ## herramienta afuera y el puño adentro; 0, ninguno.
 ## *Es para mirar: toca adentro de los brazos y las piernas (`_upper`, `_forearm`, `_hand`, `_thigh`, `_shin`). Si queda,
-## los brazos y las piernas tienen que saber ponerse esto solos.*
+## los brazos y las piernas tienen que saber ponerse esto solos. Los brazos con músculos (MuscleArm) no se visten, y un
+## brazo sin mano (el del cañón de la meca jaula) no pierde ni engorda la suya. Hasta el 17/11/2026 lo mostraban
+## tests/armory_dressed_look y armory_dressed_movie, con la meca grande; se borraron con ella.*
 static func dress(mech: Mech, loadout: Dictionary, tool_out := 0.0) -> void:
 	for arm in mech.arms:
 		var pose_arm := arm as PoseArm
@@ -296,7 +298,9 @@ static func dress(mech: Mech, loadout: Dictionary, tool_out := 0.0) -> void:
 		Clay.cylinder(forearm, MOUTH, 0.7, Vector3(0, 0, tip + 0.35), FOREARM_COLOR.darkened(0.15), Vector3(90, 0, 0))
 		var tool: String = loadout.get("tool_" + side, "")
 		if is_equal_approx(tool_out, arm.side) and tool != "":
-			pose_arm._hand.visible = false
+			# (sin mano: el brazo de la meca jaula que lleva el cañón en lugar del antebrazo)
+			if pose_arm._hand != null:
+				pose_arm._hand.visible = false
 			# las herramientas se arman para el antebrazo de la maqueta (FOREARM): se corren a la punta de éste
 			var holder := Node3D.new()
 			holder.position = Vector3(0, 0, tip - TIP)
@@ -305,7 +309,7 @@ static func dress(mech: Mech, loadout: Dictionary, tool_out := 0.0) -> void:
 				"drill": _drill(holder)
 				"energy_cannon": _energy_cannon(holder)
 				"circular_saw": _saw(holder)
-		elif loadout.get("fist_" + side, "") == "heavy_fist":
+		elif loadout.get("fist_" + side, "") == "heavy_fist" and pose_arm._hand != null:
 			make_heavy(pose_arm._hand, mech.measures.thick)
 	for leg: Node in mech.find_children("*", "MechLeg", true, false):
 		var plated: bool = loadout.get("plate_leg_left", "") != "" or loadout.get("plate_leg_right", "") != ""

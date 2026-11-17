@@ -62,7 +62,6 @@ func _ready() -> void:
 	var parent := Node3D.new()
 	add_child(parent)
 	BrawlerArchetype.thinking = true
-	BrawlerArchetype.mech_kind = BrawlerArchetype.Kind.TOOL
 	# La ira la pone el video (no por tiempos).
 	BrawlerSettings.current.rage_calm = 0.0
 	var root := BrawlerArchetype.new().build(0, parent)

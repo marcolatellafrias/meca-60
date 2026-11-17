@@ -30,7 +30,9 @@ extends MechArm
 ## VA SOLO (en su fila, `standalone`) O MONTADO en algo que se mueve (la meca): el músculo del hombro empuja
 ## contra lo que lo sostiene, así que una piña lo sacude.
 ##
-## Las perillas, en MuscleArmSettings (el panel F1 de su fila).
+## Las perillas, en MuscleArmSettings (la pestaña «Con músculos» del F3 de la meca jaula).
+## *Su fila, Brazo (MuscleArmArchetype, que lo probaba solo: `standalone`, poseíble a mano y con su cartel), se borró con
+## la meca grande el 17/11/2026; el modo solo quedó, sin quien lo use.*
 
 const UPPER_MASS := 2200.0
 const FOREARM_MASS := 2000.0

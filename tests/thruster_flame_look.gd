@@ -1,8 +1,13 @@
 extends Node3D
 
 ## LAS LLAMAS DE TOBERA PARA ELEGIR (ThrusterFlame.Style), sin el sandbox: por cada una, una tobera como las de la meca
-## (la rótula y la campana) echando para abajo con su humo, con todo y a medias. Unos 25 segundos.
+## grande (la rótula y la campana) echando para abajo con su humo, con todo y a medias. Unos 25 segundos.
 ##   tools/godot_ventana.sh res://tests/thruster_flame_look.tscn -- --salida=C:/carpeta
+## *Las toberas que se veían (BodyNozzles) se borraron con la meca grande el 17/11/2026; la llama queda, para lo que la
+## use después.*
+
+## El humo de cada una, cuántas veces el de propulsor (el de las toberas de la meca grande).
+const SMOKE_SIZE := 2.5
 
 var _folder := ""
 var _eye: Camera3D = null
@@ -83,7 +88,7 @@ func _nozzle(style: int) -> Dictionary:
 	flame.shape = style
 	flame.position = Vector3(0, 0, -0.9)
 	ball.add_child(flame)
-	var smoke := ParticleSystems.thruster_smoke(ParticleMeshes.Kind.SPHERE, BodyNozzles.SMOKE_SIZE)
+	var smoke := ParticleSystems.thruster_smoke(ParticleMeshes.Kind.SPHERE, SMOKE_SIZE)
 	smoke.position = Vector3(0, 0, -0.9 - ThrusterFlame.LENGTH)
 	ball.add_child(smoke)
 	smoke.emitting = not OS.get_cmdline_user_args().has("--sin-humo")

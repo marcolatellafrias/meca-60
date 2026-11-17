@@ -21,9 +21,6 @@ extends RefCounted
 ##     disponibles solamente mientras estás haciendo un salto… si no, un dash con el sistema de piernas actual se vería
 ##     raro»): al aterrizar, el apoyo arranca con la velocidad que trae y los pies frenan.
 
-## Cuánto se ven prendidas las toberas de un dash (s).
-const DASH_SHOW := 0.3
-
 ## Lo cargado del salto y lo que le queda al propulsor (0 a 1), para mirar.
 var jump_charge := 0.0
 var fuel := 1.0
@@ -96,7 +93,6 @@ func _dash(k: BodySettings) -> void:
 	var change := way * maxf(flat.dot(way), 0.0) + way * k.dash_speed - flat
 	change.y = maxf(k.dash_lift - now.y, 0.0)
 	_body.push_impulse(change * _body.mass)
-	_body.nozzles.show(way, DASH_SHOW)
 	fuel = maxf(fuel - k.dash_cost, 0.0)
 	dashes_left -= 1
 

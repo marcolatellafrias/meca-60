@@ -21,10 +21,11 @@ extends RefCounted
 
 ## El alto de un escalón (m): el de una escalera de verdad. Un tramo lo ajusta un pelo para cerrar justo en su altura.
 const RISE := 0.15
-## La pisada (m): 31,5 cm, ocho celdas de la grilla de la cabina, para que las escaleras de la meca y las del mundo sean
-## iguales (lo acordó la sesión del interior, 13/11/2026). *El laboratorio usaba 50 cm; con eso un piso de 3 m pide un
-## tramo de 10 m, que no entra en una fachada.*
-const TREAD := CabinGrid.CELL * 8
+## La pisada (m): 31,5 cm, ocho celdas de 1/16 del cubo de recurso (las de la grilla de la cabina de la meca grande),
+## para que las escaleras de la meca y las del mundo fueran iguales (lo acordó la sesión del interior, 13/11/2026). *El
+## laboratorio usaba 50 cm; con eso un piso de 3 m pide un tramo de 10 m, que no entra en una fachada. Hasta el
+## 17/11/2026 se leía de esa grilla (CabinGrid.CELL), borrada con la meca grande: la medida es la misma.*
+const TREAD := SupplyLook.U / 16.0 * 8
 ## El grosor de las tablas invisibles de la cápsula.
 const PLANK := 0.1
 

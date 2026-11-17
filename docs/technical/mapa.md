@@ -23,8 +23,9 @@ cosas… las cosas no tienen que estar desparramadas tan así al tuntún, pero t
   poste y una bandera que se ven de lejos, **frente a cada barrio** y **arriba de algún edificio de 30 m**.
 - **Al medio, tres ruinas** lejos una de otra: una pared rota en tres tramos que bajan (14, 10 y 6 m), la esquina de un
   edificio caído (16 m, en L) y una tapia baja (4 m: tapa a la gente; la caja de la meca va más arriba).
-- La parcela trae **una meca discreta** para manejar (nace a 45 m del centro, mirándolo) y **una de práctica** sin
-  brazos más allá del medio, de jefe quieto.
+- La parcela trae **la meca jaula** para manejar (`CageMech`, con el equipo de su fila; nace a 45 m del centro,
+  mirándolo) y **una de práctica** sin brazos más allá del medio, de jefe quieto. *Hasta el 17/11/2026, la discreta de
+  la meca grande, borrada ese día; el mapa está hecho a su escala (14 m de alto): la jaula es mucho más chica.*
 
 Todo lo fijo es `StaticBody3D` (el piso de la meca es sólo lo estático). La distribución sale de una semilla propia y
 no cambia con la R: es UN mapa.

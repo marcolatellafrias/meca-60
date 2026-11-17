@@ -58,7 +58,7 @@ var anchor: PhysicsBody3D = null
 var shoulder_local := Vector3.ZERO
 ## LAS MEDIDAS DEL CUERPO QUE LO LLEVA (ver MechBody, BalanceBody.measures): el largo del brazo y del antebrazo, el de
 ## las posturas y las piñas, y el ancho de la mano. Las pone la meca. Se ponen antes de agregarlo.
-var measures := MechBody.current
+var measures := MechBody.new()
 ## La postura pedida, y la piña que está tirando.
 var stance := Stance.COVER
 var punching := Punch.NONE

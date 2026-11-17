@@ -1,17 +1,23 @@
 # La meca jaula
 
-`game/mech/cage/` · fila **Meca jaula** (la primera del sandbox) · ver [[dos-paradigmas]], [[meca-de-tres]],
-[[meca-de-capsulas]], [[armamento]]
+`game/mech/cage/` · fila **Meca jaula** (la única meca del sandbox) · ver [[dos-paradigmas]], [[brazo]],
+[[base-comun]], [[tableros]], [[armamento]]
 
 **La jaula de las maquetas, hecha meca** (16/11/2026). Sale de `tests/cage_ideas_look`, la 166 (el usuario: «empezar a
 migrar esta meca a algo funcional… que camine… que se pueda poseer la meca y que los brazos anden y las piernas anden»).
-Es una cabina más de la meca (`Mech.Cabin.CAGE`), como la de cápsulas. **Primer paso**: se maneja entera poseyéndola
-(la O; la T cambia la vista). Las tres cabinas, subirse con la E y los controles de cada puesto vienen después.
+Es la cabina de la meca (`Mech.Cabin.CAGE`). **Primer paso**: se maneja entera poseyéndola (la O; la T cambia la
+vista). Los controles de cada puesto vienen después.
+
+**Desde el 17/11/2026 es la única meca** (el usuario: «tal vez convenga… borrar todo el sistema de la meca grande…
+limitarnos solamente a un approach de meca a una escala más humana, que es la de ahora»). La meca grande —las cabinas
+cuadrada, redonda, del vórtice y de cápsulas, la Meca de tres, la discreta, la física, la cinemática, el laboratorio
+cinemático, la arena de esquivar, el brazo suelto y el cubo con piernas archivado— se borró con su código, sus tests y
+sus notas; está entera en el commit `0bcaeaf`. Lo que la jaula usaba de ella quedó: la meca con herramientas
+(`ToolMech`, abajo), los brazos ([[brazo]]), el cuerpo con equilibrio ([[base-comun]]) y la meca de práctica.
 
 ## El tamaño y la forma — `CageShape` (F2)
-Los brazos y las piernas son **los de sus perillas de «Brazos y piernas» al 30 %** (la misma pestaña del F2 que las
-otras mecas: largos, grosor, cuánto se estiran las piernas y cuánto salen los hombros; `CageCabin.body`,
-`MechBody.shrink`). La cabina
+Los brazos y las piernas son **los de sus perillas de «Brazos y piernas» al 30 %** (largos, grosor, cuánto se estiran
+las piernas y cuánto salen los hombros; `CageCabin.body`, `MechBody.shrink`). La cabina
 **sale de pocas perillas** (`CageShape`, guardadas en `game/mech/cage/cage_shape.tres`; el F2 de su fila,
 `CageShapePanel`; el usuario: «controlar el tamaño de la meca y de los módulos sin tener tantos sliders»):
 - **La cápsula de abajo**: el radio de la cápsula, el vidrio (liso o facetado, su degradé y sus manchas), su marco (ancho y cuánto sale de la cara; un
@@ -24,6 +30,11 @@ otras mecas: largos, grosor, cuánto se estiran las piernas y cuánto salen los 
 - **La torre**: redonda o cuadrada, su ancho y su fondo (nunca más hondo que ancho) y los ojos del artillero. Siempre contra el borde de atrás e independiente
   del octógono: si es más grande de lo que deja, se mete en el pozo y se ve («me voy a dar cuenta… y haré el tamaño de
   la torre más chico»).
+- **Brazos y piernas**: **todo se mide desde las esferas** (16/11/2026): la cintura es la esfera del tobillo (su centro
+  a su radio del piso, así apoya sin atravesarlo; el pie, más fino, debajo), más las piernas de esa esfera a la de la
+  cadera —«cuánto se estiran», en partes del largo, hasta 0,98, que es también el tope de la pierna
+  (`MechBody.STRAIGHTEST`)—, más la caída de la cadera. *Era la pestaña de las cabinas de la meca grande; la jaula la
+  tiene aparte, con el adelanto de los hombros, desde que nació.*
 Todo con mallas de caras propias (`CageMesh`), nada de cajas pegadas.
 
 ## La cabina — `CageCabin`
@@ -47,32 +58,94 @@ Todo con mallas de caras propias (`CageMesh`), nada de cajas pegadas.
   las caras de adelante y de los costados (`CageBoards`). El lado del pozo, en celdas enteras (`CageShape.pit_apothem`).
 - **Atrás, la torre del artillero**: arriba, el plato que gira con su silla y el arma montada (sólo se ve; `gun`).
 - **La espalda del cubo**: el hueco de un recurso, la batería y la mochila del jetpack (sólo se ven).
-- Las tres sillas: brazos, artillero y manejo; un maniquí en las dos primeras. La U deja en el pozo.
+- Las tres sillas: brazos, artillero y manejo; un maniquí en cada una (`MechCabin.seat_dummies`). La U deja en el pozo.
+- **La caja no choca con nada de lo suyo** (`build_frame`): ni con las sillas ni con las bases de los tableros y los
+  brazos plegables, que van adentro de ella. *Hasta el 17/11/2026, sólo con lo suelto: la jaula es cinemática y lo fijo
+  no la toca; la de práctica, física, salía despedida por los 75 cuerpos fijos de sus tableros.*
 - *Hasta el 16/11/2026 era una caja de 2 m maquetada a mano, con la cubierta de borde en bisel y la torre metida.*
 
+## Adentro se camina
+Como en la meca grande, la cabina es **un marco** (`MotionFrame`, de character-parametric; lo de toda cabina está en
+`MechCabin`):
+- Las formas de choque de adentro (`interior`) **no chocan con nada**: son de donde el marco copia su **sombra**. El
+  piso, las bolas y las paredes de afuera los sigue recibiendo la caja 1:1.
+- El que entra al volumen (el cubo de abajo, o el bloque con la torre) pasa a ir **en el marco**: la meca lo lleva con
+  ella, y adentro choca sólo con la sombra. **La caja de afuera deja de chocar con él** (`MechCabin.ride`).
+- **Todo, como si la meca estuviera quieta** (13/11/2026; el usuario: «una vez que están adentro los personajes y los
+  paquetes, es como si estuvieran quietas las cosas… la regla es siempre la misma»): la inercia que se siente es 0; lo
+  suelto que entra lo adopta el marco y va clavado mientras está quieto; las sillas giran con la meca.
+
 ## La meca — `CageMech`
-La Meca de tres (`ToolMech`: la energía común, el dash, saltar y levitar) con:
-- **El torso discreto y los brazos físicos** (el usuario: «los brazos van a ser físicos y el torso va a ser discreto»).
+La meca con herramientas (`ToolMech`, abajo: la energía común, el dash, saltar y levitar) con:
+- **El torso discreto y los brazos físicos** (el usuario: «los brazos van a ser físicos y el torso va a ser discreto»):
+  la mueve el motor discreto (`KinematicMover`, ver [[base-comun]]).
 - **Sus brazos** (`loadout`, ver [[brazo]], «Lo que lleva en la punta»): a la izquierda **el cañón** (`CannonTip`) en
   un brazo discreto, en lugar del antebrazo, con sus cuatro modos y la palanca; a la derecha **el palo** (`PoleTip`) en
   un brazo con músculos (choca y se traba): el puño pesado siempre cerrado agarrando el palo eléctrico. Pega las piñas de
   siempre; el palo sólo se ve (no choca). Los dos con la placa del acorazado. *Hasta el 16/11/2026, `CageCannonArm` y
   `PoleArm`; el cañón llevaba además la funda de la Meca de tres, por eso el brazo entero se veía distinto.*
-- **Las placas del acorazado** (las de la armería) en las piernas, y la pelvis cilíndrica de la maqueta.
-- **Sus teclas** (`CageMechKeys`): las de la de tres (con el palo, el clic izquierdo un directo y el derecho un gancho).
-  La cámara de afuera, más cerca.
+- **Las placas del acorazado** (las de la armería) en las piernas. La pelvis es el cilindro acostado de la maqueta: desde
+  el 17/11/2026 la arman las piernas (`BodyLegs`) para toda meca (antes la jaula cambiaba por él el tambor de las
+  grandes).
+- **Sus teclas** (`CageMechKeys`): las de la meca con herramientas (con el palo, el clic izquierdo un directo y el
+  derecho un gancho). La cámara de afuera, más cerca.
+
+## La meca con herramientas — `ToolMech` (`game/tool_mech/`)
+Lo que la jaula trajo de **la Meca de tres** (15/11/2026, la meca de ejemplo para cerrar los controles de los tres
+pasajeros; el usuario: «hagamos un ejemplo de una mecha con elementos concretos… vamos a ir cerrando entonces todos los
+controles que van a tener los tres pasajeros que se sienten en las tres sillas»). Su fila, con la cabina cuadrada, el
+taladro a la derecha y las fundas de blindaje en las piernas (`ArmorPlates`), se borró con la meca grande; queda como la
+base de la jaula: cinemática, con lo que sigue.
+- **La energía común — `MechEnergy`**: una sola para todos ([[armamento]]: «la energía es la estamina de la meca»). La
+  gastan el dash, el salto, levitar, el taladro y el cañón. Se recarga sola (14 % por segundo) desde 0,8 s después del
+  último gasto. **Vacía, la meca queda aturdida 2,5 s**: no camina, no gira, no tira. *El máximo que baja con el uso y
+  cambiar la batería, después.*
+- **Las piernas**: el movimiento del motor discreto (caminar, girar, agacharse, saltar, el dash con Shift y una
+  dirección) y **levitar**, que es su vuelo (espacio otra vez en el aire): la mejora de **propulsores en las
+  pantorrillas, atrás**, que no se modelan. El dash, el salto y levitar, además de sus barras, gastan energía.
+- **El dash, una decisión** (el usuario, por Jefes: «diseñar todo para un dash… que cueste más energía»): gasta **el
+  25 % de la energía común** (primero fue 40 %; el usuario: «me parece mucho… va a estar moviéndose, haciendo
+  ataques»). Y entre dash y dash está **la espera** (`dash_cooldown`, en el F1): aunque sobre energía, no salen dos
+  seguidos. Shift sólo cobra si el dash sale de verdad (`KinematicMover.dash_ready()`).
+- **Lo que manejan sus teclas** (`ToolMech.cannon`, `drill`, `melee`): de lo que lleve en los brazos, el cañón, lo que
+  gira (el taladro o la sierra) y el brazo de las piñas (el primero sin ninguno de los dos). Las puntas, en [[brazo]].
+- **Las teclas, poseyéndola** (`ToolMechKeys`; la jaula, `CageMechKeys`):
+  - **Piernas**: WASD · el mouse gira · Shift con una dirección, dash · espacio salta, y en el aire otra vez, levita ·
+    Ctrl se agacha.
+  - **Taladro o sierra**: clic derecho mantenido carga · clic izquierdo descarga. **Si no lleva**, el brazo de las
+    piñas: clic izquierdo, un directo; clic derecho, un gancho.
+  - **Cañón**: las flechas mueven la palanca · 1 simple, 2 ráfaga, 3 barrido, 4 súper · F, el gatillo.
+  - Abajo a la derecha, la energía, el modo, la carga del súper y la del taladro.
+  - *Hasta el 17/11/2026, G / X subían y bajaban el ascensor de la meca grande.*
+- **Cómo se los imagina el usuario adentro** (todavía no): sentado, **la cámara queda trabada mirando al frente** y se
+  elige qué hacer **con clic en lo que se tiene adelante**. El movimiento: **una palanca de dos ejes que queda trabada**
+  donde se la dejó (para poder seguir caminando mientras se aprieta el dash), y **el dash, el salto y levitar, botones
+  aparte** en el tablero. El cañón: tres o cuatro botones de modo y su palanca. El taladro: un botón que carga y otro
+  que ataca. *Esto cambia lo de [[armamento]] («el movimiento: te conectás», el mouse que gira el cuerpo sobre la silla).*
 
 ## Moverse, sólo ella — `CageMovesPanel` (F1)
-Las perillas de la cinemática (`KinematicSettings`), **suyas** (`CageMech.MOVES`, guardadas en
+Las perillas del motor discreto (`KinematicSettings`, una pestaña por grupo), **suyas** (`CageMech.MOVES`, guardadas en
 `game/mech/cage/cage_moves.tres`; el usuario: «si un panel lo quiero modificar para este mecha, me gustaría que sea
-solamente para esta»). Cualquier cuerpo puede llevar las suyas: `BalanceBody.kinematic_knobs` (si no, las de todas).
-Sin guardar, nace con las de las otras y la velocidad, el salto, el vuelo y el dash a la mitad.
-Los paneles de los brazos con músculos y de las piernas son los de todas: no están en su fila.
+solamente para esta»). Cualquier cuerpo puede llevar las suyas: `BalanceBody.kinematic_knobs` (si no, las de todas,
+`KinematicSettings.current`). Sin guardar, nace con las de todas y la velocidad, el salto, el vuelo y el dash a la
+mitad. *Hasta el 17/11/2026 heredaba el panel de la Meca cinemática (`KinematicPanel`), borrado con ella.*
+Los paneles de los brazos (F3) y de las piernas (F4) son los de todas las mecas. Los paneles de la jaula también están
+en la fila **Base** (F2 a F4), para cambiarla desde la sucursal.
+
+## La de práctica
+Adelante, a 18 m, **una meca sin brazos** (`Mech` con `arms_kind` NONE), con la misma cabina: es la que se usa para
+pegarle (N suave, M fuerte, la bola). Es **física**: su equilibrio es [[pendulo]] (con `BodySettings`), así un golpe la
+inclina, la tira y la levanta. *Hasta el 17/11/2026 era la de la meca grande (la cuadrada, a escala de la meca grande).*
+Medido ese día: un golpe suave la inclina 18° y vuelve; uno fuerte la tira y se levanta sola en unos 4 s.
 
 ## Test
 `tests/cage_mech_look.tscn` (unos 15 s, sin el sandbox): arma la parcela, la hace caminar, pegar con el palo y tirar
 con el cañón, imprime lo que mide y saca una hoja (de afuera, desde los ojos del que maneja, caminando, el palo, el
-cañón).
+cañón). Medido el 17/11/2026, antes y después de borrar la meca grande, igual: la caja de 3,08 × 2,48 × 3,08 m, la
+cintura a 3,07 m, camina 7,6 m en 2 s y la mano del palo llega a 20 m/s.
+Más: `tests/cage_boards_look` (los tableros), `tests/folding_arm_check` (los brazos plegables),
+`tests/cage_boarding_check` (subirse con la E), `tests/frame_rebuild_check` (rearmarla con gente adentro),
+`tests/crouch_time_check`, `tests/feet_ground_check`, `tests/equipment_check`, `tests/arm_tips_look`.
 
 ## Subirse con la E — `CageBoarding`
 Nadie elige silla (el usuario: «se sientan… apretando en la meca y apretando E, y que se llenen por orden»): apuntando a
@@ -86,3 +159,5 @@ meca se sigue manejando poseyéndola (O). Prueba: `tests/cage_boarding_check` (e
 - Que cada puesto maneje lo suyo desde su silla (hoy se maneja poseyéndola).
 - El puesto del artillero gira con el arma, y la silla gira aparte.
 - Los controles de cada puesto, el arma del artillero, que el palo haga algo propio.
+- Que el súper del cañón y los golpes la muevan (la cinemática todavía no la mueve un golpe propio).
+- Los tiros por la red.

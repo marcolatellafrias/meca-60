@@ -4,9 +4,9 @@ extends RefCounted
 ## UNA FILA DEL SANDBOX, declarada: su supercategoría y su nombre (los dos obligatorios: sin ellos no compila), sus
 ## parcelas (sueltas o en subcategorías), sus teclas de fila y sus paneles F. Se arma encadenando:
 ##
-##     SandboxRow.new(SandboxSuper.Id.MECH, "Meca discreta") \
-##         .add(SandboxRow.Build.NEAR, [MechArchetype.new(Mech.Arms.POSE)]) \
-##         .panel(KEY_F1, "la meca: el péndulo…", MechPanel.new())
+##     SandboxRow.new(SandboxSuper.Id.MECH, "Meca jaula") \
+##         .add(SandboxRow.Build.NEAR, [CageMechArchetype.new()]) \
+##         .panel(KEY_F1, "la meca jaula: moverse…", CageMovesPanel.new())
 ##
 ## Cada módulo declara las suyas en un archivo propio (`MechRows.rows()`, `CharacterRows.rows()`…) y SandboxCatalogue
 ## las junta. Las reglas, en docs/technical/sandbox.md.

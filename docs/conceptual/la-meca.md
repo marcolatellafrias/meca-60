@@ -1,6 +1,7 @@
 # La meca (diseño)
 
-**Borrador** (13/11/2026). Cómo está hecha hoy, en [[meca]], [[pendulo]], [[brazo]] y [[cabina]]. Ver [[partida]].
+**Borrador** (13/11/2026). Cómo está hecha hoy, en [[meca-jaula]], [[pendulo]] y [[brazo]] (desde el 17/11/2026, una sola meca, la jaula, a
+escala humana; la meca grande se borró). Ver [[partida]].
 
 ## Qué es
 Una meca gigante **manejada desde adentro**: cada jugador opera una parte desde su puesto (piernas, brazos…). Cuando

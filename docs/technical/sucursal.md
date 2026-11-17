@@ -98,9 +98,10 @@ F1 al guardar, sin guardarlas).
 `tests/base_terminals_look.tscn` (con ventana, unos 5 s): la armería con unas compras hechas y lo que dice con el mouse
 encima, y los contratos con uno firmado.
 `tests/armory_parts_look.tscn` (con ventana, unos 10 s): todos los componentes juntos, y después uno por uno, de cerca.
-`tests/armory_dressed_look.tscn` (con ventana, unos 8 s): una meca parada con todo puesto, de adelante, de atrás y de
-costado.
-`tests/armory_dressed_movie.tscn` (con `--write-movie`): la misma meca camina hasta dos pilas de cajas y les pega piñas,
-con física, vista desde afuera (`--vista=afuera`) o desde la tarima (`--vista=tarima`). Las dos pruebas aceptan los
-argumentos de la variante (sin el corte de las esquinas, el alto de la cabina y de la pelvis, los hombros abajo, los
-parantes): sólo para mirar, no se guarda nada.
+*Hasta el 17/11/2026, `tests/armory_dressed_look.tscn` y `armory_dressed_movie.tscn` mostraban la meca grande con todo
+puesto (`ArmoryParts.dress`) y sus variantes de cabina; se borraron con ella (commit 0bcaeaf). `ArmoryParts.dress` quedó
+sin quien la llame: viste los brazos discretos y las piernas de cualquier meca (un brazo con músculos no se viste, y el
+del cañón de la jaula, sin mano, no la pierde ni la engorda), a escala de la meca grande.*
+
+**La meca de la base es la jaula** (`CageMech`, con el equipo de su fila) desde el 17/11/2026; antes, la discreta de la
+meca grande. Los paneles de la jaula están en la fila (F2 a F4).

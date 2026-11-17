@@ -55,7 +55,8 @@ cualquiera, y lo que se elige es **qué usar en qué momento**, no qué equipar 
   Interior o los módulos de ahora sostenidos por la silla). Lo de abajo sobre la espalda y el reparto queda como historia.
 - **Cada brazo es de una persona**: su punta y lo montado en él son una sola unidad que maneja ella.
 - **Otra maneja el movimiento y otra, la espalda.**
-- **Dónde se sienta cada uno, con cuatro** (14/11/2026, lo definió el usuario con la sesión Interior; ver [[cabina]]): la
+- **Dónde se sienta cada uno, con cuatro** (14/11/2026, lo definió el usuario con la sesión Interior, para la cabina cuadrada de la meca grande, borrada el
+17/11/2026): la
   cabina es de 3 × 3 módulos y un piso alto, con un entrepiso al fondo. **Adelante, a la izquierda, el brazo izquierdo; a
   la derecha, el derecho; al medio, la espalda. Arriba, en el entrepiso, el movimiento** (el usuario, 14/11/2026: el de
   atrás, con las escaleras, se lee con más jerarquía, y el que mueve es el que ve lo global, así que va más lejos del
@@ -89,7 +90,7 @@ tengan una especie de dinámica distinta»).
   espacio.
 
 ## El movimiento: te conectás (14/11/2026)
-*15/11/2026: el usuario lo replanteó para la meca de tres (ver [[meca-de-tres]]): sentado, la cámara trabada al frente
+*15/11/2026: el usuario lo replanteó para la meca de tres (hoy, la base de la jaula: ver [[meca-jaula]]): sentado, la cámara trabada al frente
 y clic en el tablero; una palanca de dos ejes que queda trabada, y el dash, el salto y levitar en botones aparte.*
 **El que maneja se conecta** (un casco, unos guantes) y **sus controles de a pie pasan a la meca**: WASD, el mouse,
 Shift el dash, y agacharse y saltar con las mismas teclas que a pie. Su cuerpo queda quieto mientras está conectado

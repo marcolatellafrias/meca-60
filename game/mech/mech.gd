@@ -3,61 +3,40 @@ extends BalanceBody
 
 ## LA MECA PROPIA: el cuerpo con equilibrio (ver BalanceBody: la caja, el péndulo, caerse y volver, las piernas, las
 ## toberas, caminar y saltar), con lo que es sólo suyo:
-##   · SquareCabin  la cabina de un piso por dentro, el ascensor (PelvisLift) y el marco que lleva a
-##                  los que van adentro.
+##   · CageCabin    la cabina jaula: el que maneja abajo, el de los brazos arriba y el artillero atrás, y el marco que
+##                  lleva a los que van adentro.
 ##   · MechKeys     el teclado y el mouse de quien la posee: escribe LO QUE SE LE PIDE (ver `_think`).
-##   · los brazos   MechArm: PoseArm (discretos) o MuscleArm (físicos), según `arms_kind`: los dos caminos. Sin brazos
-##                  es la meca de práctica, para pegarle.
+##   · los brazos   MechArm: PoseArm (discretos) o MuscleArm (físicos), cada uno el suyo (ver `loadout`). Sin brazos es
+##                  la meca de práctica, para pegarle.
 ## *Hasta el 13/11/2026 el cuerpo y el equilibrio vivían acá; se separaron para compartirlos con los jefes (ver
-## docs/technical/base-comun.md).*
+## docs/technical/base-comun.md). Hasta el 17/11/2026 llevaba también las cabinas de la meca grande —la cuadrada, la
+## redonda, la del vórtice y la de cápsulas—, las toberas que se ven y la simplificada sin cabina; se borraron con ella
+## (el usuario: «limitarnos solamente a un approach de meca a una escala más humana»; están en el commit 0bcaeaf).*
 
-## Los brazos que lleva: ninguno (la de práctica, para pegarle), discretos o físicos.
-enum Arms { NONE, POSE, MUSCLE }
-## LA CABINA QUE LLEVA, una pieza más (ver docs/technical/cuerpo-por-piezas.md): la cuadrada (SquareCabin, CabinGrid) o
-## la redonda (RoundCabin, RoundGrid; el usuario, 15/11/2026: «un "fork" en otra parcela»). Lo que cambia con ella se
-## pregunta en un solo lugar: `cabin_kit`.
-## Y EL DISCO DE DOS PISOS CON VÓRTICE (VortexCabin; el usuario, 15/11/2026: «ponémelo con brazos reales… en una
-## parcela al principio del sandbox»): sin sillas ni ascensor.
-## Y LA DE CÁPSULAS (PodCabin; el usuario, 15/11/2026: «pasemos esta maqueta de forma paramétrica y ordenada al
-## sistema de la nave»): el torso macizo, sin interior ni ascensor, con una cápsula empotrada por puesto.
-## Y LA JAULA (CageCabin; el usuario, 16/11/2026: «empezar a migrar esta meca a algo funcional»): la de las maquetas de
-## tests/cage_ideas_look, chica, con brazos y piernas al 30 %: el que maneja abajo, el de los brazos arriba y el artillero
-## atrás.
-enum Cabin { SQUARE, ROUND, VORTEX, PODS, CAGE }
+## Los brazos que lleva: ninguno (la de práctica, para pegarle) o los de su `loadout`.
+## *Hasta el 17/11/2026 había también MUSCLE, la meca física de la meca grande: hoy cada brazo elige cómo se mueve.*
+enum Arms { NONE, POSE }
+## LA CABINA QUE LLEVA, una pieza más (ver docs/technical/cuerpo-por-piezas.md): la jaula (CageCabin; el usuario,
+## 16/11/2026: «empezar a migrar esta meca a algo funcional»), la de las maquetas de tests/cage_ideas_look, chica, con
+## brazos y piernas al 30 %. Lo que cambia con ella se pregunta en un solo lugar: `cabin_kit`.
+enum Cabin { CAGE }
 
 const MASS := 50000.0
-const NAMES := ["Meca de práctica", "Meca discreta", "Meca física"]
-## LOS BRAZOS: el hombro, en el espacio de la caja (`x` del lado derecho): en el medio del costado (ver
-## CabinGrid.shoulder), `SHOULDER_OUT` afuera del costado, más con brazos más anchos. *El 12/11/2026 se
-## probó en el último tercio, hacia atrás: la postura era más natural, pero el brazo alcanzaba 2,6 m menos hacia
-## adelante, y el usuario lo volvió («estaban bien los brazos a la mitad, no me gusta el sacrificio en rango»). Del 13 al
-## 14/11/2026 se elegía en el panel F2 (el piso y el módulo); con la cabina de un piso, va en el medio.* Y cuánto pesan los físicos, en partes de lo que pesa el brazo solo (ver
-## MuscleArm.weight).
-## *Era una constante (1 m); desde el 15/11/2026 se cambia jugando (MechBody.shoulder_out, el F2: «Brazos y piernas»).*
+## LOS BRAZOS: el hombro, en el espacio de la caja (`x` del lado derecho), lo da la cabina (CageCabin.shoulder), más lo
+## que los corre afuera (MechBody.shoulder_out, el F2: «Brazos y piernas»). Y cuánto pesan los físicos, en partes de lo
+## que pesa el brazo solo (ver MuscleArm.weight).
 
 
-static func shoulder(shape := Cabin.SQUARE) -> Vector3:
+static func shoulder(shape := Cabin.CAGE) -> Vector3:
 	var kit := cabin_kit(shape)
 	var body: MechBody = kit["body"]
 	return (kit["shoulder"] as Vector3) + Vector3(body.shoulder_out * body.thick, 0.0, 0.0)
 
 
-## LO QUE CAMBIA CON LA CABINA, en un solo lugar: la caja (`box`), el hombro sin lo que lo corre afuera (`shoulder`), si
-## se ven las toberas (`nozzles`; la redonda, sin: el usuario, 15/11/2026: «quitaremos las toberas de abajo… sólo de
-## la cilíndrica») y EL CUERPO (`body`, sus medidas: MechBody; el de su F2 en la del vórtice: «opciones para cambiar
-## brazos y piernas solo para esta versión»).
-static func cabin_kit(shape: Cabin) -> Dictionary:
-	if shape == Cabin.ROUND:
-		return {"box": RoundGrid.box(), "shoulder": RoundGrid.shoulder(), "nozzles": false, "body": MechBody.current}
-	if shape == Cabin.VORTEX:
-		return {"box": VortexCabin.box(), "shoulder": VortexCabin.shoulder(), "nozzles": false,
-			"body": MechBody.from_shape(VortexCabin.BODY)}
-	if shape == Cabin.PODS:
-		return {"box": PodCabin.box(), "shoulder": PodCabin.shoulder(), "nozzles": false,
-			"body": MechBody.from_shape(PodCabin.BODY)}
-	if shape == Cabin.CAGE:
-		return {"box": CageCabin.box(), "shoulder": CageCabin.shoulder(), "nozzles": false, "body": CageCabin.body()}
-	return {"box": CabinGrid.box(), "shoulder": CabinGrid.shoulder(), "nozzles": true, "body": MechBody.current}
+## LO QUE CAMBIA CON LA CABINA, en un solo lugar: la caja (`box`), el hombro sin lo que lo corre afuera (`shoulder`) y EL
+## CUERPO (`body`, sus medidas: MechBody, las de su F2 achicadas; ver CageCabin.body).
+static func cabin_kit(_shape := Cabin.CAGE) -> Dictionary:
+	return {"box": CageCabin.box(), "shoulder": CageCabin.shoulder(), "body": CageCabin.body()}
 
 
 const ARM_WEIGHT := 0.4
@@ -75,12 +54,9 @@ var covering := false
 
 var cabin: MechCabin = null
 ## La cabina que lleva (ver `Cabin`). Se pone antes de agregarla.
-var cabin_shape := Cabin.SQUARE
+var cabin_shape := Cabin.CAGE
 var keys: MechKeys = null
 var arms: Array[MechArm] = []
-## CON CABINA (la de siempre) o SIN (LA SIMPLIFICADA: sin cabina, sin escaleras ni ascensor, sin maniquíes; con
-## `arms_kind` NONE, sin brazos: la del Laboratorio cinemático). Se pone antes de agregarla.
-var has_cabin := true
 ## La maneja algo que no son sus teclas (un test, un cerebro): no las lee.
 var scripted := false
 
@@ -88,17 +64,14 @@ var scripted := false
 func _init() -> void:
 	super()
 	mass = MASS
-	size = CabinGrid.box()
+	size = CageCabin.box()
 	hover = measures.WAIST
 
 
 func _ready() -> void:
-	name = NAMES[arms_kind] if has_cabin else "Meca simplificada"
-	if knobs == null:
-		knobs = Mech.knobs_for(arms_kind)
+	name = "Meca de práctica" if arms_kind == Arms.NONE else "Meca"
 	var kit := cabin_kit(cabin_shape)
 	size = kit["box"]
-	show_nozzles = kit["nozzles"]
 	measures = kit["body"]
 	hover = measures.WAIST
 	super()
@@ -109,23 +82,7 @@ func _build() -> void:
 	keys = MechKeys.new()
 	keys.mech = self
 	add_child(keys)
-	if not has_cabin:
-		# LA SIMPLIFICADA: la caja lisa, y una franja al frente para saber hacia dónde mira.
-		Clay.box(look, size, Vector3.ZERO, Clay.METAL.darkened(0.1))
-		Clay.box(look, Vector3(size.x * 0.6, 0.5, 0.2), Vector3(0.0, size.y * 0.3, -size.z * 0.5 - 0.1), Clay.YELLOW)
-		_build_arms()
-		return
-	match cabin_shape:
-		Cabin.ROUND:
-			cabin = RoundCabin.new()
-		Cabin.VORTEX:
-			cabin = VortexCabin.new()
-		Cabin.PODS:
-			cabin = PodCabin.new()
-		Cabin.CAGE:
-			cabin = CageCabin.new()
-		_:
-			cabin = SquareCabin.new()
+	cabin = CageCabin.new()
 	cabin.mech = self
 	add_child(cabin)
 	_build_arms()
@@ -159,15 +116,13 @@ func _loadout_now() -> Array[ArmLoadout]:
 	return default_loadout()
 
 
-## LO QUE LLEVA SU CLASE, sin nada guardado: los dos con el puño común, sin placa, discretos o con músculos según
-## `arms_kind`.
+## LO QUE LLEVA SU CLASE, sin nada guardado: los dos con el puño común, discretos, sin placa.
 func default_loadout() -> Array[ArmLoadout]:
-	return Mech.fists(arms_kind)
+	return Mech.fists()
 
 
-static func fists(arms: Arms) -> Array[ArmLoadout]:
-	var how := ArmLoadout.Motion.MUSCLE if arms == Arms.MUSCLE else ArmLoadout.Motion.POSE
-	return [ArmLoadout.of(how, ArmLoadout.Tip.FIST), ArmLoadout.of(how, ArmLoadout.Tip.FIST)]
+static func fists() -> Array[ArmLoadout]:
+	return [ArmLoadout.of(ArmLoadout.Motion.POSE, ArmLoadout.Tip.FIST), ArmLoadout.of(ArmLoadout.Motion.POSE, ArmLoadout.Tip.FIST)]
 
 
 ## De dónde sacan la energía los brazos (sin energía propia, nada: lo que la gasta no anda; ver ToolMech).
@@ -228,11 +183,11 @@ func possess_camera(first: bool, delta: float) -> Transform3D:
 
 
 ## REARMA TODAS LAS MECAS, Y NADA MÁS: cada una se cambia por una nueva igual —sus brazos, si es cinemática, su lugar en
-## el piso, hacia dónde mira, parada sobre el piso de su parcela— con la forma y las perillas de ahora. Lo usan los dos
-## paneles de la meca al probar y al guardar (el F2, la forma; el F1, las perillas). *Al principio se rearmaba la parcela
-## entera, como la R, y lo demás volvía a como nace: en la arena de esquivar, la torre volvía a tirar aunque el panel
-## chico dijera que no (lo vio el usuario).* Si se la estaba poseyendo, se la suelta antes; el que iba adentro queda
-## donde estaba. *Vivía en el panel del F2 (CabinShapePanel); pasó acá el 13/11/2026, cuando el F1 también lo necesitó.*
+## el piso, hacia dónde mira, parada sobre el piso de su parcela— con la forma y las perillas de ahora. Lo usan los
+## paneles de la meca al probar y al guardar (el F2, la forma; el F1, las perillas). *Al principio se rearmaba la
+## parcela entera, como la R, y lo demás volvía a como nace (lo vio el usuario).* Si se la estaba poseyendo, se la
+## suelta antes; el que iba adentro queda donde estaba. *Vivía en el panel del F2; pasó acá el 13/11/2026, cuando el F1
+## también lo necesitó.*
 static func rebuild_all(tree: SceneTree) -> void:
 	for found in tree.root.find_children("*", "Mech", true, false):
 		var old := found as Mech
@@ -241,13 +196,12 @@ static func rebuild_all(tree: SceneTree) -> void:
 		if old.keys != null and old.keys.driving:
 			SandboxPossession.of(tree).release()
 		var holder := old.get_parent()
-		# La misma clase (una subclase, como la Meca de tres, sigue siendo ella).
+		# La misma clase (una subclase, como la meca jaula, sigue siendo ella).
 		var fresh := old.get_script().new() as Mech
 		fresh.arms_kind = old.arms_kind
 		fresh.loadout = old.loadout
 		fresh.equipment = old.equipment
 		fresh.kinematic = old.kinematic
-		fresh.has_cabin = old.has_cabin
 		fresh.cabin_shape = old.cabin_shape
 		# Parada sobre el piso de su parcela (la altura 0 de lo que la tiene, como la arman sus arquetipos).
 		fresh.transform = Transform3D(Basis(Vector3.UP, old.yaw()), Vector3(old.position.x,
@@ -260,13 +214,8 @@ static func rebuild_all(tree: SceneTree) -> void:
 		holder.add_child(fresh)
 
 
-## LAS PERILLAS DEL CUERPO de una meca con estos brazos: la física tiene las suyas (ver BodySettings.physical).
-static func knobs_for(arms: Arms) -> BodySettings:
-	return BodySettings.physical if arms == Arms.MUSCLE else BodySettings.current
-
-
 ## A QUÉ ALTURA NACE PARADA (el centro de la caja sobre el piso, m): sus piernas más media caja. Un solo lugar para
 ## todas las parcelas que la arman. *Estaba copiado en cuatro.*
-static func standing_height(shape := Cabin.SQUARE) -> float:
+static func standing_height(shape := Cabin.CAGE) -> float:
 	var kit := cabin_kit(shape)
 	return (kit["body"] as MechBody).WAIST + (kit["box"] as Vector3).y * 0.5

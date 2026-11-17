@@ -5,6 +5,8 @@ extends KnobsPanel
 ## todos los paneles de perillas (KnobsPanel): se mueve un borrador, y «Guardar» o «Volver a lo guardado» rearman las
 ## mecas.
 
+## *El ancho era el del panel del cubo (HoverPanel), borrado con él el 17/11/2026.*
+const PANEL_WIDTH := 420.0
 const LABELS := {
 	"new_steps": "los pasos nuevos (apagado: los de antes)",
 	"stride": "largo del paso (m, piernas medianas)", "lift": "cuánto sube el pie (m, piernas medianas)",
@@ -14,7 +16,7 @@ const LABELS := {
 
 
 func setup_panel() -> void:
-	panel_width = HoverPanel.PANEL_WIDTH
+	panel_width = PANEL_WIDTH
 	setup_knobs("piernas", "PIERNAS: LOS PASOS")
 
 

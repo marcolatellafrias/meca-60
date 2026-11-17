@@ -1,7 +1,6 @@
-# Los proyectiles y la arena de esquivar
+# Los proyectiles
 
-`game/projectiles/` (`ProjectileField`, `Missile`) · `game/dodge_arena/` (`DodgeArenaArchetype`, `MissileTurret`) ·
-fila **Arena de esquivar** · ver [[filas]] y [[meca]]
+`game/projectiles/` (`ProjectileField`, `Missile`, `AreaStrike`) · ver [[filas]], [[meca-jaula]] y [[pelea-jefes]]
 
 ## Los proyectiles (13/11/2026)
 Son **piezas para reusar**: los van a usar los jefes y las armas de la meca propia (el usuario: «esto después lo vamos
@@ -35,24 +34,15 @@ hace agachar…) son del módulo de Jefes.
 - Lo que agarra un golpe se busca sin tope: lo fijo (el muro, la cabina) llenaba el cupo de la consulta y la meca
   quedaba afuera (`AreaStrike.loose_in`).
 
-## La arena de esquivar
-Para probar con algo real cómo se siente mover la meca (el usuario: «lo tengo que testear con algo real, que es
-esquivar»). Un redondel de 95 m de radio con un muro de 12 m (más alto que donde empieza la caja: un muro bajo le
-pasaría por abajo), **una torre al medio** que no es un jefe, y la Meca discreta.
-
-- **K cambia de ataque** (`MissileTurret`; una tecla del panel chico de la parcela, ver [[sandbox]]): lluvia de misiles (cada 3,2 s, uno donde está la meca, uno donde va a
-  estar y tres al azar), círculo gigante (4,5 s de aviso), dona (acercarse), ondas (saltarlas), lanza (un paso al
-  costado), alfombra de misiles (caen en fila) y pared que cruza (saltarla), o todos de a uno. Decide sólo el host.
-- **P** prende y apaga la torre; **U** sube al jugador; **O** posee la meca; **N**, **M** y **L** (pegarle y el
-  ascensor), como en las otras filas de la meca; **F1**, las perillas.
-- Medido con la meca quieta: cada ataque la inclina entre 10° y 21°; el círculo gigante (14 m/s) la tira.
-
-Medido (13/11/2026): quieta, de cinco la agarran uno o dos; corriendo en círculo, de veinte la agarran entre dos y
-cinco; un golpe en el centro la inclina unos 7°, y dos juntos la tiran.
+## La arena de esquivar (borrada)
+*Hasta el 17/11/2026, la fila **Arena de esquivar** (`game/dodge_arena/`: `DodgeArenaArchetype`, `MissileTurret`)
+probaba con algo real cómo se siente mover la meca (el usuario: «lo tengo que testear con algo real, que es
+esquivar»): un redondel de 95 m con una torre al medio que tiraba lluvias de misiles, círculos, donas, ondas, lanzas,
+alfombras y paredes a la Meca discreta. Se borró con la meca grande; está en el commit 0bcaeaf. Los proyectiles y las
+zonas quedan para los jefes y las armas de la meca.*
 
 ## Lo que falta
 - Probar la red con dos instancias (`--host-local` y `--join-local`): está hecho para eso, todavía sin probar.
 - Quien se une a mitad de una andanada no ve los misiles que ya estaban en el aire.
 - El misil explota en el piso: si cae sobre la meca, atraviesa la caja el último instante.
 
-Test: `tests/dodge_arena_look.tscn` (unos 25 s, sin el sandbox).

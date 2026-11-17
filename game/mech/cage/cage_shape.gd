@@ -66,8 +66,8 @@ static var current := CageShape.saved()
 @export_range(0.2, 2.5, 0.01) var tower_depth := 0.56
 ## Los ojos del artillero, sobre el piso de arriba (m): la torre llega a esa altura menos lo de uno sentado.
 @export_range(1.6, 4.0, 0.01) var gunner_eye := 2.75
-## LOS MISMOS CAMPOS QUE LA PESTAÑA «BRAZOS Y PIERNAS» DE LAS OTRAS (CabinShape; ver MechBody.from_shape), y el cuerpo
-## que sale de ellos, achicado al 30 % (CageCabin.body).
+## LOS CAMPOS DEL CUERPO (los de la pestaña «Brazos y piernas» de la meca grande, borrada el 17/11/2026; ver
+## MechBody.from_shape), y el cuerpo que sale de ellos, achicado al 30 % (CageCabin.body).
 @export_group("Brazos y piernas")
 @export_enum("chico", "mediano", "grande") var arm_length := 1
 @export_enum("chico", "mediano", "grande") var leg_length := 1

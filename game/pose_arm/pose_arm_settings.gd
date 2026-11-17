@@ -2,7 +2,7 @@ class_name PoseArmSettings
 extends Resource
 
 ## LAS PERILLAS DEL BRAZO DISCRETO (ver PoseArm): una sola copia para todos (`current`), que arma su panel (ArmsPanel,
-## F3 en las filas de la meca discreta). *Hasta el 13/11/2026 eran constantes del código.*
+## F3 en la fila de la meca jaula). *Hasta el 13/11/2026 eran constantes del código.*
 
 ## Se guarda (ver KnobsFile): el F3 tiene «Guardar» y «Volver a lo guardado». El archivo es del usuario.
 const SAVED := "res://game/pose_arm/pose_arm_settings.tres"

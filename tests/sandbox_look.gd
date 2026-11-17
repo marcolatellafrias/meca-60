@@ -2,10 +2,10 @@ extends Node
 
 ## EL SANDBOX ENTERO, PARA MIRAR: lo arma, imprime sus filas en orden (supercategoría, nombre, parcelas, cuáles se
 ## armaron y cuáles están lejos) y, con ventana, saca una vista de arriba y otra parado en una parcela (el panel chico).
-##   tools/godot_ventana.sh res://tests/sandbox_look.tscn -- --salida=C:/carpeta [--fila=Meca discreta]
+##   tools/godot_ventana.sh res://tests/sandbox_look.tscn -- --salida=C:/carpeta [--fila=Meca jaula]
 
 var _folder := ""
-var _row := "Meca discreta"
+var _row := "Meca jaula"
 
 
 func _ready() -> void:

@@ -1,13 +1,15 @@
 class_name KinematicSettings
 extends Resource
 
-## LAS PERILLAS DE MOVERSE DE LA MECA CINEMÁTICA (ver KinematicMover): una sola copia (`current`), la que muestra su panel
-## F1 (KinematicPanel), una pestaña por grupo. La comparten la Meca cinemática y la simplificada del Laboratorio, que es
-## la misma meca sin brazos ni cabina (el usuario, 13/11/2026: «la simplificada… se basa en la cinemática»). TODO EN
-## METROS Y SEGUNDOS: cada movimiento se define por lo que hace, no por fuerzas («movimiento más discreto y menos
-## físico»). Las piernas (sus pasos) son las de la meca, con sus perillas (BodySettings) y su largo (el F2).
+## LAS PERILLAS DE MOVERSE DE LA MECA CINEMÁTICA (ver KinematicMover), una pestaña por grupo en su panel. Cada meca puede
+## llevar las suyas (BalanceBody.kinematic_knobs): la jaula lleva las propias (CageMech.MOVES, su F1: CageMovesPanel);
+## `current` es la copia de las que no llevan (y de donde la jaula arranca si no guardó nada). TODO EN METROS Y
+## SEGUNDOS: cada movimiento se define por lo que hace, no por fuerzas («movimiento más discreto y menos físico»). Las
+## piernas (sus pasos) son las de la meca, con sus perillas (BodySettings) y su largo (el F2).
 ## Se guarda (ver KnobsFile, KnobsPanel). El archivo es del usuario.
-## *Eran las del cubo del Laboratorio (PillarSettings) hasta el 13/11/2026, cuando el cubo se reemplazó por la meca.*
+## *Eran las del cubo del Laboratorio (PillarSettings) hasta el 13/11/2026, cuando el cubo se reemplazó por la meca.
+## Hasta el 17/11/2026 `current` era la de la Meca cinemática y la simplificada del Laboratorio, con su panel
+## (KinematicPanel); se borraron con la meca grande.*
 
 const SAVED := "res://game/balance_body/kinematic_settings.tres"
 
@@ -17,8 +19,9 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 ## UNA velocidad, y CON PESO (el usuario, 15/11/2026: «más de esquivar y momentum»): tarda `start_time` (s) en llegar a
 ## ella y `stop_time` (s) en frenar de ella; cambiar de dirección cuesta como frenar (0: al instante). Sin correr: para
 ## esquivar está el dash. En el aire no se maneja, pero sigue con el impulso que traía (de caminar o de un dash: el
-## usuario, 15/11/2026: «el dash es algo que sucede y listo… seguiría con el impulso»). Las configuraciones de un
-## toque, en el F1. *Hasta el 15/11/2026, un solo tiempo para las dos cosas, y en el aire se frenaba en seco.*
+## usuario, 15/11/2026: «el dash es algo que sucede y listo… seguiría con el impulso»). *Hasta el 15/11/2026, un solo
+## tiempo para las dos cosas, y en el aire se frenaba en seco. Las configuraciones de un toque (instantánea, con peso…)
+## eran del F1 de la Meca cinemática, borrada el 17/11/2026.*
 @export_range(1.0, 30.0, 0.5) var walk_speed := 8.0
 @export_range(0.0, 2.0, 0.05) var start_time := 0.3
 @export_range(0.0, 3.0, 0.05) var stop_time := 0.6

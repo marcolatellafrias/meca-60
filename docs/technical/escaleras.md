@@ -27,8 +27,9 @@ largo. *En el laboratorio, con la rampa por los bordes de arriba de los escalone
   puntas.
 - **El descanso que da a un piso común** (un techo, la calle): la tabla de la cápsula sube ese escalón a lo ancho del
   descanso, para empalmar sin escalón.
-- **La medida**: 15 cm de alto (un tramo lo ajusta un pelo para cerrar justo) y **31,5 cm de pisada** (`CabinGrid.CELL`
-  × 8: la misma en la meca y en el mundo; en la cabina, 4 celdas de alto por 17 escalones dan justo un piso de 2,68 m).
+- **La medida**: 15 cm de alto (un tramo lo ajusta un pelo para cerrar justo) y **31,5 cm de pisada** (`Stairs.TREAD`:
+  ocho celdas de 1/16 del cubo de recurso, las de la grilla de la cabina cuadrada de la meca grande, borrada el
+  17/11/2026; la medida quedó igual).
   *El laboratorio usaba 50 cm; con eso un piso de 3 m pide un tramo de 10 m, que no entra en una fachada. Si los pies
   no se sienten bien jugando, la pisada es lo primero que hay que mirar.*
 - **Nada más que los personajes pisa una escalera**: ni la meca ni los objetos sueltos (un cubo que se suelta en una

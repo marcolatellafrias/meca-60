@@ -1,8 +1,8 @@
 class_name CageMechKeys
 extends ToolMechKeys
 
-## LAS TECLAS DE LA MECA JAULA (CageMech), poseyéndola desde afuera: las de la Meca de tres (las piernas, lo que lleva
-## en los brazos, la energía), con la cámara de afuera más cerca: es chica.
+## LAS TECLAS DE LA MECA JAULA (CageMech), poseyéndola desde afuera: las de la meca con herramientas (ToolMechKeys: las
+## piernas, lo que lleva en los brazos, la energía), con la cámara de afuera más cerca: es chica.
 ## *Hasta el 16/11/2026 tenía las piñas del palo con el clic; pasaron a ToolMechKeys, para cualquier meca con un brazo
 ## de piñas.*
 

@@ -2,27 +2,24 @@ class_name BodySettings
 extends Resource
 
 ## LAS PERILLAS DE UN CUERPO CON EQUILIBRIO (ver BalanceBody y sus piezas): una sola copia para todos (`current`), la
-## de la meca propia; un jefe puede llevar la suya (`BalanceBody.knobs`), que arma el panel de sus
-## filas (MechPanel, F1) leyendo estas propiedades —lo que el recurso exporta es lo que se ve—. Las fuerzas van como
-## ACELERACIONES (m/s²): la masa de la caja no las cambia.
+## de la meca propia; un jefe puede llevar la suya (`BalanceBody.knobs`). Las fuerzas van como ACELERACIONES (m/s²): la
+## masa de la caja no las cambia. Hoy las usa entera la meca de práctica (la física, sin brazos); la jaula, cinemática,
+## se mueve con las suyas (KinematicSettings, CageMech.MOVES) y de acá sólo leen sus piernas (el paso, las rodillas).
+## *Hasta el 17/11/2026 las mostraba el F1 de las filas de la meca grande (MechPanel), borradas ese día con ella.*
 ##
 ## SE GUARDAN, COMO LA FORMA DEL F2 (13/11/2026; el usuario: «no entiendo por qué este panel no tiene opción de
-## guardado»): `current` arranca con lo guardado en `SAVED` (si hay), y el F1 tiene «Guardar» y «Volver a lo guardado»
-## (ver KnobsFile).
+## guardado»): `current` arranca con lo guardado en `SAVED` (si hay; ver KnobsFile).
 ## CADA NÚMERO TIENE UN SOLO DUEÑO (13/11/2026): la ALTURA DE LA CAJA no es una perilla —sale del cuerpo, del largo y
 ## lo estirado de las piernas del F2: ver BalanceBody.hover—; y el PASO de acá (`step_reach`, `step_height`,
 ## `settle_gap`) es el de piernas medianas, que las piernas escalan con su largo al leerlo (BodyLegs). *Hasta entonces
 ## MechBody.dress los escribía encima de estas perillas y la altura del F1 no hacía nada (lo vio el usuario: «la pongo
 ## en 0.5 y la pongo en 15 y no cambia nada»).*
-## El archivo guardado es del usuario: no se sube al repositorio (como el del F2, game/consoles/cabin_shape.tres).
+## El archivo guardado es del usuario: no se sube al repositorio.
 
 const SAVED := "res://game/balance_body/body_settings.tres"
 static var current := KnobsFile.load_into(BodySettings.new(), SAVED) as BodySettings
-## LA MECA FÍSICA (brazos con músculos) GUARDA LAS SUYAS APARTE (13/11/2026; el usuario: «cada una lo suyo físico, pero
-## en estructura y visuales puede ser compartido»): `current` es la de la discreta, la arena y las piernas de la
-## cinemática. Sin archivo propio todavía, arranca con lo guardado de la discreta.
-const SAVED_PHYSICAL := "res://game/balance_body/body_settings_fisica.tres"
-static var physical := KnobsFile.load_into(KnobsFile.load_into(BodySettings.new(), SAVED), SAVED_PHYSICAL) as BodySettings
+## *Hasta el 17/11/2026 la meca física de la meca grande guardaba las suyas aparte (`physical`, en
+## body_settings_fisica.tres); se borró con ella.*
 
 @export_group("Caminar")
 ## A qué velocidad va (m/s), cuánto tarda en llegar (m/s²) y cómo frena al soltar (m/s²: poco, frena de a poco).

@@ -52,7 +52,7 @@ func _ready() -> void:
 			_variant = int(argument.trim_prefix("--variante="))
 	get_window().size = VIEW
 	_stage()
-	var body := MechBody.current
+	var body := MechBody.new()
 	var hip_line := (body.WAIST - body.HIP_DROP) * LIMBS
 	_bottom = hip_line + 0.25
 	match _variant:
@@ -274,7 +274,7 @@ func _standing(at: Vector3) -> void:
 
 ## UN BRAZO de arcilla desde el hombro: el antebrazo hacia adelante.
 func _arm(shoulder: Vector3, side: float) -> void:
-	var body := MechBody.current
+	var body := MechBody.new()
 	var upper := body.UPPER_ARM * LIMBS
 	var fore := body.FOREARM * LIMBS
 	var thick := body.LEG_THICKNESS * LIMBS
@@ -289,7 +289,7 @@ func _arm(shoulder: Vector3, side: float) -> void:
 
 ## LAS PIERNAS de arcilla.
 func _legs(hip_y: float) -> void:
-	var body := MechBody.current
+	var body := MechBody.new()
 	var thick := body.LEG_THICKNESS * LIMBS
 	var hip_x := body.HIP_X * LIMBS
 	var thigh := body.THIGH * LIMBS

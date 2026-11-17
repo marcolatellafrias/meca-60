@@ -1,8 +1,9 @@
 class_name ToolMechKeys
 extends MechKeys
 
-## LAS TECLAS DE LA MECA DE TRES (ToolMech), poseyéndola desde afuera: todo lo que después van a hacer los tres puestos
-## de adentro (las piernas, el cañón, el taladro), desde un teclado. Como las de siempre, el único lugar que lee teclas.
+## LAS TECLAS DE LA MECA CON HERRAMIENTAS (ToolMech, la base de la jaula; nacieron para la Meca de tres), poseyéndola
+## desde afuera: todo lo que después van a hacer los tres puestos de adentro (las piernas, el cañón, el taladro), desde
+## un teclado. Como las de siempre, el único lugar que lee teclas.
 ##   LAS PIERNAS: W/S adelante y atrás · A/D de costado · mouse gira · Ctrl se agacha · espacio salta y, en el aire,
 ##     otra vez: levita · Shift con una dirección: dash. El dash, el salto y levitar gastan energía.
 ##   LO QUE LLEVA EN LOS BRAZOS (ToolMech.cannon, drill y melee; lo que no lleva, nada):
@@ -10,10 +11,10 @@ extends MechKeys
 ##     SI NO, EL BRAZO DE LAS PIÑAS (un puño o el palo): clic izquierdo, un directo · clic derecho, un gancho.
 ##     EL CAÑÓN: las flechas mueven la palanca (queda donde la dejás) · 1 simple, 2 ráfaga, 3 barrido, 4 súper · F, el
 ##     gatillo (mantenido en ráfaga y barrido; en súper, mantener carga y soltar tira).
-##   G / X: el ascensor sube / baja (si la cabina tiene).
 ## Aturdida (sin energía), no hace nada.
 ## *Las piñas con el clic eran sólo de la meca jaula (CageMechKeys) hasta el 16/11/2026; desde que los brazos se
-## equipan, van con lo que lleve cada meca: el puño de la de cápsulas, que sólo se veía, ahora pega.*
+## equipan, van con lo que lleve cada meca. Hasta el 17/11/2026, G / X subían y bajaban el ascensor de la meca grande,
+## borrada ese día.*
 
 ## Lo que gastan el salto y el dash, y levitar por segundo. El dash, caro (el usuario, 15/11/2026: «diseñar todo para
 ## un dash… que cueste más energía»; «me parece mucho 40%… va a estar moviéndose, haciendo ataques… tal vez 25%»): un
@@ -115,10 +116,6 @@ func _unhandled_input(event: InputEvent) -> void:
 	if MODE_KEYS.has(key.physical_keycode) and tool.cannon != null:
 		tool.cannon.mode = MODE_KEYS[key.physical_keycode]
 		tool.cannon.charge = 0.0
-	elif key.physical_keycode == KEY_G and mech.cabin != null and mech.cabin.lift != null:
-		mech.cabin.lift.up()
-	elif key.physical_keycode == KEY_X and mech.cabin != null and mech.cabin.lift != null:
-		mech.cabin.lift.lower()
 	else:
 		return
 	get_viewport().set_input_as_handled()
@@ -134,6 +131,5 @@ func controls() -> PackedStringArray:
 		lines.append("PIÑAS: clic izquierdo directo · clic derecho gancho")
 	if tool.cannon != null:
 		lines.append("CAÑÓN: flechas la palanca · 1 simple, 2 ráfaga, 3 barrido, 4 súper · F el gatillo")
-	var lift := mech.cabin != null and mech.cabin.lift != null
-	lines.append("todo gasta la energía común; vacía, la meca queda aturdida%s" % (" · G / X el ascensor" if lift else ""))
+	lines.append("todo gasta la energía común; vacía, la meca queda aturdida")
 	return lines

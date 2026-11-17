@@ -2,7 +2,10 @@
 
 Lo que comparten **la meca propia** y **las mecas enemigas (los jefes)**: `BalanceBody`, en `game/balance_body/`
 (separada de `Mech` el 13/11/2026; ver [[estructura]] y [[pendulo]]). La meca propia hereda de ella; un jefe también.
-Esta nota junta lo acordado, para quien haga la meca y quien haga los jefes.
+Esta nota junta lo acordado, para quien haga la meca y quien haga los jefes. Hoy la heredan la meca jaula, con el motor
+discreto (abajo), y su meca de práctica, con el péndulo (ver [[meca-jaula]]); a la meca, los jefes le pegan por su
+puerta (`hit`, `shove`, `knock_down`; ver [[pelea-jefes]]). *Hasta el 17/11/2026 la heredaban también las de la meca
+grande, borrada ese día (commit 0bcaeaf).*
 
 ## Qué es
 **Un solo cuerpo físico** que se inclina, pierde el equilibrio y recibe golpes. Nada más. El usuario (13/11/2026): «los
@@ -40,6 +43,53 @@ siempre `BodyLegs`.
 
 ## Quién
 Es de la sesión de la meca; la de jefes la usa y le pide cambios.
+
+## El motor discreto — `KinematicMover` (13/11/2026)
+**El mismo cuerpo, con todo lo suyo, pero lo mueve el controlador de personaje del motor**, con movimiento discreto, en
+vez de Jolt. Es como se mueve la meca jaula; los jefes lo usan por su puerta. Salió del laboratorio cinemático (un cubo
+contra cajas sueltas, borrado el 17/11/2026 con la meca grande; el usuario: «un sistema simple, barebones, sólido y que
+use las cosas del motor, y no reglas inventadas»). *Esta parte vivía en las notas de la meca cinemática y del
+laboratorio, borradas ese día; están en el commit 0bcaeaf.*
+- **Un interruptor del cuerpo**: `BalanceBody.kinematic`, que se pone antes de armarlo. Con él la caja queda congelada y
+  la mueve **`KinematicMover`**, un `CharacterBody3D` (`move_and_slide`): se le da una velocidad, y él frena y se
+  desliza contra paredes y esquinas, sabe si está en el piso y se sale solo si queda metido en algo.
+- **Contra lo fijo del mundo, un cilindro** que envuelve la caja y lo que sobresale adelante (`outline_extra`), y mira
+  **sólo la capa de lo fijo** (`PhysicsLayers.FIXED`). Un piso o una pared que no esté marcado como fijo, la meca lo
+  atraviesa: el sandbox lo marca; un test que arma su propio piso tiene que marcarlo (`PhysicsLayers.mark_fixed`).
+- **Contra lo suelto**, el motor sin reglas extra: la caja empuja, y **los pies con choque** (`StompFeet`), que siguen a
+  los de las piernas, patean de costado. **Lo que queda debajo de un pie que baja, o de la caja al agacharse, se
+  achata**: suena, larga polvo y desaparece. Los personajes todavía no.
+- **Movimiento discreto, en metros y segundos** (`KinematicSettings`; cada cuerpo puede llevar las suyas,
+  `kinematic_knobs`: la jaula, en su F1): una velocidad y el tiempo para llegar a ella; giro con tope; salto sólo para
+  arriba; vuelo con su barra; dash (Shift con dirección) en el piso y en el aire con su barra; agacharse.
+- **La altura**: la de las piernas (el F2), igual que la física.
+- **Lo que la mueve sin manejarse** (lo pidieron los jefes): `shove` la corre su motor (también el revoleo) y
+  `knock_down` la tira y se levanta; tirada es intocable (`untouchable`).
+- Para ponerla en otro lugar sin barrer el camino: `put`. Para manejarla desde un test o un cerebro: `scripted` (en la
+  meca).
+
+**Lo que se aprendió armándolo** (con el cubo del laboratorio):
+- Con la física sincronizada, poner la posición del cuerpo desde afuera no alcanza: el cuerpo la pisa con la suya. Por
+  eso se pone con `put`.
+- **Un cuerpo cinemático que se pone en otro lugar barre lo que hay en el medio**, a la velocidad de ese salto (los pies
+  cruzaban 22 m en un paso y las cajas salían a 430 m/s). Para ponerlos en un lugar se apaga la sincronización un
+  instante (`place_now`, `put`); y en el aire los pies se juntan debajo de a poco.
+- **Un cuerpo entra a la física donde está al agregarlo al árbol**: los pies nacen en su lugar, no en el origen.
+- **Una prueba de movimiento que arranca tocando algo no lo cuenta como choque**: el cilindro se prueba levantado 5 cm.
+- **Las cajas nuevas no pueden nacer encimadas**: el motor las separa a lo bruto.
+- **Un «pruebo y deslizo» escrito a mano pelea con el motor** (en una esquina quedaba 1 cm adentro y de ahí atravesaba
+  el edificio): con `CharacterBody3D` y la capa de lo fijo, desaparece.
+
+## Los paneles de perillas, todos iguales — `KnobsPanel` (13/11/2026)
+El usuario: «borraría lo de probar y dejaría solamente guardar. Y que cuando guarde se regeneren las mecas… un solo
+sistema robusto». *Vivía en la nota de la meca grande, borrada el 17/11/2026.*
+- **Se mueve un borrador.** Nada cambia en vivo con la meca en movimiento.
+- **Un solo «Guardar»**: el borrador pasa a las perillas, se escribe a su archivo (del usuario, no se sube) y **se
+  aplica**: rearma todas las mecas (`Mech.rebuild_all`). «Volver a lo guardado» hace lo mismo con lo del archivo.
+- **Cada número, un solo dueño.** **La altura de la caja no es una perilla**: sale del cuerpo, del largo y lo estirado
+  de las piernas (el F2), y la meca la toma al armarse (`BalanceBody.hover`, de `MechBody.WAIST`). **El paso**
+  (`step_reach`, `step_height`, `settle_gap`) es el de piernas medianas, y las piernas lo escalan con su largo al leerlo.
+- **Dónde nace parada** una meca lo dice un solo lugar, `Mech.standing_height()`.
 
 ## Las curvas de los movimientos discretos (14/11/2026)
 `MoveCurve` y `MoveRamp`, en `game/balance_body/`. Las escribió el módulo Jefes para rodar hecho bola; son de la base

@@ -29,24 +29,17 @@ El detalle, en [[partida]].
 ## Técnico (el código de hoy)
 | Nota | Qué tiene |
 |---|---|
-| [[estructura]] | **Cómo está armado el código**: la meca y sus piezas, los dos caminos, lo congelado, lo traído. |
-| [[meca]] | La meca péndulo: la caja con tres pisos, correr, agacharse, saltar y volar, y los dos caminos. |
-| [[pendulo]] | El modelo de equilibrio: el torso es un péndulo y los pies lo siguen. |
-| [[meca-cinematica]] | La meca de siempre movida a mano, y la regla de adentro: todo como si la meca estuviera quieta. |
-| [[laboratorio-cinematico]] | El experimento del cubo cinemático contra cajas sueltas: cuatro formas de tratar lo suelto, medidas. |
-| [[base-comun]] | Lo que comparten la meca propia y los jefes (`BalanceBody`), y el resto en piezas. |
-| [[cuerpo-por-piezas]] | La regla común (acordada, sin hacer): motor del torso discreto o físico, brazos y dibujo, por separado. |
-| [[meca-de-tres]] | **La meca de ejemplo**: la cabina de tres, el cañón de energía de cuatro modos, el taladro, la energía común y las placas, manejados poseyéndola. |
+| [[estructura]] | **Cómo está armado el código**: la meca y sus piezas, los brazos, lo traído. La meca grande se borró el 17/11/2026 (está en el commit `0bcaeaf`). |
+| [[meca-jaula]] | **La meca, la jaula de las maquetas** (la única desde el 17/11/2026): chica, cinemática con brazos físicos (el cañón en lugar del antebrazo, el palo en el puño pesado), tres cabinas, la energía común, sus teclas, su propio F1 de moverse, la de práctica. |
 | [[tableros]] | **Las caras con tablero**: la grilla de 4 cm en cada cara que puede llevar controles (`FaceBoard`), las piezas de character-parametric sobre su base, en la meca jaula. |
-| [[meca-jaula]] | **La jaula de las maquetas, hecha meca**: chica, cinemática con brazos físicos (el cañón en lugar del antebrazo, el palo en el puño pesado), tres cabinas, su propio F1 de moverse. |
-| [[meca-de-capsulas]] | **La meca sin interior**: el torso macizo con una cápsula empotrada por puesto, el radial de cápsulas y hombros, la forma en el F2. |
-| [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto. |
-| [[cabina]] | La cabina sobre su grilla (módulo Interior): celdas, módulos, pisos y asientos. |
-| [[paneles]] | Los puestos de adelante (módulo Tableros y controles): el holograma con la mira y la energía, los botones, eyectar y el cubo de estado; todavía de arcilla. |
+| [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto, y lo que llevan en la punta (el cañón de energía, el taladro, el palo). |
+| [[base-comun]] | Lo que comparten la meca propia y los jefes (`BalanceBody`), el motor discreto (`KinematicMover`), los paneles de perillas y el resto en piezas. |
+| [[pendulo]] | El modelo de equilibrio físico: el torso es un péndulo y los pies lo siguen (hoy, el de la meca de práctica). |
+| [[cuerpo-por-piezas]] | La regla común (acordada, sin hacer): motor del torso discreto o físico, brazos y dibujo, por separado. |
 | [[maquetas-jefes]] | Jefes de arcilla, quietos: seis siluetas de jefe humanoide, seis con personalidad (la misma base de cuatro patas, dos brazos con armas distintas y un accesorio en el techo, normales y con ira), dos recorribles (seis y cuatro patas, con pasarelas y baterías detrás de compuertas) y una primera tanda de seis. |
 | [[luchador]] | El jefe humanoide: el Luchador sobre orugas. Paso 1: cómo se mueve (orugas con rampas, la cintura aparte, la arena), el horno con la puerta para arriba (el punto débil) y la ira con humo negro. Paso 2: la cabeza, que te rodea y te embiste (abre el horno antes; contra el borde se estrella). |
 | [[pelea-jefes]] | Lo común de la pelea con los jefes: la vida por código, las barras y la arena (un círculo del que el jefe no sale); y lo que se aprendió con el jefe bola, borrado el 15/11/2026. |
-| [[proyectiles]] | Los proyectiles por red y la arena de esquivar. |
+| [[proyectiles]] | Los proyectiles por red y las zonas que pegan. |
 | [[mapa]] | El mapa de pelea: una arena circular con barrios, escaleras y recursos en el borde. |
 | [[sucursal]] | La base en el sandbox: el plano 6 en arcilla (elevador, gimnasio, consolas, casilleros). |
 | [[escaleras]] | La regla de toda escalera (`Stairs`). |
@@ -57,7 +50,11 @@ El detalle, en [[partida]].
 | [[red]] | El multijugador. |
 | [[personajes-traidos]] | Lo traído de character-parametric: el jugador, agarrar, sentarse. |
 | [[analisis-personaje]] | Qué de lo traído necesita la meca y qué no. |
-| [[cubo]] · [[cubo-con-piernas]] | La otra variante de equilibrio (la línea), archivada. |
+
+*El 17/11/2026 se borraron, con la meca grande, las notas de la meca péndulo (`meca`), la meca cinemática, el
+laboratorio cinemático, la Meca de tres, la meca de cápsulas, la cabina cuadrada (`cabina`), la redonda, los puestos de
+adelante (`paneles`) y el cubo de la línea de equilibrio (`cubo`, `cubo-con-piernas`): están en el commit `0bcaeaf`. Lo
+que de ellas sigue vivo pasó a [[meca-jaula]], [[brazo]] y [[base-comun]].*
 
 ## Organización
 - [[modulos]] — **quién es dueño de qué**: las sesiones por módulo, sus carpetas y por dónde se tocan.

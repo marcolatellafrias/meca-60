@@ -45,9 +45,9 @@ embista, con la ventana del horno. `BrawlerBrain`, como un jefe de Souls (aviso,
 - **Si llega al borde de la arena, se estrella**: para en seco y queda **aturdido 2,5 s con el horno abierto** (otra
   ventana).
 - **Las piñas de la meca** cuentan con el brazo estirado: en el horno abierto le sacan 30; en el cuerpo, 6.
-- **En la parcela**: **J** si piensa, **K** el tipo de meca (física, mixta, cinemática con brazos y cabina, que es la de
-  arranque, o simplificada, que no puede pegar), **H** el horno, **P** la ira. Las perillas, en el F1 (pestañas
-  Embestida y Golpes).
+- **En la parcela**: **J** si piensa, **H** el horno, **P** la ira. Las perillas, en el F1 (pestañas Embestida y
+  Golpes). *Hasta el 17/11/2026 la **K** elegía el tipo de meca (física, mixta, cinemática, simplificada o la de tres),
+  todas de la meca grande, borrada ese día: la meca es la jaula (abajo).*
 - **Su cuerpo para las mecas**: las orugas y una caja para el torso que gira con la cintura (así se le llega de frente
   al pecho).
 - Medido (`brawler_fight_look`, la meca cinemática quieta): en 35 s embistió 2 veces y la alcanzó las 2 (le dejó 50);
@@ -137,8 +137,11 @@ tiene poderes propios… hay que ver cómo hacemos que se diferencie».
   mueve `HitReaction` (cinemático: la caída es una animación simple), **se pone blanco, chispas y sonido**
   (`BossSounds`, sintetizados). Las piñas de la meca al jefe también se ven así. Los empujes de las perillas ahora son
   metros (antes, m/s a la meca física).
-- **La meca de enfrente es la de tres** (`ToolMech`, del módulo Meca; el usuario la pidió por la sesión Cabinas
-  separadas): la primera de la K, y la de las pruebas y el video.
+- **La meca de enfrente es la jaula** (`CageMech`, con el equipo guardado de su fila; `BrawlerArchetype.swap_mech`),
+  la de las pruebas y el video, desde el 17/11/2026, cuando se borró la meca grande (el usuario: «limitarnos solamente a
+  un approach de meca a una escala más humana»). *Antes era la de tres (`ToolMech`; el usuario la pidió por la sesión
+  Cabinas separadas), la primera de la K. Lo medido abajo con la meca, hasta ese día, es con la de tres, a 14 m de
+  alto; la jaula mide unos 7.*
 - **El trompo, más rápido y andando**: gira a 1080°/s (antes 540) y anda a 20 m/s (antes 12) durante 3,5 s, **derecho**,
   corrigiendo 4°/s (como la embestida). Los brazos se abren menos (52°) para barrer a la altura de la meca de tres (14 m
   de alto; abiertos del todo le pasaban por arriba). Barre unos 60 m de ancho: **se esquiva escapando**, para atrás

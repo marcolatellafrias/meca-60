@@ -16,9 +16,9 @@ Va en el archivo de filas **de tu módulo** (`MechRows`, `CharacterRows`, `World
 `NetworkRows`, `BossRows`), nunca en `design_sandbox.gd`:
 
 ```gdscript
-SandboxRow.new(SandboxSuper.Id.MECH, "Meca discreta") \
-    .add(SandboxRow.Build.NEAR, [MechArchetype.new(Mech.Arms.POSE)]) \
-    .panel(KEY_F1, "la meca: el péndulo…", MechPanel.new())
+SandboxRow.new(SandboxSuper.Id.MECH, "Meca jaula") \
+    .add(SandboxRow.Build.NEAR, [CageMechArchetype.new()]) \
+    .panel(KEY_F1, "la meca jaula: moverse…", CageMovesPanel.new())
 ```
 
 Un módulo nuevo agrega una línea en `SandboxCatalogue.rows()`.

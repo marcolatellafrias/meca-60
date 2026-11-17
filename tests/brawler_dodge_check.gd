@@ -25,7 +25,6 @@ func _ready() -> void:
 	var parent := Node3D.new()
 	add_child(parent)
 	BrawlerArchetype.thinking = true
-	BrawlerArchetype.mech_kind = BrawlerArchetype.Kind.TOOL
 	var root := BrawlerArchetype.new().build(0, parent)
 	_boss = root.get_node("Luchador") as Brawler
 	_brain = _boss.get_node("Cabeza") as BrawlerBrain
@@ -44,11 +43,11 @@ func _ready() -> void:
 			"homing": k.charge_homing = float(pair[1])
 			"tiempo": k.charge_time = float(pair[1])
 			"aviso": k.charge_windup = float(pair[1])
-			"dash": KinematicSettings.current.dash_distance = float(pair[1])
+			"dash": CageMech.MOVES.dash_distance = float(pair[1])
 			"radio": k.rock_radius = float(pair[1])
 	print("la embestida: aviso %.2f s, %.0f m/s, corrige %.0f°/s · la meca: camina %.0f m/s, dash %.0f m en %.2f s" % [
-		k.charge_windup, k.charge_speed, k.charge_homing, KinematicSettings.current.walk_speed,
-		KinematicSettings.current.dash_distance, KinematicSettings.current.dash_time])
+		k.charge_windup, k.charge_speed, k.charge_homing, CageMech.MOVES.walk_speed,
+		CageMech.MOVES.dash_distance, CageMech.MOVES.dash_time])
 	var args := OS.get_cmdline_user_args()
 	if args.has("--solo-fuego"):
 		await _flames(k)
@@ -80,8 +79,8 @@ func _ready() -> void:
 		get_tree().quit()
 		return
 	print("el golpe al piso: aviso %.2f s, la onda a %.0f m/s, %.0f de ancho · la meca salta %.0f m en %.2f s" % [
-		k.slam_windup, k.wave_speed, k.wave_width, KinematicSettings.current.jump_height,
-		KinematicSettings.current.jump_time])
+		k.slam_windup, k.wave_speed, k.wave_width, CageMech.MOVES.jump_height,
+		CageMech.MOVES.jump_time])
 	for gap: float in [40.0, 80.0, 115.0]:
 		var line := "a %3.0f m:" % gap
 		line += " quieta %s" % await _try_slam(gap, "still", 0.0)

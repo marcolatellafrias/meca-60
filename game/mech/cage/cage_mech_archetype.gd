@@ -1,18 +1,24 @@
 class_name CageMechArchetype
-extends ToolMechArchetype
+extends MechArchetype
 
 ## LA PARCELA DE LA MECA JAULA (CageMech), la primera del sandbox (16/11/2026): la meca, la de práctica adelante para
-## pegarle y una pila de cajas chicas a un costado, a su medida.
+## pegarle (una jaula sin brazos) y una pila de cajas chicas a un costado, a su medida. Las teclas y la bola, las de toda
+## parcela con la meca (MechArchetype).
+## *Hasta el 17/11/2026 heredaba de la parcela de la Meca de tres (ToolMechArchetype), borrada con la meca grande; de ahí
+## venían las cajas.*
 
+## EL NOMBRE DE SU FILA: de ahí sale el equipo guardado de sus brazos (Mech.equipment, MechLoadout), también para las
+## mecas jaula de otras parcelas (el Mapa de pelea, la Base, el Luchador de orugas).
+const ROW := "Meca jaula"
 const CAGE_TARGET := 18.0
+## Las cajas para tirarles: cuántas, su lado (m) y lo que pesa cada una (kg).
+const CRATES := 9
 const SMALL_CRATE := 0.63
 const SMALL_CRATE_MASS := 300.0
 
 
 func _init() -> void:
-	super()
-	cabin_shape = Mech.Cabin.CAGE
-	display_name = "Meca jaula"
+	display_name = ROW
 
 
 func describe(_seed_value: int) -> PackedStringArray:
@@ -44,6 +50,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	mech.equipment = display_name
 	mech.transform = Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(0.0, Mech.standing_height(mech.cabin_shape), 0.0))
 	root.add_child(mech)
+	# LA DE PRÁCTICA: una meca sin brazos (con la cabina jaula, como toda meca).
 	var target := Mech.new()
 	target.arms_kind = Mech.Arms.NONE
 	target.transform = Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(-CAGE_TARGET, Mech.standing_height(), 0.0))

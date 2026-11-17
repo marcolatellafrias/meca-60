@@ -12,6 +12,8 @@ extends TunerPanel
 
 enum Kind { POSE, MUSCLE }
 
+## *El ancho era el del panel del cubo (HoverPanel), borrado con él el 17/11/2026.*
+const PANEL_WIDTH := 420.0
 const TITLES := {Kind.POSE: "Discretos", Kind.MUSCLE: "Con músculos"}
 const POSE_LABELS := {
 	"punch_speed": "piñas: cuánto más rápidas (×)",
@@ -36,7 +38,7 @@ func _init(with: Array[Kind] = [Kind.POSE]) -> void:
 
 
 func setup_panel() -> void:
-	panel_width = HoverPanel.PANEL_WIDTH
+	panel_width = PANEL_WIDTH
 	for kind in kinds:
 		var draft := ArmsPanel._fresh(kind)
 		KnobsFile.copy(draft, ArmsPanel._knobs(kind))

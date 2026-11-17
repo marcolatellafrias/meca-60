@@ -22,7 +22,7 @@ func _ready() -> void:
 	sun.rotation_degrees = Vector3(-50.0, 205.0, 0.0)
 	sun.shadow_enabled = true
 	add_child(sun)
-	_mech = ToolMech.new()
+	_mech = CageMech.new()
 	_mech.position = Vector3(0.0, Mech.standing_height(), 0.0)
 	add_child(_mech)
 	_mech.scripted = true

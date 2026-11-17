@@ -16,7 +16,6 @@ func _ready() -> void:
 	var parent := Node3D.new()
 	add_child(parent)
 	BrawlerArchetype.thinking = false
-	BrawlerArchetype.mech_kind = BrawlerArchetype.Kind.TOOL
 	BrawlerSettings.current.rage_calm = 0.0
 	var root := BrawlerArchetype.new().build(0, parent)
 	_boss = root.get_node("Luchador") as Brawler
@@ -34,6 +33,11 @@ func _ready() -> void:
 		_mech.cannon.trigger = false
 		await _wait(1.0)
 		print("cañón %s: le sacó %.1f" % [CannonTip.MODE_NAMES[mode], before - Health.of(_boss).left])
+	# El taladro, si lo lleva (la meca jaula, sin nada guardado, lleva el palo: ver CageMech.default_arms).
+	if _mech.drill == null:
+		print("taladro: no lo lleva")
+		get_tree().quit()
+		return
 	await _place(_boss_reach())
 	var before := Health.of(_boss).left
 	_mech.drill.charging = true

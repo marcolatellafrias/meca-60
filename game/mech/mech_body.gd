@@ -1,8 +1,8 @@
 class_name MechBody
 extends RefCounted
 
-## EL CUERPO DE LA MECA, DEFINIDO UNA SOLA VEZ (11/11/2026): sus medidas, sus partes y cómo se arma su postura. Lo usan
-## los cubos con piernas y la meca (las piernas las dibuja MechLeg; los brazos, MechArm y los suyos). *Nació para que la
+## EL CUERPO DE LA MECA, DEFINIDO UNA SOLA VEZ (11/11/2026): sus medidas, sus partes y cómo se arma su postura. Lo usa
+## la meca (las piernas las dibuja MechLeg; los brazos, MechArm y los suyos). *Nació para que la
 ## meca de pelea y la de equilibrio, las dos borradas el 13/11/2026, fueran el mismo cuerpo: la segunda tenía su propia
 ## copia de las piernas, armada de memoria, con el pie pegado a la canilla (lo vio el usuario: «no tiene bien los pies
 ## plantados… siendo que supuestamente es el mismo sistema»).*
@@ -43,14 +43,13 @@ const ANKLE_SHARE := 0.85
 const SIZES: Array[float] = [0.75, 1.0, 1.25]
 ## UN CUERPO ES UN OBJETO DE MEDIDAS (15/11/2026; el usuario, de la meca del vórtice: «cada panel de la meca original
 ## debería poder tener como varias variaciones si se le cambia algo estructural… después de todo es solamente
-## información»): cada meca lleva el suyo (BalanceBody.measures, que le da su cabina en Mech.cabin_kit). `current` es el
-## del F2 de la cuadrada (lo pone CabinGrid.apply), y lo llevan todas menos las que tienen su propio F2 (la del vórtice:
-## `from_shape`). *Hasta el 15/11/2026 eran medidas estáticas, una para todas.*
-static var current := MechBody.new()
+## información»): cada meca lleva el suyo (BalanceBody.measures, que le da su cabina en Mech.cabin_kit: el de la forma
+## de la jaula, `from_shape`, achicado). *Hasta el 15/11/2026 eran medidas estáticas, una para todas; hasta el
+## 17/11/2026 había también uno común (`current`), el del F2 de la cabina cuadrada de la meca grande, borrada ese día.*
 
 
 ## UN CUERPO CON LAS MEDIDAS de una forma guardada que tenga los cinco campos del cuerpo (`thickness`, `arm_length`,
-## `leg_length`, `leg_stretch`, `shoulder_out`: CabinShape, VortexShape).
+## `leg_length`, `leg_stretch`, `shoulder_out`: CageShape).
 static func from_shape(shape: Resource) -> MechBody:
 	var body := MechBody.new()
 	body.dress(shape.get("thickness"), shape.get("arm_length"), shape.get("leg_length"), shape.get("leg_stretch"),

@@ -2,8 +2,9 @@ class_name KinematicMover
 extends CharacterBody3D
 
 ## EL MOTOR DE LA MECA CINEMÁTICA (13/11/2026): la pieza que la mueve cuando es cinemática (ver BalanceBody `kinematic`).
-## Es lo que se probó en el Laboratorio con el cubo, pasado a la meca de verdad (el usuario: «la meca cinemática, que
-## ahora es distinta del laboratorio cinemático, probablemente habría que unificarla»).
+## Es lo que se probó en el Laboratorio cinemático con el cubo, pasado a la meca de verdad (el usuario: «la meca
+## cinemática, que ahora es distinta del laboratorio cinemático, probablemente habría que unificarla»); hoy mueve a la
+## meca jaula. *El laboratorio y la meca cinemática de la meca grande se borraron el 17/11/2026 (commit 0bcaeaf).*
 ##
 ## LO MUEVE EL CONTROLADOR DE PERSONAJE DEL MOTOR (CharacterBody3D, `move_and_slide`): se le da una velocidad y él frena
 ## y se desliza contra paredes y esquinas, sabe si está en el piso y se sale solo si queda metido en algo. *Antes la
@@ -131,7 +132,7 @@ func step(delta: float) -> void:
 	else:
 		var flat := _walk(k, delta, grounded)
 		velocity = Vector3(flat.x, _rise(k, delta, grounded), flat.z)
-		# Una sola regla de cuándo sale (la lee también la Meca de tres: ToolMechKeys).
+		# Una sola regla de cuándo sale (la lee también la meca con herramientas: ToolMechKeys).
 		if body.dash and not _dash_was and dash_ready():
 			_dash(k, delta)
 	_dash_was = body.dash
@@ -194,8 +195,6 @@ func _rise(k: KinematicSettings, delta: float, grounded: bool) -> float:
 		_fly_armed = true
 	if body.jump and _fly_armed and fly_fuel > 0.0:
 		fly_fuel = maxf(fly_fuel - delta / k.fly_time, 0.0)
-		# Las toberas de abajo, prendidas (sólo se ven).
-		body.nozzles.push(Vector3.UP * body.knobs.nozzle_push * body.mass, Vector3.ZERO, body.knobs)
 		return k.fly_speed
 	return velocity.y - gravity * delta
 
@@ -208,7 +207,6 @@ func _dash(k: KinematicSettings, delta: float) -> void:
 	_dash_wait = k.dash_time + k.dash_cooldown
 	velocity = _dashing(k, delta)
 	dash_fuel -= k.dash_cost
-	body.nozzles.show(_dash_way, k.dash_time)
 
 
 ## UN PASO DEL DASH: la velocidad baja pareja de la de salida a la de caminar (`walk_speed`) en `dash_time`, así recorre
@@ -311,8 +309,8 @@ func speed() -> float:
 
 
 ## SI UN DASH SALDRÍA AHORA, si se apretara: lo mismo que pide step() (parada, sin empujón ni otro dash en curso, con una
-## dirección, con barra y pasada la espera entre dashes). Para quien cobra el dash aparte, como la Meca de tres con su
-## energía: así no cobra uno que no sale.
+## dirección, con barra y pasada la espera entre dashes). Para quien cobra el dash aparte, como la meca con herramientas
+## (ToolMech) con su energía: así no cobra uno que no sale.
 func dash_ready() -> bool:
 	return body.state == BalanceBody.State.STANDING and _shove_left <= 0.0 and _dash_left <= 0.0 \
 			and body.move.length() > 0.1 and dash_fuel >= body.kinematic_settings().dash_cost and _dash_wait <= 0.0

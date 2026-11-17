@@ -8,8 +8,10 @@ extends Node
 ##   espacio: mantener carga el salto, soltar salta; en el aire, el propulsor
 ##   mouse: hacia dónde mirar. LA CABEZA del que va sentado mira ahí YA, y el torso la alcanza con su demora (el
 ##     usuario: «que con delay se gire la meca, pero que yo pueda mirar normalmente»).
-##   clic izq. / der.: directo · Q / E: gancho · Z / C: uppercut · 1 / 3: desde arriba · F: la postura · G / X: el ascensor sube / baja
-## Y LA CÁMARA de poseerla: en primera persona, la del que va sentado en la silla del movimiento, arriba; en tercera, atrás y arriba.
+##   clic izq. / der.: directo · Q / E: gancho · Z / C: uppercut · 1 / 3: desde arriba · F: la postura
+## Y LA CÁMARA de poseerla: en primera persona, la del que va sentado en la silla desde la que se mira
+## (MechCabin.top_seat); en tercera, atrás y arriba.
+## *Hasta el 17/11/2026, G / X subían y bajaban el ascensor de la meca grande, borrada ese día.*
 
 ## Las teclas de las piñas: para el brazo izquierdo y para el derecho.
 const PUNCH_KEYS := {
@@ -62,10 +64,6 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if key.physical_keycode == KEY_F:
 		mech.covering = not mech.covering
-	elif key.physical_keycode == KEY_G and mech.cabin != null and mech.cabin.lift != null:
-		mech.cabin.lift.up()
-	elif key.physical_keycode == KEY_X and mech.cabin != null and mech.cabin.lift != null:
-		mech.cabin.lift.lower()
 	elif PUNCH_KEYS.has(key.physical_keycode):
 		var pick: Array = PUNCH_KEYS[key.physical_keycode]
 		_punch(int(pick[0]), pick[1] as MechArm.Punch)
@@ -95,7 +93,7 @@ func controls() -> PackedStringArray:
 		"mouse mira: la cabeza al instante, el torso la alcanza",
 		"Shift corre (yendo hacia adelante) · Ctrl se agacha",
 		"clic izq. / der.: directo · Q / E: gancho · Z / C: uppercut · 1 / 3: desde arriba",
-		"F: postura normal / cubriéndose · G: el ascensor baja / sube",
+		"F: postura normal / cubriéndose",
 		"espacio: mantener carga el salto, soltar salta",
 		"espacio en el aire: propulsor",
 		"Shift en el aire: dash hacia donde apretás (uno por salto)",
@@ -122,9 +120,7 @@ func head_yaw() -> float:
 func camera(first: bool, delta: float) -> Transform3D:
 	if first:
 		_chase_yaw = _view_yaw()
-		# Sin cabina (la simplificada), arriba de la caja, al frente.
-		var eyes := mech.cabin.top_seat() + Vector3(0.0, SeatInteractable.STATION_EYE_HEIGHT, 0.0) if mech.cabin != null \
-			else Vector3(0.0, mech.size.y * 0.5 + 1.5, -mech.size.z * 0.4)
+		var eyes := mech.cabin.top_seat() + Vector3(0.0, SeatInteractable.STATION_EYE_HEIGHT, 0.0)
 		return mech.global_transform * Transform3D(Basis(Vector3.UP, head_yaw()) * Basis(Vector3.RIGHT, _head_pitch), eyes)
 	_chase_yaw = lerp_angle(_chase_yaw, _view_yaw(), 1.0 - exp(-4.0 * delta))
 	var from := mech.global_position + Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 14.0, 34.0)

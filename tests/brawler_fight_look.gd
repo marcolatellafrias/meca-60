@@ -48,7 +48,6 @@ func _ready() -> void:
 	var parent := Node3D.new()
 	add_child(parent)
 	BrawlerArchetype.thinking = true
-	BrawlerArchetype.mech_kind = BrawlerArchetype.Kind.KINEMATIC
 	var root := BrawlerArchetype.new().build(0, parent)
 	_boss = root.get_node("Luchador") as Brawler
 	_brain = _boss.get_node("Cabeza") as BrawlerBrain

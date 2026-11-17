@@ -1,6 +1,11 @@
 # El péndulo: el equilibrio de la meca
 
-`game/balance_body/balance_body.gd` (el equilibrio de `BalanceBody`, que hereda la meca) · ver [[meca]] y [[estructura]]
+`game/balance_body/balance_body.gd` (el equilibrio de `BalanceBody`, que hereda la meca) · ver [[base-comun]],
+[[meca-jaula]] y [[estructura]]
+
+*Es el equilibrio de la meca física. Desde el 17/11/2026, cuando se borró la meca grande (commit 0bcaeaf), lo usa la
+meca de práctica de la jaula; la jaula se mueve con el motor discreto (ver [[base-comun]]). Lo medido acá es de la
+meca grande, y sus tests (`mech_balance_check`, `mech_legs_look`, `mech_steps_look`) se borraron con ella.*
 
 *Nació como una fila aparte, el Cubo péndulo; desde el 13/11/2026 es el equilibrio de la meca, sin fila propia. Donde
 esta nota dice «el cubo», es la caja de la meca.*
@@ -40,13 +45,12 @@ de fuerza y su inclinación son huesos; la meca tiene colisión 1:1 con su caja 
   13,6; 1,7 y 2,8 pasos por segundo). Quieta, un pie lejos o girado se acomoda. **Nunca se cruzan** (un pie pisa
   siempre de su lado del otro) y girando en el lugar giran de a pasos (`turn_per_step`). **Las rodillas** van hacia
   adelante y un poco afuera; agachada, más afuera. **La caja no sube ni baja con los pasos**: lo absorben las rodillas.
-  **La pelvis**, una sola pieza, mira al promedio de los dos pies. Caído se pliegan; al enderezarse, se estiran. Para
-  mirarlas: `tests/mech_legs_look.tscn` (unos 40 s).
+  **La pelvis**, una sola pieza, mira al promedio de los dos pies. Caído se pliegan; al enderezarse, se estiran.
 - **LOS PASOS NUEVOS, el sistema clásico de piernas de meca con IK** (13/11/2026, a prueba: el interruptor del F4,
   `LegSettings.new_steps`, elige entre éstos y los de arriba; cuando convenzan se borran los de arriba). El usuario: «el
   sistema actual es uno derivado de los personajes y es medio rebuscado… es un trope bastante común el de piernas para
-  mecas con IK». Las perillas son de todas las mecas (`LegSettings`, panel `LegsPanel`, F4 en las filas de la meca, el
-  Laboratorio y el jefe bola).
+  mecas con IK». Las perillas son de todas las mecas (`LegSettings`, panel `LegsPanel`, F4 en la fila de la meca jaula
+  y en la Base).
   - **Cada pie tiene su lugar**, debajo de su cadera, pegado a la caja, **en el piso de verdad** (un rayo que saltea lo
     que se mueve). Pisa escalones y techos, cada pie a su altura; la caja no sube ni baja y lo absorben las rodillas.
   - **Sale el pie que quedó un tercio de paso atrás** de su lugar, y pisa un tercio adelante de donde va a estar su
@@ -62,15 +66,13 @@ de fuerza y su inclinación son huesos; la meca tiene colisión 1:1 con su caja 
   - **CADA MECA LLEVA SU CUERPO** (15/11/2026; el usuario, de la del vórtice: «cada panel de la meca original debería
     poder tener como varias variaciones si se le cambia algo estructural… después de todo es solamente información»):
     las medidas (MechBody) son un objeto, y cada meca lleva el suyo (`BalanceBody.measures`, que lo pasa a sus piernas
-    y sus brazos). Se lo da su cabina (`Mech.cabin_kit`, clave `body`): la cuadrada y la redonda, `MechBody.current` (el
-    del F2 de la cuadrada, «Brazos y piernas»); la del vórtice, el de su propio F2 (`MechBody.from_shape` de
-    `VortexCabin.BODY`, guardado en `vortex_shape.tres`): el ancho, los largos, el estirado y los hombros. Medido: las
-    demás, los mismos pasos y piñas que antes; la del vórtice con lo suyo (`-- --vortice`; en el test de la piña,
-    `--grosor=N` y `--brazos=N`).
+    y sus brazos). Se lo da su cabina (`Mech.cabin_kit`, clave `body`): hoy, la jaula, el de su F2 achicado al 30 %
+    (`CageCabin.body`). *Hasta el 17/11/2026 la cuadrada y la redonda llevaban uno común (`MechBody.current`) y la del
+    vórtice el suyo.*
   - **La cinemática no llega a un escalón**: su cilindro contra lo fijo va del piso al techo, así que lo frena antes
     de que el pie lo pise. Para que suba escalones el cilindro tendría que empezar más arriba (falta decidir).
 - Pasado el ángulo, **o sin piso bajo su apoyo** (un borde, un pozo), cae, suelto del todo, y se recupera con las
-  toberas del [[cubo]].
+  toberas (`BodyNozzles`; nacieron en el cubo de la línea de equilibrio, borrado con la meca grande).
 - Poseído ([[poseer]]: mirándolo, **O**): W/S hacia donde mira el torso, A/D de costado, el mouse gira.
 
 ## Las dos perillas
@@ -105,4 +107,4 @@ Hoy es la **B**. Pendiente probar la C y la D.
 2. Un brazo con músculos (estilo PuppetMaster: cuerpos unidos que persiguen la pose de la IK o de una piña), en su fila.
 3. El torso mismo como músculo del mismo sistema.
 
-Perillas: `BodySettings` (F1). Test: `tests/mech_balance_check.tscn`.
+Perillas: `BodySettings` (sin panel desde el 17/11/2026: el F1 de la meca grande, `MechPanel`, se borró con ella).

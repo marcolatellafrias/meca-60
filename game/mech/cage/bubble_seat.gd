@@ -26,7 +26,8 @@ func _init() -> void:
 	seat_area = Vector3(0.48, 1.0, 0.6)
 	stand_up_location = Vector2(1.0, 0.0)
 	seat_scene = load(SEAT_SCENE) as PackedScene
-	eye_height = CabinGrid.EYE_HEIGHT
+	# *Hasta el 17/11/2026 tomaba `eye_height` de la cabina cuadrada de la meca grande (CabinGrid.EYE_HEIGHT); acá no se
+	# usa: la altura sale de `seat_height` (ver `_height_for`).*
 
 
 func _height_for(_eye_above_pelvis: float) -> float:

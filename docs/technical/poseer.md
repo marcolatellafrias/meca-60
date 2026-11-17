@@ -28,7 +28,7 @@ Lo que está en el grupo `possessable` y contesta, por nombre:
 | `possess_camera(first, delta)` | dónde va la cámara, en primera o en tercera persona |
 | `possess_status()` (si quiere) | lo que le pasa ahora: una carga, un combustible |
 
-Hoy: la [[meca]] (las dos filas y la de práctica), el [[cubo-con-piernas]], el [[brazo]] físico y **los personajes**:
+Hoy: la meca ([[meca-jaula]], y la de práctica) y **los personajes**:
 cualquiera que no sea el jugador y se simule (los maniquíes de las sillas de la meca, la gente de la fila Locomoción).
 
 ## Poseer a un personaje

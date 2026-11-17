@@ -28,9 +28,16 @@ const LABELS := {
 	"tower_depth": "fondo (m; nunca más que el ancho)",
 	"gunner_eye": "ojos del artillero, sobre el piso de arriba (m)",
 }
-## Los de «Brazos y piernas»: los de las otras, más el adelanto de los hombros, que sólo tiene esta.
-static var LIMB_LABELS: Dictionary = CabinShapePanel.LABELS.merged({
-	"shoulder_forward": "cuánto se adelantan los hombros (0, al medio; 1, al frente sin salirse)"})
+## Los de «Brazos y piernas»: los de la meca grande, más el adelanto de los hombros, que sólo tenía esta. *Hasta el
+## 17/11/2026 se tomaban del panel de la forma de la meca grande (CabinShapePanel), borrado con ella.*
+const LIMB_LABELS := {
+	"arm_length": "largo de los brazos",
+	"leg_length": "largo de las piernas",
+	"thickness": "ancho (de los dos)",
+	"leg_stretch": "cuánto se estiran las piernas paradas",
+	"shoulder_out": "cuánto salen los hombros del costado (m)",
+	"shoulder_forward": "cuánto se adelantan los hombros (0, al medio; 1, al frente sin salirse)",
+}
 const TABS: Array[String] = ["La cápsula de abajo", "El tablero de arriba", "La torre", "Brazos y piernas"]
 
 
@@ -59,7 +66,7 @@ func applied() -> void:
 func sections() -> Array[Dictionary]:
 	var all: Array[Dictionary] = []
 	for tab: String in TABS:
-		# «Brazos y piernas», la misma pestaña que las otras (los nombres de CabinShapePanel).
+		# «Brazos y piernas», con sus nombres (LIMB_LABELS).
 		var labels: Dictionary = LIMB_LABELS if tab == "Brazos y piernas" else LABELS
 		all.append({"title": tab.to_upper(), "tab": tab, "target": draft(), "labels": labels,
 			"include": PackedStringArray([tab]), "headers": false, "defaults": CageShape.new(), "on_change": _measure})

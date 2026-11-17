@@ -267,7 +267,7 @@ func _ready() -> void:
 		_variant = 129
 	get_window().size = VIEW
 	_stage()
-	var body := MechBody.current
+	var body := MechBody.new()
 	var limb_scale: float = REAL_SCALE.get(_variant, LIMBS)
 	var hip_line := (body.WAIST - body.HIP_DROP) * limb_scale
 	_bottom = hip_line + 0.25
@@ -571,7 +571,7 @@ func _square_pod_and_deck(walk: float) -> void:
 ## cañón de energía (izquierdo), sin la mano (la herramienta sale por donde se mete el puño). Las piezas de la armería
 ## están en la medida de la meca entera: se cuelgan de un nodo achicado a `k`.
 func _armed_arm(upper: Node3D, forearm: Node3D, side: float, k: float, body: MechBody) -> void:
-	var full := MechBody.current
+	var full := MechBody.new()
 	_plate(upper, Vector3.RIGHT * side, k, full.UPPER_ARM * 0.75)
 	if side < 0.0 and POLES.has(_number):
 		_cannon_forearm(forearm, k)
@@ -600,7 +600,7 @@ func _cannon_forearm(forearm: Node3D, k: float) -> void:
 	var holder := Node3D.new()
 	holder.scale = Vector3.ONE * k
 	forearm.add_child(holder)
-	var elbow := MechBody.current.FOREARM * 0.5
+	var elbow := MechBody.new().FOREARM * 0.5
 	# La boca, donde terminaría el puño (el usuario: «quede con el cañón el mismo largo que tendría con el puño»).
 	var muzzle := ArmoryParts.TIP - 1.4
 	Clay.cylinder(holder, 1.15, 1.0, Vector3(0, 0, elbow - 0.9), Clay.METAL.darkened(0.1), Vector3(90, 0, 0))
@@ -1397,7 +1397,7 @@ func _own_foot_mount(plan: Array, integrated := false) -> void:
 ## son MechLeg puestas con `leg`; los brazos, las piezas de PoseArm (cilindros, el hombro y el codo esféricos, la mano
 ## de MechHand) puestas con `arm`, en guardia.
 func _real_limbs(k: float) -> void:
-	var full := MechBody.current
+	var full := MechBody.new()
 	var body := MechBody.new()
 	body.thick = full.thick * k
 	body.WAIST = full.WAIST * k
@@ -1452,7 +1452,7 @@ func _real_limbs(k: float) -> void:
 	if _number in ARMED:
 		for leg: Node in find_children("*", "MechLeg", true, false):
 			for piece: Node3D in [leg._thigh, leg._shin]:
-				var length: float = (MechBody.current.THIGH * 0.75) if piece == leg._thigh else (MechBody.current.SHIN * 0.8)
+				var length: float = (MechBody.new().THIGH * 0.75) if piece == leg._thigh else (MechBody.new().SHIN * 0.8)
 				_plate(piece, Vector3.FORWARD, k, length)
 
 
@@ -1733,7 +1733,7 @@ func _standing(at: Vector3) -> void:
 
 ## UN BRAZO de arcilla desde el hombro: el antebrazo hacia adelante.
 func _arm(shoulder: Vector3, side: float) -> void:
-	var body := MechBody.current
+	var body := MechBody.new()
 	var upper := body.UPPER_ARM * LIMBS
 	var fore := body.FOREARM * LIMBS
 	var thick := body.LEG_THICKNESS * LIMBS
@@ -1748,7 +1748,7 @@ func _arm(shoulder: Vector3, side: float) -> void:
 
 ## LAS PIERNAS de arcilla.
 func _legs(hip_y: float) -> void:
-	var body := MechBody.current
+	var body := MechBody.new()
 	var thick := body.LEG_THICKNESS * LIMBS
 	var hip_x := body.HIP_X * LIMBS
 	var thigh := body.THIGH * LIMBS

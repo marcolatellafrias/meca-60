@@ -4,9 +4,9 @@ extends SeededArchetype
 ## LA PARCELA DEL LUCHADOR DE ORUGAS (Brawler): el jefe en su arena (BossArena: un círculo del que no sale; los
 ## edificios, afuera; el medio, despejado) y, enfrente, UNA MECA, el blanco de su cabeza (BrawlerBrain). Los dos con vida
 ## (Health) y sus barras (FightBars). Mirándolos, la O posee a cualquiera de los dos.
-##   · LA K CAMBIA LA MECA entre los cinco tipos: la de tres (ToolMech: cinemática, cañón y taladro; la primera), física
-##     (torso y brazos simulados), mixta (torso simulado, brazos de pose), cinemática (todo cinemático, con brazos y
-##     cabina) y simplificada (sin brazos ni cabina: no puede pegar).
+##   · LA MECA ES LA JAULA (CageMech), con el equipo guardado de su fila (ver `swap_mech`). *Hasta el 17/11/2026 la K la
+##     cambiaba entre cinco tipos de la meca grande (la de tres, física, mixta, cinemática y simplificada), borrada ese
+##     día (el usuario: «limitarnos solamente a un approach de meca a una escala más humana»).*
 ##   · LA J: si el jefe piensa. LA L: qué ataques usa (todos, o uno solo, para probarlo).
 
 ## Lo que ocupa: la arena más grande del F1 y los edificios de afuera.
@@ -19,18 +19,6 @@ const MECH_HEALTH := 100.0
 
 ## Si el jefe piensa (la J).
 static var thinking := true
-## LOS TIPOS DE MECA (la K): su nombre y cómo se arma. LA DE TRES (ToolMech, del módulo Meca: cinemática, el cañón y
-## el taladro) es la primera: el usuario la pidió para pelear con el jefe (por la sesión Cabinas separadas, 15/11/2026).
-enum Kind { PHYSICAL, MIXED, KINEMATIC, SIMPLE, TOOL }
-const KIND_NAMES := ["física", "mixta", "cinemática", "simplificada", "de tres"]
-const KINDS := {
-	Kind.PHYSICAL: {"arms": Mech.Arms.MUSCLE, "kinematic": false, "cabin": true},
-	Kind.MIXED: {"arms": Mech.Arms.POSE, "kinematic": false, "cabin": true},
-	Kind.KINEMATIC: {"arms": Mech.Arms.POSE, "kinematic": true, "cabin": true},
-	Kind.SIMPLE: {"arms": Mech.Arms.NONE, "kinematic": true, "cabin": false},
-	Kind.TOOL: {"tool": true},
-}
-static var mech_kind := Kind.TOOL
 
 
 func _init() -> void:
@@ -55,7 +43,7 @@ func describe(_seed_value: int) -> PackedStringArray:
 		"o el AGARRE: la franja angosta se queda quieta y la mano sale derecho (salite de la franja); si te agarra, te revolea",
 		"si llega al borde de la arena se estrella y queda aturdido, con el horno abierto",
 		"el horno es el punto débil: una piña ahí le saca mucho; en el cuerpo, poco",
-		"J el jefe piensa · K el tipo de meca · L los ataques · O poseer la meca (o al jefe) · F1 las perillas",
+		"J el jefe piensa · L los ataques · O poseer la meca (o al jefe) · F1 las perillas",
 		"poseído: W/S orugas, A/D girarlas, el mouse la cintura, Q el horno, G la ira",
 	])
 
@@ -69,13 +57,6 @@ func keys() -> Array[SandboxKey]:
 					var brain := brawler.get_node_or_null("Cabeza") as BrawlerBrain
 					if brain != null:
 						brain.awake = on),
-		SandboxKey.cycle(KEY_K, SandboxKey.Weight.MAIN, "la meca", KIND_NAMES, func() -> int: return int(mech_kind),
-			func(_parcel: SandboxParcel, index: int) -> void:
-				mech_kind = index as Kind
-				for brawler in _brawlers():
-					var brain := brawler.get_node_or_null("Cabeza") as BrawlerBrain
-					if brain != null:
-						BrawlerArchetype.swap_mech(brain, mech_kind)),
 		SandboxKey.cycle(KEY_L, SandboxKey.Weight.MAIN, "los ataques", BrawlerBrain.MOVES_NAMES,
 			func() -> int: return int(BrawlerBrain.moves),
 			func(_parcel: SandboxParcel, index: int) -> void: BrawlerBrain.moves = index as BrawlerBrain.Moves),
@@ -99,7 +80,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	var arena_radius := BrawlerSettings.current.arena_radius
 	boss.arena = BossArena.new(root, arena_radius)
 	boss.arena.draw(root)
-	# LA CABEZA, y su blanco: la meca enfrente, del tipo de ahora (la K).
+	# LA CABEZA, y su blanco: la meca enfrente.
 	var brain := BrawlerBrain.new()
 	brain.name = "Cabeza"
 	brain.awake = thinking
@@ -109,7 +90,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	bars.boss = boss
 	bars.boss_name = "LUCHADOR DE ORUGAS"
 	root.add_child(bars)
-	BrawlerArchetype.swap_mech(brain, mech_kind)
+	BrawlerArchetype.swap_mech(brain)
 	# AFUERA, LOS EDIFICIOS (lo fijo; el jefe no llega).
 	var fixed := StaticBody3D.new()
 	fixed.name = "Fijo"
@@ -123,10 +104,11 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	return root
 
 
-## PONE LA MECA de tipo `kind` enfrente del jefe, con la vida entera, en lugar de la que había: es el blanco de `brain`.
-## Como lo aprendido con el jefe bola (ver docs/technical/pelea-jefes.md): la nueva nace cuando la vieja ya no está, y sin
-## nada suelto encima; si no, el motor la despide a lo bruto.
-static func swap_mech(brain: BrawlerBrain, kind: Kind) -> void:
+## PONE LA MECA (la jaula, CageMech, con el equipo guardado de su fila, como la arma su parcela: CageMechArchetype.build)
+## enfrente del jefe, con la vida entera, en lugar de la que había: es el blanco de `brain`. Como lo aprendido con el
+## jefe bola (ver docs/technical/pelea-jefes.md): la nueva nace cuando la vieja ya no está, y sin nada suelto encima; si
+## no, el motor la despide a lo bruto. *Hasta el 17/11/2026 era la del tipo de la K (`kind`), de la meca grande.*
+static func swap_mech(brain: BrawlerBrain) -> void:
 	var boss := brain.get_parent() as Brawler
 	var root := boss.get_parent() as Node3D
 	var tree := root.get_tree()
@@ -140,18 +122,10 @@ static func swap_mech(brain: BrawlerBrain, kind: Kind) -> void:
 		old.queue_free()
 		await tree.physics_frame
 		await tree.physics_frame
-	var shape: Dictionary = KINDS[kind]
-	var mech: Mech = null
-	if shape.get("tool", false):
-		mech = ToolMech.new()
-	else:
-		mech = Mech.new()
-		mech.arms_kind = shape["arms"]
-		mech.kinematic = shape["kinematic"]
-		mech.has_cabin = shape["cabin"]
-	mech.transform = Transform3D(Basis(), TARGET_AT + Vector3.UP * Mech.standing_height())
+	var mech := CageMech.new()
+	mech.equipment = CageMechArchetype.ROW
+	mech.transform = Transform3D(Basis(), TARGET_AT + Vector3.UP * Mech.standing_height(mech.cabin_shape))
 	root.add_child(mech)
-	mech.name = "Meca %s" % KIND_NAMES[kind]
 	Health.attach(mech, MECH_HEALTH)
 	brain.target = mech
 	for bars: FightBars in root.find_children("*", "FightBars", false, false):

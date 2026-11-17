@@ -3,7 +3,7 @@ extends ToolMech
 
 ## LA MECA JAULA (ver CageCabin; el usuario, 16/11/2026: «empezar a migrar esta meca a algo funcional… que camine… que
 ## poder cambiar su velocidad… lo primero… que se pueda poseer la meca y que los brazos anden y las piernas anden»). La
-## Meca de tres (ToolMech: la energía común, sus teclas, levitar) con:
+## meca con herramientas (ToolMech, lo que quedó de la Meca de tres: la energía común, sus teclas, levitar) con:
 ##   · EL TORSO DISCRETO, LOS BRAZOS FÍSICOS (el usuario: «los brazos van a ser físicos y el torso va a ser discreto»):
 ##     cinemática, a la izquierda EL CAÑÓN en lugar del antebrazo (CannonTip, discreto) y a la derecha EL PALO en el
 ##     puño pesado (PoleTip), un brazo con músculos (ver `loadout`, ArmLoadout).
@@ -11,8 +11,8 @@ extends ToolMech
 ##   · SUS PROPIAS PERILLAS DE MOVERSE (`MOVES`, el F1 de su fila: CageMovesPanel; el usuario: «si un panel lo quiero
 ##     modificar para este mecha, me gustaría que sea solamente para esta, porque los otros se van a sentir muy
 ##     distintos»).
-##   · LAS PLACAS DEL ACORAZADO (las de la armería, tres caras de octógono) en los brazos y las piernas, y la pelvis
-##     cilíndrica de la maqueta.
+##   · LAS PLACAS DEL ACORAZADO (las de la armería, tres caras de octógono) en los brazos y las piernas. (La pelvis
+##     cilíndrica de la maqueta la arman las piernas, BodyLegs, desde el 17/11/2026: es la de toda meca.)
 
 const SAVED_MOVES := "res://game/mech/cage/cage_moves.tres"
 ## Lo que se achican, al nacer sin guardar, las distancias y velocidades de las de siempre: es más chica.
@@ -46,7 +46,7 @@ func _ready() -> void:
 
 func _build() -> void:
 	super()
-	# Sus teclas, en lugar de las de la Meca de tres.
+	# Sus teclas, en lugar de las de la meca con herramientas.
 	keys.queue_free()
 	remove_child(keys)
 	keys = CageMechKeys.new()
@@ -79,15 +79,12 @@ static func default_arms() -> Array[ArmLoadout]:
 		ArmLoadout.of(ArmLoadout.Motion.MUSCLE, ArmLoadout.Tip.POLE, true)]
 
 
-## LAS PLACAS DE LAS PIERNAS (al frente del muslo y de la canilla) y LA PELVIS: un cilindro acostado de cadera a cadera,
-## en lugar del tambor de las grandes.
+## LAS PLACAS DE LAS PIERNAS (al frente del muslo y de la canilla).
+## *Hasta el 17/11/2026 acá se cambiaba también la pelvis: el tambor de las grandes por el cilindro acostado de cadera a
+## cadera; hoy lo arman así las piernas (BodyLegs) para toda meca.*
 func _dress() -> void:
 	var ahead := global_basis * Vector3.FORWARD
 	for found in find_children("*", "MechLeg", true, false):
 		var leg := found as MechLeg
 		ArmoryParts.plate(leg._thigh, ahead, measures.thick, float(MechBody.BASE["THIGH"]) * 0.75)
 		ArmoryParts.plate(leg._shin, ahead, measures.thick, float(MechBody.BASE["SHIN"]) * 0.8)
-	if legs != null and legs._pelvis != null:
-		legs._pelvis.mesh = null
-		Clay.cylinder(legs._pelvis, measures.LEG_THICKNESS * 0.55, measures.HIP_X * 2.0 - measures.LEG_THICKNESS * 0.9,
-			Vector3(0.0, measures.PELVIS_SIZE.y * 0.5 - measures.HIP_DROP, 0.0), MechBody.JOINT_COLOR, Vector3(0.0, 0.0, 90.0))

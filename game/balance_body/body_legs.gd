@@ -16,7 +16,9 @@ extends Node3D
 ##   · NUNCA SE CRUZAN: un pie pisa siempre de su lado del otro, a por lo menos `MechBody.STANCE_X * 1.2`, contado hacia donde mira; y
 ##     un paso gira el pie a lo más `turn_per_step` de lo que mira el otro: girando en el lugar, gira de a pasos.
 ##   · LA PELVIS, una sola pieza, mira al promedio de los dos pies (va atrás del torso al girar, y lo alcanza). Es un
-##     tambor redondo y hueco: por adentro pasa el ascensor (PelvisLift).
+##     cilindro acostado de cadera a cadera, el de la maqueta de la meca jaula (ver `_ready`). *Hasta el 17/11/2026 era
+##     un tambor redondo y hueco, por el que pasaba el ascensor de la meca grande (PelvisLift), y la jaula lo cambiaba
+##     por el cilindro.*
 ##   · LAS RODILLAS doblan hacia adelante de la pelvis y del pie, un poco hacia afuera (`knee_out`); agachada, más
 ##     (`knee_out_crouched`).
 ##   · EL CUERPO NO SUBE NI BAJA CON LOS PASOS: la caja es la de verdad (adentro se camina); lo absorben las rodillas.
@@ -61,9 +63,13 @@ var _legs: Array[MechLeg] = []
 
 
 func _ready() -> void:
-	_pelvis = PelvisLift.tube(Clay.METAL.darkened(0.15), body.measures.PELVIS_SIZE.y)
+	# LA PELVIS: el nodo que se mueve (centrado como la pelvis de MechBody) y, colgado de él, el cilindro.
+	var measures := body.measures
+	_pelvis = MeshInstance3D.new()
 	_pelvis.top_level = true
 	add_child(_pelvis)
+	Clay.cylinder(_pelvis, measures.LEG_THICKNESS * 0.55, measures.HIP_X * 2.0 - measures.LEG_THICKNESS * 0.9,
+		Vector3(0.0, measures.PELVIS_SIZE.y * 0.5 - measures.HIP_DROP, 0.0), MechBody.JOINT_COLOR, Vector3(0.0, 0.0, 90.0))
 	for i in 2:
 		var leg := MechLeg.new()
 		leg.measures = body.measures

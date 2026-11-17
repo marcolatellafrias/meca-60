@@ -1,12 +1,13 @@
 class_name BaseArchetype
 extends SeededArchetype
 
-## LA PARCELA DE LA BASE (ver BaseLayout y docs/technical/sucursal.md): la sucursal en arcilla, con la meca dormida en el
-## elevador, mirando al gimnasio. Sus teclas son las de la meca (U subirse, J/K la bola: ver MechArchetype) y la G, que
-## abre y cierra la compuerta del techo (lo que va a pasar al empezar una partida).
+## LA PARCELA DE LA BASE (ver BaseLayout y docs/technical/sucursal.md): la sucursal en arcilla, con la meca (la jaula,
+## CageMech, con el equipo de su fila) dormida en el elevador, mirando al gimnasio. Sus teclas son las de la meca (U
+## subirse, J/K la bola: ver MechArchetype) y la G, que abre y cierra la compuerta del techo (lo que va a pasar al
+## empezar una partida). *Hasta el 17/11/2026 la meca era la discreta de la meca grande, borrada ese día.*
 
 ## Las reglas de la meca (sus teclas y los tiros de la bola), de su propia parcela.
-var _mech_rules := MechArchetype.new(Mech.Arms.POSE)
+var _mech_rules := MechArchetype.new()
 ## La raíz de la base armada: la compuerta se busca ahí cada vez (el F1 la vuelve a armar).
 var _root: Node3D
 
@@ -34,9 +35,9 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	parent.add_child(root)
 	BaseLayout.build_into(root)
 	_root = root
-	var mech := Mech.new()
-	mech.arms_kind = Mech.Arms.POSE
-	var spot := BaseLayout.at(BaseLayout.MECH_AT.x, BaseLayout.MECH_AT.y, Mech.standing_height())
+	var mech := CageMech.new()
+	mech.equipment = CageMechArchetype.ROW
+	var spot := BaseLayout.at(BaseLayout.MECH_AT.x, BaseLayout.MECH_AT.y, Mech.standing_height(mech.cabin_shape))
 	mech.transform = Transform3D(Basis(Vector3.UP, -PI * 0.5), spot)
 	root.add_child(mech)
 	return root

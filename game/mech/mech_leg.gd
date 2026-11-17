@@ -14,7 +14,7 @@ var _hip: MeshInstance3D = null
 var _knee: MeshInstance3D = null
 var _ankle: MeshInstance3D = null
 ## Las medidas del cuerpo que la lleva (ver BalanceBody.measures). Se ponen antes de agregarla.
-var measures := MechBody.current
+var measures := MechBody.new()
 
 
 func _init() -> void:

@@ -5,7 +5,8 @@ extends Node
 ## coordinarse en cómo se usa es la idea básica del juego»). La gastan el movimiento (el dash, levitar), el taladro y
 ## el cañón. Se recarga sola un rato después del último gasto; si se vacía, LA MECA QUEDA ATURDIDA un rato: no hace
 ## nada hasta que se le pasa.
-## *Por ahora, sólo en la Meca de tres (ToolMech). El máximo que baja con el uso y cambiar la batería, después.*
+## *Por ahora, sólo en la meca con herramientas (ToolMech, la base de la jaula; nació en la Meca de tres). El máximo que
+## baja con el uso y cambiar la batería, después.*
 
 ## Cuánto se recarga por segundo (partes del total), y cuánto espera después de un gasto para empezar (s).
 const REFILL := 0.14

@@ -71,8 +71,9 @@ var outline_extra := 0.0
 ## PERILLA: la da el cuerpo (la meca propia, el de sus piernas: MechBody.WAIST, del F2). Se pone antes de agregarla.
 var hover := 7.4
 ## SUS MEDIDAS (ver MechBody): el ancho, las piernas, los pies, la pelvis y los brazos. Las da el cuerpo (la meca, según
-## su cabina: Mech.cabin_kit), con `hover` que haga juego (su `WAIST`). Se ponen antes de agregarla.
-var measures := MechBody.current
+## su cabina: Mech.cabin_kit), con `hover` que haga juego (su `WAIST`). Se ponen antes de agregarla; sin ponerlas, las
+## de siempre (MechBody sin tocar).
+var measures := MechBody.new()
 
 ## ── LO QUE SE LE PIDE ──
 ## Caminar (x a la derecha, y adelante, de −1 a 1), correr, agacharse, el salto (mantenido carga, soltarlo salta; en el
@@ -102,13 +103,11 @@ var grounded := false
 var airborne := false
 
 ## ── SUS PIEZAS ──
-## `look`: el nodo del dibujo (las toberas cuelgan de él).
+## `look`: el nodo del dibujo.
 var look: Node3D = null
 var legs: BodyLegs = null
+## Las toberas, invisibles (ver BodyNozzles). *Hasta el 17/11/2026 se podían ver (`show_nozzles`), en la meca grande.*
 var nozzles: BodyNozzles = null
-## Si se ven las toberas (las cuatro campanas de abajo). Sin ellas, empujan igual: sólo no se dibujan. Se pone antes de
-## agregarlo.
-var show_nozzles := true
 var moves: BodyMoves = null
 var label: Label3D = null
 
@@ -139,7 +138,7 @@ func _ready() -> void:
 	look = Node3D.new()
 	look.name = "Dibujo"
 	add_child(look)
-	nozzles = BodyNozzles.new(self, look)
+	nozzles = BodyNozzles.new(self)
 	legs = BodyLegs.new()
 	legs.body = self
 	add_child(legs)
@@ -232,7 +231,6 @@ func _kinematic_step(k: BodySettings, delta: float) -> void:
 		stomp.build(measures.FOOT_SIZE, places)
 	else:
 		stomp.follow(places)
-	nozzles.fire(k)
 	_after_step(k, delta)
 	_show_label()
 

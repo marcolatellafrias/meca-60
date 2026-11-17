@@ -3,6 +3,10 @@
 **Borrador** (15/11/2026, el usuario, después de probar el disco abierto con vórtice). Ver [[la-meca]], [[tripulacion]],
 [[armamento]].
 
+*El 17/11/2026 se borró la meca grande (el usuario: «limitarnos solamente a un approach de meca a una escala más
+humana»): la del vórtice, las cabinas cuadradas y redondas y sus maquetas de arcilla de los tests (están en el commit
+0bcaeaf). Queda la jaula, a escala humana, con sus tres puestos (ver [[meca-jaula]]).*
+
 ## La premisa, en los dos
 La fantasía de la meca: **todos los jugadores manejan una parte y todos dependen de todos**, porque la meca es demasiado
 compleja para uno. La colaboración es inevitable. Cualquier camino tiene que mantener esa imagen: que se vea y se sienta
@@ -56,9 +60,10 @@ comunicarse mejor». **Uno cada brazo y uno las piernas**; un brazo siempre es *
 ametralladora) y el otro **cuerpo a cuerpo** (mano, taladro, sierra, espada, maza). Sin artillería. La complejidad no
 está en moverse ni en chocarse: está en **decidir quién hace qué** (como las clases de los juegos de grupo: cada uno
 con su fuerte). Se prueba en la cuadrada de verdad: tres sillas en línea adelante, el ascensor redondo al medio y los
-recursos en las paredes (ver [[cabina]]). La arcilla de la cabina común escalonada
+recursos en las paredes (la nota de la cabina se borró con ella el 17/11/2026). La arcilla de la cabina común escalonada
 (`tests/shared_cabin_look`) y los planos 2D de dónde van los recursos no convencieron: «los veo medio complicados».
 
 ## Lo que queda de lo anterior
-La cabina cuadrada de un piso con escaleras, sillas y ascensor (`SquareCabin`, [[cabina]]) y la redonda siguen en el
-sandbox; ninguna de las dos es uno de estos caminos.
+La cabina cuadrada de un piso con escaleras, sillas y ascensor (`SquareCabin`) y la redonda siguieron en el sandbox
+hasta el 17/11/2026, cuando se borraron con la meca grande; ninguna de las dos era uno de estos caminos. Desde ese día
+la meca es la jaula, a escala humana (ver [[meca-jaula]]).
