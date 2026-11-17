@@ -47,6 +47,10 @@ Locomoción (el usuario, 13/11/2026, entre uno solo como el de la meca y los dos
 «Guardar» y **«Volver a lo guardado»**, que deshace lo probado sin borrar nada (`LocomotionCommon.restore`,
 `BlockShapes.restore`); el F3 además «Olvidar lo guardado», que vuelve al código.
 
+**Las formas de cabeza** (17/11/2026): al final de la fila Locomoción, una parcela con las diez ranuras de `HeadForms`
+en fila, numeradas, × 3, con su nombre y los arquetipos que la usan (`HeadFormsArchetype`). Sólo para mirar; prueba con
+captura: `tests/head_forms_look.tscn`.
+
 Pruebas:
 - `tests/people_look.tscn` (con ventana, unos 12 segundos): los seis en fila, sus cabezas de cerca, y caminando 3
   segundos (imprime cuánto anduvo cada uno y si quedó de pie). `--cabezas=0.29,0.28,…` prueba altos de cabeza.
