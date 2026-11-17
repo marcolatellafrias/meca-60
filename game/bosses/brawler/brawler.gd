@@ -139,7 +139,9 @@ func _ready() -> void:
 	_torso_shape.shape = chest
 	_torso_shape.position.y = tracks.y + chest.size.y * 0.5
 	_solid.add_child(_torso_shape)
-	PhysicsLayers.mark_fixed(_solid)
+	# SÓLO lo fijo (no la capa común): así lo chocan las mecas, pero los tiros (que miran la común) pasan hasta
+	# donde se le pega (BossHurtbox). Con la capa común, el tiro moría en el cuerpo.
+	_solid.collision_layer = PhysicsLayers.FIXED
 	add_collision_exception_with(_solid)
 	hurtbox = BossHurtbox.new()
 	_solid.add_child(hurtbox)
