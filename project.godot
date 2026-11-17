@@ -14,6 +14,10 @@ config/name="Meca"
 run/main_scene="res://game/sandbox/sandbox.tscn"
 config/features=PackedStringArray("4.5")
 
+[audio]
+
+driver/enable_input=true
+
 [autoload]
 
 AgentWindow="*res://game/debug/agent_window.gd"
@@ -33,19 +37,6 @@ folder_colors={
 "res://game/": "pink",
 "res://tests/": "yellow"
 }
-
-[physics]
-
-common/physics_ticks_per_second=240
-3d/physics_engine="Jolt Physics"
-
-[rendering]
-
-anti_aliasing/quality/msaa_3d=2
-
-[audio]
-
-driver/enable_input=true
 
 [input]
 
@@ -114,6 +105,15 @@ interact={
 3d_physics/layer_14="Escalones"
 3d_physics/layer_16="Borde de parcela"
 3d_physics/layer_17="Fijo del mundo"
+
+[physics]
+
+common/physics_ticks_per_second=240
+3d/physics_engine="Jolt Physics"
+
+[rendering]
+
+anti_aliasing/quality/msaa_3d=2
 
 [steam]
 

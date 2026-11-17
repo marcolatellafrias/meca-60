@@ -133,7 +133,7 @@ func place(k: BodySettings, delta: float) -> void:
 		var facing := Basis(Vector3.UP, _feet_yaw[i]) if standing else root.basis.orthonormalized()
 		var hip := body.measures.hip(waist, side)
 		var to_ankle := ground + Vector3.UP * body.measures.ANKLE - hip
-		var reach := body.measures.THIGH + body.measures.SHIN - 0.5
+		var reach := body.measures.leg_reach()
 		if to_ankle.length() > reach:
 			ground = hip + to_ankle.normalized() * reach - Vector3.UP * body.measures.ANKLE
 		# LA RODILLA: hacia adelante de la pelvis y del pie, y un poco hacia afuera.

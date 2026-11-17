@@ -63,6 +63,11 @@ func _awake_eye(bi: BoneInstantiator, delta: float, bob: float) -> Vector3:
 	var at: Vector3
 	if bi.is_seated and bi.current_seat is SeatInteractable:
 		var seat := bi.current_seat as SeatInteractable
+		# LA SILLA PUEDE PONER LOS OJOS (ver SeatInteractable.camera_point; la de la meca jaula, detrás del centro de su vidrio).
+		var point: Variant = seat.camera_point()
+		if point != null:
+			_pelvis_slow = NAN
+			return point as Vector3
 		# Atrás, el de quien está sentado: la silla gira con él (ver BoneInstantiator._seat_forward).
 		var up := seat.global_basis.y.normalized()
 		var back := axes.basis.z - up * axes.basis.z.dot(up)

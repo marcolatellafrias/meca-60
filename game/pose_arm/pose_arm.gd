@@ -44,8 +44,10 @@ func _ready() -> void:
 	# El hombro y el codo, esferas en la punta de arriba de cada pieza; la mano, en la de abajo del antebrazo.
 	Clay.sphere(_upper, measures.LEG_THICKNESS * 0.78, Vector3(0, 0, upper_length() * 0.5), MechBody.JOINT_COLOR)
 	Clay.sphere(_forearm, measures.LEG_THICKNESS * 0.66, Vector3(0, 0, forearm_length() * 0.5), MechBody.JOINT_COLOR)
+	forearm_skin = _forearm.get_child(0)
 	_mount_hand(_forearm)
 	_place(_target())
+	_dress(_upper, _forearm)
 
 
 func punch(kind: Punch) -> bool:
@@ -106,9 +108,11 @@ func _sweep(pose: Dictionary, delta: float) -> void:
 	_has_last = true
 
 
-## LE PEGA a `body` en `at` con el puño yendo a `velocity` (mundo): un impulso, una vez por piña.
+## LE PEGA a `body` en `at` con el puño yendo a `velocity` (mundo): un impulso, una vez por piña; o lo que haga la
+## punta (el taladro y la sierra, ver SpinTip.hit).
 func _hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> void:
 	_struck[body.get_instance_id()] = true
-	BalanceBody.hit(body, velocity * PoseArmSettings.current.hit_mass, at - body.global_position)
+	if tip == null or not tip.hit(body, at, velocity):
+		BalanceBody.hit(body, velocity * PoseArmSettings.current.hit_mass, at - body.global_position)
 	last_hit_speed = velocity.length()
 	last_hit = body

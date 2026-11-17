@@ -74,7 +74,9 @@ func _ready() -> void:
 	# forma de choque (el puño).
 	Clay.sphere(upper, measures.LEG_THICKNESS * 0.78, Vector3(0, 0, upper_length() * 0.5), MechBody.JOINT_COLOR)
 	Clay.sphere(forearm, measures.LEG_THICKNESS * 0.66, Vector3(0, 0, forearm_length() * 0.5), MechBody.JOINT_COLOR)
+	forearm_skin = forearm.get_meta("skin")
 	_mount_hand(forearm)
+	_dress(upper, forearm)
 	Clay.shape_box(forearm, Vector3(MechHand.PALM.y, MechHand.PALM.x * 2.2, MechHand.length() * 0.8) * measures.thick,
 		Vector3(0, 0, -forearm_length() * 0.5 - MechHand.length() * measures.thick * 0.4))
 	# El hombro, una bola; el codo, una bisagra sobre su eje (el Z de la articulación).
@@ -107,7 +109,7 @@ func _piece(piece_name: String, piece_mass: float, size: Vector3, at: Transform3
 	add_child(body)
 	# Choca como una caja; se ve como un cilindro de pocas caras (ver Clay.limb).
 	Clay.shape_box(body, size, Vector3.ZERO)
-	Clay.limb(body, size.x * 0.5, size.z, Vector3.ZERO, color)
+	body.set_meta("skin", Clay.limb(body, size.x * 0.5, size.z, Vector3.ZERO, color))
 	# SU RESISTENCIA A GIRAR, que es muy distinta según el eje: de punta a punta, desde la articulación (una barra,
 	# m·L²/3), y sobre su propio largo (casi nada). El músculo mide su fuerza con la de cada eje (ver `_muscle`).
 	body.set_meta("across", piece_mass * size.z * size.z / 3.0)

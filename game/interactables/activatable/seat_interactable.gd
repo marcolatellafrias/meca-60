@@ -316,6 +316,15 @@ func _update_height(delta: float) -> void:
 	_fit_visual(_visual_root)
 	_fit_visual(_borrowed_mesh)
 
+## ── EL GANCHO DE UNA SILLA DISTINTA (16/11/2026; lo usa BubbleSeat, la del que maneja la meca jaula) ──────────────
+## Por defecto no hace nada y la silla es la de siempre.
+
+## Donde van los ojos de la primera persona del que está sentado (mundo), o null para los de su cabeza (ver
+## FirstPersonView._awake_eye).
+func camera_point() -> Variant:
+	return null
+
+
 ## LA ALTURA DE LA PELVIS YA ASENTADA: a la que va la silla con quien está sentado, sin el acomodo (ver ALTURA). La lee la
 ## cámara, que no baja mientras la silla se acomoda.
 func settled_height() -> float:

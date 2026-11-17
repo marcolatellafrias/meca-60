@@ -68,6 +68,42 @@ Dónde descansa el puño: **normal** (el brazo al costado, la mano abierta), **c
 **recogido** (la mano contra el hombro, cuando lo que lo sostiene se cae). Pasa de una a otra de corrido; después de una
 piña vuelve a la que tenga. En el banco, **5** cambia entre normal y cubriéndose.
 
+## Lo que lleva en la punta, y la placa — `ArmTip`, `ArmLoadout` (`game/mech/arm_tips/`)
+Desde el 16/11/2026 (el usuario: «unificar el sistema de los brazos, ver qué cosas se equipan»; que **cada brazo elija**
+discreto o con músculos) **cómo se mueve un brazo y qué lleva en la punta son cosas aparte**. La punta es un nodo que el
+brazo monta en la punta del antebrazo (`MechArm._mount_hand`) y llama en cada paso; se monta igual en uno discreto que en
+uno con músculos:
+- **Puño común** (`ArmTip`, la de siempre: la mano) · **puño pesado** (`HeavyFistTip`, el de la armería) · **palo
+  eléctrico** (`PoleTip`: el puño pesado siempre cerrado agarrándolo; sólo se ve).
+- **Taladro** y **sierra** (`DrillTip`, `SawTip`, los dos `SpinTip`): se cargan girando y se descargan con un directo.
+  En un brazo discreto lo que tocan recibe el empujón por lo que giraba; en uno con músculos pegan como pega el brazo.
+- **Cañón de energía** (`CannonTip`): **en lugar del antebrazo** (el usuario: «reemplazar antebrazo»), con su palanca y
+  sus cuatro modos (ver [[meca-de-tres]]). Mientras tanto el brazo va adonde apunta, no a su postura.
+
+Lo que una punta puede cambiar, en ganchos: lo que arma (`_build`), lo de cada paso (`step`), dónde se pide el puño
+(`wanted`), qué pasa al conectar en un brazo discreto (`hit`), si el antebrazo lleva placa (`plates_forearm`) y lo que
+muestra poseyéndola (`status`).
+
+**La placa** (`MechArm.plated`) es la del acorazado de la armería (`ArmoryParts.plate`: tres caras de octógono del lado
+de afuera), en el brazo y el antebrazo; el cañón, que reemplaza al antebrazo, la lleva sólo en el brazo.
+
+**Qué lleva cada brazo de una meca** lo declara la meca: `Mech.loadout`, el izquierdo y el derecho, cada uno un
+`ArmLoadout` (cómo se mueve, la punta, la placa). Vacío, los dos con el puño común sin placa (las mecas de siempre). Es
+lo que elige y guarda **el panel de equipamiento** (`EquipmentPanel`, **F5** de las filas de mecas): el mismo
+panel en todas, y **cada fila guarda el suyo** (`MechLoadout`, en `game/mech/arm_tips/saved/`, por el nombre de la
+fila; los archivos son del usuario, como los de las perillas). Por brazo: cómo se mueve, qué lleva en la punta y si
+lleva la placa; «Guardar» rearma las mecas. La meca sabe de qué fila es por `Mech.equipment` (lo pone su arquetipo);
+sin fila (un test, la arena), lleva lo de su clase (`Mech.default_loadout`), y un `loadout` puesto a mano manda sobre
+todo. Lo prueba `tests/equipment_check.tscn` (cambia el borrador, lo aplica sin escribir el archivo y mira la meca
+rearmada). *El taladro, la sierra y el cañón gastan la energía de la meca: en las que no tienen (las de siempre, sin
+la de la Meca de tres) se ven pero no andan, y sus teclas tampoco los manejan.* Para mirarlas todas: `tests/arm_tips_look.tscn` (una meca jaula
+por punta, el brazo izquierdo discreto y el derecho con músculos).
+
+*Hasta ese día el cañón, el taladro y el palo eran clases de brazo (`CannonArm`, `CageCannonArm`, `DrillArm`,
+`PoleArm`): el cañón no podía tener músculos ni el palo ser discreto, había dos cañones distintos y el de la jaula
+llevaba, además de la placa, la funda de la Meca de tres.* *Y la mano del puño común quedaba siempre del tamaño de la
+meca grande: en la jaula, al 30 %, era enorme.*
+
 ## Montado
 Va solo en su fila o montado en algo que se mueve: la [[meca]] lleva dos. Montado, el músculo del hombro empuja
 contra lo que lo sostiene (una piña sacude al torso) y pesa menos.

@@ -56,7 +56,7 @@ static func cabin_kit(shape: Cabin) -> Dictionary:
 		return {"box": PodCabin.box(), "shoulder": PodCabin.shoulder(), "nozzles": false,
 			"body": MechBody.from_shape(PodCabin.BODY)}
 	if shape == Cabin.CAGE:
-		return {"box": CageCabin.box(), "shoulder": CageCabin.shoulder(), "nozzles": false, "body": CageCabin.BODY}
+		return {"box": CageCabin.box(), "shoulder": CageCabin.shoulder(), "nozzles": false, "body": CageCabin.body()}
 	return {"box": CabinGrid.box(), "shoulder": CabinGrid.shoulder(), "nozzles": true, "body": MechBody.current}
 
 
@@ -64,6 +64,12 @@ const ARM_WEIGHT := 0.4
 
 ## Qué brazos lleva. Se pone antes de agregarla al árbol.
 var arms_kind := Arms.POSE
+## LO QUE LLEVA CADA BRAZO (ver ArmLoadout), el izquierdo y el derecho: cómo se mueve, qué va en la punta y si lleva
+## placa. Puesto a mano (un test), manda. Vacío: lo guardado en el panel de equipamiento para su fila (`equipment`, ver
+## MechLoadout) o, sin fila, lo de su clase (`default_loadout`). Se pone antes de agregarla.
+var loadout: Array[ArmLoadout] = []
+## LA FILA DEL SANDBOX DE LA QUE ES (su nombre; la pone su arquetipo): de ahí sale su equipo guardado. Vacía, ninguno.
+var equipment := ""
 ## La postura de los brazos que se le pide: cubriéndose, o normal.
 var covering := false
 
@@ -131,14 +137,9 @@ func _build() -> void:
 func _build_arms() -> void:
 	if arms_kind == Arms.NONE:
 		return
-	for side: float in [-1.0, 1.0]:
-		var arm: MechArm = null
-		if arms_kind == Arms.MUSCLE:
-			var muscle := MuscleArm.new()
-			muscle.weight = ARM_WEIGHT
-			arm = muscle
-		else:
-			arm = PoseArm.new()
+	for index in 2:
+		var side := -1.0 if index == 0 else 1.0
+		var arm := (_loadout_now()[index] as ArmLoadout).make_arm(ARM_WEIGHT, _arm_energy())
 		arm.side = side
 		arm.anchor = self
 		arm.measures = measures
@@ -147,6 +148,39 @@ func _build_arms() -> void:
 		arm.stance = MechArm.Stance.NORMAL
 		add_child(arm)
 		arms.append(arm)
+
+
+## LO QUE LLEVAN LOS BRAZOS AL ARMARLA (ver `loadout`).
+func _loadout_now() -> Array[ArmLoadout]:
+	if loadout.size() == 2:
+		return loadout
+	if equipment != "":
+		return MechLoadout.current(equipment, default_loadout()).arms()
+	return default_loadout()
+
+
+## LO QUE LLEVA SU CLASE, sin nada guardado: los dos con el puño común, sin placa, discretos o con músculos según
+## `arms_kind`.
+func default_loadout() -> Array[ArmLoadout]:
+	return Mech.fists(arms_kind)
+
+
+static func fists(arms: Arms) -> Array[ArmLoadout]:
+	var how := ArmLoadout.Motion.MUSCLE if arms == Arms.MUSCLE else ArmLoadout.Motion.POSE
+	return [ArmLoadout.of(how, ArmLoadout.Tip.FIST), ArmLoadout.of(how, ArmLoadout.Tip.FIST)]
+
+
+## De dónde sacan la energía los brazos (sin energía propia, nada: lo que la gasta no anda; ver ToolMech).
+func _arm_energy() -> MechEnergy:
+	return null
+
+
+## LA PUNTA DE LA CLASE `kind` del primer brazo que la lleve (o nada).
+func tip_of(kind: Script) -> ArmTip:
+	for arm in arms:
+		if arm.tip != null and is_instance_of(arm.tip, kind):
+			return arm.tip
+	return null
 
 
 func _think() -> void:
@@ -210,6 +244,8 @@ static func rebuild_all(tree: SceneTree) -> void:
 		# La misma clase (una subclase, como la Meca de tres, sigue siendo ella).
 		var fresh := old.get_script().new() as Mech
 		fresh.arms_kind = old.arms_kind
+		fresh.loadout = old.loadout
+		fresh.equipment = old.equipment
 		fresh.kinematic = old.kinematic
 		fresh.has_cabin = old.has_cabin
 		fresh.cabin_shape = old.cabin_shape

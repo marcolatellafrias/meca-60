@@ -1,0 +1,38 @@
+class_name ControlDefinition
+extends Resource
+
+enum ControlType { TOUCH, ONE_AXIS, TWO_AXIS, ROTATING }
+
+@export var type:        ControlType = ControlType.TOUCH
+@export var grid_size:   Vector2i    = Vector2i(1, 1)
+## Con qué estilo se viste (ver ControlArchetype); vacío, el de su tipo.
+@export var archetype_name: String   = ""
+
+@export_group("Shared")
+@export var auto_return:   bool         = false
+@export var default_value: float        = 0.0
+@export var positions:     Array[float] = []
+## Cuánto sigue moviendo la cámara el mouse mientras se maneja este control.
+@export var camera_sensitivity_factor: float = ControllableInteractable.DEFAULT_CAMERA_SENSITIVITY
+## Cuánto rinde el arrastre (ver ControllableInteractable.drag_gain).
+@export var drag_gain: float = 1.0
+## Cuánto sigue solo al soltarlo, en segundos (ver ControllableInteractable, LA INERCIA); 0 se frena en seco.
+@export var inertia: float = 0.0
+
+@export_group("OneAxis / TwoAxis")
+@export var sensitivity:         float   = 0.005
+@export var max_angle_degrees:   float   = 45.0
+@export var rotation_axis_local: Vector3 = Vector3.RIGHT
+@export var rest_rotation_deg:   Vector3 = Vector3.ZERO
+
+@export_group("Touch")
+@export var is_toggle: bool = false
+
+@export_group("Rotating")
+@export var rotate_sensitivity: float = 0.05
+@export var height_offset:      float = 0.0
+@export var rotate_input:       RotatingComponent.InputMode = RotatingComponent.InputMode.SCROLL
+## Tope de giro para cada lado, en radianes; 0 = sin tope.
+@export var rotate_max:         float = 0.0
+## Cuánto puede estirarse hacia quien lo agarra (ver RotatingComponent); 0 = no se estira.
+@export var stretch_max:        float = 0.0

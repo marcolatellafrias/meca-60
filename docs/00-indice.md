@@ -1,6 +1,6 @@
 # Meca — índice
 
-Juego cooperativo de **1 a 4 jugadores** que manejan **una meca gigante desde adentro**, cada uno desde su puesto,
+Juego cooperativo de **1 a 3 jugadores** que manejan **una meca gigante desde adentro**, cada uno desde su puesto,
 contra **mecas enemigas** que maneja la computadora. Los personajes y la meca tienen **una sola vida**: si se pierden,
 se pierden para siempre. Hecho en Godot 4.5 con Jolt. Todo es tentativo: lo abierto está marcado en cada nota.
 
@@ -17,7 +17,7 @@ El detalle, en [[partida]].
 | Nota | Qué tiene |
 |---|---|
 | [[partida]] | El loop, los cuatro finales, la traición y el fuego amigo. |
-| [[tripulacion]] | Cuántos jugadores; personajes de una sola vida, por semilla; la billetera (abierta). |
+| [[tripulacion]] | **De 1 a 3 jugadores** (límite de diseño: la vista de cada puesto); personajes de una sola vida, por semilla; la billetera (abierta). |
 | [[dos-paradigmas]] | **Los dos caminos de hoy**: el disco abierto (límite físico, todos hacen todo) y las cabinas separadas (límite de información y estrategia), los dos discretos. |
 | [[la-meca]] | La meca como diseño: equilibrio y no estadísticas, una versión por cantidad de jugadores, una sola vida, eyectarse, los dos caminos. |
 | [[contratos]] | Las mecas enemigas (dificultad y paga, arquetipos con partes y afijos) y la otra tripulación. |
@@ -37,6 +37,7 @@ El detalle, en [[partida]].
 | [[base-comun]] | Lo que comparten la meca propia y los jefes (`BalanceBody`), y el resto en piezas. |
 | [[cuerpo-por-piezas]] | La regla común (acordada, sin hacer): motor del torso discreto o físico, brazos y dibujo, por separado. |
 | [[meca-de-tres]] | **La meca de ejemplo**: la cabina de tres, el cañón de energía de cuatro modos, el taladro, la energía común y las placas, manejados poseyéndola. |
+| [[tableros]] | **Las caras con tablero**: la grilla de 4 cm en cada cara que puede llevar controles (`FaceBoard`), las piezas de character-parametric sobre su base, en la meca jaula. |
 | [[meca-jaula]] | **La jaula de las maquetas, hecha meca**: chica, cinemática con brazos físicos (el cañón en lugar del antebrazo, el palo en el puño pesado), tres cabinas, su propio F1 de moverse. |
 | [[meca-de-capsulas]] | **La meca sin interior**: el torso macizo con una cápsula empotrada por puesto, el radial de cápsulas y hombros, la forma en el F2. |
 | [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto. |

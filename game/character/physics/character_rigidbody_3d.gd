@@ -269,6 +269,11 @@ func set_frame(new: MotionFrame) -> void:
 		old.crashed.disconnect(_on_frame_crashed)
 	if is_instance_valid(new):
 		new.crashed.connect(_on_frame_crashed)
+	# EL MARCO SABE QUIÉN LO TIENE, sentado o no: al salir del árbol lo suelta él (ver MotionFrame.holds).
+	if is_instance_valid(old):
+		old.holds.erase(self)
+	if is_instance_valid(new):
+		new.holds[self] = true
 	# SU RUMBO SE GUARDA EN LOS EJES DEL MARCO (ver CharacterIntent.look_yaw): al cambiar de marco se lo pasa a los
 	# ejes del nuevo, para que siga mirando al mismo lado del mundo. *En la meca (12/11/2026): al entrar volando a una
 	# meca girada, la mirada saltaba lo que la meca estaba girada («es como que me teletransporto»).* A un proxy no:

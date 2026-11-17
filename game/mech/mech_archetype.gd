@@ -60,6 +60,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	mech.arms_kind = arms
 	mech.kinematic = kinematic
 	mech.cabin_shape = cabin_shape
+	mech.equipment = display_name
 	mech.transform = Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(0.0, Mech.standing_height(cabin_shape), 0.0))
 	root.add_child(mech)
 	var target := Mech.new()
@@ -67,6 +68,12 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	target.transform = Transform3D(Basis(Vector3.UP, -PI * 0.5), Vector3(-SPARRING, standing, 0.0))
 	root.add_child(target)
 	return root
+
+
+## LO QUE LLEVA SU MECA SIN NADA GUARDADO (ver Mech.default_loadout): lo que muestra el panel de equipamiento al volver
+## a lo del código.
+func default_loadout() -> Array[ArmLoadout]:
+	return Mech.fists(arms)
 
 
 ## La bola, subirse, y pegarle arriba suave o fuerte y el ascensor (eran el panel F2, MechKnockPanel: acciones de

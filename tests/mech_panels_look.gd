@@ -10,9 +10,9 @@ func _ready() -> void:
 		if argument.begins_with("--salida="):
 			folder = argument.trim_prefix("--salida=")
 	get_window().size = Vector2i(1280, 1000)
-	var panels: Array[KnobsPanel] = [MechPanel.new(), MechPanel.new(Mech.Arms.MUSCLE), PoseArmPanel.new(),
-		MuscleArmPanel.new()]
-	var names := ["1_f1_discreta", "2_f1_fisica", "3_f3_brazos_discretos", "4_f3_brazos_musculos"]
+	var panels: Array[TunerPanel] = [MechPanel.new(), MechPanel.new(Mech.Arms.MUSCLE), ArmsPanel.new([ArmsPanel.Kind.POSE]),
+		ArmsPanel.new([ArmsPanel.Kind.POSE, ArmsPanel.Kind.MUSCLE])]
+	var names := ["1_f1_discreta", "2_f1_fisica", "3_f3_brazos_discretos", "4_f3_brazos_jaula"]
 	for i in panels.size():
 		var panel := panels[i]
 		add_child(panel)

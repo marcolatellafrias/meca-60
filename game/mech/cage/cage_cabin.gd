@@ -3,41 +3,32 @@ extends MechCabin
 
 ## LA MECA JAULA (16/11/2026, de las maquetas de tests/cage_ideas_look, la 166; el usuario: «empezar a migrar esta meca
 ## a algo funcional… que camine… que sus tres cabinas se puedan usar»). Una cabina más de la meca (ver Mech.Cabin.CAGE),
-## CHICA: las cabinas a la medida de una persona y los brazos y las piernas de la meca de siempre al 30 % (`LIMBS`; el
-## usuario: «mantener estos grosores y estos largos de brazos que me gustan»).
-##   · ABAJO, LA CÁPSULA DEL QUE MANEJA: una caja de 2 m de planta con la burbuja de vidrio al frente (la 144), el piso
-##     adentro y la tapa de la panza. Es LA CAJA de la meca (la que choca): los hombros salen de la mitad de sus
-##     costados (los de la 166: «van a estar en el módulo de abajo»).
-##   · ARRIBA, LA CUBIERTA DEL DE LOS BRAZOS: sentado, dentro de un borde bajo con bisel adelante y paredes que suben
-##     hacia atrás; adelante, sus controles (botonera, dos palancas y el reloj). Sólo se ven.
-##   · ATRÁS, LA TORRE DEL ARTILLERO, metida en la planta: arriba, el plato que gira con su silla y el arma montada en su
-##     horquilla (sólo se ve: «después lo vamos a hacer funcional»).
-##   · ATRÁS, EN LA ESPALDA: el hueco de un recurso, la batería metida y la mochila del jetpack con el bisel abajo (la
-##     129). Sólo se ven.
+## con los brazos y las piernas de la meca de siempre al 30 % (`LIMBS`; «mantener estos grosores y estos largos»). TODO
+## SALE DE SU FORMA (CageShape, el F2 de su fila; el usuario: «un sistema… para controlar el tamaño de la meca… sin tener
+## tantos sliders… que todos los elementos encajen bien»), con mallas de caras propias (CageMesh):
+##   · ABAJO, LA CAJA DEL QUE MANEJA CON LA BURBUJA AL FRENTE (la de la maqueta 166): la burbuja es una ventana; el que
+##     maneja va sentado adentro de la caja, en la silla de siempre (BubbleSeat), y su cámara de primera persona va a la
+##     altura del centro del vidrio. Los hombros, en el centro de cada costado sin el piso ni el techo. Es LA CAJA de la
+##     meca.
+##   · ARRIBA, EL BLOQUE LLENO CON EL POZO DEL DE LOS BRAZOS (DeskPit): sobre la tapa del cubo, del mismo lado.
+##   · ATRÁS, LA TORRE DEL ARTILLERO contra el borde de atrás, redonda o cuadrada; arriba, el plato que gira con su silla
+##     y el arma montada (sólo se ve: «después lo vamos a hacer funcional»).
+##   · ATRÁS, EN LA ESPALDA DEL CUBO: el hueco de un recurso, la batería metida y la mochila del jetpack (sólo se ven).
+## *Hasta el 16/11/2026 era una caja de 2 m maquetada a mano, con la cubierta de borde en bisel y la torre metida.*
 ## Todo se arma desde el fondo de la caja (`_root`, a `bottom()`): las medidas de abajo son alturas desde ahí.
 
 ## Brazos y piernas: la meca de siempre al 30 %.
 const LIMBS := 0.3
-static var BODY := MechBody.scaled(LIMBS)
-## La caja: su planta (la mitad del lado), el grosor de sus paredes y su alto (hasta la cubierta).
-const HALF := 1.0
-const SKIN := 0.1
-const DECK_Y := 1.78
-## La pared baja hasta acá; arriba, la placa de la cubierta.
-const WALL_TOP := 1.66
-## El piso de adentro de la cápsula.
-const FLOOR := 0.12
-## La ventana: el centro (también el alto de los hombros) y el radio del hueco.
-const WINDOW_CENTER := 0.83
-const WINDOW := 0.64
-## El borde de la cubierta: su ancho, el alto de afuera y el de adentro; y lo que queda para caminar adentro (la mitad).
-const RIM := 0.35
-const RIM_OUT := 0.72
-const RIM_IN := 0.6
-const WALK := HALF - RIM
-## La torre del artillero: su alto sobre la cubierta y dónde va (z, hacia atrás).
-const TOWER_TALL := 1.05
-const TOWER_Z := 0.72
+## EL CUERPO: el de sus perillas de «Brazos y piernas» (las de todas las mecas), achicado a `LIMBS`.
+static func body() -> MechBody:
+	var made := MechBody.from_shape(shape())
+	made.shrink(LIMBS)
+	return made
+
+## LA SILLA DEL QUE MANEJA (BubbleSeat): cuánto detrás del centro de la cápsula va su base (m).
+const DRIVER_BACK := 0.12
+## Los ojos sobre la silla de uno sentado arriba de la torre (m): la torre llega a los ojos del artillero menos esto.
+const GUNNER_SEATED := 1.15
 ## Lo que lleva el plato del artillero hacia adelante (el pie del arma).
 const GUN_REACH := 0.35
 ## La mochila: su profundidad; el hueco y la batería, a qué alto y su tamaño (partes del de 72 cm).
@@ -47,17 +38,19 @@ const SLOTS_K := 0.7
 const SLOTS_X := 0.45
 
 const SHELL := Color(0.6, 0.61, 0.63)
+## Lo opaco de la cápsula, por dentro: un gris oscuro (el usuario: «el espacio enterrado del habitáculo de abajo… un gris más oscuro»).
+const INSIDE := Color(0.36, 0.37, 0.39)
 const METAL := Color(0.55, 0.57, 0.6)
 const DARK := Color(0.3, 0.31, 0.34)
 const DECK := Color(0.68, 0.69, 0.7)
 const RIM_COLOR := Color(0.22, 0.23, 0.25)
 const HOLE := Color(0.08, 0.08, 0.1)
 const GLASS := Color(0.62, 0.8, 0.92, 0.3)
-const JOINT := Color(0.36, 0.375, 0.4)
+## EL VIDRIO DE LA CÁPSULA: casi transparente, apenas verdoso, con manchas muy sutiles (cage_glass.gdshader).
+static var GLASS_PAINT := CageCabin._glass_paint()
 const CELL := Color(0.62, 0.6, 0.42)
-const RED := Color(0.78, 0.18, 0.15)
-const YELLOW := Color(0.95, 0.75, 0.15)
-const FACE := Color(0.92, 0.9, 0.84)
+## El amarillo apagado del arma del artillero (el usuario: «desatura un poco sus colores y oscurecelos un poco»).
+const YELLOW := Color(0.68, 0.57, 0.26)
 ## Los puestos, en el orden de las sillas.
 const SEAT_NAMES := ["brazos", "artillero", "manejo"]
 const DRIVER := 2
@@ -69,32 +62,73 @@ var _root: Node3D = null
 
 ## ── LAS MEDIDAS (en el espacio de la caja: el centro, en el medio) ──────────────────────────────────────────────
 
+static func shape() -> CageShape:
+	return CageShape.current
+
+
+## LA CAJA: el módulo de abajo.
 static func box() -> Vector3:
-	return Vector3(HALF * 2.0, DECK_Y, HALF * 2.0)
+	var side := shape().side()
+	return Vector3(side, shape().height(), side)
 
 
 static func bottom() -> float:
-	return -DECK_Y * 0.5
+	return -shape().height() * 0.5
 
 
-## EL HOMBRO (el derecho; el izquierdo, espejado): afuera del costado, a la altura del centro de la ventana.
+## EL HOMBRO (el derecho; el izquierdo, espejado): afuera del costado, centrado en la cara sin el piso ni el techo (el
+## usuario: «los hombros deberían ir centrados en la cara del módulo sin techo y sin piso»): a la altura del centro de la
+## esfera, la de los ojos del que maneja. Y ADELANTADO `shoulder_forward` (16/11/2026, el usuario: «que se sienta un
+## poquito más conectado con los brazos… en cero, los hombros al medio… al máximo, adelantados al máximo sin que
+## sobresalgan de la caja… va a actuar como un offset»): de 0, al medio, a 1, con la bola del hombro tocando el frente.
 static func shoulder() -> Vector3:
-	return Vector3(HALF + BODY.LEG_THICKNESS * 0.7, bottom() + WINDOW_CENTER, -0.1)
+	var form := shape()
+	var lift := form.bubble_y() - form.height() * 0.5
+	var limbs := body()
+	var room := maxf(form.side() * 0.5 - limbs.LEG_THICKNESS * MechBody.JOINT_SHARE, 0.0)
+	return Vector3(form.side() * 0.5 + limbs.LEG_THICKNESS * 0.7 + limbs.shoulder_out * limbs.thick, lift,
+		-room * form.shoulder_forward)
 
 
-## Lo alto de la torre del artillero, desde el fondo.
-static func tower_head() -> float:
-	return DECK_Y + TOWER_TALL
+## EL BLOQUE DE ARRIBA de una forma: el pozo con sus perillas.
+static func pit_of(form: CageShape) -> DeskPit:
+	var pit := DeskPit.new()
+	pit.side = form.side()
+	pit.radius = form.pit_apothem()
+	pit.tilt = form.desk_tilt
+	pit.eye = form.arms_eye
+	return pit
 
 
-## Donde se mira en primera persona al poseerla: la silla del que maneja, abajo. La cámara pone los ojos a la altura de
-## un puesto de pie (SeatInteractable.STATION_EYE_HEIGHT) sobre este punto: se baja lo que hace falta para que queden
-## a la altura de los ojos de uno sentado en ella, que es la que mira por la burbuja.
+## Lo alto de la torre sobre el piso de arriba: los ojos del artillero menos lo de uno sentado, nunca debajo del bloque.
+static func tower_top(form: CageShape) -> float:
+	return maxf(form.gunner_eye - GUNNER_SEATED, pit_of(form).top() + 0.1)
+
+
+## Donde se mira en primera persona al poseerla: los ojos del que maneja (`driver_eye`). La cámara pone los ojos a la
+## altura de un puesto de pie (SeatInteractable.STATION_EYE_HEIGHT) sobre este punto: se baja eso.
 func top_seat() -> Vector3:
-	if chairs.size() <= DRIVER:
-		return Vector3.ZERO
-	var chair := chairs[DRIVER]
-	return chair.position + _root.position + Vector3(0.0, chair.eye_height - SeatInteractable.STATION_EYE_HEIGHT, 0.0)
+	return _root.position + driver_eye(shape()) - Vector3(0.0, SeatInteractable.STATION_EYE_HEIGHT, 0.0)
+
+
+## El centro de la cápsula, desde el fondo de la caja: la tapa de adelante (el domo) sobresale entera y el cinturón empieza
+## en la cara de la caja.
+static func bubble_center(form: CageShape) -> Vector3:
+	return Vector3(0.0, form.bubble_y(), -form.side() * 0.5 + form.capsule_radius() / (1.0 + sqrt(2.0)))
+
+
+## Cuánto se estira el cinturón hacia adentro: el doble de lo que mide (ver _cube).
+static func belt_back(form: CageShape) -> float:
+	return 2.0 * form.capsule_radius() / (1.0 + sqrt(2.0))
+
+
+## LOS OJOS DE LA PRIMERA PERSONA DEL QUE MANEJA, desde el fondo de la caja: a la altura del centro de su cápsula
+## (16/11/2026, el usuario: «que la cámara ya no tenga el offset por profundidad… la altura de la visión al medio»), y
+## RETROCEDIDOS MEDIO CINTURÓN (el usuario: «que el asiento retroceda… para que las piernas no clipeen»; y después, «lo
+## vamos a dejar al medio… el sweet spot de que no atraviesa las piernas, pero no está tan lejos»): entre medio del anillo
+## de adelante y el de atrás.
+static func driver_eye(form: CageShape) -> Vector3:
+	return bubble_center(form) + Vector3(0.0, 0.0, belt_back(form) * 0.5)
 
 
 func _ready() -> void:
@@ -108,167 +142,254 @@ func _ready() -> void:
 	_root.name = "Forma"
 	_root.position = Vector3(0.0, bottom(), 0.0)
 	add_child(_root)
-	_pod()
-	_deck()
-	_tower()
-	_back()
-	_chair(0, Vector3(0.0, DECK_Y + 0.03, -0.3))
-	_chair(1, Vector3(0.0, tower_head() + 0.2, TOWER_Z + 0.1))
-	_chair(2, Vector3(0.0, FLOOR + 0.03, 0.1))
+	var form := shape()
+	var side := form.side()
+	var tall := form.height()
+	_cube(form)
+	var pit := pit_of(form)
+	_upper(pit, tall)
+	# LOS TABLEROS DE VERDAD en las caras de la cápsula y del bloque de arriba (CageBoards; el usuario, 17/11/2026: «está
+	# bien ahora el sistema… lo pases a la meca»).
+	CageBoards.dress(_root, form)
+	_tower(form, side, tall, pit)
+	_back(side, tall)
+	_chair(0, Vector3(0.0, tall, 0.05), form.arms_eye)
+	_chair(1, Vector3(0.0, tower_top(form) + tall, side * 0.5 - form.tower_deep() * 0.5 + 0.05), GUNNER_SEATED)
+	# LA DEL QUE MANEJA, la de siempre (BubbleSeat), en el piso de la cabina debajo de la cápsula (sale por su hueco de
+	# abajo), un poco detrás de los ojos, que van con el anillo de atrás.
+	var driver := BubbleSeat.new()
+	driver.name = "Asiento %s" % SEAT_NAMES[DRIVER]
+	driver.position = Vector3(0.0, form.cabin_floor(), driver_eye(form).z + DRIVER_BACK)
+	driver.eye_point = driver_eye(form)
+	driver.seat_height = form.seat_height
+	_root.add_child(driver)
+	chairs.append(driver)
 
 
-## ── LA CÁPSULA DE ABAJO ──────────────────────────────────────────────────────────────────────────────────────────
+## ── LAS CARAS QUE PUEDEN LLEVAR TABLERO (ver FaceBoard) ──────────────────────────────────────────────────────────
 
-## LA CAJA: los costados, la espalda y el fondo; el frente en tiras cortadas por el círculo de la ventana; la burbuja con
-## su marco; el piso de adentro y la tapa de la panza.
-func _pod() -> void:
-	var mid := WALL_TOP * 0.5
-	for s: float in [-1.0, 1.0]:
-		_part(Vector3(SKIN, WALL_TOP, HALF * 2.0), Vector3(s * (HALF - SKIN * 0.5), mid, 0.0), SHELL)
-		_solid(Vector3(SKIN, WALL_TOP, HALF * 2.0), Vector3(s * (HALF - SKIN * 0.5), mid, 0.0))
-	_part(Vector3(HALF * 2.0, WALL_TOP, SKIN), Vector3(0.0, mid, HALF - SKIN * 0.5), SHELL)
-	_solid(Vector3(HALF * 2.0, WALL_TOP, SKIN), Vector3(0.0, mid, HALF - SKIN * 0.5))
-	_part(Vector3(HALF * 2.0, 0.12, HALF * 2.0), Vector3(0.0, 0.06, 0.0), SHELL)
-	# El frente (el vidrio también es pared para los de adentro).
-	_solid(Vector3(HALF * 2.0, WALL_TOP, SKIN), Vector3(0.0, mid, -HALF + SKIN * 0.5))
-	var outline := _circle(WINDOW, 40)
-	var strips := 80
-	var width := HALF * 2.0 / strips
-	for i in strips:
-		var x := -HALF + width * (i + 0.5)
-		for band: Array in _bands(outline, x):
-			var from: float = band[0]
-			var to: float = band[1]
-			_part(Vector3(width + 0.005, to - from, SKIN), Vector3(x, (from + to) * 0.5, -HALF + SKIN * 0.5), SHELL)
-	# El marco de la ventana, tramo por tramo, y la burbuja que sobresale (media esfera).
-	for i in outline.size():
-		var a := outline[i]
-		var b := outline[(i + 1) % outline.size()]
-		var along := b - a
-		var bar := _part(Vector3(along.length() + 0.08, 0.09, 0.07),
-			Vector3((a.x + b.x) * 0.5, WINDOW_CENTER + (a.y + b.y) * 0.5, -HALF - 0.01), RIM_COLOR)
-		bar.basis = Basis(Vector3.BACK, along.angle())
-	var bubble := MeshInstance3D.new()
-	bubble.name = "Burbuja"
-	var sphere := SphereMesh.new()
-	sphere.radius = 1.0
-	sphere.height = 2.0
-	bubble.mesh = sphere
-	bubble.material_override = Clay.material(GLASS)
-	bubble.scale = Vector3(0.66, 0.66, 0.62)
-	bubble.position = Vector3(0.0, WINDOW_CENTER, -HALF + SKIN * 0.5)
-	_root.add_child(bubble)
-	# El piso de adentro, y la tapa de la panza.
-	_part(Vector3(1.8, 0.03, 1.8), Vector3(0.0, FLOOR + 0.015, 0.0), DECK)
-	_solid(Vector3(1.8, 0.1, 1.8), Vector3(0.0, FLOOR - 0.05 + 0.03, 0.0))
-	Clay.cylinder(_root, 0.42, 0.06, Vector3(0.0, -0.01, 0.0), RIM_COLOR)
-	Clay.cylinder(_root, 0.34, 0.07, Vector3(0.0, -0.01, 0.0), HOLE)
-
-
-## Los tramos de pared de la tira vertical en `x`: lo que queda entre el fondo, el hueco de la ventana y arriba.
-func _bands(outline: PackedVector2Array, x: float) -> Array:
-	var low := INF
-	var high := -INF
-	for i in outline.size():
-		var a := outline[i]
-		var b := outline[(i + 1) % outline.size()]
-		if is_equal_approx(a.x, b.x) or x < minf(a.x, b.x) or x > maxf(a.x, b.x):
+## LAS CARAS DE LA CÁPSULA, desde el fondo de la caja: las del rombicuboctaedro (CageMesh.faceted_sphere) sin la de abajo,
+## con el cinturón estirado hacia adentro (ver `_cube`). Cada una: `normal` (hacia afuera), `points`, `raw` (los puntos
+## de la esfera de radio 1, antes de estirar), `square` y `glass` (la tapa de adelante, el domo).
+static func capsule_faces(form: CageShape) -> Array[Dictionary]:
+	var radius := form.capsule_radius()
+	var center := bubble_center(form)
+	var deeper := belt_back(form)
+	var out: Array[Dictionary] = []
+	for face: Dictionary in CageMesh.faceted_sphere():
+		var normal: Vector3 = face["normal"]
+		if normal.is_equal_approx(Vector3.DOWN):
 			continue
-		var y := lerpf(a.y, b.y, (x - a.x) / (b.x - a.x))
-		low = minf(low, y)
-		high = maxf(high, y)
-	if low >= high:
-		return [[0.0, WALL_TOP]]
-	return [[0.0, WINDOW_CENTER + low], [WINDOW_CENTER + high, WALL_TOP]]
+		var points: Array = []
+		for p: Vector3 in face["points"]:
+			var at := center + p * radius
+			if p.z > 0.001:
+				at.z += deeper
+			points.append(at)
+		out.append({"normal": normal, "points": points, "raw": face["points"], "square": face["square"],
+			"glass": normal.z < -0.1})
+	return out
 
 
-static func _circle(radius: float, sides: int) -> PackedVector2Array:
-	var points := PackedVector2Array()
-	for i in sides:
-		var a := TAU * i / sides
-		points.append(Vector2(cos(a), sin(a)) * radius)
-	return points
+## LAS CARAS DE LA CÁPSULA QUE PUEDEN LLEVAR TABLERO, desde el fondo de la caja: las opacas que no son triángulos ni
+## miran al piso (el usuario: «todas las que pueden llegar a tener tablero»).
+static func capsule_boards(form: CageShape) -> Array[FaceBoard]:
+	var out: Array[FaceBoard] = []
+	for face: Dictionary in capsule_faces(form):
+		var normal: Vector3 = face["normal"]
+		if face["glass"] or (face["points"] as Array).size() < 4 or normal.y < -0.5:
+			continue
+		# Todas sus aristas son de celdas enteras (CageShape.capsule_radius): cualquier esquina engancha igual.
+		out.append(FaceBoard.from_points("cápsula " + FaceBoard.direction_name(normal), face["points"], -normal,
+			face["points"][0]))
+	return out
 
 
-## ── LA CUBIERTA DEL DE LOS BRAZOS ────────────────────────────────────────────────────────────────────────────────
-
-## La placa, el piso, el borde con bisel adelante, la pared de atrás a la altura de la torre y, a los costados, paredes
-## que suben de adelante hacia atrás; adelante, sus controles.
-func _deck() -> void:
-	_part(Vector3(2.02, 0.12, 2.02), Vector3(0.0, DECK_Y - 0.06, 0.0), METAL)
-	_part(Vector3(WALK * 2.0, 0.03, WALK * 2.0), Vector3(0.0, DECK_Y + 0.015, 0.0), DECK)
-	_solid(Vector3(2.0, 0.1, 2.0), Vector3(0.0, DECK_Y - 0.05, 0.0))
-	var back := Vector3(1.99, TOWER_TALL, RIM - 0.01)
-	_part(back, Vector3(0.0, DECK_Y + TOWER_TALL * 0.5, WALK + RIM * 0.5), METAL)
-	_solid(back, Vector3(0.0, DECK_Y + TOWER_TALL * 0.5, WALK + RIM * 0.5))
-	for s: float in [-1.0, 1.0]:
-		_prism(s * (WALK + RIM * 0.5), RIM - 0.01, PackedVector2Array([Vector2(-HALF, DECK_Y),
-			Vector2(-HALF, DECK_Y + RIM_OUT), Vector2(HALF, DECK_Y + TOWER_TALL), Vector2(HALF, DECK_Y)]), METAL)
-		_solid(Vector3(RIM - 0.01, RIM_OUT, HALF * 2.0), Vector3(s * (WALK + RIM * 0.5), DECK_Y + RIM_OUT * 0.5, 0.0))
-	# El borde de adelante: la pared baja, la tapa inclinada y el labio.
-	var rise := Vector2(RIM, RIM_OUT - RIM_IN)
-	var front := -(WALK + RIM * 0.5)
-	_part(Vector3(1.99, RIM_IN, RIM - 0.01), Vector3(0.0, DECK_Y + RIM_IN * 0.5, front), METAL)
-	_solid(Vector3(1.99, RIM_OUT, RIM - 0.01), Vector3(0.0, DECK_Y + RIM_OUT * 0.5, front))
-	var cap := _part(Vector3(1.99, 0.05, rise.length()), Vector3(0.0, DECK_Y + (RIM_IN + RIM_OUT) * 0.5, front), METAL)
-	cap.basis = Basis(Vector3.RIGHT, -atan2(rise.y, rise.x))
-	_part(Vector3(1.99, RIM_OUT - RIM_IN, RIM * 0.5 - 0.01), Vector3(0.0, DECK_Y + (RIM_IN + RIM_OUT) * 0.5,
-		-(WALK + RIM * 0.75)), METAL)
-	for item: Array in [[-0.5, "buttons"], [0.0, "drive"], [0.5, "dial"]]:
-		_control(item[1], rise, item[0])
+## LAS DEL BLOQUE DE ARRIBA, desde el fondo de la caja (ver DeskPit.boards).
+static func upper_boards(form: CageShape) -> Array[FaceBoard]:
+	return pit_of(form).boards(Vector3(0.0, form.height(), 0.0))
 
 
-## UN CONTROL sobre la tapa inclinada de adelante, corrido `offset` de costado (sólo se ve).
-func _control(kind: String, bevel: Vector2, offset: float) -> void:
-	var outward := Vector3.FORWARD
-	var up := (Vector3.UP * bevel.x - outward * bevel.y).normalized()
-	var along := Vector3.RIGHT
-	var plate := Node3D.new()
-	plate.basis = Basis(along, up, along.cross(up))
-	plate.position = outward * (WALK + RIM * 0.5) + Vector3(0.0, DECK_Y + (RIM_IN + RIM_OUT) * 0.5, 0.0) + along * offset
-	_root.add_child(plate)
-	match kind:
-		"drive":
-			for side: float in [-1.0, 1.0]:
-				Clay.box(plate, Vector3(0.16, 0.06, 0.24), Vector3(side * 0.2, 0.03, 0.0), DARK)
-				Clay.cylinder(plate, 0.025, 0.42, Vector3(side * 0.2, 0.24, 0.0), DARK)
-				Clay.sphere(plate, 0.06, Vector3(side * 0.2, 0.46, 0.0), RED)
-		"buttons":
-			Clay.box(plate, Vector3(0.45, 0.04, 0.24), Vector3(0.0, 0.02, 0.0), DARK)
-			for i in 3:
-				Clay.cylinder(plate, 0.05, 0.06, Vector3((i - 1) * 0.14, 0.06, 0.0), YELLOW if i == 1 else RED)
-		"dial":
-			Clay.cylinder(plate, 0.15, 0.05, Vector3(0.0, 0.025, 0.0), FACE)
-			Clay.box(plate, Vector3(0.02, 0.02, 0.13), Vector3(0.03, 0.06, -0.03), RED).rotation.y = 0.6
+## Donde cuelgan las caras de arriba: el fondo de la caja.
+func board_root() -> Node3D:
+	return _root
+
+
+## ── EL CUBO DE ABAJO ─────────────────────────────────────────────────────────────────────────────────────────────
+
+## LA CAJA DEL QUE MANEJA CON SU CÁPSULA FACETADA (16/11/2026, el usuario: «hacer un octógono igual que arriba, pero
+## hecho como esfera… que el octógono de la base tenga un hueco… de ahí sale la silla… el domo sea básicamente esta misma
+## estructura pero hecha transparente»; de tests/pod_facets_look, la 2):
+##   · LA CAJA, hueca y vista de los dos lados, con el frente abierto donde la corta la cápsula; su piso de la cabina.
+##   · LA CÁPSULA: un rombicuboctaedro (CageMesh.faceted_sphere) alrededor de los ojos del que maneja, sin la cara de
+##     abajo (por ahí salen la silla y las piernas), con EL CINTURÓN DEL MEDIO EL DOBLE DE LARGO HACIA ADENTRO. La tapa de
+##     adelante sobresale de la caja: es EL DOMO, de vidrio; el cinturón empieza en la cara de la caja.
+##   · EL VIDRIO: liso o facetado (`glass_smooth`), con su degradé y sus manchas (cage_glass.gdshader).
+##   · LOS TABLEROS: en sus caras opacas, cada una con su grilla (ver CageBoards).
+##   · EL MARCO en la cara de la caja, con la forma del corte, y la tapa de la panza.
+func _cube(form: CageShape) -> void:
+	var edge := form.side() * 0.5
+	var tall := form.height()
+	var radius := form.capsule_radius()
+	var center := bubble_center(form)
+	var front := -edge
+	var shell_tool := SurfaceTool.new()
+	shell_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var inner := SurfaceTool.new()
+	inner.begin(Mesh.PRIMITIVE_TRIANGLES)
+	var glass := SurfaceTool.new()
+	glass.begin(Mesh.PRIMITIVE_TRIANGLES)
+	# EL CINTURÓN, EL DOBLE DE LARGO HACIA ADENTRO (el usuario: «no se tiene que dar vuelta para tocar controles…
+	# podemos romper un poco con la esfera… haciendo que el cinturón sea más largo para adentro… el doble del
+	# cinturón»): lo de atrás del centro se corre hacia atrás el largo del cinturón.
+	var cut := PackedVector2Array()
+	for face: Dictionary in capsule_faces(form):
+		var normal: Vector3 = face["normal"]
+		var points: Array = face["points"]
+		if absf(normal.z) < 0.1:
+			for p: Vector3 in face["raw"]:
+				if p.z <= 0.001:
+					cut.append(Vector2(p.x * radius, p.y * radius))
+		# EL DOMO: sólo la tapa de adelante es de vidrio; el cinturón y la tapa de atrás, opacos.
+		if normal.z < -0.1:
+			if form.glass_smooth:
+				CageMesh.smooth_face(glass, points, center, normal)
+			else:
+				CageMesh.face(glass, points, normal)
+			continue
+		CageMesh.face(inner, points, normal)
+	var outline := _around(cut)
+	# La caja.
+	var middle_box := Vector3(0.0, tall * 0.5, 0.0)
+	var half := Vector3(edge, tall * 0.5, edge)
+	for normal: Vector3 in [Vector3.BACK, Vector3.LEFT, Vector3.RIGHT, Vector3.UP, Vector3.DOWN]:
+		var u := Vector3(normal.y, normal.z, normal.x)
+		var v := normal.cross(u)
+		var middle := middle_box + normal * half
+		u *= half
+		v *= half
+		CageMesh.face(shell_tool, [middle - u - v, middle + u - v, middle + u + v, middle - u + v], normal)
+	if outline.size() >= 3:
+		CageMesh.fill_to_rect(shell_tool, outline, Vector2(-edge, -center.y), Vector2(edge, tall - center.y),
+			func(p: Vector2) -> Vector3: return Vector3(p.x, center.y + p.y, front), Vector3.FORWARD)
+	# EL PISO DE LA CABINA, donde está la silla (ver CageShape.cabin_floor): una cara por encima del fondo.
+	var floor_y := form.cabin_floor()
+	if floor_y > 0.01:
+		CageMesh.face(shell_tool, [Vector3(-edge, floor_y, -edge), Vector3(edge, floor_y, -edge),
+			Vector3(edge, floor_y, edge), Vector3(-edge, floor_y, edge)], Vector3.UP)
+	_both_sides(shell_tool, SHELL, "Caja de abajo")
+	_both_sides(inner, INSIDE, "Cápsula")
+	var tinted := GLASS_PAINT.duplicate() as ShaderMaterial
+	tinted.set_shader_parameter("gradient", 1)
+	tinted.set_shader_parameter("center", center)
+	tinted.set_shader_parameter("clear_alpha", form.glass_clear)
+	tinted.set_shader_parameter("edge_alpha", form.glass_tint)
+	tinted.set_shader_parameter("spread", form.glass_spread)
+	tinted.set_shader_parameter("smudge_alpha", form.glass_smudges)
+	tinted.set_shader_parameter("pixel", form.glass_pixel)
+	_both_sides(glass, GLASS, "Vidrio de la cápsula", tinted)
+	if outline.size() >= 3 and form.rim_width > 0.0 and form.rim_depth > 0.0:
+		var rim := SurfaceTool.new()
+		rim.begin(Mesh.PRIMITIVE_TRIANGLES)
+		CageMesh.outline_ring(rim, Vector3(center.x, center.y, front), outline, form.rim_width, form.rim_depth)
+		var frame_ring := MeshInstance3D.new()
+		frame_ring.name = "Marco de la cápsula"
+		frame_ring.mesh = CageMesh.commit(rim, RIM_COLOR)
+		_root.add_child(frame_ring)
+	Clay.cylinder(_root, minf(0.42, edge * 0.4), 0.06, Vector3(0.0, -0.01, 0.0), RIM_COLOR)
+	Clay.cylinder(_root, minf(0.34, edge * 0.32), 0.07, Vector3(0.0, -0.01, 0.0), HOLE)
+
+
+static func _glass_paint() -> ShaderMaterial:
+	var paint := ShaderMaterial.new()
+	paint.shader = load("res://game/mech/cage/cage_glass.gdshader") as Shader
+	return paint
+
+
+## Una malla vista de los dos lados (los de adentro también la ven), que además tocan los de adentro.
+func _both_sides(tool: SurfaceTool, color: Color, label: String, paint_with: Material = null) -> void:
+	var piece := MeshInstance3D.new()
+	piece.name = label
+	piece.mesh = CageMesh.commit(tool, color)
+	var paint := Clay.material(color).duplicate() as StandardMaterial3D
+	paint.cull_mode = BaseMaterial3D.CULL_DISABLED
+	piece.material_override = paint
+	if paint_with != null:
+		piece.material_override = paint_with
+	_root.add_child(piece)
+	if piece.mesh.get_surface_count() > 0:
+		_mesh_solid(piece.mesh)
+
+
+## El área de un polígono plano convexo.
+static func _area(points: Array) -> float:
+	var total := 0.0
+	for i in range(1, points.size() - 1):
+		total += ((points[i] as Vector3) - (points[0] as Vector3)).cross((points[i + 1] as Vector3) - (points[0] as Vector3)).length() * 0.5
+	return total
+
+
+## Los puntos del corte, sin repetidos y en orden alrededor del centro.
+static func _around(points: PackedVector2Array) -> PackedVector2Array:
+	var kept: Array[Vector2] = []
+	for p in points:
+		var seen := false
+		for q in kept:
+			seen = seen or p.distance_to(q) < 0.001
+		if not seen:
+			kept.append(p)
+	kept.sort_custom(func(a: Vector2, b: Vector2) -> bool: return a.angle() < b.angle())
+	return PackedVector2Array(kept)
+
+
+## ── EL BLOQUE DE ARRIBA ──────────────────────────────────────────────────────────────────────────────────────────
+
+## EL BLOQUE CON EL POZO, sobre la tapa del cubo (sus tableros, ver CageBoards).
+func _upper(pit: DeskPit, tall: float) -> void:
+	var block := MeshInstance3D.new()
+	block.name = "Bloque de arriba"
+	block.mesh = pit.mesh(SHELL)
+	block.position = Vector3(0.0, tall, 0.0)
+	_root.add_child(block)
+	_mesh_solid(block.mesh, block.position)
 
 
 ## ── EL ARTILLERO ─────────────────────────────────────────────────────────────────────────────────────────────────
 
-## LA TORRE, un bloque metido en la planta contra la espalda; arriba, el rulemán y el plato que gira, con la silla y, al
-## frente, el pie del arma con su horquilla y el arma (sólo se ve).
-func _tower() -> void:
-	var head := tower_head()
-	var block := Vector3(1.2, TOWER_TALL, 0.56)
-	_part(block, Vector3(0.0, DECK_Y + TOWER_TALL * 0.5, TOWER_Z), SHELL)
-	_solid(block, Vector3(0.0, DECK_Y + TOWER_TALL * 0.5, TOWER_Z))
-	_part(Vector3(1.22, 0.08, 0.58), Vector3(0.0, head - 0.15, TOWER_Z), RIM_COLOR)
-	Clay.cylinder(_root, 0.42, 0.1, Vector3(0.0, head + 0.05, TOWER_Z), RIM_COLOR)
-	for i in 8:
-		var a := TAU * i / 8.0
-		Clay.cylinder(_root, 0.03, 0.05, Vector3(sin(a) * 0.35, head + 0.12, TOWER_Z - cos(a) * 0.35), DARK)
+## LA TORRE, contra el borde de atrás (redonda o cuadrada, de su lado); arriba, el rulemán y el plato que gira, con la
+## silla y, al frente, el pie del arma con su horquilla y el arma (sólo se ve).
+func _tower(form: CageShape, side: float, tall: float, pit: DeskPit) -> void:
+	var wide := form.tower_width
+	var deep := form.tower_deep()
+	var middle := Vector2(0.0, side * 0.5 - deep * 0.5)
+	var outline := CageMesh.polygon(1.0, 32) if form.tower_round \
+		else CageMesh.polygon(sqrt(2.0), 4, PI * 0.25)
+	# Redonda: la elipse del ancho y el fondo; cuadrada: el rectángulo.
+	for k in outline.size():
+		outline[k] = middle + outline[k] * Vector2(wide * 0.5, deep * 0.5)
+	var head := tall + tower_top(form)
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	CageMesh.prism(tool, outline, tall + pit.top() - 0.01, head)
+	var tower := MeshInstance3D.new()
+	tower.name = "Torre"
+	tower.mesh = CageMesh.commit(tool, SHELL)
+	_root.add_child(tower)
+	_mesh_solid(tower.mesh)
+	var at := Vector3(0.0, head, middle.y)
+	var plate := minf(minf(wide, deep) * 0.5, 0.42)
+	Clay.cylinder(_root, plate, 0.08, at + Vector3(0.0, 0.04, 0.0), RIM_COLOR)
 	var turn := Node3D.new()
 	turn.name = "Plato del artillero"
-	turn.position = Vector3(0.0, head + 0.1, TOWER_Z)
+	turn.position = at + Vector3(0.0, 0.08, 0.0)
 	_root.add_child(turn)
-	Clay.cylinder(turn, 0.4, 0.1, Vector3(0.0, 0.05, 0.1), METAL)
-	Clay.box(turn, Vector3(0.3, 0.1, GUN_REACH - 0.05), Vector3(0.0, 0.05, -GUN_REACH * 0.5 - 0.15), METAL)
-	_solid(Vector3(0.9, 0.1, 0.9), Vector3(0.0, head + 0.15, TOWER_Z + 0.05))
+	Clay.box(turn, Vector3(0.3, 0.08, GUN_REACH + 0.1), Vector3(0.0, 0.04, -GUN_REACH * 0.5 - 0.1), METAL)
 	# El pie del arma y la horquilla; el arma cabecea en ella.
-	var foot := Vector3(0.0, 0.1, -GUN_REACH)
-	var trunnion := Vector3(0.0, 0.78, -GUN_REACH)
-	Clay.cylinder(turn, 0.08, trunnion.y - foot.y - 0.1, Vector3(0.0, (trunnion.y + foot.y) * 0.5 - 0.05, foot.z), DARK)
-	for side: float in [-1.0, 1.0]:
-		Clay.box(turn, Vector3(0.05, 0.22, 0.12), trunnion + Vector3(side * 0.2, -0.06, 0.0), DARK)
+	var foot := Vector3(0.0, 0.08, -GUN_REACH - 0.1)
+	var trunnion := Vector3(0.0, 0.78, foot.z)
+	Clay.cylinder(turn, 0.06, trunnion.y - foot.y - 0.1, Vector3(0.0, (trunnion.y + foot.y) * 0.5 - 0.05, foot.z), DARK)
+	for s: float in [-1.0, 1.0]:
+		Clay.box(turn, Vector3(0.05, 0.22, 0.12), trunnion + Vector3(s * 0.2, -0.06, 0.0), DARK)
 	Clay.box(turn, Vector3(0.45, 0.06, 0.12), trunnion + Vector3(0.0, -0.17, 0.0), DARK)
 	Clay.cylinder(turn, 0.04, 0.5, trunnion, RIM_COLOR, Vector3(0.0, 0.0, 90.0))
 	gun = Node3D.new()
@@ -280,16 +401,17 @@ func _tower() -> void:
 		for y: float in [-0.06, 0.06]:
 			Clay.cylinder(gun, 0.035, 0.9, Vector3(x, y, -0.75), RIM_COLOR, Vector3(90.0, 0.0, 0.0))
 	Clay.box(gun, Vector3(0.9, 0.5, 0.05), Vector3(0.0, 0.05, -0.38), METAL)
-	for side: float in [-1.0, 1.0]:
-		Clay.cylinder(gun, 0.03, 0.22, Vector3(side * 0.16, -0.06, 0.3), YELLOW, Vector3(90.0, 0.0, 0.0))
+	for s: float in [-1.0, 1.0]:
+		Clay.cylinder(gun, 0.03, 0.22, Vector3(s * 0.16, -0.06, 0.3), YELLOW, Vector3(90.0, 0.0, 0.0))
 
 
 ## ── LA ESPALDA ──────────────────────────────────────────────────────────────────────────────────────────────────
 
 ## El hueco de un recurso y la batería metida, abajo; arriba, la mochila del jetpack con el bisel abajo y tres toberas
 ## cortas en el bisel (sólo se ven).
-func _back() -> void:
-	var face := HALF + 0.005
+func _back(side: float, tall: float) -> void:
+	var half := side * 0.5
+	var face := half + 0.005
 	var size := 0.72 * SLOTS_K
 	for at: Vector3 in [Vector3(-SLOTS_X, SLOTS_Y, face), Vector3(SLOTS_X, SLOTS_Y, face)]:
 		for s: float in [-1.0, 1.0]:
@@ -305,13 +427,14 @@ func _back() -> void:
 	for bx: float in [-0.16, 0.16]:
 		Clay.cylinder(_root, 0.05 * k, 0.08 * k, slot + Vector3(bx * k, 0.355 * k, 0.05 * k), DARK)
 	_part(Vector3(0.3, 0.05, 0.04) * k, slot + Vector3(0.0, -0.1 * k, 0.16 * k), DARK)
-	# La mochila: del hueco + 40 cm de aire hasta arriba de la pared de atrás de la cubierta.
+	# La mochila: del hueco + 40 cm de aire hasta arriba del cubo.
 	var from := SLOTS_Y + 0.33 + 0.4 + 0.1
-	var to := tower_head() - 0.05
-	_prism(0.0, 1.6, PackedVector2Array([Vector2(HALF, from), Vector2(HALF, to), Vector2(HALF + PACK_DEPTH, to),
-		Vector2(HALF + PACK_DEPTH, from + 0.35), Vector2(HALF + 0.1, from)]), DARK.lightened(0.15))
-	_part(Vector3(1.64, 0.05, PACK_DEPTH + 0.04), Vector3(0.0, to - 0.25, HALF + PACK_DEPTH * 0.5), RIM_COLOR)
-	var bevel := Vector2(HALF + (0.1 + PACK_DEPTH) * 0.5, from + 0.175)
+	var to := tall - 0.05
+	var wide := minf(1.6, side - 0.4)
+	_prism(0.0, wide, PackedVector2Array([Vector2(half, from), Vector2(half, to), Vector2(half + PACK_DEPTH, to),
+		Vector2(half + PACK_DEPTH, from + 0.35), Vector2(half + 0.1, from)]), DARK.lightened(0.15))
+	_part(Vector3(wide + 0.04, 0.05, PACK_DEPTH + 0.04), Vector3(0.0, to - 0.25, half + PACK_DEPTH * 0.5), RIM_COLOR)
+	var bevel := Vector2(half + (0.1 + PACK_DEPTH) * 0.5, from + 0.175)
 	for x: float in [-0.45, 0.0, 0.45]:
 		var holder := Node3D.new()
 		holder.position = Vector3(x, bevel.y, bevel.x)
@@ -336,22 +459,21 @@ func _part(size: Vector3, at: Vector3, color: Color) -> MeshInstance3D:
 	return Clay.box(_root, size, at, color)
 
 
-## Una caja que pisan y tocan los de adentro (en `interior`, del que el marco copia su sombra), desde el fondo.
-func _solid(size: Vector3, at: Vector3) -> void:
-	var shape := CollisionShape3D.new()
-	var box_shape := BoxShape3D.new()
-	box_shape.size = size
-	shape.shape = box_shape
-	shape.position = at + _root.position
-	interior.add_child(shape)
+## Una malla que pisan y tocan los de adentro (en `interior`, del que el marco copia su sombra), corrida `at` desde el
+## fondo.
+func _mesh_solid(mesh: ArrayMesh, at := Vector3.ZERO) -> void:
+	var collider := CollisionShape3D.new()
+	collider.shape = mesh.create_trimesh_shape()
+	collider.position = at + _root.position
+	interior.add_child(collider)
 
 
-## Una silla del puesto `index` (ver `SEAT_NAMES`), mirando al frente.
-func _chair(index: int, at: Vector3) -> void:
+## Una silla del puesto `index` (ver `SEAT_NAMES`), mirando al frente, con los ojos a `eye` sobre su base.
+func _chair(index: int, at: Vector3, eye: float) -> void:
 	var chair := (load(SEAT_SCENE) as PackedScene).instantiate() as SeatInteractable
 	chair.name = "Asiento %s" % SEAT_NAMES[index]
 	chair.position = at
-	chair.eye_height = CabinGrid.EYE_HEIGHT
+	chair.eye_height = eye
 	_root.add_child(chair)
 	chairs.append(chair)
 
@@ -384,22 +506,36 @@ func _prism(x: float, thick: float, profile: PackedVector2Array, color: Color) -
 
 ## ── LOS DE ADENTRO, EL MARCO Y LA U ──────────────────────────────────────────────────────────────────────────────
 
-## UN MANIQUÍ EN CADA SILLA MENOS LA DEL QUE MANEJA: desde ahí se mira en primera persona al poseerla.
-func seat_dummies() -> void:
-	var driver := chairs[DRIVER]
-	chairs.remove_at(DRIVER)
-	super()
-	chairs.insert(DRIVER, driver)
+## EL QUE ENTRA DESALOJA AL MANIQUÍ (el usuario, 16/11/2026: «el dummy sí está ocupando el asiento, pero cuando yo me
+## meto es como que lo saco»): hay un maniquí en cada silla, y al tomar el puesto `index` (por ahora, poseerla: el que
+## maneja) el de esa silla se va. `seat_back` vuelve a sentar uno al dejarlo.
+func evict(index: int) -> void:
+	for dummy in dummies.duplicate():
+		if is_instance_valid(dummy) and dummy.intent.seat == chairs[index]:
+			chairs[index].release(dummy)
+			dummy.intent.seat = null
+			dummies.erase(dummy)
+			dummy.queue_free()
 
 
-## EL MARCO: la cápsula de abajo y, arriba, la cubierta con la torre (lo que se camina adentro son sus pisos).
+func seat_back(index: int) -> void:
+	for dummy in dummies:
+		if is_instance_valid(dummy) and dummy.intent.seat == chairs[index]:
+			return
+	seat_dummy(index)
+
+
+## EL MARCO: el cubo de abajo y, arriba, el bloque con la torre (lo que se camina adentro es el piso del pozo).
 func build_frame() -> void:
 	frame = MotionFrame.new()
 	mech.add_child(frame)
+	var form := shape()
+	var side := form.side()
+	var tall := form.height()
 	var low := bottom()
-	frame.floor_height = low + FLOOR
-	frame.add_volume(AABB(Vector3(-HALF, low, -HALF), Vector3(HALF * 2.0, DECK_Y, HALF * 2.0)))
-	frame.add_volume(AABB(Vector3(-HALF, low + DECK_Y, -HALF), Vector3(HALF * 2.0, TOWER_TALL + 2.2, HALF * 2.0)))
+	frame.floor_height = low + tall
+	frame.add_volume(AABB(Vector3(-side * 0.5, low, -side * 0.5), Vector3(side, tall, side)))
+	frame.add_volume(AABB(Vector3(-side * 0.5, low + tall, -side * 0.5), Vector3(side, tower_top(form) + 2.2, side)))
 	interior.collision_layer = 1
 	frame.cast_shadow(self)
 	interior.collision_layer = 0
@@ -408,7 +544,7 @@ func build_frame() -> void:
 		mech.add_collision_exception_with(body as RigidBody3D)
 
 
-## LA U: arriba, en la cubierta, al lado de la silla de los brazos.
+## LA U: arriba, en el pozo, al lado de la silla de los brazos.
 func board() -> void:
 	var player := DesignSandbox.player_of(get_tree())
 	if player == null:
@@ -417,5 +553,5 @@ func board() -> void:
 		SandboxPossession.of(get_tree()).release()
 	if player.is_seated and player.current_seat is SeatInteractable:
 		(player.current_seat as SeatInteractable).release_occupant_in_place()
-	var spot := Vector3(0.42, bottom() + DECK_Y + 0.05, 0.1)
+	var spot := Vector3(shape().pit_apothem() * 0.65, bottom() + shape().height() + 0.05, 0.1)
 	player.place_at(mech.global_transform * spot, mech.yaw())

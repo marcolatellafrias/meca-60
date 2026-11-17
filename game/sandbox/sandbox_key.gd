@@ -25,10 +25,10 @@ const RESERVED := {
 	KEY_SPACE: "saltar", KEY_SHIFT: "correr", KEY_CTRL: "agacharse", KEY_E: "usar", KEY_ESCAPE: "el menú",
 	KEY_R: "regenerar la parcela (o armarla)", KEY_C: "copiar la información", KEY_V: "modo creativo",
 	KEY_B: "corta: modo creativo · larga: ente o cuerpo", KEY_I: "el inspector",
-	KEY_O: "poseer lo que se mira", KEY_T: "la vista de lo poseído",
+	KEY_O: "poseer lo que se mira", KEY_T: "la vista de lo poseído", KEY_TAB: "ocultar toda la pantalla",
 }
 ## Las que se anotan abajo del panel chico, en este orden (las de caminar no hace falta).
-const HINTS: Array[Key] = [KEY_R, KEY_C, KEY_B, KEY_V, KEY_O, KEY_I]
+const HINTS: Array[Key] = [KEY_R, KEY_C, KEY_B, KEY_V, KEY_O, KEY_I, KEY_TAB]
 
 ## LAS F (ver SandboxRow.panel y SandboxCatalogue.global_panels): las de parcela y de fila van de F1 a F7; las globales,
 ## de F9 a F12. La F8 nunca: es la de Godot para detener el juego.

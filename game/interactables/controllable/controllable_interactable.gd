@@ -293,6 +293,30 @@ func stop_control() -> void:
 func handle_mouse_motion(_delta: Vector2) -> void:
 	pass
 
+
+## ── EL MODO (17/11/2026, el usuario: «entrás en el modo cuando les hacés clic derecho y tu cámara hace como un easing
+## hacia adelante o hacia la posición en la cual se controla ese control… y se te trae hacia vos, y a lo sumo ponés la
+## mano ahí») ────────────────────────────────────────────────────────────────────────────────────────────────────────
+## Un control que tiene modo (`has_mode`) se usa CON EL CLIC DERECHO MANTENIDO: la mano va a él como con el izquierdo,
+## él hace lo suyo al entrar (`enter_mode`) y al salir (`exit_mode`), y mientras tanto la mirada se va sola, suave,
+## hacia `mode_look` y el mouse queda para el control (ver InteractionController._set_mode, PlayerController). El primero
+## es el brazo plegable (FoldingArm): se trae a la mano y se pliega al soltar. Lo de casi todos: no tienen.
+func has_mode() -> bool:
+	return false
+
+
+func enter_mode() -> void:
+	pass
+
+
+func exit_mode() -> void:
+	pass
+
+
+## Adónde se va la mirada en el modo, en el mundo; INF, a ningún lado (la mirada queda libre).
+func mode_look() -> Vector3:
+	return Vector3.INF
+
 func handle_scroll(_delta: float) -> void:
 	pass
 

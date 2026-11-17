@@ -229,7 +229,7 @@ func update(delta: float) -> void:
 	if is_instance_valid(_controlled):
 		var handle     := _controlled.get_nearest_handle_point(_get_interaction_origin())
 		var ctrl_world := handle.global_position if is_instance_valid(handle) else _controlled.global_position
-		if _is_out_of_reach(ctrl_world):
+		if _controlled != _mode and _is_out_of_reach(ctrl_world):
 			_stop_control()
 			return
 		_want_grab(_controlled, handle)
@@ -280,6 +280,10 @@ func _start_control(ctrl: ControllableInteractable) -> void:
 	_want_grab(ctrl, handle, true)  # y que los proxies muevan los brazos al handle
 
 func _stop_control() -> void:
+	if is_instance_valid(_mode) and _mode == _controlled:
+		var leaving := _mode
+		_mode = null
+		leaving.exit_mode()
 	if is_instance_valid(_controlled):
 		if _controlled.control_lost.is_connected(_on_control_lost):
 			_controlled.control_lost.disconnect(_on_control_lost)
@@ -769,6 +773,40 @@ var _grab_turn := Vector2.ZERO
 
 func set_rotating(value: bool) -> void:
 	_is_rotating = value and is_instance_valid(_grabbed)
+	_set_mode(value)
+
+
+## ── EL MODO DE UN CONTROL (ver ControllableInteractable.has_mode) ─────────────────────────────────────────────────
+## El clic derecho mantenido sobre un control con modo —el que se maneja o el que se mira— lo agarra (la mano va a él) y
+## lo pone en su modo; al soltarlo sale y lo suelta. Mientras está, no se lo suelta por lejos ni por fuera del cono: él
+## mismo se trae a la mano.
+var _mode: ControllableInteractable = null
+
+
+func _set_mode(on: bool) -> void:
+	if on:
+		if is_instance_valid(_mode) or is_instance_valid(_grabbed) or is_instance_valid(_held):
+			return
+		var found: Node = _controlled if is_instance_valid(_controlled) else (detector.get_hovered() if is_instance_valid(detector) else null)
+		var ctrl := found as ControllableInteractable
+		if ctrl == null or not ctrl.has_mode():
+			return
+		if ctrl != _controlled:
+			_stop_control()
+			_start_control(ctrl)
+		_mode = ctrl
+		ctrl.enter_mode()
+	elif is_instance_valid(_mode):
+		var leaving := _mode
+		_mode = null
+		leaving.exit_mode()
+		if leaving == _controlled:
+			_stop_control()
+
+
+## Adónde se va la mirada: la del control en su modo; INF, libre.
+func mode_look() -> Vector3:
+	return _mode.mode_look() if is_instance_valid(_mode) else Vector3.INF
 
 func apply_grab_rotation(relative: Vector2) -> void:
 	if _is_rotating and is_instance_valid(_grabbed):

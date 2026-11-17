@@ -23,7 +23,7 @@ func _ready() -> void:
 	await _wait(0.5)
 	_mech = (_boss.get_node("Cabeza") as BrawlerBrain).target as ToolMech
 	_mech.scripted = true
-	for mode in [CannonArm.Mode.SIMPLE, CannonArm.Mode.BURST, CannonArm.Mode.BEAM]:
+	for mode in [CannonTip.Mode.SIMPLE, CannonTip.Mode.BURST, CannonTip.Mode.BEAM]:
 		await _place(40.0)
 		var before := Health.of(_boss).left
 		_mech.cannon.mode = mode
@@ -33,7 +33,7 @@ func _ready() -> void:
 		await _wait(2.0)
 		_mech.cannon.trigger = false
 		await _wait(1.0)
-		print("cañón %s: le sacó %.1f" % [CannonArm.MODE_NAMES[mode], before - Health.of(_boss).left])
+		print("cañón %s: le sacó %.1f" % [CannonTip.MODE_NAMES[mode], before - Health.of(_boss).left])
 	await _place(_boss_reach())
 	var before := Health.of(_boss).left
 	_mech.drill.charging = true

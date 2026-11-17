@@ -67,4 +67,5 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 @export_group("Agacharse")
 ## Agachada, la altura de la caja que le queda (parte de la de parada) y a qué ritmo cambia (partes por segundo).
 @export_range(0.3, 1.0, 0.05) var crouch_share := 0.6
-@export_range(0.1, 3.0, 0.05) var crouch_rate := 0.5
+## *Era 0,5 (2 s para agacharse entera) hasta el 16/11/2026; el usuario: «agacharse dura… extremadamente larga».*
+@export_range(0.1, 5.0, 0.05) var crouch_rate := 2.0

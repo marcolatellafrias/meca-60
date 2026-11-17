@@ -65,7 +65,7 @@ extends Resource
 ## El grosor de brazos y piernas (y articulaciones, manos, pies y pelvis), uno solo para los dos.
 @export_enum("chico", "mediano", "grande") var thickness := 1
 ## Cuánto se estiran las piernas paradas: la distancia de la cadera al tobillo, en partes del largo de la pierna.
-@export_range(0.45, 0.9, 0.01) var leg_stretch := 0.64
+@export_range(0.45, 0.98, 0.01) var leg_stretch := 0.64
 ## CUÁNTO SALEN LOS HOMBROS del costado de la caja (m, con el grosor de mediano; más con brazos más anchos). Con poco,
 ## la bola del hombro se mete en la cabina y tapa lo de las paredes (el usuario, 15/11/2026: «qué tanto se offsetean…
 ## los hombros… del torso… la bola esa clipea por sobre las paredes»).

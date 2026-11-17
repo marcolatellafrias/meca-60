@@ -131,8 +131,13 @@ estructura y visuales puede ser compartido»). Test para mirarlos: `tests/mech_p
 |---|---|---|---|
 | **F1, moverse** | `MechPanel`: `BodySettings.current` | `MechPanel(MUSCLE)`: `BodySettings.physical`, su archivo (`body_settings_fisica.tres`); sin archivo arranca con lo de la discreta | `KinematicPanel`: `KinematicSettings` |
 | **F2, la forma** | `CabinShapePanel`, el mismo para todas | ← | ← |
-| **F3, los brazos** | `PoseArmPanel`: `PoseArmSettings` (lo rápido de las piñas, lo que pesa y el radio del puño; eran constantes) | `MuscleArmPanel`: `MuscleArmSettings` | `PoseArmPanel` (la simplificada no tiene brazos) |
+| **F3, los brazos** | `ArmsPanel`, pestaña «Discretos»: `PoseArmSettings` (lo rápido de las piñas, lo que pesa y el radio del puño; eran constantes) | `ArmsPanel`, pestaña «Con músculos»: `MuscleArmSettings` | `ArmsPanel` (la simplificada no tiene brazos) |
 
 - **El F1 de la meca va en pestañas**: Moverse, Equilibrio, Piernas, Saltar y Caerse. Están las 60 perillas.
 - **Qué perillas usa cada meca** lo dice un solo lugar: `Mech.knobs_for(arms)`. Las piernas de la cinemática usan las de
   la discreta.
+
+**Un solo panel de brazos** (16/11/2026, el usuario: «los paneles deberían ser los mismos que la meca común, solamente que
+cada meca elige qué cosas usar»): `ArmsPanel`, una pestaña por clase de brazo, y cada fila le dice cuáles tiene su meca
+(la jaula, las dos). Las perillas siguen siendo una copia para todas. *Eran dos paneles, `PoseArmPanel` y
+`MuscleArmPanel`.*

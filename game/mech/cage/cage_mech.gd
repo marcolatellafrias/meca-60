@@ -5,9 +5,9 @@ extends ToolMech
 ## poder cambiar su velocidad… lo primero… que se pueda poseer la meca y que los brazos anden y las piernas anden»). La
 ## Meca de tres (ToolMech: la energía común, sus teclas, levitar) con:
 ##   · EL TORSO DISCRETO, LOS BRAZOS FÍSICOS (el usuario: «los brazos van a ser físicos y el torso va a ser discreto»):
-##     cinemática, a la izquierda EL CAÑÓN en lugar del antebrazo (CageCannonArm) y a la derecha EL PALO en el puño
-##     pesado, un brazo con músculos (PoleArm).
-##   · LA CABINA JAULA, chica, con brazos y piernas al 30 % (CageCabin.BODY).
+##     cinemática, a la izquierda EL CAÑÓN en lugar del antebrazo (CannonTip, discreto) y a la derecha EL PALO en el
+##     puño pesado (PoleTip), un brazo con músculos (ver `loadout`, ArmLoadout).
+##   · LA CABINA JAULA, chica, con brazos y piernas al 30 % (CageCabin.body).
 ##   · SUS PROPIAS PERILLAS DE MOVERSE (`MOVES`, el F1 de su fila: CageMovesPanel; el usuario: «si un panel lo quiero
 ##     modificar para este mecha, me gustaría que sea solamente para esta, porque los otros se van a sentir muy
 ##     distintos»).
@@ -18,8 +18,6 @@ const SAVED_MOVES := "res://game/mech/cage/cage_moves.tres"
 ## Lo que se achican, al nacer sin guardar, las distancias y velocidades de las de siempre: es más chica.
 const START_SHRINK := 0.5
 static var MOVES := CageMech.load_moves()
-
-var pole: PoleArm = null
 
 
 ## LAS PERILLAS DE MOVERSE: las guardadas; si no hay, las de las otras mecas con las distancias achicadas.
@@ -54,25 +52,31 @@ func _build() -> void:
 	keys = CageMechKeys.new()
 	keys.mech = self
 	add_child(keys)
+	# SUBIRSE CON LA E: el primer puesto libre, por orden (ver CageBoarding).
+	var boarding := CageBoarding.new()
+	boarding.cabin = cabin as CageCabin
+	add_child(boarding)
 
 
-## LOS DOS BRAZOS: el cañón a la izquierda y el palo a la derecha, armados como los de siempre (ver Mech._build_arms).
-func _build_arms() -> void:
-	cannon = CageCannonArm.new()
-	cannon.energy = energy
-	pole = PoleArm.new()
-	pole.weight = ARM_WEIGHT
-	var at := Mech.shoulder(cabin_shape)
-	for pair: Array in [[cannon, -1.0], [pole, 1.0]]:
-		var arm: MechArm = pair[0]
-		var side: float = pair[1]
-		arm.side = side
-		arm.anchor = self
-		arm.measures = measures
-		arm.shoulder_local = Vector3(side * at.x, at.y, at.z)
-		arm.stance = MechArm.Stance.NORMAL
-		add_child(arm)
-		arms.append(arm)
+## AL POSEERLA SE TOMA EL PUESTO DEL QUE MANEJA: su maniquí se va, y vuelve al soltarla (ver CageCabin.evict).
+func possess_begin() -> void:
+	super()
+	(cabin as CageCabin).evict(CageCabin.DRIVER)
+
+
+func possess_end() -> void:
+	super()
+	(cabin as CageCabin).seat_back(CageCabin.DRIVER)
+
+
+func default_loadout() -> Array[ArmLoadout]:
+	return CageMech.default_arms()
+
+
+## Lo suyo: el cañón a la izquierda (discreto) y el palo a la derecha (con músculos), los dos con placa.
+static func default_arms() -> Array[ArmLoadout]:
+	return [ArmLoadout.of(ArmLoadout.Motion.POSE, ArmLoadout.Tip.CANNON, true),
+		ArmLoadout.of(ArmLoadout.Motion.MUSCLE, ArmLoadout.Tip.POLE, true)]
 
 
 ## LAS PLACAS DE LAS PIERNAS (al frente del muslo y de la canilla) y LA PELVIS: un cilindro acostado de cadera a cadera,
@@ -81,19 +85,9 @@ func _dress() -> void:
 	var ahead := global_basis * Vector3.FORWARD
 	for found in find_children("*", "MechLeg", true, false):
 		var leg := found as MechLeg
-		CageMech.plate(leg._thigh, ahead, measures.thick, float(MechBody.BASE["THIGH"]) * 0.75)
-		CageMech.plate(leg._shin, ahead, measures.thick, float(MechBody.BASE["SHIN"]) * 0.8)
+		ArmoryParts.plate(leg._thigh, ahead, measures.thick, float(MechBody.BASE["THIGH"]) * 0.75)
+		ArmoryParts.plate(leg._shin, ahead, measures.thick, float(MechBody.BASE["SHIN"]) * 0.8)
 	if legs != null and legs._pelvis != null:
 		legs._pelvis.mesh = null
 		Clay.cylinder(legs._pelvis, measures.LEG_THICKNESS * 0.55, measures.HIP_X * 2.0 - measures.LEG_THICKNESS * 0.9,
 			Vector3(0.0, measures.PELVIS_SIZE.y * 0.5 - measures.HIP_DROP, 0.0), MechBody.JOINT_COLOR, Vector3(0.0, 0.0, 90.0))
-
-
-## UNA PLACA DEL ACORAZADO (tres caras de octógono, ArmoryParts._wrap) sobre `piece` (su largo sobre Z), del lado que
-## mira a `toward` (mundo), armada en la medida de la meca entera (`length`) y achicada a `k`.
-static func plate(piece: Node3D, toward: Vector3, k: float, length: float) -> void:
-	var holder := Node3D.new()
-	holder.name = "Placa"
-	holder.scale = Vector3.ONE * k
-	piece.add_child(holder)
-	ArmoryParts._wrap(holder, Transform3D(ArmoryParts._facing(piece, toward), Vector3.ZERO), length)

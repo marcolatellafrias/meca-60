@@ -74,7 +74,7 @@ func _ready() -> void:
 	await _shot("1. la meca de tres")
 	# EL CAÑÓN, SIMPLE: tres tiros a la de práctica, adelante.
 	var cannon := _mech.cannon
-	cannon.mode = CannonArm.Mode.SIMPLE
+	cannon.mode = CannonTip.Mode.SIMPLE
 	cannon.lever = Vector2(6.0, -6.0)
 	await _seconds(1.0)
 	for i in 3:
@@ -86,7 +86,7 @@ func _ready() -> void:
 		await _seconds(0.4)
 	print("SIMPLE: energía %.2f · la de práctica se corrió %.2f m" % [_mech.energy.level, _target.global_position.distance_to(target_rest)])
 	# RÁFAGA a las cajas (a la derecha).
-	cannon.mode = CannonArm.Mode.BURST
+	cannon.mode = CannonTip.Mode.BURST
 	cannon.lever = Vector2(25.0, -15.0)
 	await _seconds(1.2)
 	cannon.trigger = true
@@ -97,7 +97,7 @@ func _ready() -> void:
 	print("RÁFAGA: energía %.2f · cajas movidas %d" % [_mech.energy.level, _moved(crate_rest)])
 	await _seconds(2.0)
 	# BARRIDO: el rayo, barriendo de las cajas hacia adelante.
-	cannon.mode = CannonArm.Mode.BEAM
+	cannon.mode = CannonTip.Mode.BEAM
 	cannon.trigger = true
 	for i in 30:
 		cannon.lever.x -= 1.0
@@ -109,7 +109,7 @@ func _ready() -> void:
 	await _seconds(3.0)
 	# SÚPER: carga a fondo y tira a la de práctica.
 	target_rest = _target.global_position
-	cannon.mode = CannonArm.Mode.SUPER
+	cannon.mode = CannonTip.Mode.SUPER
 	cannon.lever = Vector2(6.0, -6.0)
 	await _seconds(1.0)
 	cannon.trigger = true

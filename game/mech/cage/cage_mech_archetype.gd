@@ -19,8 +19,21 @@ func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"la meca jaula: abajo el que maneja, arriba el de los brazos, atrás el artillero; cañón a la izquierda, palo a la derecha",
 		"mirándola, O la posee (T cambia la vista): sus controles, abajo a la derecha · F1 su forma de moverse",
-		"adelante, la de práctica; a la derecha, cajas para tirarles · U a la cubierta",
+		"adelante, la de práctica; a la derecha, cajas para tirarles · U a la cubierta · L la grilla de los tableros",
 	])
+
+
+## Las de toda meca (MechArchetype.keys) y LA GRILLA DE LOS TABLEROS (ver CageBoards): para ubicar piezas, no de la meca.
+func keys() -> Array[SandboxKey]:
+	var out := super()
+	out.append(SandboxKey.toggle(KEY_L, SandboxKey.Weight.NORMAL, "la grilla de los tableros",
+		func() -> bool: return CageBoards.show_grid,
+		func(parcel: SandboxParcel, on: bool) -> void: CageBoards.set_grid_visible(parcel.get_tree(), on)))
+	return out
+
+
+func default_loadout() -> Array[ArmLoadout]:
+	return CageMech.default_arms()
 
 
 func build(_seed_value: int, parent: Node3D) -> Node3D:
@@ -28,6 +41,7 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	root.name = display_name
 	parent.add_child(root)
 	var mech := CageMech.new()
+	mech.equipment = display_name
 	mech.transform = Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(0.0, Mech.standing_height(mech.cabin_shape), 0.0))
 	root.add_child(mech)
 	var target := Mech.new()

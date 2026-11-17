@@ -6,17 +6,21 @@ extends Mech
 ## los controles que van a tener los tres pasajeros»). Por ahora se maneja entera poseyéndola desde afuera (la O; «si yo
 ## poseo la meca y aprieto los botones necesarios, puedo hacer funcionar todos los controles»): los puestos de adentro
 ## son de otra sesión. Es la meca de siempre (Mech), cinemática, con la cabina cuadrada de tres, y:
-##   · EL BRAZO IZQUIERDO, EL CAÑÓN DE ENERGÍA (CannonArm): cuatro modos, apuntado con una palanca que el brazo sigue
-##     tarde.
-##   · EL BRAZO DERECHO, EL TALADRO (DrillArm): se carga y se descarga.
+##   · EL BRAZO IZQUIERDO, EL CAÑÓN DE ENERGÍA (CannonTip) en lugar del antebrazo: cuatro modos, apuntado con una
+##     palanca que el brazo sigue tarde.
+##   · EL BRAZO DERECHO, EL TALADRO (DrillTip): se carga y se descarga.
+##   Los dos discretos, con la placa del acorazado (ver `loadout`, ArmLoadout; otra meca puede llevar otros).
 ##   · LA ENERGÍA COMÚN (MechEnergy): la gastan los dos brazos, el dash y levitar.
 ##   · LEVITAR: el vuelo de la cinemática (propulsores en las pantorrillas, atrás; no se modelan), gastando energía.
-##   · LAS PLACAS DE BLINDAJE (ArmorPlates) en los brazos y las piernas.
+##   · LAS FUNDAS DE BLINDAJE (ArmorPlates) en las piernas.
 ##   · SUS TECLAS (ToolMechKeys), en lugar de las de siempre.
 
 var energy := MechEnergy.new()
-var cannon: CannonArm = null
-var drill: DrillArm = null
+## LO QUE MANEJAN SUS TECLAS, de lo que lleva en los brazos (ver `_build_arms`; lo que no lleva, nada): el cañón, lo que
+## gira (el taladro o la sierra) y el brazo de las piñas (el primero sin ninguno de los dos).
+var cannon: CannonTip = null
+var drill: SpinTip = null
+var melee: MechArm = null
 
 
 func _init() -> void:
@@ -48,36 +52,39 @@ func _dress() -> void:
 	ArmorPlates.dress_legs(self)
 
 
-## LOS DOS BRAZOS: el cañón a la izquierda y el taladro a la derecha, armados como los de siempre (ver Mech._build_arms).
+## LOS BRAZOS, los de siempre con lo que dice `loadout`; y de ahí, lo que manejan sus teclas.
 func _build_arms() -> void:
-	cannon = CannonArm.new()
-	cannon.energy = energy
-	var right := _right_arm()
-	var at := Mech.shoulder(cabin_shape)
-	for pair: Array in [[cannon, -1.0], [right, 1.0]]:
-		var arm: MechArm = pair[0]
-		var side: float = pair[1]
-		arm.side = side
-		arm.anchor = self
-		arm.measures = measures
-		arm.shoulder_local = Vector3(side * at.x, at.y, at.z)
-		arm.stance = MechArm.Stance.NORMAL
-		add_child(arm)
-		arms.append(arm)
+	super()
+	cannon = tip_of(CannonTip) as CannonTip
+	drill = tip_of(SpinTip) as SpinTip
+	melee = null
+	for arm in arms:
+		if melee == null and not (arm.tip is CannonTip or arm.tip is SpinTip):
+			melee = arm
+	ArmPoseIdeas.apply(self)
 
 
-## EL BRAZO DERECHO: el taladro (otra meca puede llevar otro; ver PodMech).
-func _right_arm() -> MechArm:
-	drill = DrillArm.new()
-	drill.energy = energy
-	return drill
+func default_loadout() -> Array[ArmLoadout]:
+	return ToolMech.default_arms()
+
+
+## Lo suyo: el cañón a la izquierda y el taladro a la derecha, discretos, con placa.
+static func default_arms() -> Array[ArmLoadout]:
+	return [ArmLoadout.of(ArmLoadout.Motion.POSE, ArmLoadout.Tip.CANNON, true),
+		ArmLoadout.of(ArmLoadout.Motion.POSE, ArmLoadout.Tip.DRILL, true)]
+
+
+func _arm_energy() -> MechEnergy:
+	return energy
 
 
 func possess_status() -> String:
 	var line := "energía %s" % energy.bar()
-	line += "\ncañón: %s%s" % [CannonArm.MODE_NAMES[cannon.mode],
-		(" %s" % BodyMoves._bar(cannon.charge)) if cannon.mode == CannonArm.Mode.SUPER else ""]
-	if drill != null:
-		line += " · taladro %s" % BodyMoves._bar(drill.spin)
+	var tools := PackedStringArray()
+	for arm in arms:
+		if arm.tip != null and arm.tip.status() != "":
+			tools.append(arm.tip.status())
+	if not tools.is_empty():
+		line += "\n" + " · ".join(tools)
 	line += "\n" + super()
 	return line

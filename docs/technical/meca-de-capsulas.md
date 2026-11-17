@@ -38,7 +38,9 @@ los recursos atrás (sólo se ven). Bajando los pasos, todo se junta hacia adela
 - **La columna**: del fondo a la pelvis, oscura. La pelvis es la de siempre (un tubo que une las piernas). Sin
   ascensor.
 - **La meca — `PodMech`**: la Meca de tres (`ToolMech`: cinemática, la energía común, sus teclas, las placas) con
-  esta cabina, **el cañón a la izquierda y el puño de siempre a la derecha** («con cañón y en el otro puño normal»).
+  esta cabina, **el cañón a la izquierda y el puño de siempre a la derecha** («con cañón y en el otro puño normal»). El
+  cañón, en lugar del antebrazo y con placa; el puño, sin placa, y desde el 16/11/2026 pega con el clic (ver [[brazo]],
+  «Lo que lleva en la punta»).
 
 ## La forma, jugando — `PodShapePanel` (F2)
 Se guarda aparte, en `game/mech/pods/pod_shape.tres` (`PodShape`): el radio del torso, el alto de la parte cilíndrica

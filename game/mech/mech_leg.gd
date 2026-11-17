@@ -30,7 +30,7 @@ func _ready() -> void:
 	# esferas que asoman de la pierna.
 	_hip = Clay.cylinder(self, measures.JOINT_RADIUS * 1.15, thickness * 1.04, Vector3.ZERO, MechBody.JOINT_COLOR)
 	_knee = Clay.sphere(self, measures.JOINT_RADIUS, Vector3.ZERO, MechBody.JOINT_COLOR)
-	_ankle = Clay.sphere(self, measures.JOINT_RADIUS * 0.85, Vector3.ZERO, MechBody.JOINT_COLOR)
+	_ankle = Clay.sphere(self, measures.JOINT_RADIUS * MechBody.ANKLE_SHARE, Vector3.ZERO, MechBody.JOINT_COLOR)
 
 
 ## La pone como dice `leg` (ver MechBody.leg): las partes, y las articulaciones en sus puntas (el muslo va de la cadera a la

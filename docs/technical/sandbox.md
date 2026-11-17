@@ -65,6 +65,9 @@ total: gris para lo normal, ámbar para lo principal y celeste para las F.
 - **R** regenera (o arma) y **C** copia.
 - **V** prende el modo creativo; la **B** corta también, y la **B** larga cambia entre ente y cuerpo.
 - **I** el inspector, **O** poseer y **T** la vista de lo poseído.
+- **Tab** oculta toda la pantalla, y la vuelve (`UIState.hide_screen`): se apaga el dibujo de 2D en la ventana, así
+  que no hay panel que se escape ni que tenga que anotarse. Cierra las F abiertas; abrir cualquier F, la pausa o la
+  consola la devuelve.
 
 El panel chico tampoco usa F1–F12.
 

@@ -207,7 +207,7 @@ func _input(event: InputEvent) -> void:
 		if not _is_ragdoll_active():
 			# La sensibilidad que eligió el jugador en Opciones (GameOptions), por encima de la del control que maneja.
 			var sens := (ic.get_camera_sensitivity_factor() if ic else 1.0) * GameOptions.mouse_sensitivity
-			if not (ic and ic._is_rotating):
+			if not (ic and (ic._is_rotating or ic.mode_look().is_finite())):
 				apply_camera_pitch(clamp(camera_pitch - event.relative.y * 0.002 * sens, -1.2, 1.2))
 				camera_yaw -= event.relative.x * 0.002 * sens
 				_cap_seated_look(bi)
@@ -322,6 +322,7 @@ func _physics_process(delta: float) -> void:
 	# La cámara del jugador se mueve también en tercera persona, aunque no esté en pantalla: de ella sale
 	# el rayo de interacción, que tiene que ser el mismo en las dos vistas.
 	_place_camera_at_head()
+	_ease_to_mode_look(delta)
 	apply_camera_pitch(camera_pitch)
 
 	_process_stamina(delta)
@@ -512,6 +513,26 @@ func _debug_keys() -> bool:
 func _direct() -> bool:
 	return is_instance_valid(char_rigidbody) and char_rigidbody.kind != null \
 		and char_rigidbody.kind.motion == CharacterKind.Motion.DIRECT
+
+
+## EL MODO DE UN CONTROL (ver ControllableInteractable.has_mode; el usuario, 17/11/2026: «tu cámara hace como un easing
+## hacia adelante o hacia la posición en la cual se controla ese control»): mientras está, la mirada se va sola y suave
+## hacia donde se lo maneja; el mouse queda para el control.
+const MODE_EASE := 6.0
+
+
+func _ease_to_mode_look(delta: float) -> void:
+	if not is_instance_valid(interaction_controller) or not is_instance_valid(player_camera):
+		return
+	var target := interaction_controller.mode_look()
+	if not target.is_finite():
+		return
+	var dir := (target - player_camera.global_position).normalized()
+	var k := 1.0 - exp(-MODE_EASE * delta)
+	camera_yaw = lerp_angle(camera_yaw, atan2(-dir.x, -dir.z), k)
+	camera_pitch = lerpf(camera_pitch, asin(clampf(dir.y, -1.0, 1.0)), k)
+	char_rigidbody.rotation.y = camera_yaw
+	_cap_seated_look(_get_bi())
 
 
 func _cap_seated_look(bi: BoneInstantiator) -> void:

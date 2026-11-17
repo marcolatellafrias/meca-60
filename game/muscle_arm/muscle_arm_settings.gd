@@ -2,7 +2,7 @@ class_name MuscleArmSettings
 extends Resource
 
 ## LAS PERILLAS DEL BRAZO CON MÚSCULOS (ver MuscleArm): una sola copia para todos (`current`), que arma su panel
-## (MuscleArmPanel, F1 en la fila Brazo).
+## (ArmsPanel: F1 en la fila Brazo, F3 en las mecas).
 
 ## Se guarda (ver KnobsFile): el F1 tiene «Guardar» y «Volver a lo guardado». El archivo es del usuario.
 const SAVED := "res://game/muscle_arm/muscle_arm_settings.tres"

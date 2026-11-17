@@ -109,6 +109,11 @@ En las filas de la meca, **F2** (`CabinShapePanel`), en cuatro pestañas (el cor
 - **Brazos y piernas** (`MechBody.current.dress`, que no depende de la caja): el largo de los brazos y el de las
   piernas (chico, mediano o grande), el ancho de los dos, cuánto se estiran las piernas paradas y cuánto salen los
   hombros. Son las medidas de todas las mecas menos las que tienen su propio cuerpo (la del vórtice: ver pendulo.md).
+  **Todo se mide desde las esferas** (16/11/2026): la cintura es la esfera del tobillo (su centro a su radio del piso,
+  así apoya sin atravesarlo; el pie, más fino, debajo), más las piernas de esa esfera a la de la cadera —«cuánto se
+  estiran», en partes del largo, hasta 0,98, que es también el tope de la pierna (`MechBody.STRAIGHTEST`)—, más la
+  caída de la cadera. Vale igual para la jaula al 30 %. *Antes el tobillo iba a 0,6 m con una esfera de 1,1 que se
+  hundía en el piso, y el tope era el largo menos 0,5 m: en la jaula, con las piernas estiradas, los pies flotaban.*
 
 **Un solo Guardar**: la escribe en `game/consoles/cabin_trama.tres` (no se sube al repositorio), rearma todas las mecas
 y es la forma de todas, también al reiniciar. *La forma guardada de antes (`cabin_shape.tres`) ya no se usa.* Abajo, las

@@ -834,8 +834,8 @@ func _check_punches() -> void:
 	var mouth := _boss.furnace_point()
 	var center := _boss.global_position + Vector3.UP * Brawler.BOX.y * 0.5
 	for arm in mech.arms:
-		# El taladro de la meca de tres pega por take_hit (no contarlo dos veces).
-		if arm is DrillArm:
+		# El taladro (o la sierra) pega por take_hit (no contarlo dos veces).
+		if arm.tip is SpinTip:
 			continue
 		var key := arm.get_instance_id()
 		var now := arm.stage()

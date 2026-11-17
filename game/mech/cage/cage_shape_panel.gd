@@ -1,0 +1,76 @@
+class_name CageShapePanel
+extends KnobsPanel
+
+## LA FORMA DE LA MECA JAULA (F2 en su fila; ver CageShape, CageCabin): una pestaña por módulo. Como todos los paneles de
+## perillas (KnobsPanel): se mueve un borrador, y «Guardar» o «Volver a lo guardado» rearman las mecas con eso.
+
+const PANEL_WIDTH := 400.0
+const LABELS := {
+	"bubble_radius": "cápsula: del centro a las caras (m)",
+	"glass_smooth": "vidrio liso (si no, facetado)",
+	"glass_clear": "vidrio: lo claro, adelante",
+	"glass_tint": "vidrio: lo teñido, hacia los bordes (verdoso)",
+	"glass_spread": "vidrio: cuánto ocupa lo claro",
+	"glass_smudges": "vidrio: cuánto se notan las manchas",
+	"glass_pixel": "vidrio: el tamaño de los cuadraditos de las manchas (m)",
+	"padding": "padding de los costados (m)",
+	"floor_thick": "grosor del piso, debajo de la burbuja (m)",
+	"ceiling_thick": "grosor del techo, encima de la burbuja (m)",
+	"floor_gap": "margen extra: el piso de la cabina, debajo de la burbuja (m)",
+	"seat_height": "altura de la silla: la pelvis sobre el piso (m; nunca con los pies abajo del piso)",
+	"rim_width": "marco de la cápsula en la cara: ancho (m; 0, sin marco)",
+	"rim_depth": "marco de la cápsula: cuánto sobresale de la cara (m)",
+	"pit_radius": "radio del octógono (m)",
+	"desk_tilt": "inclinación del tablero (°)",
+	"arms_eye": "ojos del de los brazos, sobre su piso (m)",
+	"tower_round": "redonda (si no, cuadrada)",
+	"tower_width": "ancho (m)",
+	"tower_depth": "fondo (m; nunca más que el ancho)",
+	"gunner_eye": "ojos del artillero, sobre el piso de arriba (m)",
+}
+## Los de «Brazos y piernas»: los de las otras, más el adelanto de los hombros, que sólo tiene esta.
+static var LIMB_LABELS: Dictionary = CabinShapePanel.LABELS.merged({
+	"shoulder_forward": "cuánto se adelantan los hombros (0, al medio; 1, al frente sin salirse)"})
+const TABS: Array[String] = ["La cápsula de abajo", "El tablero de arriba", "La torre", "Brazos y piernas"]
+
+
+func setup_panel() -> void:
+	panel_width = PANEL_WIDTH
+	setup_knobs("meca_jaula_forma", "MECA JAULA: LA FORMA")
+	_measure()
+
+
+func knobs() -> Resource:
+	return CageShape.current
+
+
+func fresh() -> Resource:
+	return CageShape.new()
+
+
+func saved_path() -> String:
+	return CageShape.SAVED
+
+
+func applied() -> void:
+	Mech.rebuild_all(get_tree())
+
+
+func sections() -> Array[Dictionary]:
+	var all: Array[Dictionary] = []
+	for tab: String in TABS:
+		# «Brazos y piernas», la misma pestaña que las otras (los nombres de CabinShapePanel).
+		var labels: Dictionary = LIMB_LABELS if tab == "Brazos y piernas" else LABELS
+		all.append({"title": tab.to_upper(), "tab": tab, "target": draft(), "labels": labels,
+			"include": PackedStringArray([tab]), "headers": false, "defaults": CageShape.new(), "on_change": _measure})
+	return all
+
+
+## Lo que sale de los números, sin rearmar nada.
+func _measure() -> void:
+	var shape := draft() as CageShape
+	if shape == null:
+		return
+	var pit := CageCabin.pit_of(shape)
+	say("abajo: %.2f m de lado y %.2f de alto · el bloque de arriba: %.2f m de alto · la torre deja %.2f m hasta el pozo" % [
+		shape.side(), shape.height(), pit.top(), shape.side() * 0.5 - pit.rim() - shape.tower_deep()])

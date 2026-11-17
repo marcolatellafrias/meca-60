@@ -151,26 +151,44 @@ static func _energy_cannon(root: Node3D) -> void:
 
 ## LA SIERRA: un disco grande, parado en el eje del antebrazo, sostenido por una horquilla.
 static func _saw(root: Node3D) -> void:
-	var radius := 3.0
+	var disc := Node3D.new()
+	disc.position = saw_frame(root)
+	root.add_child(disc)
+	saw_disc(disc)
+
+
+## El radio del disco de la sierra.
+const SAW_RADIUS := 3.0
+
+
+## LA HORQUILLA DE LA SIERRA (sin el disco), con su guarda; devuelve el centro del disco.
+static func saw_frame(root: Node3D) -> Vector3:
+	var radius := SAW_RADIUS
 	var at := Vector3(0, 0, TIP - 1.6 - radius)
 	Clay.box(root, Vector3(1.6, 1.4, 1.2), Vector3(0, 0, TIP - 1.0), Clay.METAL.darkened(0.1))
 	for side: float in [-1.0, 1.0]:
 		Clay.box(root, Vector3(0.3, 0.7, radius + 1.0), Vector3(side * 0.45, 0, TIP - 1.1 - (radius + 1.0) * 0.5),
 			Clay.METAL.darkened(0.1))
 		Clay.cylinder(root, 0.55, 0.3, at + Vector3(side * 0.45, 0, 0), MechBody.JOINT_COLOR, Vector3(0, 0, 90))
-	Clay.cylinder(root, radius, 0.14, at, STEEL, Vector3(0, 0, 90))
-	var teeth := 30
-	for i in teeth:
-		var angle := TAU * i / teeth
-		var tooth := Clay.box(root, Vector3(0.14, 0.3, 0.42), at + Vector3(0, cos(angle), sin(angle)) * (radius + 0.08),
-			STEEL.darkened(0.3))
-		tooth.basis = Basis(Vector3.RIGHT, -angle)
 	# la guarda: un cuarto de vuelta arriba y atrás, para que se lea de qué lado corta
 	for i in 7:
 		var angle := lerpf(0.0, PI * 0.55, i / 6.0)
 		var guard := Clay.box(root, Vector3(0.9, 0.2, 0.95), at + Vector3(0, cos(angle), sin(angle)) * (radius + 0.4),
 			Clay.METAL.darkened(0.05))
 		guard.basis = Basis(Vector3.RIGHT, -angle)
+	return at
+
+
+## EL DISCO DE LA SIERRA con sus dientes, centrado en `root` (gira sobre X).
+static func saw_disc(root: Node3D) -> void:
+	var radius := SAW_RADIUS
+	Clay.cylinder(root, radius, 0.14, Vector3.ZERO, STEEL, Vector3(0, 0, 90))
+	var teeth := 30
+	for i in teeth:
+		var angle := TAU * i / teeth
+		var tooth := Clay.box(root, Vector3(0.14, 0.3, 0.42), Vector3(0, cos(angle), sin(angle)) * (radius + 0.08),
+			STEEL.darkened(0.3))
+		tooth.basis = Basis(Vector3.RIGHT, -angle)
 
 
 ## ── LA ESPALDA ──────────────────────────────────────────────────────────────────────────────────────────────────
@@ -309,6 +327,17 @@ static func dress(mech: Mech, loadout: Dictionary, tool_out := 0.0) -> void:
 			"machine_gun": _machine_gun(mount)
 			"missile_launcher": _missile_launcher(mount)
 			"heavy_cannon": _heavy_cannon(mount)
+
+
+## UNA PLACA DEL ACORAZADO (tres caras de octógono, `_wrap`) sobre `piece` (su largo sobre Z), del lado que mira a
+## `toward` (mundo), armada en la medida de la meca entera (`length`) y achicada a `k`. La de los brazos (ver
+## MechArm.plated) y la de las piernas de la meca jaula.
+static func plate(piece: Node3D, toward: Vector3, k: float, length: float) -> void:
+	var holder := Node3D.new()
+	holder.name = "Placa"
+	holder.scale = Vector3.ONE * k
+	piece.add_child(holder)
+	_wrap(holder, Transform3D(_facing(piece, toward), Vector3.ZERO), length)
 
 
 ## El giro (sobre el largo de la pieza, de a octavos de vuelta: las caras del prisma) que lleva la cara del medio de una

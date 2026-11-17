@@ -65,9 +65,23 @@ func _ready() -> void:
 	var right := mech.global_basis.x
 	await _shot("la meca jaula", at + forward * 8.0 - right * 6.0 + Vector3.UP * 2.5, at + Vector3.UP * 0.3, 50.0)
 	await _shot("de frente", at + forward * 9.0 + Vector3.UP * 0.8, at + Vector3.UP * 0.3, 45.0)
+	# CORTADA AL MEDIO, DE COSTADO: el que maneja en su silla curva (la cámara no ve lo que está más cerca que el medio).
+	_eye.near = 12.0 - 0.3
+	var pod: Vector3 = mech.global_transform * (mech.cabin.top_seat() + Vector3(0.0, SeatInteractable.STATION_EYE_HEIGHT, 0.0))
+	await _shot("cortada al medio: el que maneja", pod + right * 12.0, pod, 11.0)
+	_eye.near = 0.05
 	await _shot("de atrás", at - forward * 8.0 + right * 5.0 + Vector3.UP * 3.0, at + Vector3.UP * 0.6, 50.0)
+	# El que maneja desaloja a su maniquí (como al poseerla), y vuelve al soltarla.
+	var cage := mech.cabin as CageCabin
+	print("MANIQUÍES ", cage.dummies.size())
+	cage.evict(CageCabin.DRIVER)
+	await get_tree().create_timer(0.3).timeout
+	print("MANIQUÍES AL TOMAR EL PUESTO ", cage.dummies.size())
 	var eye: Vector3 = mech.global_transform * (mech.cabin.top_seat() + Vector3(0.0, SeatInteractable.STATION_EYE_HEIGHT, 0.0))
 	await _shot("desde los ojos del que maneja", eye, eye + forward * 10.0 + Vector3.DOWN * 1.0, 80.0)
+	await _shot("desde los ojos, a la izquierda: los controles", eye, eye - right * 10.0 + forward * 3.0 + Vector3.DOWN * 3.0, 90.0)
+	cage.seat_back(CageCabin.DRIVER)
+	print("MANIQUÍES AL DEJARLO ", cage.dummies.size())
 	# CAMINA hacia adelante dos segundos.
 	var start := mech.global_position
 	mech.move = Vector2(0.0, 1.0)
@@ -80,13 +94,13 @@ func _ready() -> void:
 	await get_tree().create_timer(1.0).timeout
 	# EL PALO: un directo.
 	now = mech.global_position
-	mech.pole.punch(MechArm.Punch.STRAIGHT)
+	mech.melee.punch(MechArm.Punch.STRAIGHT)
 	await get_tree().create_timer(0.62).timeout
 	await _shot("el palo: un directo", now + forward * 6.0 + right * 5.0 + Vector3.UP * 2.0, now + forward * 1.0, 50.0)
-	print("PALO: la mano llegó a ", mech.pole.top_speed, " m/s")
+	print("PALO: la mano llegó a ", (mech.melee as MuscleArm).top_speed, " m/s")
 	await get_tree().create_timer(1.0).timeout
 	# EL CAÑÓN: un tiro simple.
-	mech.cannon.mode = CannonArm.Mode.SIMPLE
+	mech.cannon.mode = CannonTip.Mode.SIMPLE
 	mech.cannon.trigger = true
 	await get_tree().create_timer(0.15).timeout
 	mech.cannon.trigger = false

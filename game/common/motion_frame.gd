@@ -64,6 +64,11 @@ var floor_height := 0.0
 ## adelante). Lo emite `crash`.
 signal crashed(dv: Vector3)
 
+## LOS QUE LO TIENEN DE MARCO (CharacterRigidBody3D.set_frame los anota), lo vayan llevando o no —sentados, por
+## ejemplo, no lo son (ver `_members`)—. AL SALIR DEL ÁRBOL LOS SUELTA (`_exit_tree`): un marco fuera del mundo no
+## lleva a nadie, y quien lo seguía teniendo leía después un nodo liberado (16/11/2026: rearmar la meca jaula desde su
+## F2 con el maniquí de adentro poseído, «Invalid type in function 'world_yaw'… previously freed»).
+var holds := {}
 var _volumes: Array = []
 var _members := {}
 ## Lo suelto que adoptó (ver `_adopt`): lo suelta él cuando sale. Y lo que se le dio en el último paso para llevarlo
@@ -105,6 +110,14 @@ func _init() -> void:
 
 func _ready() -> void:
 	_prev = global_transform
+
+
+## Suelta a los que lo tienen de marco (ver `holds`): pasan al mundo, mirando a donde miraban.
+func _exit_tree() -> void:
+	for body: Variant in holds.keys():
+		if is_instance_valid(body) and body.get("frame") == self:
+			body.call("set_frame", null)
+	holds.clear()
 
 
 ## UN VOLUMEN del marco, en sus coordenadas; con `active`, cuenta sólo mientras devuelva true (la rampa abierta).

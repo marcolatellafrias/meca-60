@@ -27,9 +27,18 @@ extends RefCounted
 ## su tamaño (`SIZES`). *Del 13/11/2026 a la tarde, todo iba con el lado de la caja; el usuario: «prefiero que no
 ## dependa tanto de la caja».*
 const BASE := {
-	"WAIST": 7.4, "HIP_X": 2.7, "HIP_DROP": 1.2, "THIGH": 4.4, "SHIN": 4.4, "LEG_THICKNESS": 2.1, "ANKLE": 0.6,
+	"WAIST": 7.4, "HIP_X": 2.7, "HIP_DROP": 1.2, "THIGH": 4.4, "SHIN": 4.4, "LEG_THICKNESS": 2.1,
 	"FOOT_SIZE": Vector3(2.2, 0.7, 3.4), "FOOT_AHEAD": 0.4, "UPPER_ARM": 5.5, "FOREARM": 5.5,
 }
+## LO MÁS QUE SE ESTIRA UNA PIERNA: de la cadera al tobillo, en partes de su largo (muslo y canilla). Una sola regla para
+## el tope y para el `stretch` de parada, en partes y no en metros, así vale igual para la meca grande y para la jaula al
+## 30 % (16/11/2026, el usuario: «cuando no se agacha [los pies] están flotando… lo de distancia de piernas al máximo aún
+## tiene las piernas re dobladas»). *Hasta ese día el tope era el largo menos 0,5 m: en la jaula, un 19 % de la pierna, y
+## con el estirado al máximo (0,9) los pies quedaban colgando 24 cm.*
+const STRAIGHTEST := 0.98
+## LAS ARTICULACIONES: su radio, en partes del grosor de la pierna; el tobillo, una esfera algo más chica.
+const JOINT_SHARE := 0.62
+const ANKLE_SHARE := 0.85
 ## Chico, mediano (el de siempre) y grande.
 const SIZES: Array[float] = [0.75, 1.0, 1.25]
 ## UN CUERPO ES UN OBJETO DE MEDIDAS (15/11/2026; el usuario, de la meca del vórtice: «cada panel de la meca original
@@ -49,30 +58,28 @@ static func from_shape(shape: Resource) -> MechBody:
 	return body
 
 
-## UN CUERPO ACHICADO PAREJO: todas las medidas de siempre (`BASE`) por `k`, y los factores (el ancho, el alcance y el
-## paso) también `k`. La meca jaula va al 30 % (el usuario, 16/11/2026: «mantener estos grosores y estos largos de
-## brazos que me gustan»), con los hombros donde los pone su cabina (`shoulder_out` 0).
-static func scaled(k: float) -> MechBody:
-	var body := MechBody.new()
-	body.thick = k
-	body.reach = k
-	body.stride = k
-	body.shoulder_out = 0.0
-	body.HIP_X = float(BASE["HIP_X"]) * k
-	body.HIP_DROP = float(BASE["HIP_DROP"]) * k
-	body.LEG_THICKNESS = float(BASE["LEG_THICKNESS"]) * k
-	body.JOINT_RADIUS = body.LEG_THICKNESS * 0.62
-	body.PELVIS_SIZE = Vector3(body.HIP_X * 2.0 - body.LEG_THICKNESS, 1.8 * k, 3.6 * k)
-	body.ANKLE = float(BASE["ANKLE"]) * k
-	body.FOOT_SIZE = (BASE["FOOT_SIZE"] as Vector3) * k
-	body.FOOT_AHEAD = float(BASE["FOOT_AHEAD"]) * k
-	body.STANCE_X = body.HIP_X + 0.3 * k
-	body.THIGH = float(BASE["THIGH"]) * k
-	body.SHIN = float(BASE["SHIN"]) * k
-	body.UPPER_ARM = float(BASE["UPPER_ARM"]) * k
-	body.FOREARM = float(BASE["FOREARM"]) * k
-	body.WAIST = float(BASE["WAIST"]) * k
-	return body
+## LO ACHICA PAREJO: todas sus medidas y sus factores (el ancho, el alcance y el paso) por `k`. La meca jaula va al 30 %
+## de lo que digan sus perillas de «Brazos y piernas» (el usuario, 16/11/2026: «mantener estos grosores y estos largos
+## de brazos que me gustan»; «los paneles deberían ser los mismos que la meca común»). *Hasta ese día la jaula tenía
+## un cuerpo fijo, `scaled`, sin esas perillas.*
+func shrink(k: float) -> void:
+	thick *= k
+	reach *= k
+	stride *= k
+	WAIST *= k
+	HIP_X *= k
+	HIP_DROP *= k
+	LEG_THICKNESS *= k
+	JOINT_RADIUS *= k
+	PELVIS_SIZE *= k
+	ANKLE *= k
+	FOOT_SIZE *= k
+	FOOT_AHEAD *= k
+	STANCE_X *= k
+	THIGH *= k
+	SHIN *= k
+	UPPER_ARM *= k
+	FOREARM *= k
 
 
 ## LO QUE SE ELIGIÓ: el tamaño (0, 1, 2) del ancho, del largo de los brazos y del de las piernas, y cuánto se estiran
@@ -98,12 +105,12 @@ var SHIN := 4.4
 ## Las piernas, macizas (lo pidió el usuario el 12/11/2026: «más chunky»), y sus ARTICULACIONES —cadera, rodilla,
 ## tobillo—, discos de ese mismo grosor, con el eje de costado.
 var LEG_THICKNESS := 2.1
-var JOINT_RADIUS := LEG_THICKNESS * 0.62
+var JOINT_RADIUS := LEG_THICKNESS * JOINT_SHARE
 ## La pelvis, entre los dos discos de las caderas: corta, para darles lugar.
 var PELVIS_SIZE := Vector3(HIP_X * 2.0 - LEG_THICKNESS, 1.8, 3.6)
 ## El color de las articulaciones y de los pies: un poco más oscuro que la pierna, no negro.
 const JOINT_COLOR := Color(0.36, 0.375, 0.4)
-var ANKLE := 0.6
+var ANKLE := 2.1 * JOINT_SHARE * ANKLE_SHARE
 var FOOT_SIZE := Vector3(2.2, 0.7, 3.4)
 ## Cuánto va el pie adelante del tobillo.
 var FOOT_AHEAD := 0.4
@@ -132,9 +139,9 @@ func dress(thickness: int, arm_length: int, leg_length: int, leg_stretch: float,
 	HIP_X = BASE["HIP_X"] * thick
 	HIP_DROP = BASE["HIP_DROP"] * thick
 	LEG_THICKNESS = BASE["LEG_THICKNESS"] * thick
-	JOINT_RADIUS = LEG_THICKNESS * 0.62
+	JOINT_RADIUS = LEG_THICKNESS * JOINT_SHARE
 	PELVIS_SIZE = Vector3(HIP_X * 2.0 - LEG_THICKNESS, 1.8 * thick, 3.6 * thick)
-	ANKLE = BASE["ANKLE"] * thick
+	ANKLE = MechBody.ankle_for(LEG_THICKNESS)
 	FOOT_SIZE = (BASE["FOOT_SIZE"] as Vector3) * thick
 	FOOT_AHEAD = BASE["FOOT_AHEAD"] * thick
 	STANCE_X = HIP_X + 0.3 * thick
@@ -145,11 +152,26 @@ func dress(thickness: int, arm_length: int, leg_length: int, leg_stretch: float,
 	WAIST = MechBody.waist_for(thickness, leg_length, leg_stretch)
 
 
+## EL ALTO DEL TOBILLO sobre el piso: el radio de su esfera, así apoya en el piso sin atravesarlo; el pie (más fino)
+## queda debajo. LA CINTURA SE MIDE DESDE AHÍ: tobillo, piernas (de la esfera del tobillo a la de la cadera, ver
+## `STRAIGHTEST`) y la caída de la cadera (16/11/2026, el usuario: «que su punto de referencia realmente sean las esferas
+## de la pelvis… tomar en cuenta grosor de pies»). *Hasta ese día el tobillo iba a 0,6 m (en la grande) y su esfera,
+## de 1,1 m, se hundía medio metro en el piso.*
+static func ankle_for(leg_thickness: float) -> float:
+	return leg_thickness * JOINT_SHARE * ANKLE_SHARE
+
+
+## Lo más lejos que llega el tobillo desde la cadera (ver `STRAIGHTEST`).
+func leg_reach() -> float:
+	return (THIGH + SHIN) * STRAIGHTEST
+
+
 ## LA CINTURA que sale de un ancho, un largo de pierna y un estirado (sin ponerlos): para mostrarla antes de guardar.
 static func waist_for(thickness: int, leg_length: int, leg_stretch: float) -> float:
 	var t := SIZES[clampi(thickness, 0, SIZES.size() - 1)]
 	var l := SIZES[clampi(leg_length, 0, SIZES.size() - 1)]
-	return float(BASE["ANKLE"]) * t + float(BASE["HIP_DROP"]) * t + (float(BASE["THIGH"]) + float(BASE["SHIN"])) * l * leg_stretch
+	return MechBody.ankle_for(float(BASE["LEG_THICKNESS"]) * t) + float(BASE["HIP_DROP"]) * t \
+		+ (float(BASE["THIGH"]) + float(BASE["SHIN"])) * l * leg_stretch
 
 
 ## LA INCLINACIÓN: `lean` es el ángulo (radianes) hacia cada lado, x a la derecha e y adelante, en el espacio de la
@@ -198,7 +220,7 @@ func leg(hip_point: Vector3, ground: Vector3, facing: Basis, knee_way := Vector3
 	var ankle := ground + Vector3.UP * ANKLE
 	var bend := knee_way if knee_way.length_squared() > 0.0001 else forward
 	var knee := joint(hip_point, ankle, THIGH, SHIN, bend)
-	var to_ankle := (ankle - hip_point).limit_length(THIGH + SHIN - 0.01)
+	var to_ankle := (ankle - hip_point).limit_length(leg_reach())
 	var end := hip_point + to_ankle
 	return {
 		"thigh": segment(hip_point, knee, bend),
@@ -212,8 +234,9 @@ func leg(hip_point: Vector3, ground: Vector3, facing: Basis, knee_way := Vector3
 ## UN BRAZO, del hombro `shoulder_point` al puño `fist` (en el mundo, o en el espacio que sea, con `torso_basis` el del
 ## torso en ese espacio). Devuelve `upper` y `forearm` (centro y orientación; el largo por −Z), `elbow` y `wrist` (el
 ## puño, al alcance).
-func arm(shoulder_point: Vector3, fist: Vector3, side: float, torso_basis: Basis) -> Dictionary:
-	var hint := torso_basis * Vector3(side * ELBOW_HINT.x, ELBOW_HINT.y, ELBOW_HINT.z)
+func arm(shoulder_point: Vector3, fist: Vector3, side: float, torso_basis: Basis, elbow_hint := Vector3.ZERO) -> Dictionary:
+	var toward := ELBOW_HINT if elbow_hint == Vector3.ZERO else elbow_hint
+	var hint := torso_basis * Vector3(side * toward.x, toward.y, toward.z)
 	var elbow := joint(shoulder_point, fist, UPPER_ARM, FOREARM, hint)
 	var wrist := shoulder_point + (fist - shoulder_point).limit_length(UPPER_ARM + FOREARM - 0.01)
 	var up := torso_basis * Vector3.UP

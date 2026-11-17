@@ -23,8 +23,12 @@ const BATTERY := Color(0.93, 0.75, 0.16)
 const AMMO := Color(0.47, 0.53, 0.32)
 const SEAT_SCENE := "res://game/interactables/activatable/working_seat.tscn"
 const DUMMY_SCENE := "res://game/character/player.tscn"
+## LOS CUERPOS DE LOS MANIQUÍES: uno al azar cada vez que nace la meca, al rearmar la parcela también (el usuario,
+## 16/11/2026: «que sean aleatorios los dummies, los arquetipos, así yo veo varias cosas distintas»). Todos menos el
+## genérico.
 const DUMMY_BODIES: Array[EntityArchetype.Archetype] = [EntityArchetype.Archetype.fat_athletic,
-	EntityArchetype.Archetype.lanky, EntityArchetype.Archetype.buff, EntityArchetype.Archetype.fat_man]
+	EntityArchetype.Archetype.lanky, EntityArchetype.Archetype.buff, EntityArchetype.Archetype.fat_man,
+	EntityArchetype.Archetype.kid, EntityArchetype.Archetype.old]
 ## Los puestos, en el orden de las sillas (`chairs`): los tres de adelante, de izquierda a derecha, y el de arriba.
 const POSTS := ["brazo izquierdo", "espalda", "brazo derecho", "movimiento"]
 
@@ -79,15 +83,25 @@ func seat_dummies() -> void:
 	for i in chairs.size():
 		if chairs[i] == free_chair:
 			continue
-		var dummy := (load(DUMMY_SCENE) as PackedScene).instantiate() as BoneInstantiator
-		dummy.kind = CharacterKind.npc()
-		dummy.master_seed = EntityInstantiation.debug_seed(DUMMY_BODIES[i % DUMMY_BODIES.size()], i)
-		holder.add_child(dummy)
-		dummies.append(dummy)
-		# Aparece adentro de la caja maciza: que no la empuje antes de que el marco lo lleve (ver `ride`).
-		mech.add_collision_exception_with(dummy.char_rigidbody)
-		dummy.place_at(chairs[i].global_position + chairs[i].global_basis.z * 0.8, chairs[i].heading())
-		dummy.intent.seat = chairs[i]
+		seat_dummy(i)
+
+
+## UN MANIQUÍ EN LA SILLA `i` (ver `seat_dummies`).
+func seat_dummy(i: int) -> void:
+	var holder := mech.get_parent() as Node3D
+	if holder == null:
+		return
+	var dummy := (load(DUMMY_SCENE) as PackedScene).instantiate() as BoneInstantiator
+	dummy.kind = CharacterKind.npc()
+	var dice := RandomNumberGenerator.new()
+	dice.randomize()
+	dummy.master_seed = EntityInstantiation.debug_seed(DUMMY_BODIES[dice.randi() % DUMMY_BODIES.size()], dice.randi() % 1000)
+	holder.add_child(dummy)
+	dummies.append(dummy)
+	# Aparece adentro de la caja maciza: que no la empuje antes de que el marco lo lleve (ver `ride`).
+	mech.add_collision_exception_with(dummy.char_rigidbody)
+	dummy.place_at(chairs[i].global_position + chairs[i].global_basis.z * 0.8, chairs[i].heading())
+	dummy.intent.seat = chairs[i]
 
 
 ## Saca a los maniquíes (van al lado de la meca en el árbol, no adentro): para cuando la meca se cambia por otra.

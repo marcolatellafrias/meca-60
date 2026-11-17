@@ -346,6 +346,11 @@ func _input(event: InputEvent) -> void:
 		_press_b(key.pressed)
 		get_viewport().set_input_as_handled()
 		return
+	# EL TAB, LA PANTALLA LIMPIA (ver UIState.hide_screen): también con una F abierta, salvo escribiendo en ella.
+	if keycode == KEY_TAB and key.pressed and not _typing():
+		UIState.hide_screen(not UIState.screen_hidden)
+		get_viewport().set_input_as_handled()
+		return
 	if not key.pressed or not UIState.gameplay_active() or _current == null:
 		return
 	var busy := _busy()
@@ -361,6 +366,12 @@ func _input(event: InputEvent) -> void:
 	# UNA TECLA DE LA PARCELA SE GASTA ACÁ: si siguiera de largo, lo que ella misma abrió la recibiría.
 	get_viewport().set_input_as_handled()
 	_refresh()
+
+
+## Si se está escribiendo en un campo de texto (ahí el Tab pasa al campo siguiente).
+func _typing() -> bool:
+	var focus := get_viewport().gui_get_focus_owner()
+	return focus is LineEdit or focus is TextEdit
 
 
 func _press_key(keys: Array[SandboxKey], keycode: Key, busy: bool) -> bool:

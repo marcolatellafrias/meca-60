@@ -29,6 +29,12 @@ const STAND := &"stand"
 const MOVE_UP := &"move_up"
 const MOVE_DOWN := &"move_down"
 const MOVE_SELF := &"move_self"
+## LOS DE LOS CONTROLES TRAÍDOS DE CHARACTER-PARAMETRIC (17/11/2026; ver ComponentArchetype): apretar y soltar un botón, y
+## el movimiento sin lado (MOVE: suena igual para los dos). Allá una entrada puede ser un diccionario con opciones
+## (`{"keys": …, "resume": …}`); acá se toman sólo sus claves (`keys`), sin las opciones.
+const PRESS := &"press"
+const RELEASE := &"release"
+const MOVE := &"move"
 ## Quieto este tiempo (s), se apaga lo que suena al moverse.
 const MOVE_IDLE_S := 0.15
 
@@ -53,6 +59,8 @@ func _keys(event: StringName) -> Array:
 	var raw: Variant = sounds().get(event)
 	if raw == null:
 		return []
+	if raw is Dictionary:
+		raw = (raw as Dictionary).get("keys")
 	return raw if raw is Array else [raw]
 
 
@@ -93,7 +101,9 @@ func move_sound(value: float, by_itself := false) -> void:
 	var playing := MOVE_UP if value > before else MOVE_DOWN
 	if by_itself and sounds().has(MOVE_SELF):
 		playing = MOVE_SELF
-	for event: StringName in [MOVE_UP, MOVE_DOWN, MOVE_SELF]:
+	elif sounds().has(MOVE) and not sounds().has(playing):
+		playing = MOVE
+	for event: StringName in [MOVE_UP, MOVE_DOWN, MOVE_SELF, MOVE]:
 		if event != playing:
 			stop_sound(event)
 	start_sound(playing)
@@ -112,6 +122,6 @@ class MoveWatch extends Node:
 	func _process(_delta: float) -> void:
 		if Time.get_ticks_msec() - entity._move_msec < int(SoundEntity.MOVE_IDLE_S * 1000.0):
 			return
-		for event: StringName in [SoundEntity.MOVE_UP, SoundEntity.MOVE_DOWN, SoundEntity.MOVE_SELF]:
+		for event: StringName in [SoundEntity.MOVE_UP, SoundEntity.MOVE_DOWN, SoundEntity.MOVE_SELF, SoundEntity.MOVE]:
 			entity.stop_sound(event)
 		set_process(false)

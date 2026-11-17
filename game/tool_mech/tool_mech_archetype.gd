@@ -39,11 +39,16 @@ func describe(_seed_value: int) -> PackedStringArray:
 	])
 
 
+func default_loadout() -> Array[ArmLoadout]:
+	return PodMech.default_arms() if pods else ToolMech.default_arms()
+
+
 func build(_seed_value: int, parent: Node3D) -> Node3D:
 	var root := Node3D.new()
 	root.name = display_name
 	parent.add_child(root)
 	var mech: ToolMech = PodMech.new() if pods else ToolMech.new()
+	mech.equipment = display_name
 	mech.transform = Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(0.0, Mech.standing_height(mech.cabin_shape), 0.0))
 	root.add_child(mech)
 	var target := Mech.new()

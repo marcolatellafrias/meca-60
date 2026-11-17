@@ -4,7 +4,7 @@ extends SeededArchetype
 ## LA PARCELA DEL BRAZO CON MÚSCULOS (ver MuscleArm): un torso fijo en el aire, del tamaño del de la meca, con UN
 ## brazo (el izquierdo, del lado desde donde se llega), para tunearlo solo. Adelante, un BLOQUE suelto sobre un pedestal
 ## para pegarle; con N, una PARED fija en su lugar, para ver cómo se traba. 1 a 4 tiran las piñas; J/K, una bola liviana o
-## pesada contra el brazo (cede y vuelve). F1 abre sus perillas (MuscleArmPanel). Mirándolo, O lo posee: a mano.
+## pesada contra el brazo (cede y vuelve). F1 abre sus perillas (ArmsPanel, su pestaña «Con músculos»). Mirándolo, O lo posee: a mano.
 
 const FOOTPRINT := 60.0
 const TORSO := 8.0

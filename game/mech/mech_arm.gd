@@ -17,6 +17,12 @@ extends Node3D
 ##     se queda un instante y vuelve a su postura (ver `stage`).
 ## De ahí, LA POSE (`_target`): el codo y la muñeca salen de la IK del cuerpo de la meca (MechBody.arm), y cada pieza va
 ## con su −Z a lo largo y su Y sobre EL EJE DEL CODO. Y LA MANO (`_mount_hand`), montada por regla.
+##
+## LO QUE VA EN LA PUNTA (`tip`, un ArmTip) Y LA PLACA (`plated`), APARTE DE CÓMO SE MUEVE (16/11/2026, el usuario:
+## «unificar el sistema de los brazos… qué cosas se equipan»; que cada brazo elija discreto o con músculos): el puño, el
+## palo, el taladro, la sierra o el cañón se montan igual en un brazo discreto o en uno con músculos (ver ArmLoadout).
+## *Hasta ese día el cañón, el taladro y el palo eran clases de brazo (CannonArm, CageCannonArm, DrillArm, PoleArm): el
+## cañón no podía tener músculos ni el palo ser discreto, y el cañón de la jaula llevaba otra armadura que el palo.*
 
 enum Punch { NONE, STRAIGHT, HOOK, UPPERCUT, HAMMER }
 enum Stance { NORMAL, COVER, TUCKED }
@@ -63,6 +69,21 @@ var _from := Vector3.ZERO
 var _rest := Vector3.ZERO
 var _offset := Vector3.ZERO
 var _hand: MechHand = null
+## LO QUE VA EN LA PUNTA (ver ArmTip; sin nada, el puño común) y si lleva LAS PLACAS DEL ACORAZADO en el brazo y el
+## antebrazo (ArmoryParts.plate). Se ponen antes de agregarlo.
+var tip: ArmTip = null
+var plated := false
+## DÓNDE DESCANSA EL PUÑO EN LA POSTURA NORMAL (como `STANCES`, en el largo del brazo): cero, el de `STANCES`. Y EL
+## GOLPE PRINCIPAL (el del clic izquierdo, `main_strike`): la piña y, si va por otro camino, sus puntos (como `PUNCHES`).
+## Los cambia el panel de poses para probar (ArmPosesPanel, ver ArmPoseIdeas).
+var rest_point := Vector3.ZERO
+var main_punch := Punch.STRAIGHT
+var main_path: Array = []
+## HACIA DÓNDE DOBLA EL CODO (x afuera, y arriba, z atrás; ver MechBody.arm): cero, el de siempre (afuera, abajo y atrás).
+## Lo cambian las maquetas de reposo (tests/arm_rest_look): el codo pegado al cuerpo.
+var elbow_hint := Vector3.ZERO
+## La piel del antebrazo (el cilindro, sin la bola del codo): lo que esconde una punta que lo reemplaza (el cañón).
+var forearm_skin: Node3D = null
 ## Los puntos de la piña tirada hacia un lugar (ver `punch_at`); vacío, la piña va por los suyos (`PUNCHES`).
 var _aimed: Array = []
 ## El eje de la bisagra del codo, en el mundo: sale del brazo y el antebrazo pedidos; con el brazo estirado no se puede
@@ -114,6 +135,8 @@ func _advance(delta: float) -> void:
 	_rest = _rest.move_toward(stance_at(stance), STANCE_SPEED * reach() * delta)
 	if _hand != null:
 		_hand.fist = punching != Punch.NONE or stance == Stance.COVER
+	if tip != null:
+		tip.step(delta)
 
 
 ## Un punto de las piñas o la guardia, en el espacio de lo que lo sostiene: `x` va hacia afuera de su lado.
@@ -123,7 +146,18 @@ func _local(point: Vector3) -> Vector3:
 
 ## DÓNDE DESCANSA EL PUÑO en la postura `which` (ver `STANCES`), con el largo de este brazo.
 func stance_at(which: Stance) -> Vector3:
+	if which == Stance.NORMAL and rest_point != Vector3.ZERO:
+		return rest_point * reach()
 	return (STANCES[which] as Vector3) * reach()
+
+
+## TIRA EL GOLPE PRINCIPAL (`main_punch`, por `main_path` si tiene). Devuelve si lo tiró.
+func main_strike() -> bool:
+	if not punch(main_punch):
+		return false
+	if not main_path.is_empty():
+		_aimed = main_path
+	return true
 
 
 ## EL LARGO DE ESTE BRAZO: el factor de las posturas y las piñas (el `reach` de sus medidas), y el brazo y el antebrazo
@@ -140,9 +174,16 @@ func forearm_length() -> float:
 	return measures.FOREARM
 
 
-## DÓNDE SE PIDE EL PUÑO AHORA, desde el hombro (como `STANCES`): a lo largo de la piña y de vuelta a su postura, o en
-## su postura más lo que lo corrieron a mano.
+## DÓNDE SE PIDE EL PUÑO AHORA, desde el hombro (como `STANCES`): lo que diga la punta (el cañón apunta con su palanca)
+## sobre lo que piden las piñas y las posturas (`_moves`).
 func _wanted() -> Vector3:
+	var asked := _moves()
+	return tip.wanted(asked) if tip != null else asked
+
+
+## Lo que piden las piñas y las posturas: a lo largo de la piña y de vuelta a su postura, o en su postura más lo que lo
+## corrieron a mano.
+func _moves() -> Vector3:
 	var home := _rest + _offset
 	if punching == Punch.NONE:
 		return home
@@ -191,7 +232,7 @@ func _target() -> Dictionary:
 ## dos piezas, con su −Z a lo largo y su Y sobre EL EJE DEL CODO (el que es perpendicular al brazo y al antebrazo): así
 ## el giro del brazo sobre su largo es el que pone al antebrazo donde va, como con una bisagra.
 func _pose(shoulder: Vector3, fist: Vector3, torso: Basis) -> Dictionary:
-	var arm := measures.arm(shoulder, fist, side, torso)
+	var arm := measures.arm(shoulder, fist, side, torso, elbow_hint)
 	var elbow: Vector3 = arm["elbow"]
 	var wrist: Vector3 = arm["wrist"]
 	var across := (elbow - shoulder).cross(wrist - elbow)
@@ -220,6 +261,27 @@ func _along(way: Vector3) -> Basis:
 ## DOBLA EL CODO; LA PALMA, HACIA EL CUERPO. La mano trae el pulgar en +Y y la palma en −side·X (ver MechHand): un
 ## cuarto de vuelta sobre Z lleva su Y al −X de la pieza y su X al Y, y la palma queda en −side·Y: hacia adentro.
 func _mount_hand(forearm: Node3D) -> void:
+	if tip == null:
+		tip = ArmTip.new()
+	add_child(tip)
+	tip.mount(self, forearm)
+
+
+## EL PUÑO COMÚN, en la punta de `forearm` (ver `_mount_hand`): lo que monta la punta de siempre (ArmTip).
+func mount_common_hand(forearm: Node3D) -> void:
 	_hand = MechHand.build(forearm, side)
-	_hand.scale = Vector3.ONE * measures.thick
+	# La escala, después de la transformación (que la pisaría): la mano del ancho del brazo. *Hasta el 16/11/2026 iba
+	# antes y la mano quedaba siempre de 1; con el ancho mediano no se notaba, en la jaula (al 30 %) era enorme.*
 	_hand.transform = Transform3D(Basis(Vector3.BACK, PI * 0.5), Vector3(0, 0, -forearm_length() * 0.5))
+	_hand.scale = Vector3.ONE * measures.thick
+
+
+## LAS PLACAS DEL ACORAZADO (si `plated`) en `upper` y `forearm`, del lado de afuera del brazo; en el antebrazo, si la
+## punta lo deja (el cañón, que lo reemplaza, no). Con las piezas ya en su pose.
+func _dress(upper: Node3D, forearm: Node3D) -> void:
+	if not plated:
+		return
+	var out := anchor.global_basis * Vector3.RIGHT * side
+	ArmoryParts.plate(upper, out, measures.thick, float(MechBody.BASE["UPPER_ARM"]) * 0.75)
+	if tip == null or tip.plates_forearm():
+		ArmoryParts.plate(forearm, out, measures.thick, float(MechBody.BASE["FOREARM"]) * 0.7)

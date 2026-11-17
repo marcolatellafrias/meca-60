@@ -27,8 +27,11 @@ de la energía común** (primero fue 40 %; el usuario: «me parece mucho… va a
 cinemática** (`dash_cooldown`, 1 s desde que termina uno, en el F1): aunque sobre energía, no salen dos seguidos. Shift
 sólo cobra si el dash sale de verdad (`KinematicMover.dash_ready()`).
 
-## El taladro, brazo derecho — `DrillArm`
-Un brazo discreto (`PoseArm`) con una mecha en vez de mano. El usuario: «con el clic derecho… lo cargas y con el otro
+Sus brazos, desde el 16/11/2026, son los de cualquier meca con lo que dice su `loadout` (ver [[brazo]], «Lo que lleva
+en la punta»): los dos discretos, con la placa del acorazado.
+
+## El taladro, brazo derecho — `DrillTip`
+Un brazo discreto (`PoseArm`) con una mecha en vez de mano (la sierra, `SawTip`, anda igual). El usuario: «con el clic derecho… lo cargas y con el otro
 clic… lo usas, porque no lo puedes usar de una porque tarda en agarrar velocidad… su propia barra, y mientras más tiempo
 lo cargas… más energía gasta».
 - **Cargar** (mantenido): la mecha toma velocidad (a fondo en 1,4 s) y gasta energía de a poco, más cuanto más gira.
@@ -37,13 +40,14 @@ lo cargas… más energía gasta».
   por un factor que va de 0,4 (casi quieta) a 2,6 (a fondo). Pide que gire por lo menos un 15 %. Después del golpe,
   gira un 30 % de lo que giraba.
 
-## El cañón de energía, brazo izquierdo — `CannonArm`
+## El cañón de energía, brazo izquierdo — `CannonTip`
+**En lugar del antebrazo**, como el de la jaula (hasta el 16/11/2026 era una caja y un caño fino después de la mano).
 El usuario: «un cañón que dispare, que tenga varios modos de disparo… simple, varios disparos chicos, uno que barra y
 otro que sea un super disparo»; «que se controle con una palanca y que no sea tan controlable… que se mueva como el de
 los músculos, pero sin la colisión».
 - **La palanca** dice adónde apuntar (35° a cada lado, de 35° abajo a 30° arriba) y **queda donde la dejan**. **El
   brazo la sigue con un resorte con freno**: llega en medio segundo y se pasa un poco. Atraviesa todo (es discreto). El
-  brazo va casi estirado, así el caño, que está en el antebrazo, mira adonde apunta.
+  brazo va casi estirado, así el caño, que es el antebrazo, mira adonde apunta.
 - **Cada tiro lo patea** para arriba y un poco de costado: el retroceso. La ráfaga sube sola si no se la corrige.
 - **Los modos**:
   - **Simple**: un tiro mediano por apretada (6 % de energía; uno cada 0,3 s).
@@ -60,12 +64,14 @@ los músculos, pero sin la colisión».
 
 ## Las placas de blindaje — `ArmorPlates`
 El usuario: «paneles para brazos y piernas de armadura»; «la placa de blindaje me refiero». Sólo se ven: una funda de
-chapa más oscura alrededor del medio de cada pieza de los brazos y las piernas, con una franja en cada punta.
+chapa más oscura alrededor del medio del muslo y la canilla, con una franja en cada punta. *Hasta el 16/11/2026 también
+en los brazos; ahora los brazos llevan la placa del acorazado, la misma en todas las mecas.*
 
 ## Las teclas, poseyéndola — `ToolMechKeys`
 - **Piernas**: WASD · el mouse gira · Shift con una dirección, dash · espacio salta, y en el aire otra vez, levita ·
   Ctrl se agacha.
-- **Taladro**: clic derecho mantenido carga · clic izquierdo descarga.
+- **Taladro o sierra**: clic derecho mantenido carga · clic izquierdo descarga. **Si no lleva**, el brazo de las
+  piñas: clic izquierdo, un directo; clic derecho, un gancho.
 - **Cañón**: las flechas mueven la palanca · 1 simple, 2 ráfaga, 3 barrido, 4 súper · F, el gatillo.
 - G / X, el ascensor. Abajo a la derecha, la energía, el modo, la carga del súper y la del taladro.
 
