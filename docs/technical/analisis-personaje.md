@@ -47,7 +47,7 @@ Unas **14.000 líneas**.
 - **Ir adentro de algo que se mueve**: `MotionFrame` (390).
 - **Mirar**: `FirstPersonView`, `PossessionCamera`.
 - **La red**: `SessionManager`, `NetSpawner`, `CharacterSpawner`, `CharacterNetSync`, `NetBody`, `ExclusiveClaim`.
-- **La interfaz**: pausa, opciones, menú de inicio, `UIState`, la consola, el HUD de la estamina.
+- **La interfaz**: pausa, opciones, menú de inicio, `UIState`, la consola, el HUD de depuración (la estamina se fue el 17/11/2026).
 - **Los paneles del sandbox**: `TunerPanel` (500), `PropertyTuner` (658).
 - **Partículas, sonido** (el sistema: `Sounds`, `SoundEntity`), `PackageDamage`.
 

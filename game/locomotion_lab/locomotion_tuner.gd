@@ -7,7 +7,7 @@ extends TunerPanel
 ## Por arquetipo y guardado; un panel, cinco pestañas, una a la vez:
 ##   · CAMINATA: el andar del arquetipo (PoseShape, grupo Caminata), todo suyo.
 ##   · POSE: la postura (PoseShape, grupo Pose).
-##   · MOVIMIENTO: la velocidad de caminar, de costado y para atrás, el sprint, la aceleración.
+##   · MOVIMIENTO: la velocidad máxima y cuánto tarda en llegar, la de caminar (la de la animación), la fuerza.
 ##   · EQUILIBRIO: el peso, la estabilidad de cada lado, el resorte, la caída desde altura, el levantarse.
 ##   · SALTO: la altura y la carga.
 ##   · EN EL AIRE: cuánto recoge las piernas, cómo aterriza y cuánto se agacha al cargar el salto.
@@ -46,9 +46,9 @@ const LABELS := {
 	"stride_reach": "largo del paso", "step_height": "altura del pie al pisar", "root_bounciness": "se hunde al pisar",
 	"shoulder_swing": "hombros que suben y bajan", "arm_swing": "braceo",
 	# El resto de las pestañas.
-	"speed": "velocidad de caminar", "back_speed_factor": "para atrás (× caminar)",
-	"lateral_speed_factor": "de costado (× caminar)", "sprint_multiplier": "corriendo (× caminar)",
-	"acceleration": "aceleración", "strength": "fuerza (al llevar algo)", "throw_strength": "fuerza de tiro (y del empujón)",
+	"speed": "velocidad de caminar (donde la animación pasa a correr)",
+	"sprint_multiplier": "velocidad máxima (× caminar)", "time_to_top": "tarda en llegar a la máxima (s; 0, al instante)",
+	"strength": "fuerza (al llevar algo)", "throw_strength": "fuerza de tiro (y del empujón)",
 	"weight": "peso (kg)", "forward_stability": "estabilidad adelante", "backwards_stability": "estabilidad atrás",
 	"sideways_stability": "estabilidad de costado", "stability_spring": "qué tan duro se endereza",
 	"stability_damp": "cuánto frena el rebote", "landing_tolerance": "aterrizaje que lo tumba (m/s)",
@@ -72,8 +72,8 @@ const HELP := {
 	"root_bounciness": "Cuánto baja lower_spine —y con él todo lo de arriba— al pisar cada pie: de golpe a la mitad, sigue bajando un poco y vuelve antes de la mitad del paso. 1 es la de referencia, 0 nada.",
 	"shoulder_swing": "Inclina left_shoulder y right_shoulder (eje Z): suben y bajan juntos con el paso y se alternan de un lado al otro. Sólo los hombros: el braceo es otra perilla.",
 	"arm_swing": "El brazo gira en el hombro adelante y atrás, contrario a la pierna de su lado. upper_arm y lower_arm guardan el doblez del codo todo el braceo, y el codo apunta siempre para el mismo lado. Cuánto se abre del cuerpo es otra perilla («brazo que se abre del cuerpo»).",
-	"speed": "La velocidad de caminar, en la escala del arquetipo (× 10 m/s).",
-	"acceleration": "Cuánto tarda en llegar a su velocidad: × su peso, así no cambia con el peso.",
+	"speed": "La velocidad de caminar, en la escala del arquetipo (× 10 m/s). No mueve: es donde la animación pasa de caminar a correr.",
+	"time_to_top": "De quieto a la máxima, a ritmo parejo; frena igual. Manteniendo la tecla se gana la velocidad: no hay sprint ni estamina.",
 	"weight": "Cuánto cuesta moverlo: en un choque, el liviano se lleva el cambio de velocidad. Con la estabilidad es la firmeza, que divide lo que lo inclinan los golpes y la inercia.",
 	"landing_tolerance": "El golpe vertical al aterrizar que lo tumba. 9 es caer de unos 4 m; por debajo, el rebote de siempre.",
 	"jump_height": "Lo que sube con el salto cargado entero; un toque sin cargar sube el 30 %.",

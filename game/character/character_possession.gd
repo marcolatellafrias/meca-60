@@ -85,7 +85,7 @@ func end() -> void:
 
 func controls() -> PackedStringArray:
 	return PackedStringArray([
-		"WASD caminar · shift correr · espacio saltar (mantenido, más alto)",
+		"WASD caminar (manteniendo, acelera hasta su máxima) · espacio saltar (mantenido, más alto)",
 		"Ctrl agacharse",
 		"E sentarse en la silla que mira, o pararse · E usar",
 		"clic izquierdo agarrar · R tirar · clic derecho girar lo agarrado · rueda acercar",

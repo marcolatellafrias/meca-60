@@ -1,19 +1,10 @@
 class_name PlayerHUD
 extends CanvasLayer
 
-## EL HUD DEL JUGADOR (ver character-parametric:docs/conceptual/hud.md): UNA SOLA BARRA, la de la ESTAMINA, como en Peak —lo amarillo se
-## gasta corriendo y se recarga; las HERIDAS ocupan una parte roja desde el final, que se cura sola (ver CrewHealth),
-## y con la barra entera roja se queda herido—. Se ve sólo al correr, mientras se recarga o mientras haya heridas.
-## Lo demás —la velocidad, la carga del salto y del lanzamiento, la estabilidad— es de depuración: se ve sólo con el
-## panel F1 abierto.
-
-const BAR_W := 156.0
-const INJURY_COLOR := Color(0.85, 0.15, 0.12, 1.0)
+## EL HUD DEL JUGADOR: sólo de depuración —la velocidad, la carga del salto y del lanzamiento, la estabilidad—, que se ve
+## con el panel de depuración abierto. *Hasta el 17/11/2026 tenía la barra de la estamina, que se fue con ella.*
 
 var _bar_fill: ColorRect
-var _stamina_bar_fill: ColorRect
-var _stamina_panel: Panel
-var _injury_fill: ColorRect
 var _debug_parts: Array[Control] = []
 var _jump_bar_fill: ColorRect
 var _throw_bar_fill: ColorRect
@@ -25,40 +16,6 @@ static func create(inst: EntityInstantiation) -> PlayerHUD:
 	var arch := inst.arch_final
 	var spec := inst.spec
 	hud._max_speed = arch.speed * spec.speed_forw_multiplier * 10.0 * arch.sprint_multiplier
-
-	# --- Stamina bar ---
-	var stamina_panel := Panel.new()
-	stamina_panel.anchor_left = 0.5
-	stamina_panel.anchor_right = 0.5
-	stamina_panel.anchor_top = 1.0
-	stamina_panel.anchor_bottom = 1.0
-	stamina_panel.offset_left = -80
-	stamina_panel.offset_right = 80
-	stamina_panel.offset_top = -56
-	stamina_panel.offset_bottom = -44
-	var stamina_border := StyleBoxFlat.new()
-	stamina_border.bg_color = Color(0, 0, 0, 0)
-	stamina_border.border_color = Color(1.0, 0.85, 0.2, 1.0)
-	stamina_border.border_width_left = 2
-	stamina_border.border_width_right = 2
-	stamina_border.border_width_top = 2
-	stamina_border.border_width_bottom = 2
-	stamina_panel.add_theme_stylebox_override("panel", stamina_border)
-	var stamina_fill := ColorRect.new()
-	stamina_fill.color = Color(1.0, 0.85, 0.2, 1.0)
-	stamina_fill.size = Vector2(156, 8)
-	stamina_fill.position = Vector2(2, 2)
-	stamina_panel.add_child(stamina_fill)
-	hud._stamina_bar_fill = stamina_fill
-	var injury_fill := ColorRect.new()
-	injury_fill.color = INJURY_COLOR
-	injury_fill.size = Vector2(0, 8)
-	injury_fill.position = Vector2(2 + BAR_W, 2)
-	stamina_panel.add_child(injury_fill)
-	hud._injury_fill = injury_fill
-	hud._stamina_panel = stamina_panel
-	stamina_panel.visible = false
-	hud.add_child(stamina_panel)
 
 	# --- Speed bar ---
 	var panel := Panel.new()
@@ -163,16 +120,6 @@ static func create(inst: EntityInstantiation) -> PlayerHUD:
 func update_speed(current_speed: float) -> void:
 	var ratio: float = clamp(current_speed / _max_speed, 0.0, 1.0)
 	_bar_fill.size.x = ratio * 156.0
-
-## LA BARRA: `ratio` la estamina sobre el máximo, `injury` la parte que ocupan las heridas (0 a 1, desde el final), y
-## `active` si se está gastando o recargando. Sin nada de eso, no se ve.
-func update_stamina(ratio: float, injury := 0.0, active := false) -> void:
-	_stamina_bar_fill.size.x = clampf(ratio, 0.0, 1.0) * BAR_W
-	var red := clampf(injury, 0.0, 1.0) * BAR_W
-	_injury_fill.size.x = red
-	_injury_fill.position.x = 2.0 + BAR_W - red
-	_stamina_panel.visible = active or injury > 0.005
-
 
 func _process(_delta: float) -> void:
 	var debug := UIState.is_open(UIState.DEBUG)

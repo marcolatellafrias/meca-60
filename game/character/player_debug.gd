@@ -81,7 +81,7 @@ func _physics_process(_delta: float) -> void:
 	_impacts.update_impact_debug(rb.impact_xz, rb.global_transform.basis, rb.impact_y, rb.linear_velocity,
 		rb._last_impact_world_dir, rb.ragdoll_threshold, is_instance_valid(ragdoll) and ragdoll.is_active,
 		is_instance_valid(ragdoll) and ragdoll.is_recovering, rb._last_impact_xz_magnitude,
-		max(rb.max_speed_forward, rb.max_speed_side) * rb.sprint_multiplier, rb.ragdoll_threshold,
+		rb.top_speed, rb.ragdoll_threshold,
 		rb._snapshot_capture_count, rb._snapshot_flag_at_capture, rb._snapshot_ragdoll_at_capture,
 		rb._snapshot_acc_before, rb._snapshot_acc_after)
 

@@ -3,7 +3,7 @@ extends Node
 
 ## ── EL JUGADOR DE ESTA MÁQUINA ──────────────────────────────────────────────────────────────────────────────────────
 ## El teclado y el mouse a la intención del cuerpo (ver CharacterIntent), la cámara en los ojos, la estamina, el HUD y la
-## mira; el ente del sandbox (movimiento directo) y el vuelo libre. Lo de prueba —el panel de depuración, tirarse,
+## mira (sin estamina desde el 17/11/2026: la velocidad se gana acelerando, ver CharacterRigidBody3D); el ente del sandbox (movimiento directo) y el vuelo libre. Lo de prueba —el panel de depuración, tirarse,
 ## volver a nacer, los spawns— está en PlayerDebug, sólo con depuración.
 
 var head_bone: CustomBone
@@ -39,26 +39,6 @@ var camera_yaw: float:
 ## Mientras no tiene cuerpo (entre que nace y se arma), lo que se le escribió.
 var _pitch_alone := 0.0
 var _yaw_alone := 0.0
-
-## ── STAMINA ───────────────────────────────────────────────────────────────────────────────────────
-## Se gasta corriendo y se recupera al soltar, después de `stamina_refractory_time`.
-##
-## Los números están puestos en TIEMPO, no en unidades: con el máximo en 5.0, el drenaje es
-## `5 / segundos_de_sprint` y la regeneración `5 / segundos_de_recarga`.
-##
-##   sprint continuo  →  10 s        recarga completa  →  10 s
-##
-## El drenaje estaba en 0.01, o sea **500 segundos** de sprint: la barra existía pero nunca se vaciaba.
-var stamina_max: float = 5.0
-var stamina_drain_rate: float = 0.5
-var stamina_regen_rate: float = 0.5
-var stamina_refractory_time: float = 2.0
-var _stamina: float = 5.0
-## LO QUE OCUPAN LAS HERIDAS de la barra de estamina, de 0 a 1 desde el final, como en Peak: la estamina no puede pasar
-## de lo que queda (ver CrewHealth, que lo escribe, y character-parametric:docs/conceptual/hud.md).
-var injury: float = 0.0
-var _refractory_timer: float = 0.0
-var _was_sprinting: bool = false
 
 
 var _was_ragdoll_active: bool = false
@@ -287,8 +267,6 @@ func _physics_process(delta: float) -> void:
 	_ease_to_mode_look(delta)
 	apply_camera_pitch(camera_pitch)
 
-	_process_stamina(delta)
-
 	if is_instance_valid(interaction_controller):
 		interaction_controller.update(delta)
 
@@ -422,32 +400,6 @@ func set_active(on: bool) -> void:
 		_hud.visible = on
 
 
-func _process_stamina(delta: float) -> void:
-	var is_sprinting := Input.is_action_pressed("sprint") \
-		and Input.get_axis("move_forward", "move_backward") < 0.0 \
-		and char_rigidbody.can_sprint
-
-	var usable := stamina_max * (1.0 - clampf(injury, 0.0, 1.0))
-	_stamina = minf(_stamina, usable)
-	if is_sprinting:
-		_stamina = max(0.0, _stamina - stamina_drain_rate * delta)
-		if _stamina == 0.0:
-			char_rigidbody.can_sprint = false
-		_refractory_timer = stamina_refractory_time
-		_was_sprinting = true
-	else:
-		if _was_sprinting:
-			_was_sprinting = false
-		if _refractory_timer > 0.0:
-			_refractory_timer = max(0.0, _refractory_timer - delta)
-		else:
-			if not char_rigidbody.can_sprint:
-				char_rigidbody.can_sprint = true
-			_stamina = min(usable, _stamina + stamina_regen_rate * delta)
-
-	if is_instance_valid(_hud):
-		_hud.update_stamina(_stamina / stamina_max, injury, is_sprinting or _stamina < usable - 0.001)
-		
 func apply_camera_pitch(pitch: float) -> void:
 	camera_pitch = pitch
 	if is_instance_valid(player_camera):

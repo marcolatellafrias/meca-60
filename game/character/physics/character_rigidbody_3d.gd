@@ -3,42 +3,12 @@ extends RigidBody3D
 
 var _last_impact_world_dir: Vector3 = Vector3.ZERO
 
-var can_sprint: bool = true
-
 # Creative/debug flight (see PlayerController + character-parametric:docs/technical/characters.md). No noclip: the capsule still collides.
 # Teclas y velocidades viven en CreativeFlight, compartidas con el sandbox y el freecam de debug. Es la física
 # FREE_FLIGHT de su clase (ver `creative_mode`, más abajo).
 
-## Las tres escalas globales que convierten los stats del arquetipo en física. Mueven a TODOS los
-## personajes a la vez; los arquetipos solo eligen su lugar relativo dentro de eso.
-##
-## ⚠ ESTAS TRES DEFINEN LA CAMINATA Y ESTÁN APROBADAS. La inercia tipo carreras vive en el SPRINT
-## (ver SPRINT_ACCEL), no acá. Hubo un intento de meterla bajando `ACCEL_SCALE` a 3.5, y el efecto
-## fue el equivocado: enlenteció el andar normal, que es el 90% del juego.
+## LA ESCALA DE LA VELOCIDAD del arquetipo (ver EntityArchetype.speed): × esto, m/s.
 const SPEED_SCALE := 10.0
-## LA FRENADA ACTÚA SÓLO AL SOLTAR (06/11/2026, lo encontró el usuario: «aún el Fat Man… se frena ahí nomás»):
-## hasta entonces `_apply_braking_force` corría en todo momento, también empujando, y le comía a todos el 37,5 % de la
-## aceleración caminando y el 75 % en la banda del sprint. Al sacarla, la escala baja de 10 a 6,25 —el 62,5 % que quedaba—
-## y la frenada sube de 0,375 a 0,6 de la aceleración: arrancar a caminar y frenar soltando desde la caminata dan lo
-## mismo que antes, y el número de la aceleración ahora dice lo que hace (× su escala = m/s²).
-const ACCEL_SCALE := 6.25
-const BRAKE_FACTOR := 0.6
-
-## ── LA BANDA DE SPRINT, LINEAL (06/11/2026, el usuario: «no me gusta esa forma de funcionar del sprint, me lo
-## imagino más lineal») ────────────────────────────────────────────────────────────────────────────────────────────────
-## Multiplicador de aceleración ENTRE LA CAMINATA Y EL TOPE del sprint, el mismo en toda la banda: por debajo de la
-## velocidad de caminata acelera igual que caminando, y de ahí al tope sube a ritmo parejo, con esta fracción. Así el
-## sprint es una banda que hay que GANAR —la velocidad extra tarda en llegar— y llega de verdad al tope.
-##
-## *Hasta entonces caía de 1 en la caminata a 0,25 en el tope (`SPRINT_TOP_ACCEL`): con el freno de aire de Godot (ver
-## `_ready`) nadie pasaba del ~80 % de su tope. 0,5 tarda lo mismo de la caminata al tope que aquella curva sin freno.*
-## *Y antes de eso el sprint MULTIPLICABA la aceleración por `sprint_multiplier`: cuanto más rápido podías ir, más rápido
-## llegabas, y el tope alto no se sentía.*
-##
-## Por debajo de la caminata es 1, a propósito: arrancando de cero con sprint apretado la aceleración es la misma que
-## caminando, nunca peor. Apretar sprint jamás te frena.
-const SPRINT_ACCEL := 0.5
-
 ## Resistencia a voltearse (ragdoll por choque). La firmeza escala con el PESO relativo a este peso de referencia: un
 ## pesado necesita un golpe mucho más fuerte para inclinarse y caerse que un liviano. Ver character-parametric:docs/technical/characters.md
 ## (topple resistance) y `_firmness`.
@@ -68,25 +38,26 @@ var puppet_velocity: Vector3 = Vector3.ZERO
 ## Grupo de todas las cápsulas de personaje, para la colisión blanda jugador-jugador. Ver characters.md.
 const CHARACTER_GROUP := "character_capsule"
 var _capsule_radius: float = 0.5
-var _player_excepted: Array = []  # jugadores con los que ya NO chocamos rígido (excepción permanente)
-var _player_contacts: Array = []  # choques ya resueltos este contacto (para eyectar una vez, no por frame)
 
 var _capsule_stand_height: float = 0.0
 var _capsule_stand_y_offset: float = 0.0
 
-var accel_forward: float = 4.0
-var accel_back: float = 4.0
-var accel_side: float = 4.0
+## ── EL MOVIMIENTO: UNA VELOCIDAD MÁXIMA Y CUÁNTO TARDA EN LLEGAR (17/11/2026) ────────────────────────────────────
+## Lo pidió el usuario: «un movimiento puramente cinemático del jugador, sin mecánica de estamina, y solamente con el
+## sistema de velocidad máxima y cuánto tiempo tarda en llegar a esa velocidad máxima, que si yo la pongo en cero pasa a
+## tener un movimiento instantáneo»; «que la velocidad se vaya ganando solamente por el factor de aceleración… como un
+## pseudo sistema de estamina sin otra barra». La velocidad que pide la intención va hacia `top_speed` en la dirección
+## que aprieta, y la que tiene la alcanza a ritmo parejo —`top_speed / time_to_top` m/s²—, para arrancar, frenar y
+## doblar por igual; con `time_to_top` en 0, al instante. Se escribe la velocidad, no se aplica una fuerza.
+## `walk_speed` no mueve nada: es donde la animación pasa de caminar a correr (ver SkeletonSizesUtil).
+## *Hasta entonces: fuerzas de aceleración y de frenada aparte, adelante, atrás y de costado, una banda de sprint con la
+## shift, a la mitad de ritmo, y una barra de estamina que la cortaba.*
+var walk_speed: float = 3.0
+var top_speed: float = 6.0
+var time_to_top: float = 3.0
 
-var brake_forward: float = 1.0
-var brake_back: float = 1.0
-var brake_side: float = 1.0
 
-var max_speed_forward: float = 10.0
-var max_speed_back: float = 10.0
-var max_speed_side: float = 10.0
 
-var sprint_multiplier: float = 2.0
 
 var impact_stiffness: float = 25.0
 var impact_damping: float = 6.0
@@ -474,7 +445,7 @@ func _freeze_for_driver() -> void:
 func _ready() -> void:
 	# SIN FRENO DE AIRE (06/11/2026, el usuario: «sacaría el freno de aire»): Godot le suma a todo cuerpo el de
 	# Configuración del proyecto (0,1 por segundo) salvo que se lo reemplace; frena lo que corre y los dejaba en el ~80 %
-	# de su tope. Lo que frena a un personaje es su frenada (ver `_apply_braking_force`).
+	# de su tope. Lo que frena a un personaje es su movimiento (ver `_move`).
 	linear_damp = 0.0
 	linear_damp_mode = RigidBody3D.DAMP_MODE_REPLACE
 	var physics_mat := PhysicsMaterial.new()
@@ -499,41 +470,6 @@ func _ready() -> void:
 ## mide _detect_external_impact), el pesado apenas se frena y sigue de largo. Una sola vez por choque
 ## (si no, cada frame de solape lo frenaría). Cada máquina lo hace para SU jugador local → simétrico.
 ## Ver character-parametric:docs/technical/characters.md.
-func _resolve_player_collisions() -> void:
-	if collider == null or collider.disabled:
-		return  # yo estoy ragdolleando / sin colisión
-	_player_excepted = _player_excepted.filter(func(b): return is_instance_valid(b))
-	_player_contacts = _player_contacts.filter(func(b): return is_instance_valid(b))
-	for node in get_tree().get_nodes_in_group(CHARACTER_GROUP):
-		var other := node as CharacterRigidBody3D
-		if other == null or other == self:
-			continue
-		if not _player_excepted.has(other):
-			add_collision_exception_with(other)  # nunca bloquear rígido entre jugadores
-			_player_excepted.append(other)
-		if other.collider == null or other.collider.disabled:
-			continue  # el otro ragdollea / sin colisión
-		var to_other := other.global_position - global_position
-		var normal := Vector3(to_other.x, 0.0, to_other.z)
-		var dist := normal.length()
-		if dist < 0.001:
-			continue
-		normal /= dist
-		if dist > _capsule_radius + other._capsule_radius:
-			_player_contacts.erase(other)  # separados → el choque se puede re-armar
-			continue
-		if _player_contacts.has(other):
-			continue  # ya resolví este choque
-		var v_closing := (_prev_velocity - other.get_motion_velocity()).dot(normal)
-		if v_closing <= 0.0:
-			continue  # no me estoy acercando a este
-		_player_contacts.append(other)
-		var mass_frac := other.mass / (mass + other.mass)
-		linear_velocity += -normal * v_closing * mass_frac
-		push(-normal * v_closing * mass_frac)  # adentro del marco no se mide: va con nombre (ver EL MARCO)
-
-
-
 func _physics_process(delta: float) -> void:
 	_follow_frame()
 	_update_floor()
@@ -584,15 +520,8 @@ func _physics_process(delta: float) -> void:
 
 	_frame_force = Vector3.ZERO
 
-	if input_enabled:
-		_apply_movement_force()
+	_move(delta)
 	_apply_slope_hold()
-	# Sólo soltando (ver ACCEL_SCALE): empujando, lo que frena es lo de `_apply_movement_force`.
-	var pushing := input_enabled and intent != null and intent.move != Vector2.ZERO
-	if kind.motion == CharacterKind.Motion.PHYSICAL and not pushing:
-		_apply_braking_force()
-
-	_resolve_player_collisions()  # colisión blanda contra otros jugadores (setea velocidad, antes de medir el impacto)
 	_update_velocity_indicator()
 	# Adentro del marco el cuerpo no se mide: lo inclina la inercia y lo golpean los empujones con nombre (EL MARCO).
 	# Sin cuerpo físico (ver `has_body_physics`), nada de esto.
@@ -615,9 +544,6 @@ func _detect_external_impact(delta: float) -> void:
 	var expected_dv := (_frame_force / mass + gravity) * delta
 	var actual_dv   := linear_velocity - _prev_velocity
 	var impact_dv   := actual_dv - expected_dv
-	# La eyección jugador-jugador (_resolve_player_collisions) ya modificó linear_velocity ANTES de este
-	# frame, así que entra acá como un impacto normal: al liviano lo tumba, al pesado no le llega al
-	# umbral. Mundo/autos entran igual (medidos). No hay nada especial que hacer con jugadores acá.
 	_take_hit(impact_dv)
 
 
@@ -714,7 +640,7 @@ func _directional_stability(local_impact: Vector3) -> float:
 
 func _update_velocity_indicator() -> void:
 	var local_vel := global_transform.basis.inverse() * linear_velocity
-	var max_vel: float = max(max_speed_forward, max_speed_side) * sprint_multiplier
+	var max_vel: float = top_speed
 	velocity_indicator = (Vector2(local_vel.x, local_vel.z) / max(max_vel, 0.001)).limit_length(1.0)
 
 func _update_impact_pd(delta: float) -> void:
@@ -785,110 +711,40 @@ func _control_share() -> float:
 	return 1.0 if is_grounded else air_control
 
 
-func _apply_movement_force() -> void:
+## ADONDE VA (ver EL MOVIMIENTO, arriba): la velocidad contra el marco va hacia la que pide la intención, a ritmo parejo.
+## Sin poder moverse (sentado, levantándose), hacia cero. Es un cambio de velocidad PROPIO (ver `_self_dv`): no es un
+## golpe. Con movimiento DIRECTO (el ente), al instante y con sus propias velocidades.
+func _move(delta: float) -> void:
 	var relative := linear_velocity - floor_velocity
-	var horizontal_vel := Vector3(relative.x, 0.0, relative.z)
-
-	var input := intent.move.limit_length(1.0) if intent != null else Vector2.ZERO
-
-	if input == Vector2.ZERO:
-		if kind.motion == CharacterKind.Motion.DIRECT:
-			linear_velocity -= horizontal_vel
-		return
-
+	var horizontal := Vector3(relative.x, 0.0, relative.z)
+	var input := intent.move.limit_length(1.0) if input_enabled and intent != null else Vector2.ZERO
 	var right := global_transform.basis.x
 	var forward := global_transform.basis.z
 	right.y = 0.0
 	forward.y = 0.0
-	right = right.normalized()
-	forward = forward.normalized()
-
-	var forward_component: float = input.y
-	var side_component: float = input.x
-	var is_sprinting := intent.sprint and forward_component < 0.0 and can_sprint
-
-	var abs_fwd: float = abs(forward_component)
-	var abs_side: float = abs(side_component)
-	var total_input: float = abs_fwd + abs_side
-
-	var fwd_max: float = max_speed_back if forward_component >= 0.0 else max_speed_forward
-	var effective_max: float = (fwd_max * abs_fwd + max_speed_side * abs_side) / max(total_input, 0.001)
-	if is_sprinting:
-		effective_max *= sprint_multiplier
-	effective_max *= crouch_speed_factor * carry_speed_factor
-	effective_max = minf(effective_max, speed_cap)
-
-	var fwd_accel: float = accel_back if forward_component >= 0.0 else accel_forward
-	# LO QUE LLEVA PESA TAMBIÉN AL ARRANCAR Y AL FRENAR (03/11/2026, lo pidió el usuario): la aceleración y la
-	# frenada van por lo mismo que la velocidad máxima (ver GrabbableInteractable.carry_speed_factor).
-	var current_accel: float = (fwd_accel * abs_fwd + accel_side * abs_side) / max(total_input, 0.001) \
-		* carry_speed_factor
-
-	var direction := (right * side_component + forward * forward_component).normalized()
+	var direction := right.normalized() * input.x + forward.normalized() * input.y
 	if kind.motion == CharacterKind.Motion.DIRECT:
 		var pace := DIRECT_WALK * crouch_speed_factor
-		if intent.sprint and crouch_speed_factor >= 1.0:
+		if input != Vector2.ZERO and intent.sprint and crouch_speed_factor >= 1.0:
 			pace *= DIRECT_SPRINT * turbo_factor()
-		linear_velocity += direction * pace * minf(total_input, 1.0) - horizontal_vel
+		linear_velocity += direction * pace - horizontal
 		return
-	var is_changing_direction := horizontal_vel.dot(direction) < 0.0
-	var effective_accel := current_accel
-	if is_sprinting and not is_changing_direction:
-		# `effective_max` ya trae el sprint y el crouch; dividir por el multiplicador devuelve el tope de
-		# caminata con las mismas correcciones aplicadas.
-		var walk_max: float = effective_max / maxf(sprint_multiplier, 0.001)
-		if horizontal_vel.length() > walk_max:
-			effective_accel = current_accel * SPRINT_ACCEL
-	# APRETAR PARA ATRÁS EN LA BANDA DEL SPRINT pierde la velocidad al ritmo en que se ganó (ver `_band`).
-	elif is_changing_direction:
-		effective_accel = current_accel * _band(horizontal_vel.length())
-
+	var target := direction * minf(top_speed * crouch_speed_factor * carry_speed_factor, speed_cap)
 	var share := _control_share()
 	if share <= 0.0:
 		return
-	if horizontal_vel.length() < effective_max or is_changing_direction:
-		var force := direction * effective_accel * share
-		apply_central_force(force)
-		_frame_force += force
-	# MÁS RÁPIDO QUE SU TOPE DE AHORA —soltó el sprint con la W apretada, se agachó, levantó algo—: lo que sobra se frena
-	# como soltando (ver `_apply_braking_force`). Antes lo hacía la frenada prendida siempre.
-	elif horizontal_vel.length() > effective_max + 0.05:
-		var over_force := -horizontal_vel.normalized() * brake_forward * _band(horizontal_vel.length()) \
-			* carry_speed_factor * share
-		apply_central_force(over_force)
-		_frame_force += over_force
-
-	var opposing_vel: Vector3 = horizontal_vel - direction * max(0.0, horizontal_vel.dot(direction))
-	if opposing_vel.length() > 0.0:
-		var local_opp: Vector3 = global_transform.basis.inverse() * opposing_vel
-		var brake_opp: float = (brake_side * abs(local_opp.x) + brake_forward * abs(local_opp.z)) / max(abs(local_opp.x) + abs(local_opp.z), 0.001)
-		var brake_force := -opposing_vel.normalized() * brake_opp * _band(horizontal_vel.length()) \
-			* carry_speed_factor * share
-		apply_central_force(brake_force)
-		_frame_force += brake_force
+	var step := INF if time_to_top <= 0.0 else top_speed / time_to_top * carry_speed_factor * share * delta
+	_self_dv(horizontal.move_toward(target, step) - horizontal)
 
 
-## ── LA BANDA DEL SPRINT VALE PARA LOS DOS LADOS (06/11/2026, el usuario: «que la aceleración funcione en ambos
-## lados… qué tanto puedes acelerar, pero qué tanto puedes desacelerar también») ────────────────────────────────────────
-## Más rápido que su caminata, todo lo que le cambia la velocidad —empujar, apretar para atrás, soltar— va a
-## `SPRINT_ACCEL` de lo de siempre: la velocidad del sprint se pierde al ritmo en que se gana. Hasta la caminata, entero.
-func _band(speed: float) -> float:
-	return SPRINT_ACCEL if speed > max_speed_forward * crouch_speed_factor * carry_speed_factor else 1.0
-
-
-## CUÁNTO RECORRE HASTA PARARSE desde la velocidad que lleva (m): soltando todo, o con `against`, apretando para atrás
-## (su aceleración más la frenada). Con la banda del sprint (ver `_band`): lo de arriba de la caminata frena a menos.
-func stop_distance(against := false) -> float:
+## CUÁNTO RECORRE HASTA PARARSE desde la velocidad que lleva (m): frena al mismo ritmo al que acelera, suelte o apriete
+## para atrás. Con `time_to_top` en 0, nada.
+func stop_distance(_against := false) -> float:
+	if time_to_top <= 0.0:
+		return 0.0
 	var motion := get_motion_velocity()
 	var v := Vector2(motion.x, motion.z).length()
-	var brake := minf(brake_forward, minf(brake_back, brake_side))
-	if against:
-		brake += minf(accel_back, accel_forward)
-	var low := maxf(brake * carry_speed_factor / maxf(mass, 0.01), 0.01)
-	var walk := max_speed_forward * crouch_speed_factor * carry_speed_factor
-	if v <= walk:
-		return v * v / (2.0 * low)
-	return walk * walk / (2.0 * low) + (v * v - walk * walk) / (2.0 * low * SPRINT_ACCEL)
+	return v * v / (2.0 * maxf(top_speed / time_to_top * carry_speed_factor, 0.01))
 
 ## EN UNA PENDIENTE CAMINABLE NO SE RESBALA. La cápsula tiene fricción 0 y la fuerza de caminar es
 ## horizontal: sobre cualquier rampa la gravedad la arrastra y ninguna fuerza razonable la sube más de unos
@@ -980,7 +836,9 @@ static func create(root_size: Vector3, distance_from_ground: float, leg_height: 
 	var arch := inst.arch_final
 	var spec := inst.spec
 	rb.mass = arch.weight
-	rb.sprint_multiplier = arch.sprint_multiplier
+	rb.walk_speed = arch.speed * spec.speed_forw_multiplier * SPEED_SCALE
+	rb.top_speed = rb.walk_speed * arch.sprint_multiplier
+	rb.time_to_top = arch.time_to_top
 
 	# Resistencia a voltearse: la FIRMEZA (ver `_firmness`) sale del peso —la masa— y de las estabilidades
 	# direccionales del arquetipo, según de dónde venga. Así un chico rápido NO tumba a un gordo (el gordo recibe poco Δv
@@ -992,18 +850,6 @@ static func create(root_size: Vector3, distance_from_ground: float, leg_height: 
 	rb.landing_tolerance = arch.landing_tolerance
 	rb.impact_stiffness *= arch.stability_spring
 	rb.impact_damping   *= arch.stability_damp
-
-	rb.max_speed_forward = arch.speed * spec.speed_forw_multiplier * SPEED_SCALE
-	rb.max_speed_back    = arch.speed * arch.back_speed_factor    * spec.speed_back_multiplier  * SPEED_SCALE
-	rb.max_speed_side    = arch.speed * arch.lateral_speed_factor * spec.speed_side_multiplier  * SPEED_SCALE
-
-	rb.accel_forward = arch.weight * arch.acceleration * spec.acceleration_multiplier * ACCEL_SCALE
-	rb.accel_back    = arch.weight * arch.acceleration * arch.back_speed_factor    * spec.acceleration_multiplier * ACCEL_SCALE
-	rb.accel_side    = arch.weight * arch.acceleration * arch.lateral_speed_factor * spec.acceleration_multiplier * ACCEL_SCALE
-
-	rb.brake_forward = rb.accel_forward * BRAKE_FACTOR
-	rb.brake_back    = rb.accel_back    * BRAKE_FACTOR
-	rb.brake_side    = rb.accel_side    * BRAKE_FACTOR
 
 	var y_offset := root_size.y / 2.0 - (leg_height - distance_from_ground)
 
@@ -1077,18 +923,6 @@ func snap_feet_to_ground(xz: Vector3, exclude: Array[RID] = []) -> bool:
 	global_position = Vector3(xz.x, (hit["position"] as Vector3).y - feet_offset, xz.z)
 	return true
 
-func _apply_braking_force() -> void:
-	var relative := linear_velocity - floor_velocity
-	var horizontal_vel := Vector3(relative.x, 0.0, relative.z)
-	if horizontal_vel.length() > 0.0:
-		var local_vel := global_transform.basis.inverse() * horizontal_vel
-		var is_moving_back := local_vel.z < 0.0
-		var brake_fwd := brake_back if is_moving_back else brake_forward
-		var brake_blend : float = (brake_fwd * abs(local_vel.z) + brake_side * abs(local_vel.x)) / max(abs(local_vel.z) + abs(local_vel.x), 0.001)
-		var brake_force := -horizontal_vel.normalized() * brake_blend * _band(horizontal_vel.length()) * _control_share()
-		apply_central_force(brake_force)
-		_frame_force += brake_force
-		
 func reset_impact_state() -> void:
 	impact_xz        = Vector2.ZERO
 	_impact_xz_vel   = Vector2.ZERO

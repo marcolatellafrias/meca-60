@@ -5,13 +5,13 @@ enum Archetype {fat_man, kid, lanky, buff, old, generic, fat_athletic}
 # BASE STATS
 var strength : float = 1.0
 var weight : float = 60.0
+## LA VELOCIDAD DE CAMINAR (× CharacterRigidBody3D.SPEED_SCALE, m/s): donde la animación pasa de caminar a correr.
 var speed : float = 1.0
-var back_speed_factor : float = 1.0
-var lateral_speed_factor : float = 1.0
-## Cuántas veces la velocidad de caminata alcanza el sprint. Solo toca el TOPE — la aceleración para
-## llegar ahí la maneja `CharacterRigidBody3D.SPRINT_ACCEL`, pareja de la caminata al techo.
+## LA VELOCIDAD MÁXIMA, en veces la de caminar: a la que llega manteniendo la tecla (ver CharacterRigidBody3D, EL
+## MOVIMIENTO).
 var sprint_multiplier : float = 2.2
-var acceleration : float = 4.0
+## CUÁNTO TARDA EN LLEGAR A LA MÁXIMA desde quieto (s); 0, al instante. Frena al mismo ritmo.
+var time_to_top : float = 3.0
 var forward_stability : float = 1.0
 var backwards_stability : float = 1.0
 var sideways_stability : float = 1.0
@@ -288,10 +288,8 @@ static func generic_arch() -> EntityArchetype:
 	arch.strength = 1.0
 	arch.weight = 80.0
 	arch.speed = 0.3
-	arch.back_speed_factor = 1.0
-	arch.lateral_speed_factor = 1.0
 	arch.sprint_multiplier = 2.6
-	arch.acceleration = 0.6
+	arch.time_to_top = 3.4
 	arch.forward_stability = 1.0
 	arch.backwards_stability = 1.0
 	arch.sideways_stability = 1.0
@@ -379,10 +377,8 @@ static func fat_man_arch() -> EntityArchetype:
 	arch.strength = 0.9
 	arch.weight = 120.0
 	arch.speed = 0.3
-	arch.back_speed_factor = 1.0
-	arch.lateral_speed_factor = 1.0
 	arch.sprint_multiplier = 2.3
-	arch.acceleration = 0.375
+	arch.time_to_top = 4.6
 	# EL EQUILIBRIO (ver `balance`): pesado, cuesta moverlo; inclinado, tarda en volver y rebota como gelatina.
 	balance(arch, 120.0, Vector3(0.8, 0.6, 0.7), 0.6, 0.6)
 	arch.time_to_standup = 2.0
@@ -435,10 +431,8 @@ static func kid_arch() -> EntityArchetype:
 	# 1,2, gordo atlético 1,4 (ver `create`). Contra los pesos de las cajas, ver GrabbableInteractable.load_of.
 	arch.strength = 0.35
 	arch.speed = 0.4
-	arch.back_speed_factor = 1.0
-	arch.lateral_speed_factor = 1.0
 	arch.sprint_multiplier = 2.5
-	arch.acceleration = 0.9
+	arch.time_to_top = 2.8
 	# EL EQUILIBRIO (ver `balance`): muy liviano, cualquier golpe lo mueve; buen equilibrio, vuelve rápido y rebota.
 	balance(arch, 35.0, Vector3(0.8, 0.8, 0.8), 1.3, 0.7)
 	arch.time_to_standup = 1.0
@@ -486,10 +480,8 @@ static func lanky_arch() -> EntityArchetype:
 	var arch = EntityArchetype.new()
 	arch.strength = 0.6
 	arch.speed = 0.3
-	arch.back_speed_factor = 1.0
-	arch.lateral_speed_factor = 1.0
 	arch.sprint_multiplier = 2.3
-	arch.acceleration = 0.375
+	arch.time_to_top = 4.6
 	# EL EQUILIBRIO (ver `balance`): liviano y angosto, se tumba más de costado; se endereza rápido pero se bambolea.
 	balance(arch, 70.0, Vector3(0.8, 0.8, 0.6), 1.1, 0.8)
 	arch.time_to_standup = 2.0
@@ -537,10 +529,8 @@ static func buff_arch() -> EntityArchetype:
 	var arch = EntityArchetype.new()
 	arch.strength = 1.2
 	arch.speed = 0.3
-	arch.back_speed_factor = 1.0
-	arch.lateral_speed_factor = 1.0
 	arch.sprint_multiplier = 2.3
-	arch.acceleration = 0.375
+	arch.time_to_top = 4.6
 	# EL EQUILIBRIO (ver `balance`): el más firme; vuelve seco a su lugar.
 	balance(arch, 95.0, Vector3(1.2, 1.0, 1.1), 1.4, 1.2)
 	arch.time_to_standup = 2.0
@@ -588,10 +578,8 @@ static func fat_athletic_arch() -> EntityArchetype:
 	var arch = EntityArchetype.new()
 	arch.strength = 1.4
 	arch.speed = 0.275
-	arch.back_speed_factor = 1.0
-	arch.lateral_speed_factor = 1.0
 	arch.sprint_multiplier = 1.9
-	arch.acceleration = 0.3625
+	arch.time_to_top = 3.4
 	# EL EQUILIBRIO (ver `balance`): entre el gordo y el fornido.
 	balance(arch, 107.5, Vector3(1.0, 0.8, 0.9), 1.0, 0.9)
 	arch.time_to_standup = 2.0
@@ -650,10 +638,8 @@ static func old_arch() -> EntityArchetype:
 	var arch = EntityArchetype.new()
 	arch.strength = 0.45
 	arch.speed = 0.15
-	arch.back_speed_factor = 0.6
-	arch.lateral_speed_factor = 0.8
 	arch.sprint_multiplier = 1.8
-	arch.acceleration = 0.5
+	arch.time_to_top = 1.25
 	# EL EQUILIBRIO (ver `balance`): frágil, sobre todo para atrás; le cuesta enderezarse y casi no rebota.
 	balance(arch, 65.0, Vector3(0.5, 0.4, 0.5), 0.6, 1.2)
 	arch.time_to_standup = 1.0
@@ -698,10 +684,8 @@ func blend_with(b: EntityArchetype, t: float) -> EntityArchetype:
 	r.strength                      = lerpf(strength, b.strength, t)
 	r.weight                        = lerpf(weight, b.weight, t)
 	r.speed                         = lerpf(speed, b.speed, t)
-	r.back_speed_factor             = lerpf(back_speed_factor, b.back_speed_factor, t)
-	r.lateral_speed_factor          = lerpf(lateral_speed_factor, b.lateral_speed_factor, t)
 	r.sprint_multiplier             = lerpf(sprint_multiplier, b.sprint_multiplier, t)
-	r.acceleration                  = lerpf(acceleration, b.acceleration, t)
+	r.time_to_top                   = lerpf(time_to_top, b.time_to_top, t)
 	r.forward_stability             = lerpf(forward_stability, b.forward_stability, t)
 	r.backwards_stability           = lerpf(backwards_stability, b.backwards_stability, t)
 	r.sideways_stability            = lerpf(sideways_stability, b.sideways_stability, t)

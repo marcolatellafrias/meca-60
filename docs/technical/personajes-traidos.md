@@ -51,6 +51,20 @@ Locomoción (el usuario, 13/11/2026, entre uno solo como el de la meca y los dos
 en fila, numeradas, × 3, con su nombre y los arquetipos que la usan (`HeadFormsArchetype`). Sólo para mirar; prueba con
 captura: `tests/head_forms_look.tscn`.
 
+**El movimiento: velocidad máxima y cuánto tarda en llegar** (17/11/2026, el usuario: «un movimiento puramente
+cinemático… sin mecánica de estamina, y solamente con el sistema de velocidad máxima y cuánto tiempo tarda en llegar»).
+La cápsula sigue siendo la misma, pero en cada paso se le escribe la velocidad: va hacia la que pide la intención a
+ritmo parejo (`top_speed / time_to_top`), para arrancar, frenar y doblar por igual; con `time_to_top` en 0, al instante
+(`CharacterRigidBody3D._move`). No hay sprint ni estamina: manteniendo la tecla se gana la velocidad. Por arquetipo, en
+el F3: la máxima (`sprint_multiplier`, en veces la de caminar), cuánto tarda (`time_to_top`, que reemplaza a la
+aceleración) y la de caminar (`speed`), que no mueve: es donde la animación pasa de caminar a correr, así la animación
+no cambió. Los de fábrica son lo que tardaba cada uno de quieto al tope antes (gordo, musculoso y flaco alto 4,6 s,
+gordo atlético 3,4, chico 2,8, viejo 1,25). Las aceleraciones guardadas en el F3 se ignoran: se vuelven a afinar con
+«tarda en llegar». Se fueron las fuerzas de aceleración y frenada, lo de atrás y de costado, la banda del sprint, la
+estamina con su barra y **el choque blando entre personajes**: ahora chocan como dos cápsulas. El guion de la fila
+Locomoción camina apretando a medias, hasta la velocidad de caminar. Las escaleras no cambiaron: la cápsula sube su
+rampa y los pies pisan los escalones (ver Stairs).
+
 **Lo que cuesta la fila Locomoción** (17/11/2026, diagnóstico; nada arreglado todavía): `tests/locomotion_perf.tscn` arma
 las siete escenas juntas (42 personajes, 846 cuerpos rígidos) y mide de a una dimensión. Armarlas: 2,2 s en un cuadro
 (el tirón al acercarse). Prendido todo: 8 fps (124 ms por cuadro). Lo que más pesa, en orden: el guion de la cápsula
@@ -103,7 +117,7 @@ Quedan, a pedido: el ragdoll en el aire, el hombro adentro, la respiración y el
 el agarre del volante y la válvula, y el freno al aterrizar.
 
 **El jugador y lo de prueba, separados** (17/11/2026): `PlayerController` es el jugador —teclado y mouse a la
-intención, cámara, estamina, HUD, el ente y el vuelo libre—; `PlayerDebug` (sólo con `debug_enabled`) tiene el panel
+intención, cámara, HUD, el ente y el vuelo libre—; `PlayerDebug` (sólo con `debug_enabled`) tiene el panel
 de depuración (F9), tirarse (G), volver a nacer (P), pasarse al cuerpo que se mira (F), los spawns y el panel de
 impactos. *La pose de sostener algo con la mano que figuraba como pendiente no existe: el agarre ya está resuelto
 (cubos de tamaño fijo, las manos a los costados de donde se lo agarró).* *Arreglado el 17/11/2026*: a veces, al levantarse del ragdoll, salían cientos de errores «Basis must be normalized».

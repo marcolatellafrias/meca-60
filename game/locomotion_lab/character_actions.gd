@@ -112,7 +112,7 @@ func _walk() -> void:
 	var local := rb.global_basis.orthonormalized().inverse() * (target - rb.global_position)
 	var flat := Vector2(local.x, local.z)
 	if _path.size() >= 2:
-		bi.intent.move = flat.normalized()
+		bi.intent.move = flat.normalized() * _pace()
 		bi.intent.sprint = _sprint
 		return
 	# LLEGAR SE DECIDE EN EL PISO: en el aire no hay roce y lo que tarda en frenar sale enorme (al saltar una valla daba
@@ -122,8 +122,15 @@ func _walk() -> void:
 		stop()
 		_braking = brake
 		return
-	bi.intent.move = flat.normalized()
+	bi.intent.move = flat.normalized() * _pace()
 	bi.intent.sprint = _sprint
+
+
+## CUÁNTO APRIETA: entero corriendo; caminando, lo justo para la velocidad de caminar, como un joystick a medias (no
+## hay sprint: la velocidad se gana acelerando, ver CharacterRigidBody3D, EL MOVIMIENTO).
+func _pace() -> float:
+	var rb := bi.char_rigidbody
+	return 1.0 if _sprint else clampf(rb.walk_speed / maxf(rb.top_speed, 0.01), 0.0, 1.0)
 
 
 ## LA PERSECUCIÓN: el punto del camino más cercano (desde el tramo en que va) y de ahí `LOOK_AHEAD` más adelante. Cuando

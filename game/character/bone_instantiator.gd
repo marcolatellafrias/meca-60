@@ -976,8 +976,8 @@ func _update_passive_state(delta: float) -> void:
 	var v := char_rigidbody.get_motion_velocity() if char_rigidbody.kind.simulates() else char_rigidbody.linear_velocity
 	var speed: float = Vector2(v.x, v.z).length()
 	# El esfuerzo arranca antes del tope de caminata: caminar ligero ya cansa un poco.
-	var floor_speed: float = char_rigidbody.max_speed_forward * 0.6
-	var top: float = char_rigidbody.max_speed_forward * char_rigidbody.sprint_multiplier
+	var floor_speed: float = char_rigidbody.walk_speed * 0.6
+	var top: float = char_rigidbody.top_speed
 	var effort: float = clampf((speed - floor_speed) / maxf(top - floor_speed, 0.001), 0.0, 1.0)
 	passive_state.update(delta, effort)
 

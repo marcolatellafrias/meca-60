@@ -95,14 +95,11 @@ extends Resource
 ## ── EL CUERPO: MOVIMIENTO, EQUILIBRIO Y SALTO (03/11/2026, el panel de locomoción, ver LocomotionTuner) ────────────
 ## Los mismos números que `EntityArchetype` ya tenía, con los mismos nombres: la capa los pisa donde el arquetipo nace.
 @export_group("Movimiento")
-## LA VELOCIDAD DE CAMINAR (× la escala del juego), y cuánto de ella yendo para atrás y de costado.
+## LA VELOCIDAD DE CAMINAR (× la escala del juego): donde la animación pasa de caminar a correr.
 @export_range(0.05, 1.0, 0.01) var speed := 0.3
-@export_range(0.2, 1.5, 0.05) var back_speed_factor := 1.0
-@export_range(0.2, 1.5, 0.05) var lateral_speed_factor := 1.0
-## CUÁNTAS VECES LA DE CAMINAR LLEGA CORRIENDO.
+## LA VELOCIDAD MÁXIMA, en veces la de caminar, y cuánto tarda en llegar (s; 0, al instante). Ver EntityArchetype.
 @export_range(1.0, 4.0, 0.05) var sprint_multiplier := 2.2
-## LA ACELERACIÓN (× su peso × la escala del juego).
-@export_range(0.1, 8.0, 0.05) var acceleration := 0.6
+@export_range(0.0, 8.0, 0.05) var time_to_top := 3.0
 ## LA FUERZA: contra el peso de lo que lleva, cuánto lo frena (ver GrabbableInteractable.load_of); de a varios, se suma.
 @export_range(0.1, 2.5, 0.05) var strength := 1.0
 ## LA FUERZA DE BRAZOS, aparte de la de llevar (04/11/2026, el usuario: «quiero tener un independiente»; «un valor
@@ -142,8 +139,7 @@ const WALK_KNOBS: Array[String] = ["stride_reach", "step_height", "root_bouncine
 	"arm_swing", "walk_twist", "walk_spine_bow", "walk_spine_roll", "walk_lean",
 	"walk_posture_lean", "walk_hip_sway", "walk_bounce_up", "walk_arm_open", "walk_run_elbow", "walk_stride_growth",
 	"walk_swing_share", "walk_lead"]
-const MOVE_KNOBS: Array[String] = ["speed", "back_speed_factor", "lateral_speed_factor", "sprint_multiplier",
-	"acceleration", "strength", "throw_strength"]
+const MOVE_KNOBS: Array[String] = ["sprint_multiplier", "time_to_top", "speed", "strength", "throw_strength"]
 const BALANCE_KNOBS: Array[String] = ["weight", "forward_stability", "backwards_stability", "sideways_stability",
 	"stability_spring", "stability_damp", "landing_tolerance", "time_to_standup"]
 ## (La carga del salto es la misma para todos desde el 04/11/2026: EntityArchetype.JUMP_WINDUP_S.)
