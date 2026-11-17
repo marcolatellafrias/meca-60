@@ -256,7 +256,7 @@ func _local_player() -> Node:
 ## Saca al ocupante EN EL LUGAR (sin teleport al spawn point): libera localmente ya —sincrónico, sin
 ## esperar el round-trip del host— y avisa a los proxies. Lo usan los cambios de estado que la cápsula
 ## sentada no soporta y que necesitan el asiento libre ANTES de seguir: el respawn (reconstruye el
-## esqueleto) y el ragdoll (ver PlayerController._leave_seat_in_place).
+## esqueleto) y el ragdoll (ver PlayerDebug._leave_seat_in_place).
 func release_occupant_in_place() -> void:
 	if not is_instance_valid(_seated_bi):
 		return

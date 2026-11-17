@@ -1,6 +1,11 @@
 class_name PlayerController
 extends Node
 
+## ── EL JUGADOR DE ESTA MÁQUINA ──────────────────────────────────────────────────────────────────────────────────────
+## El teclado y el mouse a la intención del cuerpo (ver CharacterIntent), la cámara en los ojos, la estamina, el HUD y la
+## mira; el ente del sandbox (movimiento directo) y el vuelo libre. Lo de prueba —el panel de depuración, tirarse,
+## volver a nacer, los spawns— está en PlayerDebug, sólo con depuración.
+
 var head_bone: CustomBone
 var head_size: Vector3
 ## Lo que el hueso de la cabeza arranca adentro de ella (ver SkeletonSizesUtil.head_drop).
@@ -60,59 +65,46 @@ var _was_ragdoll_active: bool = false
 
 
 var _hud: PlayerHUD = null
-var _impact_debug_hud: ImpactDebugHUD = null
-var _prev_fall_rb: CharacterRigidBody3D = null
 
 var interaction_controller: InteractionController = null
 var arms_controller: ArmsController = null
 
 var _creative: bool = false
-var _debug_panel: DebugPanel = null
-## LA TECLA DEL PANEL DE DEBUG: F9, la primera de los paneles globales del sandbox (ver docs/technical/sandbox.md): de
-## F1 a F7 son de las filas, y la F8 detiene el juego. *Era la F1, y en una sesión de red chocaba con los paneles de
-## fila.* La cambia quien arma el personaje.
-var debug_panel_key: Key = KEY_F9
+## Lo de prueba (ver PlayerDebug), sólo en un personaje con depuración.
+var debug: PlayerDebug = null
 ## El puntito blanco del centro de la pantalla (ver Crosshair).
 var _crosshair: Crosshair = null
 
-## Punto de entrada único cuando el BoneInstantiator (re)construye el esqueleto del jugador
-## activo — tanto el build inicial como cada respawn. Construye lo persistente una sola vez
-## (InteractionController, cámara de debug, HUD de impacto) y re-vincula el controlador al
-## esqueleto nuevo. Lo llama BoneInstantiator.initialize_skeleton.
+## CADA VEZ QUE SE ARMA EL CUERPO (al nacer y al volver a nacer; lo llama BoneInstantiator.initialize_skeleton): lo que
+## vive en el controlador se arma una sola vez (las manos, la mira, lo de prueba) y todo se vuelve a atar al cuerpo nuevo.
+## El modo del mouse lo maneja UIState.
 func on_skeleton_built(target: BoneInstantiator, cam: Camera3D) -> void:
 	player_camera = cam
 	if not is_ready:
 		_construct_persistent(target, cam)
 		is_ready = true
 	rebind(target)
-	_use_own_camera()
+	take_camera()
 	if target.debug_enabled:
-		_setup_debug_panel()  # refleja el personaje nuevo (se recrea adentro)
-	# El mouse_mode lo maneja UIState (character-parametric:docs/technical/ui.md); acá no lo tocamos.
+		if not is_instance_valid(debug):
+			debug = PlayerDebug.new()
+			debug.controller = self
+			add_child(debug)
+		debug.on_skeleton_built()
 
-## Nodos que viven en el PlayerController y sobreviven a los respawns: se crean una sola vez.
+## Lo que vive en el controlador y sobrevive a volver a nacer: las manos y la mira.
 func _construct_persistent(target: BoneInstantiator, cam: Camera3D) -> void:
 	interaction_controller = InteractionController.new()
 	add_child(interaction_controller)
 	var max_reach := target.skel_sizes_util.interaction_reach
 	interaction_controller.setup(target.char_rigidbody, cam, target.arms_controller, target.anim_mod, max_reach, target.entity_instantiation, target)
-
-	# El panel de impactos (F1 → Acciones → Ver impactos), apagado hasta que lo prendan. Antes se armaba pero
-	# nunca entraba al árbol: se actualizaba cada cuadro y no se veía.
-	if not is_instance_valid(_impact_debug_hud):
-		_impact_debug_hud = ImpactDebugHUD.create()
-		_impact_debug_hud.visible = false
-		add_child(_impact_debug_hud)
-
-	# El puntito del centro, uno solo: `_construct_persistent` vuelve a correr en cada respawn.
-	if not is_instance_valid(_crosshair):
-		_crosshair = Crosshair.new()
-		add_child(_crosshair)
+	_crosshair = Crosshair.new()
+	add_child(_crosshair)
 
 
 ## Re-vincula el controlador (persistente) al esqueleto target: refs de cápsula/brazos/anim, el
 ## InteractionController, reparenta la cámara y recrea el HUD. Único lugar donde se re-cablea:
-## compartido por on_skeleton_built (build/respawn) y _switch_to (cambio de cuerpo en creative).
+## compartido por on_skeleton_built (nacer y volver a nacer) y PlayerDebug.switch_to (pasarse a otro cuerpo).
 func rebind(target: BoneInstantiator) -> void:
 	char_rigidbody  = target.char_rigidbody
 	head_bone       = target.custom_bones_util.head
@@ -138,8 +130,6 @@ func rebind(target: BoneInstantiator) -> void:
 	_hud = PlayerHUD.create(target.entity_instantiation)
 	char_rigidbody.add_child(_hud)
 
-	_connect_fall_signal(char_rigidbody)
-
 func _get_bi() -> BoneInstantiator:
 	return char_rigidbody.get_parent() as BoneInstantiator if is_instance_valid(char_rigidbody) else null
 
@@ -147,15 +137,6 @@ func _get_bi() -> BoneInstantiator:
 func _get_arch() -> EntityArchetype:
 	var bi := _get_bi()
 	return bi.entity_instantiation.arch_final if is_instance_valid(bi) else null
-
-
-func _connect_fall_signal(rb: CharacterRigidBody3D) -> void:
-	if is_instance_valid(_prev_fall_rb) and is_instance_valid(_impact_debug_hud):
-		if _prev_fall_rb.fall_triggered.is_connected(_impact_debug_hud.notify_fall_triggered):
-			_prev_fall_rb.fall_triggered.disconnect(_impact_debug_hud.notify_fall_triggered)
-	_prev_fall_rb = rb
-	if is_instance_valid(_impact_debug_hud):
-		rb.fall_triggered.connect(func(_d): _impact_debug_hud.notify_fall_triggered())
 
 
 func _get_ragdoll() -> RagdollUtil:
@@ -170,12 +151,6 @@ func _is_ragdoll_active() -> bool:
 
 func _input(event: InputEvent) -> void:
 	if not is_ready:
-		return
-
-	# F1 (F8 en el sandbox) abre/cierra el panel de debug — disponible siempre, incluso con overlay abierto.
-	if is_instance_valid(_debug_panel) and event is InputEventKey and event.pressed and not event.echo \
-			and event.keycode == debug_panel_key:
-		_debug_panel.toggle()
 		return
 
 	# Con cualquier overlay abierto (pausa/menú/consola/debug) se bloquea el input de gameplay.
@@ -250,20 +225,7 @@ func _input(event: InputEvent) -> void:
 				# interacción no corre— y al soltar quedaría el empujón a medias. Ver character-parametric:docs/technical/characters.md.
 				KEY_R when not _direct():  # en el sandbox la R regenera la parcela
 					if is_instance_valid(bi): bi.intent.throw = true
-				# LAS TECLAS DE DEPURACIÓN, sólo con depuración (`debug_enabled`, el jugador del juego): en el sandbox la F es
-				# del panel de la fila (ver design-sandbox.md), y ragdoll, respawn y el carnero son del juego.
-				KEY_F when _debug_keys():
-					if not seated:
-						var hovered := ic.get_hovered_rb() if ic else null
-						if is_instance_valid(hovered):
-							var target_bi := _find_bone_instantiator(hovered)
-							if target_bi and target_bi != bi:
-								_switch_to(target_bi)
-
-				# Físicas / debug
-				KEY_G when _debug_keys(): _toggle_ragdoll()
-				KEY_P when _debug_keys(): _respawn()
-
+				# La F, la G y la P (pasarse a otro cuerpo, tirarse, volver a nacer) son de prueba: ver PlayerDebug.
 
 		else: # released
 			match event.keycode:
@@ -352,27 +314,6 @@ func _update_hud(delta: float) -> void:
 	_hud.update_speed(hvel.length())
 	_hud.update_stability(char_rigidbody.velocity_indicator, char_rigidbody.impact_xz, char_rigidbody.impact_y)
 
-	if is_instance_valid(_impact_debug_hud) and _impact_debug_hud.visible:
-		var bi := _get_bi()
-		_impact_debug_hud.update_impact_debug(
-			char_rigidbody.impact_xz,
-			char_rigidbody.global_transform.basis,
-			char_rigidbody.impact_y,
-			char_rigidbody.linear_velocity,
-			char_rigidbody._last_impact_world_dir,
-			char_rigidbody.ragdoll_threshold,
-			is_instance_valid(bi) and is_instance_valid(bi.ragdoll_util) and bi.ragdoll_util.is_active,
-			is_instance_valid(bi) and is_instance_valid(bi.ragdoll_util) and bi.ragdoll_util.is_recovering,
-			char_rigidbody._last_impact_xz_magnitude,
-			max(char_rigidbody.max_speed_forward, char_rigidbody.max_speed_side) * char_rigidbody.sprint_multiplier,
-			char_rigidbody.ragdoll_threshold,
-			char_rigidbody._snapshot_capture_count,
-			char_rigidbody._snapshot_flag_at_capture,
-			char_rigidbody._snapshot_ragdoll_at_capture,
-			char_rigidbody._snapshot_acc_before,
-			char_rigidbody._snapshot_acc_after
-		)
-
 
 func _update_hud_throw_jump() -> void:
 	if not is_instance_valid(_hud):
@@ -397,8 +338,8 @@ func _update_ragdoll_camera(_delta: float) -> void:
 func is_first_person_view() -> bool:
 	return true
 
-## La cámara del jugador, la activa, y su cuerpo escondido en primera persona.
-func _use_own_camera() -> void:
+## LA CÁMARA DEL JUGADOR, la activa, y su cuerpo escondido en primera persona.
+func take_camera() -> void:
 	if is_instance_valid(player_camera):
 		player_camera.current = true
 	var bi := _get_bi()
@@ -420,79 +361,13 @@ func _set_crouch(on: bool) -> void:
 		bi.intent.crouch = on
 
 
-func _toggle_ragdoll() -> void:
-	var bi := _get_bi()
-	if not is_instance_valid(bi) or not is_instance_valid(bi.ragdoll_util):
-		return
-	if bi.ragdoll_util.is_active:
-		bi.ragdoll_util.deactivate(char_rigidbody, bi.custom_bones_util.lower_spine)
-		char_rigidbody.rotation.y = camera_yaw
-	elif bi.ragdoll_util.is_recovering:
-		return  # ya te estás levantando: no se puede re-ragdollear (nada de G-spam). En el futuro el
-				 # levantarse será por timer según arch.time_to_standup, no con G. Ver onfoot-gameplay.md.
-	else:
-		_leave_seat_in_place(bi)  # sentado y ragdoll son excluyentes: primero salir del asiento
-		char_rigidbody.is_snapshot_active = false
-		bi.ragdoll_util.activate(char_rigidbody, bi.custom_bones_util.lower_spine)
-
-
-## Sale del asiento en el lugar, si estaba sentado. Lo llaman los cambios de estado que son
-## MUTUAMENTE EXCLUYENTES con estar sentado: el ragdoll (G) y el respawn (P). Sentado, la cápsula
-## queda inerte (colisión off, axis lock, input_enabled=false) y el asiento le presta una malla hija, así
-## que entrar a cualquiera de esos estados sin salir primero deja un híbrido inválido — ragdollear
-## sentado te mandaba a volar con la silla pegada (y los proxies la veían quieta en su lugar).
-## El camino por impacto no necesita esto: BoneInstantiator._on_fall_triggered ya se niega a
-## ragdollear si estás sentado.
-func _leave_seat_in_place(bi: BoneInstantiator) -> void:
-	var seat := bi.current_seat as SeatInteractable
-	if is_instance_valid(seat):
-		seat.release_occupant_in_place()
-
-
-func _find_bone_instantiator(node: Node) -> BoneInstantiator:
-	var current := node.get_parent()
-	while current:
-		if current is BoneInstantiator:
-			return current
-		current = current.get_parent()
-	return null
-
-
-func _switch_to(target: BoneInstantiator) -> void:
-	var current_bi := _get_bi()
-	var yaw := camera_yaw
-	# LAS CLASES SE CAMBIAN: el que deja pasa a ser lo que era el otro, y el otro, el jugador (ver CharacterKind).
-	var mine := current_bi.kind
-	_set_kind(current_bi, target.kind)
-	_set_kind(target, mine)
-	current_bi.intent.move = Vector2.ZERO
-	current_bi.intent.sprint = false
-
-	rebind(target)  # cápsula, IC, cámara, HUD, fall signal — compartido con el respawn
-	char_rigidbody.input_enabled = true
-	camera_yaw = yaw
-	char_rigidbody.rotation.y = camera_yaw
-	_was_ragdoll_active = false
-
-	# En primera persona la cabeza/torso los maneja la cámara: sacamos esos bones del animador.
-	var bones_to_clear := [
-		target.custom_bones_util.head,
-		target.custom_bones_util.neck,
-		target.custom_bones_util.chest,
-		target.custom_bones_util.higher_spine,
-	]
-	for bone in bones_to_clear:
-		if is_instance_valid(bone):
-			target.procedural_animator.unregister_bone(bone)
-	target.refresh_camera_animations()
-
+## DE PIE, SIN NADA APRETADO: sin agacharse ni cargar el salto. Después de cambiar de cuerpo o de volver a nacer.
+func reset_locomotion() -> void:
 	_set_crouch(false)
 	_drop_jump()
-	char_rigidbody.crouch_speed_factor = 1.0
-
-	_use_own_camera()
-	if is_instance_valid(interaction_controller):
-		interaction_controller.stop_all()
+	_was_ragdoll_active = false
+	if is_instance_valid(char_rigidbody):
+		char_rigidbody.crouch_speed_factor = 1.0
 
 
 ## ── EL ENTE (ver CharacterKind.ente) ────────────────────────────────────────────────────────────────────────────────
@@ -502,12 +377,6 @@ const TURBO_TAP := 0.3
 const SEAT_LOOK := Vector2(2.4, 1.3)
 var _last_sprint_tap := -1.0
 var _sprint_taps := 0
-
-
-## Las teclas de depuración del juego (F, G, P, H, el numpad): sólo con depuración.
-func _debug_keys() -> bool:
-	var bi := _get_bi()
-	return is_instance_valid(bi) and bi.debug_enabled
 
 
 func _direct() -> bool:
@@ -553,46 +422,6 @@ func set_active(on: bool) -> void:
 		_hud.visible = on
 
 
-## Le pone a `bi` la clase `kind`, también a su cápsula.
-static func _set_kind(bi: BoneInstantiator, kind: CharacterKind) -> void:
-	bi.kind = kind
-	if is_instance_valid(bi.char_rigidbody):
-		bi.char_rigidbody.kind = kind
-
-
-func _respawn() -> void:
-	var bi := _get_bi()
-	if not bi:
-		return
-
-	# Salir limpio de todo estado que se aferra a la cápsula actual, ANTES de reconstruirla.
-	if _creative:
-		_set_creative(false)
-	_leave_seat_in_place(bi)  # soltar YA (sincrónico) antes de reconstruir
-	if is_instance_valid(bi.ragdoll_util) and bi.ragdoll_util.is_active:
-		bi.ragdoll_util.deactivate(char_rigidbody, bi.custom_bones_util.lower_spine)
-	if is_instance_valid(interaction_controller):
-		interaction_controller.stop_all()  # suelta grab/control (y sincroniza grab_target null)
-
-	var prev_pos := Vector3(char_rigidbody.global_position.x, 3.0, char_rigidbody.global_position.z)
-
-	# Reconstruir el esqueleto con seed nueva. initialize_skeleton → on_skeleton_built → rebind
-	# re-vincula todo (cápsula, IC, cámara, HUD); acá solo reposicionamos y reseteamos estado.
-	bi.master_seed = DebugArchetype.respawn_seed()
-	bi.initialize_skeleton()
-	if is_instance_valid(bi.net_sync):
-		bi.net_sync.broadcast_seed()  # multiplayer: reconstruir mi proxy en las demás máquinas
-
-	char_rigidbody.global_position = prev_pos
-	char_rigidbody.rotation.y      = camera_yaw
-
-	# El esqueleto nuevo arranca limpio; reseteamos el estado de locomoción que vive acá.
-	_set_crouch(false)
-	_drop_jump()
-	_was_ragdoll_active = false
-	char_rigidbody.crouch_speed_factor = 1.0
-
-
 func _process_stamina(delta: float) -> void:
 	var is_sprinting := Input.is_action_pressed("sprint") \
 		and Input.get_axis("move_forward", "move_backward") < 0.0 \
@@ -625,18 +454,7 @@ func apply_camera_pitch(pitch: float) -> void:
 		player_camera.rotation.x = camera_pitch
 
 
-# ── Creative / debug ────────────────────────────────────────────────────────
-
-## MUESTRA O ESCONDE EL PANEL DE IMPACTOS (el resorte, el umbral y el último golpe): lo usa el F9 del sandbox (ver
-## BodyPanel), que no tiene el panel de depuración.
-func show_impacts(on: bool) -> void:
-	if is_instance_valid(_impact_debug_hud):
-		_impact_debug_hud.visible = on
-
-
-func impacts_shown() -> bool:
-	return is_instance_valid(_impact_debug_hud) and _impact_debug_hud.visible
-
+# ── EL VUELO LIBRE ──────────────────────────────────────────────────────────────────────────────────────────────────
 
 ## PRENDE O APAGA EL VUELO LIBRE desde afuera (la V lo alterna): al subir a la meca con la U se apaga (ver PilotRide).
 func set_creative(on: bool) -> void:
@@ -669,148 +487,3 @@ func _set_creative(on: bool) -> void:
 	else:
 		char_rigidbody.set_creative_mode(false)
 		char_rigidbody.rotation.y = camera_yaw
-
-
-func _setup_debug_panel() -> void:
-	# Se re-llama en cada respawn (desde on_skeleton_built): recreamos el panel para reflejar
-	# el nuevo personaje (y no acumular paneles).
-	if is_instance_valid(_debug_panel):
-		_debug_panel.queue_free()
-	_debug_panel = DebugPanel.new()
-	add_child(_debug_panel)
-
-	# ── Info (stats del personaje generado + mundo + red) ──
-	var bi := _get_bi()
-	if is_instance_valid(bi) and is_instance_valid(bi.entity_instantiation):
-		_debug_panel.add_text("Info", _character_stats_text(bi.entity_instantiation))
-	_debug_panel.add_info("Red", _net_status_text())
-
-	# ── Acciones ──
-	_debug_panel.add_action("Acciones", "Toggle creative (V)",      func(): _set_creative(not _creative))
-	_debug_panel.add_action("Acciones", "Toggle ragdoll (G)",       _toggle_ragdoll)
-	_debug_panel.add_action("Acciones", "Respawn (P)",              _respawn)
-	if is_instance_valid(_impact_debug_hud):
-		_debug_panel.add_toggle("Acciones", "Ver impactos", _impact_debug_hud.visible,
-			func(on: bool) -> void: _impact_debug_hud.visible = on)
-	# ── Arquetipos ──
-	# Dos acciones por arquetipo, y son distintas: "Ser" cambia TU personaje y además deja la P pegada
-	# a ese arquetipo (apretarla repetido da otra variación del mismo); "Spawnear" deja un NPC al lado
-	# sin tocar la selección, para comparar dos siluetas a la vez.
-	_debug_panel.add_text("Arquetipos", "P respawnea como: %s" % DebugArchetype.label())
-	_debug_panel.add_action("Arquetipos", "Ser: aleatorio", func(): respawn_as(DebugArchetype.NONE))
-	for a in EntityArchetype.Archetype.values():
-		var be_name := str(EntityArchetype.Archetype.keys()[a])
-		_debug_panel.add_action("Arquetipos", "Ser: %s" % be_name, func(): respawn_as(a))
-	_debug_panel.add_action("Arquetipos", "Spawnear: aleatorio",
-		func(): _debug_spawn_character(DebugArchetype.free_seed()))
-	for b in EntityArchetype.Archetype.values():
-		var spawn_name := str(EntityArchetype.Archetype.keys()[b])
-		_debug_panel.add_action("Arquetipos", "Spawnear: %s" % spawn_name,
-			func(): _debug_spawn_character(DebugArchetype.seed_for(b)))
-
-	# ── Spawn ──
-	_debug_panel.add_action("Spawn", "Go to start",        _go_to_start)
-	_debug_panel.add_action("Spawn", "Character",          _debug_spawn_character)
-	_debug_panel.add_action("Spawn", "Caja liviana ▪",     func(): _debug_spawn("box_light_square"))
-	_debug_panel.add_action("Spawn", "Caja pesada ▪",      func(): _debug_spawn("box_heavy_square"))
-	_debug_panel.add_action("Spawn", "Seat",               func(): _debug_spawn("seat"))
-	_debug_panel.add_action("Spawn", "Limpiar spawns",     _clear_spawns)
-
-
-
-func _character_stats_text(inst: EntityInstantiation) -> String:
-	var arch := inst.arch_final
-	var sizes := SkeletonSizesUtil.create(inst)
-	var primary := str(EntityArchetype.Archetype.keys()[inst.archetype_type])
-	var blend := "arch      (no blend)"
-	if inst.archetype_blend > 0.0:
-		blend = "secondary %s (%.0f%%)" % [
-			str(EntityArchetype.Archetype.keys()[inst.secondary_archetype_type]),
-			inst.archetype_blend * 100.0]
-	var lines := [
-		"seed      %d" % inst.master_seed,
-		"arch      %s" % primary,
-		blend,
-		"%s  |  age %d" % [EntitySpecie.Specie.keys()[inst.specie_type], inst.age],
-		"",
-		# height y reach son DERIVADOS del modelo (SkeletonSizesUtil), ya no campos del arquetipo.
-		"height    %.2f m" % sizes.total_height,
-		"weight    %.1f kg" % arch.weight,
-		"speed     %.1f" % arch.speed,
-		"strength  %.2f" % arch.strength,
-		"jump      %.2fm" % arch.jump_height,
-		"arm       %.2f m  (reach %.2f)  k %.2f" % [sizes.arm_reach, sizes.interaction_reach, arch.arms_length],
-		"leg       %.2f m                k %.2f" % [sizes.leg_height, arch.legs_length],
-		"fatness   %.2f" % arch.fatness,
-		"muscle    %.2f" % arch.muscularity,
-	]
-	return "\n".join(lines)
-
-
-func _debug_spawn_pos() -> Vector3:
-	var fwd := -player_camera.global_transform.basis.z
-	return char_rigidbody.global_position + fwd * 2.5 + Vector3.UP
-
-
-## Elige el arquetipo con el que respawnea la P, y respawnea ya. La elección QUEDA PEGADA: después
-## alcanza con apretar P para ver otra variación del mismo arquetipo, que es el bucle de autoría.
-## CAMBIARSE DE CUERPO a un arquetipo puntual, en el lugar. Es el camino de la P con el arquetipo
-## elegido a mano, y es público porque lo usan los botones del panel de debug, que si lo reimplementaran
-## perderían la limpieza del respawn — salir del asiento, desactivar el ragdoll, soltar lo que se tenga
-## en la mano — y se irían separando de él en silencio.
-func respawn_as(archetype: int) -> void:
-	DebugArchetype.selected = archetype
-	_respawn()
-
-
-func _go_to_start() -> void:
-	var spawner := get_tree().get_first_node_in_group("character_spawner")
-	if spawner and spawner.has_method("respawn_local_at_start"):
-		spawner.respawn_local_at_start()
-
-
-func _net_status_text() -> String:
-	if SessionManager.is_host and SessionManager.lobby_code != "":
-		return "Host — código %s" % SessionManager.lobby_code
-	if SessionManager.is_host:
-		return "Host"
-	if SessionManager.session_started and SessionManager.local_peer_id != 1:
-		return "Cliente"
-	return "Solo (local)"
-
-
-## Deja un NPC parado al lado. No pasa por NetSpawner a propósito: es una ayuda de autoría para mirar
-## dos siluetas juntas, no un objeto de la partida.
-##
-## Sin seed explícita usa la del arquetipo elegido en el panel; los botones "Spawnear: X" pasan la de
-## un arquetipo puntual, que NO cambia la selección — así podés ser `kid` y rodearte de `buff`.
-func _debug_spawn_character(character_seed: int = -1) -> void:
-	var scene := load("res://game/character/player.tscn") as PackedScene
-	if scene == null:
-		return
-	var inst := scene.instantiate() as BoneInstantiator
-	if inst == null:
-		return
-	inst.master_seed = character_seed if character_seed >= 0 else DebugArchetype.respawn_seed()
-	get_tree().current_scene.add_child(inst)
-	inst.global_position = _debug_spawn_pos()
-
-
-func _debug_spawn(type_name: String) -> void:
-	var pos := _debug_spawn_pos()
-	# El asiento es estático y se apoya en el piso. Las cajas son rigidbodies: caen solas.
-	if type_name == "seat":
-		pos = _snap_to_ground(pos)
-	NetSpawner.request_spawn(type_name, Transform3D(Basis(), pos))
-
-## Limpia todo lo spawneado (ver NetSpawner).
-func _clear_spawns() -> void:
-	NetSpawner.request_clear_all()
-
-## Baja un punto hasta el piso con un raycast (para spawnear objetos estáticos apoyados).
-func _snap_to_ground(from: Vector3) -> Vector3:
-	var space := char_rigidbody.get_world_3d().direct_space_state
-	var q := PhysicsRayQueryParameters3D.create(from + Vector3.UP, from + Vector3.DOWN * 20.0)
-	q.exclude = [char_rigidbody.get_rid()]
-	var hit := space.intersect_ray(q)
-	return hit.position if hit else from

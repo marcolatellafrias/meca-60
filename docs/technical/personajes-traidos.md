@@ -90,7 +90,10 @@ quedó igual, comparada contra el código de antes (locomoción, andar en la mec
 Quedan, a pedido: el ragdoll en el aire, el hombro adentro, la respiración y el temblor, la caminata de cada arquetipo,
 el agarre del volante y la válvula, y el freno al aterrizar.
 
-**Falta** (de la sesión de Personajes): separar en `PlayerController` lo del jugador de lo de prueba, y la pose de
-sostener algo con la mano (quedó a medias). *Un problema que ya estaba*: a veces, al levantarse del ragdoll, cientos de
+**El jugador y lo de prueba, separados** (17/11/2026): `PlayerController` es el jugador —teclado y mouse a la
+intención, cámara, estamina, HUD, el ente y el vuelo libre—; `PlayerDebug` (sólo con `debug_enabled`) tiene el panel
+de depuración (F9), tirarse (G), volver a nacer (P), pasarse al cuerpo que se mira (F), los spawns y el panel de
+impactos. *La pose de sostener algo con la mano que figuraba como pendiente no existe: el agarre ya está resuelto
+(cubos de tamaño fijo, las manos a los costados de donde se lo agarró).* *Un problema que ya estaba*: a veces, al levantarse del ragdoll, cientos de
 errores «Basis must be normalized» (`RagdollUtil._update_recovery`); intermitente.
 
