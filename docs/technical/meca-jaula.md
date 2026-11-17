@@ -36,7 +36,17 @@ las piernas y cuánto salen los hombros; `CageCabin.body`, `MechBody.shrink`). L
   - **El hombro, una sola regla** («que el plano de ese cuadrado se centre en ese cuadrado y que el offset… funcione
     ahí»): en el centro de la cara del costado (en la redonda, su cuadrado), adelantado `shoulder_forward` hasta el borde
     de adelante de esa cara.
-  - *La caja física de la meca (la de los golpes) sigue siendo una caja del tamaño del cuerpo también en la redonda.*
+  - **El octógono de arriba puede girar aparte del torso** (sólo la redonda; `upper_turns`, el interruptor del F2; el
+    usuario: «le daría la habilidad de girar aparte, y que pueda togglearla o no»). Por ahora es la base: **todo el
+    módulo de arriba cuelga de un pivote** (`CageCabin.upper`: el bloque o el octógono, los tableros de arriba, la silla
+    de los brazos y la torre con el artillero) que gira alrededor del eje vertical; **lo que se pisa gira con él**
+    (`set_upper_yaw` mueve también sus formas de choque, y el marco por el que se camina las sigue solo). **Hacia dónde
+    mira** lo dice un solo lugar, `CageMech.upper_heading`: hoy, hacia donde apuntan las piernas (`BodyLegs.facing_yaw`);
+    el usuario lo decide jugando («el torso va a girar mediante controles y la de arriba va a quedar fija apuntando hacia
+    adelante. O tal vez… hacia donde apunten las piernas»). Hoy el torso y las piernas giran casi juntos, así que con el
+    interruptor prendido casi no se nota: se va a notar cuando el torso gire con sus controles.
+  - *La caja física de la meca (la de los golpes) sigue siendo una caja del tamaño del cuerpo también en la redonda (el
+    usuario: «el hitbox yo lo dejaría cuadrado por ahora, por simplicidad»).*
 - **La cápsula de abajo**: el radio de la cápsula, el vidrio (liso o facetado, su degradé y sus manchas), su marco (ancho y cuánto sale de la cara; un
   anillo, `CageMesh.ring`), el padding de los costados, los grosores del piso
   y del techo, el margen extra (cuánto baja el piso de la cabina por
@@ -160,8 +170,8 @@ Medido ese día: un golpe suave la inclina 18° y vuelve; uno fuerte la tira y s
 con el cañón, imprime lo que mide y saca una hoja (de afuera, desde los ojos del que maneja, caminando, el palo, el
 cañón). Medido el 17/11/2026, antes y después de borrar la meca grande, igual: la caja de 3,08 × 2,48 × 3,08 m, la
 cintura a 3,07 m, camina 7,6 m en 2 s y la mano del palo llega a 20 m/s.
-Más: `tests/cage_torsos_look` (los dos torsos: la cuadrada y tres redondas, con sus medidas, de afuera y desde los
-dos puestos), `tests/cage_boards_look` (los tableros), `tests/folding_arm_check` (los brazos plegables),
+Más: `tests/cage_torsos_look` (los dos torsos: la cuadrada, tres redondas y una con el octógono girado a mano, con sus
+medidas, de afuera y desde los dos puestos), `tests/cage_boards_look` (los tableros), `tests/folding_arm_check` (los brazos plegables),
 `tests/cage_boarding_check` (subirse con la E), `tests/frame_rebuild_check` (rearmarla con gente adentro),
 `tests/crouch_time_check`, `tests/feet_ground_check`, `tests/equipment_check`, `tests/arm_tips_look`.
 

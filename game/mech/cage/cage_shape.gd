@@ -38,6 +38,10 @@ static var current := CageShape.saved()
 ## LA REDONDA: EL CHANFLE, de 0 (parejo: el rombicuboctaedro, como la cápsula) a 1 (el cubo, sin chanfle). Las caras de
 ## adelante y de arriba quedan del mismo tamaño: el talle no cambia lo que encaja.
 @export_range(0.0, 0.95, 0.01) var body_chamfer := 0.0
+## LA REDONDA: SI EL OCTÓGONO DE ARRIBA GIRA APARTE DEL TORSO (17/11/2026, el usuario: «le daría la habilidad de girar
+## aparte, y que pueda togglearla o no… solamente en la variante esférica»). Hacia dónde mira mientras tanto, lo dice
+## CageMech.upper_heading (hoy, hacia donde apuntan las piernas: el usuario lo va a decidir jugando).
+@export var upper_turns := false
 ## LA CUADRADA: el espacio entre la burbuja y los costados (m).
 @export_range(0.05, 1.5, 0.01) var padding := 0.35
 ## LA CUADRADA: el grosor del piso, debajo de la burbuja (m).

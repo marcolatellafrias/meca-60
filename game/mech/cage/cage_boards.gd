@@ -45,21 +45,31 @@ static var show_grid := false
 
 
 ## LA GRILLA Y LAS PIEZAS en `root` (el fondo de la caja de la cabina, CageCabin.board_root) de la forma `form`.
-static func dress(root: Node3D, form: CageShape) -> void:
+## Los de arriba (el tablero y el pozo) cuelgan de `upper_root` (el módulo de arriba, que puede girar: ver
+## CageCabin.upper), en el mismo espacio que `root`.
+static func dress(root: Node3D, form: CageShape, upper_root: Node3D = null) -> void:
 	var wanted := {}
 	for entry: Array in LAYOUT:
 		wanted[entry[0]] = entry[1]
-	for board: FaceBoard in CageCabin.capsule_boards(form) + CageCabin.upper_boards(form):
+	var top := upper_root if upper_root != null else root
+	var faces: Array = []
+	for board: FaceBoard in CageCabin.capsule_boards(form):
+		faces.append([board, root])
+	for board: FaceBoard in CageCabin.upper_boards(form):
+		faces.append([board, top])
+	for pair: Array in faces:
+		var board: FaceBoard = pair[0]
+		var holder: Node3D = pair[1]
 		if board.size.x <= 0 or board.size.y <= 0:
 			continue
 		var grid := board.view()
 		grid.visible = show_grid
 		grid.set_meta(GRID, true)
-		root.add_child(grid)
+		holder.add_child(grid)
 		if not wanted.has(board.name):
 			continue
 		var mount := FaceMount.of(board)
-		root.add_child(mount)
+		holder.add_child(mount)
 		for key: String in wanted[board.name]:
 			if key == "brazo":
 				_arm(root, form, mount)
@@ -93,7 +103,7 @@ static func _arm(root: Node3D, form: CageShape, mount: FaceMount) -> void:
 static func set_grid_visible(tree: SceneTree, on: bool) -> void:
 	show_grid = on
 	for cabin in tree.root.find_children("*", "CageCabin", true, false):
-		for grid in (cabin as CageCabin).board_root().get_children():
+		for grid in (cabin as CageCabin).board_root().find_children("*", "MeshInstance3D", true, false):
 			if grid.has_meta(GRID):
 				(grid as Node3D).visible = on
 

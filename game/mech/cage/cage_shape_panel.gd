@@ -10,6 +10,7 @@ const LABELS := {
 	"torso": "el torso: la cuadrada (la caja) o la redonda (el cubo chanfleado)",
 	"body_size": "la redonda: el talle (0, la cápsula con su marco; 1, el octógono de arriba)",
 	"body_chamfer": "la redonda: el chanfle (0, parejo como la cápsula; 1, casi un cubo)",
+	"upper_turns": "la redonda: el octógono de arriba gira aparte del torso",
 	"bubble_radius": "cápsula: del centro a las caras (m)",
 	"glass_smooth": "vidrio liso (si no, facetado)",
 	"glass_clear": "vidrio: lo claro, adelante",

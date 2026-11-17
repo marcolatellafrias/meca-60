@@ -44,6 +44,23 @@ func _ready() -> void:
 	label.pixel_size = 0.006
 
 
+## ── EL MÓDULO DE ARRIBA, APARTE DEL TORSO (la redonda con `CageShape.upper_turns`; ver CageCabin.upper) ─────────────
+## Cada paso, el octógono de arriba mira a `upper_heading`, gire como gire el torso. Apagado, va con el torso.
+func _after_step(k: BodySettings, delta: float) -> void:
+	super(k, delta)
+	var form := CageCabin.shape()
+	if form.is_round() and form.upper_turns and cabin is CageCabin:
+		(cabin as CageCabin).set_upper_world_yaw(upper_heading())
+
+
+## ADÓNDE MIRA EL MÓDULO DE ARRIBA CUANDO GIRA APARTE (el giro en Y del mundo). EL ÚNICO LUGAR DE LA REGLA (el usuario,
+## 17/11/2026: «el torso va a girar mediante controles y la de arriba va a quedar fija apuntando hacia adelante. O tal vez
+## debería apuntar hacia donde apunten las piernas… lo decidiría mejor… cuando empiece a hacer experimentos de
+## gameplay»): hoy, hacia donde apuntan las piernas (la pelvis, BodyLegs.facing_yaw).
+func upper_heading() -> float:
+	return legs.facing_yaw if legs != null else yaw()
+
+
 func _build() -> void:
 	super()
 	# Sus teclas, en lugar de las de la meca con herramientas.

@@ -58,6 +58,16 @@ const DRIVER := 2
 ## El arma del artillero (la parte que cabecea), para cuando sea funcional.
 var gun: Node3D = null
 var _root: Node3D = null
+## ── EL MÓDULO DE ARRIBA, EN SU PROPIO PIVOTE (17/11/2026, el usuario: «le daría la habilidad de girar aparte… por ahora
+## lo único que dejaría sería el groundwork bien hecho para que sea fácil de hacerlo en el futuro») ────────────────────
+## El pozo con su bloque (o su octógono), sus tableros, la silla de los brazos y la torre con el artillero cuelgan de
+## `upper`, que gira alrededor del eje vertical de la meca; sus formas de choque (las que pisan los de adentro) giran
+## con él (`_upper_colliders`), y el marco por el que se camina las sigue solo (MotionFrame copia la sombra de donde
+## estén). Quién lo hace girar y hacia dónde: CageMech (`upper_heading`), sólo en la redonda y con `upper_turns`.
+var upper: Node3D = null
+## Lo que gira, relativo a la cabina (rad).
+var upper_yaw := 0.0
+var _upper_colliders: Array = []
 
 
 ## ── LAS MEDIDAS (en el espacio de la caja: el centro, en el medio) ──────────────────────────────────────────────
@@ -147,6 +157,9 @@ func _ready() -> void:
 	_root.name = "Forma"
 	_root.position = Vector3(0.0, bottom(), 0.0)
 	add_child(_root)
+	upper = Node3D.new()
+	upper.name = "Módulo de arriba"
+	_root.add_child(upper)
 	var form := shape()
 	var tall := form.height()
 	_cube(form)
@@ -154,11 +167,11 @@ func _ready() -> void:
 	_upper(pit, tall)
 	# LOS TABLEROS DE VERDAD en las caras de la cápsula y del bloque de arriba (CageBoards; el usuario, 17/11/2026: «está
 	# bien ahora el sistema… lo pases a la meca»).
-	CageBoards.dress(_root, form)
+	CageBoards.dress(_root, form, upper)
 	_tower(form, tall, pit)
 	_back(form)
-	_chair(0, Vector3(0.0, tall, 0.05), form.arms_eye)
-	_chair(1, Vector3(0.0, tower_top(form) + tall, form.upper_back() - form.tower_deep() * 0.5 + 0.05), GUNNER_SEATED)
+	_chair(0, Vector3(0.0, tall, 0.05), form.arms_eye, upper)
+	_chair(1, Vector3(0.0, tower_top(form) + tall, form.upper_back() - form.tower_deep() * 0.5 + 0.05), GUNNER_SEATED, upper)
 	# LA DEL QUE MANEJA, la de siempre (BubbleSeat), en el piso de la cabina debajo de la cápsula (sale por su hueco de
 	# abajo), un poco detrás de los ojos, que van con el anillo de atrás.
 	var driver := BubbleSeat.new()
@@ -369,8 +382,8 @@ func _upper(pit: DeskPit, tall: float) -> void:
 	block.name = "Bloque de arriba"
 	block.mesh = pit.mesh(SHELL)
 	block.position = Vector3(0.0, tall, 0.0)
-	_root.add_child(block)
-	_mesh_solid(block.mesh, block.position)
+	upper.add_child(block)
+	_mesh_solid(block.mesh, block.position, true)
 
 
 ## ── EL ARTILLERO ─────────────────────────────────────────────────────────────────────────────────────────────────
@@ -393,15 +406,15 @@ func _tower(form: CageShape, tall: float, pit: DeskPit) -> void:
 	var tower := MeshInstance3D.new()
 	tower.name = "Torre"
 	tower.mesh = CageMesh.commit(tool, SHELL)
-	_root.add_child(tower)
-	_mesh_solid(tower.mesh)
+	upper.add_child(tower)
+	_mesh_solid(tower.mesh, Vector3.ZERO, true)
 	var at := Vector3(0.0, head, middle.y)
 	var plate := minf(minf(wide, deep) * 0.5, 0.42)
-	Clay.cylinder(_root, plate, 0.08, at + Vector3(0.0, 0.04, 0.0), RIM_COLOR)
+	Clay.cylinder(upper, plate, 0.08, at + Vector3(0.0, 0.04, 0.0), RIM_COLOR)
 	var turn := Node3D.new()
 	turn.name = "Plato del artillero"
 	turn.position = at + Vector3(0.0, 0.08, 0.0)
-	_root.add_child(turn)
+	upper.add_child(turn)
 	Clay.box(turn, Vector3(0.3, 0.08, GUN_REACH + 0.1), Vector3(0.0, 0.04, -GUN_REACH * 0.5 - 0.1), METAL)
 	# El pie del arma y la horquilla; el arma cabecea en ella.
 	var foot := Vector3(0.0, 0.08, -GUN_REACH - 0.1)
@@ -487,22 +500,41 @@ func _part(size: Vector3, at: Vector3, color: Color) -> MeshInstance3D:
 
 
 ## Una malla que pisan y tocan los de adentro (en `interior`, del que el marco copia su sombra), corrida `at` desde el
-## fondo.
-func _mesh_solid(mesh: ArrayMesh, at := Vector3.ZERO) -> void:
+## fondo; con `turns`, es del módulo de arriba y gira con él (ver `set_upper_yaw`).
+func _mesh_solid(mesh: ArrayMesh, at := Vector3.ZERO, turns := false) -> void:
 	var collider := CollisionShape3D.new()
 	collider.shape = mesh.create_trimesh_shape()
 	collider.position = at + _root.position
 	interior.add_child(collider)
+	if turns:
+		_upper_colliders.append([collider, collider.transform])
 
 
-## Una silla del puesto `index` (ver `SEAT_NAMES`), mirando al frente, con los ojos a `eye` sobre su base.
-func _chair(index: int, at: Vector3, eye: float) -> void:
+## Una silla del puesto `index` (ver `SEAT_NAMES`), mirando al frente, con los ojos a `eye` sobre su base; cuelga de
+## `parent` (el módulo de arriba, las de arriba).
+func _chair(index: int, at: Vector3, eye: float, parent: Node3D = null) -> void:
 	var chair := (load(SEAT_SCENE) as PackedScene).instantiate() as SeatInteractable
 	chair.name = "Asiento %s" % SEAT_NAMES[index]
 	chair.position = at
 	chair.eye_height = eye
-	_root.add_child(chair)
+	(parent if parent != null else _root).add_child(chair)
 	chairs.append(chair)
+
+
+## EL MÓDULO DE ARRIBA GIRADO `yaw` (rad) respecto de la cabina: lo que se ve y lo que se pisa.
+func set_upper_yaw(yaw: float) -> void:
+	upper_yaw = wrapf(yaw, -PI, PI)
+	upper.rotation.y = upper_yaw
+	var turn := Transform3D(Basis(Vector3.UP, upper_yaw), Vector3.ZERO)
+	for pair: Array in _upper_colliders:
+		if is_instance_valid(pair[0]):
+			(pair[0] as CollisionShape3D).transform = turn * (pair[1] as Transform3D)
+
+
+## EL MÓDULO DE ARRIBA MIRANDO A `world_yaw` (el giro en Y del mundo, como BalanceBody.yaw), sea cual sea el del torso.
+func set_upper_world_yaw(world_yaw: float) -> void:
+	var forward := -global_basis.z
+	set_upper_yaw(world_yaw - atan2(-forward.x, -forward.z))
 
 
 ## Un prisma de grosor `thick` en x, centrado en `x`, con el contorno convexo `profile` en (z, y).
@@ -584,5 +616,6 @@ func board() -> void:
 		SandboxPossession.of(get_tree()).release()
 	if player.is_seated and player.current_seat is SeatInteractable:
 		(player.current_seat as SeatInteractable).release_occupant_in_place()
-	var spot := Vector3(shape().pit_apothem() * 0.65, bottom() + shape().height() + 0.05, 0.1)
+	var spot := Basis(Vector3.UP, upper_yaw) * Vector3(shape().pit_apothem() * 0.65, 0.0, 0.1) \
+		+ Vector3(0.0, bottom() + shape().height() + 0.05, 0.0)
 	player.place_at(mech.global_transform * spot, mech.yaw())

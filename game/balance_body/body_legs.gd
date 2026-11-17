@@ -52,6 +52,9 @@ var _feet_yaw: Array[float] = [0.0, 0.0]
 var _swing := -1
 var _swing_from := Vector3.ZERO
 var _swing_yaw := 0.0
+## HACIA DÓNDE APUNTAN LAS PIERNAS (el giro en Y de la pelvis, en el mundo): lo lee quien quiera seguirlas (el módulo de
+## arriba de la meca jaula, ver CageMech.upper_heading).
+var facing_yaw := 0.0
 var _swing_clock := 0.0
 var _swing_time := 1.0
 var _planted := false
@@ -122,6 +125,7 @@ func place(k: BodySettings, delta: float) -> void:
 		_swing = -1
 	# LA PELVIS: cuelga de la caja, inclinada como ella, mirando al promedio de los dos pies.
 	var pelvis_yaw := lerp_angle(_feet_yaw[0], _feet_yaw[1], 0.5) if standing else yaw
+	facing_yaw = pelvis_yaw
 	var leaning := Basis(Quaternion(Vector3.UP, body.global_basis.y.normalized())) if body.tilt > 0.01 else Basis()
 	var waist := Transform3D(leaning * Basis(Vector3.UP, pelvis_yaw),
 		body.global_transform * Vector3(0.0, -body.size.y * 0.5, 0.0))

@@ -16,7 +16,10 @@ const PLAN := [
 	["redonda, a la medida del octógono", 1, 1.0, 0.0],
 	["redonda, a la medida de la cápsula", 1, 0.0, 0.0],
 	["redonda, más cuadrada", 1, 1.0, 0.5],
+	["redonda, el octógono girado 35°", 1, 1.0, 0.0],
 ]
+## La última, con el módulo de arriba girado a mano (CageCabin.set_upper_yaw): lo que se ve y lo que se pisa.
+const TURNED := deg_to_rad(35.0)
 
 var _folder := ""
 var _eye: Camera3D = null
@@ -59,6 +62,12 @@ func _ready() -> void:
 			cabin.evict(seat)
 		for label in mechs[index].find_children("*", "Label3D", true, false):
 			(label as Label3D).visible = false
+	var turned := mechs[mechs.size() - 1].cabin as CageCabin
+	turned.set_upper_yaw(TURNED)
+	var block := turned.upper.get_node_or_null("Bloque de arriba") as Node3D
+	var solid := turned._upper_colliders[0][0] as CollisionShape3D
+	print("GIRADO: el pivote %.1f° · el bloque cuelga de él: %s · su choque %.1f°" % [rad_to_deg(turned.upper.rotation.y),
+		block != null, rad_to_deg(solid.transform.basis.get_euler().y)])
 	await get_tree().create_timer(0.6).timeout
 	for index in mechs.size():
 		var mech := mechs[index]
