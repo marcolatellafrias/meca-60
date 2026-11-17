@@ -57,8 +57,8 @@ La cápsula sigue siendo la misma, pero en cada paso se le escribe la velocidad:
 ritmo parejo (`top_speed / time_to_top`), para arrancar, frenar y doblar por igual; con `time_to_top` en 0, al instante
 (`CharacterRigidBody3D._move`). No hay sprint ni estamina: manteniendo la tecla se gana la velocidad. Por arquetipo, en
 el F3: la máxima (`sprint_multiplier`, en veces la de caminar), cuánto tarda (`time_to_top`, que reemplaza a la
-aceleración) y la de caminar (`speed`), que no mueve: es donde la animación pasa de caminar a correr, así la animación
-no cambió. Los de fábrica son lo que tardaba cada uno de quieto al tope antes (gordo, musculoso y flaco alto 4,6 s,
+aceleración) y el ritmo del paso (`speed`), que no mueve: es la velocidad a la que el paso tiene su largo de caminata, la
+referencia de la animación, que sigue cambiando de forma continua con la velocidad como antes. Los de fábrica son lo que tardaba cada uno de quieto al tope antes (gordo, musculoso y flaco alto 4,6 s,
 gordo atlético 3,4, chico 2,8, viejo 1,25). Las aceleraciones guardadas en el F3 se ignoran: se vuelven a afinar con
 «tarda en llegar». Se fueron las fuerzas de aceleración y frenada, lo de atrás y de costado, la banda del sprint, la
 estamina con su barra y **el choque blando entre personajes**: ahora chocan como dos cápsulas. El guion de la fila

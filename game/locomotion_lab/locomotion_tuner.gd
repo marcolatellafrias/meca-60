@@ -46,7 +46,7 @@ const LABELS := {
 	"stride_reach": "largo del paso", "step_height": "altura del pie al pisar", "root_bounciness": "se hunde al pisar",
 	"shoulder_swing": "hombros que suben y bajan", "arm_swing": "braceo",
 	# El resto de las pestañas.
-	"speed": "velocidad de caminar (donde la animación pasa a correr)",
+	"speed": "ritmo del paso (sólo animación)",
 	"sprint_multiplier": "velocidad máxima (× caminar)", "time_to_top": "tarda en llegar a la máxima (s; 0, al instante)",
 	"strength": "fuerza (al llevar algo)", "throw_strength": "fuerza de tiro (y del empujón)",
 	"weight": "peso (kg)", "forward_stability": "estabilidad adelante", "backwards_stability": "estabilidad atrás",
@@ -72,7 +72,7 @@ const HELP := {
 	"root_bounciness": "Cuánto baja lower_spine —y con él todo lo de arriba— al pisar cada pie: de golpe a la mitad, sigue bajando un poco y vuelve antes de la mitad del paso. 1 es la de referencia, 0 nada.",
 	"shoulder_swing": "Inclina left_shoulder y right_shoulder (eje Z): suben y bajan juntos con el paso y se alternan de un lado al otro. Sólo los hombros: el braceo es otra perilla.",
 	"arm_swing": "El brazo gira en el hombro adelante y atrás, contrario a la pierna de su lado. upper_arm y lower_arm guardan el doblez del codo todo el braceo, y el codo apunta siempre para el mismo lado. Cuánto se abre del cuerpo es otra perilla («brazo que se abre del cuerpo»).",
-	"speed": "La velocidad de caminar, en la escala del arquetipo (× 10 m/s). No mueve: es donde la animación pasa de caminar a correr.",
+	"speed": "No cambia cuán rápido va: es la velocidad (× 10 m/s) a la que su paso tiene el largo de caminata. Más rápido el paso se alarga, se pisa menos tiempo y el codo se dobla; más lento, se acorta. Subirlo da pasos más cortos y seguidos a la misma velocidad; bajarlo, más largos.",
 	"time_to_top": "De quieto a la máxima, a ritmo parejo; frena igual. Manteniendo la tecla se gana la velocidad: no hay sprint ni estamina.",
 	"weight": "Cuánto cuesta moverlo: en un choque, el liviano se lleva el cambio de velocidad. Con la estabilidad es la firmeza, que divide lo que lo inclinan los golpes y la inercia.",
 	"landing_tolerance": "El golpe vertical al aterrizar que lo tumba. 9 es caer de unos 4 m; por debajo, el rebote de siempre.",
