@@ -57,9 +57,9 @@ func keys() -> Array[SandboxKey]:
 					var brain := brawler.get_node_or_null("Cabeza") as BrawlerBrain
 					if brain != null:
 						brain.awake = on),
-		SandboxKey.cycle(KEY_L, SandboxKey.Weight.MAIN, "los ataques", BrawlerBrain.MOVES_NAMES,
-			func() -> int: return int(BrawlerBrain.moves),
-			func(_parcel: SandboxParcel, index: int) -> void: BrawlerBrain.moves = index as BrawlerBrain.Moves),
+		SandboxKey.cycle(KEY_L, SandboxKey.Weight.MAIN, "los poderes", BrawlerBrain.move_names(),
+			func() -> int: return BrawlerBrain.moves + 1,
+			func(_parcel: SandboxParcel, index: int) -> void: BrawlerBrain.moves = index - 1),
 		SandboxKey.toggle(KEY_H, SandboxKey.Weight.NORMAL, "el horno abierto", func() -> bool: return _all(func(b: Brawler) -> bool: return b.furnace),
 			func(_parcel: SandboxParcel, on: bool) -> void: _each(func(b: Brawler) -> void: b.furnace = on)),
 		SandboxKey.toggle(KEY_P, SandboxKey.Weight.NORMAL, "con ira", func() -> bool: return _all(func(b: Brawler) -> bool: return b.rage),
@@ -130,6 +130,11 @@ static func swap_mech(brain: BrawlerBrain) -> void:
 	brain.target = mech
 	for bars: FightBars in root.find_children("*", "FightBars", false, false):
 		bars.mech = mech
+
+
+## Los Luchadores que hay (los paneles los avisan).
+static func brawlers() -> Array[Brawler]:
+	return _brawlers()
 
 
 static func _brawlers() -> Array[Brawler]:

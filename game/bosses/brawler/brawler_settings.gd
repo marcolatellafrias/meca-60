@@ -41,113 +41,18 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 @export_range(1.0, 3.0, 0.05) var rage_speed := 1.35
 @export_range(0.0, 180.0, 1.0) var rage_calm := 40.0
 @export_range(1.0, 120.0, 1.0) var rage_last := 18.0
-## Con ira: qué chance tiene de encadenar otro ataque al terminar uno (0 a 1), y cuánto se abren las dos ondas de más
-## del golpe al piso (°).
+## Con ira: qué chance tiene de encadenar otro ataque al terminar uno (0 a 1). Lo demás de la ira, en cada poder.
 @export_range(0.0, 1.0, 0.05) var rage_chain := 0.6
-@export_range(0.0, 60.0, 1.0) var rage_fan := 28.0
 
-@export_group("Embestida")
-## LA EMBESTIDA (ver BrawlerBrain): el aviso (s: frena, se da vuelta hacia vos y abre el horno: la ventana), la velocidad
-## (m/s) y cuánto tarda en llegar a ella (s), cuánto dura como mucho (s), cuánto corrige hacia vos (°/s: poco) y, si se
-## estrella contra el borde de la arena, cuánto queda aturdido (s, con el horno abierto). Si te alcanza, cuánta vida te
-## saca y CUÁNTO TE TIRA (m: te derriba; ver HitReaction).
-## AJUSTADO CONTRA LA MECA CINEMÁTICA (15/11/2026, tests/brawler_dodge_check): 5 s cruzan la arena (con 3 no llegaba
-## desde 110 m); corrigiendo 6°/s, caminar de costado no alcanza, pero dos dashes seguidos cuando le faltan 24–32 m sí
-## (con 12°/s no la esquivaba nada).
-## MÁS RÁPIDA (15/11/2026, el usuario: «la embestida es lentísima, hacela mucho más rápida»): de 26 a 55 m/s, llega en
-## 0,3 s y dura 3 s (cruza la arena igual).
-@export_range(0.2, 4.0, 0.05) var charge_windup := 1.4
-@export_range(5.0, 120.0, 0.5) var charge_speed := 55.0
-@export_range(0.0, 3.0, 0.05) var charge_up_time := 0.3
-@export_range(0.5, 8.0, 0.1) var charge_time := 3.0
-@export_range(0.0, 60.0, 1.0) var charge_homing := 6.0
-@export_range(0.2, 8.0, 0.1) var stun_time := 2.5
-@export_range(0.0, 100.0, 1.0) var charge_damage := 25.0
-@export_range(0.0, 60.0, 0.5) var charge_push := 22.0
-
-@export_group("Golpe al piso")
-## EL GOLPE DOBLE AL PISO (ver BrawlerBrain, BrawlerWave): cuánto tiene los brazos arriba (s: el aviso, con la franja en
-## el piso que sigue a la cintura), cuánto se queda después (s), y la onda: a qué velocidad corre (m/s), hasta dónde
-## (m) y qué ancho tiene (m). Si te alcanza apoyada (saltando, no), cuánta vida te saca y cuánto te tira (m: te derriba, la onda o los puños; a la
-## meca física). La onda, de 45 a 60 m/s (el usuario: «la piedra del suelo también un poco más rápida»).
-@export_range(0.3, 4.0, 0.05) var slam_windup := 1.3
-@export_range(0.2, 4.0, 0.05) var slam_recover := 1.4
-@export_range(5.0, 120.0, 1.0) var wave_speed := 60.0
-@export_range(20.0, 250.0, 5.0) var wave_reach := 140.0
-@export_range(2.0, 40.0, 0.5) var wave_width := 14.0
-@export_range(0.0, 100.0, 1.0) var wave_damage := 20.0
-@export_range(0.0, 40.0, 0.5) var wave_push := 8.0
-
-@export_group("Arrancar el piso")
-## ARRANCAR EL PISO Y TIRARLO (ver BrawlerBrain, BrawlerRock): cuánto tarda en meter las manos y arrancarlo (s), cuánto
-## la tiene arriba (s: el aviso, con el círculo rojo que te sigue), cuánto vuela (s: de lejos va más rápido, siempre
-## tarda eso), cuánto sube el arco (m), el radio del golpe (m), cuánto queda en el piso si no le pegó a nadie (s) y cuánto
-## se queda después de tirarla (s). Si te alcanza, cuánta vida te saca y cuánto te tira (m: te derriba).
-## MEDIDO CONTRA LA MECA CINEMÁTICA (15/11/2026, tests/brawler_dodge_check --solo-piedra): con radio 9 y 1,8 s de vuelo,
-## quieta le cae encima y caminando de costado (desde el aviso o desde el tiro) o con el dash, no. Es al filo: con 1,3 s
-## de vuelo, caminando ya no llega (sólo el dash).
-@export_range(0.2, 4.0, 0.05) var rip_time := 1.0
-@export_range(0.2, 4.0, 0.05) var lift_time := 1.1
-@export_range(0.3, 4.0, 0.05) var rock_flight := 1.8
-@export_range(0.0, 80.0, 1.0) var rock_arc := 35.0
-@export_range(3.0, 25.0, 0.5) var rock_radius := 12.0
-@export_range(0.0, 30.0, 0.5) var rock_stay := 8.0
-@export_range(0.2, 4.0, 0.05) var throw_recover := 1.2
-@export_range(0.0, 100.0, 1.0) var rock_damage := 30.0
-@export_range(0.0, 60.0, 0.5) var rock_push := 10.0
-
-@export_group("Trompo")
-## EL TROMPO (ver BrawlerBrain): abre los brazos y empieza a girar (s: el aviso), gira tanto tiempo (s) a tantos °/s
-## andando hacia vos con las orugas (a tantos m/s, con su arranque corto: el de la embestida; dobla con las orugas), y
-## después queda MAREADO (s, con el horno abierto: la ventana). Si te tocan los brazos (su zona de golpe, del hombro al
-## puño), cuánta vida te saca y cuánto te empuja de costado (m, parada). MÁS RÁPIDO Y QUE ANDE (15/11/2026, el usuario:
-## «se mueve muy lento… no se mueve casi nada en el mapa. Y que gire más rápido también»): de 540 a 1080°/s y de 12
-## a 24 m/s, 3,5 s.
-@export_range(0.2, 4.0, 0.05) var spin_windup := 1.0
-@export_range(0.5, 8.0, 0.1) var spin_time := 3.5
-@export_range(90.0, 1440.0, 10.0) var spin_speed := 1080.0
-@export_range(1.0, 40.0, 0.5) var spin_move := 20.0
-## Cuánto corrige hacia vos girando (°/s: poco, como la embestida; si no, no se esquiva).
-@export_range(0.0, 90.0, 1.0) var spin_homing := 0.0
-@export_range(0.2, 6.0, 0.1) var spin_dizzy := 2.0
-@export_range(0.0, 100.0, 1.0) var spin_damage := 20.0
-@export_range(0.0, 60.0, 0.5) var spin_push := 16.0
-
-@export_group("Agarre")
-## EL AGARRE Y REVOLEO (ver BrawlerBrain, BrawlerHook): UN SKILLSHOT. El aviso (s: la franja sigue a la cintura) y, al
-## final, cuánto se queda quieta antes del tiro (s: ya apuntó, corréte); la mano: a qué velocidad sale (m/s), hasta dónde
-## (m) y qué ancho tiene la franja (m). Si te agarra: cuánto te revolea (s, a tantos °/s) y te tira lejos (m), con su
-## arco (m de alto, s de vuelo); al caer, cuánta vida te saca. Después se queda (s).
-@export_range(0.2, 4.0, 0.05) var hook_windup := 1.0
-@export_range(0.0, 2.0, 0.05) var hook_lock := 0.6
-@export_range(20.0, 200.0, 5.0) var hook_speed := 90.0
-@export_range(20.0, 150.0, 5.0) var hook_reach := 85.0
-@export_range(2.0, 20.0, 0.5) var hook_width := 6.0
-@export_range(0.2, 4.0, 0.05) var swing_time := 1.2
-@export_range(90.0, 1080.0, 10.0) var swing_speed := 400.0
-@export_range(10.0, 150.0, 5.0) var fling_distance := 70.0
-@export_range(0.0, 60.0, 1.0) var fling_arc := 25.0
-@export_range(0.3, 4.0, 0.05) var fling_time := 1.3
-@export_range(0.0, 100.0, 1.0) var fling_damage := 35.0
-@export_range(0.2, 4.0, 0.05) var hook_recover := 1.0
-
-@export_group("Lanzallamas")
-## EL LANZALLAMAS DEL HORNO (ver BrawlerBrain, BrawlerFlame), SÓLO CON IRA (el usuario eligió «el lanzallamas» como lo
-## propio de la ira, 15/11/2026). EN BOCANADAS QUE APUNTAN (sin dash intocable no se cruza un barrido; el usuario:
-## «diseñar todo para un dash»): abre el horno (s), y cada bocanada te sigue con la cintura (s, el cono en el piso),
-## se queda quieta y titila (s: apuntó, corréte) y quema en esa dirección (s). Cuántas bocanadas, hasta dónde llega (m)
-## y la mitad de su ancho (°). Si te toca, cuánta vida te saca y cuánto te empuja (m). Después se queda con el horno
-## abierto (s: la ventana).
-@export_range(0.2, 4.0, 0.05) var flame_windup := 0.8
-@export_range(0.2, 3.0, 0.05) var flame_aim := 0.9
-@export_range(0.0, 2.0, 0.05) var flame_lock := 0.45
-@export_range(0.1, 3.0, 0.05) var flame_burn := 0.8
-@export_range(1, 6, 1) var flame_bursts := 3
-@export_range(10.0, 120.0, 1.0) var flame_reach := 60.0
-@export_range(2.0, 45.0, 0.5) var flame_angle := 14.0
-@export_range(0.0, 100.0, 1.0) var flame_damage := 25.0
-@export_range(0.0, 40.0, 0.5) var flame_push := 12.0
-@export_range(0.2, 6.0, 0.1) var flame_recover := 1.8
+@export_group("Poderes")
+## SUS PODERES (BossPower, 17/11/2026): cada uno con su tilde y sus variantes, una pestaña por poder en el panel. El
+## orden es el de BrawlerBrain.Act.
+@export var charge: ChargePower = ChargePower.new()
+@export var slam: SlamPower = SlamPower.new()
+@export var throw: ThrowPower = ThrowPower.new()
+@export var spin: SpinPower = SpinPower.new()
+@export var hook: HookPower = HookPower.new()
+@export var flame: FlamePower = FlamePower.new()
 
 @export_group("Golpes")
 ## LO QUE LE SACA UNA PIÑA DE LA MECA: en el cuerpo, y en el horno abierto (el punto débil).
@@ -164,3 +69,8 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 ## EL RADIO DE LA ARENA (m; BossArena): el círculo del que no sale. El anillo del piso lo sigue al guardar; los edificios
 ## de afuera se acomodan regenerando la parcela (R).
 @export_range(60.0, 220.0, 5.0) var arena_radius := 150.0
+
+
+## Sus poderes, en el orden de BrawlerBrain.Act.
+func powers() -> Array[BossPower]:
+	return [charge, slam, throw, spin, hook, flame]

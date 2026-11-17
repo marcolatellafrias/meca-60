@@ -51,7 +51,7 @@ func _ready() -> void:
 
 ## A cuánto de su medio queda la meca para que el taladro llegue (m): el frente de su caja, más el brazo.
 func _boss_reach() -> float:
-	return Brawler.BOX.z * 0.5 + 9.0
+	return Brawler.box().z * 0.5 + 9.0
 
 
 func _place(gap: float) -> void:

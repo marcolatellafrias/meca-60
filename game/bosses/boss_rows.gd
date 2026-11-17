@@ -10,7 +10,9 @@ static func rows() -> Array[SandboxRow]:
 		# EL LUCHADOR DE ORUGAS (Brawler): el jefe humanoide, de a un paso.
 		SandboxRow.new(SandboxSuper.Id.BOSSES, "Luchador de orugas") \
 			.add(SandboxRow.Build.NEAR, [BrawlerArchetype.new()]) \
-			.panel(KEY_F1, "el luchador: las orugas, la cintura, el horno, la ira y la arena", BrawlerPanel.new()),
+			.panel(KEY_F1, "el luchador: el cuerpo, la ira y sus poderes (se tildan, con sus variantes)",
+				BrawlerPanel.new()) \
+			.panel(KEY_F2, "todos los jefes: la escala", BossSettingsPanel.new()),
 		# LAS MAQUETAS (BossMaquettes): jefes de arcilla, quietos, con sus puntos débiles, sus fases y sus ataques de área.
 		SandboxRow.new(SandboxSuper.Id.BOSSES, "Maquetas de jefes") \
 			.add(SandboxRow.Build.NEAR, BossRows.maquettes()),

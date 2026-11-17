@@ -11,12 +11,22 @@ extends RefCounted
 ##   · Los paneles que las muestran son KnobsPanel: borrador, «Guardar» y «Volver a lo guardado».
 
 
-## Copia de `from` a `into` todas las perillas (las variables del script) menos las de `skip`.
+## Copia de `from` a `into` todas las perillas (las variables del script) menos las de `skip`. UNA PERILLA QUE ES UN
+## RECURSO PROPIO (sin archivo, del mismo script: por ejemplo cada poder de un jefe, ver BossPower) se copia ADENTRO,
+## no se comparte: así el borrador de un panel no toca lo de verdad hasta guardar (módulo Jefes, 17/11/2026).
 static func copy(into: Resource, from: Resource, skip: Array[String] = []) -> void:
 	for property in into.get_property_list():
 		var name := str(property["name"])
-		if int(property["usage"]) & PROPERTY_USAGE_SCRIPT_VARIABLE and not skip.has(name):
-			into.set(name, from.get(name))
+		if not (int(property["usage"]) & PROPERTY_USAGE_SCRIPT_VARIABLE) or skip.has(name):
+			continue
+		var theirs: Variant = from.get(name)
+		var mine: Variant = into.get(name)
+		var own: bool = mine is Resource and theirs is Resource and mine != theirs \
+			and (mine as Resource).resource_path.is_empty() and (mine as Resource).get_script() != null
+		if own and (mine as Resource).get_script() == (theirs as Resource).get_script():
+			KnobsFile.copy(mine, theirs)
+		else:
+			into.set(name, theirs)
 
 
 ## LO GUARDADO EN `path`, en `fresh` (uno nuevo, con los valores del código): sin archivo, queda como está.

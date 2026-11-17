@@ -1,9 +1,10 @@
 class_name BrawlerPanel
 extends KnobsPanel
 
-## EL PANEL DEL LUCHADOR (F1 en su fila): sus perillas (BrawlerSettings), una pestaña por grupo. Como todos los paneles
-## de perillas (KnobsPanel): se mueve un borrador, y «Guardar» lo guarda y lo aplica. Lo lee en cada paso: nada que
-## rearmar.
+## EL PANEL DEL LUCHADOR (F1 en su fila): sus perillas (BrawlerSettings), una pestaña por grupo del cuerpo y UNA POR
+## PODER (BossPower: su tilde, a qué distancia lo usa, si es sólo con ira y sus pocas variantes; el usuario: «tildo los
+## poderes… y después cada poder le puedo cambiar unas variantes»). Como todos los paneles de perillas (KnobsPanel): se
+## mueve un borrador, y «Guardar» lo guarda y lo aplica (lo que pelea toma las perillas nuevas).
 
 const PANEL_WIDTH := 400.0
 const LABELS := {
@@ -15,35 +16,18 @@ const LABELS := {
 	"door_time": "la puerta tarda (s)", "door_angle": "se abre hasta (°)",
 	"rage_time": "cambia en (s)", "rage_speed": "más rápido (veces)",
 	"rage_calm": "tranquilo (s; 0, sólo con la tecla)", "rage_last": "con ira (s)",
-	"rage_chain": "encadena otro ataque (chance)", "rage_fan": "las ondas de más, abiertas (°)",
-	"charge_windup": "aviso: abre el horno (s)", "charge_speed": "velocidad (m/s)",
-	"charge_up_time": "llega a ella en (s)", "charge_time": "dura como mucho (s)",
-	"charge_homing": "corrige hacia vos (°/s)", "stun_time": "estrellado, aturdido (s)",
-	"charge_damage": "te saca (vida)", "charge_push": "te tira (m)",
+	"rage_chain": "encadena otro ataque (chance)",
 	"punch_damage": "una piña en el cuerpo le saca", "furnace_damage": "una piña en el horno abierto le saca",
 	"energy_damage": "tiros y taladro: vida por 100.000 kg·m/s", "energy_cap": "lo más por golpe",
 	"arena_radius": "radio de la arena (m; los edificios, con R)",
-	"slam_windup": "aviso: los brazos arriba (s)", "slam_recover": "se queda después (s)",
-	"wave_speed": "la onda corre a (m/s)", "wave_reach": "llega hasta (m)", "wave_width": "ancho (m)",
-	"wave_damage": "te saca (vida)", "wave_push": "te tira (m)",
-	"rip_time": "mete las manos y lo arranca en (s)", "lift_time": "aviso: la tiene arriba (s)",
-	"rock_flight": "vuela (s)", "rock_arc": "el arco sube (m)", "rock_radius": "radio del golpe (m)",
-	"rock_stay": "queda en el piso (s)", "throw_recover": "se queda después (s)",
-	"rock_damage": "te saca (vida)", "rock_push": "te tira (m)",
-	"spin_windup": "aviso: abre los brazos (s)", "spin_time": "gira (s)", "spin_speed": "a (°/s)",
-	"spin_move": "las orugas, a (m/s)", "spin_dizzy": "mareado, horno abierto (s)", "spin_homing": "corrige hacia vos (°/s)",
-	"spin_damage": "te saca (vida)", "spin_push": "te empuja (m)",
-	"hook_windup": "aviso: la franja (s)", "hook_lock": "ya apuntó, quieta (s)", "hook_speed": "la mano sale a (m/s)",
-	"hook_reach": "llega hasta (m)", "hook_width": "ancho (m)", "swing_time": "te revolea (s)",
-	"swing_speed": "a (°/s)", "fling_distance": "te tira a (m)", "fling_arc": "el arco sube (m)",
-	"flame_windup": "abre el horno (s)", "flame_aim": "cada bocanada te sigue (s)", "flame_lock": "apuntó, quieta (s)",
-	"flame_burn": "quema (s)", "flame_bursts": "bocanadas",
-	"flame_reach": "llega hasta (m)", "flame_angle": "medio ancho (°)", "flame_damage": "te saca (vida)",
-	"flame_push": "te empuja (m)", "flame_recover": "después, horno abierto (s)",
-	"fling_time": "vuelo (s)", "fling_damage": "al caer te saca (vida)", "hook_recover": "se queda después (s)",
 }
-const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Ira", "Embestida", "Golpe al piso", "Arrancar el piso",
-	"Trompo", "Agarre", "Lanzallamas", "Golpes", "Arena"]
+## Lo de siempre de cada poder (ver BossPower).
+const POWER_LABELS := {"on": "LO USA", "reach_from": "desde (m)", "reach_to": "hasta (m)",
+	"rage_only": "sólo con ira"}
+## Las pestañas del cuerpo; después, una por poder.
+const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Ira", "Golpes", "Arena"]
+## Las perillas de los poderes, en BrawlerSettings (en el orden de BrawlerBrain.Act).
+const POWERS: Array[String] = ["charge", "slam", "throw", "spin", "hook", "flame"]
 
 
 func setup_panel() -> void:
@@ -63,13 +47,30 @@ func saved_path() -> String:
 	return BrawlerSettings.SAVED
 
 
+## Lo que pelea toma las perillas nuevas (sus copias de cada poder).
 func applied() -> void:
-	pass
+	for brawler in BrawlerArchetype.brawlers():
+		var brain := brawler.get_node_or_null("Cabeza") as BrawlerBrain
+		if brain != null:
+			brain.refresh_powers()
 
 
+## UNA PESTAÑA POR GRUPO DEL CUERPO, Y UNA POR PODER (su tilde, a qué distancia, si es sólo con ira y sus variantes; si
+## al Luchador le falta lo que pide, lo dice).
 func sections() -> Array[Dictionary]:
 	var all: Array[Dictionary] = []
 	for tab in TABS:
 		all.append({"title": tab.to_upper(), "tab": tab, "target": draft(), "labels": LABELS,
 			"include": PackedStringArray([tab]), "headers": false, "defaults": BrawlerSettings.new()})
+	var fresh_set := BrawlerSettings.new()
+	for field in POWERS:
+		var power := draft().get(field) as BossPower
+		var labels := POWER_LABELS.duplicate()
+		labels.merge(power.labels())
+		var missing := Brawler.lacks(power.needs())
+		var title := power.title().to_upper()
+		if not missing.is_empty():
+			title += " (le falta: %s)" % ", ".join(missing)
+		all.append({"title": title, "tab": power.title().capitalize(), "target": power, "labels": labels,
+			"headers": false, "defaults": fresh_set.get(field)})
 	return all

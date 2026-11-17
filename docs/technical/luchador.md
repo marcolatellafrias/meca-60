@@ -206,6 +206,12 @@ escala del jefe e igualarla un poco más a la meca».
   cuando cae, chispas en los golpes, y fuego en el lanzallamas. El video: `brawler_charge_movie` (con `-- --corto`,
   sólo la piedra y el lanzallamas).
 
+## Paso 9 (17/11/2026): los ataques pasan a ser poderes
+Los seis ataques salieron de la cabeza y son poderes (`game/bosses/powers/`, ver [[poderes-jefes]]): se tildan en el
+F1, cada uno con su pestaña y sus pocas variantes (lo que antes era «con ira» quedó como variante: cuántas ondas,
+cuántas piedras, si rebota). La escala es de todos los jefes (`BossSettings.scale`, en el F2), en vivo. La cabeza
+quedó con lo común. Las pruebas, iguales.
+
 ## Lo que sigue
 Los poderes, de a uno (propuestos, sin confirmar): el gancho al cielo y la guardia con contraataque; para la ira, si
 hace falta más, el salto que aplasta y el humo. Para los golpes:

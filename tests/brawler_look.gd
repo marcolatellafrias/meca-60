@@ -127,7 +127,7 @@ func _ready() -> void:
 	_boss.move = Vector2(0, 1)
 	await _wait(9.0)
 	print("contra el borde: quedó a %.1f m del medio (el borde, a %.0f; su caja mide %.0f de ancho)" % [
-		arena.distance(_boss.global_position), arena.radius, Brawler.BOX.x])
+		arena.distance(_boss.global_position), arena.radius, Brawler.box().x])
 	await _shot("contra el borde de la arena", _boss.global_position + Vector3(-60, 40, 60), _boss.global_position + Vector3(0, 12, 0))
 	get_tree().quit()
 

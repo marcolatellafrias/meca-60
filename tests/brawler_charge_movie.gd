@@ -79,28 +79,28 @@ func _ready() -> void:
 	mech.scripted = true
 	# --corto: sólo la piedra y el lanzallamas (con ira), para mirarlos.
 	if OS.get_cmdline_user_args().has("--corto"):
-		BrawlerBrain.moves = BrawlerBrain.Moves.THROW
+		BrawlerBrain.moves = int(BrawlerBrain.Act.THROW) - 1
 		await _run(mech, 14.0)
 		_boss.rage = true
-		BrawlerBrain.moves = BrawlerBrain.Moves.FLAME
+		BrawlerBrain.moves = int(BrawlerBrain.Act.FLAME) - 1
 		await _run(mech, 16.0)
 		get_tree().quit()
 		return
-	BrawlerBrain.moves = BrawlerBrain.Moves.HOOK
+	BrawlerBrain.moves = int(BrawlerBrain.Act.HOOK) - 1
 	await _run(mech, HOOKS)
-	BrawlerBrain.moves = BrawlerBrain.Moves.SPIN
+	BrawlerBrain.moves = int(BrawlerBrain.Act.SPIN) - 1
 	await _run(mech, SPINS)
-	BrawlerBrain.moves = BrawlerBrain.Moves.ALL
+	BrawlerBrain.moves = -1
 	await _run(mech, FIGHT)
 	_boss.rage = true
-	BossSounds.play(BossSounds.Kind.RAGE_ON, _boss.global_position + Vector3.UP * Brawler.BOX.y, _boss.get_parent())
-	BrawlerBrain.moves = BrawlerBrain.Moves.FLAME
+	BossSounds.play(BossSounds.Kind.RAGE_ON, _boss.global_position + Vector3.UP * Brawler.box().y, _boss.get_parent())
+	BrawlerBrain.moves = int(BrawlerBrain.Act.FLAME) - 1
 	await _run(mech, FLAMES)
-	BrawlerBrain.moves = BrawlerBrain.Moves.ALL
+	BrawlerBrain.moves = -1
 	await _run(mech, RAGE)
 	_boss.rage = false
 	# CONTRA EL BORDE.
-	var crashes := _brain.crashes
+	var crashes := (_brain.power(BrawlerBrain.Act.CHARGE) as ChargePower).crashes
 	var arena := _boss.arena
 	_brain.awake = false
 	mech.put(Transform3D(Basis(), Vector3(0.0, Mech.standing_height(), -(arena.radius - 8.0))))
@@ -110,7 +110,7 @@ func _ready() -> void:
 	await _run(mech, 0.3)
 	_brain.awake = true
 	var clock := 0.0
-	while _brain.crashes == crashes and clock < 20.0:
+	while (_brain.power(BrawlerBrain.Act.CHARGE) as ChargePower).crashes == crashes and clock < 20.0:
 		clock += await _tick(mech)
 	await _run(mech, 3.5)
 	get_tree().quit()
@@ -171,38 +171,38 @@ func _dodge(mech: Mech, ground: Vector3, to_boss: Vector3) -> void:
 		return
 	var attack := _attacks
 	# CADA ATAQUE, CON UN DASH (el usuario: «diseñar todo para un dash»), de costado, en su momento.
-	var step_changed := _brain._step != _step_was or _brain.act != _act_was_step
-	_step_was = _brain._step
+	var step_changed := _brain.step != _step_was or _brain.act != _act_was_step
+	_step_was = _brain.step
 	_act_was_step = _brain.act
 	# La piedra: un dash cuando la tira.
-	if not _brain._rocks.is_empty() and _dodged != attack:
+	if not (_brain.power(BrawlerBrain.Act.THROW) as ThrowPower).rocks.is_empty() and _dodged != attack:
 		_dodged = attack
 		mech.move = Vector2(1.0, 0.0)
 		mech.dash = true
 	# El trompo: un dash de costado al empezar a girar, y seguir caminando de costado.
-	if _brain.act == BrawlerBrain.Act.SPIN and _brain._step == 1:
+	if _brain.act == BrawlerBrain.Act.SPIN and _brain.step == 1:
 		mech.move = Vector2(1.0, 0.0)
 		if _dodged != attack:
 			_dodged = attack
 			mech.dash = true
 	# El lanzallamas: un dash de costado cuando cada bocanada apunta (se queda quieta).
-	if _brain.act == BrawlerBrain.Act.FLAME and _brain._step == 2 and step_changed:
+	if _brain.act == BrawlerBrain.Act.FLAME and _brain.step == 2 and step_changed:
 		_flame_side = -_flame_side
 		mech.move = Vector2(_flame_side, 0.0)
 		mech.dash = true
 	# El agarre: de costado desde que apuntó (de cerca, con el dash).
-	if _brain.act == BrawlerBrain.Act.HOOK and (_brain._step == 1 or _brain.stage.ends_with("apuntó!")):
+	if _brain.act == BrawlerBrain.Act.HOOK and (_brain.step == 1 or _brain.stage.ends_with("apuntó!")):
 		mech.move = Vector2(1.0, 0.0)
 		if _dodged != attack and to_boss.length() < 55.0:
 			_dodged = attack
 			mech.dash = true
 	if _dodged == attack:
 		return
-	if _brain.stage.contains("¡arranca!") and to_boss.length() - Brawler.BOX.z * 0.5 < 30.0:
+	if _brain.stage.contains("¡arranca!") and to_boss.length() - Brawler.box().z * 0.5 < 30.0:
 		_dodged = attack
 		mech.move = Vector2(1.0, 0.0)
 		mech.dash = true
-	for wave in _brain._waves:
+	for wave in (_brain.power(BrawlerBrain.Act.SLAM) as SlamPower).waves:
 		if is_instance_valid(wave) and wave.launched and wave.way.dot(ground - wave.origin) - wave.front < 24.0:
 			_dodged = attack
 			mech.jump = true

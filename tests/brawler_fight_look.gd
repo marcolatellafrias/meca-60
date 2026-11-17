@@ -74,9 +74,9 @@ func _ready() -> void:
 				await _shot(last, _boss.global_position + Vector3(70, 45, 50), (_boss.global_position + _ground(mech)) * 0.5
 					+ Vector3.UP * 10)
 	print("en %.0f s: embistió %d, te alcanzó %d, se estrelló %d · la meca quedó con %.0f de vida" % [FIGHT,
-		_brain.charges, _brain.landed, _brain.crashes, Health.of(mech).left])
+		_brain.power(BrawlerBrain.Act.CHARGE).uses, _brain.power(BrawlerBrain.Act.CHARGE).hits, (_brain.power(BrawlerBrain.Act.CHARGE) as ChargePower).crashes, Health.of(mech).left])
 	# CONTRA EL BORDE: la meca cerca del borde, el jefe de frente a ella; embiste y se estrella.
-	var crashes := _brain.crashes
+	var crashes := (_brain.power(BrawlerBrain.Act.CHARGE) as ChargePower).crashes
 	var arena := _boss.arena
 	_brain.awake = false
 	await _wait(0.2)
@@ -85,12 +85,12 @@ func _ready() -> void:
 	Health.of(mech).left = BrawlerArchetype.MECH_HEALTH
 	_brain.awake = true
 	clock = 0.0
-	while _brain.crashes == crashes and clock < 20.0:
+	while (_brain.power(BrawlerBrain.Act.CHARGE) as ChargePower).crashes == crashes and clock < 20.0:
 		await get_tree().physics_frame
 		clock += 1.0 / Engine.physics_ticks_per_second
 		_face(mech)
 	await _wait(0.4)
-	print("contra el borde: se estrelló %s, a %.1f m del medio; aturdido: «%s»" % ["sí" if _brain.crashes > crashes else "no",
+	print("contra el borde: se estrelló %s, a %.1f m del medio; aturdido: «%s»" % ["sí" if (_brain.power(BrawlerBrain.Act.CHARGE) as ChargePower).crashes > crashes else "no",
 		arena.distance(_boss.global_position), _brain.stage])
 	await _shot("se estrelló contra el borde: aturdido, con el horno abierto", _boss.global_position + Vector3(60, 35, 40),
 		_boss.global_position + Vector3.UP * 12)

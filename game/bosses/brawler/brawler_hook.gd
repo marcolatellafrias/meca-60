@@ -10,7 +10,7 @@ enum State { AIM, OUT, BACK }
 
 ## El puño (m) y a qué altura va la cadena (m sobre el piso).
 const FIST := 6.0
-const HEIGHT := 12.0 * Brawler.SCALE
+## (La altura de la cadena sigue la escala de los jefes: `height()`.)
 const COLOR := Color(0.62, 0.2, 0.18)
 
 var state := State.AIM
@@ -85,6 +85,11 @@ func touches(point: Vector3, half: float) -> bool:
 	return absf(ahead - front) < FIST * 0.5 + half and aside < _width * 0.5 + half
 
 
+## A qué altura va la cadena (m sobre el piso): la del pecho del Luchador, a la escala de los jefes.
+static func height() -> float:
+	return 12.0 * Brawler.scale()
+
+
 ## Si ya volvió (y se va).
 func home() -> bool:
 	return state == State.BACK and front <= 0.0
@@ -106,6 +111,6 @@ func _physics_process(delta: float) -> void:
 
 
 func _place() -> void:
-	_fist.position = Vector3(0.0, HEIGHT, -front)
-	_chain.position = Vector3(0.0, HEIGHT, -front * 0.5)
+	_fist.position = Vector3(0.0, height(), -front)
+	_chain.position = Vector3(0.0, height(), -front * 0.5)
 	_chain.scale = Vector3(1.0, 1.0, maxf(front, 0.01))

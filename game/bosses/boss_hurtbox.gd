@@ -19,9 +19,17 @@ func _init() -> void:
 	collision_mask = 0
 
 
-## LA ARMA con una caja de `size` (m) en `center` (local).
+## LA ARMA (o la rearma: otra escala) con una caja de `size` (m) en `center` (local).
 func shape(size: Vector3, center: Vector3) -> void:
-	Clay.shape_box(self, size, center)
+	if _holder == null:
+		_holder = CollisionShape3D.new()
+		_holder.shape = BoxShape3D.new()
+		add_child(_holder)
+	(_holder.shape as BoxShape3D).size = size
+	_holder.position = center
+
+
+var _holder: CollisionShape3D = null
 
 
 func take_hit(strength: float, at: Vector3, source: String) -> void:

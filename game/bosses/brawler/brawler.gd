@@ -18,13 +18,15 @@ extends CharacterBody3D
 ##     cabeza, y el cuerpo va hacia ellas en su tiempo (POSES).
 ##   · LA IRA (`rage`): otro color, el visor rojo, humo negro por las chimeneas, y anda y gira más rápido.
 
-## SU ESCALA: el dibujo (BrawlerBody) está en las medidas de la maqueta, y el Luchador entero va a esta escala (el
-## dibujo, su caja, su cuerpo para las mecas y el alcance de sus golpes, que salen de sus puños). 0,6 (15/11/2026, el
-## usuario: «bajar un poco la escala del jefe e igualarla un poco más a la meca, así es más fácil de esquivarla y los
-## dashes no se sienten tan inútiles»): de 30 m de alto a 18 (la meca de tres, 14).
-const SCALE := 0.6
-## Lo que mide su caja contra lo fijo (m): el ancho de las orugas, el alto y el largo.
-const BOX := Vector3(24.0, 30.0, 20.0) * SCALE
+## SU ESCALA, LA DE TODOS LOS JEFES (BossSettings.scale, una sola perilla, en vivo): el dibujo (BrawlerBody) está en las
+## medidas de la maqueta, y el Luchador entero va a esa escala (el dibujo, su caja, su cuerpo para las mecas y el
+## alcance de lo que sale de él: la embestida, los puños). *Del 15/11/2026: 0,6 (el usuario: «bajar un poco la escala
+## del jefe e igualarla un poco más a la meca»).*
+## LO QUE TIENE (sus piezas, para los poderes: ver BossPower.needs): orugas que embisten, dos brazos con mano y el
+## horno en el pecho.
+const PARTS: Array[String] = ["embestir", "brazos", "mano", "horno"]
+## Lo que mide su caja contra lo fijo, en la maqueta (m): el ancho de las orugas, el alto y el largo.
+const BOX_BASE := Vector3(24.0, 30.0, 20.0)
 ## Cuánto cae (m/s²) si no hay piso.
 const GRAVITY := 30.0
 
@@ -63,8 +65,10 @@ var move := Vector2.ZERO
 var aim_yaw := 0.0
 var furnace := false
 var rage := false
-## EMBISTIENDO: las orugas van a la velocidad de la embestida (BrawlerSettings), con su rampa corta.
-var charging := false
+## CORRIENDO (la embestida, el trompo: lo pide el poder con `rush`): las orugas van a esta velocidad (m/s; 0, la de
+## siempre), con esta rampa (s).
+var rush_speed := 0.0
+var rush_up := 0.3
 var pose := Pose.REST
 ## EL TROMPO: la cintura gira sola a tantos °/s (positivo, a la izquierda), sin mirar a `aim_yaw`; 0, como siempre.
 var spin := 0.0
@@ -93,6 +97,9 @@ var _turn := MoveRamp.new()
 var _box := BoxShape3D.new()
 var _solid: AnimatableBody3D = null
 var _torso_shape: CollisionShape3D = null
+var _tracks_shape := CollisionShape3D.new()
+var _holder := CollisionShape3D.new()
+var _fitted := -1.0
 var _driving := false
 var _chase_yaw := 0.0
 var _furnace_was := false
@@ -110,17 +117,13 @@ func _init() -> void:
 
 
 func _ready() -> void:
-	_box.size = BOX
-	var holder := CollisionShape3D.new()
-	holder.shape = _box
-	holder.position.y = BOX.y * 0.5
-	add_child(holder)
+	_holder.shape = _box
+	add_child(_holder)
 	hull_yaw = global_rotation.y
 	waist_yaw = hull_yaw
 	aim_yaw = hull_yaw
 	body = BrawlerBody.new()
 	body.build(self)
-	body.hull.scale = Vector3.ONE * SCALE
 	# SU CUERPO PARA LAS MECAS: las orugas y una caja para lo de arriba, que gira con la cintura (así la meca llega al
 	# pecho, y al horno, de frente). Nace en su lugar.
 	_solid = AnimatableBody3D.new()
@@ -130,14 +133,10 @@ func _ready() -> void:
 	_solid.transform = global_transform
 	add_child(_solid)
 	_solid.sync_to_physics = true
-	var tracks := Vector3((BrawlerBody.WAIST.x * 0.5 + BrawlerBody.TRACK.x + 1.5) * 2.0, BrawlerBody.TRACK.y + 3.0,
-		BrawlerBody.TRACK.z) * SCALE
-	Clay.shape_box(_solid, tracks, Vector3.UP * tracks.y * 0.5)
+	_tracks_shape.shape = BoxShape3D.new()
+	_solid.add_child(_tracks_shape)
 	_torso_shape = CollisionShape3D.new()
-	var chest := BoxShape3D.new()
-	chest.size = Vector3((BrawlerBody.CHEST.x + 2.0) * SCALE, BOX.y - tracks.y, BrawlerBody.CHEST.z * SCALE)
-	_torso_shape.shape = chest
-	_torso_shape.position.y = tracks.y + chest.size.y * 0.5
+	_torso_shape.shape = BoxShape3D.new()
 	_solid.add_child(_torso_shape)
 	# SÓLO lo fijo (no la capa común): así lo chocan las mecas, pero los tiros (que miran la común) pasan hasta
 	# donde se le pega (BossHurtbox). Con la capa común, el tiro moría en el cuerpo.
@@ -145,13 +144,34 @@ func _ready() -> void:
 	add_collision_exception_with(_solid)
 	hurtbox = BossHurtbox.new()
 	_solid.add_child(hurtbox)
-	hurtbox.shape(BOX, Vector3.UP * BOX.y * 0.5)
+	_fit_scale()
 	add_to_group(SandboxPossession.GROUP)
 	_place_upper()
 
 
+## A LA ESCALA DE AHORA (BossSettings.scale): el dibujo de las orugas, la caja contra lo fijo, el cuerpo para las mecas
+## y donde se le pega. Lo de arriba se escala al ponerlo (`_place_upper`). Se llama de nuevo si la escala cambia.
+func _fit_scale() -> void:
+	var size := scale()
+	_fitted = size
+	var box_now := box()
+	body.hull.scale = Vector3.ONE * size
+	_box.size = box_now
+	_holder.position.y = box_now.y * 0.5
+	var tracks := Vector3((BrawlerBody.WAIST.x * 0.5 + BrawlerBody.TRACK.x + 1.5) * 2.0, BrawlerBody.TRACK.y + 3.0,
+		BrawlerBody.TRACK.z) * size
+	(_tracks_shape.shape as BoxShape3D).size = tracks
+	_tracks_shape.position = Vector3.UP * tracks.y * 0.5
+	var chest := Vector3((BrawlerBody.CHEST.x + 2.0) * size, box_now.y - tracks.y, BrawlerBody.CHEST.z * size)
+	(_torso_shape.shape as BoxShape3D).size = chest
+	_torso_shape.position.y = tracks.y + chest.y * 0.5
+	hurtbox.shape(box_now, Vector3.UP * box_now.y * 0.5)
+
+
 func _physics_process(delta: float) -> void:
 	var k := BrawlerSettings.current
+	if not is_equal_approx(_fitted, scale()):
+		_fit_scale()
 	_read()
 	var hurry := lerpf(1.0, k.rage_speed, fury)
 	# LAS ORUGAS: girar y andar, cada una con su rampa.
@@ -160,9 +180,9 @@ func _physics_process(delta: float) -> void:
 	hull_yaw = wrapf(hull_yaw - turning * deg_to_rad(k.turn_speed) * hurry * delta, -PI, PI)
 	var wanted := clampf(move.y, -k.reverse_share, 1.0)
 	var braking := wanted * _ahead.level < 0.0
-	var rushing := charging or spin != 0.0
-	var top := k.charge_speed if charging else (k.spin_move if spin != 0.0 else k.speed * hurry)
-	speed = _ahead.step(delta, wanted, k.charge_up_time if rushing else k.up_time, k.up_shape,
+	var rushing := rush_speed > 0.0
+	var top := rush_speed if rushing else k.speed * hurry
+	speed = _ahead.step(delta, wanted, rush_up if rushing else k.up_time, k.up_shape,
 		k.brake_time if braking else k.coast_time, k.brake_shape if braking else k.coast_shape) * top
 	rotation.y = hull_yaw
 	var heading := Basis(Vector3.UP, hull_yaw) * Vector3.FORWARD
@@ -170,12 +190,12 @@ func _physics_process(delta: float) -> void:
 	velocity = heading * speed + Vector3.UP * fall
 	if arena != null:
 		arena.resize(k.arena_radius)
-		velocity = arena.keep(global_position, velocity, BOX.x * 0.5)
+		velocity = arena.keep(global_position, velocity, box().x * 0.5)
 	if block_radius > 0.0:
 		velocity = _blocked(velocity)
 	move_and_slide()
 	if arena != null:
-		global_position = arena.hold(global_position, BOX.x * 0.5)
+		global_position = arena.hold(global_position, box().x * 0.5)
 	# Lo que de verdad avanzó: si chocó, la rampa baja hasta ahí.
 	var forward := get_real_velocity().dot(heading)
 	if absf(forward) < absf(speed) - 0.5:
@@ -204,14 +224,15 @@ func _physics_process(delta: float) -> void:
 func _place_upper() -> void:
 	if _torso_shape != null:
 		_torso_shape.transform = Transform3D(Basis(Vector3.UP, waist_yaw - hull_yaw), _torso_shape.position)
-	body.upper.global_transform = Transform3D(Basis(Vector3.UP, waist_yaw).scaled(Vector3.ONE * SCALE),
-		global_position + Vector3.UP * BrawlerBody.HIP * SCALE)
+	body.upper.global_transform = Transform3D(Basis(Vector3.UP, waist_yaw).scaled(Vector3.ONE * scale()),
+		global_position + Vector3.UP * BrawlerBody.HIP * scale())
 
 
 ## Sin lo que lo metería dentro de `block_at`: si su caja está a menos de su radio (y un poco), no avanza hacia él.
 func _blocked(wanted: Vector3) -> Vector3:
 	var local := global_transform.affine_inverse() * block_at
-	var gap := Vector2(maxf(absf(local.x) - BOX.x * 0.5, 0.0), maxf(absf(local.z) - BOX.z * 0.5, 0.0)).length()
+	var box_now := box()
+	var gap := Vector2(maxf(absf(local.x) - box_now.x * 0.5, 0.0), maxf(absf(local.z) - box_now.z * 0.5, 0.0)).length()
 	var toward := block_at - global_position
 	toward.y = 0.0
 	if gap > block_radius + 1.0 or toward.length() < 0.01:
@@ -219,6 +240,36 @@ func _blocked(wanted: Vector3) -> Vector3:
 	toward = toward.normalized()
 	var into := wanted.dot(toward)
 	return wanted - toward * into if into > 0.0 else wanted
+
+
+## CORRE a `top` m/s (llega en `up` s): la embestida, el trompo. 0, vuelve a lo de siempre.
+func rush(top: float, up := 0.3) -> void:
+	rush_speed = top
+	rush_up = up
+
+
+## Lo que le falta de `needs` (las piezas que pide un poder).
+static func lacks(needs: PackedStringArray) -> PackedStringArray:
+	var missing := PackedStringArray()
+	for part in needs:
+		if not PARTS.has(part):
+			missing.append(part)
+	return missing
+
+
+## La escala de todos los jefes (ver BossSettings).
+static func scale() -> float:
+	return BossSettings.current.scale
+
+
+## Lo que mide su caja, a escala (m).
+static func box() -> Vector3:
+	return BOX_BASE * scale()
+
+
+## El puño, a escala (m).
+static func fist() -> float:
+	return BrawlerBody.FIST * scale()
 
 
 ## LO PARA EN SECO (se estrelló): sin velocidad.
@@ -315,9 +366,9 @@ func possess_end() -> void:
 
 func possess_camera(first: bool, delta: float) -> Transform3D:
 	if first:
-		var eye := global_position + Vector3.UP * 27.0 * SCALE + Basis(Vector3.UP, waist_yaw) * Vector3(0.0, 0.0, -5.0 * SCALE)
+		var eye := global_position + Vector3.UP * 27.0 * scale() + Basis(Vector3.UP, waist_yaw) * Vector3(0.0, 0.0, -5.0 * scale())
 		return Transform3D(Basis(Vector3.UP, waist_yaw), eye)
 	_chase_yaw = lerp_angle(_chase_yaw, waist_yaw, 1.0 - exp(-3.0 * delta))
-	var at := global_position + Vector3.UP * 18.0 * SCALE
-	var from := at + Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 25.0, 70.0) * SCALE
+	var at := global_position + Vector3.UP * 18.0 * scale()
+	var from := at + Basis(Vector3.UP, _chase_yaw) * Vector3(0.0, 25.0, 70.0) * scale()
 	return Transform3D(Basis(), from).looking_at(at, Vector3.UP)
