@@ -1,38 +1,49 @@
 # La base en el sandbox
 
-`game/base/` (`BaseLayout`, `BaseHatch`, `BaseSettings`, `BasePanel`, `BaseArchetype`) · fila **Base** (Mundo) · el diseño, en [[base]] · ver [[filas]]
+`game/base/` (`BaseLayout`, `BaseHatch`, `BaseAirlock`, `BaseSlideDoor`, `BaseSettings`, `BasePanel`, `BaseArchetype`) · fila **Base** (Mundo) · el diseño, en [[base]] · ver [[filas]]
 
-La sucursal en arcilla, **sin estética**: el plano 6 de [[base]] armado de cajas, para recorrerlo con la meca y a pie.
+La sucursal en arcilla, **sin estética**: el plano de [[base]] armado de cajas, para recorrerlo con la meca y a pie.
 Lo estético de cada cosa lo agrega el usuario después.
 
-## Qué hay
-- **Un solo piso, todo al mismo nivel**, en L: el elevador (24 × 24 m) y el gimnasio (36 × 24 m) en fila, y debajo
-  del gimnasio la franja de las consolas (12 m de fondo y **5 m de alto**, a escala de persona: sobre su borde abierto,
-  la pared de la nave baja hasta ahí, como un dintel). Debajo del elevador, pared. La nave, de 22 m, y **techo**; adentro,
-  cinco lámparas colgadas (el sol no entra).
-- **El elevador**: un cuadrado del piso con el borde amarillo a rayas. Ahí duerme la meca, mirando al gimnasio.
+## Qué hay (a escala humana, 17/11/2026)
+El plano de la esclusa de [[base]], para la meca jaula (≈ 7 m). *Hasta el 17/11/2026 era la base de la meca grande:
+el elevador de 24 m, la nave de 22 m y el ascensor de personal metido en la pared, que la esclusa reemplaza.*
+- **Un solo piso, todo al mismo nivel**, en L: el elevador (10 × 10 m; lo marcado, 9 m) y el gimnasio (14 × 10 m) en
+  fila, y debajo del gimnasio la franja de las consolas (6 m de fondo y 4 m de alto). La nave, de 12 m, con **techo**;
+  adentro, lámparas colgadas.
+- **El elevador**: un cuadrado del piso con el borde amarillo a rayas. Ahí duerme la meca jaula, mirando al gimnasio.
   Todavía no sube.
-- **La compuerta del techo** (`BaseHatch`), sobre el elevador: dos hojas que **se corren hacia los costados**, como una
-  puerta de ciencia ficción, cuando empieza una partida; cada una se guarda en su bolsillo, una caja sobre el techo (la
-  de afuera, metida en la roca). Por ahora la abre y la cierra la **G** de la parcela.
-- **La línea de peligro**, rayas amarillas y negras en el piso, entre el gimnasio y la franja: no hay pared ni vidrio.
-- **La bolsa**: un cilindro de 5,2 m de diámetro, de 7 a 15 m de alto, colgado de una viga. **Fija por ahora**, con su
-  colisión, para pegarle; la física, después.
-- **Las consolas**, contra la pared de la franja: una caja con la pantalla inclinada y su cartel. Los contratos
-  (6 m), la armería (4,5 m), los cosméticos y la pintura (4,5 m). Todavía no hacen nada.
-- **Los personajes**: seis casilleros, el cuadro del empleado del mes al lado, y **el ascensor de personal**, una jaula
-  metida en un hueco de la pared de la punta. **El hueco es sólo de su alto** (3,4 m): arriba sigue la pared. Es una
-  ilusión de continuidad, no un pozo.
+- **La compuerta del techo** (`BaseHatch`), sobre el elevador: dos hojas que se corren hacia los costados. La abre y la
+  cierra la **G** de la parcela.
+- **La línea de peligro** entre el gimnasio y la franja.
+- **La bolsa**: 1,8 m de diámetro, de 2,8 a 6,2 m de alto (a la altura de los brazos de la jaula), colgada de una viga.
+  Fija, con su colisión.
+- **La franja usa sus dos caras libres** (la del gimnasio es la línea de peligro y la de la punta, la esclusa):
+  - **la pared bajo el elevador**: los contratos, al lado de la meca;
+  - **el fondo**, desde ahí: la armería, los cosméticos y la pintura, el cuadro del empleado del mes y cinco casilleros
+    junto a la esclusa.
+- **La esclusa** (`BaseAirlock`, con `BaseSlideDoor`), la sala de espera, en la punta de la franja: **un cuadrado del
+  lado del fondo de la franja y de su alto**; si cambia el fondo, cambia ella. Dos bancos, una baliza roja que gira y el
+  cartel «esperando tripulación».
+  - **El botón de adentro** (un botón de compuerta de los tableros, `ButtonArchetype.for_control`), al lado de la
+    compuerta de adelante: la luz pasa a verde, un poco de vapor, la compuerta se abre y a los 6 s se cierra **para
+    siempre** («cerrada»).
+  - **La compuerta de atrás** es la de «afuera». **Para probar en el sandbox** se abre con un botón de afuera (5 s),
+    así se entra caminando; la **X** de la parcela rearma la esclusa.
+  - Todavía no se aparece ahí, ni la meca se arma con los que son: eso es del flujo de la partida.
+- **Lo fijo** (`PhysicsLayers.mark_fixed`): el piso, las paredes y los bolsillos de la compuerta. Sin eso, la meca
+  jaula (cinemática) se cae por el piso.
 
 ## Las medidas
 En `BaseLayout`, en metros sobre el plano (`at(x, z, alto)` pasa a la parcela).
-- **Se mueven con el F1** de la fila (`BasePanel`, perillas en `BaseSettings`): **el alto de la nave** (16 a 45 m), **el
-  fondo de la franja** (6 a 30 m) y **su alto** (3,5 a 20 m). Al guardar, cada base armada se vuelve a armar en su
-  lugar (`BaseLayout.rebuild`; la meca se queda). Lo guardado, `game/base/base_settings.tres`, es del usuario: no va al
-  repositorio.
-- Lo demás (el elevador, el largo, el hueco del ascensor de personal, la bolsa), en las constantes de `BaseLayout`.
-- La parcela se mide con la franja más honda (30 m): con una menos honda, la base se arrima a la pared del fondo.
-- Los paneles F2 a F4 son los de la meca propia (como en los jefes), para modificarla desde la base.
+- **Se mueven con el F1** de la fila (`BasePanel`, perillas en `BaseSettings`): **el alto de la nave** (8 a 25 m), **el
+  fondo de la franja** (4 a 12 m; también el lado de la esclusa) y **su alto** (3 a 10 m; también el de la esclusa). Al
+  guardar, la base se vuelve a armar en su lugar (`BaseLayout.rebuild`; la meca se queda). Lo guardado,
+  `game/base/base_humana.tres`, es del usuario: no va al repositorio (el de la meca grande, `base_settings.tres`, quedó
+  de lado).
+- Lo demás (el elevador, el largo, la bolsa, dónde va cada cosa del fondo), en las constantes de `BaseLayout`.
+- La parcela se mide con la franja más honda (12 m).
+- Los paneles F2 a F4 son los de la meca jaula, para modificarla desde la base.
 
 ## Las terminales (15/11/2026)
 La armería y los contratos se usan: se mira la consola, se aprieta **E** y se abre su pantalla; **E o Esc** la cierra.
@@ -92,9 +103,9 @@ Lo pidió el usuario: «empecemos a hacer maquetas de clay de todos los componen
 - En el sandbox, en la fila **Componentes de la armería** (`ArmoryPartsArchetype`), numeradas y en tres filas.
 
 ## Para mirarla
-`tests/base_look.tscn` (con ventana, unos 8 s): cuatro capturas, desde afuera con la compuerta abierta, desde la
-franja de las consolas, desde el gimnasio hacia la compuerta, y otra vez desde afuera con otras medidas (lo que hace el
-F1 al guardar, sin guardarlas).
+`tests/base_look.tscn` (con ventana, unos 10 s): desde arriba con la compuerta del techo abierta, adentro de la esclusa
+(cerrada y, después de apretar el botón, abierta), lo que se ve al salir, la franja con los contratos y la meca desde el
+gimnasio.
 `tests/base_terminals_look.tscn` (con ventana, unos 5 s): la armería con unas compras hechas y lo que dice con el mouse
 encima, y los contratos con uno firmado.
 `tests/armory_parts_look.tscn` (con ventana, unos 10 s): todos los componentes juntos, y después uno por uno, de cerca.

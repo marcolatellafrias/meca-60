@@ -1,8 +1,8 @@
 extends Node3D
 
-## LA BASE, PARA MIRAR (unos 8 segundos, sin el sandbox): arma la parcela de la base, deja que la meca se asiente en el
-## elevador y saca tres capturas: desde afuera con el techo y la compuerta abierta, desde la franja de las consolas
-## mirando la meca, y desde el piso del gimnasio hacia la compuerta.
+## LA BASE, PARA MIRAR (unos 10 segundos, sin el sandbox): arma la parcela de la base, deja que la meca se asiente en el
+## elevador y saca capturas: desde arriba con la compuerta del techo abierta, adentro de la esclusa (cerrada y, después
+## de apretar el botón, abierta), lo que se ve al salir y la franja con los contratos.
 ##   tools/godot_ventana.sh res://tests/base_look.tscn -- --salida=C:/carpeta
 
 var _folder := ""
@@ -28,32 +28,43 @@ func _ready() -> void:
 	world.environment.ambient_light_energy = 0.8
 	add_child(world)
 	var base := BaseArchetype.new().build(0, self)
-	# Una persona de 1,8 m frente a las consolas, para la escala.
-	Clay.box(self, Vector3(0.5, 1.8, 0.3), BaseLayout.at(38.0, 27.0, 0.9), Color(0.95, 0.5, 0.1))
+	# Una persona de 1,8 m en la franja, para la escala.
+	Clay.box(self, Vector3(0.5, 1.8, 0.3), BaseLayout.at(15.0, 12.5, 0.9), Color(0.95, 0.5, 0.1))
 	var eye := Camera3D.new()
-	eye.fov = 50.0
+	eye.fov = 60.0
 	eye.far = 1000.0
 	add_child(eye)
 	eye.make_current()
 	await get_tree().create_timer(5.0).timeout
+	var strip := BaseLayout.strip
+	var airlock := base.get_node("Plano/Esclusa") as BaseAirlock
 	(base.get_node("Plano/Compuerta") as BaseHatch).snap_open()
-	eye.global_position = BaseLayout.at(70.0, 62.0, 60.0)
-	eye.look_at(BaseLayout.at(30.0, 14.0, 10.0))
+	# desde afuera, arriba, sin el techo a la vista: la compuerta abierta deja ver la meca
+	eye.global_position = BaseLayout.at(34.0, 34.0, 26.0)
+	eye.look_at(BaseLayout.at(14.0, 9.0, 2.0))
 	await _shot("base_arriba")
-	eye.global_position = BaseLayout.at(57.0, 28.0, 1.7)
-	eye.look_at(BaseLayout.at(20.0, 14.0, 6.0))
-	await _shot("base_desde_las_consolas")
-	eye.global_position = BaseLayout.at(40.0, 20.0, 1.7)
-	eye.look_at(BaseLayout.at(12.0, 12.0, 22.0))
-	await _shot("base_la_compuerta")
-	# lo que hace el F1 al guardar: otras medidas (sin guardarlas) y la base se vuelve a armar en su lugar
-	BaseSettings.current.strip_depth = 18.0
-	BaseSettings.current.strip_height = 10.0
-	BaseSettings.current.nave_height = 28.0
-	BaseLayout.rebuild(base.get_node("Plano") as Node3D)
-	eye.global_position = BaseLayout.at(70.0, 62.0, 60.0)
-	eye.look_at(BaseLayout.at(30.0, 14.0, 10.0))
-	await _shot("base_otras_medidas")
+	# adentro de la esclusa, mirando la compuerta de adelante (cerrada, luz roja)
+	eye.global_position = BaseLayout.at(BaseLayout.LENGTH + strip - 0.7, BaseLayout.NAVE + strip * 0.5 + 0.8, 1.7)
+	eye.look_at(BaseLayout.at(BaseLayout.LENGTH, BaseLayout.NAVE + strip * 0.5, 1.4))
+	await _shot("base_esclusa_cerrada")
+	# se aprieta el botón: se abre
+	airlock._on_front_pressed()
+	await get_tree().create_timer(2.0).timeout
+	await _shot("base_esclusa_abierta")
+	# lo que se ve al salir: la franja, el gimnasio y la meca
+	eye.global_position = BaseLayout.at(BaseLayout.LENGTH - 0.6, BaseLayout.NAVE + strip * 0.5, 1.7)
+	eye.look_at(BaseLayout.at(8.0, 7.0, 2.5))
+	await _shot("base_al_salir")
+	# desde la franja, mirando los contratos y la meca detrás
+	eye.global_position = BaseLayout.at(19.0, BaseLayout.NAVE + strip - 1.5, 1.7)
+	eye.look_at(BaseLayout.at(10.0, BaseLayout.NAVE + 2.0, 1.6))
+	await _shot("base_contratos")
+	# desde el gimnasio, mirando la meca en el elevador
+	eye.global_position = BaseLayout.at(20.0, 8.5, 1.7)
+	eye.look_at(BaseLayout.at(5.0, 5.0, 3.5))
+	await _shot("base_gimnasio")
+	for node in base.find_children("*", "Mech", true, false):
+		print("la meca, en ", (node as Node3D).global_position)
 	get_tree().quit()
 
 

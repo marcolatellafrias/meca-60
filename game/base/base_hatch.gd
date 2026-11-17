@@ -29,6 +29,7 @@ func build() -> void:
 	var middle := BaseLayout.ELEVATOR * 0.5
 	var pockets := StaticBody3D.new()
 	pockets.name = "Bolsillos"
+	PhysicsLayers.mark_fixed(pockets)
 	add_child(pockets)
 	for side: float in [-1.0, 1.0]:
 		var leaf := AnimatableBody3D.new()

@@ -22,9 +22,10 @@ func max_footprint() -> Vector2:
 
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
-		"la sucursal, en arcilla: un solo piso, todo al mismo nivel (plano 6)",
-		"el elevador, donde duerme la meca · el gimnasio con la bolsa",
-		"la franja: contratos, armería, cosméticos y pintura, casilleros, el ascensor de personal",
+		"la sucursal a escala humana, en arcilla: un solo piso (el plano de la esclusa)",
+		"la esclusa: se espera ahí; el botón verde de adentro abre la compuerta una sola vez",
+		"para entrar a probar: el botón de afuera de la esclusa abre la de atrás · X la rearma",
+		"el elevador con la meca · el gimnasio con la bolsa · la franja: contratos, armería, cosméticos, casilleros",
 		"mirando la meca, O la posee · U subirse · G abre la compuerta del techo",
 	])
 
@@ -53,6 +54,12 @@ func keys() -> Array[SandboxKey]:
 			var hatch := _hatch()
 			if hatch != null:
 				hatch.set_open(on)))
+	out.append(SandboxKey.action(KEY_X, SandboxKey.Weight.NORMAL, "rearmar la esclusa",
+		func(_parcel: SandboxParcel) -> void:
+			if is_instance_valid(_root):
+				var airlock := _root.get_node_or_null("Plano/Esclusa") as BaseAirlock
+				if airlock != null:
+					airlock.rearm()))
 	return out
 
 

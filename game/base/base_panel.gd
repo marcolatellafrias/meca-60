@@ -8,7 +8,7 @@ const PANEL_WIDTH := 380.0
 const LABELS := {
 	"nave_height": "nave (elevador y gimnasio): alto (m)",
 	"strip_depth": "franja de las consolas: fondo (m)",
-	"strip_height": "franja de las consolas: alto (m)",
+	"strip_height": "franja de las consolas (y esclusa): alto (m)",
 }
 
 
