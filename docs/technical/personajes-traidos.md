@@ -51,6 +51,14 @@ Locomoción (el usuario, 13/11/2026, entre uno solo como el de la meca y los dos
 en fila, numeradas, × 3, con su nombre y los arquetipos que la usan (`HeadFormsArchetype`). Sólo para mirar; prueba con
 captura: `tests/head_forms_look.tscn`.
 
+**Lo que cuesta la fila Locomoción** (17/11/2026, diagnóstico; nada arreglado todavía): `tests/locomotion_perf.tscn` arma
+las siete escenas juntas (42 personajes, 846 cuerpos rígidos) y mide de a una dimensión. Armarlas: 2,2 s en un cuadro
+(el tirón al acercarse). Prendido todo: 8 fps (124 ms por cuadro). Lo que más pesa, en orden: el guion de la cápsula
+—el choque blando entre personajes (`_resolve_player_collisions`) recorre a todos contra todos en cada paso, ~30 ms—,
+las manos de las acciones (~20 ms), el `_physics_process` del personaje (~30 ms), la pose de cada cuadro (~14 ms) y los
+cuerpos del ragdoll, que de pie se mueven con la cápsula en cada paso (~13 ms). Como un paso de física pasa los 16,7
+ms, cada cuadro hace varios pasos y todo se multiplica. El dibujo casi no cuenta.
+
 Pruebas:
 - `tests/people_look.tscn` (con ventana, unos 12 segundos): los seis en fila, sus cabezas de cerca, y caminando 3
   segundos (imprime cuánto anduvo cada uno y si quedó de pie). `--cabezas=0.29,0.28,…` prueba altos de cabeza.
