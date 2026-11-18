@@ -49,9 +49,11 @@ func _ready() -> void:
 	get_tree().quit()
 
 
-## A cuánto de su medio queda la meca para que el taladro llegue (m): el frente de su caja, más el brazo.
+## A cuánto de su medio queda la meca para que el taladro llegue (m): el frente de su caja, más lo que llega la punta
+## desde el centro de la jaula (el taladro 4,7 m y la sierra 6,35: tests/spin_tips_movie). *Eran 9 m, el brazo de la
+## meca grande: desde ahí la punta no llegaba y le sacaba 0.*
 func _boss_reach() -> float:
-	return Brawler.box().z * 0.5 + 9.0
+	return Brawler.box().z * 0.5 + 4.0
 
 
 func _place(gap: float) -> void:
