@@ -103,8 +103,16 @@ func _build_arms() -> void:
 		var at := shoulder(cabin_shape)
 		arm.shoulder_local = Vector3(side * at.x, at.y, at.z)
 		arm.stance = MechArm.Stance.NORMAL
+		if skeleton != null:
+			arm.upper_bone = skeleton.uppers[index]
+			arm.forearm_bone = skeleton.forearms[index]
 		add_child(arm)
 		arms.append(arm)
+
+
+## EL HOMBRO DERECHO para el esqueleto: el de su cabina (ver `shoulder`).
+func _shoulder() -> Vector3:
+	return Mech.shoulder(cabin_shape)
 
 
 ## LO QUE LLEVAN LOS BRAZOS AL ARMARLA (ver `loadout`).

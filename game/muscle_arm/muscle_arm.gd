@@ -100,6 +100,12 @@ func _ready() -> void:
 		forearm.add_child(holder)
 	upper.collision_layer = 0
 	upper.collision_mask = 0
+	# LO QUE SE VE CUELGA DE LOS HUESOS (MechSkeleton): los cuerpos quedan para empujar y chocar.
+	if upper_bone != null:
+		MechSkeleton.aim(upper_bone, upper.global_transform)
+		MechSkeleton.aim(forearm_bone, forearm.global_transform)
+		MechSkeleton.move_drawing(upper, upper_bone)
+		MechSkeleton.move_drawing(forearm, forearm_bone)
 	forearm.collision_layer = 0
 	# El hombro, una bola; el codo, una bisagra sobre su eje (el Z de la articulación).
 	var ball := PinJoint3D.new()
@@ -168,6 +174,11 @@ func _punch_speed() -> float:
 ## ── CADA PASO: LOS MÚSCULOS ──────────────────────────────────────────────────────────────────────────────────────
 
 func _physics_process(delta: float) -> void:
+	# SUS HUESOS (MechSkeleton) GIRAN COMO SUS CUERPOS, sin moverse de donde nacen (el hombro, la punta del brazo): la
+	# unión física puede ceder un poco; el esqueleto, no.
+	if upper_bone != null:
+		MechSkeleton.aim(upper_bone, upper.global_transform)
+		MechSkeleton.aim(forearm_bone, forearm.global_transform)
 	var k := MuscleArmSettings.current
 	if manual and UIState.gameplay_active():
 		_offset.z -= MechKeys.axis(KEY_W, KEY_S) * k.depth_speed * delta

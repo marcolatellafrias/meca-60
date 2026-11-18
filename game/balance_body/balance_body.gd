@@ -105,6 +105,9 @@ var airborne := false
 ## ── SUS PIEZAS ──
 ## `look`: el nodo del dibujo.
 var look: Node3D = null
+## SU ESQUELETO (MechSkeleton, 18/11/2026): los huesos de la pelvis, las piernas, el torso y los brazos; las piezas
+## cuelgan de ellos. El torso sigue a la caja (`_follow_bones`).
+var skeleton: MechSkeleton = null
 var legs: BodyLegs = null
 ## Las toberas, invisibles (ver BodyNozzles). *Hasta el 17/11/2026 se podían ver (`show_nozzles`), en la meca grande.*
 var nozzles: BodyNozzles = null
@@ -139,6 +142,10 @@ func _ready() -> void:
 	look.name = "Dibujo"
 	add_child(look)
 	nozzles = BodyNozzles.new(self)
+	skeleton = MechSkeleton.new()
+	skeleton.build(measures, size, _shoulder())
+	add_child(skeleton)
+	_follow_bones()
 	legs = BodyLegs.new()
 	legs.body = self
 	add_child(legs)
@@ -167,6 +174,21 @@ func _ready() -> void:
 ## Arma sus piezas propias, con el cuerpo, el dibujo, las toberas, las piernas y los movimientos ya armados.
 func _build() -> void:
 	pass
+
+
+## EL HOMBRO DERECHO en el espacio de la caja (el izquierdo, espejado), para el esqueleto. Lo de todos: arriba, al
+## costado de la caja; la meca dice el suyo (Mech.shoulder).
+func _shoulder() -> Vector3:
+	return Vector3(size.x * 0.5, size.y * 0.3, 0.0)
+
+
+## EL TORSO SIGUE A LA CAJA: el hueso del torso (y la cintura, su raíz) en el piso de la caja, con sus ejes.
+func _follow_bones() -> void:
+	if skeleton == null:
+		return
+	var floor_of_box := global_transform * Transform3D(Basis(), Vector3(0.0, -size.y * 0.5, 0.0))
+	skeleton.waist.global_transform = floor_of_box
+	skeleton.torso.global_transform = floor_of_box
 
 
 ## Al empezar cada paso: escribe lo que se le pide (las teclas, un cerebro).
@@ -212,6 +234,7 @@ func _physics_process(delta: float) -> void:
 			if tilt <= k.upright_done and angular_velocity.length() < 0.4:
 				_recovered()
 	nozzles.fire(k)
+	_follow_bones()
 	legs.place(k, delta)
 	_after_step(k, delta)
 	_show_label()
@@ -222,6 +245,7 @@ func _physics_process(delta: float) -> void:
 func _kinematic_step(k: BodySettings, delta: float) -> void:
 	mover.step(delta)
 	global_transform = mover.body_place()
+	_follow_bones()
 	legs.place(k, delta)
 	var places := legs.foot_transforms()
 	if stomp == null:
@@ -243,6 +267,7 @@ func put(where: Transform3D) -> void:
 	mover.put(where)
 	freeze = true
 	global_transform = mover.body_place()
+	_follow_bones()
 	if stomp != null:
 		legs.replant()
 		legs.place(knobs, 0.0)

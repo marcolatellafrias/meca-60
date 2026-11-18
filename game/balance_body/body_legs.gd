@@ -85,9 +85,19 @@ func _ready() -> void:
 	add_child(_pelvis)
 	Clay.cylinder(_pelvis, measures.LEG_THICKNESS * 0.55, measures.HIP_X * 2.0 - measures.LEG_THICKNESS * 0.9,
 		Vector3(0.0, measures.PELVIS_SIZE.y * 0.5 - measures.HIP_DROP, 0.0), MechBody.JOINT_COLOR, Vector3(0.0, 0.0, 90.0))
+	# En el esqueleto: cuelga del hueso de la pelvis (que apunta para abajo: se le deshace el medio giro).
+	if body.skeleton != null:
+		remove_child(_pelvis)
+		body.skeleton.pelvis.add_child(_pelvis)
+		_pelvis.top_level = false
+		_pelvis.transform = Transform3D(Basis.from_euler(MechSkeleton.DOWN).inverse(), Vector3.ZERO)
 	for i in 2:
 		var leg := MechLeg.new()
 		leg.measures = body.measures
+		if body.skeleton != null:
+			leg.thigh_bone = body.skeleton.thighs[i]
+			leg.shin_bone = body.skeleton.shins[i]
+			leg.foot_bone = body.skeleton.feet[i]
 		add_child(leg)
 		_legs.append(leg)
 	_pose.name = "LaCajaAlCaminar"
@@ -165,7 +175,10 @@ func place(k: BodySettings, delta: float) -> void:
 		waist = Transform3D(upright.basis, upright * Vector3(0.0, -body.size.y * 0.5, 0.0))
 	elif not standing:
 		waist.basis = body.global_basis
-	_pelvis.global_transform = fall * body.measures.pelvis(waist)
+	if body.skeleton != null:
+		body.skeleton.put_pelvis(fall * body.measures.pelvis(waist))
+	else:
+		_pelvis.global_transform = fall * body.measures.pelvis(waist)
 	var crouched := clampf((1.0 - body.moves.rod_scale) / maxf(1.0 - k.crouch_rod, 0.01), 0.0, 1.0)
 	var out := lerpf(k.knee_out, k.knee_out_crouched, crouched)
 	for i in 2:

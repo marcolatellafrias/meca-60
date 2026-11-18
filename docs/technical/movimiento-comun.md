@@ -7,6 +7,32 @@ contestó cada sesión, en la nota compartida `jefes-unificar-movimiento.md`.
 El usuario: «los personajes tienen un sistema en el que abstrae varios ciclos… y después usa eso para mover ciertos
 huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la meca… y de paso así compartimos código».
 
+## El esqueleto de la meca (`MechSkeleton`, game/mech/; 18/11/2026)
+El usuario: «la meca debería tener un sistema de huesos similar a las de un humano… todos los huesos deberían estar
+conectados». Huesos de verdad (`CustomBone`, los de los personajes: un Node3D con largo que apunta por su +Y), en un
+árbol, y LAS PIEZAS DE ARCILLA CUELGAN DE SUS HUESOS:
+- cintura (la raíz) → pelvis → caderas (PUNTOS FIJOS) → muslo → canilla → pie;
+- cintura → torso (la caja) → hombros (PUNTOS FIJOS) → brazo → antebrazo.
+
+LA PELVIS ES RÍGIDA (el usuario: «los dos huesos de la pelvis… nunca pueden quebrarse… se calculan a partir de dónde
+están las piernas»): un solo hueso que se mueve; las caderas cuelgan de él a una distancia fija y nada las escribe (no
+son huesos). Lo mismo los hombros, del torso.
+
+Lo arma BalanceBody (`skeleton`, con el hombro de `_shoulder`); el torso sigue a la caja (`_follow_bones`), BodyLegs
+escribe la pelvis (`put_pelvis`), MechLeg los huesos de la pierna y MechArm los del brazo (`upper_bone`,
+`forearm_bone`). El brazo con músculos sólo GIRA sus huesos como sus cuerpos (`MechSkeleton.aim`): la unión física
+cede un poco (18 cm medidos) y el esqueleto no; su dibujo cuelga de los huesos (`move_drawing`) y los cuerpos quedan
+para empujar y chocar.
+
+`tests/mech_skeleton_check` (sin ventana): caminando, doblando y con una piña, lo más que se separa cada hueso de
+donde nace (el muslo de su cadera, la canilla de la punta del muslo, el pie, el brazo de su hombro, el antebrazo) y
+que las caderas no se muevan en la pelvis: todo 0 mm, «ESQUELETO OK». La huella de `cage_mech_look` y su hoja, igual.
+
+Por pasos (la nota compartida `jefes-revision-cuerpo-meca.md`): 1. el esqueleto sin cambio visible (HECHO: la pose la
+sigue calculando el código de siempre, MechBody, y se escribe en los huesos); 2. una sola IK sobre los huesos y las
+capas (caminar, inclinarse, el resorte, hundirse) en la pelvis y el torso; 3. los dos brazos sobre los huesos; 4. el
+ragdoll desde el esqueleto; 5. el jefe; 6. limpieza.
+
 ## Las piezas (todas son DIBUJO: no se sincronizan, cada máquina las saca de lo que viaja)
 1. **La marcha** (`Gait`, game/common/, 18/11/2026): cuándo y adónde pisa cada pata, para 2, 4 o 6. **Un ciclo
    continuo**, como se hace en todos lados: cada grupo de patas (`Gait.pattern`: dos, de a una; cuatro, las

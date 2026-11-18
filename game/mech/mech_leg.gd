@@ -15,6 +15,11 @@ var _knee: MeshInstance3D = null
 var _ankle: MeshInstance3D = null
 ## Las medidas del cuerpo que la lleva (ver BalanceBody.measures). Se ponen antes de agregarla.
 var measures := MechBody.new()
+## SUS HUESOS (MechSkeleton: el muslo, la canilla y el pie; 18/11/2026): sus piezas cuelgan de ellos y `pose` escribe
+## los huesos. Se ponen antes de agregarla. Sin ellos (una maqueta suelta), las piezas van solas, como antes.
+var thigh_bone: CustomBone = null
+var shin_bone: CustomBone = null
+var foot_bone: CustomBone = null
 
 
 func _init() -> void:
@@ -31,12 +36,45 @@ func _ready() -> void:
 	_hip = Clay.cylinder(self, measures.JOINT_RADIUS * 1.15, thickness * 1.04, Vector3.ZERO, MechBody.JOINT_COLOR)
 	_knee = Clay.sphere(self, measures.JOINT_RADIUS, Vector3.ZERO, MechBody.JOINT_COLOR)
 	_ankle = Clay.sphere(self, measures.JOINT_RADIUS * MechBody.ANKLE_SHARE, Vector3.ZERO, MechBody.JOINT_COLOR)
+	if thigh_bone != null:
+		_hang()
 
+
+## LAS PIEZAS, EN SUS HUESOS: el muslo con la cadera (arriba) y la rodilla (abajo), la canilla con el tobillo (abajo) y
+## el pie. Las articulaciones van donde las ponía `pose`, que ya no las mueve: en las puntas de las piezas.
+func _hang() -> void:
+	var sideways := Basis(Vector3.BACK, PI * 0.5)
+	MechSkeleton.hang(_thigh, thigh_bone)
+	MechSkeleton.hang(_shin, shin_bone)
+	_joint(_hip, _thigh, Transform3D(sideways, Vector3(0.0, 0.0, measures.THIGH * 0.5)))
+	_joint(_knee, _thigh, Transform3D(sideways, Vector3(0.0, 0.0, -measures.THIGH * 0.5)))
+	_joint(_ankle, _shin, Transform3D(sideways, Vector3(0.0, 0.0, -measures.SHIN * 0.5)))
+	remove_child(_foot)
+	foot_bone.add_child(_foot)
+	_foot.transform = Transform3D(Basis(), _foot_from_ankle())
+
+
+## Una articulación, colgada de la pieza `piece` en `local` (su espacio).
+func _joint(part: Node3D, piece: Node3D, local: Transform3D) -> void:
+	remove_child(part)
+	piece.add_child(part)
+	part.transform = local
+
+
+## Del tobillo al centro del pie, en los ejes del pie (ver MechBody.leg: el pie va plano, adelantado, sobre el piso).
+func _foot_from_ankle() -> Vector3:
+	return Vector3(0.0, measures.FOOT_SIZE.y * 0.5 - measures.ANKLE, -measures.FOOT_AHEAD)
 
 ## La pone como dice `leg` (ver MechBody.leg): las partes, y las articulaciones en sus puntas (el muslo va de la cadera a la
 ## rodilla por su −Z; la canilla, de la rodilla al tobillo).
 func pose(leg: Dictionary) -> void:
 	global_transform = Transform3D()
+	if thigh_bone != null:
+		MechSkeleton.put(thigh_bone, leg["thigh"])
+		MechSkeleton.put(shin_bone, leg["shin"])
+		var foot: Transform3D = leg["foot"]
+		foot_bone.global_transform = Transform3D(foot.basis, foot.origin - foot.basis * _foot_from_ankle())
+		return
 	var thigh: Transform3D = leg["thigh"]
 	var shin: Transform3D = leg["shin"]
 	_thigh.transform = thigh

@@ -67,6 +67,10 @@ var shoulder_local := Vector3.ZERO
 ## LAS MEDIDAS DEL CUERPO QUE LO LLEVA (ver MechBody, BalanceBody.measures): el largo del brazo y del antebrazo, el de
 ## las posturas y las piñas, y el ancho de la mano. Las pone la meca. Se ponen antes de agregarlo.
 var measures := MechBody.new()
+## SUS HUESOS (MechSkeleton: el brazo y el antebrazo; 18/11/2026): el brazo los escribe y sus piezas cuelgan de ellos.
+## Se ponen antes de agregarlo. Sin ellos, como antes.
+var upper_bone: CustomBone = null
+var forearm_bone: CustomBone = null
 ## La postura pedida, y la piña que está tirando.
 var stance := Stance.COVER
 var punching := Punch.NONE

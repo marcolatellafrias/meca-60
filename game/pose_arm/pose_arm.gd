@@ -29,6 +29,9 @@ func _ready() -> void:
 	Clay.sphere(_upper, measures.LEG_THICKNESS * 0.78, Vector3(0, 0, upper_length() * 0.5), MechBody.JOINT_COLOR)
 	Clay.sphere(_forearm, measures.LEG_THICKNESS * 0.66, Vector3(0, 0, forearm_length() * 0.5), MechBody.JOINT_COLOR)
 	forearm_skin = _forearm.get_child(0)
+	if upper_bone != null:
+		MechSkeleton.hang(_upper, upper_bone)
+		MechSkeleton.hang(_forearm, forearm_bone)
 	_mount_hand(_forearm)
 	_place(_target())
 	_dress(_upper, _forearm)
@@ -46,5 +49,9 @@ func _physics_process(delta: float) -> void:
 
 
 func _place(pose: Dictionary) -> void:
+	if upper_bone != null:
+		MechSkeleton.put(upper_bone, pose["upper"])
+		MechSkeleton.put(forearm_bone, pose["forearm"])
+		return
 	_upper.global_transform = pose["upper"]
 	_forearm.global_transform = pose["forearm"]
