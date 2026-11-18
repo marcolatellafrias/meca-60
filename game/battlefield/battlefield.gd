@@ -49,20 +49,26 @@ const CARS: Array[Color] = [Color(0.56, 0.32, 0.28), Color(0.34, 0.42, 0.50), Co
 
 ## Arma el mapa colgado de `parent`, centrado en su origen, con el piso en y = 0. Devuelve el cuerpo estático; los
 ## recursos (cuerpos que se agarran) van colgados de `parent` aparte.
-static func build(parent: Node3D) -> StaticBody3D:
+## Con `hole`, EL HUECO DEL ASCENSOR: un cuadrado de ese lado en el medio del piso, por donde sale la meca desde la base
+## (BaseElevator; el usuario, 19/11/2026: «la arena tiene que tener un cutout cuadrado arriba para que salga la meca…
+## podría ser al medio por ahora»). Sin `supplies_on`, sin los recursos (en la partida todavía no van por la red).
+static func build(parent: Node3D, hole := 0.0, supplies_on := true) -> StaticBody3D:
 	var body := StaticBody3D.new()
 	body.name = "Mapa"
 	parent.add_child(body)
 	var rng := RandomNumberGenerator.new()
 	rng.seed = LAYOUT_SEED
-	_ground(body)
+	if hole > 0.0:
+		_ground_with_hole(body, hole)
+	else:
+		_ground(body)
 	_wall(body)
 	var supplies: Array[Vector3] = []
 	for barrio: Array in BARRIOS:
 		_barrio(body, rng, barrio[0], barrio[1], barrio[2], barrio[3], supplies)
 	_ruins(body)
 	var kinds := PackageArchetype.catalogue()
-	for i in supplies.size():
+	for i in supplies.size() if supplies_on else 0:
 		_supply(body, parent, supplies[i], kinds, i)
 	# TODO LO DEL MAPA ES LO FIJO DEL MUNDO (ver PhysicsLayers.FIXED): contra esto frena la meca, que sólo mira esa capa.
 	# *Hasta el 18/11/2026 no se marcaba: en el sandbox la sostenía el piso de la parcela y atravesaba los edificios; en
@@ -93,6 +99,37 @@ static func _ground(body: StaticBody3D) -> void:
 	cylinder.height = 1.0
 	shape.shape = cylinder
 	shape.position.y = -0.5
+	body.add_child(shape)
+
+
+## EL PISO CON EL HUECO DEL ASCENSOR: el disco, de a gajos, del borde del círculo al borde del cuadrado del medio (cada
+## radio va del círculo al cuadrado; con 96 gajos, las esquinas del cuadrado caen justo en un radio). Sólo la cara de
+## arriba: abajo está la roca, el pozo y la base, que no se ven.
+static func _ground_with_hole(body: StaticBody3D, hole: float) -> void:
+	var segments := 96
+	var half := hole * 0.5
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	tool.set_normal(Vector3.UP)
+	var outer: Array[Vector3] = []
+	var inner: Array[Vector3] = []
+	for i in segments + 1:
+		var angle := TAU * i / segments
+		var way := Vector2(cos(angle), sin(angle))
+		outer.append(Vector3(way.x * RADIUS, 0.0, way.y * RADIUS))
+		var square := way * half / maxf(absf(way.x), absf(way.y))
+		inner.append(Vector3(square.x, 0.0, square.y))
+	for i in segments:
+		# el frente es horario: visto de arriba, del cuadrado al círculo, avanzando el ángulo
+		for corner: Vector3 in [inner[i], outer[i], outer[i + 1], inner[i], outer[i + 1], inner[i + 1]]:
+			tool.add_vertex(corner)
+	var mesh := tool.commit()
+	var disc := MeshInstance3D.new()
+	disc.mesh = mesh
+	disc.material_override = Clay.material(GROUND)
+	body.add_child(disc)
+	var shape := CollisionShape3D.new()
+	shape.shape = mesh.create_trimesh_shape()
 	body.add_child(shape)
 
 

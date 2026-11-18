@@ -57,6 +57,8 @@ static var depth := 10.0
 static var width := 14.0
 static var strip := 6.0
 static var strip_height := 4.0
+## El pozo del ascensor: del techo de la base al piso de la arena.
+static var shaft := 14.0
 ## Lo que sale de ésas: el lado del elevador, el largo de todo (elevador y gimnasio) y el fondo de la nave.
 static var ELEVATOR := 10.0
 static var LENGTH := 24.0
@@ -89,6 +91,7 @@ static func measure() -> void:
 	width = settings.strip_width
 	strip = settings.strip_depth
 	strip_height = settings.strip_height
+	shaft = settings.shaft_height
 	ELEVATOR = depth
 	NAVE = depth
 	LENGTH = depth + width
@@ -99,6 +102,16 @@ static func measure() -> void:
 	if settings.bag_place == 1:
 		x = maxf(x, LENGTH - BAG_CLEAR - BAG_RADIUS)
 	bag_at = Vector2(x, NAVE * 0.5)
+
+
+## EL PISO DE LA ARENA, sobre el pozo: hasta acá sube el ascensor, y ahí está la segunda compuerta.
+static func shaft_top() -> float:
+	return height + ROOF + shaft
+
+
+## El lado de la boca del pozo (y de las compuertas): el cuadrado del elevador sin su borde.
+static func span() -> float:
+	return ELEVATOR - HATCH_INSET * 2.0
 
 
 ## Arma la base en un nodo propio, colgado de `parent` (en el grupo GROUP, para rearmarla).
@@ -134,10 +147,19 @@ static func build(parent: Node3D) -> StaticBody3D:
 	_consoles(body)
 	_roof(body)
 	_lights(body)
+	_shaft(body)
 	var hatch := BaseHatch.new()
 	hatch.name = "Compuerta"
 	parent.add_child(hatch)
 	hatch.build()
+	var top := BaseHatch.new()
+	top.name = "Compuerta de arriba"
+	parent.add_child(top)
+	top.build(true)
+	var elevator := BaseElevator.new()
+	elevator.name = "Ascensor"
+	parent.add_child(elevator)
+	elevator.build()
 	var airlock := BaseAirlock.new()
 	airlock.name = "Esclusa"
 	airlock.position = at(LENGTH, NAVE)
@@ -210,6 +232,26 @@ static func _roof(body: StaticBody3D) -> void:
 	# el techo bajo de la franja
 	Clay.solid(body, Vector3(LENGTH - ELEVATOR, ROOF, strip), at((ELEVATOR + LENGTH) * 0.5, NAVE + strip * 0.5,
 		strip_height + ROOF * 0.5), WALL_COLOR)
+
+
+## EL POZO DEL ASCENSOR (el usuario, 19/11/2026): cuatro paredes sobre la boca de la compuerta del techo, hasta la de
+## arriba, en el piso de la arena. Donde se guardan las hojas de las compuertas (los bolsillos, a los costados en X),
+## la pared empieza arriba del bolsillo de abajo y termina abajo del de arriba: las hojas pasan por ahí.
+static func _shaft(body: StaticBody3D) -> void:
+	var side := span()
+	var middle := ELEVATOR * 0.5
+	var bottom := height + ROOF
+	var top := shaft_top()
+	var pocket := ROOF + BaseHatch.POCKET_RISE
+	for sign: float in [-1.0, 1.0]:
+		# en Z, de punta a punta
+		var z := middle + sign * (side * 0.5 + WALL * 0.5)
+		Clay.solid(body, Vector3(side + WALL * 2.0, top - bottom, WALL), at(middle, z, (bottom + top) * 0.5), WALL_COLOR)
+		# en X, entre los bolsillos
+		var low := height + pocket
+		var high := top - 0.03 - pocket
+		var x := middle + sign * (side * 0.5 + WALL * 0.5)
+		Clay.solid(body, Vector3(WALL, high - low, side), at(x, middle, (low + high) * 0.5), WALL_COLOR)
 
 
 ## LAS LUCES: con techo, el sol no entra. Lámparas colgadas, sin sombras.

@@ -5,6 +5,9 @@ extends Node3D
 ## corren hacia los costados, como una puerta de ciencia ficción (el usuario, 15/11/2026: «se abren hacia los
 ## costados»), cuando empieza una partida. Cada hoja se guarda en su bolsillo, una caja sobre el techo a cada lado.
 ## Por ahora se abre y se cierra con una tecla de su parcela.
+## HAY DOS (el usuario, 19/11/2026: «dos escotillas arriba del ascensor… la primera… la columna vertical… la segunda…
+## directamente a la arena»): la del techo de la base, con los bolsillos encima del techo, y la de arriba del pozo, en el
+## piso de la arena (`build(top)`), con los bolsillos abajo del piso, que no se ven.
 
 ## Lo que tarda en abrirse o cerrarse (s).
 const SLIDE_TIME := 4.0
@@ -20,12 +23,15 @@ var _open_x: Array[float] = []
 var _tween: Tween
 
 
-## Las dos hojas, cada una de la mitad del cuadrado, y sus dos bolsillos.
-func build() -> void:
+## Las dos hojas, cada una de la mitad del cuadrado, y sus dos bolsillos. Con `top`, la de arriba del pozo: las hojas
+## a ras del piso de la arena (un pelo abajo, para que no titilen con él) y los bolsillos debajo.
+func build(top := false) -> void:
 	var inset := BaseLayout.HATCH_INSET
 	var span := BaseLayout.ELEVATOR - inset * 2.0
 	var half := span * 0.5
 	var y := BaseLayout.height + BaseLayout.ROOF * 0.5
+	if top:
+		y = BaseLayout.shaft_top() - BaseLayout.ROOF * 0.5 - 0.02
 	var middle := BaseLayout.ELEVATOR * 0.5
 	var pockets := StaticBody3D.new()
 	pockets.name = "Bolsillos"
@@ -48,6 +54,8 @@ func build() -> void:
 		# el bolsillo: tapa la hoja abierta, apoyado en el techo (del lado de afuera, en la roca)
 		var pocket_size := Vector3(half + POCKET_SLACK * 2.0, BaseLayout.ROOF + POCKET_RISE, span + POCKET_SLACK * 2.0)
 		var pocket_at := BaseLayout.at(opened, middle, BaseLayout.height + pocket_size.y * 0.5)
+		if top:
+			pocket_at.y = BaseLayout.shaft_top() - 0.03 - pocket_size.y * 0.5
 		Clay.solid(pockets, pocket_size, pocket_at, BaseLayout.WALL_COLOR)
 
 

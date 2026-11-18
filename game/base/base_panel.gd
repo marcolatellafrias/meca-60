@@ -11,6 +11,7 @@ const LABELS := {
 	"strip_width": "franja de las consolas: ancho, y el largo del gimnasio (m)",
 	"strip_depth": "franja de las consolas (y esclusa): fondo (m)",
 	"strip_height": "franja de las consolas (y esclusa): alto (m)",
+	"shaft_height": "pozo del ascensor, del techo a la arena (m)",
 	"bag_place": "la bolsa",
 }
 

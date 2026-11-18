@@ -2,17 +2,14 @@ class_name ContractsScreen
 extends TerminalScreen
 
 ## LA CONSOLA DE CONTRATOS (ver docs/conceptual/contratos.md y docs/technical/sucursal.md): a la izquierda los contratos
-## (la dificultad, el jefe, la paga y los afijos), a la derecha el elegido. «Firmar» lo deja firmado; «Salir a la
-## arena», con uno firmado, abre la compuerta del techo (por ahora no hay arena detrás: es lo que pasa al empezar una
-## partida). En el estilo monocromo (Mono): el elegido, invertido; el lugar del jefe en 3D, tramado.
-
-## Lo que hace «Salir a la arena» (la terminal le pasa abrir la compuerta).
-var on_launch := Callable()
+## (la dificultad, el jefe, la paga y los afijos), a la derecha el elegido. «Firmar» lo deja firmado; para salir a la
+## arena, la tripulación sube al ascensor y el capitán aprieta su botón (BaseElevator; *hasta el 19/11/2026 había acá un
+## «salir a la arena» que abría la compuerta del techo*). En el estilo monocromo (Mono): el elegido, invertido; el lugar
+## del jefe en 3D, tramado.
 var _chosen := 0
 var _rows: Array[_Row] = []
 var _detail: VBoxContainer
 var _sign: MonoButton
-var _launch: MonoButton
 var _signed: MonoText
 
 
@@ -60,9 +57,6 @@ func build_content() -> Control:
 	buttons.alignment = BoxContainer.ALIGNMENT_END
 	buttons.add_theme_constant_override("separation", 14)
 	column.add_child(buttons)
-	_launch = MonoButton.make("SALIR A LA ARENA", Vector2(230, 46))
-	_launch.pressed.connect(_go)
-	buttons.add_child(_launch)
 	_sign = MonoButton.make("FIRMAR", Vector2(200, 46), true)
 	_sign.pressed.connect(func() -> void:
 		if is_captain():
@@ -101,17 +95,8 @@ func refresh() -> void:
 	else:
 		_signed.words = "NINGÚN CONTRATO FIRMADO."
 	_sign.disabled = state.contract == _chosen or not is_captain()
-	_launch.disabled = state.contract < 0 or not is_captain()
 	if not is_captain():
 		_signed.words += "  LO DECIDE EL CAPITÁN."
-
-
-func _go() -> void:
-	if not is_captain():
-		return
-	if on_launch.is_valid():
-		on_launch.call()
-	close()
 
 
 ## UN CONTRATO DE LA LISTA: la dificultad, el jefe y la paga; abajo los afijos. Elegido o con el mouse encima, invertido.

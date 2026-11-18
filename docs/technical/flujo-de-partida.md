@@ -38,8 +38,18 @@
 6. **La meca armada para los que son**: al abrir la esclusa, el host cuenta los jugadores y en todas las máquinas la
    meca se rearma para ellos (`CageShape.crew`: 1, 2 o 3 puestos; con más, la de 3), en `BaseWorld._crew_aboard`. —
    *Mundo*, **hecho** (probado con dos instancias: las dos la ven para 2, en el mismo lugar).
-7. **La salida a la arena**: «salir a la arena» abre la compuerta del techo, el elevador sube y todos pasan juntos a la
-   escena de la arena (el mapa de pelea con el jefe del contrato). — *Mundo*, cuando estén 5 y 8.
+7. **La salida a la arena, por el ascensor** (el usuario, 19/11/2026: «el sistema este de compuertas… es básicamente
+   para ocultar cosas y poder cargar cosas sin que los jugadores le vean»). El cuadrado del elevador es una plataforma
+   (`BaseElevator`) con un pedestal y su botón en la esquina, y un cartel que dice qué falta (el contrato, los que no
+   subieron, o «listo»). Con el contrato firmado y **todos arriba**, el capitán aprieta: sube una **baranda** por el
+   borde (que nadie se tire), se abre la compuerta del techo, la plataforma sube por **el pozo** (`BaseLayout._shaft`,
+   su largo es una perilla del F1) y se abre **la segunda compuerta**, la del piso de la arena. Al arrancar, **la arena
+   se arma arriba** (`BaseWorld._build_arena`: el mapa de pelea con **el hueco del ascensor** en el medio,
+   `Battlefield.build(hole)`, y el sol); la plataforma llega a ras de su piso y la baranda baja. En red lo dispara el
+   host en todos (`BaseSync.launch`) y cada máquina lo anda con los mismos tiempos. Los contratos sólo firman (el
+   «salir a la arena» de la terminal se fue). — *Mundo*, **hecho**. Probado: `tests/base_launch_look.tscn` (capturas)
+   y `tests/base_net_check.tscn` (los dos suben y se ven arriba, con la meca). *Falta*: el jefe del contrato en la
+   arena (el 8), los recursos del mapa (todavía no van por la red) y el hueco a los costados en lugar del medio.
 8. **El jefe por red**. — *Jefes*, **hecho** (18/11/2026; ver [[red]]): el jefe lo simula el host y las demás siguen su
    cuerpo; la vida la decide el host y la muerte (con su ragdoll) pasa en todas; los golpes del jefe a la meca los
    decide el host y el empujón lo hace la máquina de su dueño. *Falta: lo que se ve de sus ataques en las demás.*

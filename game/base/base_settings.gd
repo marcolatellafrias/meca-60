@@ -20,6 +20,9 @@ static var current := KnobsFile.load_into(BaseSettings.new(), SAVED) as BaseSett
 @export_range(11.0, BaseLayout.MAX_WIDTH, 0.25) var strip_width := 14.0
 @export_range(4.0, BaseLayout.MAX_STRIP, 0.25) var strip_depth := 6.0
 @export_range(3.0, 10.0, 0.25) var strip_height := 4.0
+## EL POZO DEL ASCENSOR (m): del techo de la base a la segunda compuerta, la del piso de la arena (el usuario, 19/11/2026:
+## «la columna vertical larga, o no tan larga»).
+@export_range(4.0, 40.0, 0.5) var shaft_height := 14.0
 ## DÓNDE CUELGA LA BOLSA: al medio del gimnasio (para dar vueltas pegándole) o en la punta, contra la pared con su
 ## margen (para pegarle de un lado).
 @export_enum("al medio", "en la punta") var bag_place := 0

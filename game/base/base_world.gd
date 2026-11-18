@@ -9,9 +9,12 @@ extends Node3D
 ##   · La meca jaula en el elevador, por la red (BodyNet: la simula su dueño, el host o el que la maneja). AL ABRIR LA
 ##     ESCLUSA SE ARMA PARA LOS QUE SON (CageShape.crew: de 1, 2 o 3 puestos), con la cuenta del host, igual en todas
 ##     las máquinas. *Hasta el 19/11/2026 estuvo congelada, como decorado, mientras la meca no iba por la red.*
+##   · LA ARENA, ARRIBA (el paso 7): al arrancar el ascensor (BaseElevator.launching) se arma el mapa de pelea sobre el
+##     pozo, con el hueco del ascensor en el medio, y se prende el sol. Las compuertas ocultan que recién se arma.
 
 const GROUP := "net_world"
 var _spawner: CharacterSpawner
+var _environment: Environment
 ## El jugador local al que ya se le dio vuelta hacia la compuerta (se vuelve a hacer si nace de nuevo).
 var _faced: Node
 
@@ -25,6 +28,7 @@ func _ready() -> void:
 	world.environment.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	world.environment.ambient_light_color = Color(0.82, 0.84, 0.87)
 	world.environment.ambient_light_energy = 0.45
+	_environment = world.environment
 	add_child(world)
 	var base := Node3D.new()
 	base.name = "Base"
@@ -33,6 +37,8 @@ func _ready() -> void:
 	BaseArchetype.place_mech(base)
 	var airlock := base.find_child("Esclusa", true, false) as BaseAirlock
 	airlock.opened.connect(_crew_aboard.bind(base))
+	var elevator := base.find_child("Ascensor", true, false) as BaseElevator
+	elevator.launching.connect(_build_arena.bind(base))
 	var characters := Node3D.new()
 	characters.name = "Personajes"
 	add_child(characters)
@@ -65,3 +71,23 @@ func start_point() -> Vector3:
 func _crew_aboard(players: int, base: Node3D) -> void:
 	CageShape.crew = clampi(players, 1, 3) - 1
 	BaseArchetype.place_mech(base)
+
+
+## LA ARENA SOBRE EL POZO: el mapa de pelea con el hueco del ascensor justo arriba de la plataforma, el piso a ras de la
+## compuerta de arriba. Sin recursos por ahora (todavía no van por la red). Y la luz de afuera: el sol y el cielo.
+func _build_arena(base: Node3D) -> void:
+	if get_node_or_null("Arena") != null:
+		return
+	var holder := base.get_node("Plano") as Node3D
+	var arena := Node3D.new()
+	arena.name = "Arena"
+	add_child(arena)
+	arena.global_position = holder.to_global(BaseLayout.at(BaseLayout.ELEVATOR * 0.5, BaseLayout.NAVE * 0.5,
+		BaseLayout.shaft_top()))
+	Battlefield.build(arena, BaseLayout.span(), false)
+	var sun := DirectionalLight3D.new()
+	sun.rotation_degrees = Vector3(-50.0, -35.0, 0.0)
+	sun.shadow_enabled = true
+	sun.directional_shadow_max_distance = 300.0
+	arena.add_child(sun)
+	_environment.background_color = Color(0.75, 0.82, 0.9)

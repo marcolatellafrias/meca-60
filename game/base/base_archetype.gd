@@ -65,12 +65,16 @@ func keys() -> Array[SandboxKey]:
 			var hatch := _hatch()
 			if hatch != null:
 				hatch.set_open(on)))
-	out.append(SandboxKey.action(KEY_X, SandboxKey.Weight.NORMAL, "rearmar la esclusa",
+	out.append(SandboxKey.action(KEY_X, SandboxKey.Weight.NORMAL, "rearmar la esclusa y bajar el ascensor",
 		func(_parcel: SandboxParcel) -> void:
 			if is_instance_valid(_root):
 				var airlock := _root.get_node_or_null("Plano/Esclusa") as BaseAirlock
 				if airlock != null:
-					airlock.rearm()))
+					airlock.rearm()
+				var elevator := _root.get_node_or_null("Plano/Ascensor") as BaseElevator
+				if elevator != null and elevator.launched:
+					elevator.reset()
+					place_mech(_root)))
 	return out
 
 
