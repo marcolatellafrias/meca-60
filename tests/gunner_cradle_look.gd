@@ -22,6 +22,8 @@ const DARK_FORK := Color(0.12, 0.12, 0.13)
 const PIVOT := Vector3(0.0, 0.42, 0.02)
 ## Dónde va cada tornillo del eje: en la cara del costado del asiento.
 const BOLT_X := 0.27
+## Cuánto más grandes van la minigun y la caja de misiles.
+const WEAPON_SCALE := 1.5
 ## LOS DOS AROS (m, al medio de cada lado; alto sobre el piso): el de afuera, fijo; el de adentro, que gira.
 const OUTER := Vector2(0.4, 0.05)
 const INNER := Vector2(0.27, 0.12)
@@ -170,16 +172,20 @@ func _idea(number: int) -> void:
 	for side: float in [-1.0, 1.0]:
 		Clay.cylinder(_rig, 0.055, 0.1, PIVOT + Vector3(side * (BOLT_X + 0.02), 0.0, 0.0), CageCabin.RIM_COLOR, Vector3(0.0, 0.0, 90.0))
 	# La minigun, a la derecha; la caja de misiles, más grande, bien a la izquierda.
-	# Las armas, en la línea del eje (ni adelante ni atrás): los brazos suben derecho desde los tornillos.
-	var gun := Vector3(0.7, 0.86, PIVOT.z)
-	var bolt_right := PIVOT + Vector3(BOLT_X + 0.08, 0.0, 0.0)
-	_arm_to(bolt_right, gun + Vector3(-0.02, -0.1, 0.06), 1.0)
-	_weapon(_rig, gun, 1.0)
-	var pod := Vector3(-0.82, 0.92, PIVOT.z)
-	var bolt_left := PIVOT + Vector3(-BOLT_X - 0.08, 0.0, 0.0)
-	_arm_to(bolt_left, pod + Vector3(0.05, -0.18, 0.0), -1.0)
+	# Las armas, en la línea del eje (ni adelante ni atrás), MÁS GRANDES (`WEAPON_SCALE`): los brazos suben derecho
+	# desde los tornillos.
+	var gun := Vector3(0.82, 0.9, PIVOT.z)
+	_arm_to(PIVOT + Vector3(BOLT_X + 0.08, 0.0, 0.0), gun + Vector3(-0.04, -0.16, 0.08), 1.0)
+	var gun_holder := Node3D.new()
+	gun_holder.position = gun
+	gun_holder.scale = Vector3.ONE * WEAPON_SCALE
+	_rig.add_child(gun_holder)
+	_weapon(gun_holder, Vector3.ZERO, 1.0)
+	var pod := Vector3(-0.98, 0.98, PIVOT.z)
+	_arm_to(PIVOT + Vector3(-BOLT_X - 0.08, 0.0, 0.0), pod + Vector3(0.08, -0.26, 0.0), -1.0)
 	var holder := Node3D.new()
 	holder.position = pod
+	holder.scale = Vector3.ONE * WEAPON_SCALE
 	_rig.add_child(holder)
 	_missiles_on(holder, Vector3.ZERO, 3, 2, 0.11)
 	# El yugo: una columna desde el borde de adelante del asiento.
