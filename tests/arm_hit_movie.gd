@@ -76,6 +76,9 @@ func _ready() -> void:
 				_title.text = "%d. %s · %s · %s" % [number, tip[1], MechArm.NAMES[kind], VIEWS[view]]
 				var before := Health.of(_boss).left
 				var arm := _mech.arms[1]
+				# La anterior, terminada: si no, ésta no sale.
+				while arm.punching != MechArm.Punch.NONE:
+					await get_tree().physics_frame
 				arm.punch(kind)
 				await _wait(PUNCH_TIME)
 				print("%-42s conectó a %4.1f m/s (%s) · le sacó %.2f" % [_title.text, arm.last_hit_speed,
