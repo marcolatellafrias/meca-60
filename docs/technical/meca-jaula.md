@@ -16,9 +16,11 @@ cinemático, la arena de esquivar, el brazo suelto y el cubo con piernas archiva
 sus notas; está entera en el commit `0bcaeaf`. Lo que la jaula usaba de ella quedó: la meca con herramientas
 (`ToolMech`, abajo), los brazos ([[brazo]]), el cuerpo con equilibrio ([[base-comun]]) y la meca de práctica.
 
-## Para cuántos: 1, 2 o 3 jugadores — `CageShape.crew` (F2)
-Una perilla en la pestaña del cuerpo (18/11/2026, el usuario: «haría la variante de 2 y 1… si yo quiero probar la meca
-de a 1, puedo hacerlo»):
+## Para cuántos: 1, 2 o 3 jugadores — `CageShape.crew` (la P)
+Para probar, la **P** del panel chico en la parcela de la meca jaula pasa de 3 a 1, a 2 y a 3, y rearma las mecas. **No se
+guarda**: cada vez que arranca, la de 3. *Hasta el 18/11/2026 era una perilla guardada en la pestaña del cuerpo del F2.*
+El usuario, 18/11/2026: «haría la variante de 2 y 1… si yo quiero probar la meca de a 1, puedo hacerlo».
+
 - **De 3**: todo.
 - **De 2**: sin la torre del artillero. Su arma irá a otro lado; la hace la sesión de las armas.
 - **De 1**: sólo la cápsula de abajo, sin el bloque de arriba ni la torre. Se maneja con **el modo manejo**: un brazo

@@ -43,11 +43,10 @@ func _ready() -> void:
 	add_child(_eye)
 	_eye.make_current()
 	# LAS TRES: de 1, de 2 y de 3, mirando hacia −Z, una al lado de la otra.
-	var form := CageShape.current
-	var was := form.crew
+	var was := CageShape.crew
 	var mechs: Array[CageMech] = []
 	for crew in 3:
-		form.crew = crew
+		CageShape.crew = crew
 		var mech := CageMech.new()
 		mech.equipment = CageMechArchetype.ROW
 		# La de 3, con el escudo en el brazo derecho (el canje: un arma menos).
@@ -57,7 +56,7 @@ func _ready() -> void:
 		mech.position = Vector3((crew - 1) * GAP, Mech.standing_height(mech.cabin_shape), 0.0)
 		add_child(mech)
 		mechs.append(mech)
-	form.crew = was
+	CageShape.crew = was
 	await get_tree().create_timer(1.0).timeout
 	for crew in 3:
 		var cabin := mechs[crew].cabin as CageCabin

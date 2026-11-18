@@ -28,12 +28,14 @@ extends Resource
 
 const SAVED := "res://game/mech/cage/cage_shape.tres"
 static var current := CageShape.saved()
+## PARA CUÁNTOS JUGADORES (18/11/2026, el usuario: «haría la variante de 2 y 1… si yo quiero probar la meca de a 1»; el
+## diseño, en docs/conceptual/la-meca.md): 0, 1 o 2, para 1, 2 o 3 jugadores (el número, `players`). De 3, todo; de 2, sin
+## la torre del artillero; de 1, sólo la cápsula de abajo, sin el bloque de arriba ni la torre (se maneja con el modo
+## manejo, ver CageBoards). NO SE GUARDA: es para probar, y lo cambia la P del panel chico en la parcela de la meca jaula
+## (CageMechArchetype.keys); cada vez que arranca, la de 3. *Hasta el 18/11/2026 era una perilla guardada del F2.*
+static var crew := 2
 
 @export_group("El cuerpo")
-## PARA CUÁNTOS JUGADORES (18/11/2026, el usuario: «haría la variante de 2 y 1… si yo quiero probar la meca de a 1»; el
-## diseño, en docs/conceptual/la-meca.md): de 3, todo; de 2, sin la torre del artillero; de 1, sólo la cápsula de abajo,
-## sin el bloque de arriba ni la torre (se maneja con el modo manejo, ver CageBoards). El número, `players`.
-@export_enum("1 jugador", "2 jugadores", "3 jugadores") var crew := 2
 ## EL TORSO: la cuadrada (la caja) o la redonda (el cubo chanfleado).
 @export_enum("cuadrada", "redonda") var torso := 0
 ## LA REDONDA: EL TALLE DEL CUERPO, de 0 (su cara de adelante, justo la cápsula con su marco) a 1 (su cara de arriba,

@@ -7,7 +7,6 @@ extends KnobsPanel
 
 const PANEL_WIDTH := 400.0
 const LABELS := {
-	"crew": "para cuántos: de 1, sólo la cápsula; de 2, sin la torre; de 3, todo",
 	"torso": "el torso: la cuadrada (la caja) o la redonda (el cubo chanfleado)",
 	"body_size": "la redonda: el talle (0, la cápsula con su marco; 1, el octógono de arriba)",
 	"body_chamfer": "la redonda: el chanfle (0, parejo como la cápsula; 1, casi un cubo)",

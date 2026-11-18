@@ -29,9 +29,16 @@ func describe(_seed_value: int) -> PackedStringArray:
 	])
 
 
-## Las de toda meca (MechArchetype.keys) y LA GRILLA DE LOS TABLEROS (ver CageBoards): para ubicar piezas, no de la meca.
+## Las de toda meca (MechArchetype.keys), LA GRILLA DE LOS TABLEROS (ver CageBoards: para ubicar piezas, no de la meca)
+## y PARA CUÁNTOS JUGADORES (CageShape.crew; el usuario, 18/11/2026, por Armas: una sola tecla que pase por las tres, sin
+## guardarse): rearma las mecas (Mech.rebuild_all), como el F2.
 func keys() -> Array[SandboxKey]:
 	var out := super()
+	out.append(SandboxKey.cycle(KEY_P, SandboxKey.Weight.NORMAL, "para cuántos",
+		["1 jugador", "2 jugadores", "3 jugadores"], func() -> int: return CageShape.crew,
+		func(parcel: SandboxParcel, crew: int) -> void:
+			CageShape.crew = crew
+			Mech.rebuild_all(parcel.get_tree())))
 	out.append(SandboxKey.toggle(KEY_L, SandboxKey.Weight.NORMAL, "la grilla de los tableros",
 		func() -> bool: return CageBoards.show_grid,
 		func(parcel: SandboxParcel, on: bool) -> void: CageBoards.set_grid_visible(parcel.get_tree(), on)))
