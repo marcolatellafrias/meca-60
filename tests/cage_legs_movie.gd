@@ -7,16 +7,24 @@ extends Node
 ## --write-movie:
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/piernas.avi --fixed-fps 30 res://tests/cage_legs_movie.tscn
 ## Imprime, caminando, qué parte del tiempo no tenía ningún pie en el aire (la pausa que vio el usuario: «paso, paso,
-## pausa») y cuántos pasos dio.
+## pausa») y cuántos pasos dio; y la caja al caminar: cuánto sube con el paso y cuánto se inclina de costado (y de frente,
+## que no tiene que inclinarse).
 
 var _mech: Mech = null
 var _eye: Camera3D = null
 var _title: Label = null
 var _cam_at := Vector3.ZERO
 var _first := true
+## Desde dónde mira la cámara (relativo a la meca): de costado; yendo de costado, de frente (para ver la inclinación).
+var _cam_from := Vector3(17.0, 4.0, 5.0)
 ## Caminando: cuánto tiempo, y cuánto sin ningún pie en el aire (s).
 var _walking := 0.0
 var _paused := 0.0
+## La caja al caminar (BodyLegs.pose_offset): lo más que subió (m) y lo más que se inclinó de costado yendo de costado y
+## yendo de frente (°).
+var _bob := 0.0
+var _lean_side := 0.0
+var _lean_ahead := 0.0
 
 
 func _ready() -> void:
@@ -66,8 +74,10 @@ func _ready() -> void:
 	await _run("dobla de golpe: atrás", 1.2, Vector2(0.0, -1.0))
 	await _run("frena", 1.0, Vector2.ZERO)
 	await _turn_in_place(2.5)
-	await _run("de costado", 2.0, Vector2(-1.0, 0.0))
+	_cam_from = Vector3(4.0, 4.0, 17.0)
+	await _run("de costado", 3.0, Vector2(-1.0, 0.0))
 	await _run("frena", 1.0, Vector2.ZERO)
+	_cam_from = Vector3(17.0, 4.0, 5.0)
 	await _dash()
 	await _jump(false, false)
 	await _jump(true, false)
@@ -75,6 +85,8 @@ func _ready() -> void:
 	await _run("parada", 1.0, Vector2.ZERO)
 	print("caminando: sin ningún pie en el aire el %.0f %% del tiempo · %d pasos" % [100.0 * _paused / maxf(_walking, 0.01),
 		_mech.legs.steps_taken])
+	print("la caja al caminar: sube hasta %.2f m · de costado se inclina %.1f° · de frente %.1f°" % [_bob, _lean_side,
+		_lean_ahead])
 	get_tree().quit()
 
 
@@ -87,6 +99,13 @@ func _run(label: String, seconds: float, move: Vector2) -> void:
 		var delta := await _tick()
 		clock += delta
 		# Caminando de verdad (ya arrancó, en el piso): ¿algún pie en el aire?
+		var walk := _mech.legs.pose_offset()
+		var lean := absf(rad_to_deg(walk.basis.get_euler().z))
+		_bob = maxf(_bob, walk.origin.y)
+		if move.x != 0.0:
+			_lean_side = maxf(_lean_side, lean)
+		elif move.y != 0.0 and clock > 0.6:
+			_lean_ahead = maxf(_lean_ahead, lean)
 		if move != Vector2.ZERO and clock > 0.5 and _mech.grounded and _mech.support_speed.length() > 1.0:
 			_walking += delta
 			if int(_mech.legs.get("_swing")) < 0:
@@ -142,5 +161,5 @@ func _tick() -> float:
 	var at := _mech.mover.global_position + Vector3.UP * 2.6
 	_cam_at = at if _first else _cam_at.lerp(at, 1.0 - exp(-3.0 * delta))
 	_first = false
-	_eye.global_transform = Transform3D(Basis(), _cam_at + Vector3(17.0, 4.0, 5.0)).looking_at(_cam_at, Vector3.UP)
+	_eye.global_transform = Transform3D(Basis(), _cam_at + _cam_from).looking_at(_cam_at, Vector3.UP)
 	return delta

@@ -67,6 +67,12 @@ var _tuck := 0.0
 ## LA MARCHA COMÚN de los pasos nuevos (Gait), de dos caderas; y hacia dónde miraba cada pie al salir.
 var _gait := Gait.new()
 var _lift_yaw: Array[float] = [0.0, 0.0]
+## LA CAJA AL CAMINAR (sube con el paso, se inclina de costado; LegSettings, «La caja al caminar»): las señales de la
+## marcha (GaitSignals), la tabla común (ProceduralBoneAnimator) y la pieza que mueve, sin dibujo: la lee el motor
+## (`pose_offset`, en KinematicMover.body_place).
+var signals := GaitSignals.new()
+var _pose := Node3D.new()
+var _table: ProceduralBoneAnimator = null
 var _pelvis: MeshInstance3D = null
 var _legs: Array[MechLeg] = []
 
@@ -84,6 +90,11 @@ func _ready() -> void:
 		leg.measures = body.measures
 		add_child(leg)
 		_legs.append(leg)
+	_pose.name = "LaCajaAlCaminar"
+	add_child(_pose)
+	_table = ProceduralBoneAnimator.create(signals)
+	_table.register_formula(_pose, ProceduralBoneAnimator.Axis.POS_Y, _bob_now)
+	_table.register_formula(_pose, ProceduralBoneAnimator.Axis.ROT_Z, _lean_now)
 
 
 ## Los pies vuelven a plantarse debajo (al aterrizar).
@@ -130,6 +141,14 @@ func place(k: BodySettings, delta: float) -> void:
 	else:
 		_planted = false
 		_swing = -1
+	# LA CAJA AL CAMINAR: las señales (parada, de la marcha; si no, se apagan) y la tabla.
+	signals.full_speed = body.kinematic_settings().walk_speed
+	if standing and LegSettings.current.new_steps:
+		signals.read(_gait, Basis(Vector3.UP, yaw), body.support_speed, delta)
+	else:
+		signals.step_progress = 0.0
+		signals.horizontal_velocity_smooth = signals.horizontal_velocity_smooth.lerp(Vector2.ZERO, 1.0 - exp(-8.0 * delta))
+	_table.update()
 	# LA PELVIS: cuelga de la caja, inclinada como ella, mirando al promedio de los dos pies.
 	var pelvis_yaw := lerp_angle(_feet_yaw[0], _feet_yaw[1], 0.5) if standing else yaw
 	facing_yaw = pelvis_yaw
@@ -274,6 +293,21 @@ func _gait_setup() -> void:
 	_gait.lift = s.lift * _stride()
 	_gait.fastest = s.fastest * 2.0 / _gait.swing_part
 	_gait.slowest = s.slowest * 2.0 / _gait.swing_part
+
+
+## LAS DOS FILAS DE LA TABLA: sube a mitad de cada paso (m) y se inclina de costado según la velocidad de costado (rad).
+func _bob_now() -> float:
+	return signals.step_progress * LegSettings.current.bob * _stride()
+
+
+func _lean_now() -> float:
+	var side := clampf(signals.horizontal_velocity_smooth.x / maxf(signals.full_speed, 0.01), -1.0, 1.0)
+	return side * deg_to_rad(LegSettings.current.side_lean)
+
+
+## LO QUE LA CAJA SUBE Y SE INCLINA CAMINANDO, en sus ejes (la tabla; ver `signals`): lo compone el motor.
+func pose_offset() -> Transform3D:
+	return _pose.transform
 
 
 ## Si algún pie está en el aire (para las pruebas: la pausa entre pasos).

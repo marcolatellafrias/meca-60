@@ -30,3 +30,11 @@ static var current := KnobsFile.load_into(LegSettings.new(), SAVED) as LegSettin
 @export_range(0.1, 1.5, 0.05) var fastest := 0.2
 @export_range(0.2, 2.0, 0.05) var slowest := 0.7
 
+@export_group("La caja al caminar")
+## LO QUE HACE LA CAJA CON LOS PASOS (18/11/2026; módulo Jefes, el sistema común: GaitSignals y la tabla de los
+## personajes, ProceduralBoneAnimator; sólo dibujo). El usuario: «una curva leve de subir y bajar la pelvis… le da el
+## feeling de meca»; «de costado, el torso entero se inclina un poco… adelante y atrás, nunca».
+## Cuánto sube a mitad de cada paso (m, piernas medianas; 0, nada).
+@export_range(0.0, 2.0, 0.05) var bob := 0.5
+## Cuánto se inclina yendo de costado a la velocidad de caminar (°; 0, nada).
+@export_range(0.0, 20.0, 0.5) var side_lean := 5.0

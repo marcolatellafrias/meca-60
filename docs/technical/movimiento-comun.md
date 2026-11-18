@@ -28,7 +28,8 @@ huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la me
    correr; imprime la pausa y lo que se corre un pie apoyado). *Falta: usarla en los jefes de patas (BossParts
    «cuatro»); «recoger» (dash, aire).*
 2. **Las señales** (`MotionSignals`, game/common/): lo que lee la tabla. La base común; cada cuerpo las calcula a su
-   manera (los personajes, `LocomotionSignals`, de sus dos pies). Normalizadas por el largo de pierna. **Hecho.**
+   manera (los personajes, `LocomotionSignals`, de sus dos pies; los de patas, `GaitSignals`, de su marcha: el arco del
+   paso, la velocidad en sus ejes suavizada). Normalizadas por el largo de pierna. **Hecho.**
 3. **Los resortes** (`HitSpring`, game/common/, lo sacó Personajes de su cápsula): golpe y aterrizaje. **Hecho.**
    **CADA CUERPO ES DUEÑO DEL SUYO** (`body_spring`, 18/11/2026): la jaula, en su motor (`KinematicMover.body_spring`);
    el Luchador, en `Brawler.body_spring`. El cuerpo lo actualiza y lo dibuja en `body_place` / `_place_upper`: la
@@ -49,6 +50,12 @@ huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la me
    piezas de una meca o un jefe) y lee **cualquier `MotionSignals`**. Quién mueve qué lo dice cada cuerpo (en los
    personajes, animations.gd). **Hecho**; `tests/procedural_node_check` (sin ventana): un torso de arcilla se inclina
    11,5° yendo de costado a 4 m/s y la pelvis baja 0,2 m a mitad de un paso, y vuelven.
+   **LA JAULA LA USA** (18/11/2026): BodyLegs tiene sus señales (`GaitSignals`) y dos filas que mueven una pieza sin
+   dibujo (`pose_offset`), que el motor compone en la caja (`KinematicMover.body_place`, sobre el piso de la caja): SUBE
+   a mitad de cada paso (`LegSettings.bob`, 0,5 m de piernas medianas: 0,15 m en la jaula) y SE INCLINA DE COSTADO según
+   la velocidad de costado (`side_lean`, 5° a la de caminar; de frente, nunca). F4, «La caja al caminar». El usuario:
+   «una curva leve de subir y bajar la pelvis… le da el feeling de meca»; «adelante y atrás, nunca». En
+   `tests/cage_legs_movie`: sube hasta 0,15 m, de costado 5°, de frente 0,3° (el instante de doblar).
 5. **Un solo IK de dos huesos**: `Gait.knee` (lo usan las patas de la marcha). *Falta que lo usen la jaula y los
    personajes.*
 

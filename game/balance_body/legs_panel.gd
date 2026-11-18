@@ -11,6 +11,7 @@ const LABELS := {
 	"new_steps": "los pasos nuevos (apagado: los de antes)",
 	"stride": "largo del paso (m, piernas medianas)", "lift": "cuánto sube el pie (m, piernas medianas)",
 	"fastest": "el paso más rápido (s)", "slowest": "el paso más lento (s)",
+	"bob": "la caja sube a mitad del paso (m, piernas medianas)", "side_lean": "de costado se inclina (°)",
 }
 
 

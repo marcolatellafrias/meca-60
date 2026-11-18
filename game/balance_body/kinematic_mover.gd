@@ -119,6 +119,12 @@ func body_place() -> Transform3D:
 		var sway := Basis(upright.basis.x, deg_to_rad(tilt.x)) * Basis(upright.basis.z, -deg_to_rad(tilt.y))
 		upright = Transform3D(sway * upright.basis, global_position + sway * (upright.origin - global_position))
 	upright.origin.y -= body_spring.y * body.kinematic_settings().land_sink
+	# CAMINANDO (BodyLegs.pose_offset): sube con el paso y se inclina de costado sobre el piso de la caja.
+	if body.legs != null and body.state == BalanceBody.State.STANDING:
+		var walk := body.legs.pose_offset()
+		var pivot := upright * Vector3(0.0, -body.size.y * 0.5, 0.0)
+		var roll := upright.basis * walk.basis * upright.basis.inverse()
+		upright = Transform3D(roll * upright.basis, pivot + roll * (upright.origin - pivot) + upright.basis * walk.origin)
 	return upright
 
 
