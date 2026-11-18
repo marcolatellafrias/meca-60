@@ -449,6 +449,11 @@ func take_hit(strength: float, at: Vector3, source: String) -> void:
 	if source != "rayo" or now - _shown_at > 250:
 		_shown_at = now
 		HitReaction.of(boss).show_hit(at, furnace or strength > 300000.0)
+	# SE INCLINA con el golpe (sólo dibujo): de donde vino hacia afuera, según la fuerza.
+	var away := boss.global_position - at
+	away.y = 0.0
+	if away.length() > 0.01 and source != "rayo":
+		HitReaction.of(boss).sway(away.normalized() * strength / 100000.0 * k.hit_sway)
 	if source != "rayo":
 		if furnace:
 			furnace_hits += 1

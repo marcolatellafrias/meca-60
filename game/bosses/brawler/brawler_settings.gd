@@ -65,6 +65,9 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 ## taladro cargado empuja mucho: sin tope sacaba 38).
 @export_range(0.0, 50.0, 0.5) var energy_damage := 4.0
 @export_range(1.0, 100.0, 1.0) var energy_cap := 12.0
+## CUÁNTO SE INCLINA CON UN GOLPE (sólo dibujo, el resorte de los golpes): m/s del resorte por cada 100.000 kg·m/s.
+## Más grande el jefe, menos (bajarlo).
+@export_range(0.0, 10.0, 0.1) var hit_sway := 1.5
 
 @export_group("Arena")
 ## EL RADIO DE LA ARENA (m; BossArena): el círculo del que no sale. El anillo del piso lo sigue al guardar; los edificios

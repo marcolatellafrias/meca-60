@@ -91,6 +91,9 @@ var rush_up := 0.3
 ##   · `jump(to, time, arc)`: un salto en arco hasta un punto (cualquier poder lo puede pedir); `landed_now` es cierto
 ##     el paso en que cae.
 var hurry := 1.0
+## LA INCLINACIÓN DE UN GOLPE (°; x adelante y atrás, y de costado): sólo dibujo, lo de arriba gira sobre la cintura.
+## La escribe HitReaction desde su resorte (HitSpring) cuando la meca le pega.
+var hit_tilt := Vector2.ZERO
 var fly_height := 0.0
 var go := Vector3.ZERO
 var omni := false
@@ -299,7 +302,9 @@ func _physics_process(delta: float) -> void:
 func _place_upper() -> void:
 	if _torso_shape != null:
 		_torso_shape.transform = Transform3D(Basis(Vector3.UP, waist_yaw - hull_yaw), _torso_shape.position)
-	body.upper.global_transform = Transform3D(Basis(Vector3.UP, waist_yaw).scaled(Vector3.ONE * scale()),
+	var upright := Basis(Vector3.UP, waist_yaw)
+	var sway := Basis(upright.x, deg_to_rad(hit_tilt.x)) * Basis(upright.z, -deg_to_rad(hit_tilt.y))
+	body.upper.global_transform = Transform3D((sway * upright).scaled(Vector3.ONE * scale()),
 		global_position + Vector3.UP * BrawlerBody.HIP * scale())
 
 

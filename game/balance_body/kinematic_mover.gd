@@ -56,6 +56,10 @@ var _shove_flat := Vector3.ZERO
 var _shove_hop := 0.0
 ## LA CAÍDA (ver `knock_down`): cuánto está inclinada para atrás (°) y su reloj (s).
 var lean := 0.0
+## LA INCLINACIÓN DE UN GOLPE (°; x adelante y atrás, positivo para atrás; y de costado, positivo a la derecha): sólo
+## dibujo, la caja gira sobre el piso de sus pies. La escribe en cada paso quien lleva el resorte de los golpes
+## (HitReaction, con HitSpring; módulo Jefes, 18/11/2026). En cero, nada.
+var hit_tilt := Vector2.ZERO
 var _fall_clock := 0.0
 var _cylinder := CylinderShape3D.new()
 var _holder := CollisionShape3D.new()
@@ -101,12 +105,15 @@ func _fit() -> void:
 ## simple, agarrar la pose de reposo, y hacer que siempre se caiga hacia arriba (espalda al suelo)»).
 func body_place() -> Transform3D:
 	var upright := standing_place()
-	if lean <= 0.0:
-		return upright
-	var back := upright.basis.z * body.size.z * 0.5
-	var turn := Basis(upright.basis.x, deg_to_rad(lean))
-	var pivot := global_position + back
-	return Transform3D(turn * upright.basis, pivot + turn * (upright.origin - pivot))
+	if lean > 0.0:
+		var back := upright.basis.z * body.size.z * 0.5
+		var turn := Basis(upright.basis.x, deg_to_rad(lean))
+		var pivot := global_position + back
+		upright = Transform3D(turn * upright.basis, pivot + turn * (upright.origin - pivot))
+	if hit_tilt != Vector2.ZERO:
+		var sway := Basis(upright.basis.x, deg_to_rad(hit_tilt.x)) * Basis(upright.basis.z, -deg_to_rad(hit_tilt.y))
+		upright = Transform3D(sway * upright.basis, global_position + sway * (upright.origin - global_position))
+	return upright
 
 
 ## DÓNDE IRÍA LA CAJA PARADA, aunque esté caída (la pose de reposo se arma ahí y se vuelca: ver BodyLegs.place).

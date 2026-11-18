@@ -44,6 +44,9 @@ var _hold := Vector3.ZERO
 var _land_damage := 0.0
 var _land_what := ""
 var _flash := 0.0
+## EL RESORTE DE LOS GOLPES (HitSpring, la pieza común con los personajes): cada golpe lo inclina y vuelve rebotando.
+## Sólo dibujo: lo que se inclina lo dice el cuerpo (`hit_tilt`: la jaula, por su motor; un jefe, lo de arriba).
+var spring := HitSpring.new()
 var _painted: Array[MeshInstance3D] = []
 var _white := StandardMaterial3D.new()
 
@@ -96,6 +99,7 @@ func down() -> bool:
 func react(kind: Kind, away: Vector3, distance: float, at: Vector3) -> void:
 	hits += 1
 	show_hit(at, kind == Kind.KNOCKDOWN)
+	sway(away * distance * SWAY_PER_M)
 	_away = Vector3(away.x, 0.0, away.z).normalized()
 	if _away == Vector3.ZERO:
 		_away = Vector3.BACK
@@ -110,6 +114,29 @@ func react(kind: Kind, away: Vector3, distance: float, at: Vector3) -> void:
 	else:
 		_body.shove(_away * distance, FALL_TIME, FALL_HOP)
 		_body.knock_down()
+
+
+## SE INCLINA CON UN GOLPE de `push` (m/s, en el mundo, hacia donde lo empuja): el resorte (HitSpring), en los ejes del
+## cuerpo. No tumba nunca (eso lo decide el ataque: Kind.KNOCKDOWN).
+func sway(push: Vector3) -> void:
+	var facing := _facing()
+	var local := facing.inverse() * Vector3(push.x, 0.0, push.z)
+	spring.hit(Vector2(local.x, local.z), 1.0, false)
+
+
+## Cuánto inclina cada metro de empuje de un ataque (m/s del resorte por m).
+const SWAY_PER_M := 0.15
+## Cuánto se inclina con el resorte en el borde (°).
+const SWAY_DEGREES := 20.0
+
+
+## Hacia dónde mira el cuerpo (para pasar el golpe a sus ejes).
+func _facing() -> Basis:
+	if _kinematic():
+		return Basis(Vector3.UP, _body.mover.rotation.y)
+	if "waist_yaw" in _target:
+		return Basis(Vector3.UP, float(_target.get("waist_yaw")))
+	return Basis(Vector3.UP, _target.global_rotation.y)
 
 
 ## Sólo lo que se ve y se oye (también para el jefe cuando le pegan).
@@ -160,6 +187,13 @@ func clear() -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# EL RESORTE: se endereza solo; lo que inclina lo escribe en el cuerpo (z, para atrás: positivo en x).
+	spring.update(delta)
+	var tilt := Vector2(spring.hit_xz.y, spring.hit_xz.x) * SWAY_DEGREES
+	if _kinematic():
+		_body.mover.hit_tilt = tilt
+	elif "hit_tilt" in _target:
+		_target.set("hit_tilt", tilt)
 	if _flash > 0.0:
 		_flash -= delta
 		_white.albedo_color.a = 0.85 * clampf(_flash / FLASH_TIME, 0.0, 1.0)
