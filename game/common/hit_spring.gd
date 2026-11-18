@@ -32,6 +32,10 @@ var land_threshold := 2.0
 var land_full_speed := 10.0
 var land_stiffness := 25.0
 var land_damping := 6.0
+## EL QUIEBRE COMO EMPUJÓN (las mecas; 18/11/2026, el usuario: «el peso se siente en el quiebre inicial nada más… la
+## vuelta… nunca sluggish»): en vez de quedar hundido de una, sale hacia abajo con la velocidad justa para llegar a lo
+## mismo en un instante (1/√rigidez s) y el resorte lo devuelve. Apagado, como los personajes: hundido de una.
+var land_push := false
 
 ## Lo continuo va hacia acá (la inercia de lo que lo lleva, en la unidad de `xz`): lo escribe quien lo tiene.
 var lean_target := Vector2.ZERO
@@ -75,7 +79,12 @@ func hit(dv: Vector2, firmness := 1.0, can_fall := true) -> bool:
 func land(dv_y: float) -> void:
 	if absf(dv_y) <= land_threshold:
 		return
-	y = clampf(y + dv_y / land_full_speed, -1.0, 1.0)
+	var depth := clampf(dv_y / land_full_speed, -1.0, 1.0)
+	if land_push:
+		# Un resorte casi crítico empujado con v llega a ~v / (ω·e) en 1/ω.
+		_y_vel += depth * sqrt(land_stiffness) * exp(1.0)
+		return
+	y = clampf(y + depth, -1.0, 1.0)
 	_y_vel = 0.0
 
 

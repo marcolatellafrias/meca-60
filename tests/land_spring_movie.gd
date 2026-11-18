@@ -96,22 +96,30 @@ func _jump_mech(label: String, dive: bool) -> void:
 	_mech.jump = true
 	await _wait(0.1)
 	_mech.jump = false
-	await _land_mech(label, dive, 2.6)
+	await _land_mech(label, dive, 3.4)
 
 
 ## Hasta que cae y se repone (`seconds`): cuánto se hundió y si levantó polvo.
 func _land_mech(label: String, dive: bool, seconds: float) -> void:
 	var dust := _mech.mover.dust_raised
 	var deepest := 0.0
+	var deepest_at := 0.0
+	var back_at := -1.0
 	var clock := 0.0
 	while clock < seconds:
 		await get_tree().physics_frame
 		clock += 1.0 / Engine.physics_ticks_per_second
 		_mech.crouch = dive and clock > 0.25 and not _mech.grounded
-		deepest = maxf(deepest, _mech.mover.body_spring.y)
+		var y := _mech.mover.body_spring.y
+		if y > deepest:
+			deepest = y
+			deepest_at = clock
+		elif deepest > 0.05 and back_at < 0.0 and y < deepest * 0.1:
+			back_at = clock
 	_mech.crouch = false
-	print("%s: se hundió %.2f m%s" % [label, deepest * _mech.kinematic_settings().land_sink,
-		" · levantó polvo" if _mech.mover.dust_raised > dust else ""])
+	print("%s: se hundió %.2f m%s%s" % [label, deepest * _mech.kinematic_settings().land_sink,
+		" · levantó polvo" if _mech.mover.dust_raised > dust else "",
+		" · volvió en %.2f s" % ((back_at - deepest_at) * Engine.time_scale) if back_at > 0.0 else ""])
 	await _wait(0.6)
 
 

@@ -46,8 +46,10 @@ huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la me
      cayendo a `land_full_speed` m/s (KinematicSettings, grupo Aterrizar; 0,6 m a 20 m/s): 0,40 m de un salto, 0,60 m
      en picada. El Luchador, `LAND_SINK` m de la maqueta a `LAND_FULL` m/s (3 a 80): 1,8 m de un salto de 12 m de
      alto, 3 de uno de 25. `tests/land_spring_movie` (el video).
-     **Con peso** (18/11/2026; el usuario: «se debería sentir más el peso»): la jaula baja de golpe hasta 0,9 m y vuelve
-     en `land_recover` s (0,8) casi sin rebote. **Y POLVO** cayendo fuerte (`dust_speed`, 16 m/s: un salto no, en picada
+     **Con peso en el quiebre** (18/11/2026; el usuario: «el peso se siente en el quiebre inicial nada más»; la vuelta,
+     «siempre… relativamente snappy, nunca… sluggish»): la jaula sale hacia abajo como un impacto (`HitSpring.land_push`:
+     llega a lo más hondo, hasta 0,9 m, en unos 75 ms) y vuelve en `land_recover` (0,35 s; medido, 0,29 s del fondo al
+     10 %) casi sin rebote. **Y POLVO** cayendo fuerte (`dust_speed`, 16 m/s: un salto no, en picada
      y de 15 m sí): un anillo a ras del piso que rueda para afuera (`ParticleSystems.landing_dust`, la variación del
      polvo de golpe; fila Partículas). Lo detecta el motor: el paso en que `is_on_floor` pasa a verdadero, con la
      velocidad de caída de antes de moverse.
