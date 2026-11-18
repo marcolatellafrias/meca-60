@@ -61,8 +61,9 @@ const DRIVER := 0
 const LOCOMOTION := 1
 const GUNNER := 2
 
-## El arma del artillero (la parte que cabecea), para cuando sea funcional.
+## El arma del artillero (la cuna de su torreta, lo que cabecea) y LA TORRETA (GunnerTurret).
 var gun: Node3D = null
+var turret: GunnerTurret = null
 var _root: Node3D = null
 ## ── EL MÓDULO DE ARRIBA, EN SU PROPIO PIVOTE (17/11/2026, el usuario: «le daría la habilidad de girar aparte… por ahora
 ## lo único que dejaría sería el groundwork bien hecho para que sea fácil de hacerlo en el futuro») ────────────────────
@@ -197,8 +198,11 @@ func _ready() -> void:
 	if crew >= 2:
 		_chair(LOCOMOTION, Vector3(0.0, tall, 0.05), form.arms_eye, upper)
 	if crew >= 3:
-		_chair(GUNNER, Vector3(0.0, tower_top(form) + tall, form.upper_back() - form.tower_deep() * 0.5 + 0.05),
-			GUNNER_SEATED, upper)
+		# La del artillero va en la cuna de su torreta, FIJA: el cuerpo va con la torreta y la cabeza mira en su cono
+		# (SeatInteractable.fixed; el usuario, 18/11/2026: «una variante de la silla que sea fija… se va a mover con el
+		# yugo»).
+		_chair(GUNNER, Vector3.ZERO, GUNNER_SEATED, turret.frame)
+		(chairs[GUNNER] as SeatInteractable).fixed = true
 
 
 ## ── LAS CARAS QUE PUEDEN LLEVAR TABLERO (ver FaceBoard) ──────────────────────────────────────────────────────────
@@ -429,30 +433,11 @@ func _tower(form: CageShape, tall: float, pit: DeskPit) -> void:
 	var at := Vector3(0.0, head, middle.y)
 	var plate := minf(minf(wide, deep) * 0.5, 0.42)
 	Clay.cylinder(upper, plate, 0.08, at + Vector3(0.0, 0.04, 0.0), RIM_COLOR)
-	var turn := Node3D.new()
-	turn.name = "Plato del artillero"
-	turn.position = at + Vector3(0.0, 0.08, 0.0)
-	upper.add_child(turn)
-	Clay.box(turn, Vector3(0.3, 0.08, GUN_REACH + 0.1), Vector3(0.0, 0.04, -GUN_REACH * 0.5 - 0.1), METAL)
-	# El pie del arma y la horquilla; el arma cabecea en ella.
-	var foot := Vector3(0.0, 0.08, -GUN_REACH - 0.1)
-	var trunnion := Vector3(0.0, 0.78, foot.z)
-	Clay.cylinder(turn, 0.06, trunnion.y - foot.y - 0.1, Vector3(0.0, (trunnion.y + foot.y) * 0.5 - 0.05, foot.z), DARK)
-	for s: float in [-1.0, 1.0]:
-		Clay.box(turn, Vector3(0.05, 0.22, 0.12), trunnion + Vector3(s * 0.2, -0.06, 0.0), DARK)
-	Clay.box(turn, Vector3(0.45, 0.06, 0.12), trunnion + Vector3(0.0, -0.17, 0.0), DARK)
-	Clay.cylinder(turn, 0.04, 0.5, trunnion, RIM_COLOR, Vector3(0.0, 0.0, 90.0))
-	gun = Node3D.new()
-	gun.name = "Arma del artillero"
-	gun.position = trunnion
-	turn.add_child(gun)
-	Clay.box(gun, Vector3(0.3, 0.25, 0.55), Vector3(0.0, 0.0, -0.05), DARK)
-	for x: float in [-0.06, 0.06]:
-		for y: float in [-0.06, 0.06]:
-			Clay.cylinder(gun, 0.035, 0.9, Vector3(x, y, -0.75), RIM_COLOR, Vector3(90.0, 0.0, 0.0))
-	Clay.box(gun, Vector3(0.9, 0.5, 0.05), Vector3(0.0, 0.05, -0.38), METAL)
-	for s: float in [-1.0, 1.0]:
-		Clay.cylinder(gun, 0.03, 0.22, Vector3(s * 0.16, -0.06, 0.3), YELLOW, Vector3(90.0, 0.0, 0.0))
+	# EL PUESTO DEL ARTILLERO: la torreta (GunnerTurret, del módulo de las armas desde el 18/11/2026), sobre el plato.
+	turret = GunnerTurret.new()
+	turret.position = at + Vector3(0.0, 0.08, 0.05)
+	upper.add_child(turret)
+	gun = turret.cradle
 
 
 ## ── LA ESPALDA ──────────────────────────────────────────────────────────────────────────────────────────────────
