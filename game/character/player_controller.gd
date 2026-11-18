@@ -261,7 +261,7 @@ func _physics_process(delta: float) -> void:
 		_update_ragdoll_camera(delta)
 		return
 
-	char_rigidbody.rotation.y = camera_yaw
+	_face_camera()
 
 	# La cámara del jugador se mueve también en tercera persona, aunque no esté en pantalla: de ella sale
 	# el rayo de interacción, que tiene que ser el mismo en las dos vistas.
@@ -390,7 +390,7 @@ func _ease_to_mode_look(delta: float) -> void:
 		_mode_phase = ModePhase.EASING
 	if _mode_phase == ModePhase.FREE:
 		camera_yaw = _mode_world_yaw
-		char_rigidbody.rotation.y = camera_yaw
+		_face_camera()
 		_cap_seated_look(_get_bi())
 		return
 	var target := interaction_controller.mode_look()
@@ -404,19 +404,34 @@ func _ease_to_mode_look(delta: float) -> void:
 	var want_pitch := asin(clampf(dir.y, -1.0, 1.0))
 	camera_yaw = lerp_angle(camera_yaw, want_yaw, k)
 	camera_pitch = lerpf(camera_pitch, want_pitch, k)
-	char_rigidbody.rotation.y = camera_yaw
+	_face_camera()
 	_cap_seated_look(_get_bi())
 	if absf(angle_difference(camera_yaw, want_yaw)) < MODE_EASED and absf(camera_pitch - want_pitch) < MODE_EASED:
 		_mode_phase = ModePhase.FREE
 		_mode_world_yaw = camera_yaw
 
 
+## SENTADO, LA MIRADA CON TOPE: en una silla fija, su cono (ver SeatInteractable.look_cone); el ente, en cualquiera,
+## `SEAT_LOOK`. Si no, libre.
 func _cap_seated_look(bi: BoneInstantiator) -> void:
-	if not _direct() or not is_instance_valid(bi) or not bi.is_seated or not is_instance_valid(bi.current_seat):
+	if not is_instance_valid(bi) or not bi.is_seated or not is_instance_valid(bi.current_seat):
 		return
+	var seat := bi.fixed_seat()
+	if seat == null and not _direct():
+		return
+	var cone := Vector2(deg_to_rad(seat.look_cone.x), deg_to_rad(seat.look_cone.y)) if seat != null else SEAT_LOOK
 	var front := CharacterIntent.yaw_of(char_rigidbody.frame, -(bi.current_seat as Node3D).global_basis.z)
-	bi.intent.look_yaw = front + clampf(angle_difference(front, bi.intent.look_yaw), -SEAT_LOOK.x, SEAT_LOOK.x)
-	apply_camera_pitch(clampf(camera_pitch, -SEAT_LOOK.y, SEAT_LOOK.y))
+	bi.intent.look_yaw = front + clampf(angle_difference(front, bi.intent.look_yaw), -cone.x, cone.x)
+	apply_camera_pitch(clampf(camera_pitch, -cone.y, cone.y))
+
+
+## LA CÁPSULA, HACIA DONDE MIRA LA CÁMARA; en una silla fija no: su rumbo es el de la silla (ver
+## BoneInstantiator.fixed_seat).
+func _face_camera() -> void:
+	var bi := _get_bi()
+	if is_instance_valid(bi) and bi.fixed_seat() != null:
+		return
+	char_rigidbody.rotation.y = camera_yaw
 
 
 ## APAGADO O PRENDIDO (ver BoneInstantiator.set_active): sin cámara, sin mira y sin HUD mientras está apagado.
@@ -433,6 +448,10 @@ func apply_camera_pitch(pitch: float) -> void:
 	camera_pitch = pitch
 	if is_instance_valid(player_camera):
 		player_camera.rotation.x = camera_pitch
+		# EN UNA SILLA FIJA LA CÁPSULA NO GIRA CON LA MIRADA: la cámara gira sola lo que se aparta (ver
+		# BoneInstantiator.fixed_seat_look_yaw). Si no, 0: la cápsula ya va hacia donde mira.
+		var bi := _get_bi()
+		player_camera.rotation.y = bi.fixed_seat_look_yaw() if is_instance_valid(bi) else 0.0
 
 
 # ── EL VUELO LIBRE ──────────────────────────────────────────────────────────────────────────────────────────────────

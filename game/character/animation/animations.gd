@@ -226,10 +226,17 @@ func _register_camera_pitch_animations() -> void:
 		return  # el que tiene quien lo maneje (ver CharacterKind.looks); los NPCs puros no miran con la cámara
 	var pa             := bi.procedural_animator
 	var PA             := ProceduralBoneAnimator
-	var pitch_callable := _make_pitch_callable()
+	var looking        := _make_pitch_callable()
+	# EN UNA SILLA FIJA SÓLO LA CABEZA MIRA (ver BoneInstantiator.fixed_seat; el usuario: «se va a limitar a movimiento
+	# de cabeza»): el cabeceo entero en ella y nada en el cuello ni el tronco, y de costado gira lo que se aparta del
+	# frente de la silla. Si no, como siempre.
+	var bi_ref := bi
+	var pitch_callable := func() -> float: return 0.0 if bi_ref.fixed_seat() != null else looking.call()
+	var head_pitch := func() -> float: return looking.call() * (2.0 if bi_ref.fixed_seat() != null else 1.0)
 
 	# ─── HEAD / NECK / SPINE PITCH (ambas direcciones) ───────────────────────
-	pa.register_formula(bi.custom_bones_util.head,         PA.Axis.ROT_X, pitch_callable, 0.50)
+	pa.register_formula(bi.custom_bones_util.head,         PA.Axis.ROT_X, head_pitch, 0.50)
+	pa.register_formula(bi.custom_bones_util.head,         PA.Axis.ROT_Y, func() -> float: return bi_ref.fixed_seat_look_yaw(), 1.0)
 	if is_instance_valid(bi.custom_bones_util.neck):
 		pa.register_formula(bi.custom_bones_util.neck,     PA.Axis.ROT_X, pitch_callable, 0.25)
 	pa.register_formula(bi.custom_bones_util.chest,        PA.Axis.ROT_X, pitch_callable, 0.12)

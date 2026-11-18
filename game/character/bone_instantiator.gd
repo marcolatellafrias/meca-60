@@ -792,9 +792,31 @@ func _apply_look() -> void:
 		return
 	if is_instance_valid(ragdoll_util) and ragdoll_util.is_active:
 		return
+	# EN UNA SILLA FIJA EL RUMBO ES EL DE LA SILLA (ver `fixed_seat`): la mirada se queda en la cabeza.
+	var seat := fixed_seat()
+	if seat != null:
+		char_rigidbody.global_rotation.y = seat.heading()
+		return
 	if is_seated and not kind.simulates() and kind.driver != CharacterKind.Driver.NETWORK:
 		return
 	char_rigidbody.global_rotation.y = CharacterIntent.world_yaw(char_rigidbody.frame, intent.look_yaw)
+
+
+## ── LA SILLA FIJA (ver SeatInteractable.fixed) ─────────────────────────────────────────────────────────────────────
+## Sentado en una silla fija, el cuerpo mira al frente de la silla y la mirada sólo mueve la cabeza (y la cámara del
+## jugador, ver PlayerController): lo que se aparta de ese frente lo gira la cabeza (ver animations.gd). Sirve igual en
+## la máquina de cada uno, porque sale de la intención.
+func fixed_seat() -> SeatInteractable:
+	var seat := current_seat as SeatInteractable if is_seated else null
+	return seat if is_instance_valid(seat) and seat.fixed else null
+
+
+## LO QUE LA MIRADA SE APARTA DE COSTADO DEL FRENTE DE LA SILLA FIJA (rad; positivo, a la izquierda), o 0 sin silla fija.
+func fixed_seat_look_yaw() -> float:
+	var seat := fixed_seat()
+	if seat == null or not is_instance_valid(char_rigidbody):
+		return 0.0
+	return angle_difference(seat.heading(), CharacterIntent.world_yaw(char_rigidbody.frame, intent.look_yaw))
 
 
 ## ── EL SALTO CARGADO (ver CharacterJump): lo que de él se lee afuera o se comparte ─────────────────────────────────

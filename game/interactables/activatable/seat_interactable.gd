@@ -39,6 +39,15 @@ const STATION_EYE_HEIGHT := 1.7
 @export var stand_up_location: Vector2     = Vector2(0.0, 1.2)
 @export var seat_scene:        PackedScene = null
 @export var show_debug:        bool        = false
+## ── LA SILLA FIJA (18/11/2026, el usuario por la sesión de las armas: «una variante de la silla que sea fija… no se
+## mueve directamente con la cámara del jugador… la cámara… la limitamos a un cierto ángulo… se va a limitar a
+## movimiento de cabeza») ─────────────────────────────────────────────────────────────────────────────────────────────
+## Fija, el que se sienta mira al frente de la silla —el cuerpo y la silla que se ve— y la silla la gira otra cosa (la
+## torreta del artillero, con su yugo); la mirada sólo mueve la cámara y la cabeza, dentro de `look_cone` (grados de
+## costado y grados arriba y abajo, desde el frente de la silla). Sin fijar, como siempre: la mirada gira el cuerpo y
+## la silla con él. Ver BoneInstantiator.fixed_seat.
+@export var fixed := false
+@export var look_cone := Vector2(70.0, 45.0)
 
 ## ── CUÁNTO SE AGRANDA LA SILLA QUE SE VE, para acompañar a un maniquí ampliado ───────────────────
 ## La fila de personajes del sandbox agranda a sus maniquíes REGENERÁNDOLOS (ver SkeletonSizesUtil.size_scale,

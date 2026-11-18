@@ -109,6 +109,14 @@ siempre) o con un lado plano adelante (`HeadForm.build_arrays(front_face)`). J l
 en K (densidad: 64, 100, 150 o 200 px/m) e Y (el giro), X la borra. Sombreado suave (`PixelModel.smooth_normals`). A
 100 px/m, la cara del frente es de 7 × 7 píxeles. Prueba con captura: `tests/head_paint_look.tscn` (borra lo suyo).
 
+**La silla fija** (18/11/2026, el usuario por la sesión de las armas: «una variante de la silla que sea fija… no se
+mueve directamente con la cámara del jugador… se va a limitar a movimiento de cabeza»). `SeatInteractable.fixed` y
+`look_cone` (grados de costado y arriba y abajo): sentado en una fija, el cuerpo y la silla que se ve miran al frente de
+la silla —la gira otra cosa, como la torreta del artillero con su yugo— (`BoneInstantiator.fixed_seat`, `_apply_look`);
+la cámara del jugador mira libre dentro del cono (`PlayerController._cap_seated_look`, `_face_camera`,
+`apply_camera_pitch`) y la cabeza gira lo que se aparta del frente, con todo el cabeceo y nada del tronco
+(`fixed_seat_look_yaw`, animations.gd). Sin fijar, como siempre. Prueba con captura: `tests/fixed_seat_look.tscn`.
+
 **Lo que cuesta la fila Locomoción** (17/11/2026, diagnóstico; nada arreglado todavía): `tests/locomotion_perf.tscn` arma
 las siete escenas juntas (42 personajes, 846 cuerpos rígidos) y mide de a una dimensión. Armarlas: 2,2 s en un cuadro
 (el tirón al acercarse). Prendido todo: 8 fps (124 ms por cuadro). Lo que más pesa, en orden: el guion de la cápsula
