@@ -1,13 +1,14 @@
 extends Control
 ## EL MENÚ DE INICIO, el de character-parametric (traído el 11/11/2026): abrir partida o unirse por código de Steam, la
-## sesión local para probar con dos instancias, Opciones y Salir. Acá no hay otro juego que el sandbox: la partida ES
-## el sandbox (con su fila Multijugador, ver SandboxSession). Se llega al volver de una sesión que se cortó
+## sesión local para probar con dos instancias, Opciones y Salir. Desde el 18/11/2026 la partida es LA BASE (BaseWorld);
+## el sandbox, con su propio botón (y su fila Multijugador, ver SandboxSession). Se llega al volver de una sesión que se cortó
 ## (SessionManager.return_to_menu, o «Salir de la partida» en la pausa) o desde la fila Multijugador, para unirse por
 ## código. Cuando la sesión se establece (session_ready) carga el sandbox; si falla (session_failed) se queda en el menú
 ## mostrando el error. Si se vuelve sin pedirlo (se cortó la partida), dice por qué (SessionManager.menu_notice).
 
 const SANDBOX_SCENE := "res://game/sandbox/sandbox.tscn"
-const GAME_SCENE := SANDBOX_SCENE
+## La partida es la base (ver BaseWorld, docs/technical/flujo-de-partida.md); el sandbox, aparte, con su botón.
+const GAME_SCENE := "res://game/base/base_world.tscn"
 
 var _code_field: MonoField
 var _status: MonoText

@@ -1,0 +1,42 @@
+# El flujo de la partida (en red)
+
+**Plan** (18/11/2026). Lo que hace falta para jugar online, del menú a la pelea con el jefe, y de quién es cada pieza. Ver
+[[red]], [[sucursal]], [[base]], [[interfaz]], [[progresion]].
+
+## Las reglas
+- **El sandbox es un reflejo modular del juego** (el usuario, 18/11/2026: «el sandbox siempre debería ser un reflejo
+  modular de las cosas que están en el juego»). El juego y el sandbox **arman las cosas con el mismo código y leen las
+  mismas perillas guardadas**: la base del juego llama a lo mismo que la parcela Base (`BaseLayout`, `BaseSettings`).
+  Lo que se mueve en un F1 del sandbox cambia el juego.
+- **Los guardados que usa el juego van al repositorio**, pero sólo cuando el usuario dice que ese valor va (hasta
+  entonces son suyos y no se commitean). Si no están, el juego arma con los valores por defecto.
+- **El host es el capitán** y la autoridad: el estado de la sucursal vive en el host; los demás piden y el host aplica.
+- **La meca, congelada por ahora** (el usuario: «todavía la estamos modificando… está bien si queda la meca sin
+  interacción… como algo estático»): en la base es decorado quieto, sin poseer ni subirse, hasta que la sesión de la
+  meca la cierre y la sincronice.
+
+## Los pasos
+1. **La escena de la base del juego** (`game/base/base_world.tscn`, `BaseWorld`): la base armada con `BaseLayout`, la
+   meca jaula congelada en el elevador y la luz. Es un mundo de la red (grupo `net_world`) con su `CharacterSpawner`.
+   «Crear partida» y «unirse» llevan acá (el sandbox de pruebas sigue en su botón). — *Mundo*, **hecho**. Como en
+   character-parametric, la sesión arranca con «crear partida» (`SessionManager.host`) y el mundo, al cargar, avisa
+   (`world_ready`) y nace el jugador (`CharacterSpawner`). Para mirarla: `tests/base_world_look.tscn`.
+2. **Aparecer en la esclusa**: los personajes nacen adentro (`BaseWorld.start_point`). — *Mundo*, **hecho** (todavía
+   mirando a un costado, no a la compuerta). **El botón abre la compuerta para todos**: el que lo aprieta le pide al
+   host; el host la abre en todos. — *Mundo*, falta.
+3. **El estado de la sucursal compartido**: la plata, el depósito, lo puesto y el contrato (`BaseState`) viven en el
+   host y llegan a todos (al entrar, una foto entera; después, cada cambio). — *Mundo*.
+4. **El capitán**: comprar, poner, sacar y firmar se le piden al host, que sólo acepta los del capitán (el host). Los
+   demás ven las terminales con esas acciones tramadas («lo decide el capitán»). — *Mundo*.
+5. **La meca por red**: posición, piernas, brazos, puestos. — *Meca*, cuando la cierre.
+6. **La meca armada para los que son**: al abrir la esclusa, la meca tiene los puestos de los que están. — *Meca* y
+   *Mundo*.
+7. **La salida a la arena**: «salir a la arena» abre la compuerta del techo, el elevador sube y todos pasan juntos a la
+   escena de la arena (el mapa de pelea con el jefe del contrato). — *Mundo*, cuando estén 5 y 8.
+8. **El jefe por red**. — *Jefes*.
+9. **La vuelta**: la paga del contrato a la plata de la tripulación, lo que vuelve de la arena (ver [[progresion]]). —
+   *Mundo*.
+
+## Abierto
+- Si alguien se une entre una partida y otra: ¿espera en la esclusa?
+- Si el host se va, se termina la partida ([[progresion]]): volver al menú con el aviso.

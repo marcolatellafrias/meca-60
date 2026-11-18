@@ -51,6 +51,7 @@ El detalle, en [[partida]].
 | [[filas]] | Cada fila del sandbox y su código (qué borrar si se borra una parcela). |
 | [[poseer]] | La O posee lo que mirás, la T cambia la vista. |
 | [[red]] | El multijugador. |
+| [[flujo-de-partida]] | El plan de la partida en red, del menú a la pelea: la base del juego (reflejo del sandbox), la esclusa, el estado de la sucursal en el host, el capitán, y de quién es cada pieza. |
 | [[personajes-traidos]] | Lo traído de character-parametric: el jugador, agarrar, sentarse. |
 | [[analisis-personaje]] | Qué de lo traído necesita la meca y qué no. |
 
