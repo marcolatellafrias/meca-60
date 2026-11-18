@@ -83,6 +83,9 @@ uno con músculos:
   En un brazo discreto lo que tocan recibe el empujón por lo que giraba; en uno con músculos pegan como pega el brazo.
 - **Cañón de energía** (`CannonTip`): **en lugar del antebrazo** (el usuario: «reemplazar antebrazo»), con su palanca y
   sus cuatro modos (ver abajo, «El cañón de energía»). Mientras tanto el brazo va adonde apunta, no a su postura.
+- **Escudo** (`ShieldTip`, 18/11/2026, de la sesión de la cabina): la mano común siempre cerrada en el mango de un
+  escudo físico rectangular. Levantado, sólo ese brazo va a la guardia (`wanted`), y no pega. Va al final de la lista de
+  puntas, así los equipos guardados no se corren. Lo que frena y lo que gasta, en [[meca-jaula]].
 
 Lo que una punta puede cambiar, en ganchos: lo que arma (`_build`), lo de cada paso (`step`), dónde se pide el puño
 (`wanted`), qué pasa al conectar en un brazo discreto (`hit`), si el antebrazo lleva placa (`plates_forearm`) y lo que

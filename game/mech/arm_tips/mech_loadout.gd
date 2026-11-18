@@ -10,11 +10,11 @@ const FOLDER := "res://game/mech/arm_tips/saved"
 
 @export_group("Brazo izquierdo")
 @export_enum("discreto", "con músculos") var left_motion := 0
-@export_enum("puño común", "puño pesado", "palo eléctrico", "taladro", "sierra", "cañón de energía") var left_tip := 0
+@export_enum("puño común", "puño pesado", "palo eléctrico", "taladro", "sierra", "cañón de energía", "escudo") var left_tip := 0
 @export var left_plate := false
 @export_group("Brazo derecho")
 @export_enum("discreto", "con músculos") var right_motion := 0
-@export_enum("puño común", "puño pesado", "palo eléctrico", "taladro", "sierra", "cañón de energía") var right_tip := 0
+@export_enum("puño común", "puño pesado", "palo eléctrico", "taladro", "sierra", "cañón de energía", "escudo") var right_tip := 0
 @export var right_plate := false
 
 ## Los de cada fila, ya leídos (los guarda el panel y los leen las mecas al armarse).

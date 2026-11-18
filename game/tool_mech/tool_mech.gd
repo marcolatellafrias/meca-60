@@ -9,7 +9,8 @@ extends Mech
 ##     o la sierra, SpinTip) o un brazo de piñas; lo manejan sus teclas.
 ##   · LA ENERGÍA COMÚN (MechEnergy): la gastan los brazos, el dash y levitar.
 ##   · LEVITAR: el vuelo de la cinemática, gastando energía.
-##   · EL ESCUDO DE FUERZA (MechShield, 18/11/2026): frena todo golpe mientras está prendido, gastando energía.
+##   · EL ESCUDO (MechShield, 18/11/2026): si un brazo lleva el escudo (ShieldTip), levantado frena lo que viene de
+##     frente, gastando energía; sin brazo de escudo, no hay escudo.
 ##   · SUS TECLAS (ToolMechKeys), en lugar de las de siempre.
 ## *La Meca de tres, su fila (con la cabina cuadrada, el cañón a la izquierda, el taladro a la derecha y las fundas de
 ## blindaje en las piernas), se borró con la meca grande el 17/11/2026 (está en el commit 0bcaeaf); esto quedó como la
@@ -22,6 +23,10 @@ var shield := MechShield.new()
 var cannon: CannonTip = null
 var drill: SpinTip = null
 var melee: MechArm = null
+## El escudo de un brazo (ShieldTip), o null: sin él, no hay escudo.
+var guard: ShieldTip = null
+## LO QUE FRENA EL ESCUDO: lo que viene de este ángulo del frente del torso, a cada lado (°).
+const GUARD_HALF := 75.0
 
 
 func _init() -> void:
@@ -37,18 +42,27 @@ func _ready() -> void:
 	super()
 
 
-## CON EL ESCUDO PRENDIDO NO SE LE PUEDE PEGAR (ver MechShield). Se pregunta muchas veces por golpe: no cuenta nada.
-func untouchable() -> bool:
-	return shield.on or super()
-
-
-## UN GOLPE FRENADO POR EL ESCUDO (BalanceBody.block_hit, una vez por golpe: lo llama quien pega): el destello y el parry.
-## *Hasta el 18/11/2026 lo contaba `untouchable`, que se pregunta varias veces por golpe (lo avisó la sesión de Jefes).*
+## UN GOLPE FRENADO POR EL ESCUDO (BalanceBody.block_hit, una vez por golpe: lo llama quien pega): si está levantado y el
+## golpe viene de frente (`GUARD_HALF`; sin saber de dónde, cuenta como de frente), el destello y el parry. Lo de atrás
+## o de los costados entra: el escudo es de un brazo («algo que se cubre de frente… la dirección en la que está mirando
+## importa»). *Hasta el 18/11/2026 el escudo era un campo global: frenaba todo y además la hacía intocable.*
 func block_hit(at := Vector3.INF) -> bool:
-	if not shield.on:
+	if not shield.on or not _from_front(at):
 		return super(at)
 	shield.stopped(at)
 	return true
+
+
+func _from_front(at: Vector3) -> bool:
+	if not at.is_finite():
+		return true
+	var toward := at - global_position
+	toward.y = 0.0
+	var ahead := -global_basis.z
+	ahead.y = 0.0
+	if toward.length() < 0.01 or ahead.length() < 0.01:
+		return true
+	return rad_to_deg(ahead.angle_to(toward)) <= GUARD_HALF
 
 
 func _build() -> void:
@@ -74,9 +88,11 @@ func _build_arms() -> void:
 	super()
 	cannon = tip_of(CannonTip) as CannonTip
 	drill = tip_of(SpinTip) as SpinTip
+	guard = tip_of(ShieldTip) as ShieldTip
+	shield.tip = guard
 	melee = null
 	for arm in arms:
-		if melee == null and not (arm.tip is CannonTip or arm.tip is SpinTip):
+		if melee == null and not (arm.tip is CannonTip or arm.tip is SpinTip or arm.tip is ShieldTip):
 			melee = arm
 	ArmPoseIdeas.apply(self)
 

@@ -7,10 +7,10 @@ extends Resource
 ## (Mech.loadout, izquierdo y derecho); es lo que va a elegir y guardar el panel de equipamiento.
 
 enum Motion { POSE, MUSCLE }
-enum Tip { FIST, HEAVY_FIST, POLE, DRILL, SAW, CANNON }
+enum Tip { FIST, HEAVY_FIST, POLE, DRILL, SAW, CANNON, SHIELD }
 
 const MOTION_NAMES := ["discreto", "con músculos"]
-const TIP_NAMES := ["puño común", "puño pesado", "palo eléctrico", "taladro", "sierra", "cañón de energía"]
+const TIP_NAMES := ["puño común", "puño pesado", "palo eléctrico", "taladro", "sierra", "cañón de energía", "escudo"]
 
 @export var motion := Motion.POSE
 @export var tip := Tip.FIST
@@ -52,4 +52,6 @@ func make_tip() -> ArmTip:
 			return SawTip.new()
 		Tip.CANNON:
 			return CannonTip.new()
+		Tip.SHIELD:
+			return ShieldTip.new()
 	return ArmTip.new()

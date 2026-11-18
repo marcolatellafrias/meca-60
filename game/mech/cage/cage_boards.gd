@@ -10,11 +10,13 @@ extends RefCounted
 ##   · LOS DOS MANDOS PLEGABLES (FoldingArm), uno en cada costado del cinturón, adelante. Clic derecho mantenido lo
 ##     agarra: se trae a la mano, la mirada va al frente con una transición y queda libre; EL TORSO PERSIGUE LA MIRADA
 ##     con su resorte (CageMech.steer; «el torso va a girar… a dónde apuntan inevitablemente tus dos brazos») y el clic
-##     izquierdo usa ese brazo:
-##       — EL CAÑÓN (el de la izquierda): el gatillo, según el modo que eligen TRES BOTONES al lado de su mando —RÁFAGA y
+##     izquierdo usa SU BRAZO, según lo que lleve (`_arm_use`; lo que lleva cada uno se elige en el F5):
+##       — EL CAÑÓN: el gatillo, según el modo que eligen TRES BOTONES al lado del mando de la izquierda —RÁFAGA y
 ##         BARRIDO mientras se mantiene, SÚPER carga mientras se mantiene y tira al soltar (CannonTip).
-##       — EL PUÑO (el de la derecha): cuanto más se mantiene, más lenta y más fuerte la piña (MechArm.charged_strike;
-##         sus perillas, en el F7: CageHandling).
+##       — EL PUÑO (o el palo): cuanto más se mantiene, más lenta y más fuerte la piña (MechArm.charged_strike; sus
+##         perillas, en el F7: CageHandling).
+##       — EL ESCUDO (ShieldTip): mientras se mantiene, levantado; frena lo que viene de frente (MechShield,
+##         ToolMech.block_hit). El canje: un arma menos.
 ##   · DOS PANTALLAS EN BRAZOS FIJOS (ScreenArmArchetype), arriba en la vista del que maneja: la ENERGÍA de la meca y la
 ##     CARGA de lo que se está manteniendo («que esté al máximo… hasta que estás cargando… al máximo»).
 ##   ARRIBA, EN EL POZO: LA LOCOMOCIÓN (lo piden a MechCockpit, que lee la meca con las reglas de energía de siempre).
@@ -26,8 +28,8 @@ extends RefCounted
 ##     «nos da más variedad»). EL DASH, UN BOTÓN, en el tablero de la derecha, del lado de la de dirección: hacia donde
 ##     apunta ella (al medio, no sale). Con las dos palancas no entra en el de adelante, ni con levitar en el suyo.
 ##     AGACHAR, en el tablero de la izquierda: apoyada, se agacha; EN EL AIRE, BAJA RÁPIDO, como un dash hacia abajo
-##     (KinematicSettings.dive_speed; el usuario: «nos ahorramos un botón»). EL ESCUDO (MechShield), al lado de saltar:
-##     lo maneja el de arriba, de a 2 y de a 3 (el usuario lo aprobó: el que ve lo global).
+##     (KinematicSettings.dive_speed; el usuario: «nos ahorramos un botón»). *Hasta el 18/11/2026 había además un botón
+##     ESCUDO al lado de saltar: el escudo pasó al brazo del de abajo.*
 ##   · LA PANTALLA DEL PROPULSOR (la barra de levitar, KinematicMover.fly_fuel: se gasta levitando y se llena apoyada), en
 ##     un brazo fijo corto al lado de levitar, abajo a la derecha de la vista del de arriba (`PIT_SCREEN_AT`). *Primero
 ##     salía de la pared del pozo: un palo de 1,2 m que cruzaba la vista.*
@@ -42,12 +44,12 @@ extends RefCounted
 
 ## Lo que va en cada cara: su nombre (FaceBoard.name) y las piezas (ver `_place`).
 const LAYOUT := [
-	["cápsula izquierda", ["brazo cañón", "modo ráfaga", "modo barrido", "modo súper"]],
-	["cápsula derecha", ["brazo puño"]],
+	["cápsula izquierda", ["brazo izquierdo", "modo ráfaga", "modo barrido", "modo súper"]],
+	["cápsula derecha", ["brazo derecho"]],
 	["cápsula izquierda arriba", ["pantalla energía"]],
 	["cápsula derecha arriba", ["pantalla carga"]],
 	["tablero adelante", ["palancas"]],
-	["tablero adelante izquierda", ["saltar", "escudo"]],
+	["tablero adelante izquierda", ["saltar"]],
 	["tablero adelante derecha", ["levitar", "pantalla propulsor"]],
 	["tablero derecha", ["dash"]],
 	["tablero izquierda", ["agachar"]],
@@ -72,7 +74,7 @@ const LOOK_AHEAD := 3.0
 const PIT_SCREEN_AT := Vector3(0.38, -0.3, -0.62)
 ## Los botones que se mantienen (el texto y el color): lo que piden mientras se aprietan (ver `_hold`).
 const HOLDS := {"saltar": ["SALTAR", Color(0.3, 0.8, 0.4)], "levitar": ["LEVITAR", Color(0.3, 0.8, 0.4)],
-	"agachar": ["AGACHAR", Color(0.45, 0.62, 0.85)], "escudo": ["ESCUDO", Color(0.45, 0.8, 1.0)]}
+	"agachar": ["AGACHAR", Color(0.45, 0.62, 0.85)]}
 ## Los modos del cañón que eligen sus botones: su nombre y su color.
 const MODES := {"modo ráfaga": [CannonTip.Mode.BURST, "RÁFAGA", Color(0.9, 0.62, 0.2)],
 	"modo barrido": [CannonTip.Mode.BEAM, "BARRIDO", Color(0.35, 0.7, 0.95)],
@@ -130,7 +132,7 @@ static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape,
 	var eye := CageCabin.driver_eye(form)
 	var k := form.capsule_radius() / 0.75
 	match key:
-		"brazo cañón", "brazo puño":
+		"brazo izquierdo", "brazo derecho":
 			var placed := mount.place(FoldingArmArchetype.new(side), _front(board, FoldingArmArchetype.CELLS))
 			if placed == null:
 				return
@@ -141,14 +143,7 @@ static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape,
 				var mech := _mech_of(arm)
 				if mech != null:
 					mech.steer(world_yaw, world_pitch)
-			if key == "brazo cañón":
-				arm.use = func(pressed: bool) -> void:
-					var cockpit := _cockpit_of(arm)
-					if cockpit != null:
-						cockpit.fire = pressed
-			else:
-				arm.use = func(pressed: bool) -> void:
-					_punch(_mech_of(arm), pressed, state)
+			arm.use = func(pressed: bool) -> void: _arm_use(arm, side, pressed, state)
 		"manejo":
 			var look := FoldingArmArchetype.new(1.0)
 			look.drive = true
@@ -162,13 +157,9 @@ static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape,
 				var mech := _mech_of(handle)
 				if mech != null:
 					mech.steer(world_yaw, world_pitch)
-			handle.use = func(pressed: bool) -> void:
-				var cockpit := _cockpit_of(handle)
-				if cockpit != null:
-					cockpit.fire = pressed
-			handle.use_alt = func(pressed: bool) -> void:
-				_punch(_mech_of(handle), pressed, state)
-			handle.drive = func(active: bool) -> void: _drive_keys(handle, active)
+			handle.use = func(pressed: bool) -> void: _arm_use(handle, -1.0, pressed, state)
+			handle.use_alt = func(pressed: bool) -> void: _arm_use(handle, 1.0, pressed, state)
+			handle.drive = func(active: bool) -> void: _drive_keys(handle, active, state)
 		"pantalla energía", "pantalla carga":
 			var energy := key == "pantalla energía"
 			var look := ScreenArmArchetype.new("ENERGÍA" if energy else "CARGA",
@@ -224,12 +215,9 @@ static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape,
 					var world := board_axes.x * value.x - board_axes.y * value.y
 					state["way"] = _flat(stick, world, board_axes.z, 1.0) if value.length() >= DEAD else Vector2.ZERO
 					_walk(stick, state))
-		"saltar", "levitar", "agachar", "escudo":
+		"saltar", "levitar", "agachar":
 			var look := ButtonArchetype.power()
 			look.latching = false
-			if key == "escudo":
-				# Más chico: va al lado de saltar (dos de 4 × 4 no entran en una cara).
-				look.button_cells = Vector2i(3, 3)
 			look.text = HOLDS[key][0]
 			look.color = HOLDS[key][1]
 			look.head_size = 0.7
@@ -275,6 +263,34 @@ static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape,
 
 ## ── LO QUE HACEN ────────────────────────────────────────────────────────────────────────────────────────────────
 
+## LO QUE HACE EL BRAZO DE ESE LADO (`side`: −1 el izquierdo, 1 el derecho) con el clic, según lo que lleve: el cañón
+## dispara (su gatillo, MechCockpit.fire); el escudo se levanta mientras se mantiene (MechCockpit.shield; queda en
+## `state`, así el teclado del modo manejo no lo pisa); el puño o el palo, la piña cargada (`_punch`).
+static func _arm_use(from: Node, side: float, pressed: bool, state: Dictionary) -> void:
+	var mech := _mech_of(from)
+	var cockpit := _cockpit_of(from)
+	if mech == null or cockpit == null:
+		return
+	var arm := _arm_on(mech, side)
+	if arm == null:
+		return
+	if arm.tip is CannonTip:
+		cockpit.fire = pressed
+	elif arm.tip is ShieldTip:
+		state["shield"] = pressed
+		cockpit.shield = pressed
+	elif arm == mech.melee:
+		_punch(mech, pressed, state)
+
+
+## El brazo de ese lado de la meca (por dónde está su hombro).
+static func _arm_on(mech: CageMech, side: float) -> MechArm:
+	for arm in mech.arms:
+		if signf(mech.to_local(arm.anchor.global_transform * arm.shoulder_local).x) == signf(side):
+			return arm
+	return null
+
+
 ## EL PUÑO: al apretar, empieza a cargar; al soltar, la piña cargada (si alcanza la energía).
 static func _punch(mech: CageMech, pressed: bool, state: Dictionary) -> void:
 	if mech == null or mech.melee == null:
@@ -304,7 +320,7 @@ static func _charge(mech: CageMech, state: Dictionary) -> float:
 ## EL TECLADO EN EL MODO MANEJO (la meca de 1, DriveHandle), mientras `active`: WASD camina (relativo al torso), espacio
 ## salta y en el aire otra vez levita, Shift tira el dash hacia donde camina, Ctrl agacha (en el aire, baja rápido), Q
 ## el escudo, y 1, 2 y 3 los modos del cañón (`SOLO_MODES`). Lo pide a MechCockpit, como los controles de la de 3.
-static func _drive_keys(from: Node, active: bool) -> void:
+static func _drive_keys(from: Node, active: bool, state: Dictionary) -> void:
 	var cockpit := _cockpit_of(from)
 	if cockpit == null:
 		return
@@ -316,7 +332,7 @@ static func _drive_keys(from: Node, active: bool) -> void:
 	cockpit.dash = live and Input.is_physical_key_pressed(KEY_SHIFT)
 	cockpit.dash_way = move.normalized() if move.length() > 0.1 else Vector2.ZERO
 	cockpit.crouch = live and Input.is_physical_key_pressed(KEY_CTRL)
-	cockpit.shield = live and Input.is_physical_key_pressed(KEY_Q)
+	cockpit.shield = (live and Input.is_physical_key_pressed(KEY_Q)) or bool(state.get("shield", false))
 	var mech := _mech_of(from)
 	if not live or mech == null or mech.cannon == null:
 		return
@@ -345,8 +361,6 @@ static func _hold(from: Node, what: String, on: bool) -> void:
 			cockpit.levitate = on
 		"agachar":
 			cockpit.crouch = on
-		"escudo":
-			cockpit.shield = on
 
 
 ## UNA DIRECCIÓN DEL MUNDO `world` SOBRE UNA CARA (de normal `normal`), en el piso de la meca de `from` (x a la derecha,

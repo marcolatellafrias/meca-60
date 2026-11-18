@@ -71,8 +71,8 @@ func _ready() -> void:
 	await _shot(driver, driver + forward, 85.0)
 	await _shot(driver, driver - right + forward * 0.3 - up * 0.3, 85.0)
 	await _shot(driver, driver + right + forward * 0.3 - up * 0.3, 85.0)
-	var cannon_arm := FoldingArmArchetype.arm_of(pieces["brazo cañón"])
-	var fist_arm := FoldingArmArchetype.arm_of(pieces["brazo puño"])
+	var cannon_arm := FoldingArmArchetype.arm_of(pieces["brazo izquierdo"])
+	var fist_arm := FoldingArmArchetype.arm_of(pieces["brazo derecho"])
 	cannon_arm.enter_mode()
 	fist_arm.enter_mode()
 	await get_tree().create_timer(0.6).timeout

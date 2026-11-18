@@ -104,7 +104,8 @@ en algunas, **los controles de verdad de la meca para 3** (17/11/2026, el usuari
   apoyada se agacha y **en el aire baja rápido**, como un dash hacia abajo (`KinematicSettings.dive_speed`; el usuario:
   «nos ahorramos un botón»). Saltar y levitar quedan como dos controles distintos («nos da más variedad»). **La
   pantalla del propulsor** (`KinematicMover.fly_fuel`: se gasta levitando, se llena apoyada) va en un brazo fijo corto
-  al lado de levitar, abajo a la derecha de la vista (`CageBoards.PIT_SCREEN_AT`). El escudo, después. *Hasta el
+  al lado de levitar, abajo a la derecha de la vista (`CageBoards.PIT_SCREEN_AT`). *El 18/11/2026 hubo además un botón ESCUDO al lado de
+  saltar: el escudo pasó a un brazo del de abajo (ver [[meca-jaula]]).* *Hasta el
   17/11/2026 (el mismo día) caminaba una sola palanca de dos ejes que volvía sola al medio, y el dash eran ocho botones
   en círculo, uno por dirección. La pantalla del propulsor salió primero de la pared del pozo: un palo de 1,2 m que
   cruzaba la vista.*
@@ -153,7 +154,8 @@ redondas y rótulas, con **el mando de palo** del que maneja en la punta.
   (`InteractionController`). Mientras, el teclado maneja la meca (`CageBoards._drive_keys`, a MechCockpit).
 
 ## Test
-`tests/cage_crew_check.tscn`: la meca de 1, 2 y 3 lado a lado, el manubrio de la de 1 y el escudo (ver [[meca-jaula]]).
+`tests/cage_crew_check.tscn`: la meca de 1, 2 y 3 lado a lado, el manubrio de la de 1 y el escudo del brazo de la de 3
+(ver [[meca-jaula]]).
 
 `tests/cage_cockpit_check.tscn` (unos 20 s, sin el sandbox): los controles de la meca para 3. Encuentra cada pieza, saca
 una hoja (desde la cápsula: adelante con las pantallas, el mando del cañón con sus botones, el del puño, los dos

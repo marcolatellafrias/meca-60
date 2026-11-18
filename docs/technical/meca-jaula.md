@@ -27,7 +27,7 @@ de a 1, puedo hacerlo»):
   - la mirada es libre y el torso la persigue;
   - el clic izquierdo, el cañón; el derecho, la piña cargada;
   - WASD camina; espacio salta, y en el aire levita; Shift, el dash hacia donde camina;
-  - Ctrl agacha, y en el aire baja rápido; Q, el escudo; 1, 2 y 3, los modos del cañón.
+  - Ctrl agacha, y en el aire baja rápido; Q, el escudo (si un brazo lo lleva); 1, 2 y 3, los modos del cañón.
 
   El diseño, en [[la-meca]] («los modos, para jugar solo»); el código, en [[tableros]].
 - **La meca de `n` tiene las primeras `n` sillas**: la de abajo va primera (`CageCabin.DRIVER` 0, `LOCOMOTION` 1,
@@ -215,32 +215,31 @@ cintura a 3,07 m, camina 7,6 m en 2 s y la mano del palo llega a 20 m/s.
 Más: `tests/cage_torsos_look` (los dos torsos: la cuadrada, tres redondas y una con el octógono girado a mano, con sus
 medidas, de afuera y desde los dos puestos), `tests/cage_boards_look` (los tableros), `tests/folding_arm_check` (los brazos plegables),
 `tests/cage_cockpit_check` (los controles de adentro, ver [[tableros]]), `tests/cage_crew_check` (la de 1, 2 y 3: sus
-sillas y piezas, el manubrio de la de 1 manejado con el teclado y el escudo con el parry; medido el 18/11/2026: con W
-camina 3,4 m en un segundo, el parry devuelve el 0,12 y el escudo apagado deja entrar el golpe), `tests/cage_boarding_check` (subirse con la E), `tests/frame_rebuild_check` (rearmarla con gente adentro),
+sillas y piezas, el manubrio de la de 1 manejado con el teclado y el escudo del brazo de la de 3; medido el 18/11/2026:
+con W camina 3,4 m en un segundo; el escudo frena el golpe de frente, el parry devuelve el 0,12, y entran el de atrás y
+el de frente con el escudo bajado), `tests/cage_boarding_check` (subirse con la E), `tests/frame_rebuild_check` (rearmarla con gente adentro),
 `tests/crouch_time_check`, `tests/feet_ground_check`, `tests/equipment_check`, `tests/arm_tips_look`.
 
-## El escudo de fuerza — `MechShield` (`game/tool_mech/`)
-El de [[armamento]] («El escudo de fuerza», 18/11/2026; el usuario: «el del escudo, que tiene que estar en todos»): un
-campo celeste que envuelve a toda la meca mientras se mantiene.
-- **Lo que gasta**: prenderlo, un golpe de energía (0,12); mantenerlo, 0,2 por segundo. Si se vacía, se apaga y la meca
-  queda aturdida, como siempre.
-- **Frena todo golpe**: quien pega pregunta si se le puede pegar (`HitReaction.land` → `ToolMech.untouchable`, sin
-  efectos), y con el escudo, no. **El golpe frenado se avisa una vez por golpe** (`BalanceBody.block_hit`, lo llama
-  quien pega): ahí van el destello y el parry. *La primera versión lo contaba en `untouchable`, que se pregunta varias
-  veces por golpe; lo avisó la sesión de Jefes.*
-- **El parry**: el primer golpe frenado hasta 0,3 s después de prenderlo devuelve lo que costó prenderlo.
-- **Quién lo maneja**: de a 2 y de a 3, **el de arriba**, con su botón al lado de saltar (lo aprobó el usuario: el que
-  ve lo global). De a 1, **la Q** en el modo manejo. Poseyéndola, la Q.
-- **Cómo se ve: en suspenso** (18/11/2026). El usuario descartó el campo en todas sus formas: la burbuja (lisa, low
-  poly, con aristas, entera o del torso; `tests/shield_looks_look`), pegado al cuerpo, la pantalla de frente
-  (`tests/shield_styles_look`), la caja del torso y los campos de energía que salen de un brazo. Quedan en el código los
-  estilos de `MechShield.look`; el de la meca sigue siendo la burbuja plana.
-- **La dirección que quedó, sin hacer**: un brazo de escudo en lugar de un arma (el canje: un arma menos), con el puño
-  común agarrando por un mango corto el centro de un escudo físico opaco, un plano rectangular apenas inclinado (el
-  usuario: «aceptar el trade-off de que va a tapar la pantalla como para testear la idea»). Se maneja con el mando de ese
-  brazo: el torso apunta y el clic izquierdo lo levanta; justo antes del golpe, parry. La maqueta, en
-  `tests/shield_held_look` (con la guardia de hoy, que levanta los dos brazos). Para hacerla: la punta de escudo y la
-  guardia de un solo brazo son de la sesión de las armas. El usuario lo dejó ahí («déjalo así, ya fue»).
+## El escudo — `ShieldTip`, `MechShield`
+**Un brazo de escudo, en lugar de un arma** (18/11/2026; el usuario: «un brazo sea el que cubre y otro brazo no puede
+cubrir… si querés tener un escudo vas a tener un arma menos»). Se elige en el F5 como cualquier punta («escudo»); **sin
+brazo de escudo no hay escudo**.
+- **Cómo se ve** (`ShieldTip`): la mano común, siempre cerrada, agarra por un mango corto el centro de la cara de adentro
+  de un **escudo físico opaco, un plano rectangular** (2 × 3,2 m). Mira adelante con un poco del giro de la mano, para que
+  no quede derechito. Tapa la vista del de abajo; el usuario lo aceptó para probar la idea. No pega.
+- **Levantado**, ese brazo, y sólo ése, va a la guardia en 0,2 s (`ShieldTip.wanted`).
+- **Frena lo que viene de frente** (`ToolMech.block_hit`, que llama quien pega una vez por golpe, con dónde pega): hasta
+  75° a cada lado del frente del torso. Lo de atrás o de los costados entra. Como el torso apunta, la dirección importa
+  («algo que se cubre de frente… la dirección en la que está mirando importa»).
+- **Lo que gasta y el parry** (`MechShield`): levantarlo gasta un golpe de energía (0,12) y mantenerlo 0,2 por segundo.
+  El primer golpe frenado hasta 0,3 s después de levantarlo devuelve lo que costó. Cada golpe frenado hace un destello.
+- **Quién lo maneja: el de abajo, con el mando de ese brazo.** Clic derecho mantenido lo agarra (el torso apunta) y el
+  clic izquierdo lo levanta mientras se mantiene (`CageBoards._arm_use`: cada mando usa su brazo según lo que lleve). De
+  a 1, el clic de ese lado en el modo manejo, o la Q. Poseyéndola, la Q.
+- *Antes, el mismo 18/11/2026: un campo global que envolvía a la meca, manejado por el de arriba con un botón ESCUDO. El
+  usuario descartó cómo se veía en todas sus formas: la burbuja (lisa, low poly, con aristas, entera o del torso), pegado
+  al cuerpo, la pantalla de frente, la caja del torso y los campos de energía que salen de un brazo. Las maquetas están en
+  los commits 20227d6 y 3cb12fb.*
 
 ## Subirse con la E — `CageBoarding`
 Nadie elige silla (el usuario: «se sientan… apretando en la meca y apretando E, y que se llenen por orden»): apuntando a

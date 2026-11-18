@@ -43,14 +43,15 @@ Lo decidió el usuario el 17/11/2026, tentativo hasta probarlo:
 - **Arriba, en el pozo: la locomoción.** Dos palancas de palo negro y punta roja: **el acelerador** (cuánto) y **la de
   dirección** (hacia dónde; queda donde se la deja). Saltar, levitar —con la pantalla del propulsor, que se gasta y se
   recarga— y **el dash, un botón**, hacia donde apunta la de dirección. **Agachar**: en el aire, baja rápido (un dash
-  hacia abajo). **El escudo**, al lado de saltar.
+  hacia abajo).
+- **El escudo es un brazo**, el del de abajo, si lo lleva: el canje es un arma menos. Se levanta con el mando de ese
+  brazo y frena lo que viene de frente. Ver [[meca-jaula]].
 - **Atrás, el artillero**: lo lleva la sesión de las armas, con la artillería.
 
 ## Para 2 y para 1 (18/11/2026, hechos)
 - **De a 2**: lo mismo, sin la torre del artillero.
 - **De a 1**: sólo la cápsula, y todo al teclado en el modo manejo (WASD, los dos clics para los brazos, espacio,
-  Shift, Ctrl, Q para el escudo, 1 a 3 para los modos del cañón).
-- **El escudo está en todas**: de a 2 y de a 3 lo maneja el de arriba; de a 1, la Q.
+  Shift, Ctrl, Q para el escudo si un brazo lo lleva, 1 a 3 para los modos del cañón).
 
 ## Cómo se muestra un objeto en un puesto
 Dos formas (17/11/2026; el código, en [[tableros]]):

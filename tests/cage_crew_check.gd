@@ -2,8 +2,9 @@ extends Node
 
 ## LA MECA JAULA PARA 1, 2 Y 3 JUGADORES, PARA VERLA Y PROBARLA (CageShape.crew, CageBoards, DriveHandle, MechShield):
 ## las tres una al lado de la otra, con sus sillas y sus piezas; la de 1 manejada con el teclado desde el manubrio del
-## techo (WASD, espacio, el clic derecho); y el escudo frenando un golpe de jefe, con el parry. La hoja: las tres de
-## afuera, adentro de la de 1 con el manubrio plegado y traído, y la de 3 con el escudo prendido.
+## techo (WASD, espacio, el clic derecho); y el escudo del brazo derecho de la de 3 frenando un golpe de frente, con el
+## parry, y no uno de atrás. La hoja: las tres de afuera, adentro de la de 1 con el manubrio plegado y traído, y la de 3
+## con el escudo levantado (de afuera y desde adentro) y bajado.
 ##   tools/godot_ventana.sh res://tests/cage_crew_check.tscn -- --salida=C:/carpeta
 
 const VIEW := Vector2i(1280, 720)
@@ -49,6 +50,10 @@ func _ready() -> void:
 		form.crew = crew
 		var mech := CageMech.new()
 		mech.equipment = CageMechArchetype.ROW
+		# La de 3, con el escudo en el brazo derecho (el canje: un arma menos).
+		if crew == 2:
+			mech.loadout = [ArmLoadout.of(ArmLoadout.Motion.POSE, ArmLoadout.Tip.CANNON, true),
+				ArmLoadout.of(ArmLoadout.Motion.POSE, ArmLoadout.Tip.SHIELD, true)]
 		mech.position = Vector3((crew - 1) * GAP, Mech.standing_height(mech.cabin_shape), 0.0)
 		add_child(mech)
 		mechs.append(mech)
@@ -115,37 +120,41 @@ func _ready() -> void:
 	handle.exit_mode()
 	print("  soltado el manubrio: pide ", snapped(cockpit.move, Vector2.ONE * 0.01), ", escudo ", cockpit.shield)
 	await get_tree().create_timer(1.0).timeout
-	# ── EL ESCUDO, en la de 3 ──
+	# ── EL ESCUDO, en la de 3: en el brazo derecho; frena lo de frente, no lo de atrás ──
 	var trio := mechs[2]
 	var energy := trio.energy
 	energy.level = 1.0
-	var health := Health.of(trio)
-	var life := health.left if health != null else -1.0
-	# Como un jefe: primero avisa el golpe una vez (block_hit; si lo frena el escudo, se da por usado) y si no, pega.
-	var hit := func() -> bool:
-		if trio.block_hit():
+	var front := trio.global_position - trio.global_basis.z * 2.5
+	var behind := trio.global_position + trio.global_basis.z * 2.5
+	# Como un jefe: primero avisa el golpe una vez, con dónde pega (block_hit; si lo frena el escudo, se da por usado), y
+	# si no, pega.
+	var hit := func(at: Vector3) -> bool:
+		if trio.block_hit(at):
 			return false
-		return HitReaction.land(trio, 10.0, "prueba", HitReaction.Kind.FLINCH, Vector3.FORWARD, 0.0,
-			trio.global_position)
+		return HitReaction.land(trio, 10.0, "prueba", HitReaction.Kind.FLINCH, Vector3.FORWARD, 0.0, at)
+	print("ESCUDO: el brazo derecho lleva ", "el escudo" if trio.guard != null else "OTRA COSA", "; el de las piñas: ",
+		"ninguno" if trio.melee == null else str(trio.melee.name))
 	(trio.keys as ToolMechKeys).cockpit.shield = true
 	await get_tree().physics_frame
 	await get_tree().physics_frame
 	var after_start := energy.level
-	var landed: bool = hit.call()
-	print("ESCUDO: prender gastó ", snappedf(1.0 - after_start, 0.01), "; un golpe enseguida ", "entró" if landed else
-		"no entró", " y la energía volvió a ", snappedf(energy.level, 0.01), " (el parry)")
-	await get_tree().create_timer(1.0).timeout
-	var before := energy.level
-	landed = hit.call()
-	print("  un segundo después: el golpe ", "entró" if landed else "no entró", ", y mantenerlo gastó ",
-		snappedf(after_start - before + (1.0 - after_start), 0.01), " en ese segundo (sin parry: ",
-		snappedf(energy.level, 0.01), ")")
-	await _shot(trio.global_position + Vector3(-9.0, 3.0, 12.0), trio.global_position + Vector3(0.0, -0.5, 0.0), 50.0)
+	var landed: bool = hit.call(front)
+	print("  prender gastó ", snappedf(1.0 - after_start, 0.01), "; un golpe de frente enseguida ", "entró" if landed
+		else "no entró", " y la energía volvió a ", snappedf(energy.level, 0.01), " (el parry)")
+	await get_tree().create_timer(0.6).timeout
+	landed = hit.call(front)
+	print("  de frente, después: ", "entró" if landed else "no entró", " · ", trio.guard.status())
+	landed = hit.call(behind)
+	print("  de atrás: ", "entró" if landed else "no entró")
+	await get_tree().create_timer(0.5).timeout
+	await _shot(trio.global_position + Vector3(7.0, 1.5, -10.5), trio.global_position + Vector3(0.5, 0.0, -1.0), 50.0)
+	var trio_seat := (trio.cabin as CageCabin).board_root().global_transform * CageCabin.driver_eye(CageCabin.shape())
+	await _shot(trio_seat, trio_seat - trio.global_basis.z, 85.0)
 	(trio.keys as ToolMechKeys).cockpit.shield = false
-	await get_tree().create_timer(0.3).timeout
-	landed = hit.call()
-	print("  apagado: el golpe ", "entró" if landed else "no entró", "; la vida, de ", life, " a ",
-		health.left if health != null else -1.0)
+	await get_tree().create_timer(0.6).timeout
+	landed = hit.call(front)
+	print("  bajado: de frente ", "entró" if landed else "no entró", " · ", trio.guard.status())
+	await _shot(trio.global_position + Vector3(7.0, 1.5, -10.5), trio.global_position + Vector3(0.5, 0.0, -1.0), 50.0)
 	_save()
 	get_tree().quit()
 
