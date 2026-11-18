@@ -55,7 +55,7 @@ func keys() -> Array[SandboxKey]:
 
 
 ## LAS TRES FUERZAS PARA ESTA PERSONA, con el equilibrio de character-parametric (CharacterRigidBody3D): un golpe de
-## frente la inclina Δv × `LEAN_PER_MS` / firmeza, la firmeza es su peso sobre 60 kg por su estabilidad de atrás, y se
+## frente la inclina Δv × `HitSpring.LEAN_PER_MS` / firmeza, la firmeza es su peso sobre 60 kg por su estabilidad de atrás, y se
 ## cae en `ragdoll_threshold`. La mueve a la mitad, la deja al 90 % y la tira al 160 % (a una persona liviana la bola le
 ## rebota y le deja menos: medido el 11/11/2026, al chico un 75 %; por eso la que tira tiene margen).
 func ball_pushes() -> Array[float]:
@@ -64,7 +64,7 @@ func ball_pushes() -> Array[float]:
 	var falls_at := 0.85
 	var out: Array[float] = []
 	for share: float in [0.5, 0.9, 1.6]:
-		out.append(TestBall.push_for(arch.weight, falls_at * share * firmness / CharacterRigidBody3D.LEAN_PER_MS))
+		out.append(TestBall.push_for(arch.weight, falls_at * share * firmness / HitSpring.LEAN_PER_MS))
 	return out
 
 

@@ -84,6 +84,12 @@ panel de impactos, los peatones que pasaban de su camino a la física, el piso q
 fijos a bordo (unas 210 líneas). Probado con `tests/capsule_side_check.tscn`: escalera, rampa quieto y subiéndola, pared
 en diagonal (se desliza mejor que antes) y un cubo que le pega (igual que antes).
 
+**El resorte de los golpes es una pieza común** (18/11/2026, el usuario: «un solo sistema que sea robusto, así no
+tenemos que mantener dos codebases»): `game/common/hit_spring.gd` (`HitSpring`), el de costado y el vertical, sacados de
+la cápsula para que los usen también la meca propia y los jefes (los adapta la sesión de Jefes, que lleva el sistema
+común de movimiento y reacción). La cápsula lo tiene en `spring` y sigue mostrando `impact_xz`, `impact_y` y `hit_xz`
+con los nombres de siempre; los números no cambiaron (`tests/hit_check`, `tests/capsule_side_check`).
+
 **Lo que cuesta la fila Locomoción** (17/11/2026, diagnóstico; nada arreglado todavía): `tests/locomotion_perf.tscn` arma
 las siete escenas juntas (42 personajes, 846 cuerpos rígidos) y mide de a una dimensión. Armarlas: 2,2 s en un cuadro
 (el tirón al acercarse). Prendido todo: 8 fps (124 ms por cuadro). Lo que más pesa, en orden: el guion de la cápsula

@@ -73,20 +73,33 @@ var _set_h := Vector3.ZERO
 
 
 
-var impact_stiffness: float = 25.0
-var impact_damping: float = 6.0
-## ── EL GOLPE ES UNA CANTIDAD EN M/S (03/11/2026) ──────────────────────────────────────────────────────────────────
-## Un golpe es lo que le cambia la velocidad (ver `hit`, LOS GOLPES SON IMPULSOS CON NOMBRE). La INCLINACIÓN es el golpe dividido por
-## la firmeza (ver `_firmness`) por `LEAN_PER_MS`, y tumba al llegar a `ragdoll_threshold`: un golpe de unos 2,8 m/s de
-## firmeza 1 (0,85 / 0,3). La EXPULSIÓN al caerse es el mismo golpe, en m/s, tal cual (ver RagdollUtil.activate_with_impact).
-## Sin perillas por personaje: lo que cambia de uno a otro es la firmeza.
-const LEAN_PER_MS := 0.3
+## ── EL RESORTE DE LOS GOLPES ES UNA PIEZA COMÚN (18/11/2026, ver HitSpring) ───────────────────────────────────────
+## El de costado (los golpes y la inercia) y el vertical (el aterrizaje) son los de HitSpring, que usan también la meca y
+## los jefes. Un golpe es lo que le cambia la velocidad (ver `hit`, LOS GOLPES SON IMPULSOS CON NOMBRE); la INCLINACIÓN es
+## el golpe dividido por la firmeza (ver `_firmness`) y tumba en su umbral: un golpe de unos 2,8 m/s de firmeza 1. La
+## EXPULSIÓN al caerse es el mismo golpe, en m/s, tal cual (ver RagdollUtil.activate_with_impact). Lo que cambia de un
+## personaje a otro es la firmeza y, del arquetipo, la dureza y el amortiguado del resorte (ver `create`).
+## `impact_xz`, `impact_y` y `hit_xz` son sus salidas con los nombres de siempre (la red las escribe en un compañero).
+var spring := HitSpring.new()
+var impact_xz: Vector2:
+	get:
+		return spring.xz
+	set(value):
+		spring.set_xz(value)
+var impact_y: float:
+	get:
+		return spring.y
+	set(value):
+		spring.y = value
+var hit_xz: Vector2:
+	get:
+		return spring.hit_xz
+var ragdoll_threshold: float:
+	get:
+		return spring.threshold
 ## EL ATERRIZAJE FUERTE, en m/s (del arquetipo, `EntityArchetype.landing_tolerance`): con él frena del todo al caer
 ## (ver `_brake_on_landing`). Aterrizar no tumba.
 var landing_tolerance: float = 9.0
-var impact_y_threshold: float = 2.0
-
-var ragdoll_threshold: float = 0.85
 
 ## Estabilidad direccional (de EntityArchetype): multiplican el umbral de impacto según de dónde
 ## venga el golpe. >1 = más difícil de voltear en esa dirección; <1 = más fácil. Se setean por
@@ -96,26 +109,15 @@ var stability_backward: float = 1.0
 var stability_sideways: float = 1.0
 
 var velocity_indicator: Vector2 = Vector2.ZERO
-var impact_xz: Vector2 = Vector2.ZERO
-var impact_y: float = 0.0
 
 signal fall_triggered(world_dir: Vector3)
 
-var _impact_xz_vel: Vector2 = Vector2.ZERO
-## ── EL RESORTE EN DOS PARTES (02/11/2026) ─────────────────────────────────────────────────────────────────────────
-## `impact_xz` —lo que inclina el cuerpo y lo que tumba— es la suma de DOS resortes iguales: el de los GOLPES
-## (`hit_xz`: los empujones medidos o con nombre, de reposo cero) y el de lo CONTINUO (`_lean_xz`: la inercia del marco,
-## que le corre el reposo, y la deriva del ebrio). Se separan porque la cámara sigue sólo al de los golpes (ver
-## PlayerController._place_camera_at_head): un golpe se tiene que sentir aunque no tumbe, y que la inercia moviera la
-## vista todo el viaje marearía (02/11/2026, el usuario: «el feedback del choque es muy útil para mostrarle al
-## jugador de que un impacto aunque no lo haya hecho caer influye en el gameplay»).
-var hit_xz: Vector2 = Vector2.ZERO
-var _hit_vel: Vector2 = Vector2.ZERO
-var _lean_xz: Vector2 = Vector2.ZERO
+## (EL RESORTE EN DOS PARTES, los golpes y lo continuo, está en HitSpring: la cámara sigue sólo a los golpes, 02/11/2026,
+## el usuario: «el feedback del choque es muy útil para mostrarle al jugador de que un impacto aunque no lo haya hecho
+## caer influye en el gameplay».)
 ## LO QUE TRAE LA RED: un proxy recibe `impact_xz` de su dueño, con la inercia y los golpes adentro (ver
 ## CharacterNetSync), así que no los calcula de nuevo. Lo prende la red al primer estado.
 var impact_synced := false
-var _impact_y_vel: float = 0.0
 var _prev_velocity: Vector3 = Vector3.ZERO
 var _frame_force: Vector3 = Vector3.ZERO
 ## El último golpe de costado: su dirección (para dónde cae) y cuánto inclinó (lo muestra el panel de impactos).
@@ -309,11 +311,7 @@ func _count_fall(_delta: float) -> void:
 	if seated or not kind.can_fall:
 		return
 	fall_triggered.emit(_last_impact_world_dir)
-	impact_xz = Vector2.ZERO
-	_impact_xz_vel = Vector2.ZERO
-	hit_xz = Vector2.ZERO
-	_hit_vel = Vector2.ZERO
-	_lean_xz = Vector2.ZERO
+	spring.reset_xz()
 
 
 ## LA INERCIA (ver EL MARCO): la aceleración del marco en su punto —la mide el marco, con el giro adentro, así la curva
@@ -465,30 +463,18 @@ func _take_hit(impact_dv: Vector3) -> void:
 	# estabilidad de ese lado, ver `_firmness`—, y todos caen en el mismo punto (`ragdoll_threshold`). Así INCLINARSE ES
 	# ESTAR CERCA DE CAER, igual para todos: un pesado muy inclinado está tan por caerse como un liviano. Antes el peso y
 	# la estabilidad eran un umbral: por debajo, nada; por encima, todos se inclinaban igual.
-	if xz.length() > HIT_NOISE:
-		var impact_dir_world := (global_transform.basis * Vector3(local_impact.x, 0.0, local_impact.z)).normalized()
-
-		_last_impact_world_dir = impact_dir_world
-		_last_impact_xz_magnitude = xz.length() * LEAN_PER_MS / _firmness(local_impact)
-		# AL RESORTE DE LOS GOLPES (ver EL RESORTE EN DOS PARTES); lo que cuenta para tumbar es la suma.
-		hit_xz = (hit_xz + xz * LEAN_PER_MS / _firmness(local_impact)).limit_length(1.0)
-		_hit_vel = Vector2.ZERO
-		impact_xz = hit_xz + _lean_xz
-
-		# UN GOLPE QUE SOLO PASA EL UMBRAL LO TUMBA, en el acto; lo que se junta de a poco sólo inclina, hasta el borde.
-		if xz.length() * LEAN_PER_MS / _firmness(local_impact) >= ragdoll_threshold and not seated:
+	if xz.length() > spring.noise:
+		_last_impact_world_dir = (global_transform.basis * Vector3(local_impact.x, 0.0, local_impact.z)).normalized()
+		_last_impact_xz_magnitude = xz.length() * spring.lean_per_ms / _firmness(local_impact)
+		# AL RESORTE (ver HitSpring): un golpe que solo pasa el umbral lo tumba en el acto; sentado, nunca.
+		if spring.hit(xz, _firmness(local_impact), not seated):
 			_fall_in = 0.0
-		elif impact_xz.length() >= ragdoll_threshold:
-			hit_xz = impact_xz.limit_length(ragdoll_threshold * 0.95) - _lean_xz
-			impact_xz = hit_xz + _lean_xz
 
-	if LocomotionCommon.base().landing_brake and local_impact.y > impact_y_threshold and not seated:
+	if LocomotionCommon.base().landing_brake and local_impact.y > spring.land_threshold and not seated:
 		_brake_on_landing(local_impact.y)
-	if abs(local_impact.y) > impact_y_threshold:
-		impact_y_signed = local_impact.y  # agregá esta línea
-		# Se hunde del todo a la velocidad de LocomotionCommon (ver Aterrizaje); es de todos.
-		impact_y = clampf(impact_y + local_impact.y / LocomotionCommon.LANDING_FULL_SPEED, -1.0, 1.0)
-		_impact_y_vel = 0.0
+	if absf(local_impact.y) > spring.land_threshold:
+		impact_y_signed = local_impact.y
+	spring.land(local_impact.y)
 
 ## ── AL ATERRIZAR, FRENA EL CUERPO (04/11/2026, el usuario; LocomotionCommon.landing_brake, de todos) ───────
 ## Prendido, el golpe de aterrizar le saca velocidad horizontal según qué tan fuerte cayó: `hard` (m/s, lo que el piso le
@@ -529,20 +515,10 @@ func _update_velocity_indicator() -> void:
 	var max_vel: float = top_speed
 	velocity_indicator = (Vector2(local_vel.x, local_vel.z) / max(max_vel, 0.001)).limit_length(1.0)
 
+## EL RESORTE, UN PASO: lo continuo va hacia la inercia del marco (ver HitSpring).
 func _update_impact_pd(delta: float) -> void:
-	var stiffness := impact_stiffness
-	# LOS DOS RESORTES (ver EL RESORTE EN DOS PARTES): el continuo va hacia la inercia del marco; el de los golpes, a cero.
-	var lean_acc := -(_lean_xz - _frame_lean) * stiffness - _impact_xz_vel * impact_damping
-	_impact_xz_vel += lean_acc * delta
-	_lean_xz += _impact_xz_vel * delta
-	var hit_acc := -hit_xz * stiffness - _hit_vel * impact_damping
-	_hit_vel += hit_acc * delta
-	hit_xz += _hit_vel * delta
-	impact_xz = hit_xz + _lean_xz
-
-	var y_acc := -impact_y * LocomotionCommon.LANDING_SPRING - _impact_y_vel * LocomotionCommon.LANDING_DAMP
-	_impact_y_vel += y_acc * delta
-	impact_y += _impact_y_vel * delta
+	spring.lean_target = _frame_lean
+	spring.update(delta)
 
 ## ── MOVIMIENTO DIRECTO (el ente, ver CharacterKind.Motion) ────────────────────────────────────────────────────────
 ## Para recorrer y probar cómodo: la velocidad que pide es la que tiene, al instante, sin aceleración, frenada ni golpes.
@@ -746,8 +722,12 @@ static func create(root_size: Vector3, distance_from_ground: float, leg_height: 
 	rb.stability_sideways  = arch.sideways_stability
 	# EL RESORTE DE CADA UNO (02/11/2026): qué tan duro se endereza y cuánto rebota, del arquetipo.
 	rb.landing_tolerance = arch.landing_tolerance
-	rb.impact_stiffness *= arch.stability_spring
-	rb.impact_damping   *= arch.stability_damp
+	rb.spring.stiffness *= arch.stability_spring
+	rb.spring.damping   *= arch.stability_damp
+	rb.spring.noise = HIT_NOISE
+	rb.spring.land_full_speed = LocomotionCommon.LANDING_FULL_SPEED
+	rb.spring.land_stiffness = LocomotionCommon.LANDING_SPRING
+	rb.spring.land_damping = LocomotionCommon.LANDING_DAMP
 
 	var y_offset := root_size.y / 2.0 - (leg_height - distance_from_ground)
 
@@ -822,11 +802,5 @@ func snap_feet_to_ground(xz: Vector3, exclude: Array[RID] = []) -> bool:
 	return true
 
 func reset_impact_state() -> void:
-	impact_xz        = Vector2.ZERO
-	_impact_xz_vel   = Vector2.ZERO
-	hit_xz           = Vector2.ZERO
-	_hit_vel         = Vector2.ZERO
-	_lean_xz         = Vector2.ZERO
-	impact_y         = 0.0
-	_impact_y_vel    = 0.0
+	spring.reset()
 	_prev_velocity   = linear_velocity
