@@ -2,6 +2,17 @@
 
 **Borrador** (17/11/2026). Primero que funcione; la capa estética, al final. Ver [[base]], [[progresion]].
 
+## El giro retro (18/11/2026)
+El usuario: «quiero hacer un menú a lo viejo, a lo retro, que sea todo con píxeles… toda la pantalla… una grilla de
+píxeles… las fuentes… los marcos». **Fondo casi negro y fósforo verde**, en tres brillos (encendido, medio y apagado)
+más un relleno oscuro; la letra, la de trazos rectos **rasterizada** en su grilla de 4 × 6 (5 × 7 con el aire). Se
+probó la armería a 320 × 180 y a 640 × 360 (agrandadas a 1280 × 720), y a 320 con líneas de barrido. **Lo único que no
+es verde: la pintura de la meca**, que tiene colores; se repiensa (el aerosol y una plataforma al lado de la meca) más
+adelante. Lo de abajo (el acento amarillo, los tamaños de letra) queda reemplazado por esto cuando se elija la
+resolución.
+- **Pantallas encima de todo** por ahora (quizás diegéticas después). **Sólo el capitán compra, pone y firma.** El
+  menú principal y la pintura, después.
+
 ## El lenguaje común
 - **Una sola letra**: la de trazos rectos (`StrokeFont`, la de character-parametric). Hoy escribe sólo en el mundo 3D;
   para las pantallas hace falta un control 2D que la dibuje. Le faltan el `$` y los círculos de la dificultad.
