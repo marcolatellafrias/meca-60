@@ -31,15 +31,9 @@ func arms() -> PackedStringArray:
 	return out
 
 
-## Cuánto pesa lo de arriba (el torso, los brazos y la cabeza).
-func weight() -> int:
-	var total: int = BossParts.TORSOS[torso]["weight"] + BossParts.HEADS[head]["weight"]
-	for each in arms():
-		total += int(BossParts.ARMS[each]["weight"])
-	return total
-
-
-## POR QUÉ NO ENCAJA (vacío: encaja): un brazo más grande que el hombro, o piernas que no aguantan el peso.
+## POR QUÉ NO ENCAJA (vacío: encaja): sólo lo que es de lugar, un brazo más grande que el hombro donde va. *Hubo una
+## regla de peso (las piernas aguantaban tanto): el usuario la sacó («muy figurativa… le saca libertad… capaz quiero
+## jugar con proporciones poco realistas»).*
 func problems() -> PackedStringArray:
 	var out := PackedStringArray()
 	var shoulder: int = BossParts.TORSOS[torso]["shoulder_size"]
@@ -50,10 +44,6 @@ func problems() -> PackedStringArray:
 			seen[each] = true
 			out.append("el brazo «%s» pide un hombro %s y el torso «%s» los tiene %s" % [BossParts.ARMS[each]["title"],
 				BossParts.SIZE_NAMES[need], BossParts.TORSOS[torso]["title"], BossParts.SIZE_NAMES[shoulder]])
-	var capacity: int = BossParts.LEGS[legs]["capacity"]
-	if weight() > capacity:
-		out.append("las piernas «%s» aguantan %d y lo de arriba pesa %d" % [BossParts.LEGS[legs]["title"], capacity,
-			weight()])
 	return out
 
 

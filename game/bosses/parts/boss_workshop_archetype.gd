@@ -13,7 +13,7 @@ const EXAMPLES := [
 	["orugas", "ancho", "puno", "visor", ""],
 	["bipedo", "angosto", "pinza", "antena", ""],
 	["cuatro", "cuatro", "canon", "visor", "pinza"],
-	["flotante", "angosto", "canon", "ninguna", ""],
+	["flotante", "ancho", "escudo", "ninguna", ""],
 	["cuatro", "ancho", "escudo", "antena", ""],
 ]
 
@@ -36,7 +36,7 @@ func far_height() -> float:
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"armar el cuerpo de un jefe con piezas: piernas, torso, brazos y cabeza",
-		"el cartel dice si encaja (el tamaño de los hombros, el peso que aguantan las piernas)",
+		"el cartel dice si encaja (el tamaño de los hombros)",
 		"y qué le dan sus piezas: con eso, qué poderes podría usar",
 		"J piernas · K torso · L brazos · H brazos del segundo par · P cabeza · F7 la escala de todos",
 	])
@@ -116,7 +116,7 @@ static func write(label: Label3D, made: BossRecipe, full: bool) -> void:
 	var problems := made.problems()
 	var lines := PackedStringArray([made.title()])
 	if problems.is_empty():
-		lines.append("ENCAJA · pesa %d de %d" % [made.weight(), int(BossParts.LEGS[made.legs]["capacity"])])
+		lines.append("ENCAJA")
 	else:
 		for problem in problems:
 			lines.append("NO ENCAJA: " + problem)

@@ -116,15 +116,15 @@ no como estéticas, sino como superficies que soportan o no ciertos attachments�
 modelarlos a mano». En `game/bosses/parts/`:
 - **`BossParts`, el catálogo**: cada pieza es un dato (qué es, qué ofrece, qué pide) y un dibujo de arcilla provisorio
   (`draw_*`); cambiar el dibujo por un modelo no toca el dato.
-  - Piernas: orugas, dos patas, cuatro patas, flotante. Dicen cuánto peso aguantan, cómo se mueven (orugas, patas,
+  - Piernas: orugas, dos patas, cuatro patas, flotante. Dicen cómo se mueven (orugas, patas,
     vuelo), la altura de la cadera y lo que dan (suelo, embestir, saltar, volar).
-  - Torsos: ancho, angosto, de cuatro brazos. Dicen cuánto pesan, cuántos hombros tienen y de qué tamaño, y lo que dan
+  - Torsos: ancho, angosto, de cuatro brazos. Dicen cuántos hombros tienen y de qué tamaño, y lo que dan
     (horno, núcleo).
-  - Brazos: puño, pinza, cañón, escudo. Dicen cuánto pesan, qué tamaño de hombro piden y lo que dan (brazos, mano,
+  - Brazos: puño, pinza, cañón, escudo. Dicen qué tamaño de hombro piden y lo que dan (brazos, mano,
     cañón, escudo).
   - Cabezas: visor, antena, sin cabeza.
-- **`BossRecipe`, la receta**: qué piezas lleva un jefe. Dice **si encaja** (`problems`: un brazo entra en un hombro de
-  su tamaño o más grande; las piernas tienen que aguantar el peso de lo de arriba) y **qué le dan** sus piezas
+- **`BossRecipe`, la receta**: qué piezas lleva un jefe. Dice **si encaja** (`problems`: sólo lo que es de lugar, un brazo entra en un
+  hombro de su tamaño o más grande; la regla de peso se sacó, el usuario la vio muy figurativa) y **qué le dan** sus piezas
   (`gives`), que es lo que piden los poderes: de ahí sale qué poderes podría usar (`usable`).
 - **`BossFrame`, el armazón**: monta la receta (las piernas, el torso en la cadera, un brazo en cada hombro, la
   cabeza), a la escala de todos los jefes, con sus zonas de golpe por nombre.

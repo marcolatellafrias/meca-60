@@ -7,42 +7,41 @@ extends RefCounted
 ## attachments… yo después en un futuro puedo agarrar módulos y empezar a modelarlos a mano».
 ## Cada pieza es UN DATO (qué es, qué ofrece, qué pide) y UN DIBUJO DE ARCILLA provisorio (`draw_*`), en medidas de
 ## maqueta (un jefe de unos 30 m; la escala de todos, BossSettings). Cambiar el dibujo por un modelo no toca el dato.
-##   · LAS PIERNAS dicen cuánto peso aguantan (`capacity`), cómo se mueven (`move`: orugas, patas, vuelo), a qué altura
-##     dejan la cadera (`hip`) y lo que dan (suelo, embestir, saltar, volar).
-##   · EL TORSO dice cuánto pesa, cuántos hombros tiene y de qué tamaño (`shoulders`, `shoulder_size`: 1 chico, 2 medio,
+##   · LAS PIERNAS dicen cómo se mueven (`move`: orugas, patas, vuelo), a qué altura dejan la cadera (`hip`) y lo que
+##     dan (suelo, embestir, saltar, volar).
+##   · EL TORSO dice cuántos hombros tiene y de qué tamaño (`shoulders`, `shoulder_size`: 1 chico, 2 medio,
 ##     3 grande), y lo que da (horno, núcleo).
-##   · EL BRAZO dice cuánto pesa, qué tamaño de hombro pide (`size`) y lo que da (brazos, mano, cañón, escudo).
-##   · LA CABEZA, cuánto pesa y lo que da.
-## QUÉ ENCAJA (BossRecipe.problems): un brazo entra en un hombro de su tamaño o más grande; las piernas tienen que
-## aguantar el peso de todo lo de arriba. Lo que DA cada pieza es lo que piden los poderes (BossPower.needs).
+##   · EL BRAZO dice qué tamaño de hombro pide (`size`) y lo que da (brazos, mano, cañón, escudo).
+##   · LA CABEZA, lo que da.
+## QUÉ ENCAJA (BossRecipe.problems): sólo lo que es de lugar: un brazo entra en un hombro de su tamaño o más grande. Lo que DA cada pieza es lo que piden los poderes (BossPower.needs).
 
 enum Kind { LEGS, TORSO, ARM, HEAD }
 const KIND_NAMES := ["piernas", "torso", "brazos", "cabeza"]
 
 const LEGS := {
-	"orugas": {"title": "orugas", "capacity": 100, "move": "orugas", "hip": 7.0, "gives": ["suelo", "embestir"]},
-	"bipedo": {"title": "dos patas", "capacity": 60, "move": "patas", "hip": 13.0, "gives": ["suelo", "saltar"]},
-	"cuatro": {"title": "cuatro patas", "capacity": 120, "move": "patas", "hip": 9.0, "gives": ["suelo"]},
-	"flotante": {"title": "flotante", "capacity": 45, "move": "vuelo", "hip": 10.0, "gives": ["volar"]},
+	"orugas": {"title": "orugas", "move": "orugas", "hip": 7.0, "gives": ["suelo", "embestir"]},
+	"bipedo": {"title": "dos patas", "move": "patas", "hip": 13.0, "gives": ["suelo", "saltar"]},
+	"cuatro": {"title": "cuatro patas", "move": "patas", "hip": 9.0, "gives": ["suelo"]},
+	"flotante": {"title": "flotante", "move": "vuelo", "hip": 10.0, "gives": ["volar"]},
 }
 const TORSOS := {
-	"ancho": {"title": "ancho", "weight": 50, "size": Vector3(22, 13, 13), "shoulders": 2, "shoulder_size": 3,
+	"ancho": {"title": "ancho", "size": Vector3(22, 13, 13), "shoulders": 2, "shoulder_size": 3,
 		"gives": ["horno"]},
-	"angosto": {"title": "angosto", "weight": 25, "size": Vector3(12, 14, 9), "shoulders": 2, "shoulder_size": 2,
+	"angosto": {"title": "angosto", "size": Vector3(12, 14, 9), "shoulders": 2, "shoulder_size": 2,
 		"gives": []},
-	"cuatro": {"title": "de cuatro brazos", "weight": 45, "size": Vector3(16, 18, 11), "shoulders": 4,
+	"cuatro": {"title": "de cuatro brazos", "size": Vector3(16, 18, 11), "shoulders": 4,
 		"shoulder_size": 2, "gives": ["núcleo"]},
 }
 const ARMS := {
-	"puno": {"title": "puño", "weight": 10, "size": 3, "gives": ["brazos", "mano"]},
-	"pinza": {"title": "pinza", "weight": 6, "size": 2, "gives": ["brazos", "mano"]},
-	"canon": {"title": "cañón", "weight": 8, "size": 2, "gives": ["cañón"]},
-	"escudo": {"title": "escudo", "weight": 12, "size": 3, "gives": ["escudo"]},
+	"puno": {"title": "puño", "size": 3, "gives": ["brazos", "mano"]},
+	"pinza": {"title": "pinza", "size": 2, "gives": ["brazos", "mano"]},
+	"canon": {"title": "cañón", "size": 2, "gives": ["cañón"]},
+	"escudo": {"title": "escudo", "size": 3, "gives": ["escudo"]},
 }
 const HEADS := {
-	"visor": {"title": "visor", "weight": 2, "gives": ["cabeza"]},
-	"antena": {"title": "antena", "weight": 1, "gives": ["cabeza", "sensor"]},
-	"ninguna": {"title": "sin cabeza", "weight": 0, "gives": []},
+	"visor": {"title": "visor", "gives": ["cabeza"]},
+	"antena": {"title": "antena", "gives": ["cabeza", "sensor"]},
+	"ninguna": {"title": "sin cabeza", "gives": []},
 }
 const SIZE_NAMES := ["", "chico", "medio", "grande"]
 

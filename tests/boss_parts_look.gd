@@ -39,7 +39,7 @@ func _ready() -> void:
 	_look(Vector3(0.0, 9.0, -75.0), Vector3(0.0, 30.0, 25.0))
 	await _shot("0_ejemplos")
 	var tries := [["orugas", "ancho", "puno", "visor", "pinza"], ["cuatro", "cuatro", "canon", "antena", "pinza"],
-		["flotante", "ancho", "escudo", "ninguna", "pinza"]]
+		["bipedo", "angosto", "puno", "ninguna", "pinza"]]
 	for index in tries.size():
 		var each: Array = tries[index]
 		BossWorkshopArchetype.recipe = BossRecipe.of(each[0], each[1], each[2], each[3], each[4])
