@@ -31,6 +31,14 @@ nacen. La pierna plegándose de la meca física sigue por el camino de antes. EL
 (`PartsRagdoll._mech_parts`): un pedazo por hueso, unido a su padre en el origen del hueso; 12 pedazos (el brazo con
 músculos, también en dos).
 
+PASO 3 (18/11/2026): EL BRAZO DISCRETO CON LA IK COMÚN. `MechArm._reach_bones`: la IK de los personajes pone el codo
+y la muñeca (el codo hacia `elbow_way`), y cada hueso gira sobre su largo hasta su eje del codo (`MechSkeleton.roll`),
+que es de donde salen la mano y las placas. Girar el brazo gira también al antebrazo que cuelga de él: se lo deja donde
+apuntaba antes de girarlo (sin eso, el antebrazo erraba hasta 16° y el cañón no le pegaba al jefe). Medido: el codo a
+3 mm de la cuenta de antes (MechBody.arm), la pieza del antebrazo a 0,06°, y el cañón le saca lo mismo (2,8, 13,2 y 12,0
+en tests/brawler_shots_check). El brazo con músculos sigue pidiendo su pose con MechBody.arm (lo que persiguen sus
+músculos); sus huesos siguen a sus cuerpos.
+
 `tests/mech_skeleton_check` (sin ventana): caminando, doblando y con una piña, lo más que se separa cada hueso de
 donde nace (el muslo de su cadera, la canilla de la punta del muslo, el pie, el brazo de su hombro, el antebrazo) y
 que las caderas no se muevan en la pelvis: todo 0 mm, «ESQUELETO OK». La huella de `cage_mech_look` y su hoja, igual.
@@ -38,7 +46,7 @@ que las caderas no se muevan en la pelvis: todo 0 mm, «ESQUELETO OK». La huell
 Por pasos (la nota compartida `jefes-revision-cuerpo-meca.md`): 1. el esqueleto sin cambio visible (HECHO: la pose la
 sigue calculando el código de siempre, MechBody, y se escribe en los huesos); 2a. una sola IK sobre los huesos de las
 piernas (HECHO); 2b. las capas (caminar, inclinarse, el resorte, hundirse) en la pelvis y el torso, con la cabina colgada del
-torso (con Cabinas); 3. los dos brazos sobre los huesos; 4. el ragdoll desde el esqueleto, y su vuelta (con los
+torso (con Cabinas); 3. los dos brazos sobre los huesos (HECHO el discreto; el de músculos sigue a sus cuerpos); 4. el ragdoll desde el esqueleto, y su vuelta (con los
 personajes); 5. el jefe; 6. limpieza.
 
 ## Qué viaja por la red y qué se calcula en cada máquina (acordado con el usuario, 18/11/2026)

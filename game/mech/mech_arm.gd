@@ -317,6 +317,27 @@ func _pose(shoulder: Vector3, fist: Vector3, torso: Basis) -> Dictionary:
 	}
 
 
+## HACIA DÓNDE DOBLA EL CODO desde el hombro, en el mundo (la de MechBody.arm: `elbow_hint` o la de siempre, del lado de
+## este brazo, en los ejes del torso `torso`).
+func elbow_way(torso: Basis) -> Vector3:
+	var toward := MechBody.ELBOW_HINT if elbow_hint == Vector3.ZERO else elbow_hint
+	return torso * Vector3(side * toward.x, toward.y, toward.z)
+
+
+## EL BRAZO CON SUS HUESOS (18/11/2026; paso 3 del esqueleto): LA IK COMÚN (IkUtil.solve_two_bone_ik, la de los
+## personajes y las piernas) pone el codo y la muñeca, con el codo doblando hacia `elbow_way`; después cada hueso gira
+## sobre su largo hasta su eje del codo (`_hinge`, que sale de `pose`), como sus piezas (MechSkeleton.roll). Los huesos
+## no se mueven de donde nacen (el hombro, el codo).
+func _reach_bones(pose: Dictionary, torso: Basis) -> void:
+	var shoulder: Vector3 = pose["shoulder"]
+	IkUtil.solve_two_bone_ik(upper_bone, forearm_bone, pose["wrist"], shoulder + elbow_way(torso))
+	# Girar el brazo sobre su largo gira también al antebrazo, que cuelga de él: se lo deja donde apuntaba.
+	var forearm_was := forearm_bone.global_basis
+	MechSkeleton.roll(upper_bone, _hinge)
+	forearm_bone.transform.basis = upper_bone.global_basis.orthonormalized().inverse() * forearm_was
+	MechSkeleton.roll(forearm_bone, _hinge)
+
+
 ## La orientación de una pieza que va hacia `way`: su −Z para ahí y su Y lo más cerca del eje del codo.
 func _along(way: Vector3) -> Basis:
 	var back := -way.normalized()

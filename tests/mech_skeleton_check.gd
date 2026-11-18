@@ -44,6 +44,31 @@ func _ready() -> void:
 			_measure("antebrazo en la punta del brazo (%s)" % ("izq" if side == 0 else "der"), skeleton.forearms[side].global_position,
 				_end(skeleton.uppers[side]))
 			_measure("cadera fija en la pelvis", skeleton.hips[side].position, hip_rest[side])
+			# EL BRAZO DISCRETO CON LA IK COMÚN (paso 3): el codo donde lo pone la cuenta de la pose (MechBody.arm), y
+			# el hueso girado sobre su eje del codo (lo que da la Y de sus piezas: la mano, las placas).
+			var arm := mech.arms[side]
+			if arm is PoseArm:
+				var pose: Dictionary = arm.call("_target")
+				_measure("codo de la IK común donde lo pone la pose (%s)" % ("izq" if side == 0 else "der"),
+					skeleton.forearms[side].global_position, pose["elbow"])
+				# La parte del eje del codo perpendicular al antebrazo (con el brazo casi derecho el eje queda el último
+				# que se pudo calcular: la pieza, como el hueso, usa esa parte; ver MechArm._along).
+				var along := (skeleton.forearms[side].global_basis.y).normalized()
+				var hinge: Vector3 = arm.get("_hinge")
+				hinge = hinge - along * hinge.dot(along)
+				var piece := arm.get("_forearm") as Node3D
+				var wanted: Transform3D = pose["forearm"]
+				_measure("la pieza del antebrazo apunta como la pose (%s, rad)" % ("izq" if side == 0 else "der"),
+					Vector3.ZERO, Vector3.RIGHT * (-piece.global_basis.z).angle_to(-wanted.basis.z))
+				_measure("la pieza del antebrazo en su lugar (%s)" % ("izq" if side == 0 else "der"),
+					piece.global_position, wanted.origin)
+				if OS.get_cmdline_user_args().has("--ver"):
+					var off := skeleton.forearms[side].global_basis.z.normalized().distance_to(hinge.normalized())
+					if off > 0.05:
+						print("    %.2f s: el antebrazo a %.2f de su eje · el codo dobla %.0f° · etapa %d" % [clock, off,
+							rad_to_deg((pose["elbow"] - pose["shoulder"]).angle_to(pose["wrist"] - pose["elbow"])), arm.stage()])
+				_measure("el antebrazo girado a su eje del codo (%s)" % ("izq" if side == 0 else "der"),
+					skeleton.forearms[side].global_basis.z.normalized(), hinge.normalized())
 	var ok := true
 	for what: String in _worst:
 		var gap: float = _worst[what]

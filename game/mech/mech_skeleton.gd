@@ -122,6 +122,20 @@ static func aim(bone: CustomBone, piece: Transform3D) -> void:
 	bone.transform.basis = parent.global_basis.orthonormalized().inverse() * basis if parent != null else basis
 
 
+## GIRA UN HUESO SOBRE SU LARGO hasta que su Z quede del lado de `z_world` (lo que se pueda: la parte perpendicular al
+## hueso). No cambia hacia dónde apunta ni dónde nace. Para los brazos: su Z es el eje del codo (la Y de sus piezas;
+## ver MechArm._along), y de ahí salen la mano y las placas.
+static func roll(bone: CustomBone, z_world: Vector3) -> void:
+	var y := bone.global_basis.y.normalized()
+	var z := z_world - y * z_world.dot(y)
+	if z.length_squared() < 0.000001:
+		return
+	z = z.normalized()
+	var world := Basis(y.cross(z), y, z)
+	var parent := bone.get_parent() as Node3D
+	bone.transform.basis = parent.global_basis.orthonormalized().inverse() * world if parent != null else world
+
+
 ## LO QUE COLGABA DE UN CUERPO (`body`, con los ejes de una pieza: el largo por −Z) PASA A SU HUESO, en el mismo lugar
 ## respecto de él (menos sus formas de choque, que se quedan en el cuerpo).
 static func move_drawing(body: Node3D, bone: CustomBone) -> void:

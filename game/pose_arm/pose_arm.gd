@@ -50,8 +50,7 @@ func _physics_process(delta: float) -> void:
 
 func _place(pose: Dictionary) -> void:
 	if upper_bone != null:
-		MechSkeleton.put(upper_bone, pose["upper"])
-		MechSkeleton.put(forearm_bone, pose["forearm"])
+		_reach_bones(pose, anchor.global_basis)
 		return
 	_upper.global_transform = pose["upper"]
 	_forearm.global_transform = pose["forearm"]
