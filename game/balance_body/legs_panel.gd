@@ -8,7 +8,6 @@ extends KnobsPanel
 ## *El ancho era el del panel del cubo (HoverPanel), borrado con él el 17/11/2026.*
 const PANEL_WIDTH := 420.0
 const LABELS := {
-	"new_steps": "los pasos nuevos (apagado: los de antes)",
 	"stride": "largo del paso (m, piernas medianas)", "lift": "cuánto sube el pie (m, piernas medianas)",
 	"fastest": "el paso más rápido (s)", "slowest": "el paso más lento (s)",
 	"bob": "la caja sube a mitad del paso (m, piernas medianas)", "side_lean": "de costado se inclina (°)",

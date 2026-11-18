@@ -10,8 +10,9 @@ extends Resource
 ## SE GUARDAN, COMO LA FORMA DEL F2 (13/11/2026; el usuario: «no entiendo por qué este panel no tiene opción de
 ## guardado»): `current` arranca con lo guardado en `SAVED` (si hay; ver KnobsFile).
 ## CADA NÚMERO TIENE UN SOLO DUEÑO (13/11/2026): la ALTURA DE LA CAJA no es una perilla —sale del cuerpo, del largo y
-## lo estirado de las piernas del F2: ver BalanceBody.hover—; y el PASO de acá (`step_reach`, `step_height`,
-## `settle_gap`) es el de piernas medianas, que las piernas escalan con su largo al leerlo (BodyLegs). *Hasta entonces
+## lo estirado de las piernas del F2: ver BalanceBody.hover—; y el PASO es el de LegSettings (F4), de piernas medianas,
+## que las piernas escalan con su largo al leerlo (BodyLegs; *el paso de acá se fue el 18/11/2026 con los pasos de
+## largo fijo*). *Hasta entonces
 ## MechBody.dress los escribía encima de estas perillas y la altura del F1 no hacía nada (lo vio el usuario: «la pongo
 ## en 0.5 y la pongo en 15 y no cambia nada»).*
 ## El archivo guardado es del usuario: no se sube al repositorio.
@@ -58,19 +59,7 @@ static var current := KnobsFile.load_into(BodySettings.new(), SAVED) as BodySett
 @export_range(0.5, 60.0, 0.5) var yaw_hold := 12.0
 @export_range(0.5, 20.0, 0.5) var yaw_grip := 6.0
 
-@export_group("Las piernas (pasos de largo fijo)")
-## EL PASO TIENE SIEMPRE EL MISMO LARGO: el pie pisa `step_reach` adelante de su lugar (hacia donde va). Más rápido no
-## pisa más lejos: da los pasos más seguido. Cuánto dura un paso es lo que tarda el torso en recorrer el doble de eso,
-## entre `step_fastest` y `step_slowest`.
-@export_range(0.3, 6.0, 0.1) var step_reach := 2.4
-@export_range(0.1, 1.5, 0.05) var step_fastest := 0.3
-@export_range(0.2, 2.0, 0.05) var step_slowest := 0.7
-@export_range(0.0, 4.0, 0.1) var step_height := 1.4
-## Quieta, un pie que quedó más lejos que esto de su lugar (o más girado que `settle_turn`) se acomoda con un paso.
-@export_range(0.1, 3.0, 0.05) var settle_gap := 0.5
-@export_range(2.0, 45.0, 1.0) var settle_turn := 10.0
-## Lo más que un paso gira el pie de lo que mira el otro: girando en el lugar, gira de a pasos.
-@export_range(10.0, 90.0, 1.0) var turn_per_step := 40.0
+@export_group("Las piernas")
 ## LAS RODILLAS van hacia adelante y un poco hacia afuera; agachada, más hacia afuera (parte de adelante).
 @export_range(0.0, 1.5, 0.05) var knee_out := 0.2
 @export_range(0.0, 2.0, 0.05) var knee_out_crouched := 0.6

@@ -9,7 +9,7 @@ extends RefCounted
 ##
 ## LAS PARTES, de abajo para arriba:
 ##   · los PIES: planos sobre el piso, mirando hacia donde miran las piernas; el TOBILLO, `ANKLE` arriba del piso.
-##   · las CANILLAS y los MUSLOS, del tobillo a la cadera; la RODILLA sale de los dos largos (ver `joint`), hacia adelante.
+##   · las CANILLAS y los MUSLOS, del tobillo a la cadera; la RODILLA sale de los dos largos (la IK común, IkUtil.bend_point), hacia adelante.
 ##   · la PELVIS, donde van las piernas (lo pidió el usuario: «la pelvis… que gira independiente del torso, que es donde
 ##     van conectadas las piernas… ahora… es monolítico»): mira hacia donde caminan las piernas y se inclina con el
 ##     equilibrio, colgada de la CINTURA.
@@ -218,7 +218,7 @@ func leg(hip_point: Vector3, ground: Vector3, facing: Basis, knee_way := Vector3
 	var flat := Basis.looking_at(forward, Vector3.UP)
 	var ankle := ground + Vector3.UP * ANKLE
 	var bend := knee_way if knee_way.length_squared() > 0.0001 else forward
-	var knee := joint(hip_point, ankle, THIGH, SHIN, bend)
+	var knee := IkUtil.bend_point(hip_point, ankle, THIGH, SHIN, bend)
 	var to_ankle := (ankle - hip_point).limit_length(leg_reach())
 	var end := hip_point + to_ankle
 	return {
@@ -236,7 +236,7 @@ func leg(hip_point: Vector3, ground: Vector3, facing: Basis, knee_way := Vector3
 func arm(shoulder_point: Vector3, fist: Vector3, side: float, torso_basis: Basis, elbow_hint := Vector3.ZERO) -> Dictionary:
 	var toward := ELBOW_HINT if elbow_hint == Vector3.ZERO else elbow_hint
 	var hint := torso_basis * Vector3(side * toward.x, toward.y, toward.z)
-	var elbow := joint(shoulder_point, fist, UPPER_ARM, FOREARM, hint)
+	var elbow := IkUtil.bend_point(shoulder_point, fist, UPPER_ARM, FOREARM, hint)
 	var wrist := shoulder_point + (fist - shoulder_point).limit_length(UPPER_ARM + FOREARM - 0.01)
 	var up := torso_basis * Vector3.UP
 	return {
@@ -256,17 +256,3 @@ static func segment(from: Vector3, to: Vector3, up: Vector3) -> Transform3D:
 	along = along.normalized()
 	var hint := up.normalized() if absf(along.dot(up.normalized())) < 0.95 else Vector3.BACK
 	return Transform3D(Basis.looking_at(along, hint), (from + to) * 0.5)
-
-
-## LA ARTICULACIÓN DEL MEDIO de dos huesos (`first` desde `root`, `second` hasta `end`): ley del coseno en la raíz,
-## doblada hacia `hint` sin la parte que va a lo largo. La rodilla y el codo.
-static func joint(root: Vector3, end: Vector3, first: float, second: float, hint: Vector3) -> Vector3:
-	var reach := end - root
-	var distance := clampf(reach.length(), 0.5, first + second - 0.01)
-	var along := reach.normalized()
-	var cosine := (first * first + distance * distance - second * second) / (2.0 * first * distance)
-	var angle := acos(clampf(cosine, -1.0, 1.0))
-	var bend := (hint - along * hint.dot(along)).normalized()
-	if bend.length_squared() < 0.01:
-		bend = Vector3.FORWARD
-	return root + along * cos(angle) * first + bend * sin(angle) * first

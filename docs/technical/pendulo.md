@@ -39,18 +39,14 @@ de fuerza y su inclinación son huesos; la meca tiene colisión 1:1 con su caja 
 - **El pedido del mouse no se acumula**: nunca va más de 110° por delante del torso. Si no, un mouse más rápido que el
   torso se le adelanta más de media vuelta y el torso gira para el otro lado.
 - **La caja no roza** (fricción 0, parada): lo que la frena son los pies.
-- **Las piernas son dibujo** (IK, `MechBody`; `BodyLegs`). **El paso tiene siempre el mismo largo** (13/11/2026, antes
-  pisaban por radio): andando, los pies se turnan sin parar y cada uno pisa adelante de su lugar (a lo más
-  `step_reach`); más rápido, **más seguido, no más largo** (medido: 4,8 m por paso caminando a 8 m/s y corriendo a
-  13,6; 1,7 y 2,8 pasos por segundo). Quieta, un pie lejos o girado se acomoda. **Nunca se cruzan** (un pie pisa
-  siempre de su lado del otro) y girando en el lugar giran de a pasos (`turn_per_step`). **Las rodillas** van hacia
-  adelante y un poco afuera; agachada, más afuera. **La caja no sube ni baja con los pasos**: lo absorben las rodillas.
-  **La pelvis**, una sola pieza, mira al promedio de los dos pies. Caído se pliegan; al enderezarse, se estiran.
-- **LOS PASOS NUEVOS, el sistema clásico de piernas de meca con IK** (13/11/2026, a prueba: el interruptor del F4,
-  `LegSettings.new_steps`, elige entre éstos y los de arriba; cuando convenzan se borran los de arriba). El usuario: «el
-  sistema actual es uno derivado de los personajes y es medio rebuscado… es un trope bastante común el de piernas para
-  mecas con IK». Las perillas son de todas las mecas (`LegSettings`, panel `LegsPanel`, F4 en la fila de la meca jaula
-  y en la Base).
+- **Las piernas son dibujo** (IK, `MechBody`; `BodyLegs`). **Los pasos son la marcha común** (`Gait`, ver
+  [[movimiento-comun]]). Las perillas son de todas las mecas (`LegSettings`, panel `LegsPanel`, F4 en la fila de la meca
+  jaula y en la Base). **Las rodillas** van hacia adelante y un poco afuera; agachada, más afuera. **La pelvis**, una
+  sola pieza, mira al promedio de los dos pies. Caído se pliegan; al enderezarse, se estiran. *Antes hubo los pasos de
+  largo fijo (13/11/2026: cada pie pisaba hasta `step_reach` adelante, con reglas de giro y de cruce) y los de un
+  tercio de paso (con un interruptor en el F4 para compararlos, `LegSettings.new_steps`); se borraron los dos el
+  18/11/2026, en la limpieza del esqueleto. El usuario, de los de largo fijo: «el sistema actual es uno derivado de los
+  personajes y es medio rebuscado… es un trope bastante común el de piernas para mecas con IK».*
   - **Cada pie tiene su lugar**, debajo de su cadera, pegado a la caja, **en el piso de verdad** (un rayo que saltea lo
     que se mueve). Pisa escalones y techos, cada pie a su altura; la caja no sube ni baja y lo absorben las rodillas.
   - **Sale el pie que quedó un tercio de paso atrás** de su lugar, y pisa un tercio adelante de donde va a estar su

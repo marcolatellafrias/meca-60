@@ -22,7 +22,7 @@ extends RefCounted
 ##     arriba antes y baja casi derecho y de golpe al final; en 0, un arco parejo.
 ## Lo que da: `feet` (el mundo), `swing_share` (0 a 1 por pata: cuánto lleva de su paso; −1 apoyada), `phase` y
 ## `steps_taken`. Uso: `setup(rests, groups)`, `place(root)` al ponerlo, y `update(delta, root, velocity)` en cada paso;
-## `root`, el cuerpo en el piso (su giro y el punto debajo de su centro). El IK de cada pata, `knee`.
+## `root`, el cuerpo en el piso (su giro y el punto debajo de su centro). El IK de cada pata, el común (IkUtil.bend_point).
 
 ## Más lento que esto (m/s) está quieto.
 const STILL := 0.2
@@ -199,17 +199,3 @@ func _floor(at: Vector3) -> Vector3:
 	if ground.is_valid():
 		return ground.call(at)
 	return Vector3(at.x, _root.origin.y, at.z)
-
-
-## EL IK DE DOS HUESOS: dónde va la rodilla de una pata que va de `hip` a `foot` con muslo `upper` y canilla `lower`,
-## doblando hacia `bend` (el mundo). Si el pie queda lejos, la pata se estira derecha hacia él.
-static func knee(hip: Vector3, foot: Vector3, upper: float, lower: float, bend: Vector3) -> Vector3:
-	var along := foot - hip
-	var reach := clampf(along.length(), absf(upper - lower) + 0.001, upper + lower - 0.001)
-	var way := along.normalized() if along.length() > 0.0001 else Vector3.DOWN
-	# Lo que avanza la rodilla por la línea y lo que se aparta (ley de los cosenos).
-	var forward := (upper * upper - lower * lower + reach * reach) / (2.0 * reach)
-	var out := sqrt(maxf(upper * upper - forward * forward, 0.0))
-	var side := (bend - way * bend.dot(way))
-	side = side.normalized() if side.length() > 0.0001 else way.cross(Vector3.RIGHT).normalized()
-	return hip + way * forward + side * out

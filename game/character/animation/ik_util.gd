@@ -285,23 +285,8 @@ static func create_ik_target(left: bool, reach: float, ik_util: IkUtil) -> Node3
 static func solve_two_bone_ik(upper_bone: CustomBone, lower_bone: CustomBone, ik_target: Vector3, pole_target: Vector3) -> void:
 	var root_pos: Vector3 = upper_bone.global_position
 	var target_pos: Vector3 = ik_target
-	var upper_len: float = upper_bone.length
-	var lower_len: float = lower_bone.length
-
-	var root_to_target: Vector3 = target_pos - root_pos
-	var clamped_len: float = clamp(root_to_target.length(), 0.001, upper_len + lower_len)
-	var dir_to_target: Vector3 = root_to_target.normalized()
-
-	var raw_pole := (pole_target - root_pos).normalized()
-	var right_vec := dir_to_target.cross(raw_pole)
-	if right_vec.length() < 1e-6:
-		right_vec = get_orthogonal(dir_to_target)
-	var bend_plane_normal := right_vec.normalized()
-	var pole_on_plane := (bend_plane_normal.cross(dir_to_target)).normalized()
-
-	var cosA: float = clamp((upper_len*upper_len + clamped_len*clamped_len - lower_len*lower_len) / (2.0 * upper_len * clamped_len), -1.0, 1.0)
-	var sinA: float = sqrt(max(0.0, 1.0 - cosA * cosA))
-	var knee_pos: Vector3 = root_pos + dir_to_target * (cosA * upper_len) + pole_on_plane * (sinA * upper_len)
+	var pole_on_plane := _pole_on_plane((target_pos - root_pos).normalized(), (pole_target - root_pos).normalized())
+	var knee_pos := bend_point(root_pos, target_pos, upper_bone.length, lower_bone.length, pole_target - root_pos)
 
 	# Se escribe la base LOCAL, nunca `global_transform.basis`. Asignar el global en GDScript reescribe
 	# el transform entero —origen incluido—, y Godot recalcula la posición local del hueso contra un
@@ -315,6 +300,29 @@ static func solve_two_bone_ik(upper_bone: CustomBone, lower_bone: CustomBone, ik
 	upper_bone.transform.basis = (upper_parent.global_transform.basis.inverse() * upper_global) if upper_parent else upper_global
 	var lower_global := upper_bone.pose_from_rest_to((target_pos - knee_pos).normalized(), pole_on_plane)
 	lower_bone.transform.basis = upper_bone.global_transform.basis.inverse() * lower_global
+
+
+## LA ARTICULACIÓN DEL MEDIO (la rodilla, el codo) de dos huesos de largo `upper_len` y `lower_len` que van de `root`
+## hacia `target`, doblando hacia `pole_way` (una dirección desde `root`): la cuenta de solve_two_bone_ik, sin huesos.
+## La usan también las poses de la meca que se arman sin huesos (MechBody.leg y .arm: las piezas sueltas de la física y
+## lo que persigue el brazo de músculos) y las patas de gait_movie. *Hasta el 18/11/2026 había tres cuentas iguales:
+## ésta, MechBody.joint y Gait.knee.*
+static func bend_point(root: Vector3, target: Vector3, upper_len: float, lower_len: float, pole_way: Vector3) -> Vector3:
+	var to_target := target - root
+	var reach := clampf(to_target.length(), 0.001, upper_len + lower_len)
+	var way := to_target.normalized()
+	var pole_on_plane := _pole_on_plane(way, pole_way.normalized())
+	var cos_a := clampf((upper_len * upper_len + reach * reach - lower_len * lower_len) / (2.0 * upper_len * reach), -1.0, 1.0)
+	var sin_a := sqrt(maxf(0.0, 1.0 - cos_a * cos_a))
+	return root + way * (cos_a * upper_len) + pole_on_plane * (sin_a * upper_len)
+
+
+## Hacia dónde dobla, perpendicular a `way`: lo de `pole_way` que no va a lo largo (si va justo a lo largo, cualquiera).
+static func _pole_on_plane(way: Vector3, pole_way: Vector3) -> Vector3:
+	var right := way.cross(pole_way)
+	if right.length() < 1e-6:
+		right = get_orthogonal(way)
+	return right.normalized().cross(way).normalized()
 
 
 # ── Marcha por fase ───────────────────────────────────────────────────────────────────────────────

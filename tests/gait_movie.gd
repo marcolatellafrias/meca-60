@@ -122,7 +122,7 @@ func _move(body: Dictionary, root: Transform3D, velocity: Vector3, delta: float)
 		# Las rodillas, arriba y hacia afuera (como una araña).
 		var out := hip - root.origin
 		out.y = 0.0
-		var knee := Gait.knee(hip, foot, body["upper"], body["lower"], Vector3.UP * 1.5 + out.normalized())
+		var knee := IkUtil.bend_point(hip, foot, body["upper"], body["lower"], Vector3.UP * 1.5 + out.normalized())
 		var parts: Array = body["parts"][leg]
 		Clay.segment(parts[0], hip, knee, 0.45)
 		Clay.segment(parts[1], knee, foot, 0.35)

@@ -88,7 +88,7 @@ sistema robusto». *Vivía en la nota de la meca grande, borrada el 17/11/2026.*
   aplica**: rearma todas las mecas (`Mech.rebuild_all`). «Volver a lo guardado» hace lo mismo con lo del archivo.
 - **Cada número, un solo dueño.** **La altura de la caja no es una perilla**: sale del cuerpo, del largo y lo estirado
   de las piernas (el F2), y la meca la toma al armarse (`BalanceBody.hover`, de `MechBody.WAIST`). **El paso**
-  (`step_reach`, `step_height`, `settle_gap`) es el de piernas medianas, y las piernas lo escalan con su largo al leerlo.
+  (`LegSettings`, F4) es el de piernas medianas, y las piernas lo escalan con su largo al leerlo.
 - **Dónde nace parada** una meca lo dice un solo lugar, `Mech.standing_height()`.
 
 ## Las curvas de los movimientos discretos (14/11/2026)

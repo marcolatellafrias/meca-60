@@ -1,23 +1,19 @@
 class_name LegSettings
 extends Resource
 
-## LAS PERILLAS DE LOS PASOS NUEVOS de las piernas de la meca (ver BodyLegs): una sola copia para todas las mecas
+## LAS PERILLAS DE LOS PASOS de las piernas de la meca (ver BodyLegs): una sola copia para todas las mecas
 ## (`current`): las piernas son estructura y dibujo, compartidas (el usuario: «en estructura y visuales puede ser
 ## compartido»). Las arma su panel (LegsPanel, F4 en las filas de la meca).
 ##
 ## EL SISTEMA CLÁSICO DE PIERNAS CON IK (13/11/2026; el usuario: «empezar a reescribir desde 0… el sistema actual es uno
-## derivado de los personajes y es medio rebuscado… es un trope bastante común el de piernas para mecas con IK»). Mientras
-## se comparan, el interruptor elige entre los de antes y los nuevos.
+## derivado de los personajes y es medio rebuscado… es un trope bastante común el de piernas para mecas con IK»), hoy la
+## marcha común (Gait). *El interruptor entre éstos y los de antes se fue con los de antes el 18/11/2026.*
 ##
 ## Se guarda (ver KnobsFile): el F4 tiene «Guardar» y «Volver a lo guardado». El archivo es del usuario.
 
 const SAVED := "res://game/balance_body/leg_settings.tres"
 
 static var current := KnobsFile.load_into(LegSettings.new(), SAVED) as LegSettings
-
-@export_group("Cuáles")
-## Los pasos nuevos (el sistema clásico) o los de antes (BodySettings, «Las piernas» del F1).
-@export var new_steps := true
 
 @export_group("El paso")
 ## EL LARGO DEL PASO, lo que recorre un pie en el mundo (m, piernas medianas: se escala con su largo, F2): lo que avanza

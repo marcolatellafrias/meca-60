@@ -17,7 +17,7 @@ está en el commit **`0bcaeaf`**.
 |---|---|---|
 | `balance_body.gd` | `BalanceBody` | La caja (`size`, la masa) y **su equilibrio, el péndulo**: el apoyo, caerse, volver. Lo que se le pide (`move`, `sprint`, `crouch`, `jump`, `aim_yaw`). Arma sus piezas y las llama en orden; cada uno agrega lo suyo con tres ganchos: `_build` (sus piezas), `_think` (escribe lo que se le pide) y `_after_step`. |
 | `kinematic_mover.gd`, `kinematic_settings.gd`, `stomp_feet.gd` | `KinematicMover`, `KinematicSettings`, `StompFeet` | **El motor discreto** (`BalanceBody.kinematic`): el controlador de personaje del motor contra lo fijo, sus perillas y los pies con choque. Es como se mueve la jaula. |
-| `body_legs.gd` | `BodyLegs` | La pelvis (un cilindro) y dos piernas debajo de la caja: dibujo. Los pasos nuevos (el sistema clásico, `LegSettings`, F4) o los de largo fijo de antes. Otro medio de moverse es otra pieza. |
+| `body_legs.gd` | `BodyLegs` | La pelvis (un cilindro) y dos piernas debajo de la caja: dibujo. Los pasos, la marcha común (`Gait`, perillas en `LegSettings`, F4). Otro medio de moverse es otra pieza. |
 | `body_nozzles.gd` | `BodyNozzles` | Las toberas, invisibles: levantarse cuando se cae, y el propulsor. |
 | `body_moves.gd` | `BodyMoves` | Caminar, correr, agacharse, el salto cargado, el propulsor (la física). |
 | `body_settings.gd` | `BodySettings` | Todas sus perillas, en un recurso (`BalanceBody.knobs`; por defecto el de la meca). |

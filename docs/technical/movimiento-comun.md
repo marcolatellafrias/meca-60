@@ -104,8 +104,8 @@ esqueleto a 0 mm) y camina.
    con un instante de todos apoyados). El ciclo avanza con lo que anda (uno por `stride` m, o lo que recorre la pata de
    más afuera girando; con topes). Cada pie pisa donde va a estar su lugar a mitad de su apoyo (el lugar al pisar más
    medio apoyo de avance, girado si gira): el apoyo queda centrado y no se corre. Quieto, cada grupo da un paso hasta su
-   lugar y el ciclo se para; lo poco corrido no da pasitos (`settle_gap`). Sin BalanceBody. Trae el IK de dos huesos
-   (`Gait.knee`). **Más de meca** (18/11/2026; el usuario: «pasos más largos o cosas así»): el paso de la jaula es el
+   lugar y el ciclo se para; lo poco corrido no da pasitos (`settle_gap`). Sin BalanceBody. Las rodillas, con la IK común
+   (`IkUtil.bend_point`). **Más de meca** (18/11/2026; el usuario: «pasos más largos o cosas así»): el paso de la jaula es el
    doble de largo y más lento, con PISOTÓN (`stomp`: el pie llega alto y adelante y baja de golpe) y al pisar la caja
    se hunde (`GaitSignals.plant`, `LegSettings.stomp_dip`).
    *La primera versión (el mismo día) era la regla de la jaula: un pie sale al quedar un tercio de paso atrás y pisa un
@@ -166,8 +166,9 @@ esqueleto a 0 mm) y camina.
    la velocidad de costado (`side_lean`, 5° a la de caminar; de frente, nunca). F4, «La caja al caminar». El usuario:
    «una curva leve de subir y bajar la pelvis… le da el feeling de meca»; «adelante y atrás, nunca». En
    `tests/cage_legs_movie`: sube hasta 0,15 m, de costado 5°, de frente 0,3° (el instante de doblar).
-5. **Un solo IK de dos huesos**: `Gait.knee` (lo usan las patas de la marcha). *Falta que lo usen la jaula y los
-   personajes.*
+5. **Un solo IK de dos huesos** (18/11/2026, la limpieza): `IkUtil.solve_two_bone_ik` sobre huesos y, sin huesos, su
+   misma cuenta `IkUtil.bend_point` (las poses de MechBody: lo que persigue el brazo de músculos, las piernas plegándose
+   de la meca física; las patas de gait_movie). *Se fueron `MechBody.joint` y `Gait.knee`.*
 
 `tests/cage_legs_movie` (con ventana): **el video de base** de las piernas de la jaula hoy, caso por caso (arrancar,
 frenar, doblar de golpe, girar en el lugar, de costado, el dash, saltar, levitar, bajar agachada), con una grilla en el

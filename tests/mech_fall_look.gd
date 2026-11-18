@@ -70,7 +70,13 @@ func _measure() -> void:
 	for arm: Node3D in _mech.find_children("*", "MechArm", true, false):
 		var low := INF
 		var high := -INF
-		for mesh: Node3D in arm.find_children("*", "MeshInstance3D", true, false):
+		# Las piezas cuelgan de sus huesos (el esqueleto, 18/11/2026), no del brazo.
+		var holders: Array[Node] = [arm]
+		for bone: Variant in [arm.get("upper_bone"), arm.get("forearm_bone")]:
+			if bone != null:
+				holders.append(bone)
+		for mesh: Node3D in holders.reduce(func(all: Array, n: Node) -> Array:
+				return all + n.find_children("*", "MeshInstance3D", false, false), []):
 			if mesh.is_visible_in_tree():
 				low = minf(low, mesh.global_position.y)
 				high = maxf(high, mesh.global_position.y)
