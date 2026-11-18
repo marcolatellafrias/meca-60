@@ -10,6 +10,12 @@ probó la armería a 320 × 180 y a 640 × 360 (agrandadas a 1280 × 720), y a 3
 es verde: la pintura de la meca**, que tiene colores; se repiensa (el aerosol y una plataforma al lado de la meca) más
 adelante. Lo de abajo (el acento amarillo, los tamaños de letra) queda reemplazado por esto cuando se elija la
 resolución.
+- **Dos colores, nada más** (el usuario, 18/11/2026: «solo dos colores, negro y verde»): lo elegido va **invertido**
+  (verde lleno, letra negra), lo que no se puede, **tramado** (un píxel sí, uno no), las líneas de fondo, punteadas.
+  A **480 × 270** (cada píxel, 3 de pantalla: entre las dos que se probaron).
+- **Sin cartel del mouse**: los superpuestos no se leen en estas máquinas. **Clic en una cosa lleva a su pantalla** (qué
+  es, dónde va, qué hace, el precio y «comprar»), con «volver».
+- **Íconos de un bit**, de 16 × 16, que se leen por la silueta y los huecos de adentro.
 - **Pantallas encima de todo** por ahora (quizás diegéticas después). **Sólo el capitán compra, pone y firma.** El
   menú principal y la pintura, después.
 
