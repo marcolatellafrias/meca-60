@@ -70,7 +70,8 @@ La armería y los contratos se usan: se mira la consola, se aprieta **E** y se a
 Pedido del usuario: «vos te acercás, apretás E y se te abre». La consola de cosméticos y pintura todavía es de adorno.
 - **`BaseTerminal`** (un `ActivatableInteractable`) cuelga del cuerpo de cada consola, que es lo que se contornea.
 - **`TerminalScreen`** es la base de las pantallas: una sola abierta a la vez, y mientras está abierta el mouse queda suelto
-  (`UIState`, capa `base_terminal`).
+  (`UIState`, capa `base_terminal`). Desde el 18/11/2026, en el estilo monocromo (`Mono`, ver [[interfaz]]): fondo negro,
+  la barra de una raya (el título; el capitán, la plata y la cruz) y el cuerpo de cada terminal debajo.
 - **`BaseState.current`** guarda lo de la sucursal: la plata de la tripulación (arranca con $2500), **el depósito de la
   sucursal**, lo que tiene puesto la meca y el contrato firmado.
   - Vive mientras corre el juego: no se guarda a disco.

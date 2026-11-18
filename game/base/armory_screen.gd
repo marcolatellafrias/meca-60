@@ -1,89 +1,70 @@
 class_name ArmoryScreen
 extends TerminalScreen
 
-## LA ARMERÍA (ver docs/technical/sucursal.md): a la izquierda la tienda, al medio la meca dibujada con sus huecos, a la
-## derecha el depósito de la sucursal y la plata. Se compra arrastrando de la tienda a un hueco o al depósito (o con
-## doble clic, al depósito); se pone arrastrando del depósito a un hueco, y se saca arrastrando del hueco al depósito.
-## Con el mouse encima de cualquier cosa, lo que es y cuánto cuesta.
+## LA ARMERÍA (ver docs/technical/sucursal.md y docs/conceptual/interfaz.md): a la izquierda la tienda, al medio la meca
+## dibujada con sus huecos, a la derecha el depósito de la sucursal. Se compra arrastrando de la tienda a un hueco o al
+## depósito (o con doble clic, al depósito); se pone arrastrando del depósito a un hueco, y se saca arrastrando del hueco
+## al depósito. Con el mouse encima de cualquier cosa, el cartel con lo que es y cuánto cuesta.
+## En el estilo monocromo (Mono; la variante B de las maquetas, sin nombres en los huecos ni en el depósito).
 
 ## Dónde va cada hueco sobre el dibujo (su centro), vista de atrás: el brazo izquierdo a la izquierda.
 const SLOT_AT := {
-	"back_left": Vector2(118, 40), "back_right": Vector2(302, 40),
-	"plate_arm_left": Vector2(66, 160), "plate_arm_right": Vector2(354, 160),
-	"tool_left": Vector2(66, 240), "tool_right": Vector2(354, 240),
-	"fist_left": Vector2(66, 320), "fist_right": Vector2(354, 320),
-	"plate_leg_left": Vector2(150, 360), "plate_leg_right": Vector2(270, 360),
+	"back_left": Vector2(130, 50), "back_right": Vector2(270, 50),
+	"plate_arm_left": Vector2(40, 170), "plate_arm_right": Vector2(360, 170),
+	"tool_left": Vector2(40, 255), "tool_right": Vector2(360, 255),
+	"fist_left": Vector2(40, 340), "fist_right": Vector2(360, 340),
+	"plate_leg_left": Vector2(160, 530), "plate_leg_right": Vector2(240, 530),
 }
 const SLOT_NAMES := {
-	"back_left": "espalda izq.", "back_right": "espalda der.",
-	"plate_arm_left": "brazo izq.", "plate_arm_right": "brazo der.",
-	"tool_left": "herramienta izq.", "tool_right": "herramienta der.",
-	"fist_left": "puño izq.", "fist_right": "puño der.",
-	"plate_leg_left": "pierna izq.", "plate_leg_right": "pierna der.",
+	"back_left": "LA ESPALDA, A LA IZQUIERDA", "back_right": "LA ESPALDA, A LA DERECHA",
+	"plate_arm_left": "LA PLACA DEL BRAZO IZQUIERDO", "plate_arm_right": "LA PLACA DEL BRAZO DERECHO",
+	"tool_left": "LA HERRAMIENTA DEL PUÑO IZQUIERDO", "tool_right": "LA HERRAMIENTA DEL PUÑO DERECHO",
+	"fist_left": "EL PUÑO IZQUIERDO", "fist_right": "EL PUÑO DERECHO",
+	"plate_leg_left": "LA PLACA DE LA PIERNA IZQUIERDA", "plate_leg_right": "LA PLACA DE LA PIERNA DERECHA",
 }
-const DRAWING_SIZE := Vector2(420, 440)
-const SHOP_ORDER := [ArmoryCatalog.Kind.FIST, ArmoryCatalog.Kind.ARM_TOOL, ArmoryCatalog.Kind.BACK, ArmoryCatalog.Kind.PLATE_ARM]
-const SHOP_HEADINGS := {
-	ArmoryCatalog.Kind.FIST: "PUÑOS", ArmoryCatalog.Kind.ARM_TOOL: "HERRAMIENTAS DEL PUÑO", ArmoryCatalog.Kind.BACK: "ARMAS DE ESPALDA",
-	ArmoryCatalog.Kind.PLATE_ARM: "PLACAS DEL ACORAZADO",
-}
+const DRAWING_SIZE := Vector2(400, 570)
 
-var _money: Label
 var _shop_cells: Array[ArmoryCell] = []
 var _slot_cells: Array[ArmoryCell] = []
 var _depot_grid: GridContainer
 
 
+func title() -> String:
+	return "ARMERÍA"
+
+
 func build_content() -> Control:
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 10)
-	var header := HBoxContainer.new()
-	header.add_child(TerminalScreen.title("ARMERÍA"))
-	var spacer := Control.new()
-	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(spacer)
-	_money = TerminalScreen.label("", 20, TerminalScreen.ACCENT)
-	header.add_child(_money)
-	column.add_child(header)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 16)
+	row.add_theme_constant_override("separation", 40)
 	row.add_child(_shop())
 	row.add_child(_mech())
 	row.add_child(_depot())
-	column.add_child(row)
-	column.add_child(TerminalScreen.label(
-		"Arrastrá de la tienda a un hueco o al depósito para comprar (doble clic: al depósito). Del depósito a un hueco "
-		+ "para ponerlo; del hueco al depósito para sacarlo.", 13, TerminalScreen.DIM_TEXT))
-	return column
+	return row
 
 
 func _section(text: String, body: Control) -> Control:
 	var column := VBoxContainer.new()
-	column.add_child(TerminalScreen.label(text, 15, TerminalScreen.DIM_TEXT))
+	column.add_theme_constant_override("separation", 16)
+	column.add_child(MonoText.make(text))
 	column.add_child(body)
 	return column
 
 
 func _shop() -> Control:
-	var list := VBoxContainer.new()
-	list.add_theme_constant_override("separation", 8)
-	for kind: int in SHOP_ORDER:
-		var grid := GridContainer.new()
-		grid.columns = 3
-		for entry: Dictionary in ArmoryCatalog.ITEMS:
-			var same: bool = int(entry.kind) == kind or (kind == ArmoryCatalog.Kind.PLATE_ARM
-				and str(entry.id).begins_with("plate_"))
-			if not same:
-				continue
-			var cell := ArmoryCell.new().setup(self, ArmoryCell.Role.SHOP)
-			cell.id = entry.id
-			grid.add_child(cell)
-			_shop_cells.append(cell)
-		list.add_child(_section(SHOP_HEADINGS[kind], grid))
+	var grid := GridContainer.new()
+	grid.columns = 3
+	grid.add_theme_constant_override("h_separation", 10)
+	grid.add_theme_constant_override("v_separation", 10)
+	for entry: Dictionary in ArmoryCatalog.ITEMS:
+		var cell := ArmoryCell.new().setup(self, ArmoryCell.Role.SHOP)
+		cell.id = entry.id
+		grid.add_child(cell)
+		_shop_cells.append(cell)
 	var scroll := ScrollContainer.new()
-	scroll.custom_minimum_size = Vector2(ArmoryCell.SIZE.x * 3 + 24, DRAWING_SIZE.y + 30)
+	scroll.custom_minimum_size = Vector2(ArmoryCell.SHOP_SIZE.x * 3 + 24, 0)
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.add_child(list)
+	scroll.add_child(grid)
 	return _section("TIENDA", scroll)
 
 
@@ -93,44 +74,50 @@ func _mech() -> Control:
 	for slot: String in SLOT_AT:
 		var cell := ArmoryCell.new().setup(self, ArmoryCell.Role.SLOT)
 		cell.slot = slot
-		cell.position = SLOT_AT[slot] - ArmoryCell.SIZE * 0.5
-		cell.size = ArmoryCell.SIZE
+		cell.position = SLOT_AT[slot] - ArmoryCell.SLOT_SIZE * 0.5
 		drawing.add_child(cell)
 		_slot_cells.append(cell)
-	return _section("LA MECA (vista de atrás)", drawing)
+	return _section("LA MECA", drawing)
 
 
 func _depot() -> Control:
-	var zone := PanelContainer.new()
-	zone.add_theme_stylebox_override("panel", TerminalScreen.box(Color(0.1, 0.11, 0.12), TerminalScreen.FRAME, 1, 6))
-	zone.custom_minimum_size = Vector2(ArmoryCell.SIZE.x * 2 + 26, DRAWING_SIZE.y + 30)
+	var zone := _DepotZone.new()
+	zone.custom_minimum_size = Vector2(ArmoryCell.DEPOT_SIZE.x * 4 + 50, 110)
+	zone.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	zone.set_drag_forwarding(Callable(), _zone_can_drop, _zone_drop)
-	var scroll := ScrollContainer.new()
-	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	scroll.mouse_filter = Control.MOUSE_FILTER_PASS
-	zone.add_child(scroll)
 	_depot_grid = GridContainer.new()
-	_depot_grid.columns = 2
-	scroll.add_child(_depot_grid)
-	return _section("DEPÓSITO DE LA SUCURSAL", zone)
+	_depot_grid.columns = 4
+	_depot_grid.add_theme_constant_override("h_separation", 10)
+	_depot_grid.add_theme_constant_override("v_separation", 10)
+	_depot_grid.position = Vector2(16, 16)
+	_depot_grid.mouse_filter = Control.MOUSE_FILTER_PASS
+	zone.add_child(_depot_grid)
+	_depot_grid.resized.connect(func() -> void:
+		zone.custom_minimum_size.y = maxf(110.0, _depot_grid.size.y + 32.0))
+	var section := _section("DEPÓSITO", zone)
+	section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	return section
+
+
+## EL RECUADRO DEL DEPÓSITO: un borde fino (se le suelta encima lo que se compra o se saca).
+class _DepotZone extends Control:
+	func _draw() -> void:
+		Mono.frame(self, Rect2(Vector2.ZERO, size))
 
 
 func refresh() -> void:
-	_money.text = "Plata de la tripulación: $%d" % state.money
 	for cell in _shop_cells:
-		var price := int(ArmoryCatalog.item(cell.id).price)
-		var sub := "$%d" % price if state.in_stock(cell.id) else "vendido"
-		cell.show_item(cell.id, sub, state.can_buy(cell.id))
+		var sold := not state.in_stock(cell.id)
+		cell.show_item(cell.id, "VENDIDO" if sold else str(int(ArmoryCatalog.item(cell.id).price)), state.can_buy(cell.id))
 	for cell in _slot_cells:
-		var empty := "sólo el puño" if cell.slot.begins_with("tool_") else "vacío"
-		cell.show_item(state.loadout[cell.slot], SLOT_NAMES[cell.slot], true, empty)
+		cell.show_item(state.loadout[cell.slot])
 	for child in _depot_grid.get_children():
 		child.queue_free()
 	for i in state.depot.size():
 		var cell := ArmoryCell.new().setup(self, ArmoryCell.Role.DEPOT)
 		cell.index = i
 		_depot_grid.add_child(cell)
-		cell.show_item(state.depot[i], str(ArmoryCatalog.KIND_NAMES[ArmoryCatalog.item(state.depot[i]).kind]))
+		cell.show_item(state.depot[i])
 
 
 ## ── SOLTAR ──────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -189,31 +176,21 @@ func double_clicked(cell: ArmoryCell) -> void:
 ## ── LO QUE DICE CON EL MOUSE ENCIMA ────────────────────────────────────────────────────────────────────────────
 
 func tooltip_for(cell: ArmoryCell) -> Control:
-	var panel := PanelContainer.new()
-	panel.add_theme_stylebox_override("panel", TerminalScreen.box(Color(0.08, 0.09, 0.1), TerminalScreen.ACCENT, 1, 10))
-	var column := VBoxContainer.new()
-	panel.add_child(column)
 	if cell.id == "":
-		column.add_child(TerminalScreen.label(SLOT_NAMES[cell.slot].capitalize(), 16, TerminalScreen.ACCENT))
 		var kind: int = BaseState.SLOTS[cell.slot]
-		var hint := "Acá va: %s." % ArmoryCatalog.KIND_NAMES[kind]
+		var lines := [[SLOT_NAMES[cell.slot], Mono.TEXT],
+			["ACÁ VA: " + str(ArmoryCatalog.KIND_NAMES[kind]).to_upper() + ".", Mono.SMALL]]
 		if cell.slot.begins_with("tool_"):
-			hint += " Se le agrega al puño; sin herramienta, el brazo pega sólo con el puño."
-		column.add_child(TerminalScreen.label(hint, 14))
-		return panel
+			lines.append(["SIN HERRAMIENTA, EL BRAZO PEGA SÓLO CON EL PUÑO.", Mono.SMALL])
+		return MonoTooltip.make(lines)
 	var entry := ArmoryCatalog.item(cell.id)
-	column.add_child(TerminalScreen.label(entry.name, 17, TerminalScreen.ACCENT))
-	column.add_child(TerminalScreen.label(str(ArmoryCatalog.KIND_NAMES[entry.kind]), 13, TerminalScreen.DIM_TEXT))
-	var text := TerminalScreen.label(entry.text, 14)
-	text.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	text.custom_minimum_size.x = 260
-	column.add_child(text)
-	column.add_child(TerminalScreen.label(entry.stats, 14, Color(0.6, 0.8, 0.65)))
+	var lines := [[str(entry.name).to_upper(), Mono.TEXT], [str(ArmoryCatalog.KIND_NAMES[entry.kind]).to_upper(), Mono.SMALL],
+		[str(entry.text).to_upper(), Mono.SMALL], [str(entry.stats).to_upper(), Mono.SMALL]]
 	if cell.role == ArmoryCell.Role.SHOP:
-		var price := "$%d" % int(entry.price)
 		if not state.in_stock(cell.id):
-			price = "Vendido: hay uno solo de cada uno."
+			lines.append(["VENDIDO: HAY UNO SOLO DE CADA UNO.", Mono.SMALL])
 		elif state.money < int(entry.price):
-			price += " · no alcanza la plata"
-		column.add_child(TerminalScreen.label(price, 15, TerminalScreen.ACCENT))
-	return panel
+			lines.append(["%d · NO ALCANZA LA PLATA" % int(entry.price), Mono.TEXT])
+		else:
+			lines.append(["%d" % int(entry.price), Mono.TEXT])
+	return MonoTooltip.make(lines)

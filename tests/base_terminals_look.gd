@@ -11,6 +11,7 @@ func _ready() -> void:
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--salida="):
 			_folder = argument.trim_prefix("--salida=")
+	get_window().size = Vector2i(1280, 720)
 	var state := BaseState.current
 	state.buy("drill")
 	state.buy_into("circular_saw", "tool_right")
@@ -21,8 +22,8 @@ func _ready() -> void:
 	var armory := ArmoryScreen.new()
 	TerminalScreen.open_screen(armory, get_tree())
 	await get_tree().create_timer(1.0).timeout
-	# lo que dice con el mouse encima del puño pesado (puesto a mano: la captura no mueve el mouse)
-	var cell: ArmoryCell = armory._shop_cells[1]
+	# lo que dice con el mouse encima de la sierra (puesto a mano: la captura no mueve el mouse)
+	var cell: ArmoryCell = armory._shop_cells[4]
 	var tip := armory.tooltip_for(cell)
 	armory.add_child(tip)
 	tip.position = cell.global_position + Vector2(cell.size.x * 0.6, cell.size.y * 0.7)

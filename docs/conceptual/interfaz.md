@@ -12,6 +12,10 @@ borde doble; una ventana que pide algo, además, **atenúa todo lo de atrás con
 - **Lo elegido de la primera vuelta** (18/11/2026): **nuestra letra de trazos rectos**, dibujada en vector (no la OCR-A).
   **La barra de arriba: una raya** (la alternativa 1): el título a la izquierda, a la derecha el capitán, la plata y la
   cruz, sueltos, y debajo una raya a lo ancho; sin degradé ni barra llena.
+- **En el juego** (18/11/2026): las terminales de la base (la armería y los contratos) ya van en este estilo. Lo común,
+  en `game/ui/mono/`: `Mono` (los colores, las tramas, el superpuesto, la letra de trazos dibujada en 2D, los
+  íconos), `MonoText`, `MonoButton`, `MonoTooltip` y `MonoIcons` (los de un bit). El menú principal, las opciones y la
+  pausa, todavía en el estilo viejo.
 - Comprar y montar piezas a mano en la meca, los estantes y el receptáculo del techo quedan **de lado** por ahora: la
   complejidad explotaba (los controles de adentro cambiarían con alguien sentado; habría que acoplar la meca).
 
