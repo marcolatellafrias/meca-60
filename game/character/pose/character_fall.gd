@@ -21,7 +21,6 @@ func maybe_ragdoll_in_air() -> void:
 	rng.seed = bi.master_seed + Engine.get_physics_frames()
 	var axis := Vector3(rng.randf_range(-1.0, 1.0), 0.0, rng.randf_range(-1.0, 1.0))
 	var spin := axis.normalized() * AirStyle.RAGDOLL_SPIN if axis.length_squared() > 0.0001 else Vector3.ZERO
-	bi.char_rigidbody.is_snapshot_active = false
 	bi.ragdoll_util.knock_down(bi.char_rigidbody, bi.custom_bones_util.lower_spine, Vector3.ZERO, spin)
 
 
@@ -35,7 +34,6 @@ func on_fall_triggered(world_dir: Vector3) -> void:
 	# los huesos desarmados. Ver character-parametric:docs/technical/characters.md.
 	if not is_instance_valid(bi.ragdoll_util) or bi.ragdoll_util.is_active or bi.ragdoll_util.is_recovering:
 		return
-	bi.char_rigidbody.is_snapshot_active = false
 	bi.ragdoll_util.activate_with_impact(bi.char_rigidbody, bi.custom_bones_util.lower_spine, world_dir)
 	if not bi.kind.simulates():
 		# LOS HUESOS ARRANCAN CON LA VELOCIDAD DEL MARCO en su punto, y el golpe encima: la cápsula de quien no se simula

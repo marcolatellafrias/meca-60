@@ -500,7 +500,6 @@ func _sit(bi: Node) -> void:
 	if char_rb.kind.simulates():
 		char_rb.linear_velocity    = Vector3.ZERO
 		char_rb.angular_velocity   = Vector3.ZERO
-	char_rb.is_snapshot_active = false
 	char_rb.reset_impact_state()
 	char_rb.collider.disabled  = true
 	char_rb.axis_lock_linear_y = true
@@ -628,7 +627,6 @@ func _release_occupant(teleport: bool, broadcast: bool) -> void:
 	if char_rb.kind.simulates():
 		char_rb.angular_velocity   = Vector3.ZERO
 	char_rb.reset_impact_state()
-	char_rb.is_snapshot_active = true
 	char_rb.input_enabled      = char_rb.kind.simulates()
 
 	if teleport and is_instance_valid(_spawn_point) and char_rb.kind.simulates():

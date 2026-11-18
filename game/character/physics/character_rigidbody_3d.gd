@@ -35,7 +35,7 @@ var _ground_ray: RayCast3D
 ## congelada y su `linear_velocity` es 0. La animación lee esto.
 var puppet_velocity: Vector3 = Vector3.ZERO
 
-## Grupo de todas las cápsulas de personaje, para la colisión blanda jugador-jugador. Ver characters.md.
+## Grupo de todas las cápsulas de personaje (la usan los paneles para rearmar a todos).
 const CHARACTER_GROUP := "character_capsule"
 var _capsule_radius: float = 0.5
 
@@ -56,20 +56,33 @@ var walk_speed: float = 3.0
 var top_speed: float = 6.0
 var time_to_top: float = 3.0
 
+## ── DE COSTADO MANDA EL CÓDIGO; PARA ARRIBA, LA FÍSICA (17/11/2026) ──────────────────────────────────────────────
+## Lo pidió el usuario: «que la cápsula no la muevan los objetos… lo de costado sólo programático»; «decido yo qué tanto
+## me tiro para atrás cuando recibo ese impacto en base a mi peso… con easing». La velocidad horizontal contra el marco
+## es la SUYA: lo que camina (`_walk_h`, hacia lo que pide a ritmo parejo, ver EL MOVIMIENTO) más EL RETROCESO
+## (`shove`: lo que le suman los golpes con nombre, que se frena al ritmo de su andar). Se escribe en cada paso, y lo
+## que el motor le haya cambiado de costado se descarta —las paredes igual frenan: el motor no deja atravesarlas—,
+## salvo que lo esté tocando un objeto suelto: eso es un golpe, y entra por `hit` con ese impulso. Para arriba y abajo
+## manda la física: la gravedad, el salto, el piso y el aterrizaje medido (el resorte vertical).
+## *Hasta entonces la cápsula era un cuerpo más: un paquete la corría, y los golpes de costado se medían por lo que le
+## cambiaba la velocidad, con una anotación de cada cambio propio para no confundirlos.*
+var _walk_h := Vector3.ZERO
+var shove := Vector3.ZERO
+var _set_h := Vector3.ZERO
+
 
 
 
 var impact_stiffness: float = 25.0
 var impact_damping: float = 6.0
 ## ── EL GOLPE ES UNA CANTIDAD EN M/S (03/11/2026) ──────────────────────────────────────────────────────────────────
-## Un golpe es lo que le cambió la velocidad (medido, o con nombre: ver `push`). La INCLINACIÓN es el golpe dividido por
+## Un golpe es lo que le cambia la velocidad (ver `hit`, LOS GOLPES SON IMPULSOS CON NOMBRE). La INCLINACIÓN es el golpe dividido por
 ## la firmeza (ver `_firmness`) por `LEAN_PER_MS`, y tumba al llegar a `ragdoll_threshold`: un golpe de unos 2,8 m/s de
 ## firmeza 1 (0,85 / 0,3). La EXPULSIÓN al caerse es el mismo golpe, en m/s, tal cual (ver RagdollUtil.activate_with_impact).
 ## Sin perillas por personaje: lo que cambia de uno a otro es la firmeza.
 const LEAN_PER_MS := 0.3
-## EL GOLPE VERTICAL QUE LO TUMBA AL ATERRIZAR, en m/s, con UMBRAL PROPIO, distinto del de los golpes de costado y de su
-## arquetipo (`EntityArchetype.landing_tolerance`; lo pidió el usuario, 03/11/2026: «que no sea frustrante»). Por
-## debajo, el rebote de siempre (`impact_y`) y sigue corriendo. Cae en el acto, como un golpe seco.
+## EL ATERRIZAJE FUERTE, en m/s (del arquetipo, `EntityArchetype.landing_tolerance`): con él frena del todo al caer
+## (ver `_brake_on_landing`). Aterrizar no tumba.
 var landing_tolerance: float = 9.0
 var impact_y_threshold: float = 2.0
 
@@ -87,11 +100,6 @@ var impact_xz: Vector2 = Vector2.ZERO
 var impact_y: float = 0.0
 
 signal fall_triggered(world_dir: Vector3)
-## CADA GOLPE FUERTE que mide `_detect_external_impact`: cuánto le cambió la velocidad sin que él lo pidiera, en m/s
-## —caer, chocar contra una pared, que lo lleve puesto un auto, un empujón—. Lo escucha la salud (ver CrewHealth).
-## Lo de todos los días, saltar y caer de pie, queda abajo de `IMPACT_SIGNAL_MIN` y no se avisa.
-signal impact_taken(speed: float)
-const IMPACT_SIGNAL_MIN := 4.0
 
 var _impact_xz_vel: Vector2 = Vector2.ZERO
 ## ── EL RESORTE EN DOS PARTES (02/11/2026) ─────────────────────────────────────────────────────────────────────────
@@ -110,19 +118,13 @@ var impact_synced := false
 var _impact_y_vel: float = 0.0
 var _prev_velocity: Vector3 = Vector3.ZERO
 var _frame_force: Vector3 = Vector3.ZERO
+## El último golpe de costado: su dirección (para dónde cae) y cuánto inclinó (lo muestra el panel de impactos).
 var _last_impact_xz_magnitude: float = 0.0
 ## EL EMPUJÓN QUE NO LE CAMBIÓ LA VELOCIDAD, en m/s y ejes del mundo (lo horizontal): el de un choque de la meca, que a
 ## la cápsula la lleva el marco entera (ver `crash`). Los demás golpes —medidos, el choque blando entre jugadores, la R—
 ## ya están en su velocidad. Al caerse sale con su velocidad MÁS esto (ver RagdollUtil.activate_with_impact).
 var _last_push := Vector3.ZERO
 
-var is_snapshot_active: bool = true
-var _ext_ragdoll_state: int = 0
-var _snapshot_capture_count: int = 0
-var _snapshot_flag_at_capture: bool = false
-var _snapshot_ragdoll_at_capture: int = 0
-var _snapshot_acc_before: float = 0.0
-var _snapshot_acc_after: float = 0.0
 
 ## Volando libre (ver CharacterKind.Physics.FREE_FLIGHT): el modo creativo del jugador y el ente que vuela.
 var creative_mode: bool:
@@ -158,8 +160,7 @@ var impact_y_signed: float = 0.0
 ##     curva para afuera—, corre el punto de equilibrio del mismo resorte de los golpes (`impact_xz`), que se inclina hacia
 ##     ahí y rebota (ver `_update_frame_lean`). No tumba. Cuánto, lo elige el usuario en el F3 de la meca
 ##     (`MotionFrame.inertia_felt`).
-##   · LOS EMPUJONES CON NOMBRE: el choque blando entre jugadores, el empujón con R y los choques de la meca entran por
-##     `push`, como un golpe, y ésos sí pueden tumbarlo si está parado.
+##   · LOS GOLPES CON NOMBRE: la R, lo que pega en lo que lleva y los choques de la meca, como afuera (ver `hit`).
 ## Corre también en un compañero de red y en uno de exhibición, que no se simulan: la meca llega por red o es la de la
 ## escena, así que cada máquina inclina a cada uno sin mandar nada.
 var frame: MotionFrame = null
@@ -203,21 +204,8 @@ var _frame_accel := Vector3.ZERO
 
 
 
-## ── EL PISO LO DICE QUIEN LO MANEJA (05/11/2026, el usuario: «un sustituto de piso… que sería el path predefinido
-## con el nivel de suelo que ya lo sabemos») ──────────────────────────────────────────────────────────────────────
-## Un peatón en su camino nunca deja el nivel del piso, y su camino sabe a qué altura está: con `ground_by_driver`, el
-## rayo al piso se apaga y el piso es `driver_ground`, que quien lo maneja escribe al ponerlo (ver
-## BoneInstantiator.puppeteer); INF, en el aire. Sin eso, el rayo, como siempre.
-var ground_by_driver := false:
-	set(on):
-		ground_by_driver = on
-		if is_instance_valid(_ground_ray):
-			_ground_ray.enabled = not on
-var driver_ground := Vector3.INF
-
-
 func get_ground_collision_point() -> Vector3:
-	return driver_ground if ground_by_driver else _ground_ray.get_collision_point()
+	return _ground_ray.get_collision_point()
 
 ## Velocidad que maneja la animación: la real si se simula, o la que puso quien lo maneja; las dos, contra el marco.
 func get_motion_velocity() -> Vector3:
@@ -264,40 +252,11 @@ func move_to(at: Vector3, yaw: float) -> void:
 	global_rotation = Vector3(0.0, yaw, 0.0)
 
 
-## Cada paso: el marco que le toca por el volumen (ver MotionFrame.around), salvo que vaya fijo en uno (`ride`) o que se
-## lo diga la red.
+## Cada paso: el marco que le toca por el volumen (ver MotionFrame.around), salvo que se lo diga la red.
 func _follow_frame() -> void:
-	if _riding or kind.driver == CharacterKind.Driver.NETWORK:
+	if kind.driver == CharacterKind.Driver.NETWORK:
 		return
 	set_frame(MotionFrame.around(global_position, frame))
-
-
-## ── PARADO DE EXHIBICIÓN A BORDO (02/11/2026, ver DisplayCharacter.stand y BoneInstantiator, PLANTADO EN LA NAVE) ──
-## Uno que no se simula no lo lleva nada. Parado a bordo, SU CÁPSULA VA FIJA EN SU PUNTO DEL MARCO, derecha con el marco
-## y girada lo que diga su intención; no la mueve ni la inercia ni el ángulo de la meca, y los pies van clavados al piso.
-## La inercia y los golpes la inclinan desde la base de la columna, como sentado.
-## *Hasta el 02/11/2026 iba derecho en el mundo con los pies plantados por el rayo de siempre: atravesaba el piso a la
-## altura del pecho y daba pasos en el aire (lo vio el usuario).*
-var _riding := false
-var _ride_point := Vector3.ZERO
-
-
-## QUE VIAJE FIJO EN SU MARCO desde donde está ahora (`on`), o que lo suelte. Su rumbo pasa a su intención.
-func ride(on: bool) -> void:
-	_riding = false
-	if on:
-		set_frame(MotionFrame.around(global_position, frame))
-	_riding = on and is_instance_valid(frame)
-	if _riding:
-		_ride_point = frame.global_transform.affine_inverse() * global_position
-		if intent != null:
-			intent.look_yaw = CharacterIntent.yaw_of(frame, -global_basis.z)
-
-
-func _carry_ride() -> void:
-	var axes := frame.global_transform.orthonormalized()
-	global_transform = Transform3D(axes.basis * Basis(Vector3.UP, intent.look_yaw if intent != null else 0.0),
-		axes * _ride_point)
 
 
 ## ── LOS GOLPES SON IMPULSOS CON NOMBRE (17/11/2026) ──────────────────────────────────────────────────────────────
@@ -315,7 +274,8 @@ func _carry_ride() -> void:
 ## *Hasta entonces todo cambio de velocidad que no fuera suyo era un golpe, y lo que se juntaba de a poco también tumbaba.*
 func hit(impulse: Vector3) -> void:
 	var dv := impulse / maxf(mass, 0.01)
-	_self_dv(dv)
+	shove += Vector3(dv.x, 0.0, dv.z)
+	_self_dv(Vector3(0.0, dv.y, 0.0))
 	_take_hit(dv)
 
 
@@ -376,40 +336,6 @@ func _update_floor() -> void:
 	floor_velocity = frame.velocity_at(global_position) if frame != null else Vector3.ZERO
 
 
-## ── DE SU CAMINO A SIMULARSE, Y DE VUELTA (06/11/2026, el usuario: el peatón «golpeado… se vuelve físico al
-## desviarse de su path y después intenta retomarlo», como el auto) ─────────────────────────────────────────────────
-## `set_simulated(true)`: la cápsula que ponía su camino (FOLLOWS_DRIVER) pasa a simularse como la de cualquiera —con su
-## gravedad, sus capas de siempre, sus golpes y su caída—, con `velocity` (la que traía por su camino; lo que se le sume
-## después cuenta como golpe, ver `_detect_external_impact`). `set_simulated(false)`: vuelve a ponerla su camino. Lo usa
-## el peatón (ver Pedestrian, GOLPEADO).
-var _simulated_saved := false
-var _simulated_layer := 1
-var _simulated_mask := 1
-
-
-func set_simulated(on: bool, velocity := Vector3.ZERO) -> void:
-	if on == kind.simulates():
-		return
-	if on:
-		kind.physics = CharacterKind.Physics.SIMULATED
-		kind.can_fall = true
-		ground_by_driver = false
-		collision_layer = _simulated_layer
-		collision_mask = _simulated_mask | SandboxParcel.bound_mask(self)
-		gravity_scale = _gravity_scale()
-		freeze = false
-		input_enabled = true
-		linear_velocity = velocity
-		_prev_velocity = velocity
-		reset_impact_state()
-	else:
-		kind.physics = CharacterKind.Physics.FOLLOWS_DRIVER
-		kind.can_fall = false
-		input_enabled = false
-		linear_velocity = Vector3.ZERO
-		_freeze_for_driver()
-
-
 ## LA CÁPSULA DE QUIEN NO SE SIMULA (ver CharacterKind.simulates): congelada, sin gravedad, la pone quien lo maneja. A un
 ## compañero de red, KINEMÁTICA y en la capa 1 —se lo choca, lo apunta el rayo de interacción y se lo agarra; la red le
 ## reescribe el transform en cada cuadro—; a uno de exhibición o una figura, ESTÁTICA y en ninguna capa: se los mira y se
@@ -417,10 +343,6 @@ func set_simulated(on: bool, velocity := Vector3.ZERO) -> void:
 ## nodo su propio transform en cada paso: medido, `place_at` con giro 1 rad volvía a 0 a los dos cuadros). Ver
 ## multiplayer.md (Causa A).
 func _freeze_for_driver() -> void:
-	if not _simulated_saved:
-		_simulated_saved = true
-		_simulated_layer = collision_layer
-		_simulated_mask = collision_mask
 	freeze = true
 	gravity_scale = 0.0
 	collision_mask = 0
@@ -451,14 +373,6 @@ func _ready() -> void:
 	axis_lock_angular_y = true
 	add_to_group(CHARACTER_GROUP)
 
-## Colisión BLANDA jugador-jugador. Los jugadores NO se bloquean rígido entre sí (nos atravesamos):
-## el solver no sirve acá — el otro es un puppet KINEMÁTICO (una pared en su posición VIEJA por el
-## delay de red), que frena al que corre sin respetar masas. En su lugar resolvemos la colisión a
-## mano por momento: cuando me acerco a otro y nos tocamos, me eyecto ALEJÁNDOME ∝ mi velocidad de
-## acercamiento · masa_del_otro/(mi+suya) — el liviano sale volando (y se cae si supera su umbral, lo
-## mide _detect_external_impact), el pesado apenas se frena y sigue de largo. Una sola vez por choque
-## (si no, cada frame de solape lo frenaría). Cada máquina lo hace para SU jugador local → simétrico.
-## Ver character-parametric:docs/technical/characters.md.
 func _physics_process(delta: float) -> void:
 	_follow_frame()
 	_update_floor()
@@ -466,17 +380,8 @@ func _physics_process(delta: float) -> void:
 	# miden golpes, pero SÍ se actualiza el rayo al piso para que la animación sepa si está apoyado (si no, los pies
 	# quedan recogidos y no camina). Ver character-parametric:docs/technical/character-animation.md.
 	if not kind.simulates():
-		if _riding and _ext_ragdoll_state == 0:
-			# A BORDO NO HAY PISO QUE LEER (ver PARADO DE EXHIBICIÓN A BORDO): va fijo en su marco, apoyado y quieto
-			# contra él. Ni rayo ni velocidad del casco, que en las maquetas se mueve a mano. Cayéndose, la cápsula va
-			# con la pelvis del ragdoll (ver RagdollUtil._update_active).
-			_carry_ride()
-			is_grounded = true
-		elif ground_by_driver:
-			is_grounded = driver_ground.is_finite()
-		elif not _riding:
-			_ground_ray.force_raycast_update()
-			is_grounded = _ground_ray.is_colliding()
+		_ground_ray.force_raycast_update()
+		is_grounded = _ground_ray.is_colliding()
 		# QUIETO EN SU MARCO: al de exhibición y a la figura no los mueve nadie más que lo que los lleva, así que su
 		# velocidad es la del marco —contra él, cero—. Con cero en el mundo, la animación lo leía corriendo para atrás a la
 		# velocidad de la nave y se tiraba para atrás y al costado todo el vuelo (lo vio el usuario, 03/11/2026). Al
@@ -533,13 +438,12 @@ func _detect_external_impact(delta: float) -> void:
 	var expected_dv := (_frame_force / mass + gravity) * delta
 	var actual_dv   := linear_velocity - _prev_velocity
 	var impact_dv   := actual_dv - expected_dv
-	if not _struck_by_loose():
-		impact_dv = Vector3(0.0, impact_dv.y, 0.0)
-	_take_hit(impact_dv)
+	# SÓLO LO VERTICAL SE MIDE (ver DE COSTADO MANDA EL CÓDIGO): el aterrizaje.
+	_take_hit(Vector3(0.0, impact_dv.y, 0.0))
 
 
 ## SI LO ESTÁ TOCANDO UN OBJETO SUELTO (un paquete, una caja: un cuerpo rígido que no es un personaje ni está quieto):
-## sólo entonces lo que le cambió la velocidad de costado es un golpe (ver LOS GOLPES SON IMPULSOS CON NOMBRE).
+## sólo entonces lo que el motor le cambió de costado es un golpe (ver DE COSTADO MANDA EL CÓDIGO).
 func _struck_by_loose() -> bool:
 	for body in get_colliding_bodies():
 		var loose := body as RigidBody3D
@@ -553,8 +457,6 @@ func _struck_by_loose() -> bool:
 func _take_hit(impact_dv: Vector3) -> void:
 	if not has_body_physics():
 		return
-	if impact_dv.length() > IMPACT_SIGNAL_MIN:
-		impact_taken.emit(impact_dv.length())
 	var local_impact := global_transform.basis.inverse() * impact_dv
 
 	var xz := Vector2(local_impact.x, local_impact.z)
@@ -566,13 +468,8 @@ func _take_hit(impact_dv: Vector3) -> void:
 	if xz.length() > HIT_NOISE:
 		var impact_dir_world := (global_transform.basis * Vector3(local_impact.x, 0.0, local_impact.z)).normalized()
 
-		if is_snapshot_active:
-			_last_impact_world_dir = impact_dir_world
-			_last_impact_xz_magnitude = xz.length() * LEAN_PER_MS / _firmness(local_impact)
-			_snapshot_flag_at_capture = is_snapshot_active
-			_snapshot_ragdoll_at_capture = _ext_ragdoll_state
-			_snapshot_acc_before = impact_xz.length()
-			_snapshot_capture_count += 1
+		_last_impact_world_dir = impact_dir_world
+		_last_impact_xz_magnitude = xz.length() * LEAN_PER_MS / _firmness(local_impact)
 		# AL RESORTE DE LOS GOLPES (ver EL RESORTE EN DOS PARTES); lo que cuenta para tumbar es la suma.
 		hit_xz = (hit_xz + xz * LEAN_PER_MS / _firmness(local_impact)).limit_length(1.0)
 		_hit_vel = Vector2.ZERO
@@ -580,7 +477,6 @@ func _take_hit(impact_dv: Vector3) -> void:
 
 		# UN GOLPE QUE SOLO PASA EL UMBRAL LO TUMBA, en el acto; lo que se junta de a poco sólo inclina, hasta el borde.
 		if xz.length() * LEAN_PER_MS / _firmness(local_impact) >= ragdoll_threshold and not seated:
-			_snapshot_acc_after = impact_xz.length()
 			_fall_in = 0.0
 		elif impact_xz.length() >= ragdoll_threshold:
 			hit_xz = impact_xz.limit_length(ragdoll_threshold * 0.95) - _lean_xz
@@ -606,9 +502,8 @@ const LANDING_BRAKE_MAX := 0.7
 
 func _brake_on_landing(hard: float) -> void:
 	var share := clampf(hard / maxf(landing_tolerance, 0.01), 0.0, 1.0) * LANDING_BRAKE_MAX
-	var relative := linear_velocity - (frame.velocity_at(global_position) if frame != null else Vector3.ZERO)
-	relative.y = 0.0
-	_self_dv(-relative * share)
+	_walk_h *= 1.0 - share
+	shove *= 1.0 - share
 
 
 ## LA FIRMEZA en la dirección de `local` (ejes de la cápsula): el peso respecto del de referencia por la estabilidad de
@@ -720,12 +615,25 @@ func _move(delta: float) -> void:
 			pace *= DIRECT_SPRINT * turbo_factor()
 		linear_velocity += direction * pace - horizontal
 		return
+	# QUIETA (sentada, tirada): nada que llevar.
+	if freeze:
+		_walk_h = Vector3.ZERO
+		shove = Vector3.ZERO
+		_set_h = Vector3.ZERO
+		return
+	# LO QUE EL MOTOR LE CAMBIÓ DE COSTADO desde el paso anterior: un golpe si lo tocó un objeto suelto; si no, nada.
+	var engine_dv := horizontal - _set_h
+	if engine_dv.length() > HIT_NOISE and _struck_by_loose():
+		hit(engine_dv * mass)
 	var target := direction * minf(top_speed * crouch_speed_factor * carry_speed_factor, speed_cap)
 	var share := _control_share()
-	if share <= 0.0:
-		return
 	var step := INF if time_to_top <= 0.0 else top_speed / time_to_top * carry_speed_factor * share * delta
-	_self_dv(horizontal.move_toward(target, step) - horizontal)
+	_walk_h = _walk_h.move_toward(target, step)
+	# EL RETROCESO SE FRENA COMO SU ANDAR: al mismo ritmo parejo que acelera (con `time_to_top` en 0, al instante),
+	# la misma curva que tenía cuando era un cuerpo más.
+	shove = shove.move_toward(Vector3.ZERO, step)
+	_set_h = _walk_h + shove
+	linear_velocity = Vector3(floor_velocity.x + _set_h.x, linear_velocity.y, floor_velocity.z + _set_h.z)
 
 
 ## CUÁNTO RECORRE HASTA PARARSE desde la velocidad que lleva (m): frena al mismo ritmo al que acelera, suelte o apriete
@@ -797,7 +705,6 @@ func set_creative_mode(enabled: bool) -> void:
 		gravity_scale      = _gravity_scale()
 		linear_velocity    = Vector3.ZERO
 		_prev_velocity     = Vector3.ZERO
-		is_snapshot_active = true
 
 func _apply_creative_fly() -> void:
 	linear_velocity = CreativeFlight.velocity(global_transform.basis) * turbo_factor()
@@ -923,4 +830,3 @@ func reset_impact_state() -> void:
 	impact_y         = 0.0
 	_impact_y_vel    = 0.0
 	_prev_velocity   = linear_velocity
-	is_snapshot_active = false

@@ -74,6 +74,16 @@ otros personajes y su propio movimiento ya no cuentan, nada tumba de a poco y at
 aire» del F1 sigue, a pedido). Medido con `tests/hit_check.tscn`: 150 N·s tumba al chico y al viejo; 300, además al
 flaco alto; los pesados quedan inclinados.
 
+**De costado manda el código; para arriba, la física** (18/11/2026, el usuario: «que la cápsula no la muevan los
+objetos… lo de costado sólo programático»; lo eligió viendo los dos sistemas en video, iguales a la vista). La
+velocidad horizontal es la suya: lo que camina más el retroceso (`shove`), que suman los golpes con nombre y se frena al
+mismo ritmo que su andar; se escribe en cada paso y lo que el motor le cambie de costado se descarta (las paredes igual
+frenan), salvo que lo esté tocando un objeto suelto, que entra como `hit` con ese impulso. Lo vertical —gravedad,
+salto, piso, el aterrizaje medido— sigue siendo física. Se borraron con esto la medición de costado, las capturas del
+panel de impactos, los peatones que pasaban de su camino a la física, el piso que ponía quien los manejaba y los parados
+fijos a bordo (unas 210 líneas). Probado con `tests/capsule_side_check.tscn`: escalera, rampa quieto y subiéndola, pared
+en diagonal (se desliza mejor que antes) y un cubo que le pega (igual que antes).
+
 **Lo que cuesta la fila Locomoción** (17/11/2026, diagnóstico; nada arreglado todavía): `tests/locomotion_perf.tscn` arma
 las siete escenas juntas (42 personajes, 846 cuerpos rígidos) y mide de a una dimensión. Armarlas: 2,2 s en un cuadro
 (el tirón al acercarse). Prendido todo: 8 fps (124 ms por cuadro). Lo que más pesa, en orden: el guion de la cápsula

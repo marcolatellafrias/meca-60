@@ -15,11 +15,6 @@ var _ragdoll_recovering: bool = false
 var _fall_flash: float = 0.0
 var _one_hit_threshold: float = 0.85
 
-var _snapshot_capture_count: int = 0
-var _snapshot_flag_at_capture: bool = false
-var _snapshot_ragdoll_at_capture: int = 0
-var _snapshot_acc_before: float = 0.0
-var _snapshot_acc_after: float = 0.0
 
 const FALL_FLASH_DUR := 1.5
 const CR    := 26.0
@@ -65,12 +60,7 @@ func update_impact_debug(
 	p_ragdoll_recovering: bool,
 	p_last_impact_magnitude: float,
 	p_max_velocity: float,
-	p_one_hit_threshold: float,
-	p_snapshot_capture_count: int,
-	p_snapshot_flag_at_capture: bool,
-	p_snapshot_ragdoll_at_capture: int,
-	p_snapshot_acc_before: float,
-	p_snapshot_acc_after: float
+	p_one_hit_threshold: float
 ) -> void:
 	var w := p_char_basis * Vector3(p_impact_xz.x, 0.0, p_impact_xz.y)
 	_impact_xz_world = Vector2(w.x, w.z)
@@ -86,11 +76,6 @@ func update_impact_debug(
 	_one_hit_threshold = max(p_one_hit_threshold, 0.001)
 	_ragdoll_active = p_ragdoll_active
 	_ragdoll_recovering = p_ragdoll_recovering
-	_snapshot_capture_count = p_snapshot_capture_count
-	_snapshot_flag_at_capture = p_snapshot_flag_at_capture
-	_snapshot_ragdoll_at_capture = p_snapshot_ragdoll_at_capture
-	_snapshot_acc_before = p_snapshot_acc_before
-	_snapshot_acc_after = p_snapshot_acc_after
 	queue_redraw()
 
 func _process(delta: float) -> void:
@@ -143,26 +128,7 @@ func _draw() -> void:
 		HORIZONTAL_ALIGNMENT_LEFT, -1, FS, C_FG)
 	draw_string(f, Vector2(cx3 + CR + PAD + 2.0, cy3 + 10.0), "max %.1f" % _max_velocity,
 		HORIZONTAL_ALIGNMENT_LEFT, -1, FS, C_DIM)
-	y += CR * 2.0 + PAD; _sep(y); y += 8.0
-
-	y = _lbl(f, "SNAPSHOT  META", y, FS_T, C_FG)
-	y += 2.0
-	var rc_txt: String
-	var rc_col: Color
-	match _snapshot_ragdoll_at_capture:
-		0: rc_txt = "NONE";    rc_col = C_OK
-		1: rc_txt = "ACTIVE";  rc_col = C_ALERT
-		2: rc_txt = "RECOVER"; rc_col = C_WARN
-		_: rc_txt = "?";       rc_col = C_DIM
-	var fc := C_OK if _snapshot_flag_at_capture else C_ALERT
-	y = _lbl(f, "flag     " + ("TRUE" if _snapshot_flag_at_capture else "FALSE"), y, FS, fc)
-	y = _lbl(f, "ragdoll  " + rc_txt, y, FS, rc_col)
-	y = _lbl(f, "count    %d" % _snapshot_capture_count, y, FS, C_FG)
-	y += 2.0
-	var before_col := C_WARN if _snapshot_acc_before > 0.3 else C_FG
-	y = _lbl(f, "acc bef  %.2f" % _snapshot_acc_before, y, FS, before_col)
-	_lbl(f, "acc aft  %.2f" % _snapshot_acc_after, y, FS, C_ALERT)
-
+	y += CR * 2.0 + PAD
 func _world_circle(center: Vector2, dir: Vector2, magnitude: float, scale: float, threshold: float) -> void:
 	var t := magnitude / scale
 	var ring_col := C_DIM

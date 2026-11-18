@@ -472,7 +472,6 @@ func _physics_process(delta: float) -> void:
 	# aunque la pose se resuelva por cuadro. Ver character-animation.md.
 	if is_instance_valid(puppeteer):
 		puppeteer.call("apply_to_puppet")
-	_update_ragdoll_ext_state()
 	fall.follow_ragdoll_frame()
 	_follow_seat()
 	_apply_look()
@@ -597,7 +596,6 @@ func _solve_pose(solve_delta: float) -> void:
 			ik_util.recovery_targets_locked = true
 		elif not ragdoll_util.is_recovering and ik_util.recovery_targets_locked:
 			ik_util.recovery_targets_locked = false
-			char_rigidbody.is_snapshot_active = true
 			_reset_feet_after_recovery = true  # plantar los pies bajo el cuerpo, sin catch-up a los pasos
 
 	skel_sizes_util.update(solve_delta, animation_inputs, entity_instantiation, ik_util)
@@ -618,17 +616,6 @@ func _solve_pose(solve_delta: float) -> void:
 	_solve_frame(solve_delta)
 
 
-func _update_ragdoll_ext_state() -> void:
-	if not is_instance_valid(char_rigidbody) or not is_instance_valid(ragdoll_util):
-		return
-	if ragdoll_util.is_active:
-		char_rigidbody._ext_ragdoll_state = 1
-	elif ragdoll_util.is_recovering:
-		char_rigidbody._ext_ragdoll_state = 2
-	else:
-		char_rigidbody._ext_ragdoll_state = 0
-
-
 # ── Solve del pose: UN solo camino ────────────────────────────────────────────
 # Sentado y parado NO son dos pipelines. Es el mismo frame, y lo único que cambia es:
 #   1. la RAÍZ    — parado la manda la cápsula; sentado se ancla al asiento.
@@ -645,14 +632,7 @@ func _update_ragdoll_ext_state() -> void:
 #   - Sentado van DESPUÉS, porque cuelgan de la raíz ya anclada al asiento.
 func _solve_frame(delta: float) -> void:
 	var seated := is_seated and is_instance_valid(current_seat)
-	# PARADO A BORDO, COMO SENTADO (ver PLANTADO EN LA NAVE): los pies, clavados al final; ni marcha ni bajada de pelvis.
-	var planted := not seated and seating.is_planted()
-
-	if planted:
-		# Los pies, a sus puntos de la meca; y la pelvis baja lo que haga falta para alcanzarlos, como en tierra.
-		seating.place_planted_targets()
-		pelvis.update_pelvis_drop(delta)
-	elif not seated:
+	if not seated:
 		pelvis.pose_legs_standing()
 		# Con los pies ya colocados se puede medir si las piernas llegan. Va acá, entre colocarlos y la
 		# capa procedural: el resultado lo aplica _apply_root_offsets, que corre dentro de _pose_procedural.
@@ -679,8 +659,6 @@ func _solve_frame(delta: float) -> void:
 	# brazos (era este mismo comentario, dos líneas más abajo).
 	if seated:
 		seating.repin_legs_seated()
-	elif planted:
-		seating.pose_legs_planted()
 	else:
 		pelvis.repin_legs_standing()
 
@@ -815,14 +793,12 @@ func _follow_seat() -> void:
 
 ## ── LA MIRADA LLEVA EL CUERPO ENTERO (ver characters.md, Where you look is the whole body) ──────────────────────────
 ## El rumbo de la intención, en los ejes del marco, gira la cápsula derecha. No a quien no tiene quien lo maneje (una
-## figura queda como la pusieron), ni tirado, ni al que va fijo en su marco o sentado sin simularse (a ésos los lleva su
-## marco o su silla, girados lo mismo: ver CharacterRigidBody3D.ride, SeatInteractable._carry_occupant).
+## figura queda como la pusieron), ni tirado, ni al que va sentado sin simularse (a ése lo lleva su silla, girado lo
+## mismo: ver SeatInteractable._carry_occupant).
 func _apply_look() -> void:
 	if not kind.looks() or not is_instance_valid(char_rigidbody):
 		return
 	if is_instance_valid(ragdoll_util) and ragdoll_util.is_active:
-		return
-	if char_rigidbody._riding:
 		return
 	if is_seated and not kind.simulates() and kind.driver != CharacterKind.Driver.NETWORK:
 		return

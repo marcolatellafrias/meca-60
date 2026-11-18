@@ -18,15 +18,6 @@ const SEATED_SHIN_REACH := 0.995
 const SEATED_MAX_TUCK := deg_to_rad(55.0)
 ## Cuánto baja la punta de los pies, sentado (ver `_repin_legs_seated`).
 const SEATED_FOOT_POINT := deg_to_rad(18.0)
-## Parado a bordo ES IGUAL QUE SENTADO, sólo que las piernas van al piso en vez de a la silla (el usuario: «la inclinación del root bone por inercia o por impacto sucede también cuando están parados; la única
-## diferencia es que están con las piernas en el piso en vez de la silla»). La cápsula va fija en su punto de la meca y
-## girada con ella (ver CharacterRigidBody3D.ride); los pies, CLAVADOS en dos puntos del piso de la meca guardados en el
-## marco de la cápsula (`plant_feet`), así nada de lo que recuerda queda en el mundo. Sin rayos contra el casco —que en
-## las maquetas se mueve a mano y salta de a pasos— y sin pasos: el piso lo dice la meca. La pelvis sí baja lo que haga
-## falta para alcanzarlos (la respiración la sube unos centímetros), como en tierra. Lo de arriba —la inclinación por inercia o por golpes, la respiración, los brazos— es lo de siempre.
-var planted_feet: Array[Vector3] = []
-
-
 func _init(owner: BoneInstantiator) -> void:
 	bi = owner
 
@@ -90,50 +81,6 @@ func pose_legs_seated() -> void:
 	repin_legs_seated()
 	bi.ik_util.left_leg_current_target.global_position  = seated_left_foot
 	bi.ik_util.right_leg_current_target.global_position = seated_right_foot
-
-
-func is_planted() -> bool:
-	return planted_feet.size() == 2 and is_instance_valid(bi.char_rigidbody) and bi.char_rigidbody._riding
-
-
-## CLAVA LOS PIES en el piso que pasa por `floor_point` (un punto del mundo), cada uno bajo su cadera, separados como su
-## marcha (`raycast_stance_offset`) y con el tobillo a su alto sobre el piso (`ankle_height`). Se guardan en el marco de
-## la cápsula.
-func plant_feet(floor_point: Vector3) -> void:
-	planted_feet.clear()
-	if not is_instance_valid(bi.char_rigidbody):
-		return
-	var body := bi.char_rigidbody.global_transform
-	var ankle_local := body.affine_inverse() * (floor_point + body.basis.y.normalized() * bi.skel_sizes_util.ankle_height)
-	for left: bool in [true, false]:
-		var side := -1.0 if left else 1.0
-		planted_feet.append(Vector3(side * bi.skel_sizes_util.raycast_stance_offset, ankle_local.y, 0.0))
-
-
-## Los blancos de los pies, en sus puntos de la meca: de ellos mide la bajada de pelvis y a ellos van las piernas.
-func place_planted_targets() -> void:
-	var body := bi.char_rigidbody.global_transform.orthonormalized()
-	bi.ik_util.left_leg_current_target.global_position = body * planted_feet[0]
-	bi.ik_util.right_leg_current_target.global_position = body * planted_feet[1]
-
-
-## Las piernas a sus pies clavados, con la rodilla adelante y los pies planos sobre el piso de la meca.
-func pose_legs_planted() -> void:
-	place_planted_targets()
-	var body := bi.char_rigidbody.global_transform.orthonormalized()
-	var forward := -body.basis.z
-	var up := body.basis.y
-	var tilt := Basis(Quaternion(Vector3.UP, up))
-	var flat := tilt.inverse() * forward
-	var yaw := atan2(-flat.x, -flat.z)
-	for left: bool in [true, false]:
-		var foot := body * planted_feet[0 if left else 1]
-		var upper := bi.custom_bones_util.left_higher_leg if left else bi.custom_bones_util.right_higher_leg
-		var lower := bi.custom_bones_util.left_lower_leg if left else bi.custom_bones_util.right_lower_leg
-		bi.ik_util.solve_two_bone_ik(upper, lower, foot, foot + up * bi.skel_sizes_util.leg_height * 0.5 + forward)
-		var bone: CustomBone = bi.custom_bones_util.left_foot if left else bi.custom_bones_util.right_foot
-		if is_instance_valid(bone):
-			bone.global_basis = tilt * IkUtil.level_basis(left, yaw)
 
 
 ## Re-resuelve el IK de las piernas sentadas contra los targets ya cacheados (los huesos se movieron

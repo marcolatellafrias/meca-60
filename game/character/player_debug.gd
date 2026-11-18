@@ -81,9 +81,7 @@ func _physics_process(_delta: float) -> void:
 	_impacts.update_impact_debug(rb.impact_xz, rb.global_transform.basis, rb.impact_y, rb.linear_velocity,
 		rb._last_impact_world_dir, rb.ragdoll_threshold, is_instance_valid(ragdoll) and ragdoll.is_active,
 		is_instance_valid(ragdoll) and ragdoll.is_recovering, rb._last_impact_xz_magnitude,
-		rb.top_speed, rb.ragdoll_threshold,
-		rb._snapshot_capture_count, rb._snapshot_flag_at_capture, rb._snapshot_ragdoll_at_capture,
-		rb._snapshot_acc_before, rb._snapshot_acc_after)
+		rb.top_speed, rb.ragdoll_threshold)
 
 
 ## ── TIRARSE, VOLVER A NACER, PASARSE A OTRO CUERPO ──────────────────────────────────────────────────────────────────
@@ -99,7 +97,6 @@ func toggle_ragdoll() -> void:
 		rb.rotation.y = controller.camera_yaw
 	elif not bi.ragdoll_util.is_recovering:
 		_leave_seat_in_place(bi)
-		rb.is_snapshot_active = false
 		bi.ragdoll_util.activate(rb, bi.custom_bones_util.lower_spine)
 
 
