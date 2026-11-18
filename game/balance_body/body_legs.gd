@@ -26,6 +26,11 @@ extends Node3D
 ##     hacia debajo de las caderas: al quedar derecha ya está parada.
 ##   · EL PIE, NUNCA MÁS LEJOS DE LO QUE LA PIERNA ALCANZA: en el aire cuelga de la cadera.
 ##
+## LOS PASOS NUEVOS SON LA MARCHA COMÚN (Gait, game/common/; 18/11/2026, módulo Jefes, con el aviso a las armas): un
+## ciclo continuo, cada pie con su desfase, que pisa adelantado según la velocidad (el apoyo queda centrado debajo de su
+## lugar). El usuario: «me gusta pasarlo al sistema para que lo usen todos». *Hasta ese día eran la regla de abajo (sale
+## a un tercio de paso atrás, pisa un tercio adelante): entre un paso y el otro un tercio del ciclo ningún pie estaba en
+## el aire; el usuario: «hacen paso, paso, pausa».* Lo de abajo sigue valiendo para el lugar de cada pie y el piso.
 ## LOS PASOS NUEVOS, EL SISTEMA CLÁSICO DE PIERNAS DE MECA CON IK (13/11/2026; con el interruptor de LegSettings, F4,
 ## mientras se comparan con los de arriba). El usuario: «el sistema actual es uno derivado de los personajes y es medio
 ## rebuscado… es un trope bastante común el de piernas para mecas con IK».
@@ -37,7 +42,7 @@ extends Node3D
 ##   · GIRAR ES LO MISMO: el lugar gira con la caja, el pie queda lejos y sale. Y como cada lugar está de su lado, no se
 ##     cruzan. No hay reglas de giro ni de cruce.
 ##   · SE TURNAN: no sale uno mientras el otro está en el aire.
-##   · QUIETA, SE ACOMODA: frenada, después de `settle_wait`, trae el pie que quedó corrido o girado.
+##   · QUIETA, SE ACOMODA: frenada, cada pie da un paso hasta su lugar (la marcha común, sin esperar).
 
 ## Lo mínimo entre los dos pies, de costado, contado hacia donde mira el que pisa (m).
 ## Más lento que esto (m/s) está quieta: los pies sólo se acomodan.
@@ -59,8 +64,9 @@ var _swing_clock := 0.0
 var _swing_time := 1.0
 var _planted := false
 var _tuck := 0.0
-## Pasos nuevos: cuánto lleva quieta (s).
-var _still_clock := 0.0
+## LA MARCHA COMÚN de los pasos nuevos (Gait), de dos caderas; y hacia dónde miraba cada pie al salir.
+var _gait := Gait.new()
+var _lift_yaw: Array[float] = [0.0, 0.0]
 var _pelvis: MeshInstance3D = null
 var _legs: Array[MechLeg] = []
 
@@ -109,12 +115,13 @@ func place(k: BodySettings, delta: float) -> void:
 		var classic := LegSettings.current.new_steps
 		if not _planted:
 			if classic:
-				_feet = [_home(0, yaw, 0.0), _home(1, yaw, 0.0)]
+				_gait_setup()
+				_gait.place(Transform3D(Basis(Vector3.UP, yaw), body.support))
+				_feet = [_gait.feet[0], _gait.feet[1]]
 			else:
 				_feet = [body.measures.foot_rest(root, -1.0), body.measures.foot_rest(root, 1.0)]
 			_feet_yaw = [yaw, yaw]
 			_swing = -1
-			_still_clock = 0.0
 			_planted = true
 		if classic:
 			_classic(delta, yaw)
@@ -223,7 +230,7 @@ func _foot_ground(k: BodySettings, index: int) -> Vector3:
 	if _swing != index:
 		return _feet[index]
 	if LegSettings.current.new_steps:
-		return _classic_swing(index)
+		return _feet[index]
 	var share := clampf(_swing_clock / _swing_time, 0.0, 1.0)
 	var spot := _target(k, index, body.yaw(), maxf(_swing_time - _swing_clock, 0.0))
 	var to: Vector3 = spot["at"]
@@ -233,73 +240,45 @@ func _foot_ground(k: BodySettings, index: int) -> Vector3:
 	return _swing_from.lerp(to, eased) + Vector3.UP * sin(share * PI) * _lift(k) * lift
 
 
-## LOS PASOS NUEVOS (ver arriba): termina el paso de ahora y, si no hay ninguno en el aire, ve si sale uno.
+## LOS PASOS NUEVOS (ver arriba): la marcha común (Gait) con dos caderas; acá sólo el giro de cada pie, que va de
+## hacia donde miraba al salir a hacia donde mira la caja.
 func _classic(delta: float, yaw: float) -> void:
-	var s := LegSettings.current
-	var stride := s.stride * _stride()
-	if _swing >= 0:
-		_swing_clock += delta
-		if _swing_clock < _swing_time:
-			return
-		_feet[_swing] = _landing(_swing, yaw, 0.0)
-		_feet_yaw[_swing] = yaw
-		_swing = -1
-	var velocity := Vector3(body.support_speed.x, 0.0, body.support_speed.z)
-	var speed := velocity.length()
-	var moving := speed > STILL
-	_still_clock = 0.0 if moving else _still_clock + delta
-	var worst := -1
-	var farthest := 0.0
+	_gait_setup()
+	_gait.update(delta, Transform3D(Basis(Vector3.UP, yaw), body.support), body.support_speed)
+	steps_taken = _gait.steps_taken
+	_swing = -1
 	for i in 2:
-		var off := _feet[i] - _home(i, yaw, 0.0)
-		off.y = 0.0
-		var gap := off.length()
-		var turned := absf(angle_difference(_feet_yaw[i], yaw))
-		# ATRÁS (o de costado) a un tercio de paso: sale. Adelante no: es el que recién pisó.
-		var due := gap >= stride / 3.0 and (not moving or off.dot(velocity) <= 0.0)
-		# Quieta, después de esperar: lo corrido o girado vuelve a su lugar.
-		if not moving and _still_clock >= s.settle_wait:
-			due = due or gap > stride * 0.05 or turned > deg_to_rad(5.0)
-		if due and gap + turned > farthest:
-			worst = i
-			farthest = gap + turned
-	if worst < 0:
-		return
-	_swing = worst
-	_swing_from = _feet[worst]
-	_swing_yaw = _feet_yaw[worst]
-	_swing_clock = 0.0
-	_swing_time = clampf(stride / 3.0 / speed, s.fastest, s.slowest) if moving else s.slowest
-	steps_taken += 1
+		var share: float = _gait.swing_share[i]
+		if share >= 0.0 and _feet_yaw.size() > i:
+			if share <= 0.0 or _lift_yaw[i] == INF:
+				_lift_yaw[i] = _feet_yaw[i]
+			_feet_yaw[i] = lerp_angle(_lift_yaw[i], yaw, smoothstep(0.0, 1.0, share))
+			_swing = i
+		else:
+			if _lift_yaw[i] != INF:
+				_feet_yaw[i] = yaw
+			_lift_yaw[i] = INF
+		_feet[i] = _gait.feet[i]
 
 
-## EL LUGAR DEL PIE `index` dentro de `ahead` segundos: debajo de su cadera, en el piso de verdad.
-func _home(index: int, yaw: float, ahead: float) -> Vector3:
-	var side := -1.0 if index == 0 else 1.0
-	var root := Transform3D(Basis(Vector3.UP, yaw), body.support + Vector3(body.support_speed.x, 0.0,
-		body.support_speed.z) * ahead)
-	return _ground(body.measures.foot_rest(root, side))
-
-
-## DÓNDE PISA el pie `index` si le quedan `left` segundos de paso: un tercio de paso adelante de su lugar, hacia donde va.
-func _landing(index: int, yaw: float, left: float) -> Vector3:
-	var at := _home(index, yaw, left)
-	var velocity := Vector3(body.support_speed.x, 0.0, body.support_speed.z)
-	if velocity.length() > STILL:
-		at = _ground(at + velocity.normalized() * LegSettings.current.stride * _stride() / 3.0)
-	return at
-
-
-## EL PIE EN EL AIRE (pasos nuevos): de donde salió hacia donde va a pisar, que se mueve con la caja, en arco.
-func _classic_swing(index: int) -> Vector3:
+## Las perillas de la marcha, de LegSettings (F4) y de las medidas de estas piernas: el ciclo es dos pasos, y en el aire
+## va un poco menos de la mitad de cada uno.
+func _gait_setup() -> void:
 	var s := LegSettings.current
-	var share := clampf(_swing_clock / _swing_time, 0.0, 1.0)
-	var to := _landing(index, body.yaw(), maxf(_swing_time - _swing_clock, 0.0))
-	var eased := smoothstep(0.0, 1.0, share)
-	_feet_yaw[index] = lerp_angle(_swing_yaw, body.yaw(), eased)
-	var stride := s.stride * _stride()
-	var lift := clampf(Vector2(to.x - _swing_from.x, to.z - _swing_from.z).length() / stride, 0.35, 1.0)
-	return _swing_from.lerp(to, eased) + Vector3.UP * sin(share * PI) * s.lift * _stride() * lift
+	if _gait.rests.is_empty():
+		var rests: Array[Vector3] = [body.measures.foot_rest(Transform3D(), -1.0),
+			body.measures.foot_rest(Transform3D(), 1.0)]
+		_gait.setup(rests)
+		_gait.ground = _ground
+	_gait.stride = s.stride * _stride()
+	_gait.lift = s.lift * _stride()
+	_gait.fastest = s.fastest * 2.0 / _gait.swing_part
+	_gait.slowest = s.slowest * 2.0 / _gait.swing_part
+
+
+## Si algún pie está en el aire (para las pruebas: la pausa entre pasos).
+func swinging() -> bool:
+	return _swing >= 0
 
 
 ## EL PISO DE VERDAD debajo de `at`: un rayo desde la altura de la caja hacia abajo, que saltea lo que se mueve y los

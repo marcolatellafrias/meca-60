@@ -6,12 +6,17 @@ extends Node
 ## y aterrizar, levitar y bajar agachada en el aire—, con la cámara de costado y un cartel con el caso. Se graba con
 ## --write-movie:
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/piernas.avi --fixed-fps 30 res://tests/cage_legs_movie.tscn
+## Imprime, caminando, qué parte del tiempo no tenía ningún pie en el aire (la pausa que vio el usuario: «paso, paso,
+## pausa») y cuántos pasos dio.
 
 var _mech: Mech = null
 var _eye: Camera3D = null
 var _title: Label = null
 var _cam_at := Vector3.ZERO
 var _first := true
+## Caminando: cuánto tiempo, y cuánto sin ningún pie en el aire (s).
+var _walking := 0.0
+var _paused := 0.0
 
 
 func _ready() -> void:
@@ -68,6 +73,8 @@ func _ready() -> void:
 	await _jump(true, false)
 	await _jump(false, true)
 	await _run("parada", 1.0, Vector2.ZERO)
+	print("caminando: sin ningún pie en el aire el %.0f %% del tiempo · %d pasos" % [100.0 * _paused / maxf(_walking, 0.01),
+		_mech.legs.steps_taken])
 	get_tree().quit()
 
 
@@ -77,7 +84,13 @@ func _run(label: String, seconds: float, move: Vector2) -> void:
 	var clock := 0.0
 	while clock < seconds:
 		_mech.move = move
-		clock += await _tick()
+		var delta := await _tick()
+		clock += delta
+		# Caminando de verdad (ya arrancó, en el piso): ¿algún pie en el aire?
+		if move != Vector2.ZERO and clock > 0.5 and _mech.grounded and _mech.support_speed.length() > 1.0:
+			_walking += delta
+			if int(_mech.legs.get("_swing")) < 0:
+				_paused += delta
 
 
 func _turn_in_place(seconds: float) -> void:

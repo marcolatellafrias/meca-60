@@ -19,10 +19,14 @@ huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la me
    *La primera versión (el mismo día) era la regla de la jaula: un pie sale al quedar un tercio de paso atrás y pisa un
    tercio adelante. Entre un paso y el otro un tercio del ciclo nadie estaba en el aire; el usuario: «hacen paso, paso,
    pausa». Medido en el mismo recorrido: sin ningún pie en el aire el 21 % del tiempo andando, en pausas; ahora el 10 %,
-   parejo entre paso y paso. LAS PIERNAS DE LA JAULA (BodyLegs) TIENEN ESA MISMA PAUSA.*
+   parejo entre paso y paso.*
+   **LA JAULA LA USA** (18/11/2026, con el aviso a las armas): los pasos nuevos de BodyLegs son un Gait de dos caderas
+   (los lugares de `MechBody.foot_rest`, el piso de BodyLegs; las perillas del F4, LegSettings). BodyLegs sigue con el
+   giro de cada pie, la pelvis, las rodillas, la caída y recogerlas. En `tests/cage_legs_movie`, caminando: sin ningún
+   pie en el aire el 20 % del tiempo antes, el 10 % ahora.
    `tests/gait_movie` (el video: un cuerpo de 4 y uno de 6, arrancar, doblar, frenar, de costado, girar en el lugar,
    correr; imprime la pausa y lo que se corre un pie apoyado). *Falta: usarla en los jefes de patas (BossParts
-   «cuatro») y en la jaula (BodyLegs con dos caderas, con las armas); «recoger» (dash, aire).*
+   «cuatro»); «recoger» (dash, aire).*
 2. **Las señales** (`MotionSignals`, game/common/): lo que lee la tabla. La base común; cada cuerpo las calcula a su
    manera (los personajes, `LocomotionSignals`, de sus dos pies). Normalizadas por el largo de pierna. **Hecho.**
 3. **Los resortes** (`HitSpring`, game/common/, lo sacó Personajes de su cápsula): golpe y aterrizaje. **Hecho.**
