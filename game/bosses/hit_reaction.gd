@@ -45,8 +45,6 @@ var _land_damage := 0.0
 var _land_what := ""
 var _flash := 0.0
 ## EL RESORTE DE LOS GOLPES (HitSpring, la pieza común con los personajes): cada golpe lo inclina y vuelve rebotando.
-## Sólo dibujo: lo que se inclina lo dice el cuerpo (`hit_tilt`: la jaula, por su motor; un jefe, lo de arriba).
-var spring := HitSpring.new()
 var _painted: Array[MeshInstance3D] = []
 var _white := StandardMaterial3D.new()
 
@@ -128,13 +126,20 @@ func react(kind: Kind, away: Vector3, distance: float, at: Vector3) -> void:
 func sway(push: Vector3) -> void:
 	var facing := _facing()
 	var local := facing.inverse() * Vector3(push.x, 0.0, push.z)
-	spring.hit(Vector2(local.x, local.z), 1.0, false)
+	var spring := _spring()
+	if spring != null:
+		spring.hit(Vector2(local.x, local.z), 1.0, false)
+
+
+## El resorte de dibujo del cuerpo (HitSpring): la jaula, el de su motor; un jefe, el suyo. Sin resorte, nada.
+func _spring() -> HitSpring:
+	if _kinematic():
+		return _body.mover.body_spring
+	return _target.get("body_spring") as HitSpring if "body_spring" in _target else null
 
 
 ## Cuánto inclina cada metro de empuje de un ataque (m/s del resorte por m).
 const SWAY_PER_M := 0.15
-## Cuánto se inclina con el resorte en el borde (°).
-const SWAY_DEGREES := 20.0
 
 
 ## Hacia dónde mira el cuerpo (para pasar el golpe a sus ejes).
@@ -194,13 +199,6 @@ func clear() -> void:
 
 
 func _physics_process(delta: float) -> void:
-	# EL RESORTE: se endereza solo; lo que inclina lo escribe en el cuerpo (z, para atrás: positivo en x).
-	spring.update(delta)
-	var tilt := Vector2(spring.hit_xz.y, spring.hit_xz.x) * SWAY_DEGREES
-	if _kinematic():
-		_body.mover.hit_tilt = tilt
-	elif "hit_tilt" in _target:
-		_target.set("hit_tilt", tilt)
 	if _flash > 0.0:
 		_flash -= delta
 		_white.albedo_color.a = 0.85 * clampf(_flash / FLASH_TIME, 0.0, 1.0)

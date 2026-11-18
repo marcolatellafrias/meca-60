@@ -56,10 +56,13 @@ var _shove_flat := Vector3.ZERO
 var _shove_hop := 0.0
 ## LA CAÍDA (ver `knock_down`): cuánto está inclinada para atrás (°) y su reloj (s).
 var lean := 0.0
-## LA INCLINACIÓN DE UN GOLPE (°; x adelante y atrás, positivo para atrás; y de costado, positivo a la derecha): sólo
-## dibujo, la caja gira sobre el piso de sus pies. La escribe en cada paso quien lleva el resorte de los golpes
-## (HitReaction, con HitSpring; módulo Jefes, 18/11/2026). En cero, nada.
-var hit_tilt := Vector2.ZERO
+## EL RESORTE DE DIBUJO (HitSpring; módulo Jefes, 18/11/2026): DE COSTADO, los golpes la inclinan (los pasa quien pega:
+## HitReaction.sway); VERTICAL, al aterrizar se hunde (lo mide este motor: ver `step`) y vuelve. Sólo dibujo: la caja
+## gira sobre el piso de sus pies y baja (`body_place`); el motor y su forma no se mueven (adentro se camina).
+var body_spring := HitSpring.new()
+## Cayendo, a cuánto bajaba en el último paso (m/s), y si estaba apoyada (para ver cuándo aterriza).
+var _fall_speed := 0.0
+var _grounded_was := true
 var _fall_clock := 0.0
 var _cylinder := CylinderShape3D.new()
 var _holder := CollisionShape3D.new()
@@ -110,9 +113,12 @@ func body_place() -> Transform3D:
 		var turn := Basis(upright.basis.x, deg_to_rad(lean))
 		var pivot := global_position + back
 		upright = Transform3D(turn * upright.basis, pivot + turn * (upright.origin - pivot))
-	if hit_tilt != Vector2.ZERO:
-		var sway := Basis(upright.basis.x, deg_to_rad(hit_tilt.x)) * Basis(upright.basis.z, -deg_to_rad(hit_tilt.y))
+	# EL RESORTE: la inclinación de un golpe (sobre el piso de sus pies) y lo que se hunde al aterrizar.
+	var tilt := body_spring.tilt_degrees()
+	if tilt != Vector2.ZERO:
+		var sway := Basis(upright.basis.x, deg_to_rad(tilt.x)) * Basis(upright.basis.z, -deg_to_rad(tilt.y))
 		upright = Transform3D(sway * upright.basis, global_position + sway * (upright.origin - global_position))
+	upright.origin.y -= body_spring.y * body.kinematic_settings().land_sink
 	return upright
 
 
@@ -150,7 +156,15 @@ func step(delta: float) -> void:
 		body.aim_yaw = _yaw
 		_yaw_speed = 0.0
 	rotation.y = _yaw
+	_fall_speed = maxf(-velocity.y, 0.0)
 	move_and_slide()
+	# ATERRIZÓ: se hunde según a cuánto bajaba (el resorte vertical; ver `body_spring`).
+	body_spring.land_full_speed = k.land_full_speed
+	body_spring.land_threshold = k.land_full_speed * 0.15
+	if is_on_floor() and not _grounded_was:
+		body_spring.land(_fall_speed)
+	_grounded_was = is_on_floor()
+	body_spring.update(delta)
 	# LO QUE MIDEN LAS PIERNAS (ver BodyLegs): el apoyo es el piso debajo, y va a la velocidad de costado.
 	var real := get_real_velocity()
 	body.grounded = is_on_floor()
@@ -324,6 +338,8 @@ func put(where: Transform3D) -> void:
 	_dash_left = 0.0
 	_shove_left = 0.0
 	_last_bottom = global_position.y + _hover_now()
+	body_spring.reset()
+	_grounded_was = true
 
 
 ## Cuánto se mueve de costado (m/s), para el cartel.

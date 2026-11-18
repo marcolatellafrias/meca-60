@@ -83,6 +83,13 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 @export_range(0.0, 5.0, 0.1) var down_time := 1.1
 @export_range(0.1, 3.0, 0.05) var rise_time := 0.8
 
+@export_group("Aterrizar")
+## AL ATERRIZAR SE HUNDE (sólo dibujo: la caja baja y las piernas se doblan; el resorte vertical de HitSpring la devuelve;
+## módulo Jefes, 18/11/2026): `land_sink` m cayendo a `land_full_speed` m/s o más (un salto cae a 2·alto/tiempo); menos
+## rápido, menos. 0, no se hunde.
+@export_range(0.0, 3.0, 0.05) var land_sink := 0.6
+@export_range(2.0, 80.0, 1.0) var land_full_speed := 20.0
+
 @export_group("Agacharse")
 ## Agachada, la altura de la caja que le queda (parte de la de parada) y a qué ritmo cambia (partes por segundo).
 @export_range(0.3, 1.0, 0.05) var crouch_share := 0.6

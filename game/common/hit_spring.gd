@@ -91,6 +91,15 @@ func update(delta: float) -> void:
 	y += _y_vel * delta
 
 
+## LA INCLINACIÓN DE LOS GOLPES EN GRADOS, para un cuerpo que la dibuja girando (una meca, un jefe): x adelante y
+## atrás (positivo, para atrás), y de costado (positivo, a la derecha); `TILT_DEGREES` en el borde.
+const TILT_DEGREES := 20.0
+
+
+func tilt_degrees() -> Vector2:
+	return Vector2(hit_xz.y, hit_xz.x) * TILT_DEGREES
+
+
 ## DE COSTADO, A CERO (al tumbar: tirado no se inclina).
 func reset_xz() -> void:
 	hit_xz = Vector2.ZERO

@@ -12,14 +12,21 @@ huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la me
    *Falta.*
 2. **Las señales** (`MotionSignals`, game/common/): lo que lee la tabla. La base común; cada cuerpo las calcula a su
    manera (los personajes, `LocomotionSignals`, de sus dos pies). Normalizadas por el largo de pierna. **Hecho.**
-3. **Los resortes** (`HitSpring`, game/common/, lo sacó Personajes de su cápsula): golpe y aterrizaje. **Hecho**, y
-   ya inclina a la jaula y a los jefes cuando les pegan: `HitReaction` lleva uno por cuerpo (`sway`) y escribe la
-   inclinación en el cuerpo (`hit_tilt`, en grados: la jaula, en `KinematicMover.body_place`, sobre el piso de sus
-   pies, después de la caída; el Luchador, lo de arriba sobre la cintura). Sólo dibujo. Los ataques del jefe inclinan
-   a la meca según cuánto empujan (`SWAY_PER_M`); las piñas de la meca inclinan al jefe según su fuerza (perilla
-   `hit_sway` del Luchador, F1, Golpes). Medido: el jefe 4° con una piña floja, 13° con un directo, 16° con un
-   mazazo; la jaula 5° con un empujón de 6 m y 16° con uno de 16. `tests/hit_sway_movie` (el video). *Falta pasar sus
-   salidas a señales de la tabla (hoy los personajes las leen por fórmula en animations.gd).*
+3. **Los resortes** (`HitSpring`, game/common/, lo sacó Personajes de su cápsula): golpe y aterrizaje. **Hecho.**
+   **CADA CUERPO ES DUEÑO DEL SUYO** (`body_spring`, 18/11/2026): la jaula, en su motor (`KinematicMover.body_spring`);
+   el Luchador, en `Brawler.body_spring`. El cuerpo lo actualiza y lo dibuja en `body_place` / `_place_upper`: la
+   inclinación (`HitSpring.tilt_degrees()`; la jaula gira sobre el piso de sus pies, después de la caída; el Luchador,
+   lo de arriba sobre la cintura) y lo que se hunde (`y`). Sólo dibujo: el motor no se mueve (adentro se camina).
+   - **De costado, los golpes**: los pasa quien pega (`HitReaction.sway`). Los ataques del jefe inclinan a la meca
+     según cuánto empujan (`SWAY_PER_M`); las piñas de la meca inclinan al jefe según su fuerza (perilla `hit_sway`
+     del Luchador, F1, Golpes). Medido: el jefe 4° con una piña floja, 13° con un directo, 16° con un mazazo; la jaula
+     5° con un empujón de 6 m y 16° con uno de 16. `tests/hit_sway_movie` (el video).
+   - **Vertical, el aterrizaje**: lo mide cada motor (a cuánto bajaba el paso en que tocó el piso; el Luchador, lo más
+     rápido de ese paso y el anterior, porque el arco del salto llega un paso antes). La jaula se hunde `land_sink` m
+     cayendo a `land_full_speed` m/s (KinematicSettings, grupo Aterrizar; 0,6 m a 20 m/s): 0,40 m de un salto, 0,60 m
+     en picada. El Luchador, `LAND_SINK` m de la maqueta a `LAND_FULL` m/s (3 a 80): 1,8 m de un salto de 12 m de
+     alto, 3 de uno de 25. `tests/land_spring_movie` (el video).
+   *Falta pasar sus salidas a señales de la tabla (hoy los personajes las leen por fórmula en animations.gd).*
 4. **La tabla** (`ProceduralBoneAnimator`): cada fila es (qué mueve, en qué eje, qué señal, peso, escala, curva); en
    cada pasada todo vuelve a su reposo y se le suma lo suyo. Ahora mueve **cualquier Node3D** (huesos de un personaje o
    piezas de una meca o un jefe) y lee **cualquier `MotionSignals`**. Quién mueve qué lo dice cada cuerpo (en los

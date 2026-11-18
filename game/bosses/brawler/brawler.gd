@@ -91,9 +91,15 @@ var rush_up := 0.3
 ##   · `jump(to, time, arc)`: un salto en arco hasta un punto (cualquier poder lo puede pedir); `landed_now` es cierto
 ##     el paso en que cae.
 var hurry := 1.0
-## LA INCLINACIÓN DE UN GOLPE (°; x adelante y atrás, y de costado): sólo dibujo, lo de arriba gira sobre la cintura.
-## La escribe HitReaction desde su resorte (HitSpring) cuando la meca le pega.
-var hit_tilt := Vector2.ZERO
+## EL RESORTE DE DIBUJO (HitSpring), como el de la jaula: los golpes lo inclinan (HitReaction.sway, cuando la meca le
+## pega) y al caer de un salto o de volar se hunde. Sólo lo de arriba: gira sobre la cintura y baja sobre las orugas.
+var body_spring := HitSpring.new()
+## Al caer se hunde LAND_SINK m (de la maqueta) cayendo a LAND_FULL m/s o más.
+const LAND_SINK := 3.0
+const LAND_FULL := 80.0
+var _height_was := 0.0
+## A cuánto bajaba en el paso anterior (m/s, en el mundo): el arco del salto llega al piso un paso antes de terminar.
+var _drop_was := 0.0
 var fly_height := 0.0
 var go := Vector3.ZERO
 var omni := false
@@ -211,6 +217,7 @@ func _physics_process(delta: float) -> void:
 		_fit_scale()
 	_read()
 	landed_now = false
+	_height_was = global_position.y
 	# LAS ORUGAS: girar y andar, cada una con su rampa.
 	var turning := _turn.step(delta, clampf(move.x, -1.0, 1.0), k.turn_time, MoveCurve.Shape.LINEAR, k.turn_time,
 		MoveCurve.Shape.LINEAR)
@@ -276,6 +283,14 @@ func _physics_process(delta: float) -> void:
 			speed = forward
 	if arena != null:
 		global_position = arena.hold(global_position, box().x * 0.5)
+	# ATERRIZÓ: se hunde según a cuánto bajaba (en la maqueta; lo más rápido de este paso y el anterior).
+	var drop := (_height_was - global_position.y) / maxf(delta, 0.001)
+	if landed_now:
+		body_spring.land_full_speed = LAND_FULL
+		body_spring.land_threshold = LAND_FULL * 0.1
+		body_spring.land(maxf(drop, _drop_was) / scale())
+	_drop_was = drop
+	body_spring.update(delta)
 	_show_jets()
 	_solid.global_transform = global_transform
 	# Donde se le pega es un cuerpo aparte: no sigue solo a su padre (quedaba donde nació).
@@ -303,9 +318,10 @@ func _place_upper() -> void:
 	if _torso_shape != null:
 		_torso_shape.transform = Transform3D(Basis(Vector3.UP, waist_yaw - hull_yaw), _torso_shape.position)
 	var upright := Basis(Vector3.UP, waist_yaw)
-	var sway := Basis(upright.x, deg_to_rad(hit_tilt.x)) * Basis(upright.z, -deg_to_rad(hit_tilt.y))
+	var tilt := body_spring.tilt_degrees()
+	var sway := Basis(upright.x, deg_to_rad(tilt.x)) * Basis(upright.z, -deg_to_rad(tilt.y))
 	body.upper.global_transform = Transform3D((sway * upright).scaled(Vector3.ONE * scale()),
-		global_position + Vector3.UP * BrawlerBody.HIP * scale())
+		global_position + Vector3.UP * (BrawlerBody.HIP - body_spring.y * LAND_SINK) * scale())
 
 
 ## Sin lo que lo metería dentro de `block_at`: si su caja está a menos de su radio (y un poco), no avanza hacia él.
@@ -497,6 +513,7 @@ func put(where: Transform3D) -> void:
 	_drift = Vector3.ZERO
 	_jump_time = 0.0
 	fly_height = 0.0
+	body_spring.reset()
 	_solid.sync_to_physics = false
 	_solid.global_transform = global_transform
 	# Donde se le pega es un cuerpo aparte: no sigue solo a su padre (quedaba donde nació).
