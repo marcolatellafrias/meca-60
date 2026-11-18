@@ -60,7 +60,7 @@ const LABELS := {
 	"throw_draw": "la caja viene al pecho (de la distancia de llevar)", "throw_push_s": "dura el empujón (s)",
 	"throw_extend": "las manos la empujan hasta (m más)", "throw_follow_deg": "se va adelante al soltar (°)",
 	"throw_per_arm": "tiro: N·s por cada 1 de fuerza de brazos",
-	"push_per_arm": "empujón: m/s por cada 1 de fuerza de brazos",
+	"push_per_arm": "empujón: N·s por cada 1 de fuerza de brazos",
 	"interaction_reach": "alcance desde la punta del pecho (m)",
 	# Equilibrio.
 	"impact_fall_linear": "exageración de la caída (× el empujón)", "landing_brake": "al aterrizar, frena el cuerpo",

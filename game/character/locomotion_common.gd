@@ -75,7 +75,8 @@ extends Resource
 ## da el empujón a quien lo recibe (m/s). Una no mueve a la otra (el usuario: «un valor normalizado que afecte a
 ## las dos en vez de que una afecte a la otra»).
 @export_range(10.0, 200.0, 1.0) var throw_per_arm := 70.0
-@export_range(0.5, 12.0, 0.1) var push_per_arm := 3.5
+## EL EMPUJÓN (N·s a carga entera por cada 1 de fuerza de brazos). 210 es lo de antes para uno de 60 kg (3,5 m/s).
+@export_range(20.0, 600.0, 5.0) var push_per_arm := 210.0
 ## EL ALCANCE PARA INTERACTUAR (m, desde la punta del pecho; × la escala del cuerpo, ver BlockShape.apply_to). Con 1,00:
 ## el botón más bajo del alcance (a 0,2 m) pide agacharse a los seis; agachado lo alcanzan todos menos el flaco alto (le
 ## hacen falta 1,06). Un solo número en metros no logra las dos cosas para los seis: el kid parado llega a 1,02.

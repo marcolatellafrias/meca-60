@@ -33,7 +33,10 @@ var grab_cone_half_angle:     float = 120.0
 func _throw_impulse() -> float:
 	return _arm() * LocomotionCommon.base().throw_per_arm
 
-func _push_speed() -> float:
+## EL EMPUJÓN ES UN IMPULSO DE QUIEN EMPUJA (17/11/2026, el usuario: «obviamente el empujón tiene que depender» de la
+## fuerza): N·s a carga entera, su fuerza de brazos × `push_per_arm`. Sobre la masa de quien lo recibe: el fuerte voltea
+## al chico y al revés no. *Hasta entonces era un cambio de velocidad fijo, igual para cualquiera que lo recibiera.*
+func _push_impulse() -> float:
 	return _arm() * LocomotionCommon.base().push_per_arm
 
 func _arm() -> float:
@@ -470,7 +473,7 @@ func _release_throw() -> void:
 		if target is CharacterRigidBody3D:
 			# Empujar a un compañero: knockback por VELOCIDAD (impulso = masa·vel) → trastabilla
 			# parecido sin importar su peso. Un empujón lo despide un poco para atrás.
-			impulse = dir * target.mass * _push_speed() * t
+			impulse = dir * _push_impulse() * t
 		else:
 			# Lanzar un OBJETO: impulso FIJO (esfuerzo del brazo). Δv = impulso/masa → lo liviano
 			# vuela lejos, lo pesado apenas se despega y cae cerca. throw_strength lo escala.
@@ -570,7 +573,7 @@ func _push_all(dir: Vector3, t: float) -> void:
 	for body in bodies_in_push_box(char_rigidbody.get_world_3d(), _my_push_box(), _my_rids()):
 		var flat := Vector3(dir.x, 0.0, dir.z).normalized()
 		if body is CharacterRigidBody3D:
-			_launch(body, flat * body.mass * _push_speed() * t)
+			_launch(body, flat * _push_impulse() * t)
 		else:
 			_launch(body, flat * _throw_impulse() * PUSH_OBJECT_SHARE * t)
 
