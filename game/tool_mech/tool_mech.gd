@@ -44,10 +44,10 @@ func untouchable() -> bool:
 
 ## UN GOLPE FRENADO POR EL ESCUDO (BalanceBody.block_hit, una vez por golpe: lo llama quien pega): el destello y el parry.
 ## *Hasta el 18/11/2026 lo contaba `untouchable`, que se pregunta varias veces por golpe (lo avisó la sesión de Jefes).*
-func block_hit() -> bool:
+func block_hit(at := Vector3.INF) -> bool:
 	if not shield.on:
-		return super()
-	shield.stopped()
+		return super(at)
+	shield.stopped(at)
 	return true
 
 

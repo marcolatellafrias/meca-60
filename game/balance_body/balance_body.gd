@@ -476,9 +476,9 @@ func untouchable() -> bool:
 
 
 ## SI UN GOLPE LO FRENA ALGO SUYO (el escudo de la meca, ver ToolMech): quien pega lo llama UNA SOLA VEZ POR GOLPE, antes
-## de pegar (`untouchable` se pregunta muchas veces y no cuenta nada). True: el golpe se frenó y se da por usado (no se
-## reintenta). Lo de casi todos: nada lo frena.
-func block_hit() -> bool:
+## de pegar (`untouchable` se pregunta muchas veces y no cuenta nada), con dónde pega (`at`, en el mundo) si lo sabe.
+## True: el golpe se frenó y se da por usado (no se reintenta). Lo de casi todos: nada lo frena.
+func block_hit(_at := Vector3.INF) -> bool:
 	return false
 
 
