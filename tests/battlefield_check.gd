@@ -1,6 +1,6 @@
 extends Node3D
 
-## EL MAPA DE PELEA, CON LA MECA (con ventana, ~70 segundos, sin el sandbox): arma el mapa (Battlefield) y su parcela,
+## EL MAPA DE PELEA, CON LA MECA (con ventana, unos 3 minutos, sin el sandbox): arma el mapa (Battlefield) y su parcela,
 ## y maneja la meca por una vuelta de puntos por el campo libre (caminando y corriendo, con un salto), y al final la
 ## manda contra el muro del borde. Imprime cada tramo (si llegó, cuánto tardó) y al final si se cayó, si se trabó
 ## (pidiéndole moverse, quieta más de 3 s), la altura más baja y lo más lejos del centro que llegó (no puede pasar el
@@ -10,11 +10,19 @@ extends Node3D
 ## La vuelta: [x, z, corre, salta al llegar].
 ## Dentro del centro libre (unos 60 m de radio para la meca: más allá están los autos, los recursos y las escaleras de
 ## los barrios).
-const ROUTE := [[45.0, 30.0, false, false], [50.0, -25.0, true, false], [10.0, -55.0, false, true],
-	[-45.0, -35.0, true, false], [-50.0, 25.0, false, false], [0.0, 45.0, true, false]]
+## Rodea las tres ruinas del medio (Battlefield._ruins: la esquina en (42, 8), el muro en (-38, -12) y el bajo en
+## (4, -58)): la meca jaula, de escala humana, no pasa por encima.
+const ROUTE := [[45.0, 30.0, false, false], [65.0, 0.0, true, false], [50.0, -35.0, false, false],
+	[10.0, -45.0, false, true], [-45.0, -35.0, true, false], [-62.0, -10.0, false, false], [-50.0, 25.0, false, false],
+	[0.0, 45.0, true, false]]
 ## La carrera contra el muro va por un hueco entre dos barrios (grados).
 const WALL_RUN := 70.0
-const LEG_TIMEOUT := 16.0
+## Lo que tiene cada tramo: el largo a paso de la meca jaula (de escala humana, unos 3,7 m/s caminando) y un margen.
+const PACE := 3.0
+const LEG_SPARE := 6.0
+## Contra el muro: corre hasta que deja de alejarse del centro (unos segundos sin ganar) o se acaba el tiempo.
+const WALL_STALL := 4.0
+const WALL_TIMEOUT := 70.0
 const REACHED := 8.0
 
 var _folder := ""
@@ -65,9 +73,10 @@ func _ready() -> void:
 		leg += 1
 		var target := Vector2(point[0], point[1])
 		var started := Time.get_ticks_msec()
+		var leg_timeout := Vector2(_mech.global_position.x, _mech.global_position.z).distance_to(target) / PACE + LEG_SPARE
 		_press(KEY_SHIFT, point[2])
 		var reached := false
-		while (Time.get_ticks_msec() - started) / 1000.0 < LEG_TIMEOUT:
+		while (Time.get_ticks_msec() - started) / 1000.0 < leg_timeout:
 			var here := Vector2(_mech.global_position.x, _mech.global_position.z)
 			var toward := target - here
 			if toward.length() < REACHED:
@@ -92,9 +101,17 @@ func _ready() -> void:
 	# Contra el muro, corriendo: no tiene que salirse.
 	_press(KEY_SHIFT, true)
 	var wall_started := Time.get_ticks_msec()
-	while (Time.get_ticks_msec() - wall_started) / 1000.0 < 14.0:
+	var best := 0.0
+	var gained_at := wall_started
+	while (Time.get_ticks_msec() - wall_started) / 1000.0 < WALL_TIMEOUT:
 		_mech.aim_yaw = atan2(-cos(deg_to_rad(WALL_RUN)), -sin(deg_to_rad(WALL_RUN)))
 		await get_tree().physics_frame
+		var away := Vector2(_mech.global_position.x, _mech.global_position.z).length()
+		if away > best + 0.5:
+			best = away
+			gained_at = Time.get_ticks_msec()
+		elif (Time.get_ticks_msec() - gained_at) / 1000.0 > WALL_STALL:
+			break
 	_driving = false
 	_press(KEY_W, false)
 	_press(KEY_SHIFT, false)
