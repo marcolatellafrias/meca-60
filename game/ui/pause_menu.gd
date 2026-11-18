@@ -28,42 +28,24 @@ func _on_ui_changed() -> void:
 	if not visible and is_instance_valid(_options_menu):
 		_options_menu.close()
 
+## EN EL ESTILO MONOCROMO (Mono, 18/11/2026): una ventana superpuesta (todo lo de atrás, atenuado con trama) con el
+## título, los jugadores y los botones; seguir es la acción principal, llena.
 func _build() -> void:
-	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
-	_main = center
-
-	var panel := PanelContainer.new()
-	center.add_child(panel)
-
-	var margin := MarginContainer.new()
-	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 16)
-	panel.add_child(margin)
-
-	var vbox := VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 8)
-	vbox.custom_minimum_size = Vector2(240, 0)
-	margin.add_child(vbox)
-
-	var title := Label.new()
-	title.text = "PAUSA"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
-
-	var players_title := Label.new()
-	players_title.text = "Jugadores"
-	vbox.add_child(players_title)
+	var window := MonoWindow.new()
+	add_child(window)
+	_main = window
+	window.content.add_child(MonoText.make("PAUSA", Mono.TITLE))
+	window.content.add_child(MonoText.make("JUGADORES", Mono.SMALL))
 	_players_box = VBoxContainer.new()
-	vbox.add_child(_players_box)
-
-	vbox.add_child(HSeparator.new())
-
-	vbox.add_child(_make_button("Reanudar", _resume))
-	vbox.add_child(_make_button("Opciones", _options))
-	vbox.add_child(_make_button("Salir de la partida", _leave_match))
-	vbox.add_child(_make_button("Salir del juego", _quit))
+	_players_box.add_theme_constant_override("separation", 6)
+	window.content.add_child(_players_box)
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(0, 10)
+	window.content.add_child(gap)
+	window.content.add_child(_make_button("SEGUIR", _resume, true))
+	window.content.add_child(_make_button("OPCIONES", _options))
+	window.content.add_child(_make_button("SALIR DE LA PARTIDA", _leave_match))
+	window.content.add_child(_make_button("SALIR DEL JUEGO", _quit))
 
 func _refresh_players() -> void:
 	if not is_instance_valid(_players_box):
@@ -73,14 +55,10 @@ func _refresh_players() -> void:
 	for pid in SessionManager.players:
 		var sp: SessionPlayer = SessionManager.players[pid]
 		var display := sp.steam_name if sp.steam_name != "" else "Jugador %d" % pid
-		var label := Label.new()
-		label.text = "• %s (vos)" % display if sp.is_local else "• %s" % display
-		_players_box.add_child(label)
+		_players_box.add_child(MonoText.make(("· %s (VOS)" % display if sp.is_local else "· %s" % display).to_upper()))
 
-func _make_button(text: String, cb: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
-	b.focus_mode = Control.FOCUS_NONE
+func _make_button(text: String, cb: Callable, primary := false) -> MonoButton:
+	var b := MonoButton.make(text, Vector2(340, 46), primary)
 	b.pressed.connect(cb)
 	return b
 

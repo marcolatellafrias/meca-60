@@ -9,10 +9,12 @@ extends Control
 const SANDBOX_SCENE := "res://game/sandbox/sandbox.tscn"
 const GAME_SCENE := SANDBOX_SCENE
 
-var _code_field: LineEdit
-var _status: Label
-var _host_btn: Button
-var _join_btn: Button
+var _code_field: MonoField
+var _status: MonoText
+var _host_btn: MonoButton
+var _join_btn: MonoButton
+## La ventana de «unirse con código», abierta, o null.
+var _join_window: MonoWindow = null
 ## La pantalla de Opciones abierta, o null (ver OptionsMenu).
 var _options_menu: OptionsMenu = null
 
@@ -35,81 +37,120 @@ func _ready() -> void:
 	if SessionManager.session_started or SessionManager.is_joining():
 		_go_to_game()
 
+## EN EL ESTILO MONOCROMO (Mono, docs/conceptual/interfaz.md, 18/11/2026): fondo negro, el nombre grande, los botones en
+## columna (crear partida, la acción principal, llena) y, a la derecha, la meca tramada; «unirse con código» abre una
+## ventana superpuesta con el campo.
 func _build() -> void:
 	var bg := ColorRect.new()
-	bg.color = Color(0.08, 0.08, 0.1)
+	bg.color = Mono.BLACK
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
+	var art := _MechArt.new()
+	art.set_anchors_preset(Control.PRESET_RIGHT_WIDE)
+	art.offset_left = -560
+	art.offset_right = -80
+	art.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(art)
 
-	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	add_child(center)
-
-	var vbox := VBoxContainer.new()
-	vbox.custom_minimum_size = Vector2(300, 0)
-	vbox.add_theme_constant_override("separation", 10)
-	center.add_child(vbox)
-
-	var title := Label.new()
-	title.text = "MECA"
-	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(title)
-
-	_host_btn = _button("Host", _on_host)
-	vbox.add_child(_host_btn)
-
-	var join_row := HBoxContainer.new()
-	join_row.add_theme_constant_override("separation", 6)
-	_code_field = LineEdit.new()
-	_code_field.placeholder_text = "código"
-	_code_field.max_length = SessionManager.CODE_LENGTH
-	_code_field.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_code_field.text_submitted.connect(func(_t): _on_join())
-	join_row.add_child(_code_field)
-	_join_btn = _button("Join", _on_join)
-	join_row.add_child(_join_btn)
-	vbox.add_child(join_row)
-
-	vbox.add_child(_button("Design sandbox", _on_sandbox))
-	vbox.add_child(_button("Opciones", _on_options))
-	vbox.add_child(_button("Salir", _on_quit))
-
+	var column := VBoxContainer.new()
+	column.position = Vector2(90, 110)
+	column.custom_minimum_size = Vector2(380, 0)
+	column.add_theme_constant_override("separation", 18)
+	add_child(column)
+	column.add_child(MonoText.make("MECA", 84.0))
+	column.add_child(MonoText.make("UNA SUCURSAL, UNA MECA, HASTA TRES TRIPULANTES", Mono.SMALL))
+	var gap := Control.new()
+	gap.custom_minimum_size = Vector2(0, 20)
+	column.add_child(gap)
+	_host_btn = _button("CREAR PARTIDA", _on_host, true)
+	column.add_child(_host_btn)
+	_join_btn = _button("UNIRSE CON CÓDIGO", _open_join)
+	column.add_child(_join_btn)
+	column.add_child(_button("SANDBOX DE PRUEBAS", _on_sandbox))
+	column.add_child(_button("OPCIONES", _on_options))
+	column.add_child(_button("SALIR", _on_quit))
 	# Dev: test multiplayer local con varias instancias (ENet, sin Steam).
-	var dev_label := Label.new()
-	dev_label.text = "— dev (test local) —"
-	dev_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(dev_label)
-	vbox.add_child(_button("Host local", func(): SessionManager.host_local()))
-	vbox.add_child(_button("Join local", func(): SessionManager.join_local()))
-
-	_status = Label.new()
-	_status.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	vbox.add_child(_status)
+	var dev := HBoxContainer.new()
+	dev.add_theme_constant_override("separation", 10)
+	dev.add_child(_small_button("HOST LOCAL", func() -> void: SessionManager.host_local()))
+	dev.add_child(_small_button("JOIN LOCAL", func() -> void: SessionManager.join_local()))
+	column.add_child(dev)
+	_status = MonoText.make("", Mono.SMALL)
+	column.add_child(_status)
 
 	if not SessionManager.enabled:
 		_join_btn.disabled = true
-		_code_field.editable = false
-		_set_status("Steam no disponible — Host corre local")
+		_set_status("STEAM NO DISPONIBLE: CREAR PARTIDA CORRE LOCAL")
 
-func _button(text: String, cb: Callable) -> Button:
-	var b := Button.new()
-	b.text = text
+func _button(text: String, cb: Callable, primary := false) -> MonoButton:
+	var b := MonoButton.make(text, Vector2(380, 50), primary)
 	b.pressed.connect(cb)
 	return b
+
+func _small_button(text: String, cb: Callable) -> MonoButton:
+	var b := MonoButton.make(text, Vector2(185, 36))
+	b.pressed.connect(cb)
+	return b
+
+## LA VENTANA DE «UNIRSE CON CÓDIGO»: el campo y, abajo, cancelar y unirse.
+func _open_join() -> void:
+	if is_instance_valid(_join_window):
+		return
+	_join_window = MonoWindow.new()
+	add_child(_join_window)
+	_join_window.content.add_child(MonoText.make("UNIRSE CON CÓDIGO", Mono.TITLE))
+	_code_field = MonoField.new()
+	_code_field.placeholder = "CÓDIGO"
+	_code_field.custom_minimum_size = Vector2(460, 64)
+	_code_field.edit.max_length = SessionManager.CODE_LENGTH
+	_code_field.submitted.connect(func(_t: String) -> void: _on_join())
+	_join_window.content.add_child(_code_field)
+	var buttons := HBoxContainer.new()
+	buttons.add_theme_constant_override("separation", 20)
+	var cancel := MonoButton.make("CANCELAR", Vector2(220, 46))
+	cancel.pressed.connect(_close_join)
+	buttons.add_child(cancel)
+	var join := MonoButton.make("UNIRSE", Vector2(220, 46), true)
+	join.pressed.connect(_on_join)
+	buttons.add_child(join)
+	_join_window.content.add_child(buttons)
+	_code_field.edit.grab_focus.call_deferred()
+
+func _close_join() -> void:
+	if is_instance_valid(_join_window):
+		_join_window.queue_free()
+	_join_window = null
+
+
+## LA MECA TRAMADA de la derecha (un placeholder de ilustración).
+class _MechArt extends Control:
+	func _init() -> void:
+		Mono.prepare(self)
+
+	func _draw() -> void:
+		var c := size.x * 0.5
+		var top := size.y * 0.22
+		for part: Rect2 in [Rect2(c - 120, top, 240, 280), Rect2(c - 200, top + 20, 64, 310), Rect2(c + 136, top + 20, 64, 310),
+				Rect2(c - 80, top + 280, 64, 220), Rect2(c + 16, top + 280, 64, 220)]:
+			Mono.dots(self, part, Mono.QUARTER)
+			Mono.frame(self, part)
 
 # ── Acciones ──────────────────────────────────────────────────────────────────
 
 func _on_host() -> void:
-	_set_busy("Creando partida…")
+	_set_busy("CREANDO PARTIDA…")
 	SessionManager.host()
 
 func _on_join() -> void:
-	var code := _code_field.text.strip_edges()
-	if code == "":
-		_set_status("Ingresá un código")
+	if not is_instance_valid(_code_field):
 		return
-	_set_busy("Uniéndose a %s…" % code.to_upper())
+	var code := _code_field.text().strip_edges()
+	if code == "":
+		_set_status("INGRESÁ UN CÓDIGO")
+		return
+	_close_join()
+	_set_busy("UNIÉNDOSE A %s…" % code.to_upper())
 	SessionManager.join_by_code(code)
 
 func _on_sandbox() -> void:
@@ -132,7 +173,7 @@ func _on_session_ready(_id: int) -> void:
 
 func _on_session_failed(reason: String) -> void:
 	_set_idle()
-	_set_status("Error: " + reason)
+	_set_status("ERROR: " + reason.to_upper())
 
 func _go_to_game() -> void:
 	UIState.close(UIState.MENU)  # el juego arranca con el mouse capturado
@@ -150,4 +191,4 @@ func _set_idle() -> void:
 	_join_btn.disabled = not SessionManager.enabled
 
 func _set_status(msg: String) -> void:
-	_status.text = msg
+	_status.words = msg
