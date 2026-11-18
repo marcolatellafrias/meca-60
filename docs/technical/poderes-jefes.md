@@ -43,7 +43,7 @@ esa copia. Al guardar el panel, las perillas nuevas pasan a las copias.
 La **L** de la parcela deja un solo poder (aunque no tenga ira), para probarlo.
 
 ## La escala
-Una sola perilla para todos los jefes: `BossSettings.scale`, en el F2 de la fila, que se cambia en vivo. Cada jefe
+Una sola perilla para todos los jefes: `BossSettings.scale`, en el F7 de las filas de jefes, que se cambia en vivo. Cada jefe
 está dibujado en sus medidas de maqueta y va a esa escala. **Lo que sale de su cuerpo escala con él**: su caja, el
 frente de la embestida, los puños y los brazos del trompo, la altura de la mano del agarre. **Las zonas tienen su
 propio tamaño**, en las perillas de cada poder: el ancho de la onda, el radio de la piedra, el cono del lanzallamas
@@ -79,7 +79,7 @@ puede pedir. En el aire le falta el «suelo»: los poderes que lo piden no se us
 ## Las zonas en el piso
 `BossZone` es la pieza común de todo ataque «geométrico»: **círculo, franja, cono y anillo** (que puede crecer solo:
 una onda redonda que se abre). Es la cuenta de si un punto está adentro (`covers`) y, si se quiere, la marca que avisa.
-**La marca es opcional**: `BossSettings.floor_marks` (en el F2) la apaga para todos, y entonces todo se lee por las
+**La marca es opcional**: `BossSettings.floor_marks` (en el F7) la apaga para todos, y entonces todo se lee por las
 poses y los sonidos, como en Souls; `marked` la apaga para una. No hace daño: el poder que la usa decide cuándo pega.
 La usan la onda y el agarre (franja), la piedra y las bombas (círculo), el lanzallamas (cono) y el anillo de las bombas.
 
@@ -110,10 +110,39 @@ Son tres juegos distintos, y un poder elige una o las mezcla:
 - Las variantes son **pocas perillas del poder**; lo que depende del tamaño del jefe sale de su cuerpo y escala solo.
 - Cada pieza que haga falta y no esté (otra forma de zona, otra manera de volar) **se agrega a la pieza común**.
 
+## El cuerpo modular
+El usuario: «un sistema modular de mecas… 2 o 3 modelos de piernas, de brazos, de torso y de cabeza… pensar en las mecas
+no como estéticas, sino como superficies que soportan o no ciertos attachments… yo después puedo agarrar módulos y
+modelarlos a mano». En `game/bosses/parts/`:
+- **`BossParts`, el catálogo**: cada pieza es un dato (qué es, qué ofrece, qué pide) y un dibujo de arcilla provisorio
+  (`draw_*`); cambiar el dibujo por un modelo no toca el dato.
+  - Piernas: orugas, dos patas, cuatro patas, flotante. Dicen cuánto peso aguantan, cómo se mueven (orugas, patas,
+    vuelo), la altura de la cadera y lo que dan (suelo, embestir, saltar, volar).
+  - Torsos: ancho, angosto, de cuatro brazos. Dicen cuánto pesan, cuántos hombros tienen y de qué tamaño, y lo que dan
+    (horno, núcleo).
+  - Brazos: puño, pinza, cañón, escudo. Dicen cuánto pesan, qué tamaño de hombro piden y lo que dan (brazos, mano,
+    cañón, escudo).
+  - Cabezas: visor, antena, sin cabeza.
+- **`BossRecipe`, la receta**: qué piezas lleva un jefe. Dice **si encaja** (`problems`: un brazo entra en un hombro de
+  su tamaño o más grande; las piernas tienen que aguantar el peso de lo de arriba) y **qué le dan** sus piezas
+  (`gives`), que es lo que piden los poderes: de ahí sale qué poderes podría usar (`usable`).
+- **`BossFrame`, el armazón**: monta la receta (las piernas, el torso en la cadera, un brazo en cada hombro, la
+  cabeza), a la escala de todos los jefes, con sus zonas de golpe por nombre.
+- **La fila «Taller de jefes»** (`BossWorkshopArchetype`): adelante, el que se arma (J piernas, K torso, L brazos, H
+  los del segundo par, P cabeza), con su cartel: qué lleva, si encaja y por qué no, lo que le dan sus piezas y qué
+  poderes podría usar; atrás, cinco ejemplos. `tests/boss_parts_look` (con ventana, 10 s): capturas de tres recetas.
+- *Todavía es sólo el cuerpo, quieto: el Luchador sigue siendo un cuerpo hecho a mano. Falta que un armazón pelee
+  (la cabeza común) y que las piernas pongan cómo se mueve.*
+
+## Los paneles
+- **F1 de la parcela de cada jefe**: ese jefe (su cuerpo, sus modos, sus poderes).
+- **F7 en todas las filas de jefes**: «Todos los jefes» (`BossSettingsPanel`): la escala y las marcas en el piso. El
+  sandbox no tiene panel de supercategoría: es la misma tecla en cada fila.
+
 ## Lo que sigue
-1. **El cuerpo modular**: piezas (piernas, torso, brazos, cabeza) con enchufes y reglas de qué va con qué; cada pieza
-   trae sus zonas de golpe y lo que le da al jefe (`needs`). Hoy el Luchador es un cuerpo fijo.
-2. **La cabeza común a todos los jefes**: hoy es `BrawlerBrain`; al llegar el segundo jefe, lo común sube a una base.
+1. **Que un armazón pelee**: la cabeza común a todos los jefes (hoy es `BrawlerBrain`, atada al Luchador) y un jefe
+   genérico que se arma de una receta, con las piernas poniendo cómo se mueve. El Luchador pasa a ser una receta.
+2. **Poses por pieza**: hoy las poses son del Luchador; los brazos del armazón tienen que poder levantarse y abrirse.
 3. **Rutinas de rodeo por modo** (ir por zonas, mantener un lado) y más poderes.
 4. **Ajustar los poderes a la meca jaula** (a escala humana): hoy casi todo le pega.
 5. Juntar los proyectiles con la artillería de la meca propia.
