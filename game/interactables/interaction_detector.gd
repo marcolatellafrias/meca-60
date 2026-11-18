@@ -20,6 +20,15 @@ var _own_bi:           BoneInstantiator       = null
 ## SI SE LO PUEDE USAR DESDE ACÁ, que lo decide quien lo va a usar (InteractionController._can_use) con lo mismo que
 ## lo hace soltar: lo que no pasa no se resalta y no se le puede hacer clic. Sin esto, vacío: sólo la distancia.
 var can_use: Callable
+## ── SI ALGUIEN MIRA POR ESTOS OJOS (18/11/2026) ─────────────────────────────────────────────────────────────────────
+## Sólo entonces se contornea lo que se mira: el contorno es para quien mira la pantalla. Nace prendido si el ojo es
+## una cámara (el jugador) y apagado si no (un guion, ver ExhibitOperator, o las manos de un personaje con
+## CharacterActions); lo prende quien pasa a mirar por ellos (un personaje poseído, ver CharacterPossession).
+var watched := false:
+	set(on):
+		watched = on
+		if not on:
+			force_clear()
 
 signal hovered_changed(interactable: Interactable)
 
@@ -27,6 +36,7 @@ func setup(rb: CollisionObject3D, cam: Node3D, bi: BoneInstantiator) -> void:
 	char_rigidbody = rb
 	player_camera  = cam
 	_own_bi        = bi
+	watched        = cam is Camera3D
 	_build_outline_material()
 
 func rebind(rb: CollisionObject3D, cam: Node3D, bi: BoneInstantiator) -> void:
@@ -141,8 +151,8 @@ func _is_own_character(node: Node) -> bool:
 ## mat.next_pass: el material de la malla es un recurso compartido entre todas las instancias del
 ## mismo PackedScene, así que escribirle next_pass contorneaba todos los asientos/objetos iguales.
 func _apply_outline_to(interactable: Interactable) -> void:
-	# El contorno es para quien mira la pantalla: un ojo sin cámara (un guion, ver ExhibitOperator) no contornea.
-	if not player_camera is Camera3D:
+	# El contorno es para quien mira la pantalla (ver `watched`).
+	if not watched:
 		return
 	for target in interactable.get_outline_targets():
 		if is_instance_valid(target):

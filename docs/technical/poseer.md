@@ -28,6 +28,12 @@ Lo que está en el grupo `possessable` y contesta, por nombre:
 | `possess_camera(first, delta)` | dónde va la cámara, en primera o en tercera persona |
 | `possess_status()` (si quiere) | lo que le pasa ahora: una carga, un combustible |
 
+**Lo poseído trae su interfaz** (18/11/2026, el usuario: «si poseés algo, pasás a tener la interfaz de esa cosa»): la
+arma en `possess_begin` y la saca en `possess_end`; `SandboxPossession` no sabe qué interfaz tiene cada cosa. Un
+personaje, la del jugador: el puntito del medio (`Crosshair`) y el contorno de lo que mira
+(`InteractionDetector.watched`, prendido mientras alguien mira por sus ojos). La meca, su panel: sus controles y su
+estado en el cartel (`possess_controls`, `possess_status`).
+
 Hoy: la meca ([[meca-jaula]], y la de práctica) y **los personajes**:
 cualquiera que no sea el jugador y se simule (los maniquíes de las sillas de la meca, la gente de la fila Locomoción).
 

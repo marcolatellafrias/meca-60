@@ -53,6 +53,18 @@ func _ready() -> void:
 	await _key(KEY_E)
 	await _seconds(1.0)
 	print("E: sentado %s" % dummy.is_seated)
+	# SU INTERFAZ: el puntito y el contorno de lo que mira (ver CharacterPossession). Se da vuelta hacia su silla.
+	for i in 3:
+		var to_seat := chair - possession._camera.global_position
+		dummy.intent.look_yaw = CharacterIntent.yaw_of(dummy.char_rigidbody.frame, to_seat)
+		dummy.intent.look_pitch = asin(clampf(to_seat.normalized().y, -1.0, 1.0))
+		await _seconds(0.3)
+	var hands := CharacterActions.of(dummy)._hands
+	var crosshairs := dummy.find_children("*", "Crosshair", true, false).size()
+	print("INTERFAZ: puntito %d · contorno prendido %s · mira %s" % [crosshairs,
+		hands.detector.watched if hands != null else false,
+		hands.detector.get_hovered().name if hands != null and hands.detector.get_hovered() != null else "nada"])
+	await _shot("2a_mirando_su_silla")
 	possession.view = SandboxPossession.View.THIRD
 	await _seconds(0.3)
 	await _shot("2_parado_tercera")
@@ -66,6 +78,9 @@ func _ready() -> void:
 	await _key(KEY_O)
 	await _seconds(2.0)
 	print("O: suelta · posee %s · sentado %s · intención de silla %s" % [_name(possession), dummy.is_seated, dummy.intent.seat])
+	var hands_after := CharacterActions.of(dummy)._hands
+	print("SOLTADO: puntito %d · contorno prendido %s" % [dummy.find_children("*", "Crosshair", true, false).size(),
+		hands_after.detector.watched if hands_after != null else false])
 	await _shot("4_soltado")
 	print("SCRIPT sin errores hasta el final")
 	get_tree().quit()

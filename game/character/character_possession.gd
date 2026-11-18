@@ -12,6 +12,11 @@ extends Node
 ## son las de CharacterActions (las del jugador, con un ojo en su cabeza). Por eso sigue siendo lo que era: va en el
 ## marco de la meca como antes, se choca y se cae igual. Al soltarlo se queda como quedó —parado, tirado o sentado— y
 ## no vuelve solo a su silla.
+##
+## LO POSEÍDO TRAE SU INTERFAZ (18/11/2026, el usuario por la sesión de las armas: «hay que hacerlo bien… si poseés algo,
+## pasás a tener la interfaz de esa cosa»): poseído, un personaje tiene la del jugador —el puntito del medio (Crosshair)
+## y el contorno de lo que mira (sus manos, InteractionDetector.watched)—; al soltarlo se va. Lo de cada cosa lo arma
+## ella misma al empezar y lo saca al terminar (`begin` / `end`): SandboxPossession no sabe qué interfaz tiene cada una.
 
 ## Lo que gira la mirada por píxel de mouse (rad), como el jugador (ver PlayerController).
 const MOUSE_RAD := 0.002
@@ -28,6 +33,7 @@ var _view := FirstPersonView.new()
 var _first := false
 ## El levantarse solo mientras se lo posee (como el jugador), y sólo si lo puso esto (ver `end`).
 var _get_up: CharacterGetUp = null
+var _crosshair: Crosshair = null
 
 
 ## EL DE `who`, creado la primera vez.
@@ -60,6 +66,8 @@ func begin() -> void:
 		_get_up = CharacterGetUp.new()
 		_get_up.bi = bi
 		bi.add_child(_get_up)
+	_crosshair = Crosshair.new()
+	add_child(_crosshair)
 
 
 ## LO SUELTA COMO QUEDÓ: sin teclas apretadas, sin nada en las manos que no esté soltado, sin levantarse solo.
@@ -78,6 +86,10 @@ func end() -> void:
 	if is_instance_valid(_get_up):
 		_get_up.queue_free()
 	_get_up = null
+	if is_instance_valid(_crosshair):
+		_crosshair.queue_free()
+	_crosshair = null
+	_watch(false)
 	if _first:
 		_first = false
 		bi.set_first_person_visibility(false)
@@ -167,9 +179,18 @@ func _use() -> void:
 		bi.intent.activate = true
 
 
+## EL CONTORNO DE LO QUE MIRA: las manos nacen cuando el cuerpo está listo (ver CharacterActions._hands_ready), así
+## que se prende cada paso mientras se lo posee.
+func _watch(on: bool) -> void:
+	var hands: InteractionController = _actions._hands if is_instance_valid(_actions) else null
+	if hands != null and is_instance_valid(hands.detector) and hands.detector.watched != on:
+		hands.detector.watched = on
+
+
 func _physics_process(_delta: float) -> void:
 	if not active:
 		return
+	_watch(true)
 	var live := UIState.gameplay_active()
 	bi.intent.move = Vector2(Input.get_axis("move_left", "move_right"),
 		Input.get_axis("move_forward", "move_backward")) if live and not bi.is_seated else Vector2.ZERO
