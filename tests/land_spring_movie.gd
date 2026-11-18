@@ -78,12 +78,20 @@ func _ready() -> void:
 		var spot := _boss.global_position + Vector3(0.0, 0.0, 15.0 if arc < 20.0 else -15.0) * Brawler.scale()
 		_boss.jump(spot, 1.0, arc * Brawler.scale())
 		var deepest := 0.0
+		var deepest_at := 0.0
+		var back_at := -1.0
 		var clock := 0.0
 		while clock < 3.0:
 			await get_tree().physics_frame
 			clock += 1.0 / Engine.physics_ticks_per_second
-			deepest = maxf(deepest, _boss.body_spring.y)
-		print("%s: se hundió %.2f m (de la maqueta)" % [_title.text, deepest * Brawler.LAND_SINK])
+			var y := _boss.body_spring.y
+			if y > deepest:
+				deepest = y
+				deepest_at = clock
+			elif deepest > 0.05 and back_at < 0.0 and y < deepest * 0.1:
+				back_at = clock
+		print("%s: se hundió %.2f m (de la maqueta) · volvió en %.2f s" % [_title.text, deepest * Brawler.LAND_SINK,
+			(back_at - deepest_at) * Engine.time_scale])
 	get_tree().quit()
 
 

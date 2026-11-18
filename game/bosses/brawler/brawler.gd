@@ -97,6 +97,10 @@ var body_spring := HitSpring.new()
 ## Al caer se hunde LAND_SINK m (de la maqueta) cayendo a LAND_FULL m/s o más.
 const LAND_SINK := 3.0
 const LAND_FULL := 80.0
+## Como la jaula (KinematicSettings, «Aterrizar»): el peso en el quiebre (land_push) y la vuelta rápida, con resorte:
+## de vuelta en LAND_RECOVER s, con LAND_BOUNCE de rebote (0 a 1). El usuario: «en la oruga sigue volviendo más lento».
+const LAND_RECOVER := 0.25
+const LAND_BOUNCE := 0.7
 var _height_was := 0.0
 ## A cuánto bajaba en el paso anterior (m/s, en el mundo): el arco del salto llega al piso un paso antes de terminar.
 var _drop_was := 0.0
@@ -286,6 +290,10 @@ func _physics_process(delta: float) -> void:
 	# ATERRIZÓ: se hunde según a cuánto bajaba (en la maqueta; lo más rápido de este paso y el anterior).
 	var drop := (_height_was - global_position.y) / maxf(delta, 0.001)
 	if landed_now:
+		var firm := 4.5 / LAND_RECOVER
+		body_spring.land_stiffness = firm * firm
+		body_spring.land_damping = 2.0 * lerpf(0.95, 0.3, LAND_BOUNCE) * firm
+		body_spring.land_push = true
 		body_spring.land_full_speed = LAND_FULL
 		body_spring.land_threshold = LAND_FULL * 0.1
 		body_spring.land(maxf(drop, _drop_was) / scale())

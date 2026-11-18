@@ -50,7 +50,8 @@ huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la me
      «siempre… relativamente snappy, nunca… sluggish»): la jaula sale hacia abajo como un impacto (`HitSpring.land_push`:
      llega justo a lo más hondo, hasta 0,9 m, con cualquier rebote: `_peak_per_speed`) y vuelve en `land_recover` (0,22
      s; el usuario: «un poco más rápida la vuelta») CON RESORTE (`land_bounce`, 0,7; el usuario: «siempre con resorte»).
-     Medido: vuelve del fondo en 0,10 s y rebota hasta 0,14 m para arriba. **Y POLVO** cayendo fuerte (`dust_speed`, 16 m/s: un salto no, en picada
+     Medido: vuelve del fondo en 0,10 s y rebota hasta 0,14 m para arriba. EL LUCHADOR, IGUAL (`LAND_RECOVER` 0,25 s,
+     `LAND_BOUNCE` 0,7; el usuario: «en la oruga sigue volviendo más lento»): vuelve en 0,12 s. **Y POLVO** cayendo fuerte (`dust_speed`, 16 m/s: un salto no, en picada
      y de 15 m sí): un anillo a ras del piso que rueda para afuera (`ParticleSystems.landing_dust`, la variación del
      polvo de golpe; fila Partículas). Lo detecta el motor: el paso en que `is_on_floor` pasa a verdadero, con la
      velocidad de caída de antes de moverse.
