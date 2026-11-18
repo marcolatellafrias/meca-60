@@ -40,6 +40,7 @@ El detalle, en [[partida]].
 | [[maquetas-jefes]] | Jefes de arcilla, quietos: seis siluetas de jefe humanoide, seis con personalidad (la misma base de cuatro patas, dos brazos con armas distintas y un accesorio en el techo, normales y con ira), dos recorribles (seis y cuatro patas, con pasarelas y baterías detrás de compuertas) y una primera tanda de seis. |
 | [[luchador]] | El jefe humanoide: el Luchador sobre orugas. Paso 1: cómo se mueve (orugas con rampas, la cintura aparte, la arena), el horno con la puerta para arriba (el punto débil) y la ira con humo negro. Paso 2: la cabeza, que te rodea y te embiste (abre el horno antes; contra el borde se estrella). |
 | [[poderes-jefes]] | Los poderes de los jefes: cada ataque es un poder que se tilda en el panel, con sus pocas variantes y lo que pide del cuerpo; la escala de todos los jefes en una perilla. El plan: piezas que se combinan, fases y el cuerpo modular. |
+| [[movimiento-comun]] | Cómo se mueve y cómo reacciona un cuerpo, común a la meca, los jefes y los personajes: la marcha, las señales, los resortes, la tabla de animación procedural (ya mueve cualquier pieza), el IK, el retroceso y el ragdoll. Qué está hecho y qué falta. |
 | [[pelea-jefes]] | Lo común de la pelea con los jefes: la vida por código, las barras y la arena (un círculo del que el jefe no sale); y lo que se aprendió con el jefe bola, borrado el 15/11/2026. |
 | [[proyectiles]] | Los proyectiles por red y las zonas que pegan. |
 | [[mapa]] | El mapa de pelea: una arena circular con barrios, escaleras y recursos en el borde. |
