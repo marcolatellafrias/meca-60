@@ -81,7 +81,7 @@ func _make_custom_tooltip(_for_text: String) -> Object:
 
 
 func _get_drag_data(_at: Vector2) -> Variant:
-	if id == "" or (role == Role.SHOP and not screen.state.in_stock(id)):
+	if id == "" or (role == Role.SHOP and not screen.state.in_stock(id)) or not screen.is_captain():
 		return null
 	var preview := ArmoryCell.new().setup(screen, Role.DEPOT)
 	preview.show_item(id)

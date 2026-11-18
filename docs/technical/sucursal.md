@@ -72,6 +72,8 @@ Pedido del usuario: «vos te acercás, apretás E y se te abre». La consola de 
 - **`TerminalScreen`** es la base de las pantallas: una sola abierta a la vez, y mientras está abierta el mouse queda suelto
   (`UIState`, capa `base_terminal`). Desde el 18/11/2026, en el estilo monocromo (`Mono`, ver [[interfaz]]): fondo negro,
   la barra de una raya (el título; el capitán, la plata y la cruz) y el cuerpo de cada terminal debajo.
+- **En la partida** (`BaseWorld`, ver [[flujo-de-partida]]) va por la red: `BaseSync` manda la foto del host a todos y
+  sólo el capitán (el host) compra, pone y firma; el botón de la esclusa y la compuerta del techo, en todos.
 - **`BaseState.current`** guarda lo de la sucursal: la plata de la tripulación (arranca con $2500), **el depósito de la
   sucursal**, lo que tiene puesto la meca y el contrato firmado.
   - Vive mientras corre el juego: no se guarda a disco.

@@ -2,8 +2,10 @@ class_name BaseState
 extends RefCounted
 
 ## LO QUE GUARDA LA SUCURSAL ENTRE PARTIDAS (ver docs/conceptual/progresion.md y docs/technical/sucursal.md): la plata de
-## la tripulación, el depósito, lo que tiene puesto la meca y el contrato firmado. Por ahora vive mientras corre el juego
-## (no se guarda a disco) y es una sola copia, sin red: la compra la hace el que abre la terminal. Después, el capitán.
+## la tripulación, el depósito, lo que tiene puesto la meca y el contrato firmado. Vive mientras corre el juego (no se
+## guarda a disco). EN RED (BaseSync, docs/technical/flujo-de-partida.md): la copia que manda es la del host; los demás
+## reciben una foto entera (`snapshot`/`load_snapshot`) cada vez que cambia. Compra, pone, saca y firma sólo el
+## capitán (`is_captain`), que es el host.
 
 signal changed()
 
@@ -108,6 +110,24 @@ func unequip(slot: String) -> void:
 		return
 	depot.append(loadout[slot])
 	loadout[slot] = ""
+	changed.emit()
+
+
+## EL CAPITÁN: el host (sin red, uno mismo). Sólo él compra, pone, saca y firma.
+static func is_captain(tree: SceneTree) -> bool:
+	return tree.get_multiplayer().is_server()
+
+
+## LA FOTO ENTERA, para mandarla por la red.
+func snapshot() -> Dictionary:
+	return {"money": money, "depot": depot.duplicate(), "loadout": loadout.duplicate(), "contract": contract}
+
+
+func load_snapshot(data: Dictionary) -> void:
+	money = int(data.get("money", money))
+	depot.assign(data.get("depot", depot))
+	loadout = (data.get("loadout", loadout) as Dictionary).duplicate()
+	contract = int(data.get("contract", contract))
 	changed.emit()
 
 

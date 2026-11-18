@@ -64,7 +64,9 @@ func build_content() -> Control:
 	_launch.pressed.connect(_go)
 	buttons.add_child(_launch)
 	_sign = MonoButton.make("FIRMAR", Vector2(200, 46), true)
-	_sign.pressed.connect(func() -> void: state.sign_contract(_chosen))
+	_sign.pressed.connect(func() -> void:
+		if is_captain():
+			state.sign_contract(_chosen))
 	buttons.add_child(_sign)
 	return row
 
@@ -98,11 +100,15 @@ func refresh() -> void:
 		_signed.words = "FIRMADO: " + str(ContractsCatalog.CONTRACTS[state.contract].boss).to_upper()
 	else:
 		_signed.words = "NINGÚN CONTRATO FIRMADO."
-	_sign.disabled = state.contract == _chosen
-	_launch.disabled = state.contract < 0
+	_sign.disabled = state.contract == _chosen or not is_captain()
+	_launch.disabled = state.contract < 0 or not is_captain()
+	if not is_captain():
+		_signed.words += "  LO DECIDE EL CAPITÁN."
 
 
 func _go() -> void:
+	if not is_captain():
+		return
 	if on_launch.is_valid():
 		on_launch.call()
 	close()

@@ -5,6 +5,7 @@ extends Node3D
 ## Es un REFLEJO del sandbox, no una copia: la arma con lo mismo que la parcela Base (BaseLayout, con las medidas
 ## guardadas de BaseSettings), así lo que se mueve en el F1 cambia el juego.
 ##   · Un mundo de la red (grupo `net_world`, ver CharacterSpawner): los personajes NACEN EN LA ESCLUSA (`start_point`).
+##   · La sucursal en red (BaseSync): el estado del host y la compuerta del techo, para todos.
 ##   · La meca jaula en el elevador, CONGELADA (el usuario, 18/11/2026: «está bien si queda la meca sin interacción…
 ##     como algo estático»): se deja asentar y después se apaga entera (sin física propia ni scripts; choca como algo
 ##     fijo), hasta que la meca vaya por la red.
@@ -35,6 +36,7 @@ func _ready() -> void:
 	var characters := Node3D.new()
 	characters.name = "Personajes"
 	add_child(characters)
+	add_child(BaseSync.new())
 	_spawner = CharacterSpawner.new()
 	_spawner.name = "CharacterSpawner"
 	_spawner.characters_root = characters

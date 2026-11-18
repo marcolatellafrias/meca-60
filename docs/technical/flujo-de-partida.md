@@ -22,12 +22,16 @@
    character-parametric, la sesión arranca con «crear partida» (`SessionManager.host`) y el mundo, al cargar, avisa
    (`world_ready`) y nace el jugador (`CharacterSpawner`). Para mirarla: `tests/base_world_look.tscn`.
 2. **Aparecer en la esclusa**: los personajes nacen adentro (`BaseWorld.start_point`). — *Mundo*, **hecho** (todavía
-   mirando a un costado, no a la compuerta). **El botón abre la compuerta para todos**: el que lo aprieta le pide al
-   host; el host la abre en todos. — *Mundo*, falta.
+   mirando a un costado, no a la compuerta). **El botón abre la compuerta para todos**: lo aprieta el capitán y el
+   host la abre en todos (`BaseAirlock._open`); el pedido de otro no hace nada. — *Mundo*, **hecho**. *Quien llega con
+   la compuerta ya abierta y cerrada, queda adentro: falta decidir (ver Abierto).*
 3. **El estado de la sucursal compartido**: la plata, el depósito, lo puesto y el contrato (`BaseState`) viven en el
-   host y llegan a todos (al entrar, una foto entera; después, cada cambio). — *Mundo*.
-4. **El capitán**: comprar, poner, sacar y firmar se le piden al host, que sólo acepta los del capitán (el host). Los
-   demás ven las terminales con esas acciones tramadas («lo decide el capitán»). — *Mundo*.
+   host y llegan a todos (`BaseSync`: al que llega, una foto entera; después, la foto a cada cambio). — *Mundo*,
+   **hecho**.
+4. **El capitán**: es el host (`BaseState.is_captain`). Sólo él compra, pone, saca, firma y sale a la arena; los demás
+   ven las terminales, no pueden arrastrar y los botones están tramados («lo decide el capitán»). «Salir a la arena»
+   abre la compuerta del techo en todos (`BaseSync.open_hatch`). — *Mundo*, **hecho**. Para probar con dos
+   instancias: `tests/base_net_check.tscn` (`--host-local` y `--join-local`).
 5. **La meca por red**: posición, piernas, brazos, puestos. — *Meca*, cuando la cierre.
 6. **La meca armada para los que son**: al abrir la esclusa, la meca tiene los puestos de los que están. — *Meca* y
    *Mundo*.

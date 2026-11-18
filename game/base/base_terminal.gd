@@ -29,6 +29,10 @@ func get_outline_targets() -> Array[Node]:
 
 ## La compuerta del techo de la misma base (Plano/Compuerta).
 func _open_hatch() -> void:
+	# en la partida, en todos (BaseSync); en el sandbox, la de esta base
+	if BaseSync.current != null:
+		BaseSync.current.open_hatch()
+		return
 	var holder := get_parent()
 	while holder and not holder.is_in_group(BaseLayout.GROUP):
 		holder = holder.get_parent()

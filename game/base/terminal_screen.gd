@@ -29,6 +29,19 @@ static func open_screen(screen: TerminalScreen, tree: SceneTree) -> void:
 	UIState.open(LAYER)
 
 
+## SI EL QUE MIRA ES EL CAPITÁN (el host): sólo él compra, pone, saca y firma (BaseState.is_captain).
+func is_captain() -> bool:
+	return BaseState.is_captain(get_tree())
+
+
+## Cómo se llama el capitán: «vos», o el nombre del host.
+func captain_name() -> String:
+	if is_captain():
+		return "VOS"
+	var host: SessionPlayer = SessionManager.players.get(1)
+	return host.steam_name.to_upper() if host != null and host.steam_name != "" else "EL HOST"
+
+
 ## El título de la barra (cada terminal el suyo).
 func title() -> String:
 	return ""
@@ -72,8 +85,7 @@ func _bar() -> void:
 	right.alignment = BoxContainer.ALIGNMENT_END
 	right.add_theme_constant_override("separation", 28)
 	_root.add_child(right)
-	# sin red todavía: el que abre la terminal es el capitán
-	var captain := MonoText.make("CAPITÁN: VOS", Mono.SMALL)
+	var captain := MonoText.make("CAPITÁN: " + captain_name(), Mono.SMALL)
 	captain.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	right.add_child(captain)
 	_money = MonoText.make("", Mono.TEXT)

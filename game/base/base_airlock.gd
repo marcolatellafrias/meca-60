@@ -137,7 +137,27 @@ func _process(delta: float) -> void:
 		_beacon.rotate_y(delta * (3.0 if armed else 0.0))
 
 
+## EL BOTÓN DE ADENTRO, EN RED (ver docs/technical/flujo-de-partida.md): lo aprieta el capitán, que es el host; el host
+## la abre en todos (`_open`, para todos y para él). Si lo aprieta otro, se lo pide al host, que no le hace caso: abre
+## sólo el capitán. Sin red (el sandbox), el host es uno mismo.
 func _on_front_pressed() -> void:
+	if not armed:
+		return
+	if multiplayer.is_server():
+		_open.rpc()
+	else:
+		_request_open.rpc_id(1)
+
+
+@rpc("any_peer", "reliable")
+func _request_open() -> void:
+	# abre sólo el capitán (el host, por ahora); un pedido de otro no hace nada
+	if multiplayer.is_server() and multiplayer.get_remote_sender_id() == 1:
+		_open.rpc()
+
+
+@rpc("authority", "call_local", "reliable")
+func _open() -> void:
 	if not armed:
 		return
 	armed = false

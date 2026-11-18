@@ -123,7 +123,7 @@ func refresh() -> void:
 ## ── SOLTAR ──────────────────────────────────────────────────────────────────────────────────────────────────────
 
 func can_drop(target: ArmoryCell, data: Dictionary) -> bool:
-	if target.role == ArmoryCell.Role.SHOP:
+	if target.role == ArmoryCell.Role.SHOP or not is_captain():
 		return false
 	if target.role == ArmoryCell.Role.DEPOT:
 		return _zone_can_drop(Vector2.ZERO, data)
@@ -150,7 +150,7 @@ func drop(target: ArmoryCell, data: Dictionary) -> void:
 
 ## Al depósito: lo de la tienda se compra; lo de un hueco se saca.
 func _zone_can_drop(_at: Vector2, data: Variant) -> bool:
-	if not (data is Dictionary and data.get("armory", false)):
+	if not (data is Dictionary and data.get("armory", false)) or not is_captain():
 		return false
 	match int(data.role):
 		ArmoryCell.Role.SHOP:
@@ -169,7 +169,7 @@ func _zone_drop(_at: Vector2, data: Variant) -> void:
 
 
 func double_clicked(cell: ArmoryCell) -> void:
-	if cell.role == ArmoryCell.Role.SHOP:
+	if cell.role == ArmoryCell.Role.SHOP and is_captain():
 		state.buy(cell.id)
 
 
@@ -186,6 +186,8 @@ func tooltip_for(cell: ArmoryCell) -> Control:
 	var entry := ArmoryCatalog.item(cell.id)
 	var lines := [[str(entry.name).to_upper(), Mono.TEXT], [str(ArmoryCatalog.KIND_NAMES[entry.kind]).to_upper(), Mono.SMALL],
 		[str(entry.text).to_upper(), Mono.SMALL], [str(entry.stats).to_upper(), Mono.SMALL]]
+	if not is_captain():
+		lines.append(["LO DECIDE EL CAPITÁN.", Mono.SMALL])
 	if cell.role == ArmoryCell.Role.SHOP:
 		if not state.in_stock(cell.id):
 			lines.append(["VENDIDO: HAY UNO SOLO DE CADA UNO.", Mono.SMALL])
