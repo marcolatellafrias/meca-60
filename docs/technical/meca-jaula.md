@@ -231,6 +231,16 @@ campo celeste que envuelve a toda la meca mientras se mantiene.
 - **El parry**: el primer golpe frenado hasta 0,3 s después de prenderlo devuelve lo que costó prenderlo.
 - **Quién lo maneja**: de a 2 y de a 3, **el de arriba**, con su botón al lado de saltar (lo aprobó el usuario: el que
   ve lo global). De a 1, **la Q** en el modo manejo. Poseyéndola, la Q.
+- **Cómo se ve: en suspenso** (18/11/2026). El usuario descartó el campo en todas sus formas: la burbuja (lisa, low
+  poly, con aristas, entera o del torso; `tests/shield_looks_look`), pegado al cuerpo, la pantalla de frente
+  (`tests/shield_styles_look`), la caja del torso y los campos de energía que salen de un brazo. Quedan en el código los
+  estilos de `MechShield.look`; el de la meca sigue siendo la burbuja plana.
+- **La dirección que quedó, sin hacer**: un brazo de escudo en lugar de un arma (el canje: un arma menos), con el puño
+  común agarrando por un mango corto el centro de un escudo físico opaco, un plano rectangular apenas inclinado (el
+  usuario: «aceptar el trade-off de que va a tapar la pantalla como para testear la idea»). Se maneja con el mando de ese
+  brazo: el torso apunta y el clic izquierdo lo levanta; justo antes del golpe, parry. La maqueta, en
+  `tests/shield_held_look` (con la guardia de hoy, que levanta los dos brazos). Para hacerla: la punta de escudo y la
+  guardia de un solo brazo son de la sesión de las armas. El usuario lo dejó ahí («déjalo así, ya fue»).
 
 ## Subirse con la E — `CageBoarding`
 Nadie elige silla (el usuario: «se sientan… apretando en la meca y apretando E, y que se llenen por orden»): apuntando a
