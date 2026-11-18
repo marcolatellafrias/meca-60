@@ -22,9 +22,27 @@ const KIND_NAMES := ["piernas", "torso", "brazos", "cabeza"]
 
 const LEGS := {
 	"orugas": {"title": "orugas", "move": "orugas", "hip": 7.0, "gives": ["suelo"], "zones": ["cuerpo"], "points": []},
-	"bipedo": {"title": "dos patas", "move": "patas", "hip": 13.0, "gives": ["suelo"], "zones": ["cuerpo"], "points": []},
-	"cuatro": {"title": "cuatro patas", "move": "patas", "hip": 9.0, "gives": ["suelo"], "zones": ["cuerpo"], "points": []},
+	"bipedo": {"title": "dos patas", "move": "patas", "hip": 13.0, "gives": ["suelo"], "zones": ["cuerpo"], "points": [],
+		"walk": WALK_TWO},
+	"cuatro": {"title": "cuatro patas", "move": "patas", "hip": 9.0, "gives": ["suelo"], "zones": ["cuerpo"], "points": [],
+		"walk": WALK_FOUR},
 	"flotante": {"title": "flotante", "move": "vuelo", "hip": 10.0, "gives": [], "zones": ["cuerpo"], "points": ["abajo"]},
+}
+## CÓMO CAMINAN LAS PATAS (BossLegs, 18/11/2026): por pata, de adelante para atrás y de a pares (izquierda, derecha),
+## la cadera (en los ejes de la cintura, que va a la altura `hip`), dónde se para su pie quieta (en el piso, debajo del
+## medio) y hacia dónde dobla la rodilla; el largo del muslo y de la canilla, el grueso, el largo de un ciclo de la
+## marcha (dos pasos) y lo que sube el pie. Adelante es −Z.
+const WALK_TWO := {
+	"hips": [Vector3(-4.5, -1.5, 0.0), Vector3(4.5, -1.5, 0.0)],
+	"feet": [Vector3(-4.5, 0.0, 0.0), Vector3(4.5, 0.0, 0.0)],
+	"bends": [Vector3(-0.15, 0.0, -1.0), Vector3(0.15, 0.0, -1.0)],
+	"thigh": 6.6, "shin": 6.6, "thick": 3.0, "stride": 14.0, "lift": 2.5,
+}
+const WALK_FOUR := {
+	"hips": [Vector3(-6.0, -1.0, -5.0), Vector3(6.0, -1.0, -5.0), Vector3(-6.0, -1.0, 5.0), Vector3(6.0, -1.0, 5.0)],
+	"feet": [Vector3(-11.0, 0.0, -10.0), Vector3(11.0, 0.0, -10.0), Vector3(-11.0, 0.0, 10.0), Vector3(11.0, 0.0, 10.0)],
+	"bends": [Vector3(-1.0, 1.4, -0.4), Vector3(1.0, 1.4, -0.4), Vector3(-1.0, 1.4, 0.4), Vector3(1.0, 1.4, 0.4)],
+	"thigh": 8.0, "shin": 10.0, "thick": 2.4, "stride": 12.0, "lift": 2.5,
 }
 const TORSOS := {
 	"ancho": {"title": "ancho", "size": Vector3(22, 13, 13), "shoulders": 2, "shoulder_size": 3,
@@ -59,7 +77,8 @@ static func of(kind: Kind) -> Dictionary:
 
 ## ── LOS DIBUJOS DE ARCILLA (provisorios) ─────────────────────────────────────────────────────────────────────────
 
-## LAS PIERNAS, paradas en el piso de `at`, con la cadera arriba a su `hip`.
+## LAS PIERNAS, paradas en el piso de `at`, con la cadera arriba a su `hip`. Las que caminan (`walk`) dibujan acá sólo
+## la cadera: sus patas las arma BossLegs.
 static func draw_legs(at: Node3D, id: String) -> void:
 	var hip: float = LEGS[id]["hip"]
 	match id:
@@ -69,17 +88,8 @@ static func draw_legs(at: Node3D, id: String) -> void:
 			Clay.box(at, Vector3(15.0, 3.5, 12.5), Vector3(0.0, 4.5, 0.0), TRIM)
 			Clay.cylinder(at, 5.0, hip - 6.0, Vector3(0.0, 6.0 + (hip - 6.0) * 0.5, 0.0), TRIM.darkened(0.2))
 		"bipedo":
-			for side: float in [-1.0, 1.0]:
-				Clay.box(at, Vector3(3.2, hip * 0.5, 3.6), Vector3(side * 4.5, hip * 0.72, 0.6), BODY)
-				Clay.box(at, Vector3(2.6, hip * 0.5, 3.0), Vector3(side * 4.5, hip * 0.27, -0.4), TRIM)
-				Clay.box(at, Vector3(4.2, 1.4, 7.0), Vector3(side * 4.5, 0.7, -1.2), Clay.DARK)
 			Clay.box(at, Vector3(12.0, 3.0, 6.0), Vector3(0.0, hip - 1.5, 0.0), TRIM)
 		"cuatro":
-			for corner in 4:
-				var out := Vector3(1.0 if corner % 2 == 0 else -1.0, 0.0, 1.0 if corner < 2 else -1.0)
-				Clay.box(at, Vector3(2.6, 2.6, 9.0), Vector3(out.x * 7.0, hip - 1.0, out.z * 6.0), BODY)
-				Clay.box(at, Vector3(2.4, hip, 2.4), Vector3(out.x * 10.5, hip * 0.5, out.z * 10.0), TRIM)
-				Clay.box(at, Vector3(4.0, 1.2, 4.0), Vector3(out.x * 10.5, 0.6, out.z * 10.0), Clay.DARK)
 			Clay.cylinder(at, 7.5, 3.5, Vector3(0.0, hip - 1.75, 0.0), TRIM.darkened(0.2))
 		"flotante":
 			Clay.cylinder(at, 8.5, 3.0, Vector3(0.0, hip - 1.5, 0.0), TRIM)

@@ -1,7 +1,7 @@
 extends Node
 
 ## LA MARCHA DE 4 Y 6 PATAS (con ventana, unos 25 segundos de video): dos cuerpos de arcilla, uno de CUATRO patas (pisan
-## las diagonales) y uno de SEIS (el trípode), con la marcha común (Gait) y el IK común (Gait.knee), hacen el mismo
+## las diagonales) y uno de SEIS (el trípode), con la marcha común (Gait) y la IK común (IkUtil.bend_point), hacen el mismo
 ## recorrido: arrancar, doblar andando, frenar, ir de costado, girar en el lugar, correr y frenar. Una grilla en el piso
 ## (cada 2 m) para ver si los pies patinan. Imprime cuántos pasos dio cada uno, qué parte del tiempo andando no tenía
 ## ningún pie en el aire (la pausa que vio el usuario: «paso, paso, pausa») y lo más que se corrió un pie apoyado. Se graba con --write-movie:

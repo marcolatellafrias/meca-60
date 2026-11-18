@@ -129,6 +129,14 @@ esqueleto a 0 mm) y camina.
    (los lugares de `MechBody.foot_rest`, el piso de BodyLegs; las perillas del F4, LegSettings). BodyLegs sigue con el
    giro de cada pie, la pelvis, las rodillas, la caída y recogerlas. En `tests/cage_legs_movie`, caminando: sin ningún
    pie en el aire el 20 % del tiempo antes, el 10 % ahora.
+   **LOS JEFES CON PATAS LA USAN** (18/11/2026): las piernas «patas» del catálogo de jefes (BossParts.LEGS: dos patas
+   y cuatro, con su `walk`: cada cadera, dónde se para su pie, hacia dónde dobla la rodilla, los largos y el paso) son
+   `BossLegs` (game/bosses/parts/): EL MISMO ESQUELETO QUE LA MECA (MechSkeleton: el tronco con su pelvis y una pierna
+   por pata), la marcha común y la IK común (`IkUtil.solve_two_bone_ik`). El armazón (BossFrame) mide solo a qué
+   velocidad lo mueven: quien lo mueva no les dice nada. Las de cuatro pisan las diagonales, con la rodilla arriba y
+   afuera, como una araña. En `tests/boss_walk_movie` (con ventana; el mismo recorrido que gait_movie): 29 y 28 pasos,
+   ningún pie apoyado se corre y las canillas no se separan de sus muslos (0 mm). *Falta: el piso de verdad (cada pie a
+   su altura) y que un jefe con patas pelee.*
    **RECOGER LAS PIERNAS** (18/11/2026; las reglas las acordó el usuario): recogidas, de una, en un DASH (en el piso
    también), LEVITANDO y BAJANDO EN PICADA, SUTIL (el usuario: «parecerse a la pose en reposo pero un poco más
    recogida nomás, y con los pies un poco apuntando hacia abajo»: la pose de parada con el pie subido `tuck_lift` de la
