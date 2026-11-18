@@ -15,6 +15,8 @@ const GROUP := "net_world"
 const SETTLE := 1.5
 
 var _spawner: CharacterSpawner
+## El jugador local al que ya se le dio vuelta hacia la compuerta (se vuelve a hacer si nace de nuevo).
+var _faced: Node
 
 
 func _ready() -> void:
@@ -41,6 +43,16 @@ func _ready() -> void:
 	_spawner.name = "CharacterSpawner"
 	_spawner.characters_root = characters
 	add_child(_spawner)
+
+
+## NACER MIRANDO A LA COMPUERTA DE ADELANTE (la que da a la franja, hacia −X): apenas el jugador local tiene su
+## control, se le da vuelta la mirada.
+func _process(_delta: float) -> void:
+	var player := _spawner.local_player if is_instance_valid(_spawner) else null
+	if not is_instance_valid(player) or player == _faced or not is_instance_valid(player.player_controller):
+		return
+	player.player_controller.camera_yaw = PI * 0.5
+	_faced = player
 
 
 ## DÓNDE APARECE UN PERSONAJE (lo pide CharacterSpawner): en la esclusa, cerca del medio, un poco al azar para que

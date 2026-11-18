@@ -161,6 +161,9 @@ func _open() -> void:
 	if not armed:
 		return
 	armed = false
+	# abrir la esclusa EMPIEZA LA PARTIDA: desde acá no se une nadie más (ver SessionManager.close_to_new_players)
+	if multiplayer.is_server():
+		SessionManager.close_to_new_players()
 	_show(GO, GREEN)
 	_puff()
 	_front.set_open(true)

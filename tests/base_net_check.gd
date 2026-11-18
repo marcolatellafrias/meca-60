@@ -15,6 +15,16 @@ func _ready() -> void:
 	_host = OS.get_cmdline_args().has("--host-local")
 	_world = (load("res://game/base/base_world.tscn") as PackedScene).instantiate()
 	add_child(_world)
+	# --tarde: el host abre la esclusa enseguida (empieza la partida) y espera; el otro llega después y no tiene que
+	# poder entrar
+	if _host and OS.get_cmdline_user_args().has("--tarde"):
+		await get_tree().create_timer(2.0).timeout
+		(_world.get_node("Base/Plano/Esclusa") as BaseAirlock)._on_front_pressed()
+		print("HOST: partida empezada")
+		await get_tree().create_timer(20.0).timeout
+		print("HOST: jugadores al final ", SessionManager.players.size())
+		get_tree().quit()
+		return
 	if _host:
 		await get_tree().create_timer(8.0).timeout
 		print("HOST: jugadores ", SessionManager.players.size())

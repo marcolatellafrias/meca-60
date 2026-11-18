@@ -21,10 +21,13 @@
    «Crear partida» y «unirse» llevan acá (el sandbox de pruebas sigue en su botón). — *Mundo*, **hecho**. Como en
    character-parametric, la sesión arranca con «crear partida» (`SessionManager.host`) y el mundo, al cargar, avisa
    (`world_ready`) y nace el jugador (`CharacterSpawner`). Para mirarla: `tests/base_world_look.tscn`.
-2. **Aparecer en la esclusa**: los personajes nacen adentro (`BaseWorld.start_point`). — *Mundo*, **hecho** (todavía
-   mirando a un costado, no a la compuerta). **El botón abre la compuerta para todos**: lo aprieta el capitán y el
-   host la abre en todos (`BaseAirlock._open`); el pedido de otro no hace nada. — *Mundo*, **hecho**. *Quien llega con
-   la compuerta ya abierta y cerrada, queda adentro: falta decidir (ver Abierto).*
+2. **Aparecer en la esclusa**: los personajes nacen adentro (`BaseWorld.start_point`). — *Mundo*, **hecho**, mirando a la
+   compuerta. **El botón abre la compuerta para todos**: lo aprieta el capitán y el
+   host la abre en todos (`BaseAirlock._open`); el pedido de otro no hace nada. — *Mundo*, **hecho**. **Abrir la esclusa
+   empieza la partida y desde ahí no se une nadie más** (el usuario: «no se puede unir alguien una vez iniciada la
+   partida, la partida se inicia al abrir la compuerta inicial»): el lobby de Steam deja de aceptar y al que igual se
+   conecte el host lo rechaza y vuelve al menú con el aviso (`SessionManager.close_to_new_players`). Para probarlo:
+   `tests/base_net_check.tscn` con `-- --tarde` en el host.
 3. **El estado de la sucursal compartido**: la plata, el depósito, lo puesto y el contrato (`BaseState`) viven en el
    host y llegan a todos (`BaseSync`: al que llega, una foto entera; después, la foto a cada cambio). — *Mundo*,
    **hecho**.
@@ -42,5 +45,4 @@
    *Mundo*.
 
 ## Abierto
-- Si alguien se une entre una partida y otra: ¿espera en la esclusa?
 - Si el host se va, se termina la partida ([[progresion]]): volver al menú con el aviso.

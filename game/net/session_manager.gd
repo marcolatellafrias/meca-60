@@ -24,6 +24,8 @@ const MAIN_MENU_SCENE := "res://game/ui/main_menu.tscn"
 var enabled: bool = false
 var is_host: bool = false
 var lobby_id: int = 0
+## Si la partida ya empezó y no se une nadie más (ver `close_to_new_players`).
+var closed := false
 var local_steam_id: int = 0
 ## True cuando el transporte es ENet local (test multi-instancia), no Steam.
 var is_local_transport: bool = false
@@ -192,6 +194,7 @@ func leave_session() -> void:
 	_pending_connect = Callable()
 	lobby_code = ""
 	local_peer_id = 0
+	closed = false
 	session_started = false
 	is_local_transport = false
 
@@ -263,6 +266,34 @@ func host() -> void:
 	_leave_current()
 	lobby_code = _generate_code()
 	Steam.createLobby(Steam.LOBBY_TYPE_PUBLIC, MAX_MEMBERS)
+
+## CIERRA LA PARTIDA A LOS NUEVOS (lo llama el host al empezar la partida, ver BaseAirlock): nadie más se puede unir
+## (el usuario, 18/11/2026: «no se puede unir alguien una vez iniciada la partida, la partida se inicia al abrir la
+## compuerta inicial»). Con Steam, el lobby deja de aceptar; y al que igual se conecte (por código, o en modo local), el
+## host le avisa por qué y lo desconecta (`_turn_away`): vuelve al menú con el aviso.
+func close_to_new_players() -> void:
+	if not multiplayer.is_server():
+		return
+	closed = true
+	if enabled and lobby_id != 0:
+		Steam.setLobbyJoinable(lobby_id, false)
+
+
+const STARTED_NOTICE := "La partida ya empezó: no se puede unir nadie más"
+
+
+func _turn_away(peer_id: int) -> void:
+	_turned_away.rpc_id(peer_id)
+	# que el aviso llegue antes de cortar
+	await get_tree().create_timer(0.5).timeout
+	if multiplayer.multiplayer_peer != null:
+		multiplayer.multiplayer_peer.disconnect_peer(peer_id)
+
+
+@rpc("authority", "reliable")
+func _turned_away() -> void:
+	print("[Session] Rechazado: la partida ya empezó")
+	return_to_menu(STARTED_NOTICE)
 
 ## Se une por código corto: busca el lobby público con ese "code" y se conecta.
 func join_by_code(code: String) -> void:
@@ -416,6 +447,10 @@ func _on_lobby_joined(joined_lobby: int, _permissions: int, _locked: bool, respo
 # ── Peer registry ─────────────────────────────────────────────────────────────
 
 func _on_peer_connected(peer_id: int) -> void:
+	# la partida ya empezó: no entra (ver close_to_new_players)
+	if closed and multiplayer.is_server():
+		_turn_away(peer_id)
+		return
 	# Registramos el peer ahora (nombre vacío) y le mandamos NUESTRA identidad. Como
 	# peer_connected dispara para cada par de peers, todos terminan conociendo a todos.
 	_add_player(peer_id, 0, "", false)
