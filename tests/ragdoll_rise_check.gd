@@ -8,7 +8,7 @@ extends Node3D
 ##     mide que vuelva a andar, que cada malla vuelva a su hueso (el esqueleto, conectado: ver mech_skeleton_check) y
 ##     que no quede ningún pedazo. Hoy la meca no se levanta en el juego: queda lista para cuando se use.
 ## Con --write-movie, un video (la cámara mira a la meca).
-##   godot --headless --path . res://tests/ragdoll_rise_check.tscn
+##   godot --headless --path . res://tests/ragdoll_rise_check.tscn [-- --pose: la pose final de cada personaje]
 
 var _eye: Camera3D = null
 
@@ -72,6 +72,15 @@ func _people() -> void:
 		print("%s: %s · %s · al terminar, los cuerpos a %.3f m de sus huesos" % [person.name,
 			"se cayó" if fell.has(person) else "NO SE CAYÓ",
 			("se levantó a los %.1f s" % rose_at[person]) if rose_at.has(person) else "NO SE LEVANTÓ", gap])
+		# LA POSE FINAL (para comparar antes y después de un cambio, lo pidió Personajes): la pelvis y la cabeza en el
+		# mundo y lo que gira cada hueso respecto de su padre (la suma, en grados).
+		if OS.get_cmdline_user_args().has("--pose"):
+			var bones := person.custom_bones_util
+			var turned := 0.0
+			for bone: CustomBone in rag._bodies:
+				turned += rad_to_deg(bone.transform.basis.get_rotation_quaternion().get_angle())
+			print("    pose: pelvis %s · cabeza %s · giros %.1f°" % [bones.lower_spine.global_position.snapped(Vector3.ONE * 0.01),
+				bones.head.global_position.snapped(Vector3.ONE * 0.01), turned])
 
 
 ## LA MECA: muere, revive y se levanta.
