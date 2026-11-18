@@ -165,7 +165,11 @@ func show_hit(at: Vector3, heavy: bool) -> void:
 	_flash = FLASH_TIME
 	_paint(true)
 	_sparks(at, heavy)
-	BossSounds.play(BossSounds.Kind.KNOCKDOWN if heavy else BossSounds.Kind.HIT, at, _target)
+	# EL GOLPE LIVIANO NO SUENA ACÁ: suena el impacto de lo que pegó (el arma de la meca, MechSounds; el usuario,
+	# 18/11/2026: «ya hay un sonido para cuando le pego al boss… demasiado fuerte y distracting»: con la minigun eran 14
+	# por segundo, a todo volumen). El fuerte, el derribo, sigue.
+	if heavy:
+		BossSounds.play(BossSounds.Kind.KNOCKDOWN, at, _target)
 
 
 ## AGARRADA: la lleva quien la agarró (`hold_at` en cada paso). Sólo un cuerpo con equilibrio.

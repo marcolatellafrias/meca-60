@@ -128,6 +128,7 @@ static func of(node: Node) -> MechSounds:
 	for child in at.get_children():
 		if child is MechSounds:
 			return child as MechSounds
+	MechSynth.provide_all()
 	var sounds_node := MechSounds.new()
 	sounds_node.name = "Sonidos"
 	sounds_node.mech = at as Mech
@@ -146,6 +147,12 @@ static func hit(node: Node, event: StringName, at: Node3D = null, pitch := 1.0, 
 static func loose(event: StringName, point: Vector3, tree: SceneTree, pitch := 1.0, volume := 1.0) -> void:
 	if tree == null or tree.current_scene == null:
 		return
+	# Muchos juntos (las balas que pegan) suenan como uno: a lo más uno cada LOOSE_GAP.
+	var now := Time.get_ticks_msec()
+	if now - int(_loose_last.get(event, -100000)) < int(LOOSE_GAP * 1000.0):
+		return
+	_loose_last[event] = now
+	MechSynth.provide_all()
 	var spot := Node3D.new()
 	tree.current_scene.add_child(spot)
 	spot.global_position = point
@@ -156,8 +163,10 @@ static func loose(event: StringName, point: Vector3, tree: SceneTree, pitch := 1
 	tree.create_timer(SPOT_LIFE).timeout.connect(spot.queue_free)
 
 
-## Lo que dura un punto de `loose` (s): más que cualquier golpe.
+## Lo que dura un punto de `loose` (s): más que cualquier golpe. Y lo mínimo entre dos del mismo evento (s).
 const SPOT_LIFE := 6.0
+const LOOSE_GAP := 0.06
+static var _loose_last := {}
 
 
 ## UN GOLPE DE UN CONTINUO (la minigun, cada bala): `event` suena seguido mientras sigan llegando, y se apaga

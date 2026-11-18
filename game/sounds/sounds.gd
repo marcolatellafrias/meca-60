@@ -22,6 +22,8 @@ const TEST_HZ := 1800.0
 
 ## clave → rutas de sus archivos (se arma una vez).
 static var _files: Dictionary = {}
+## clave → el sonido que suena SI NO HAY ARCHIVO, en lugar del clic de prueba (ver `provide`).
+static var _provided: Dictionary = {}
 static var _scanned := false
 static var _test: AudioStreamWAV = null
 
@@ -52,15 +54,24 @@ static func _player(key: StringName, at: Node3D, pitch: float, volume: float, lo
 	return player
 
 
-## El archivo de `key` (uno al azar si hay varios), o el clic de prueba.
+## LO QUE SUENA PARA `key` MIENTRAS NO HAYA ARCHIVO (uno armado por código: ver MechSynth). Un archivo lo pisa.
+static func provide(key: StringName, stream: AudioStream) -> void:
+	_provided[String(key)] = stream
+
+
+## El archivo de `key` (uno al azar si hay varios); si no hay, lo provisto (`provide`); si no, el clic de prueba.
 static func _stream(key: StringName, looped: bool) -> AudioStream:
 	if not _scanned:
 		_scan(ROOT)
 		_scanned = true
 	var paths: Array = _files.get(String(key), [])
-	if paths.is_empty():
+	var stream: AudioStream = null
+	if not paths.is_empty():
+		stream = load(paths[randi() % paths.size()]) as AudioStream
+	elif _provided.has(String(key)):
+		stream = _provided[String(key)]
+	else:
 		return _test_click()
-	var stream := load(paths[randi() % paths.size()]) as AudioStream
 	if stream is AudioStreamOggVorbis:
 		(stream as AudioStreamOggVorbis).loop = looped
 	elif stream is AudioStreamWAV:
