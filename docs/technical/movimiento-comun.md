@@ -82,7 +82,20 @@ en cada máquina y sólo puede depender de lo que viaja.
 - EN EL RAGDOLL: viajan el lugar y el giro del tronco; los brazos y las piernas caen como caigan en cada máquina.
 - NO VIAJA: los pasos y los pies (la marcha y los rayos), la IK, el rumbo de la pelvis, el subir y bajar, el pisotón y
   la inclinación de costado, recoger las piernas, el polvo, las chispas, los destellos y los sonidos.
-- LAS CAJAS DE GOLPE salen sólo de lo que viaja (el motor y cuánto está agachada): iguales en todas las máquinas.
+- LAS CAJAS DE GOLPE (la regla, acordada con el usuario y hecha el 18/11/2026):
+  1. DONDE SE LE PEGA A ALGO sale sólo de lo que viaja: iguales en todas las máquinas. La meca: un cilindro del piso a
+     lo alto de ahora (`KinematicMover.tall_now`, que baja al agacharse: un golpe alto le pasa por arriba); es el mismo
+     alto del cilindro de su motor. El jefe (`BossHurtbox`): hasta la cintura va con las orugas, y de la cintura para
+     arriba sigue a su torso (`upper` y `follow`, del alto de lo dibujado y el hondo del pecho), que sale de su giro,
+     su pose y su resorte (lo que viaja): se le pega donde se lo ve.
+  2. CON QUÉ SE PEGA sigue a la animación (el puño, el palo, los brazos del jefe: `Brawler.hit_shapes`): lo decide la
+     máquina del que pega.
+  3. LA CAJA SÓLIDA (con la que chocan las cajas y la gente) sigue al dibujo.
+  Medido en `tests/hit_boxes_check` (sin ventana, unos 10 s): la meca mide 5,45 m parada y 4,22 agachada, y un golpe a
+  4,83 m le pega parada y le pasa por arriba agachada. Un rayo de frente a la altura del pecho del jefe encuentra la
+  caja a 0,6 m del frente del pecho dibujado quieto, a 0,7 con un golpe que lo inclina 16° y a 1,0 agachado para cavar
+  (42°); antes, agachado para cavar, el pecho quedaba 2 m afuera de la caja y los tiros lo atravesaban. Los tiros le
+  sacan lo mismo de pie (brawler_shots_check) y sus ataques a la meca, igual (boss_shield_check).
 El usuario: el impacto viaja (lo causa un golpe que otra máquina puede no ver); el bobbing al caminar no (sale de la
 velocidad, que viaja).
 

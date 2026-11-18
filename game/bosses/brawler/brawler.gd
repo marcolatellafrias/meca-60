@@ -212,7 +212,13 @@ func _fit_scale() -> void:
 	var chest := Vector3((BrawlerBody.CHEST.x + 2.0) * size, box_now.y - tracks.y, BrawlerBody.CHEST.z * size)
 	(_torso_shape.shape as BoxShape3D).size = chest
 	_torso_shape.position.y = tracks.y + chest.y * 0.5
-	hurtbox.shape(box_now, Vector3.UP * box_now.y * 0.5)
+	# DONDE SE LE PEGA, EN DOS (la regla de las cajas de golpe, 18/11/2026): hasta la cintura, con las orugas; de la
+	# cintura para arriba, con el torso (encorvado, inclinado, girado con la cintura): se le pega donde se lo ve.
+	var low := BrawlerBody.HIP * size
+	hurtbox.shape(Vector3(box_now.x, low, box_now.z), Vector3.UP * low * 0.5)
+	# Lo de arriba, del alto de lo dibujado arriba de la cintura y del hondo del pecho (más un poco, como el cuerpo).
+	var high := BOX_BASE.y - BrawlerBody.HIP
+	hurtbox.upper(Vector3(box_now.x, high * size, (BrawlerBody.CHEST.z + 2.0) * size), Vector3.UP * high * 0.5)
 
 
 func _physics_process(delta: float) -> void:
@@ -332,6 +338,8 @@ func _place_upper() -> void:
 	if body.skeleton.table == null:
 		_layers()
 	body.skeleton.animate()
+	if hurtbox != null:
+		hurtbox.follow(body.bent)
 
 
 ## LAS CAPAS DE SU ESQUELETO (la tabla común, como la meca: MechSkeleton.layers): en la cintura, hundirse al aterrizar;

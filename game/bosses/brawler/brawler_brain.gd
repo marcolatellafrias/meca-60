@@ -271,8 +271,11 @@ func feet_over(level: float) -> float:
 	return 0.0
 
 
+## EL ALTO DEL BLANCO: el de ahora (agachada, más bajo: un golpe alto le pasa por arriba; ver KinematicMover.tall_now).
 func _target_height() -> float:
 	var body := target as BalanceBody
+	if body != null and body.mover != null:
+		return body.mover.tall_now()
 	if body != null:
 		return body.hover + body.size.y
 	return TARGET_HEIGHT

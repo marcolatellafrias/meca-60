@@ -106,6 +106,12 @@ func _ready() -> void:
 	_last_bottom = global_position.y + _hover_now()
 
 
+## LO ALTO QUE ESTÁ AHORA, del piso a lo de arriba de la caja (agachada, menos): el alto de su cilindro y del blanco
+## donde le pegan los jefes (BrawlerBrain.touches_target). Sale de `crouched`, que viaja por la red.
+func tall_now() -> float:
+	return _hover_now() + body.size.y
+
+
 ## A QUÉ ALTURA VA LA CARA DE ABAJO DE LA CAJA, ahora (agachada, más bajo).
 func _hover_now() -> float:
 	return body.hover * lerpf(1.0, body.kinematic_settings().crouch_share, crouched)
@@ -113,7 +119,7 @@ func _hover_now() -> float:
 
 ## El cilindro, del piso al techo de la caja.
 func _fit() -> void:
-	_cylinder.height = _hover_now() + body.size.y
+	_cylinder.height = tall_now()
 	_holder.position.y = _cylinder.height * 0.5
 
 

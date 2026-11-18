@@ -19,7 +19,7 @@ func _init() -> void:
 	collision_mask = 0
 
 
-## LA ARMA (o la rearma: otra escala) con una caja de `size` (m) en `center` (local).
+## LA ARMA (o la rearma: otra escala) con una caja de `size` (m) en `center` (local): lo de abajo, que va con el cuerpo.
 func shape(size: Vector3, center: Vector3) -> void:
 	if _holder == null:
 		_holder = CollisionShape3D.new()
@@ -30,6 +30,28 @@ func shape(size: Vector3, center: Vector3) -> void:
 
 
 var _holder: CollisionShape3D = null
+
+
+## LO DE ARRIBA, QUE SIGUE AL TORSO (18/11/2026, la regla de las cajas de golpe): una caja de `size` (m) con su centro
+## en `center`, en los ejes del hueso del torso (sin escala). La pone `follow` en cada paso.
+func upper(size: Vector3, center: Vector3) -> void:
+	if _upper == null:
+		_upper = CollisionShape3D.new()
+		_upper.shape = BoxShape3D.new()
+		add_child(_upper)
+	(_upper.shape as BoxShape3D).size = size
+	_upper_center = center
+
+
+## Lo de arriba, donde está el torso `bone` ahora (su giro, sin escala; el centro, con la escala del hueso). Va DESPUÉS
+## de mover la caja (la de arriba cuelga de ella).
+func follow(bone: Node3D) -> void:
+	if _upper != null:
+		_upper.global_transform = Transform3D(bone.global_basis.orthonormalized(), bone.global_transform * _upper_center)
+
+
+var _upper: CollisionShape3D = null
+var _upper_center := Vector3.ZERO
 
 
 func take_hit(strength: float, at: Vector3, source: String) -> void:
