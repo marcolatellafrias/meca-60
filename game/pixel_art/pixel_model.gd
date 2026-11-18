@@ -345,8 +345,6 @@ static func _place_in(part: Node3D, root: Node3D) -> Transform3D:
 	return place
 
 
-## Los triángulos de una superficie (con `surface_get_arrays`: `get_faces` redondea las posiciones), con el frente
-## orientado según sus normales.
 ## LA NORMAL DE UN PUNTO: la de su cara o, con `smooth_normals`, la suave —la de su vértice, o adentro de la cara (una
 ## estirada), las de sus esquinas pesadas por la cercanía—.
 func _normal_at(face: PixelFace, point: Vector3) -> Vector3:
@@ -374,7 +372,8 @@ static func _smooth_normals(triangles: PackedVector3Array) -> Dictionary:
 		var a := triangles[i]
 		var b := triangles[i + 1]
 		var c := triangles[i + 2]
-		var n := (b - a).cross(c - a)
+		# EL FRENTE ES HORARIO (como en PixelFaces y `_collect`): la normal hacia afuera es (c − a) × (b − a).
+		var n := (c - a).cross(b - a)
 		for point in [a, b, c]:
 			var key := _vertex_key(point)
 			sums[key] = (sums.get(key, Vector3.ZERO) as Vector3) + n
@@ -383,6 +382,8 @@ static func _smooth_normals(triangles: PackedVector3Array) -> Dictionary:
 	return sums
 
 
+## Los triángulos de una superficie (con `surface_get_arrays`: `get_faces` redondea las posiciones), con el frente
+## orientado según sus normales.
 static func _collect(mesh: Mesh, surface: int, place: Transform3D, color: Color, triangles: PackedVector3Array,
 		colors: PackedColorArray) -> void:
 	var arrays := mesh.surface_get_arrays(surface)
