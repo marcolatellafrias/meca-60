@@ -12,11 +12,9 @@ extends Node
 ## `PIVOT`); el plato y la horquilla, `_base` (no se inclinan).
 
 const VIEW := Vector2i(1280, 720)
-const PER_SHEET := 3
+const PER_SHEET := 4
 const IDEAS := [
-	["1. dos parantes rectos hasta el asiento", "el tornillo, en la cara del costado del asiento"],
-	["2. una horquilla en U desde un poste", "un solo pie, como una silla de siempre"],
-	["3. dos patas en A, una por costado", "más firme a la vista"],
+	["la torreta: soportes macizos, armas en la línea del eje", "abajo recto, arriba curvo en tres tramos"],
 ]
 ## Los ejes de la cuna, en el espacio de la silla: a la altura de la cadera.
 ## La parte que sostiene los ejes (lo negro).
@@ -98,8 +96,8 @@ func _ready() -> void:
 	_eye.make_current()
 	var layer := CanvasLayer.new()
 	add_child(layer)
-	_title = _label(layer, Vector2(20, 8), 58)
-	_note = _label(layer, Vector2(20, 84), 44)
+	_title = _label(layer, Vector2(20, 8), 44)
+	_note = _label(layer, Vector2(20, 64), 34)
 	_mech = CageMech.new()
 	_mech.scripted = true
 	_mech.position = Vector3(0.0, Mech.standing_height(Mech.Cabin.CAGE), 0.0)
@@ -141,14 +139,16 @@ func _ready() -> void:
 		var outside := at + seat.basis * Vector3(1.5, 1.2, -1.7)
 		await _shot(IDEAS[index][0], "prueba: " + IDEAS[index][1], outside, at, 60.0)
 		var eye := seat * _eyes
-		await _shot(String(IDEAS[index][0]).get_slice(".", 0) + ". desde sus ojos", "", eye,
+		await _shot("desde sus ojos", "", eye,
 			eye + seat.basis * Vector3(0.0, -1.2, -3.0), 85.0)
 		var middle := seat * PIVOT
 		var side := middle + seat.basis * Vector3(2.4, 0.5, -0.2)
 		_tilt = 25.0
 		_place_rig()
-		await _shot(String(IDEAS[index][0]).get_slice(".", 0) + ". de costado, 25° arriba", "", side,
-			middle + seat.basis * Vector3(0.0, 0.3, -0.2), 55.0)
+		await _shot("de costado, 25° arriba", "", side, middle + seat.basis * Vector3(0.0, 0.3, -0.2), 55.0)
+		_tilt = 0.0
+		_place_rig()
+		await _shot("el soporte, de cerca", "", middle + seat.basis * Vector3(1.0, 0.1, -0.7), middle + seat.basis * Vector3(0.3, -0.15, 0.0), 55.0)
 		_rig.queue_free()
 		_base.queue_free()
 		await get_tree().process_frame
@@ -164,31 +164,20 @@ func _idea(number: int) -> void:
 	_pedestal = false
 	# ABAJO: el plato y lo que sostiene los ejes (la variante).
 	Clay.cylinder(_base, 0.32, 0.06, Vector3(0.0, 0.03, 0.0), GUNMETAL)
-	match number:
-		1:
-			for side: float in [-1.0, 1.0]:
-				Clay.box(_base, Vector3(0.05, PIVOT.y - 0.06, 0.1), Vector3(side * (BOLT_X + 0.05), PIVOT.y * 0.5 + 0.03, PIVOT.z), DARK_FORK)
-		2:
-			Clay.cylinder(_base, 0.05, 0.16, Vector3(0.0, 0.14, PIVOT.z), DARK_FORK)
-			Clay.box(_base, Vector3(BOLT_X * 2.0 + 0.15, 0.05, 0.1), Vector3(0.0, 0.22, PIVOT.z), DARK_FORK)
-			for side: float in [-1.0, 1.0]:
-				Clay.box(_base, Vector3(0.05, PIVOT.y - 0.2, 0.1), Vector3(side * (BOLT_X + 0.05), (PIVOT.y + 0.22) * 0.5, PIVOT.z), DARK_FORK)
-		3:
-			for side: float in [-1.0, 1.0]:
-				var bolt := PIVOT + Vector3(side * (BOLT_X + 0.05), 0.0, 0.0)
-				for z: float in [-0.2, 0.2]:
-					_beam_on(_base, Vector3(side * (BOLT_X + 0.05), 0.06, PIVOT.z + z), bolt, 0.03)
+	for side: float in [-1.0, 1.0]:
+		_support(side * (BOLT_X + 0.07))
 	# Los tornillos, en las caras del asiento; de cada uno sale el brazo de su arma.
 	for side: float in [-1.0, 1.0]:
 		Clay.cylinder(_rig, 0.055, 0.1, PIVOT + Vector3(side * (BOLT_X + 0.02), 0.0, 0.0), CageCabin.RIM_COLOR, Vector3(0.0, 0.0, 90.0))
 	# La minigun, a la derecha; la caja de misiles, más grande, bien a la izquierda.
-	var gun := Vector3(0.74, 0.84, -0.28)
+	# Las armas, en la línea del eje (ni adelante ni atrás): los brazos suben derecho desde los tornillos.
+	var gun := Vector3(0.7, 0.86, PIVOT.z)
 	var bolt_right := PIVOT + Vector3(BOLT_X + 0.08, 0.0, 0.0)
 	_arm_to(bolt_right, gun + Vector3(-0.02, -0.1, 0.06), 1.0)
 	_weapon(_rig, gun, 1.0)
-	var pod := Vector3(-0.82, 0.9, -0.5)
+	var pod := Vector3(-0.82, 0.92, PIVOT.z)
 	var bolt_left := PIVOT + Vector3(-BOLT_X - 0.08, 0.0, 0.0)
-	_arm_to(bolt_left, pod + Vector3(0.05, -0.16, 0.05), -1.0)
+	_arm_to(bolt_left, pod + Vector3(0.05, -0.18, 0.0), -1.0)
 	var holder := Node3D.new()
 	holder.position = pod
 	_rig.add_child(holder)
@@ -208,6 +197,35 @@ func _idea(number: int) -> void:
 		_beam(elbow, spot + Vector3(0.0, -0.06, 0.0), 0.018)
 		Clay.sphere(_rig, 0.03, elbow, GUNMETAL)
 		_face_panel(_rig, spot, angle, 35.0 if spot.x == 0.0 else 45.0)
+
+
+## EL SOPORTE DE UN EJE, macizo, en `x`: una chapa gruesa con la base recta (sobre el plato) y la parte de arriba curva
+## en tres tramos alrededor del tornillo, y los costados en falda.
+func _support(x: float) -> void:
+	var points: Array[Vector2] = [Vector2(-0.24, 0.06), Vector2(0.24, 0.06)]
+	for k in 4:
+		var angle := deg_to_rad(15.0 + k * 50.0)
+		points.append(Vector2(PIVOT.z, PIVOT.y) + Vector2(cos(angle), sin(angle)) * 0.11)
+	var thick := 0.08
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for face: float in [-thick * 0.5, thick * 0.5]:
+		for k in range(1, points.size() - 1):
+			for point: Vector2 in [points[0], points[k], points[k + 1]]:
+				tool.add_vertex(Vector3(x + face, point.y, point.x))
+	for k in points.size():
+		var a := points[k]
+		var b := points[(k + 1) % points.size()]
+		for corner: Vector3 in [Vector3(-1, a.y, a.x), Vector3(1, a.y, a.x), Vector3(1, b.y, b.x),
+				Vector3(-1, a.y, a.x), Vector3(1, b.y, b.x), Vector3(-1, b.y, b.x)]:
+			tool.add_vertex(Vector3(x + corner.x * thick * 0.5, corner.y, corner.z))
+	tool.generate_normals()
+	var plate := MeshInstance3D.new()
+	plate.mesh = tool.commit()
+	var paint := _paint(DARK_FORK)
+	paint.cull_mode = BaseMaterial3D.CULL_DISABLED
+	plate.material_override = paint
+	_base.add_child(plate)
 
 
 ## UN BRAZO DE ARMA desde el tornillo `from` hasta `to`, con un codo hacia afuera (`side`).
@@ -709,13 +727,13 @@ func _save(number: int) -> void:
 	if _shots.is_empty():
 		return
 	var first: Image = _shots[0]
-	var w := first.get_width() / 3
-	var h := first.get_height() / 3
-	var sheet := Image.create(w * 3, h * ceili(_shots.size() / 3.0), false, first.get_format())
+	var w := first.get_width() / 2
+	var h := first.get_height() / 2
+	var sheet := Image.create(w * 2, h * ceili(_shots.size() / 2.0), false, first.get_format())
 	for index in _shots.size():
 		var shot: Image = _shots[index]
 		shot.resize(w, h, Image.INTERPOLATE_BILINEAR)
-		sheet.blit_rect(shot, Rect2i(Vector2i.ZERO, shot.get_size()), Vector2i(w * (index % 3), h * (index / 3)))
+		sheet.blit_rect(shot, Rect2i(Vector2i.ZERO, shot.get_size()), Vector2i(w * (index % 2), h * (index / 2)))
 	var path := "%s/cuna_%d.png" % [_folder, number]
 	sheet.save_png(path)
 	print("CAPTURA ", path)
