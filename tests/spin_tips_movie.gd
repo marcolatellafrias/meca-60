@@ -1,12 +1,14 @@
 extends Node
 
 ## EL TALADRO Y LA SIERRA DESDE LOS MANDOS DE LA JAULA (18/11/2026; ver CageBoards._arm_use): la meca jaula con el
-## taladro a la izquierda (discreto) y la sierra a la derecha (con músculos), frente a dos pilas de cajas. Se agarra cada
+## taladro a la izquierda (discreto) y la sierra a la derecha (con músculos), frente a dos blancos altos. Se agarra cada
 ## mando y se mantiene el clic: gira y gasta energía; al soltar, el directo. Imprime lo que giraba y cuánto se movieron
 ## las cajas. Se graba:
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/giran.avi --fixed-fps 30 res://tests/spin_tips_movie.tscn
 
 const CRATE := 0.9
+## El alto de cada blanco: hasta pasar el hombro de la meca (m).
+const TALL := 5.0
 const GAP := 5.0
 
 var _mech: CageMech = null
@@ -53,13 +55,12 @@ func _ready() -> void:
 	_mech.position = Vector3(0.0, Mech.standing_height(_mech.cabin_shape), 0.0)
 	add_child(_mech)
 	for side in [-1.0, 1.0]:
-		for i in 3:
-			var crate := RigidBody3D.new()
-			crate.mass = 80.0
-			Clay.solid(crate, Vector3.ONE * CRATE, Vector3.ZERO, Clay.METAL.lerp(Color(0.7, 0.5, 0.3), 0.6))
-			crate.position = Vector3(side * 1.1, CRATE * 0.5 + i * CRATE, -GAP)
-			add_child(crate)
-			_crates.append(crate)
+		var crate := RigidBody3D.new()
+		crate.mass = 6000.0
+		Clay.solid(crate, Vector3(CRATE, TALL, CRATE), Vector3.ZERO, Clay.METAL.lerp(Color(0.7, 0.5, 0.3), 0.6))
+		crate.position = Vector3(side * 0.8, TALL * 0.5, -GAP)
+		add_child(crate)
+		_crates.append(crate)
 	await _wait(1.5)
 	_mech.label.visible = false
 	var cabin := _mech.cabin as CageCabin
@@ -87,14 +88,30 @@ func _use(holding: String, letting: String, arm: Node, side: float) -> void:
 	var spin := tip.spin if tip != null else -1.0
 	_title.text = letting
 	arm.use.call(false)
-	await _wait(1.6)
+	# Hasta dónde llega lo que golpea, al frente de la meca y de costado, desde su centro (m).
+	var ahead := -_mech.global_basis.z
+	var far := -INF
+	var across := 0.0
+	var high := 0.0
+	var thrown := tip != null and tip.arm.punching != MechArm.Punch.NONE
+	var seconds := 0.0
+	while seconds < 1.6:
+		if tip != null:
+			for point in tip.strike_points():
+				var off: Vector3 = point - _mech.global_position
+				if off.dot(ahead) > far:
+					far = off.dot(ahead)
+					across = off.dot(_mech.global_basis.x)
+					high = point.y
+		await get_tree().physics_frame
+		seconds += get_physics_process_delta_time()
 	arm.exit_mode()
 	var after := _spots()
 	var moved := 0.0
 	for i in _crates.size():
 		moved = maxf(moved, (after[i] - before[i]).length())
-	print("%-28s giraba %.2f · energía %.2f · la caja que más se movió: %.2f m" % [holding, spin, _mech.energy.level,
-		moved])
+	print("%-28s giraba %.2f · lo tiró %s · llega a %.2f m al frente (%.2f de costado, %.2f de alto) · la caja que más se movió: %.2f m"
+		% [holding, spin, thrown, far, across, high, moved])
 
 
 func _spots() -> Array[Vector3]:
