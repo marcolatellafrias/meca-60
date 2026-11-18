@@ -135,8 +135,10 @@ esqueleto a 0 mm) y camina.
    por pata), la marcha común y la IK común (`IkUtil.solve_two_bone_ik`). El armazón (BossFrame) mide solo a qué
    velocidad lo mueven: quien lo mueva no les dice nada. Las de cuatro pisan las diagonales, con la rodilla arriba y
    afuera, como una araña. En `tests/boss_walk_movie` (con ventana; el mismo recorrido que gait_movie): 29 y 28 pasos,
-   ningún pie apoyado se corre y las canillas no se separan de sus muslos (0 mm). *Falta: el piso de verdad (cada pie a
-   su altura) y que un jefe con patas pelee.*
+   ningún pie apoyado se corre y las canillas no se separan de sus muslos (0 mm). PISAN EL PISO DE VERDAD, cada pie a su
+   altura: un rayo desde la cadera, contra lo fijo del mundo (lo mismo que frena a la meca); las rodillas lo absorben.
+   En la prueba, una tarima de 1,5 m en el camino: los dos pisan arriba a 1,50 m, sin correrse. *Falta: que un jefe con
+   patas pelee.*
    **RECOGER LAS PIERNAS** (18/11/2026; las reglas las acordó el usuario): recogidas, de una, en un DASH (en el piso
    también), LEVITANDO y BAJANDO EN PICADA, SUTIL (el usuario: «parecerse a la pose en reposo pero un poco más
    recogida nomás, y con los pies un poco apuntando hacia abajo»: la pose de parada con el pie subido `tuck_lift` de la

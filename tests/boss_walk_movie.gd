@@ -4,7 +4,8 @@ extends Node
 ## (BossFrame), uno de CUATRO patas (pisan las diagonales) y uno de DOS, con sus patas en el esqueleto común
 ## (BossLegs: MechSkeleton, la marcha común Gait y la IK común), hacen el mismo recorrido: arrancar, doblar andando,
 ## frenar, ir de costado, girar en el lugar, apurarse y frenar. Se los mueve desde afuera (como el Taller o una cabeza):
-## las patas siguen solas. Una grilla en el piso cada 2 m para ver si los pies patinan. Imprime cuántos pasos dio cada
+## las patas siguen solas. EL PISO DE VERDAD: en el camino hay una tarima de 1,5 m (lo fijo del mundo), y cada pie pisa a
+## su altura; se imprime lo más alto que pisó cada uno. Una grilla en el piso cada 2 m para ver si los pies patinan. Imprime cuántos pasos dio cada
 ## uno, lo más que se corrió un pie apoyado y lo más que se separó una canilla de la punta de su muslo. Con --write-movie:
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/jefes.avi --fixed-fps 30 res://tests/boss_walk_movie.tscn
 
@@ -42,6 +43,7 @@ func _ready() -> void:
 	var yaw := 0.0
 	var first := true
 	var slip: Array[float] = [0.0, 0.0]
+	var highest: Array[float] = [0.0, 0.0]
 	var loose: Array[float] = [0.0, 0.0]
 	for leg: Array in ROUTE:
 		_title.text = leg[0]
@@ -63,6 +65,8 @@ func _ready() -> void:
 				var gait := _frames[index].walking.gait
 				var bones := _frames[index].walking.skeleton
 				for foot in gait.feet.size():
+					if gait.swing_share[foot] < 0.0:
+						highest[index] = maxf(highest[index], gait.feet[foot].y)
 					if before[index][1][foot] < 0.0 and gait.swing_share[foot] < 0.0:
 						slip[index] = maxf(slip[index], (gait.feet[foot] - (before[index][0][foot] as Vector3)).length())
 					var tip := bones.thighs[foot].global_transform * Vector3(0.0, bones.thighs[foot].capsule_dimensions.y, 0.0)
@@ -74,15 +78,19 @@ func _ready() -> void:
 			_eye.look_at(middle, Vector3.UP)
 			clock += delta
 	for index in _frames.size():
-		print("%s: %d pasos · un pie apoyado se corrió %.3f m · la canilla, a %.3f m de la punta del muslo" % [
-			_frames[index].recipe.legs, _frames[index].walking.gait.steps_taken, slip[index], loose[index]])
+		print("%s: %d pasos · un pie apoyado se corrió %.3f m · la canilla, a %.3f m de la punta del muslo · pisó hasta %.2f m de alto" % [
+			_frames[index].recipe.legs, _frames[index].walking.gait.steps_taken, slip[index], loose[index], highest[index]])
 	get_tree().quit()
 
 
 func _world() -> void:
-	var ground := Node3D.new()
+	var ground := StaticBody3D.new()
 	add_child(ground)
-	Clay.box(ground, Vector3(600, 1, 600), Vector3(0, -0.5, 0), Color(0.82, 0.80, 0.76))
+	Clay.solid(ground, Vector3(600, 1, 600), Vector3(0, -0.5, 0), Color(0.82, 0.80, 0.76))
+	# Las tarimas: 1,5 m de alto, una en el camino de cada uno al arrancar (los dos andan hacia −Z).
+	for z: float in [6.0, -30.0]:
+		Clay.solid(ground, Vector3(60.0, 1.5, 8.0), Vector3(0.0, 0.75, z), Color(0.62, 0.6, 0.57))
+	PhysicsLayers.mark_fixed(ground)
 	for i in range(-100, 101):
 		var tone := Color(0.6, 0.58, 0.55)
 		Clay.box(ground, Vector3(0.08, 0.02, 400.0), Vector3(i * 2.0, 0.01, 0.0), tone)

@@ -12,7 +12,10 @@ extends Node3D
 ##     la rodilla (BossParts.LEGS[…]["walk"]). Las de cuatro, como una araña: la rodilla arriba y afuera.
 ##   · VAN A LA ESCALA DE LOS JEFES (BossSettings): se arman con las medidas ya escaladas (la IK cuenta con el largo de
 ##     los huesos, que no puede llevar la escala del nodo), y se rearman si la escala cambia (`build`).
-##   · EL PISO: el de debajo del cuerpo (Gait sin `ground`). *Falta: el piso de verdad, cada pie a su altura.*
+##   · EL PISO DE VERDAD, CADA PIE A SU ALTURA (`_ground`): un rayo desde la cadera hacia abajo, contra lo fijo del mundo
+##     (PhysicsLayers.FIXED, lo mismo que frena a la meca): pisa escalones y techos, y las rodillas lo absorben (el
+##     cuerpo no sube ni baja: lo pone quien lo mueve). Sin piso debajo, el del cuerpo. *Hasta el 18/11/2026 pisaban
+##     todas el plano de debajo del cuerpo.*
 
 ## Lo que sube el pie del piso al tobillo (m de maqueta) y el tamaño de la pisada.
 const ANKLE := 0.6
@@ -27,6 +30,8 @@ var _size := 1.0
 var _bends: Array[Vector3] = []
 var _pads: Array[Node3D] = []
 var _placed := false
+## El cuerpo en el piso, el de este paso (de ahí sale el rayo de cada pie).
+var _root := Transform3D()
 
 
 ## LAS ARMA (o las rearma: otra escala) para las piernas `id` del catálogo, a la escala `size`.
@@ -65,11 +70,13 @@ func build(id: String, size: float) -> void:
 	gait.stride = float(spec["stride"]) * size
 	gait.lift = float(spec["lift"]) * size
 	gait.stomp = 0.6
+	gait.ground = _ground
 
 
 ## UN PASO: el cuerpo en el piso en `root` (su giro y el punto debajo de su centro, sin escala) andando a `velocity`.
 func step(delta: float, root: Transform3D, velocity: Vector3) -> void:
 	skeleton.root.global_transform = root
+	_root = root
 	if not _placed:
 		gait.place(root)
 		_placed = true
@@ -80,6 +87,18 @@ func step(delta: float, root: Transform3D, velocity: Vector3) -> void:
 		IkUtil.solve_two_bone_ik(skeleton.thighs[leg], skeleton.shins[leg], foot + Vector3.UP * ANKLE * _size,
 			hip + root.basis * _bends[leg] * 10.0 * _size)
 		_pads[leg].global_transform = Transform3D(root.basis, foot)
+
+
+## EL PISO DE VERDAD debajo de `at`: un rayo desde la altura de la cadera hasta lo que alcanza una pata por debajo
+## del cuerpo, contra lo fijo del mundo. Sin piso, el del cuerpo.
+func _ground(at: Vector3) -> Vector3:
+	var hip := float(BossParts.LEGS[_id]["hip"]) * _size
+	var query := PhysicsRayQueryParameters3D.create(Vector3(at.x, _root.origin.y + hip, at.z),
+		Vector3(at.x, _root.origin.y - hip, at.z), PhysicsLayers.FIXED)
+	var hit := get_world_3d().direct_space_state.intersect_ray(query)
+	if hit.is_empty():
+		return Vector3(at.x, _root.origin.y, at.z)
+	return Vector3(at.x, (hit["position"] as Vector3).y, at.z)
 
 
 ## Las piernas que arma (las de `id`, a `size`).
