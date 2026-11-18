@@ -7,12 +7,19 @@ extends RefCounted
 static func rows() -> Array[SandboxRow]:
 	return [
 		SandboxRow.new(SandboxSuper.Id.CHARACTERS, "Personajes") 			.add(SandboxRow.Build.NEAR, PeopleArchetype.catalogue()) 			.panel(KEY_F3, TUNER, _tuner("Personajes")),
-		SandboxRow.new(SandboxSuper.Id.CHARACTERS, "Cabezas") 			.add(SandboxRow.Build.NEAR, HeadFormsArchetype.catalogue()) 			.panel(KEY_F3, "las formas de cabeza: editar, agregar, el aplanamiento de todas", HeadFormsPanel.new()),
+		SandboxRow.new(SandboxSuper.Id.CHARACTERS, "Cabezas") 			.add(SandboxRow.Build.NEAR, HeadFormsArchetype.catalogue()) 			.add(SandboxRow.Build.NEAR, HeadPaintArchetype.catalogue()) 			.panel(KEY_F3, "las formas de cabeza: editar, agregar, el aplanamiento de todas", HeadFormsPanel.new()) 			.panel(KEY_F1, "pintar con píxeles la cara que mirás", _painter()),
 		SandboxRow.new(SandboxSuper.Id.CHARACTERS, "Locomoción") 			.add(SandboxRow.Build.NEAR, LocomotionLabArchetype.catalogue()) 			.panel(KEY_F3, TUNER, _tuner("Locomoción")),
 	]
 
 
 const TUNER := "locomoción: lo de cada arquetipo y lo de todos (caminata, pose, movimiento, equilibrio, salto, cuerpo)"
+
+
+## EL PANEL DE PINTAR DE LA FILA PÍXELES, también acá (ver HeadPaintArchetype), con su propia llave.
+static func _painter() -> PixelPaintPanel:
+	var panel := PixelPaintPanel.new()
+	panel.ui_copy = "Cabezas"
+	return panel
 
 
 ## El mismo afinador en dos filas necesita otra llave (TunerPanel.ui_copy), o abrir uno abre los dos.

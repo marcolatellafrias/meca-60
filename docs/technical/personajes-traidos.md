@@ -99,6 +99,16 @@ estabilidad de las especies, que no usaba nadie. La dureza y el amortiguado del 
 todos, en el F1 (`impact_spring`, `impact_damp`). Con 150 N·s cae sólo el chico (antes también el viejo); con 300,
 el flaco alto, el chico y el viejo; los pesados se inclinan menos que antes.
 
+**Pintar caras sobre las cabezas** (18/11/2026, el usuario: «una misma silueta tenga varias pinturas, pero solamente
+para esa silueta»). La parcela «Pintar caras» de la fila Cabezas (`HeadPaintArchetype`) muestra la forma elegida (N la
+cambia) como un modelo de la herramienta de píxeles (`PixelModel`, ver [[pixel-art]]): las caras de la cabeza son
+planas (cada anillo es el mismo octógono agrandado o corrido), así que la herramienta las toma tal cual y se pintan con
+su panel, F1 también en esta fila. Cada pintura es un archivo (`game/character/faces/cabeza<forma>_<n>.json`, del
+usuario: no se commitea) atado a su forma, con su densidad y su giro: el octógono con una esquina adelante (como
+siempre) o con un lado plano adelante (`HeadForm.build_arrays(front_face)`). J la siguiente, U una nueva con lo elegido
+en K (densidad: 64, 100, 150 o 200 px/m) e Y (el giro), X la borra. Sombreado suave (`PixelModel.smooth_normals`). A
+100 px/m, la cara del frente es de 7 × 7 píxeles. Prueba con captura: `tests/head_paint_look.tscn` (borra lo suyo).
+
 **Lo que cuesta la fila Locomoción** (17/11/2026, diagnóstico; nada arreglado todavía): `tests/locomotion_perf.tscn` arma
 las siete escenas juntas (42 personajes, 846 cuerpos rígidos) y mide de a una dimensión. Armarlas: 2,2 s en un cuadro
 (el tirón al acercarse). Prendido todo: 8 fps (124 ms por cuadro). Lo que más pesa, en orden: el guion de la cápsula

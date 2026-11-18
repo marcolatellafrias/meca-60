@@ -51,6 +51,15 @@ var _colors := PackedColorArray()
 var stretch_all := false
 var face_modes: Dictionary = {}
 
+## ── PARA QUIEN LO USA (18/11/2026, las caras pintadas de las cabezas, ver HeadPaintArchetype) ─────────────────────
+## SOMBREADO SUAVE (antes de `from_mesh`): cada vértice con la normal promedio de las caras que lo tocan (pesada por su
+## área), en vez de la de su cara. Las cabezas low poly lo quieren (el usuario: «low poly… bajo polycount, no flat
+## shading»). Apagado, como siempre.
+var smooth_normals := false
+## LO DE QUIEN LO USA, guardado con la pintura (las cabezas: su giro): no lo lee el modelo.
+var extra: Dictionary = {}
+var _smooth: Dictionary = {}
+
 
 ## Un modelo de Blender: junta los triángulos de todas sus mallas, con su color de material.
 func from_scene(scene: PackedScene, name_for_paint: String) -> PixelModel:
@@ -139,7 +148,8 @@ func pick(from: Vector3, direction: Vector3) -> Dictionary:
 
 
 func save() -> void:
-	var data := {"pixels_per_cell": pixels_per_cell, "stretch_all": stretch_all, "face_modes": face_modes, "pixels": {}}
+	var data := {"pixels_per_cell": pixels_per_cell, "stretch_all": stretch_all, "face_modes": face_modes, "extra": extra,
+		"pixels": {}}
 	var keys := painted.keys()
 	keys.sort()
 	for key: String in keys:
@@ -160,9 +170,20 @@ func load_paint() -> void:
 		return
 	stretch_all = bool((data as Dictionary).get("stretch_all", stretch_all))
 	face_modes = (data as Dictionary).get("face_modes", {})
+	extra = (data as Dictionary).get("extra", extra)
 	var pixels: Dictionary = (data as Dictionary).get("pixels", {})
 	for key: String in pixels:
 		painted[key] = Color.html(str(pixels[key]))
+
+
+## LO GUARDADO DE `name_for_paint` en `in_folder`, sin armar nada (vacío si no hay): para saber su densidad y lo de
+## quien lo usa antes de armar el modelo.
+static func peek(in_folder: String, name_for_paint: String) -> Dictionary:
+	var path := in_folder + name_for_paint + ".json"
+	if not FileAccess.file_exists(path):
+		return {}
+	var data: Variant = JSON.parse_string(FileAccess.get_file_as_string(path))
+	return data if data is Dictionary else {}
 
 
 ## Borra lo pintado de este modelo, también del archivo.
@@ -179,6 +200,8 @@ func _setup(triangles: PackedVector3Array, colors: PackedColorArray, name_for_pa
 	pixel = CELL / pixels_per_cell
 	_triangles = triangles
 	_colors = colors
+	if smooth_normals:
+		_smooth = _smooth_normals(triangles)
 	load_paint()
 	_rebuild()
 	return self
@@ -285,7 +308,7 @@ func _build_mesh() -> void:
 	for face in faces:
 		if not face.stretched:
 			for point in face.triangles:
-				tool.set_normal(face.normal)
+				tool.set_normal(_normal_at(face, point))
 				tool.set_uv((Vector2(face.at) + face.local(point, pixel)) / atlas_side)
 				tool.add_vertex(point)
 			continue
@@ -297,9 +320,10 @@ func _build_mesh() -> void:
 				var cell: Array[Vector2i] = [Vector2i(x, y), Vector2i(x + 1, y), Vector2i(x + 1, y + 1), Vector2i(x, y + 1)]
 				for corner: int in [0, 1, 2, 0, 2, 3]:
 					var grid := cell[corner]
-					tool.set_normal(face.normal)
+					var point := face.spot(float(grid.x) / face.width, float(grid.y) / face.height)
+					tool.set_normal(_normal_at(face, point))
 					tool.set_uv(Vector2(face.at + grid) / atlas_side)
-					tool.add_vertex(face.spot(float(grid.x) / face.width, float(grid.y) / face.height))
+					tool.add_vertex(point)
 	var material := StandardMaterial3D.new()
 	material.albedo_texture = _texture
 	material.texture_filter = BaseMaterial3D.TEXTURE_FILTER_NEAREST
@@ -323,6 +347,42 @@ static func _place_in(part: Node3D, root: Node3D) -> Transform3D:
 
 ## Los triángulos de una superficie (con `surface_get_arrays`: `get_faces` redondea las posiciones), con el frente
 ## orientado según sus normales.
+## LA NORMAL DE UN PUNTO: la de su cara o, con `smooth_normals`, la suave —la de su vértice, o adentro de la cara (una
+## estirada), las de sus esquinas pesadas por la cercanía—.
+func _normal_at(face: PixelFace, point: Vector3) -> Vector3:
+	if not smooth_normals:
+		return face.normal
+	var found: Variant = _smooth.get(_vertex_key(point))
+	if found != null:
+		return found
+	var sum := Vector3.ZERO
+	for corner in face.corners:
+		var at: Variant = _smooth.get(_vertex_key(corner))
+		if at != null:
+			sum += (at as Vector3) / maxf(corner.distance_to(point), 0.0001)
+	return sum.normalized() if sum != Vector3.ZERO else face.normal
+
+
+static func _vertex_key(point: Vector3) -> Vector3i:
+	return Vector3i((point * 10000.0).round())
+
+
+## Las normales suaves de cada vértice: la suma de las de los triángulos que lo tocan, pesadas por su área.
+static func _smooth_normals(triangles: PackedVector3Array) -> Dictionary:
+	var sums := {}
+	for i in range(0, triangles.size() - 2, 3):
+		var a := triangles[i]
+		var b := triangles[i + 1]
+		var c := triangles[i + 2]
+		var n := (b - a).cross(c - a)
+		for point in [a, b, c]:
+			var key := _vertex_key(point)
+			sums[key] = (sums.get(key, Vector3.ZERO) as Vector3) + n
+	for key: Vector3i in sums:
+		sums[key] = (sums[key] as Vector3).normalized()
+	return sums
+
+
 static func _collect(mesh: Mesh, surface: int, place: Transform3D, color: Color, triangles: PackedVector3Array,
 		colors: PackedColorArray) -> void:
 	var arrays := mesh.surface_get_arrays(surface)

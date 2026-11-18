@@ -84,6 +84,11 @@ y cada píxel busca su clave:
 El orden de las caras y el atlas no importan: se rearman cada vez. En el test, la caja con la manija más larga y una
 chapa nueva conserva 1400 de sus 1408 píxeles (los 8 que se pierden son la manija, que cambió de tamaño).
 
+## Para quien lo usa
+- **Sombreado suave** (`smooth_normals`, antes de armar): las caras pintadas de las cabezas (ver [[personajes-traidos]]).
+- **Lo de quien lo usa** (`extra`), guardado con la pintura: el giro de la cabeza.
+- **Leer un guardado sin armar el modelo** (`PixelModel.peek`): su densidad, antes de armarlo.
+
 ## Lo que quedó sin resolver
 - **Una cara que se corre pierde lo suyo** (por ejemplo, una pared que se hace un píxel más gruesa). Se podría buscar la
   clave también corrida por la normal, o «llevar» la pintura de una cara vieja a la nueva más parecida.

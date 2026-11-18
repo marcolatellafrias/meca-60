@@ -217,9 +217,10 @@ static func _monotone(xs: PackedFloat32Array, ys: PackedFloat32Array, x: float) 
 ## (ver AROUND): los anillos son los de los domos, las dos tapas y los cortes prendidos, y nada más. EL SOMBREADO ES
 ## SUAVE: vértices compartidos con la normal promediada. El bobinado se decide midiendo: si las caras quedaron mirando para adentro, se dan vuelta
 ## (ver la nota del proyecto sobre el frente horario de Godot).
-func build_mesh() -> ArrayMesh:
+## `front_face`: ver `build_arrays`.
+func build_mesh(front_face := false) -> ArrayMesh:
 	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, build_arrays())
+	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, build_arrays(front_face))
 	return mesh
 
 
@@ -240,14 +241,17 @@ func ring_heights() -> Array[float]:
 	return rows
 
 
-func build_arrays() -> Array:
+## LA MALLA. `front_face` (18/11/2026, para pintar la cara, ver HeadPaintArchetype): el octógono girado medio lado,
+## con un lado plano adelante en vez de una esquina —el centro de la cara cae en una sola cara—. Apagado, como siempre.
+func build_arrays(front_face := false) -> Array:
+	var turn := PI / AROUND if front_face else 0.0
 	var verts := PackedVector3Array()
 	verts.append(Vector3(0.0, 0.0, -section(0.0).z))
 	var rows := ring_heights()
 	for y in rows:
 		var s := section_at_height(y)
 		for j in AROUND:
-			verts.append(ring_point(s.x, s.y, s.z, TAU * float(j) / float(AROUND), y))
+			verts.append(ring_point(s.x, s.y, s.z, TAU * float(j) / float(AROUND) + turn, y))
 	verts.append(Vector3(0.0, total_height(), -section(1.0).z))
 	var last_pole := verts.size() - 1
 	var tris := PackedInt32Array()
