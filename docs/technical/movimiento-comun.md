@@ -83,8 +83,18 @@ huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la me
 frenar, doblar de golpe, girar en el lugar, de costado, el dash, saltar, levitar, bajar agachada), con una grilla en el
 piso para ver si patinan.
 
-Aparte, porque es MOVIMIENTO y no dibujo: el retroceso por golpe (una velocidad que se frena sola, con la gravedad de
-siempre) y el ragdoll al morir, para todos. *Falta.*
+Aparte, porque es MOVIMIENTO y no dibujo:
+- **El retroceso por golpe** (18/11/2026; el usuario preguntó si era «un impulso con gravedad»): en la meca cinemática,
+  `KinematicMover.knock(velocidad)` (o `BalanceBody.knock_back`): una velocidad que se frena sola. En el piso, un roce
+  parejo (`knock_friction`, 40 m/s²: recorre v²/2·roce); en el aire se frena de a poco (`knock_drag_air`) y cae con la
+  gravedad de siempre, así que si lo levanta sale en curva; contra una pared se corta; se maneja otra vez apoyada y casi
+  quieta (`knock_stop`). `shove(metros, _, saltito)` sigue para quien pega en metros: es el impulso que recorre eso en el
+  piso. El revoleo del agarre, que tiene que caer en un punto, es otra cosa: `carry`, un camino guionado. *Hasta ese día
+  `shove` era un camino guionado, y al terminar la meca seguía deslizándose con la inercia de caminar (en la prueba del
+  escudo se iba unos 90 m: por eso el lanzallamas pegaba una sola ráfaga; ahora, quieta, las tres).* Medido en
+  `tests/knock_back_movie` (el video): 6 y 16 m en el piso recorren 6,0 y 16,0 m y se maneja a los 0,5 y 0,9 s; tirada
+  con saltito y en el aire, unos 14 m en curva; contra una pared, se corta.
+- **El ragdoll al morir**, para todos. *Falta.*
 
 ## Lo de la jaula que no hay que pisar
 La inclinación al apuntar (`CageMech._tilt`, cabin.rotation.x: la inclinación de costado se suma, no la reemplaza),

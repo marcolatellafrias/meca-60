@@ -188,7 +188,7 @@ func fling(to: Vector3, arc: float, time: float, damage: float, what: String) ->
 	_time = maxf(time, 0.1)
 	_land_damage = damage
 	_land_what = what
-	_body.shove(offset, _time, arc)
+	_body.carry(offset, _time, arc)
 
 
 ## Suelta todo (para las pruebas).

@@ -74,6 +74,15 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 ## mínimo entre dashes, y diseñar todo para un dash, así es más consciente la esquivada»).
 @export_range(0.0, 5.0, 0.05) var dash_cooldown := 1.0
 
+@export_group("Empujada")
+## EL EMPUJÓN DE UN GOLPE (KinematicMover.knock; 18/11/2026, módulo Jefes): una velocidad que se frena sola. En el
+## piso, UN ROCE PAREJO de `knock_friction` m/s² (recorre v² / 2·roce); en el aire, `knock_drag_air` por segundo (parte
+## de lo que lleva: sale en curva, con la gravedad de siempre, y al caer sigue con lo que le quedó). Vuelve a manejarse
+## apoyada y a menos de `knock_stop` m/s.
+@export_range(5.0, 200.0, 1.0) var knock_friction := 40.0
+@export_range(0.0, 10.0, 0.1) var knock_drag_air := 2.0
+@export_range(0.1, 5.0, 0.1) var knock_stop := 1.0
+
 @export_group("Caerse")
 ## DERRIBADA (KinematicMover.knock_down; 15/11/2026, desde el módulo Jefes, con el sí del usuario: «los brazos están
 ## mega bugueados cuando se cae… arreglalo de raíz»): SIEMPRE DE ESPALDAS, la pose de reposo de una pieza; cae en

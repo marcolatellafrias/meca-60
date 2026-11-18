@@ -482,11 +482,24 @@ func block_hit(_at := Vector3.INF) -> bool:
 	return false
 
 
-## UN EMPUJÓN A LA CINEMÁTICA: se corre `offset` (m, de costado) en `time` (s), con un saltito de `hop` m, sin
-## manejarse (ver KinematicMover.shove). A la física, nada: a ella se le pega con `push_impulse`.
+## UN EMPUJÓN A LA CINEMÁTICA: una velocidad que se frena sola, con la gravedad de siempre (`knock_back`; ver
+## KinematicMover.knock); `shove`, el que recorre `offset` m en el piso, con un saltito de `hop` m. A la física, nada: a
+## ella se le pega con `push_impulse`.
+func knock_back(push: Vector3) -> void:
+	if kinematic and mover != null:
+		mover.knock(push)
+
+
 func shove(offset: Vector3, time: float, hop := 0.0) -> void:
 	if kinematic and mover != null:
 		mover.shove(offset, time, hop)
+
+
+## EL REVOLEO DE LA CINEMÁTICA: un camino guionado hasta `offset` m en `time` s, con un arco de `hop` m (lo que lleva
+## quien la agarró y la tira; ver KinematicMover.carry).
+func carry(offset: Vector3, time: float, hop := 0.0) -> void:
+	if kinematic and mover != null:
+		mover.carry(offset, time, hop)
 
 
 ## DERRIBA A LA CINEMÁTICA: cae siempre de espaldas, queda tirada y se levanta, animado (ver

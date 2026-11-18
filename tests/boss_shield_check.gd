@@ -2,7 +2,8 @@ extends Node
 
 ## EL ESCUDO CONTRA EL LUCHADOR (sin ventana, alrededor de un minuto): cada ataque del jefe contra la meca quieta, sin
 ## escudo y con el escudo prendido (MechShield); de cada uno, cuánta vida le sacó. Con el escudo tiene que dar 0: el
-## golpe se le pregunta una vez (BalanceBody.block_hit) y queda usado. --solo=piso, sólo los que lo tienen en el nombre;
+## golpe se le pregunta una vez (BalanceBody.block_hit) y queda usado. El escudo es de un brazo y frena sólo de frente:
+## sin el brazo de escudo, sólo mide «sin escudo». --solo=piso, sólo los que lo tienen en el nombre;
 ## --ver, cuántas veces lo usó.
 ##   godot --headless --path . res://tests/boss_shield_check.tscn
 
@@ -34,6 +35,10 @@ func _ready() -> void:
 	_mech = _brain.target as ToolMech
 	await _wait(0.5)
 	_mech.scripted = true
+	# El escudo es de un brazo (ShieldTip; Cabinas, 18/11/2026): sin ese brazo no hay escudo, y la columna no se mide.
+	var shields: Array = [false, true] if _mech.guard != null else [false]
+	if _mech.guard == null:
+		print("la meca no lleva el brazo de escudo: sólo «sin escudo»")
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--solo="):
 			_only = argument.trim_prefix("--solo=")
@@ -41,7 +46,7 @@ func _ready() -> void:
 		if not _only.is_empty() and not title.contains(_only):
 			continue
 		var line := "%s:" % title
-		for shielded: bool in [false, true]:
+		for shielded: bool in shields:
 			line += " %s %.0f" % ["con escudo" if shielded else "sin escudo", await _try(ACTS[title], GAPS[title], shielded)]
 		print(line)
 	get_tree().quit()
@@ -61,6 +66,10 @@ func _try(act: BrawlerBrain.Act, gap: float, shielded: bool) -> float:
 		await get_tree().physics_frame
 		clock += 1.0 / Engine.physics_ticks_per_second
 		_mech.energy.level = 1.0
+		if OS.get_cmdline_user_args().has("--ver") and int(clock * 60) % 12 == 0:
+			var apart := _mech.mover.global_position - _boss.global_position
+			print("    %.1f s: a %.1f m, vida %.0f, %s" % [clock, Vector2(apart.x, apart.z).length(), Health.of(_mech).left,
+				_brain.stage])
 	await _wait(2.5)
 	if OS.get_cmdline_user_args().has("--ver"):
 		print("  %s: lo usó %d veces en %.1f s, el escudo %s" % [_brain.power(act).title(), _brain.power(act).uses - uses,
