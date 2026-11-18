@@ -170,10 +170,10 @@ func step(delta: float) -> void:
 	# ATERRIZÓ: se hunde según a cuánto bajaba (el resorte vertical; ver `body_spring`).
 	body_spring.land_full_speed = k.land_full_speed
 	body_spring.land_threshold = k.land_full_speed * 0.15
-	# Con peso en el quiebre: baja en un instante (land_push) y vuelve en `land_recover` s, casi sin rebote.
+	# Con peso en el quiebre: baja en un instante (land_push) y vuelve en `land_recover` s, con rebote (`land_bounce`).
 	var firm := 4.5 / maxf(k.land_recover, 0.05)
 	body_spring.land_stiffness = firm * firm
-	body_spring.land_damping = 2.0 * 0.95 * firm
+	body_spring.land_damping = 2.0 * lerpf(0.95, 0.3, k.land_bounce) * firm
 	body_spring.land_push = true
 	if is_on_floor() and not _grounded_was:
 		body_spring.land(_fall_speed)

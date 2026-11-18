@@ -91,8 +91,10 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 @export_range(2.0, 80.0, 1.0) var land_full_speed := 20.0
 ## CON PESO EN EL QUIEBRE (el usuario: «el peso se siente en el quiebre inicial nada más»; «la vuelta… siempre…
 ## relativamente snappy, nunca… sluggish»): baja en un instante, como un impacto (HitSpring.land_push), y en
-## `land_recover` s está de vuelta, casi sin rebote.
-@export_range(0.1, 3.0, 0.05) var land_recover := 0.35
+## `land_recover` s está de vuelta, CON RESORTE: se pasa un poco para arriba y se acomoda (`land_bounce`, 0 sin rebote;
+## el usuario: «siempre con resorte»).
+@export_range(0.1, 3.0, 0.01) var land_recover := 0.22
+@export_range(0.0, 1.0, 0.05) var land_bounce := 0.7
 ## EL POLVO (ParticleSystems.landing_dust, un anillo a ras del piso): cayendo a `dust_speed` m/s o más (un salto cae a
 ## 2·alto/tiempo; en picada, a `dive_speed`). 0, nunca.
 @export_range(0.0, 80.0, 1.0) var dust_speed := 16.0

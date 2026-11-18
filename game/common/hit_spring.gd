@@ -81,11 +81,22 @@ func land(dv_y: float) -> void:
 		return
 	var depth := clampf(dv_y / land_full_speed, -1.0, 1.0)
 	if land_push:
-		# Un resorte casi crítico empujado con v llega a ~v / (ω·e) en 1/ω.
-		_y_vel += depth * sqrt(land_stiffness) * exp(1.0)
+		_y_vel += depth / _peak_per_speed()
 		return
 	y = clampf(y + depth, -1.0, 1.0)
 	_y_vel = 0.0
+
+
+## Lo más que se aparta el resorte vertical por cada m/s de empujón (con su rigidez y su freno; con rebote o sin).
+func _peak_per_speed() -> float:
+	var omega := sqrt(maxf(land_stiffness, 0.0001))
+	var zeta := land_damping / (2.0 * omega)
+	if zeta >= 1.0:
+		return 1.0 / (omega * exp(1.0))
+	var root := sqrt(1.0 - zeta * zeta)
+	var damped := omega * root
+	var peak_at := atan2(root, zeta) / damped
+	return exp(-zeta * omega * peak_at) * sin(damped * peak_at) / damped
 
 
 func update(delta: float) -> void:

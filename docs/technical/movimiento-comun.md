@@ -48,8 +48,9 @@ huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la me
      alto, 3 de uno de 25. `tests/land_spring_movie` (el video).
      **Con peso en el quiebre** (18/11/2026; el usuario: «el peso se siente en el quiebre inicial nada más»; la vuelta,
      «siempre… relativamente snappy, nunca… sluggish»): la jaula sale hacia abajo como un impacto (`HitSpring.land_push`:
-     llega a lo más hondo, hasta 0,9 m, en unos 75 ms) y vuelve en `land_recover` (0,35 s; medido, 0,29 s del fondo al
-     10 %) casi sin rebote. **Y POLVO** cayendo fuerte (`dust_speed`, 16 m/s: un salto no, en picada
+     llega justo a lo más hondo, hasta 0,9 m, con cualquier rebote: `_peak_per_speed`) y vuelve en `land_recover` (0,22
+     s; el usuario: «un poco más rápida la vuelta») CON RESORTE (`land_bounce`, 0,7; el usuario: «siempre con resorte»).
+     Medido: vuelve del fondo en 0,10 s y rebota hasta 0,14 m para arriba. **Y POLVO** cayendo fuerte (`dust_speed`, 16 m/s: un salto no, en picada
      y de 15 m sí): un anillo a ras del piso que rueda para afuera (`ParticleSystems.landing_dust`, la variación del
      polvo de golpe; fila Partículas). Lo detecta el motor: el paso en que `is_on_floor` pasa a verdadero, con la
      velocidad de caída de antes de moverse.

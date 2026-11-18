@@ -1,8 +1,8 @@
 extends Node
 
-## EL ATERRIZAJE CON EL RESORTE (con ventana, unos 25 segundos de video): al caer, la caja se hunde y vuelve rebotando
+## EL ATERRIZAJE CON EL RESORTE (con ventana, unos 20 segundos de video): al caer, la caja se hunde y vuelve rebotando
 ## (el resorte vertical de HitSpring, común con los personajes), sólo como dibujo: el motor no baja. LA JAULA salta en el
-## lugar sin resorte (para comparar) y con él, cae en picada agachada (KinematicSettings.dive_speed) y cae de 15 m (las
+## lugar, cae en picada agachada (KinematicSettings.dive_speed) y cae de 15 m (las
 ## dos últimas, fuerte: levantan polvo, ParticleSystems.landing_dust); después EL JEFE
 ## salta (Brawler.jump) y cae sobre sus orugas. A media velocidad. Imprime cuánto se hundió cada vez. Se graba con --write-movie:
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/aterrizar.avi --fixed-fps 30 res://tests/land_spring_movie.tscn
@@ -63,11 +63,7 @@ func _ready() -> void:
 	# A MEDIA VELOCIDAD, para que se vea el hundirse (el video dura el doble).
 	Engine.time_scale = 0.5
 	var k := _mech.kinematic_settings()
-	var sink := k.land_sink
-	k.land_sink = 0.0
-	await _jump_mech("la jaula: un salto, SIN resorte", false)
-	k.land_sink = sink
-	await _jump_mech("la jaula: un salto, con resorte (%.2f m a %.0f m/s)" % [k.land_sink, k.land_full_speed], false)
+	await _jump_mech("la jaula: un salto (%.2f m a %.0f m/s)" % [k.land_sink, k.land_full_speed], false)
 	await _jump_mech("la jaula: cae en picada, agachada", true)
 	# De 15 m de alto (se la pone ahí y cae).
 	_title.text = "la jaula: cae de 15 m"
@@ -103,6 +99,7 @@ func _jump_mech(label: String, dive: bool) -> void:
 func _land_mech(label: String, dive: bool, seconds: float) -> void:
 	var dust := _mech.mover.dust_raised
 	var deepest := 0.0
+	var over := 0.0
 	var deepest_at := 0.0
 	var back_at := -1.0
 	var clock := 0.0
@@ -111,15 +108,17 @@ func _land_mech(label: String, dive: bool, seconds: float) -> void:
 		clock += 1.0 / Engine.physics_ticks_per_second
 		_mech.crouch = dive and clock > 0.25 and not _mech.grounded
 		var y := _mech.mover.body_spring.y
+		over = minf(over, y)
 		if y > deepest:
 			deepest = y
 			deepest_at = clock
 		elif deepest > 0.05 and back_at < 0.0 and y < deepest * 0.1:
 			back_at = clock
 	_mech.crouch = false
-	print("%s: se hundió %.2f m%s%s" % [label, deepest * _mech.kinematic_settings().land_sink,
+	print("%s: se hundió %.2f m%s%s%s" % [label, deepest * _mech.kinematic_settings().land_sink,
 		" · levantó polvo" if _mech.mover.dust_raised > dust else "",
-		" · volvió en %.2f s" % ((back_at - deepest_at) * Engine.time_scale) if back_at > 0.0 else ""])
+		" · volvió en %.2f s" % ((back_at - deepest_at) * Engine.time_scale) if back_at > 0.0 else "",
+		" · rebotó %.2f m para arriba" % (-over * _mech.kinematic_settings().land_sink)])
 	await _wait(0.6)
 
 
