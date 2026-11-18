@@ -26,6 +26,10 @@ const FLY_COST := 0.22
 const MODE_KEYS := {KEY_1: CannonTip.Mode.SIMPLE, KEY_2: CannonTip.Mode.BURST, KEY_3: CannonTip.Mode.BEAM,
 	KEY_4: CannonTip.Mode.SUPER}
 
+## LO QUE PIDEN LOS CONTROLES DE ADENTRO (MechCockpit, 17/11/2026): cuando nadie la posee, las piernas, el salto, el
+## dash y levitar salen de ahí, con las mismas reglas de energía que las teclas.
+var cockpit := MechCockpit.new()
+
 var _dash_on := false
 var _shift_was := false
 var _jump_on := false
@@ -37,12 +41,19 @@ func read() -> void:
 	var tool := mech as ToolMech
 	var delta := get_physics_process_delta_time()
 	var energy := tool.energy
-	var mine := driving and UIState.gameplay_active() and energy.able()
-	mech.move = Vector2(MechKeys.axis(KEY_D, KEY_A), MechKeys.axis(KEY_W, KEY_S)) if mine else Vector2.ZERO
+	var keyed := driving and UIState.gameplay_active()
+	var mine := keyed and energy.able()
+	# Sin nadie poseyéndola, lo piden los controles de adentro (`cockpit`).
+	var inside := not keyed and energy.able()
+	mech.move = Vector2(MechKeys.axis(KEY_D, KEY_A), MechKeys.axis(KEY_W, KEY_S)) if mine \
+		else (cockpit.move if inside else Vector2.ZERO)
 	mech.sprint = false
-	mech.crouch = mine and Input.is_physical_key_pressed(KEY_CTRL)
-	# EL DASH: al apretar Shift con una dirección, si alcanza la energía (y su barra).
-	var shift := mine and Input.is_physical_key_pressed(KEY_SHIFT)
+	mech.crouch = (mine and Input.is_physical_key_pressed(KEY_CTRL)) or (inside and cockpit.crouch)
+	# EL DASH: al apretar Shift con una dirección, si alcanza la energía (y su barra). Desde adentro, cada botón del
+	# dash es su dirección.
+	if inside and cockpit.dash:
+		mech.move = cockpit.dash_way
+	var shift := (mine and Input.is_physical_key_pressed(KEY_SHIFT)) or (inside and cockpit.dash)
 	if shift and not _shift_was and mech.move.length() > 0.1 and mech.mover != null and mech.mover.dash_ready():
 		_dash_on = energy.spend(DASH_COST)
 	if not shift:
@@ -50,7 +61,7 @@ func read() -> void:
 	_shift_was = shift
 	mech.dash = _dash_on
 	# EL SALTO, al apretar apoyada; LEVITAR, mantenido en el aire, gasta de a poco.
-	var space := mine and Input.is_physical_key_pressed(KEY_SPACE)
+	var space := (mine and Input.is_physical_key_pressed(KEY_SPACE)) or (inside and (cockpit.jump or cockpit.levitate))
 	if mech.grounded:
 		_flying = false
 		if space and not _space_was:
@@ -72,7 +83,8 @@ func read() -> void:
 		tool.drill.charging = mine and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
 	if tool.cannon == null:
 		return
-	tool.cannon.trigger = mine and Input.is_physical_key_pressed(KEY_F)
+	# El gatillo: la F poseyéndola, o el mando del cañón desde adentro (su energía la cuida el cañón).
+	tool.cannon.trigger = (mine and Input.is_physical_key_pressed(KEY_F)) or (not keyed and cockpit.fire)
 	if mine:
 		tool.cannon.move_lever(Vector2(MechKeys.axis(KEY_RIGHT, KEY_LEFT), MechKeys.axis(KEY_UP, KEY_DOWN)), delta)
 

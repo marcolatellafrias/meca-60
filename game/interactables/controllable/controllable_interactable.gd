@@ -313,9 +313,22 @@ func exit_mode() -> void:
 	pass
 
 
-## Adónde se va la mirada en el modo, en el mundo; INF, a ningún lado (la mirada queda libre).
+## Adónde se va la mirada AL ENTRAR en el modo (una transición, no de golpe), en el mundo; INF, a ningún lado. Después,
+## la mirada queda libre y el control recibe hacia dónde mira (`mode_steer`).
 func mode_look() -> Vector3:
 	return Vector3.INF
+
+
+## EN EL MODO, HACIA DÓNDE MIRA QUIEN LO MANEJA (el giro y la inclinación en el mundo, rad), cada paso: el brazo plegable
+## se lo pasa al torso de la meca, que lo persigue con su resorte (el usuario: «que la cámara sea libre y que lo que se
+## limite sea qué tanto se mueve el torso yendo a ese target»).
+func mode_steer(_world_yaw: float, _world_pitch: float) -> void:
+	pass
+
+
+## EN EL MODO, EL CLIC IZQUIERDO apretado o soltado: lo usa (disparar, pegar).
+func mode_use(_pressed: bool) -> void:
+	pass
 
 func handle_scroll(_delta: float) -> void:
 	pass

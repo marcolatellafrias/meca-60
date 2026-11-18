@@ -25,13 +25,23 @@ algo se rompe, hay que reacomodarse, salir afuera a reparar o ir a buscar recurs
 Lo decidió el usuario el 17/11/2026, tentativo hasta probarlo:
 - **E** para subirse a la meca y para bajarse.
 - **Clic izquierdo** interactúa: aprieta un botón, mueve una palanca.
-- **Clic derecho mantenido** agarra un componente para usarlo: la cámara se traba al frente y el **clic izquierdo** lo
-  usa (disparar, atacar, mover el torso). Sirve, por ejemplo, para manejar los brazos desde abajo mirando al frente.
+- **Clic derecho mantenido** agarra un componente para usarlo: la mirada va al frente con una transición y **queda
+  libre**, y el **clic izquierdo** lo usa (disparar, atacar). Sirve para manejar los brazos desde abajo: **el torso
+  persigue la mirada con un resorte**, no 1:1 (el usuario: «que la cámara sea libre y que lo que se limita sea qué tanto
+  se mueve el torso yendo a ese target… se siente responsive y pesado»). *Primero se pensó con la cámara trabada.*
 - **La ruedita del mouse** no se usa por ahora (los componentes de character-parametric la leen; queda).
 - **Los modos, para jugar solo** (más adelante): un modo en el que se entra y del que se sale. Adentro, captura el
   teclado y los dos clics para ese sistema (caminar con WASD y un brazo en cada clic); afuera, se mira libre el puesto y
   se tocan otras cosas. Así cada sistema baja su complejidad para uno, sin volverse un shooter común: los sistemas
   siguen siendo varios, y muchos pasan al teclado.
+
+## Los controles para 3 (17/11/2026, hechos; el código en [[tableros]])
+- **Abajo, en la cápsula: los dos brazos y el torso.** Un mando por brazo: **el cañón** (tres botones eligen ráfaga,
+  barrido o súper; el clic izquierdo dispara, barre o carga) y **el puño** (cuanto más se mantiene, más lenta y más
+  fuerte la piña). Agarrando cualquiera, el torso sigue la mirada. Dos pantallas: la energía y la carga.
+- **Arriba, en el pozo: la locomoción.** Una palanca para caminar, saltar, levitar y el dash con ocho botones en círculo.
+  El escudo, después.
+- **Atrás, el artillero**: todavía nada.
 
 ## Cómo se muestra un objeto en un puesto
 Dos formas (17/11/2026; el código, en [[tableros]]):
@@ -39,14 +49,14 @@ Dos formas (17/11/2026; el código, en [[tableros]]):
    inclinado y la pared del pozo de arriba— tiene la suya.
 2. **En la punta de un brazo de dos articulaciones**, que sale de una celda de la grilla o de otro lado (el piso del
    artillero). **Fijo**, quieto en su pose, o **plegable**: se trae cuando se usa ese componente y se pliega con él
-   cuando no. Sin hacer todavía.
+   cuando no. Hechos los dos en la jaula: los mandos de los brazos, plegables; las pantallas, fijas.
 
 ## Lo que se va a probar, en parcelas aparte
 En orden (el usuario: «estos experimentos los haría separados, así vemos bien las cosas, y después le agregamos a la
 meca»):
 1. La grilla en las caras y los controles de verdad: **hecho y pasado a la meca jaula**, ver [[tableros]].
 2. El brazo de dos articulaciones: **el plegable, hecho** (el más simple, con el mando de palo; se trae con el clic
-   derecho mantenido y la mirada se va adelante), ver [[tableros]]. El fijo, cuando haga falta.
+   derecho mantenido y la mirada se va adelante), ver [[tableros]]. **El fijo, también** (las pantallas de la cápsula).
 3. La zona del artillero: un disco chato (quizás hexagonal) del que salen brazos con lo suyo, que se pliegan si tapan.
 4. **Las dos formas del torso**, a elegir jugando: la **cuadrada** de hoy (la cápsula adentro y el bloque de arriba;
    girar el torso gira también el puesto de arriba) y la **redonda** (el cuerpo como una esfera chanfleada con la

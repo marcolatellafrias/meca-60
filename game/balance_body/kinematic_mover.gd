@@ -286,8 +286,21 @@ func _turn(k: KinematicSettings, delta: float) -> void:
 	var error := clampf(wrapf(body.aim_yaw - _yaw, -PI, PI), -BalanceBody.AIM_LEAD, BalanceBody.AIM_LEAD)
 	body.aim_yaw = _yaw + error
 	var top := deg_to_rad(k.turn_speed)
-	_yaw_speed = move_toward(_yaw_speed, clampf(error * 6.0, -top, top), deg_to_rad(k.turn_accel) * delta)
+	if k.turn_spring > 0.0:
+		# EL RESORTE (ver KinematicSettings.turn_spring): tira hacia lo pedido, frena con la velocidad; con los topes.
+		var push := KinematicMover.spring(error, _yaw_speed, k.turn_spring, k.turn_bounce)
+		var most := deg_to_rad(k.turn_accel)
+		_yaw_speed = clampf(_yaw_speed + clampf(push, -most, most) * delta, -top, top)
+	else:
+		_yaw_speed = move_toward(_yaw_speed, clampf(error * 6.0, -top, top), deg_to_rad(k.turn_accel) * delta)
 	_yaw += _yaw_speed * delta
+
+
+## LA ACELERACIÓN DE UN RESORTE CON FRENO hacia `error` (lo que falta), yendo a `speed`: de `frequency` (Hz) y
+## amortiguado `bounce` (1, justo sin pasarse; menos, se pasa y vuelve).
+static func spring(error: float, speed: float, frequency: float, bounce: float) -> float:
+	var omega := TAU * frequency
+	return omega * omega * error - 2.0 * bounce * omega * speed
 
 
 ## LA PONE en `where` (el punto del piso debajo de su centro), quieta, sin barrer el camino (ver StompFeet.place_now).

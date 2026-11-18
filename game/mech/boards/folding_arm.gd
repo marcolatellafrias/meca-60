@@ -44,6 +44,11 @@ var piece: Node3D = null
 var rods: Array[Node3D] = []
 var elbow_ball: Node3D = null
 
+## LO QUE HACE EN SU MODO (lo conecta quien lo monta, CageBoards): `steer(giro, inclinación)` con hacia dónde mira quien
+## lo maneja, cada paso; `use(apretado)` con el clic izquierdo.
+var steer := Callable()
+var use := Callable()
+
 var _t := 0.0
 
 
@@ -76,12 +81,25 @@ func enter_mode() -> void:
 func exit_mode() -> void:
 	visual_value = 0.0
 	_emit_if_changed(0.0)
+	# Soltar el mando suelta también lo que se tenía apretado.
+	if use.is_valid():
+		use.call(false)
 
 
 func mode_look() -> Vector3:
 	if not look_point.is_finite() or piece == null:
 		return Vector3.INF
 	return piece.global_transform * look_point
+
+
+func mode_steer(world_yaw: float, world_pitch: float) -> void:
+	if steer.is_valid():
+		steer.call(world_yaw, world_pitch)
+
+
+func mode_use(pressed: bool) -> void:
+	if use.is_valid():
+		use.call(pressed)
 
 
 ## El agarre: en el medio del palo.

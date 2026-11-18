@@ -13,6 +13,8 @@ const LABELS := {
 	"walk_speed": "velocidad (m/s)", "start_time": "tarda en arrancar (s; 0: al instante)",
 	"stop_time": "tarda en frenar o cambiar de dirección (s)",
 	"turn_speed": "velocidad tope (°/s)", "turn_accel": "aceleración tope (°/s²)",
+	"turn_spring": "resorte: rapidez (Hz; 0, sin resorte)", "turn_bounce": "resorte: rebote (1, nada; menos, más)",
+	"pitch_limit": "inclinación al mirar arriba o abajo: tope (°; 0, no se inclina)",
 	"jump_height": "salto: sube (m)", "jump_time": "salto: tarda en subir (s)",
 	"fly_speed": "vuelo: sube a (m/s)", "fly_time": "vuelo: la barra dura (s)",
 	"fly_refill": "vuelo: se llena apoyada en (s)",

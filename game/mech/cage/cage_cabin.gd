@@ -51,8 +51,9 @@ static var GLASS_PAINT := CageCabin._glass_paint()
 const CELL := Color(0.62, 0.6, 0.42)
 ## El amarillo apagado del arma del artillero (el usuario: «desatura un poco sus colores y oscurecelos un poco»).
 const YELLOW := Color(0.68, 0.57, 0.26)
-## Los puestos, en el orden de las sillas.
-const SEAT_NAMES := ["brazos", "artillero", "manejo"]
+## Los puestos, en el orden de las sillas: arriba la locomoción, atrás el artillero, abajo (en la cápsula) los brazos y el
+## torso (17/11/2026, la variante de 3: CageBoards). *Hasta entonces, arriba los brazos y abajo el manejo.*
+const SEAT_NAMES := ["locomoción", "artillero", "brazos"]
 const DRIVER := 2
 
 ## El arma del artillero (la parte que cabecea), para cuando sea funcional.

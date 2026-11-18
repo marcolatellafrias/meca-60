@@ -106,6 +106,27 @@ var _strike_was := PackedVector3Array()
 var _sphere := SphereShape3D.new()
 
 
+## LA PIÑA CARGADA (17/11/2026, el usuario: «mientras más tiempo hacés clic, más tarda la animación y más pega, pero
+## más difícil es de pegarle porque dura más y te exponés más»): la que se está tirando va `punch_pace` de rápida (×) y
+## pega `punch_strength` de fuerte (×). Las pone `charged_strike`; al terminar la piña vuelven a 1.
+var punch_pace := 1.0
+var punch_strength := 1.0
+
+
+## TIRA EL GOLPE PRINCIPAL CARGADO `power` (0 a 1): de la de siempre (0) a la más lenta (`slowest` de la velocidad) y
+## más fuerte (`strongest` del golpe). Devuelve si lo tiró.
+func charged_strike(power: float, slowest: float, strongest: float) -> bool:
+	if punching != Punch.NONE:
+		return false
+	punch_pace = lerpf(1.0, slowest, clampf(power, 0.0, 1.0))
+	punch_strength = lerpf(1.0, strongest, clampf(power, 0.0, 1.0))
+	if not main_strike():
+		punch_pace = 1.0
+		punch_strength = 1.0
+		return false
+	return true
+
+
 ## Tira una piña (si no está en otra). Devuelve si la tiró.
 func punch(kind: Punch) -> bool:
 	if punching != Punch.NONE or kind == Punch.NONE:
@@ -150,6 +171,8 @@ func _advance(delta: float) -> void:
 		_clock += delta
 		if _clock >= _punch_time():
 			punching = Punch.NONE
+			punch_pace = 1.0
+			punch_strength = 1.0
 	_rest = _rest.move_toward(stance_at(stance), STANCE_SPEED * reach() * delta)
 	if _hand != null:
 		_hand.fist = punching != Punch.NONE or stance == Stance.COVER
@@ -234,7 +257,7 @@ func _punch_time() -> float:
 	var total := RETURN_TIME
 	for step: Array in _steps():
 		total += float(step[0])
-	return total / _punch_speed()
+	return total / (_punch_speed() * punch_pace)
 
 
 ## ── LA POSE ──────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -363,7 +386,7 @@ func _strike(delta: float, skip: Array[RID]) -> void:
 func _hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> void:
 	_struck[body.get_instance_id()] = true
 	if tip == null or not tip.hit(body, at, velocity):
-		EnergyBolt.lands(body, velocity * PoseArmSettings.current.hit_mass, at, "golpe")
+		EnergyBolt.lands(body, velocity * PoseArmSettings.current.hit_mass * punch_strength, at, "golpe")
 	EnergyBolt.flash(get_tree().current_scene, at, strike_radius() * 1.2, Color(1.0, 0.93, 0.7))
 	last_hit_speed = velocity.length()
 	last_hit = body

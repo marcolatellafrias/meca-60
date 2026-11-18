@@ -44,10 +44,55 @@ func _ready() -> void:
 	label.pixel_size = 0.006
 
 
+## ── LA INCLINACIÓN DEL TORSO (17/11/2026, el usuario: «si mirás hacia arriba o hacia abajo también se inclinaría el
+## torso… con un límite bastante fuerte»): `aim_pitch` lo pide quien la maneja desde adentro (ver `steer`); el torso lo
+## persigue con el mismo resorte del giro, hasta `KinematicSettings.pitch_limit`. Se inclina la cabina entera (en la
+## redonda, también el octógono de arriba), no las piernas; el cañón sube y baja con ella.
+var aim_pitch := 0.0
+var pitch := 0.0
+var _pitch_speed := 0.0
+
+
+## LO QUE PIDE EL QUE MANEJA LOS BRAZOS MIENTRAS AGARRA UN MANDO: hacia dónde mira (el giro y la inclinación en el mundo,
+## rad). El torso lo persigue con su resorte (KinematicMover); la puntería va con él.
+func steer(world_yaw: float, world_pitch: float) -> void:
+	aim_yaw = world_yaw
+	aim_pitch = world_pitch
+	_steered = 2
+
+
+## Cuántos pasos más se considera que la manejan desde adentro (lo renueva `steer`): mientras, el cañón sube y baja con
+## el torso; si no, su palanca es de las teclas (poseyéndola).
+var _steered := 0
+
+
+func _tilt(delta: float) -> void:
+	var k := MOVES
+	var limit := deg_to_rad(k.pitch_limit)
+	var wanted := clampf(aim_pitch, -limit, limit)
+	if k.turn_spring > 0.0:
+		_pitch_speed += KinematicMover.spring(wanted - pitch, _pitch_speed, k.turn_spring, k.turn_bounce) * delta
+	else:
+		_pitch_speed = (wanted - pitch) * 6.0
+	pitch = clampf(pitch + _pitch_speed * delta, -limit * 1.5, limit * 1.5)
+	if cabin != null:
+		cabin.rotation.x = pitch
+	if _steered > 0:
+		_steered -= 1
+		aim_pitch = aim_pitch if _steered > 0 else 0.0
+		if cannon != null:
+			cannon.lever = Vector2(0.0, CANNON_REST_UP + rad_to_deg(pitch))
+
+
+## Adónde apunta el cañón de alto con el torso derecho (grados; la palanca de CannonTip).
+const CANNON_REST_UP := -5.0
+
+
 ## ── EL MÓDULO DE ARRIBA, APARTE DEL TORSO (la redonda con `CageShape.upper_turns`; ver CageCabin.upper) ─────────────
 ## Cada paso, el octógono de arriba mira a `upper_heading`, gire como gire el torso. Apagado, va con el torso.
 func _after_step(k: BodySettings, delta: float) -> void:
 	super(k, delta)
+	_tilt(delta)
 	var form := CageCabin.shape()
 	if form.is_round() and form.upper_turns and cabin is CageCabin:
 		(cabin as CageCabin).set_upper_world_yaw(upper_heading())
@@ -91,9 +136,11 @@ func default_loadout() -> Array[ArmLoadout]:
 
 
 ## Lo suyo: el cañón a la izquierda (discreto) y el palo a la derecha (con músculos), los dos con placa.
+## Lo que lleva de arranque (sin nada guardado en el F5): el cañón a la izquierda y el puño pesado a la derecha (el
+## usuario, 17/11/2026: «el puño lo haría que reemplace el palo por ahora para estas pruebas iniciales»).
 static func default_arms() -> Array[ArmLoadout]:
 	return [ArmLoadout.of(ArmLoadout.Motion.POSE, ArmLoadout.Tip.CANNON, true),
-		ArmLoadout.of(ArmLoadout.Motion.MUSCLE, ArmLoadout.Tip.POLE, true)]
+		ArmLoadout.of(ArmLoadout.Motion.MUSCLE, ArmLoadout.Tip.HEAVY_FIST, true)]
 
 
 ## LAS PLACAS DE LAS PIERNAS (al frente del muslo y de la canilla).

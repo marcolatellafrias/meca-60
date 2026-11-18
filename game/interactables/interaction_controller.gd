@@ -161,7 +161,10 @@ func _read_intent() -> void:
 	var able := not who._is_ragdolling()
 	if intent.use != _was_use:
 		_was_use = intent.use
-		if not intent.use:
+		# EN EL MODO DE UN CONTROL, el clic izquierdo es para él (ver ControllableInteractable.mode_use).
+		if is_instance_valid(_mode):
+			_mode.mode_use(intent.use)
+		elif not intent.use:
 			release_interact()
 		elif able:
 			try_interact()
@@ -226,6 +229,10 @@ func update(delta: float) -> void:
 		_want_grab(_held, _held.get_nearest_handle_point(origin))
 		return
 
+	# EN EL MODO, hacia dónde mira (ver ControllableInteractable.mode_steer).
+	if is_instance_valid(_mode) and is_instance_valid(player_camera):
+		var look := -player_camera.global_basis.z.normalized()
+		_mode.mode_steer(atan2(-look.x, -look.z), asin(clampf(look.y, -1.0, 1.0)))
 	if is_instance_valid(_controlled):
 		var handle     := _controlled.get_nearest_handle_point(_get_interaction_origin())
 		var ctrl_world := handle.global_position if is_instance_valid(handle) else _controlled.global_position
@@ -806,9 +813,14 @@ func _set_mode(on: bool) -> void:
 			_stop_control()
 
 
-## Adónde se va la mirada: la del control en su modo; INF, libre.
+## Adónde se va la mirada al entrar en el modo: la del control; INF, libre.
 func mode_look() -> Vector3:
 	return _mode.mode_look() if is_instance_valid(_mode) else Vector3.INF
+
+
+## Si hay un control en su modo.
+func in_mode() -> bool:
+	return is_instance_valid(_mode)
 
 func apply_grab_rotation(relative: Vector2) -> void:
 	if _is_rotating and is_instance_valid(_grabbed):

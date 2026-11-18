@@ -30,6 +30,18 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 ## Velocidad tope (grados por segundo) y aceleración tope (grados por segundo al cuadrado).
 @export_range(10.0, 360.0, 5.0) var turn_speed := 90.0
 @export_range(10.0, 1000.0, 10.0) var turn_accel := 140.0
+## EL RESORTE DEL GIRO (17/11/2026, el usuario: «si lo giro muy rápido… termina haciendo un poquito de ida y vuelta como
+## resorte… que no sea libre con el mouse… la gracia de los límites que tiene la meca»): con `turn_spring` (Hz) en más de
+## 0, el torso persigue lo pedido como un resorte con freno —con la velocidad y la aceleración tope de arriba—, y con
+## `turn_bounce` debajo de 1 se pasa y vuelve (más bajo, más rebote): el rebote mueve la puntería. En 0, el giro de
+## siempre (sin resorte). ARRANCA CON RESORTE Y UN POCO DE REBOTE: los valores del código son los de la meca (las únicas
+## que se mueven con esto); van acá y no en cada meca porque el archivo guardado no escribe lo que es igual al código, y
+## al cargarlo eso vuelve al código.
+@export_range(0.0, 6.0, 0.05) var turn_spring := 1.2
+@export_range(0.1, 1.0, 0.01) var turn_bounce := 0.55
+## LA INCLINACIÓN DEL TORSO al mirar arriba o abajo, con el mismo resorte: el tope (°; 0, no se inclina). Sutil: el
+## usuario, «con un límite bastante fuerte, porque si no el de arriba se inclinaría muchísimo y se desorientaría».
+@export_range(0.0, 30.0, 0.5) var pitch_limit := 8.0
 
 @export_group("Saltar y volar")
 ## EL SALTO: sube `jump_height` (m) en `jump_time` (s), y baja igual. La gravedad sale de esos dos números.

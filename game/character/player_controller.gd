@@ -162,10 +162,12 @@ func _input(event: InputEvent) -> void:
 		if not _is_ragdoll_active():
 			# La sensibilidad que eligió el jugador en Opciones (GameOptions), por encima de la del control que maneja.
 			var sens := (ic.get_camera_sensitivity_factor() if ic else 1.0) * GameOptions.mouse_sensitivity
-			if not (ic and (ic._is_rotating or ic.mode_look().is_finite())):
+			if not (ic and (ic._is_rotating or _mode_phase == ModePhase.EASING)):
 				apply_camera_pitch(clamp(camera_pitch - event.relative.y * 0.002 * sens, -1.2, 1.2))
 				camera_yaw -= event.relative.x * 0.002 * sens
 				_cap_seated_look(bi)
+				if _mode_phase == ModePhase.FREE:
+					_mode_world_yaw = camera_yaw
 		# LAS MANOS SON BOTONES DE LA INTENCIÓN (ver CharacterIntent, LAS MANOS): el teclado los aprieta, el controlador los lee.
 		if is_instance_valid(bi):
 			bi.intent.hand_motion += event.relative
@@ -363,23 +365,50 @@ func _direct() -> bool:
 
 
 ## EL MODO DE UN CONTROL (ver ControllableInteractable.has_mode; el usuario, 17/11/2026: «tu cámara hace como un easing
-## hacia adelante o hacia la posición en la cual se controla ese control»): mientras está, la mirada se va sola y suave
-## hacia donde se lo maneja; el mouse queda para el control.
+## hacia adelante o hacia la posición en la cual se controla ese control»; y después: «si dejo que la cámara sea libre y
+## que lo que se limita sea qué tanto se mueve el torso yendo a ese target de la cámara… se siente tanto responsive como
+## pesado»). Dos tiempos:
+##   · AL ENTRAR (EASING): la mirada se va sola y suave hacia donde se lo maneja (`mode_look`, el frente del domo); el
+##     mouse espera.
+##   · DESPUÉS (FREE): la mirada es libre y SE QUEDA QUIETA EN EL MUNDO aunque gire el torso en el que va sentado
+##     (`_mode_world_yaw`): el torso la persigue (ver ControllableInteractable.mode_steer) y, al alcanzarla, queda al
+##     frente. Al soltar, vuelve la mirada de siempre, desde donde estaba.
 const MODE_EASE := 6.0
+## Lo que le falta a la transición para darla por terminada (rad).
+const MODE_EASED := 0.035
+enum ModePhase { NONE, EASING, FREE }
+var _mode_phase := ModePhase.NONE
+var _mode_world_yaw := 0.0
 
 
 func _ease_to_mode_look(delta: float) -> void:
-	if not is_instance_valid(interaction_controller) or not is_instance_valid(player_camera):
+	if not is_instance_valid(interaction_controller) or not is_instance_valid(player_camera) \
+			or not interaction_controller.in_mode():
+		_mode_phase = ModePhase.NONE
+		return
+	if _mode_phase == ModePhase.NONE:
+		_mode_phase = ModePhase.EASING
+	if _mode_phase == ModePhase.FREE:
+		camera_yaw = _mode_world_yaw
+		char_rigidbody.rotation.y = camera_yaw
+		_cap_seated_look(_get_bi())
 		return
 	var target := interaction_controller.mode_look()
 	if not target.is_finite():
+		_mode_phase = ModePhase.FREE
+		_mode_world_yaw = camera_yaw
 		return
 	var dir := (target - player_camera.global_position).normalized()
 	var k := 1.0 - exp(-MODE_EASE * delta)
-	camera_yaw = lerp_angle(camera_yaw, atan2(-dir.x, -dir.z), k)
-	camera_pitch = lerpf(camera_pitch, asin(clampf(dir.y, -1.0, 1.0)), k)
+	var want_yaw := atan2(-dir.x, -dir.z)
+	var want_pitch := asin(clampf(dir.y, -1.0, 1.0))
+	camera_yaw = lerp_angle(camera_yaw, want_yaw, k)
+	camera_pitch = lerpf(camera_pitch, want_pitch, k)
 	char_rigidbody.rotation.y = camera_yaw
 	_cap_seated_look(_get_bi())
+	if absf(angle_difference(camera_yaw, want_yaw)) < MODE_EASED and absf(camera_pitch - want_pitch) < MODE_EASED:
+		_mode_phase = ModePhase.FREE
+		_mode_world_yaw = camera_yaw
 
 
 func _cap_seated_look(bi: BoneInstantiator) -> void:

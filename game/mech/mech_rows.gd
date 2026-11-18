@@ -20,7 +20,8 @@ static func rows() -> Array[SandboxRow]:
 			.panel(KEY_F3, CAGE_ARMS_PANEL, ArmsPanel.new([ArmsPanel.Kind.POSE, ArmsPanel.Kind.MUSCLE])) \
 			.panel(KEY_F4, LEGS_PANEL, LegsPanel.new()) \
 			.panel(KEY_F5, EQUIPMENT_PANEL, EquipmentPanel.new(cage)) \
-			.panel(KEY_F6, POSES_PANEL, ArmPosesPanel.new()),
+			.panel(KEY_F6, POSES_PANEL, ArmPosesPanel.new()) \
+			.panel(KEY_F7, HANDLING_PANEL, CageHandlingPanel.new()),
 	]
 
 
@@ -30,5 +31,7 @@ const CAGE_SHAPE_PANEL := "la meca jaula: la esfera de abajo, el tablero de arri
 const CAGE_ARMS_PANEL := "los brazos: el cañón (discreto) y el palo (con músculos), los de todas las mecas"
 ## Las poses de los brazos para probar (ArmPosesPanel; temporal).
 const POSES_PANEL := "las poses de los brazos para probar: el reposo del palo y del cañón, y el golpe (temporal)"
+## Cómo se maneja desde adentro (CageHandlingPanel): lo de mantener apretado los mandos.
+const HANDLING_PANEL := "la meca jaula: el manejo desde adentro, la piña cargada (sólo ella)"
 ## Lo que lleva cada brazo (EquipmentPanel): cada fila el suyo.
 const EQUIPMENT_PANEL := "el equipamiento: qué lleva cada brazo, cómo se mueve y su placa (cada fila el suyo)"
