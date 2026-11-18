@@ -52,6 +52,10 @@ En `BaseLayout`, en metros sobre el plano (`at(x, z, alto)` pasa a la parcela).
 - **El fondo de la franja se llena solo**: la armería, los cosméticos y el cuadro en fila desde la pared bajo el
   elevador, y los casilleros, los que entren hasta la esclusa.
 - La bolsa, de 1,8 m de diámetro, cuelga de 1 a 4,6 m: se le pega con la meca agachada.
+- **La bolsa es low poly** (`BaseBag`, 17/11/2026): un prisma de ocho lados con las dos tapas en bisel, de caras planas.
+  Lo que la cuelga, en ideas para elegir (`tests/base_bag_ideas.tscn`): cuatro sogas (gruesa, cadena, soga con cuatro
+  correas al borde, cadena con cuatro cadenas cortas) y cuatro maneras de atarla al techo (chapa con argolla, viga doble
+  T con gancho, riel con carro, brazo desde la pared). La física, los huesos y la textura de píxeles, después.
 - La parcela se mide con todo lo más grande.
 - Los paneles F2 a F4 son los de la meca jaula, para modificarla desde la base.
 

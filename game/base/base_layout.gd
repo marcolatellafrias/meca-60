@@ -237,7 +237,8 @@ static func _bag(body: StaticBody3D) -> void:
 	var center := at(bag_at.x, bag_at.y)
 	Clay.box(body, Vector3(0.3, 0.4, NAVE), Vector3(center.x, height - 0.2, OFFSET.z + NAVE * 0.5), CAGE_COLOR)
 	Clay.cylinder(body, 0.05, height - BAG_HIGH, center + Vector3.UP * (BAG_HIGH + height) * 0.5, CAGE_COLOR)
-	Clay.cylinder(body, BAG_RADIUS, BAG_HIGH - BAG_LOW, center + Vector3.UP * (BAG_LOW + BAG_HIGH) * 0.5, BAG_COLOR)
+	# low poly, con las tapas chanfleadas (BaseBag); la soga y cómo se ata al techo, a elegir (tests/base_bag_ideas)
+	BaseBag.bag(body, BAG_RADIUS, BAG_HIGH - BAG_LOW, center + Vector3.UP * (BAG_LOW + BAG_HIGH) * 0.5, BAG_COLOR)
 	var shape := CollisionShape3D.new()
 	var cylinder := CylinderShape3D.new()
 	cylinder.radius = BAG_RADIUS
