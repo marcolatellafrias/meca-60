@@ -18,10 +18,17 @@ extends RefCounted
 ##   · DOS PANTALLAS EN BRAZOS FIJOS (ScreenArmArchetype), arriba en la vista del que maneja: la ENERGÍA de la meca y la
 ##     CARGA de lo que se está manteniendo («que esté al máximo… hasta que estás cargando… al máximo»).
 ##   ARRIBA, EN EL POZO: LA LOCOMOCIÓN (lo piden a MechCockpit, que lee la meca con las reglas de energía de siempre).
-##   · LA PALANCA DE DOS EJES: hacia dónde camina. · SALTAR. · LEVITAR (en el aire). · EL DASH: ocho botones en círculo
-##     (DashRingArchetype), uno por dirección. CADA DIRECCIÓN ES HACIA DÓNDE APUNTA EN LA MECA: la palanca empujada
-##     hacia el frente de la meca camina adelante, el botón del círculo que queda hacia el frente tira el dash adelante
-##     (se mide en el mundo y se pasa al torso: vale en cualquier cara, y aunque el módulo de arriba gire aparte).
+##   · EN EL TABLERO DE ADELANTE, DOS PALANCAS DE PALO NEGRO Y PUNTA ROJA (ControlArchetype.DRIVE_LEVER, DRIVE_STICK;
+##     el usuario: «una que es de aceleración… y la otra… XZ, que se trabe y que decida para dónde ir»): a la izquierda
+##     EL ACELERADOR (cuánto; adelante, más) y a la derecha LA DE DIRECCIÓN (hacia dónde; QUEDA DONDE SE LA DEJA, y cerca
+##     del medio no pide nada: `DEAD`). Camina hacia donde apunta la de dirección, a lo que diga el acelerador.
+##   · SALTAR adelante a la izquierda y LEVITAR (en el aire) adelante a la derecha. EL DASH, UN BOTÓN, en el tablero de la
+##     derecha, del lado de la de dirección: hacia donde apunta ella (al medio, no sale). Con las dos palancas no entra
+##     en el de adelante, ni con levitar en el suyo.
+##   HACIA DÓNDE APUNTA ES EN LA MECA: la de dirección empujada hacia el frente de la meca va adelante (se mide en el
+##   mundo y se pasa al torso: vale en cualquier cara, y aunque el módulo de arriba gire aparte; ver `_flat`).
+##   *Hasta el 17/11/2026 (el mismo día) la palanca de dos ejes caminaba sola y volvía al medio al soltarla, y el dash
+##   eran ocho botones en círculo, uno por dirección.*
 ##
 ## LA GRILLA PINTADA se ve sólo si se pide (`show_grid`, la L de su fila del sandbox): es para ubicar, no de la meca.
 ## *Hasta el 17/11/2026 había palancas y botones de prueba sin conectar en casi todas las caras, y antes, controles de
@@ -33,7 +40,7 @@ const LAYOUT := [
 	["cápsula derecha", ["brazo puño"]],
 	["cápsula izquierda arriba", ["pantalla energía"]],
 	["cápsula derecha arriba", ["pantalla carga"]],
-	["tablero adelante", ["caminar"]],
+	["tablero adelante", ["palancas"]],
 	["tablero adelante izquierda", ["saltar"]],
 	["tablero adelante derecha", ["levitar"]],
 	["tablero derecha", ["dash"]],
@@ -51,9 +58,12 @@ const LOOK_AHEAD := 3.0
 const MODES := {"modo ráfaga": [CannonTip.Mode.BURST, "RÁFAGA", Color(0.9, 0.62, 0.2)],
 	"modo barrido": [CannonTip.Mode.BEAM, "BARRIDO", Color(0.35, 0.7, 0.95)],
 	"modo súper": [CannonTip.Mode.SUPER, "SÚPER", Color(0.85, 0.3, 0.25)]}
+## La palanca de dirección más cerca del medio que esto no pide nada (parte de su recorrido).
+const DEAD := 0.2
 ## Lo que marca una grilla pintada (para mostrarlas y esconderlas todas).
 const GRID := &"grilla_de_tablero"
-## Lo que marca cada pieza puesta: su nombre en `LAYOUT` (para encontrarla: `piece_of`).
+## Lo que marca cada pieza puesta: su nombre en `LAYOUT` (las dos palancas, «acelerador» y «dirección»), para
+## encontrarla: `piece_of`.
 const PIECE := &"pieza_de_tablero"
 
 ## Si se ven las grillas pintadas: las de ahora y las que se armen.
@@ -73,8 +83,9 @@ static func dress(root: Node3D, form: CageShape, upper_root: Node3D = null) -> v
 		faces.append([board, root])
 	for board: FaceBoard in CageCabin.upper_boards(form):
 		faces.append([board, top])
-	# Lo que se mantiene apretado (la piña), para la pantalla de la carga.
-	var held := {"punch_from": -1.0}
+	# Lo de los controles que se lee de varios: desde cuándo se mantiene la piña (para la pantalla de la carga), hacia
+	# dónde apunta la palanca de dirección y cuánto el acelerador (para caminar y el dash).
+	var state := {"punch_from": -1.0, "way": Vector2.ZERO, "throttle": 0.0}
 	for pair: Array in faces:
 		var board: FaceBoard = pair[0]
 		var holder: Node3D = pair[1]
@@ -89,11 +100,11 @@ static func dress(root: Node3D, form: CageShape, upper_root: Node3D = null) -> v
 		var mount := FaceMount.of(board)
 		holder.add_child(mount)
 		for key: String in wanted[board.name]:
-			_place(key, mount, root, form, held)
+			_place(key, mount, root, form, state)
 
 
 ## PONE Y CONECTA LA PIEZA `key` en el tablero `mount`.
-static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape, held: Dictionary) -> void:
+static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape, state: Dictionary) -> void:
 	var board := mount.board
 	var side := signf(-board.frame.basis.z.x)
 	var eye := CageCabin.driver_eye(form)
@@ -117,7 +128,7 @@ static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape,
 						cockpit.fire = pressed
 			else:
 				arm.use = func(pressed: bool) -> void:
-					_punch(_mech_of(arm), pressed, held)
+					_punch(_mech_of(arm), pressed, state)
 		"pantalla energía", "pantalla carga":
 			var energy := key == "pantalla energía"
 			var look := ScreenArmArchetype.new("ENERGÍA" if energy else "CARGA",
@@ -133,7 +144,7 @@ static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape,
 					var mech := _mech_of(screen)
 					return mech.energy.level if mech != null and mech.energy != null else 0.0
 			else:
-				screen.source = func() -> float: return _charge(_mech_of(screen), held)
+				screen.source = func() -> float: return _charge(_mech_of(screen), state)
 		"modo ráfaga", "modo barrido", "modo súper":
 			var mode: Array = MODES[key]
 			var look := ButtonArchetype.new()
@@ -152,18 +163,27 @@ static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape,
 				if mech != null and mech.cannon != null:
 					mech.cannon.mode = mode[0]
 					mech.cannon.charge = 0.0)
-		"caminar":
-			var placed := _spotted(mount, ControlArchetype.of("stick"))
-			if placed == null:
+		"palancas":
+			var pair := _pair(mount, ControlArchetype.of(ControlArchetype.DRIVE_LEVER),
+				ControlArchetype.of(ControlArchetype.DRIVE_STICK))
+			if pair.is_empty():
 				return
-			placed.set_meta(PIECE, key)
-			for found in placed.find_children("*", "TwoAxisComponent", true, false):
+			pair[0].set_meta(PIECE, "acelerador")
+			pair[1].set_meta(PIECE, "dirección")
+			for found in pair[0].find_children("*", "OneAxisComponent", true, false):
+				var lever := found as OneAxisComponent
+				# Arriba en su tablero (adelante) es el mínimo: ver ControlArchetype.DRIVE_LEVER.
+				lever.state_changed.connect(func(value: float) -> void:
+					state["throttle"] = 1.0 - value
+					_walk(lever, state))
+			for found in pair[1].find_children("*", "TwoAxisComponent", true, false):
 				var stick := found as TwoAxisComponent
 				stick.state_changed_2d.connect(func(value: Vector2) -> void:
-					var cockpit := _cockpit_of(stick)
-					if cockpit != null:
-						cockpit.move = _flat(stick, stick.global_basis.x * value.x - stick.global_basis.y * value.y,
-							stick.global_basis.z, value.length()))
+					# Los ejes del tablero, de la base: los de la palanca se inclinan con ella y torcían la dirección.
+					var board_axes := stick.get_parent_node_3d().global_basis
+					var world := board_axes.x * value.x - board_axes.y * value.y
+					state["way"] = _flat(stick, world, board_axes.z, 1.0) if value.length() >= DEAD else Vector2.ZERO
+					_walk(stick, state))
 		"saltar", "levitar":
 			var look := ButtonArchetype.power()
 			look.latching = false
@@ -178,36 +198,38 @@ static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape,
 			button.pressed.connect(func() -> void: _hold(button, jump, true))
 			button.released.connect(func() -> void: _hold(button, jump, false))
 		"dash":
-			var placed := _spotted(mount, DashRingArchetype.new())
+			var look := ButtonArchetype.power()
+			look.latching = false
+			look.color = Color(0.9, 0.62, 0.2)
+			look.text = "DASH"
+			look.head_size = 0.7
+			var placed := _spotted(mount, look)
 			if placed == null:
 				return
 			placed.set_meta(PIECE, key)
-			var buttons := DashRingArchetype.buttons_of(placed)
-			for index in buttons.size():
-				var button := buttons[index]
-				button.pressed.connect(func() -> void:
-					var cockpit := _cockpit_of(button)
-					if cockpit != null:
-						cockpit.dash_way = _flat(button, button.global_position - placed.global_position,
-							placed.global_basis.z, 1.0)
-						cockpit.dash = true)
-				button.released.connect(func() -> void:
-					var cockpit := _cockpit_of(button)
-					if cockpit != null:
-						cockpit.dash = false)
+			var button := ButtonArchetype.button_of(placed)
+			button.pressed.connect(func() -> void:
+				var cockpit := _cockpit_of(button)
+				if cockpit != null:
+					cockpit.dash_way = state["way"]
+					cockpit.dash = true)
+			button.released.connect(func() -> void:
+				var cockpit := _cockpit_of(button)
+				if cockpit != null:
+					cockpit.dash = false)
 
 
 ## ── LO QUE HACEN ────────────────────────────────────────────────────────────────────────────────────────────────
 
 ## EL PUÑO: al apretar, empieza a cargar; al soltar, la piña cargada (si alcanza la energía).
-static func _punch(mech: CageMech, pressed: bool, held: Dictionary) -> void:
+static func _punch(mech: CageMech, pressed: bool, state: Dictionary) -> void:
 	if mech == null or mech.melee == null:
 		return
 	if pressed:
-		held["punch_from"] = Time.get_ticks_msec() / 1000.0
+		state["punch_from"] = Time.get_ticks_msec() / 1000.0
 		return
-	var from: float = held["punch_from"]
-	held["punch_from"] = -1.0
+	var from: float = state["punch_from"]
+	state["punch_from"] = -1.0
 	if from < 0.0 or not mech.energy.able():
 		return
 	var knobs := CageHandling.current
@@ -216,13 +238,20 @@ static func _punch(mech: CageMech, pressed: bool, held: Dictionary) -> void:
 
 
 ## LA CARGA que muestra su pantalla (0 a 1): la de la piña que se está manteniendo, o la del súper del cañón.
-static func _charge(mech: CageMech, held: Dictionary) -> float:
-	var from: float = held["punch_from"]
+static func _charge(mech: CageMech, state: Dictionary) -> float:
+	var from: float = state["punch_from"]
 	if from >= 0.0:
 		return (Time.get_ticks_msec() / 1000.0 - from) / CageHandling.current.punch_charge_time
 	if mech != null and mech.cannon != null and mech.cannon.mode == CannonTip.Mode.SUPER:
 		return mech.cannon.charge
 	return 0.0
+
+
+## CAMINAR: hacia donde apunta la palanca de dirección, a lo que diga el acelerador.
+static func _walk(from: Node, state: Dictionary) -> void:
+	var cockpit := _cockpit_of(from)
+	if cockpit != null:
+		cockpit.move = (state["way"] as Vector2) * float(state["throttle"])
 
 
 ## SALTAR o LEVITAR, apretado o suelto.
@@ -239,7 +268,7 @@ static func _hold(from: Node, jump: bool, on: bool) -> void:
 ## UNA DIRECCIÓN DEL MUNDO `world` SOBRE UNA CARA (de normal `normal`), en el piso de la meca de `from` (x a la derecha,
 ## y adelante, como BalanceBody.move), de largo `length`. LA CARA SE ACUESTA SOBRE EL PISO girándola por su borde
 ## horizontal: lo de arriba de la cara va hacia adelante de quien la mira (hacia la cara), lo de los costados queda a los
-## costados, y los ángulos son los de la cara (los ocho del dash, a 45° en el piso también: proyectarlos los apretaba).
+## costados, y los ángulos son los de la cara (45° en una cara inclinada son 45° en el piso: proyectarlos los apretaba).
 static func _flat(from: Node, world: Vector3, normal: Vector3, length: float) -> Vector2:
 	var mech := _mech_of(from)
 	if mech == null:
@@ -278,6 +307,45 @@ static func _behind_arm(mount: FaceMount, made: PanelArchetype, index: int) -> N
 	if mount.can_place(made, at):
 		return mount.place(made, at)
 	return _spotted(mount, made)
+
+
+## LAS DOS PALANCAS, UNA AL LADO DE LA OTRA: `left` a la izquierda de quien mira el tablero, con una celda de aire entre
+## las dos y centradas en alto, lo más al medio posible. Devuelve [la de la izquierda, la de la derecha], o nada si no
+## entran.
+static func _pair(mount: FaceMount, left: PanelArchetype, right: PanelArchetype) -> Array[Node3D]:
+	var board := mount.board
+	# La grilla crece hacia +x de la cara: si eso es hacia la derecha de la meca, la de la izquierda va primero.
+	var left_first := board.frame.basis.x.x > 0.0
+	var west := left if left_first else right
+	var east := right if left_first else left
+	var a := west.cells(0)
+	var b := east.cells(0)
+	var drop := (a.y - b.y) / 2
+	var center := Vector2(board.size) * 0.5
+	var best := Vector2i(-1, -1)
+	var best_far := INF
+	for column in board.size.x:
+		for row in board.size.y:
+			var at_west := Vector2i(column, row)
+			var at_east := Vector2i(column + a.x + 1, row + drop)
+			if not mount.can_place(west, at_west) or not mount.can_place(east, at_east) \
+					or _crowded(mount, at_west, a) or _crowded(mount, at_east, b):
+				continue
+			var top := minf(at_west.y, at_east.y)
+			var bottom := maxf(at_west.y + a.y, at_east.y + b.y)
+			var far := (Vector2((column + at_east.x + b.x) * 0.5, (top + bottom) * 0.5) - center).length()
+			if far < best_far:
+				best = at_west
+				best_far = far
+	var out: Array[Node3D] = []
+	if best.x < 0:
+		push_warning("[Tableros de la jaula] Las dos palancas no entran en la cara «%s»." % board.name)
+		return out
+	var placed_west := mount.place(west, best)
+	var placed_east := mount.place(east, Vector2i(best.x + a.x + 1, best.y + drop))
+	out.append(placed_west if left_first else placed_east)
+	out.append(placed_east if left_first else placed_west)
+	return out
 
 
 ## Pone `made` donde entre lo más al medio posible, con una celda de aire alrededor de lo que ya hay.

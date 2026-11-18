@@ -153,11 +153,11 @@ base de la jaula: cinemática, con lo que sigue.
   - **Cañón**: las flechas mueven la palanca · 1 simple, 2 ráfaga, 3 barrido, 4 súper · F, el gatillo.
   - Abajo a la derecha, la energía, el modo, la carga del súper y la del taladro.
   - *Hasta el 17/11/2026, G / X subían y bajaban el ascensor de la meca grande.*
-- **Desde adentro** (17/11/2026, la variante para 3; ver [[tableros]]): lo que piden la palanca, saltar, levitar y el
-  dash lo junta `MechCockpit` (`ToolMechKeys.cockpit`), y cuando nadie la posee la meca lo lee **con las mismas reglas de
-  energía** que las teclas; el gatillo del cañón también (`fire`). **Pendiente, a decidir**: el usuario se imaginaba la
-  palanca de caminar **trabada donde se la deja** (para seguir caminando mientras se aprieta el dash); hoy vuelve sola al
-  medio al soltarla. *Antes se lo imaginaba con la cámara trabada mirando
+- **Desde adentro** (17/11/2026, la variante para 3; ver [[tableros]]): lo que piden el acelerador, la palanca de
+  dirección, saltar, levitar y el dash lo junta `MechCockpit` (`ToolMechKeys.cockpit`), y cuando nadie la posee la meca
+  lo lee **con las mismas reglas de energía** que las teclas; el gatillo del cañón también (`fire`). **La de dirección
+  queda trabada donde se la deja** (el usuario lo quería así: para seguir caminando mientras se aprieta el dash).
+  *Antes se lo imaginaba con la cámara trabada mirando
   al frente; quedó libre, y lo que se limita es cuánto la sigue el torso. Esto cambia lo de [[armamento]] («el
   movimiento: te conectás», el mouse que gira el cuerpo sobre la silla).*
 

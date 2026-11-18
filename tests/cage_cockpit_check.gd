@@ -1,9 +1,11 @@
 extends Node
 
 ## LOS CONTROLES DE LA MECA JAULA PARA 3, PARA VERLOS Y PROBARLOS (CageBoards, MechCockpit): fotos desde la cápsula
-## (adelante con las dos pantallas, el mando del cañón con sus botones de modo, el del puño, el mando traído) y desde
-## arriba (la palanca, saltar, levitar, el dash); y cada control apretado como lo apretaría la mano, con lo que hace la
-## meca: camina, el dash, salta, el modo del cañón, la carga, la piña cargada y el torso persiguiendo la mirada.
+## (adelante con las dos pantallas, el mando del cañón con sus botones de modo, el del puño, los mandos traídos) y desde
+## arriba (el tablero de adelante, de cerca las dos palancas quietas y movidas, el dash); y cada control apretado como lo
+## apretaría la mano, con lo que hace la meca: la palanca de dirección que se queda, cuánto camina con el acelerador a
+## fondo y a la mitad, el dash hacia donde apunta (y al medio, nada), el salto, el modo del cañón, la carga, la piña
+## cargada y el torso persiguiendo la mirada.
 ##   tools/godot_ventana.sh res://tests/cage_cockpit_check.tscn -- --salida=C:/carpeta
 
 const VIEW := Vector2i(1280, 720)
@@ -55,9 +57,10 @@ func _ready() -> void:
 	await get_tree().create_timer(0.5).timeout
 	var pieces := {}
 	for entry: Array in CageBoards.LAYOUT:
-		for key: String in entry[1]:
-			pieces[key] = CageBoards.piece_of(cabin, key)
-			print("PIEZA ", key, " en «", entry[0], "»: ", "sí" if pieces[key] != null else "NO")
+		for listed: String in entry[1]:
+			for key: String in (["acelerador", "dirección"] if listed == "palancas" else [listed]):
+				pieces[key] = CageBoards.piece_of(cabin, key)
+				print("PIEZA ", key, " en «", entry[0], "»: ", "sí" if pieces[key] != null else "NO")
 	# ── LAS FOTOS ──
 	var base := cabin.board_root().global_transform
 	var driver := base * CageCabin.driver_eye(form)
@@ -77,39 +80,51 @@ func _ready() -> void:
 	cannon_arm.exit_mode()
 	fist_arm.exit_mode()
 	await _shot(top, top + forward - up * 0.9, 85.0)
-	await _shot(top, top + forward * 0.3 + right - up * 0.9, 85.0)
+	var levers: Vector3 = (pieces["acelerador"].global_position + pieces["dirección"].global_position) * 0.5
+	await _shot(top, levers, 32.0)
+	await _shot(top, pieces["dash"].global_position, 40.0)
 	# ── LO QUE HACE CADA CONTROL ──
 	var cockpit := (_mech.keys as ToolMechKeys).cockpit
-	var stick: TwoAxisComponent = pieces["caminar"].find_children("*", "TwoAxisComponent", true, false)[0]
-	# Caminar: la palanca hacia donde quede el frente de la meca en su tablero.
+	var stick: TwoAxisComponent = pieces["dirección"].find_children("*", "TwoAxisComponent", true, false)[0]
+	var throttle: OneAxisComponent = pieces["acelerador"].find_children("*", "OneAxisComponent", true, false)[0]
+	print("ACELERADOR: arranca en ", throttle.visual_value, ", con el palo hacia adelante ",
+		snappedf(throttle.global_basis.z.dot(forward), 0.01), " (1, del todo; −1, hacia atrás)")
+	# La de dirección hacia donde quede el frente de la meca en su tablero; sin acelerar, no camina.
 	var toward := stick.global_basis.inverse() * forward
 	var push := Vector2(toward.x, -toward.y).normalized()
-	var from := _mech.global_position
 	stick.apply_sync_state(push)
-	print("CAMINAR: la palanca a ", snapped(push, Vector2.ONE * 0.01), " pide ", snapped(cockpit.move, Vector2.ONE * 0.01))
 	await get_tree().create_timer(0.6).timeout
-	print("  a los 0,6 s la palanca está en ", snapped(stick.axis_value, Vector2.ONE * 0.01), " y pide ",
-		snapped(cockpit.move, Vector2.ONE * 0.01))
-	await get_tree().create_timer(0.6).timeout
-	stick.apply_sync_state(Vector2.ZERO)
-	var went := _mech.global_position - from
-	print("  caminó ", snappedf(went.length(), 0.01), " m, hacia adelante ", snappedf(went.dot(forward), 0.01), " m")
+	print("DIRECCIÓN: a 0,6 s de soltarla sigue en ", snapped(stick.axis_value, Vector2.ONE * 0.01),
+		"; sin acelerar pide ", snapped(cockpit.move, Vector2.ONE * 0.01))
+	# El acelerador a fondo y a la mitad.
+	for wanted: float in [0.0, 0.5]:
+		var from := _mech.global_position
+		throttle.apply_sync_state(wanted)
+		print("  acelerador en ", wanted, " (palo hacia adelante ", snappedf(throttle.global_basis.z.dot(forward), 0.01),
+			"): pide ", snapped(cockpit.move, Vector2.ONE * 0.01))
+		if wanted == 0.0:
+			var seat := cabin.board_root().global_transform * Vector3(0.0, form.height() + form.arms_eye, 0.05)
+			await _shot(seat, (pieces["acelerador"].global_position + pieces["dirección"].global_position) * 0.5, 32.0)
+		await get_tree().create_timer(1.2).timeout
+		var went := _mech.global_position - from
+		print("  caminó ", snappedf(went.length(), 0.01), " m en 1,2 s, hacia adelante ", snappedf(went.dot(forward), 0.01))
+	throttle.apply_sync_state(1.0)
 	await get_tree().create_timer(1.0).timeout
-	# El dash: cada botón, su dirección en el piso de la meca.
-	var ring := DashRingArchetype.buttons_of(pieces["dash"])
-	var ways := []
-	for button: TouchComponent in ring:
-		button.pressed.emit()
-		ways.append(snapped(cockpit.dash_way, Vector2.ONE * 0.1))
-		button.released.emit()
-	print("DASH: ", ring.size(), " botones, direcciones ", ways)
-	from = _mech.global_position
-	ring[0].pressed.emit()
-	await get_tree().create_timer(0.5).timeout
-	ring[0].released.emit()
-	print("  el botón 0 movió ", snappedf((_mech.global_position - from).length(), 0.01), " m (hacia ",
-		snapped(cockpit.dash_way, Vector2.ONE * 0.1), ")")
-	await get_tree().create_timer(1.0).timeout
+	# El dash, un botón: hacia donde apunta la de dirección (a la derecha); al medio, no sale.
+	var dash := ButtonArchetype.button_of(pieces["dash"])
+	var aside := stick.global_basis.inverse() * right
+	for way: Vector2 in [Vector2(aside.x, -aside.y).normalized(), Vector2.ZERO]:
+		stick.apply_sync_state(way)
+		await get_tree().create_timer(0.3).timeout
+		var from := _mech.global_position
+		dash.pressed.emit()
+		var asked := cockpit.dash_way
+		await get_tree().create_timer(0.5).timeout
+		dash.released.emit()
+		var went := _mech.global_position - from
+		print("DASH con la de dirección en ", snapped(way, Vector2.ONE * 0.01), ": pide ", snapped(asked, Vector2.ONE * 0.01),
+			", movió ", snappedf(went.length(), 0.01), " m (a la derecha ", snappedf(went.dot(right), 0.01), ")")
+		await get_tree().create_timer(1.0).timeout
 	# Saltar.
 	var jump := ButtonArchetype.button_of(pieces["saltar"])
 	var floor_y := _mech.global_position.y

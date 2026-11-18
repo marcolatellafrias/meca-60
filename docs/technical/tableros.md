@@ -90,13 +90,22 @@ en algunas, **los controles de verdad de la meca para 3** (17/11/2026, el usuari
     a los costados de la vista, mirando a los ojos: se leen agarrando los brazos y mirando al frente (el usuario: «no
     plegable… en una posición que me permita ver su información mientras estoy manejando los brazos y mirando el
     frente»).
-- **Arriba, en el pozo: la locomoción.** **La palanca de dos ejes** (caminar), **saltar**, **levitar** (en el aire) y
-  **el dash**: ocho botones en círculo (`DashRingArchetype`, 8 × 8 celdas; los botones adentro, libres de la grilla:
-  «tal vez no tengas que respetar la grilla porque si no se complica»). El escudo, después.
-- **Cada dirección es hacia donde apunta en la meca** (`CageBoards._flat`): la palanca empujada hacia el frente camina
-  adelante; el botón del círculo que queda hacia el frente tira el dash adelante. La cara se acuesta sobre el piso
-  girándola por su borde horizontal (lo de arriba de la cara va hacia la cara, los ángulos quedan como en ella: los
-  ocho del dash a 45°), medido en el mundo: vale en cualquier cara y aunque el módulo de arriba gire aparte.
+- **Arriba, en el pozo: la locomoción.** En el tablero de adelante, **dos palancas de palo negro y punta roja**, las de
+  mentira que tuvo la jaula hechas de verdad (el usuario: «una que es de aceleración… palo negro y punta roja, como
+  los que estaban en el placeholder low poly… y la otra… XZ, que se trabe y que decida para dónde ir»):
+  - a la izquierda **el acelerador** (`ControlArchetype.DRIVE_LEVER`, de un eje, 3 × 8 celdas): cuánto; arranca atrás,
+    hacia quien lo usa, sin acelerar, y adelante es a fondo;
+  - a la derecha **la de dirección** (`DRIVE_STICK`, de dos ejes, 6 × 6): hacia dónde; **queda donde se la deja** (no
+    vuelve sola) y cerca del medio no pide nada (`CageBoards.DEAD`).
+  Camina hacia donde apunta la de dirección, a lo que diga el acelerador (`_walk`). **Saltar** adelante a la izquierda,
+  **levitar** (en el aire) adelante a la derecha, y **el dash, un botón**, en el tablero de la derecha: hacia donde
+  apunta la de dirección; al medio, no sale. Con las dos palancas no entraba en el de adelante, ni con levitar en el
+  suyo. El escudo, después. *Hasta el 17/11/2026 (el mismo día) caminaba una sola palanca de dos ejes que volvía sola al
+  medio, y el dash eran ocho botones en círculo, uno por dirección.*
+- **Hacia dónde apunta es en la meca** (`CageBoards._flat`): la de dirección empujada hacia el frente de la meca va
+  adelante. La cara se acuesta sobre el piso girándola por su borde horizontal (lo de arriba de la cara va hacia la
+  cara, los ángulos quedan como en ella), medido en el mundo con los ejes de la base (los de la palanca se inclinan con
+  ella): vale en cualquier cara y aunque el módulo de arriba gire aparte.
 - **Lo que piden los de arriba lo junta `MechCockpit`** (`ToolMechKeys.cockpit`): cuando nadie la posee, la meca lo
   lee con las mismas reglas de energía que las teclas (el salto, el dash, levitar). Poseyéndola (O), mandan las teclas.
 - **La grilla pintada** está apagada: es para ubicar, no de la meca. **L** en la fila de la meca jaula la muestra
@@ -135,9 +144,11 @@ redondas y rótulas, con **el mando de palo** del que maneja en la punta.
 ## Test
 `tests/cage_cockpit_check.tscn` (unos 20 s, sin el sandbox): los controles de la meca para 3. Encuentra cada pieza, saca
 una hoja (desde la cápsula: adelante con las pantallas, el mando del cañón con sus botones, el del puño, los dos
-traídos; desde arriba: la palanca, saltar y levitar, el dash) y aprieta cada control como la mano: imprime lo que
-camina, las ocho direcciones del dash, el salto, el modo del cañón, la carga del súper y de la piña, cómo sale la piña
-y el torso persiguiendo la mirada. Medido el 17/11/2026: el dash a 45° exactos; el salto, 1,9 m; medio segundo
+traídos; desde arriba: el tablero de adelante, de cerca las dos palancas quietas y movidas, el dash) y aprieta cada
+control como la mano: imprime si la de dirección se queda, lo que camina con el acelerador a fondo y a la mitad, el dash
+hacia donde apunta (y al medio, nada), el salto, el modo del cañón, la carga del súper y de la piña, cómo sale la piña
+y el torso persiguiendo la mirada. Medido el 17/11/2026: la de dirección sigue donde se la dejó; a fondo camina 4,5 m
+en 1,2 s y a la mitad 2,7; el dash, 9,6 m derecho hacia donde apunta; el salto, 1,9 m; medio segundo
 mantenido, la piña sale a 0,71× la velocidad y 1,78× el golpe; pedidos 50° de giro y 20° arriba, **el torso se pasa
 hasta 67° y vuelve a 50° en unos 2 s**, y se inclina hasta su tope (8°, un grado de rebote); soltado, se endereza.
 

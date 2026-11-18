@@ -67,6 +67,8 @@ static func of(key: String) -> ControlArchetype:
 		return _knob_look()
 	if key == DOOR:
 		return _door_look()
+	if key == DRIVE_LEVER or key == DRIVE_STICK:
+		return _drive_look(key)
 	if _by_key.is_empty():
 		for archetype in catalogue():
 			_by_key[archetype.key] = archetype
@@ -94,6 +96,32 @@ static func _door_look() -> ControlArchetype:
 		_door = ControlArchetype.new(DOOR, "Botón de compuerta", ControlDefinition.ControlType.TOUCH, Vector2i(3, 3),
 			Color(0.3, 0.8, 0.4))
 	return _door
+
+
+## LAS DE MANEJAR DE LA MECA JAULA (17/11/2026, el usuario: «una que es de aceleración… con un palo negro y punta roja,
+## como los que estaban en el placeholder low poly… y la otra… XZ, que se trabe y que decida para dónde ir»): el palo
+## negro con la bola roja de las palancas de mentira que tuvo la jaula, sobre una base oscura (`_dress_drive`).
+##   · DRIVE_LEVER, EL ACELERADOR, de un eje: la palanca de siempre (va de punta a punta de sus celdas). Arranca ABAJO en
+##     su tablero (`default_value` 1: hacia quien la usa), y arriba es el mínimo: quien la lee da vuelta el valor.
+##   · DRIVE_STICK, LA DE DIRECCIÓN, de dos ejes: NO VUELVE SOLA, queda donde se la deja.
+## Fuera del catálogo, como la compuerta: sólo las pide CageBoards.
+const DRIVE_LEVER := "drive_lever"
+const DRIVE_STICK := "drive_stick"
+const DRIVE_PAINT := Color(0.1, 0.1, 0.11)
+const DRIVE_TIP := Color(0.78, 0.18, 0.15)
+const DRIVE_BASE := Color(0.2, 0.21, 0.23)
+static var _drive: Dictionary = {}
+
+
+static func _drive_look(drive_key: String) -> ControlArchetype:
+	if not _drive.has(drive_key):
+		if drive_key == DRIVE_LEVER:
+			_drive[drive_key] = ControlArchetype.new(DRIVE_LEVER, "Acelerador", ControlDefinition.ControlType.ONE_AXIS,
+				Vector2i(3, 8), DRIVE_TIP)
+		else:
+			_drive[drive_key] = ControlArchetype.new(DRIVE_STICK, "Palanca de dirección",
+				ControlDefinition.ControlType.TWO_AXIS, Vector2i(6, 6), DRIVE_TIP)
+	return _drive[drive_key]
 
 
 ## Cómo se ve la perilla: su estilo, fuera del catálogo.
@@ -177,6 +205,11 @@ func definition() -> ControlDefinition:
 			d.auto_return = true
 			# La punta se mueve poco: sin esto, se volcaba con un movimiento de muñeca.
 			d.drag_gain = 0.3
+		DRIVE_LEVER:
+			d.rotation_axis_local = Vector3.RIGHT
+			d.default_value = 1.0
+		DRIVE_STICK:
+			d.drag_gain = 0.3
 	return d
 
 
@@ -233,6 +266,9 @@ func dress(body: StaticBody3D, interactable: ControllableInteractable, size: Vec
 	if key == "lever" and interactable is OneAxisComponent:
 		LeverArchetype.dress_control(body, interactable as OneAxisComponent, size)
 		return
+	if key == DRIVE_LEVER or key == DRIVE_STICK:
+		_dress_drive(body, interactable, size)
+		return
 	body.add_child(_instance(base_unit(size), size))
 	var offset := interactable.mesh_offset()
 	var moving := _instance(moving_unit(size), size)
@@ -256,6 +292,44 @@ func dress(body: StaticBody3D, interactable: ControllableInteractable, size: Vec
 			var shaft := UnitMesh.new()
 			shaft.add_cylinder_z(Vector3(0.44, 0.44, 0.0), Vector3(0.56, 0.56, 1.0), BASE_COLOR)
 			body.add_child(_instance(shaft, Vector3(size.x, size.y, offset.z)))
+
+
+## LAS DE MANEJAR (ver DRIVE_LEVER): en el cuerpo, la base oscura —una ranura a lo largo para el acelerador, un cuadrado
+## para la de dirección—; en el componente, el palo negro y la bola roja hasta donde pone la mano (la de un eje, en la
+## punta de su brazo; la de dos, ver TwoAxisComponent._setup_handle_points). Las medidas, las de la de mentira: la bola,
+## un séptimo del palo.
+func _dress_drive(body: StaticBody3D, interactable: ControllableInteractable, size: Vector3) -> void:
+	var lever := interactable as OneAxisComponent
+	var reach := lever.arm_length if lever != null else size.z * 0.5 + minf(size.x, size.y) * 0.55
+	var base := MeshInstance3D.new()
+	var plate := BoxMesh.new()
+	plate.size = Vector3(size.x * 0.55, size.y * 0.55, 0.02)
+	if lever != null:
+		plate.size = Vector3(size.x * 0.6, size.y * 0.9, 0.012)
+	base.mesh = plate
+	base.material_override = MeshKit.material(DRIVE_BASE, 0.8)
+	base.position = Vector3(0.0, 0.0, plate.size.z * 0.5)
+	body.add_child(base)
+	var at := interactable.mesh_offset()
+	var stick := MeshInstance3D.new()
+	var rod := CylinderMesh.new()
+	rod.top_radius = reach * 0.05
+	rod.bottom_radius = reach * 0.06
+	rod.height = reach
+	stick.mesh = rod
+	stick.material_override = MeshKit.material(DRIVE_PAINT, 0.5)
+	stick.rotation.x = PI * 0.5
+	stick.position = at + Vector3(0.0, 0.0, reach * 0.5)
+	interactable.add_child(stick)
+	var ball := MeshInstance3D.new()
+	var round_mesh := SphereMesh.new()
+	round_mesh.radius = reach * 0.15
+	round_mesh.height = reach * 0.3
+	ball.mesh = round_mesh
+	ball.material_override = MeshKit.material(DRIVE_TIP, 0.45)
+	ball.position = at + Vector3(0.0, 0.0, reach)
+	interactable.add_child(ball)
+	interactable.highlighted.append_array([stick, ball])
 
 
 static func _instance(unit: UnitMesh, size: Vector3) -> MeshInstance3D:
