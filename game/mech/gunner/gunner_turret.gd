@@ -242,12 +242,25 @@ func _missiles(parent: Node3D, columns: int, rows: int, cell: float) -> void:
 	Clay.box(parent, Vector3(size.x + 0.01, 0.02, size.z * 0.6), Vector3(0.0, size.y * 0.5 + 0.01, 0.0), CageCabin.YELLOW)
 
 
-## LOS TRES TABLEROS (18/11/2026; el usuario aprobó el reparto: «dale»): pocas piezas cada uno, que se lean de un
-## vistazo —lo difícil queda en coordinarse con los otros dos y en el mapa, no en el tablero—. Por ahora sólo se ven.
+## LOS TRES TABLEROS (18/11/2026; el usuario: «que se sientan como hechizos… muchos indicadores de cooldown… uno radial
+## con el botón al medio, que es como funcionaría en la UI de un juego»; la recarga, «el timing de la recarga»; y el
+## artillero no repara: «arreglar la nave de un panel de la silla de artillero se siente medio finique»). TODO SON
+## BOTONES REDONDOS CON SU ARO (`_radial`): el botón al medio, y alrededor el aro que se llena con el tiempo de recarga;
+## en el de cada arma, el aro marca además LA ZONA DE LA RECARGA CON RITMO (una aguja lo recorre y se vuelve a apretar
+## en la zona: al instante y más fuerte; si no, lenta).
+##   · AL MEDIO, LAS DOS ARMAS: un botón grande por arma (la minigun, gris; los misiles, amarillo): elige el arma, y
+##     elegida, recarga. Arriba, la barra del calor de la minigun.
+##   · A LA IZQUIERDA, LO DE LA MINIGUN: sobrecarga (el doble de cadencia un rato, el calor sube rápido), perforante (las
+##     balas atraviesan) y enfriar (vacía el calor).
+##   · A LA DERECHA, LO DE LOS MISILES: salva (los seis), guiado (uno, con el mouse) y fijar (marca un blanco y lo
+##     persiguen).
+## Por ahora sólo se ven: los aros, a medio llenar como de muestra.
 const BOARD := Vector2(0.32, 0.22)
 const LIT := Color(0.4, 1.0, 0.45)
 const OFF := Color(0.08, 0.1, 0.08)
 const AMBER := Color(1.0, 0.72, 0.2)
+## Los tramos de un aro.
+const RING_STEPS := 20
 
 
 ## UN TABLERO en `at`, hacia `angle` (rad, 0 adelante), inclinado `lean` grados mirando al artillero: la chapa, y
@@ -264,69 +277,63 @@ func _panel(at: Vector3, angle: float, lean: float) -> Node3D:
 	return face
 
 
-## AL MEDIO: LAS ARMAS. Dos botones grandes para elegir (la minigun, gris; los misiles, amarillo), la barra del calor
-## de la minigun (el usuario: «una simple barra por ahora»), una luz por tubo de misil (seis) y la llave de cómo va el misil (derecho, guiado, fija un blanco).
+## AL MEDIO: LAS ARMAS (ver arriba).
 func _weapons_board(face: Node3D) -> void:
-	var front := 0.012
-	Clay.box(face, Vector3(0.07, 0.07, 0.025), Vector3(-0.11, 0.04, front), CageCabin.METAL)
-	Clay.box(face, Vector3(0.07, 0.07, 0.025), Vector3(-0.11, -0.05, front), CageCabin.YELLOW)
-	# El calor: una barra que se llena, con su punta roja.
-	Clay.box(face, Vector3(0.1, 0.022, 0.012), Vector3(0.0, 0.05, front), OFF)
-	Clay.box(face, Vector3(0.055, 0.018, 0.014), Vector3(-0.022, 0.05, front + 0.002), AMBER)
-	Clay.box(face, Vector3(0.016, 0.022, 0.016), Vector3(0.042, 0.05, front + 0.003), RED)
-	# Los seis tubos: luces de dos por tres.
-	for c in 3:
-		for r in 2:
-			var lit := c + r * 3 < 4
-			Clay.cylinder(face, 0.011, 0.01, Vector3(0.075 + c * 0.03, 0.06 - r * 0.03, front), LIT if lit else OFF,
-				Vector3(90.0, 0.0, 0.0))
-	# La llave de tres posiciones, con sus tres marcas.
-	var key := Vector3(0.105, -0.05, front)
-	Clay.cylinder(face, 0.025, 0.02, key, GUNMETAL, Vector3(90.0, 0.0, 0.0))
-	Clay.box(face, Vector3(0.008, 0.03, 0.03), key + Vector3(0.0, 0.01, 0.01), GRAB)
-	for k in 3:
-		var angle := deg_to_rad(-45.0 + k * 45.0)
-		Clay.box(face, Vector3(0.006, 0.006, 0.01), key + Vector3(sin(angle), cos(angle), 0.0) * 0.04, AMBER)
-	Clay.box(face, Vector3(0.1, 0.02, 0.01), Vector3(0.0, -0.075, front), OFF)
+	_heat_bar(face, Vector3(0.0, 0.08, 0.012))
+	_radial(face, Vector3(-0.075, -0.025, 0.012), 0.05, CageCabin.METAL, 0.7, true, "MINIGUN")
+	_radial(face, Vector3(0.075, -0.025, 0.012), 0.05, CageCabin.YELLOW, 0.35, true, "MISILES")
 
 
-## A LA IZQUIERDA: LA MUNICIÓN. Tres ranuras de tipos de bala por color (lo que se encuentra en el mapa se mete acá),
-## cada una con cuánto le queda. *La manivela de recargar misiles y la palanca de destrabar se fueron el mismo día (el
-## usuario: «no me gustan»).*
+## A LA IZQUIERDA: LO DE LA MINIGUN (ver arriba).
 func _ammo_board(face: Node3D) -> void:
-	var front := 0.012
-	for k in 3:
-		var x := -0.11 + k * 0.055
-		Clay.box(face, Vector3(0.04, 0.08, 0.02), Vector3(x, 0.03, front), CageCabin.HOLE)
-		Clay.box(face, Vector3(0.03, 0.05, 0.028), Vector3(x, 0.035, front), AMMO[k])
-		Clay.box(face, Vector3(0.04, 0.012, 0.012), Vector3(x, -0.03, front), OFF)
-		Clay.box(face, Vector3(0.04 * (1.0 - k * 0.3), 0.012, 0.014), Vector3(x - 0.02 * k * 0.3, -0.03, front + 0.002), LIT)
+	_radial(face, Vector3(-0.1, 0.0, 0.012), 0.036, Color(0.9, 0.45, 0.2), 1.0, false, "SOBRECARGA")
+	_radial(face, Vector3(0.0, 0.0, 0.012), 0.036, Color(0.7, 0.75, 0.85), 0.4, false, "PERFORANTE")
+	_radial(face, Vector3(0.1, 0.0, 0.012), 0.036, Color(0.3, 0.7, 0.95), 0.15, false, "ENFRIAR")
 
 
-## A LA DERECHA: EL ESTADO DE LA MECA. El dibujo de la meca con sus partes (casco, piernas, brazo izquierdo, brazo
-## derecho, batería), cada una verde, amarilla a medias o roja rota; el máximo de la batería, y los kits de reparación
-## que hay a bordo.
+## A LA DERECHA: LO DE LOS MISILES (ver arriba).
 func _state_board(face: Node3D) -> void:
-	var front := 0.012
-	Clay.box(face, Vector3(0.14, 0.17, 0.01), Vector3(-0.06, 0.0, front), SCREEN)
-	var parts := [
-		[Vector3(0.05, 0.05, 0.01), Vector3(-0.06, 0.03, 0.0), LIT],
-		[Vector3(0.018, 0.045, 0.01), Vector3(-0.1, 0.025, 0.0), AMBER],
-		[Vector3(0.018, 0.045, 0.01), Vector3(-0.02, 0.025, 0.0), LIT],
-		[Vector3(0.015, 0.05, 0.01), Vector3(-0.072, -0.03, 0.0), LIT],
-		[Vector3(0.015, 0.05, 0.01), Vector3(-0.048, -0.03, 0.0), RED],
-		[Vector3(0.025, 0.015, 0.01), Vector3(-0.06, 0.07, 0.0), LIT],
-	]
-	for part: Array in parts:
-		Clay.box(face, part[0], (part[1] as Vector3) + Vector3(0.0, 0.0, front + 0.006), part[2])
-	# El máximo de la batería: una barra parada, con lo que perdió.
-	Clay.box(face, Vector3(0.03, 0.15, 0.012), Vector3(0.06, 0.0, front), OFF)
-	Clay.box(face, Vector3(0.026, 0.11, 0.014), Vector3(0.06, -0.018, front + 0.002), LIT)
-	Clay.box(face, Vector3(0.03, 0.006, 0.016), Vector3(0.06, 0.04, front + 0.004), RED)
-	# Los kits a bordo: tres luces.
-	for k in 3:
-		Clay.cylinder(face, 0.011, 0.01, Vector3(0.115, 0.05 - k * 0.035, front), AMBER if k < 2 else OFF,
-			Vector3(90.0, 0.0, 0.0))
+	_radial(face, Vector3(-0.1, 0.0, 0.012), 0.036, CageCabin.YELLOW, 0.6, false, "SALVA")
+	_radial(face, Vector3(0.0, 0.0, 0.012), 0.036, Color(0.85, 0.35, 0.25), 1.0, false, "GUIADO")
+	_radial(face, Vector3(0.1, 0.0, 0.012), 0.036, Color(0.6, 0.85, 0.4), 0.25, false, "FIJAR")
+
+
+## LA BARRA DEL CALOR: se llena hacia la derecha, con la punta roja.
+func _heat_bar(face: Node3D, at: Vector3) -> void:
+	Clay.box(face, Vector3(0.2, 0.022, 0.012), at, OFF)
+	Clay.box(face, Vector3(0.11, 0.018, 0.014), at + Vector3(-0.045, 0.0, 0.002), AMBER)
+	Clay.box(face, Vector3(0.025, 0.022, 0.016), at + Vector3(0.0875, 0.0, 0.003), RED)
+
+
+## UN BOTÓN REDONDO CON SU ARO en `at` (en la cara), de `radius` (el aro; el botón, la mitad): el botón de `tint` al
+## medio, y el aro en tramos, prendidos hasta `ready` (0 a 1: lo que lleva de su tiempo de recarga). Con `reload`, la
+## zona de la recarga con ritmo marcada en ámbar y la aguja. Abajo, su nombre.
+func _radial(face: Node3D, at: Vector3, radius: float, tint: Color, ready: float, reload: bool, title: String) -> void:
+	Clay.cylinder(face, radius * 1.08, 0.008, at, SCREEN, Vector3(90.0, 0.0, 0.0))
+	Clay.cylinder(face, radius * 0.55, 0.022, at + Vector3(0.0, 0.0, 0.008), tint, Vector3(90.0, 0.0, 0.0))
+	var step := TAU / RING_STEPS
+	for k in RING_STEPS:
+		# De arriba, en el sentido del reloj.
+		var angle := k * step
+		var middle := Vector2(sin(angle + step * 0.5), cos(angle + step * 0.5)) * radius * 0.82
+		var zone := reload and k >= 13 and k <= 15
+		var color := AMBER if zone else (LIT if float(k + 1) / RING_STEPS <= ready else OFF)
+		var piece := Clay.box(face, Vector3(radius * 0.22, radius * 0.24, 0.01),
+			at + Vector3(middle.x, middle.y, 0.006), color)
+		piece.rotation = Vector3(0.0, 0.0, -(angle + step * 0.5))
+	if reload:
+		var needle_angle := ready * TAU
+		var needle := Clay.box(face, Vector3(0.004, radius * 0.4, 0.012),
+			at + Vector3(sin(needle_angle), cos(needle_angle), 0.0) * radius * 0.82 + Vector3(0.0, 0.0, 0.012), Color.WHITE)
+		needle.rotation = Vector3(0.0, 0.0, -needle_angle)
+	var label := Label3D.new()
+	label.text = title
+	label.font_size = 32
+	label.pixel_size = radius * 0.012
+	label.outline_size = 0
+	label.modulate = Color(0.9, 0.92, 0.85)
+	label.position = at + Vector3(0.0, -radius * 1.35, 0.012)
+	face.add_child(label)
 
 
 ## UNA VIGA de `from` a `to`, de `radius`, en `parent`.

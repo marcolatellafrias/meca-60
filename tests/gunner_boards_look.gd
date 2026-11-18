@@ -1,8 +1,8 @@
 extends Node
 
 ## LOS TABLEROS DEL ARTILLERO, DESDE SUS OJOS (18/11/2026; ver GunnerTurret, «Los tres tableros»): la meca jaula de 3,
-## la cámara en los ojos del artillero, mirando al tablero del medio (las armas), al de la izquierda (la munición), al de
-## la derecha (el estado de la meca) y, de cerca, los tres. Una hoja: tableros_artillero.png.
+## la cámara en los ojos del artillero, mirando al tablero del medio (las armas), al de la izquierda (la minigun), al de
+## la derecha (los misiles) y, de cerca, los tres. Una hoja: tableros_artillero.png.
 ##   tools/godot_ventana.sh res://tests/gunner_boards_look.tscn -- --salida=C:/carpeta
 
 const VIEW := Vector2i(1280, 720)
@@ -57,13 +57,13 @@ func _ready() -> void:
 	_mech.position = Vector3(0.0, Mech.standing_height(Mech.Cabin.CAGE), 0.0)
 	add_child(_mech)
 	await get_tree().create_timer(2.0).timeout
-	for found in get_tree().root.find_children("*", "Label3D", true, false):
-		(found as Label3D).visible = false
+	# El cartel de lo que mide la meca, apagado (los nombres de los botones de los tableros, no).
+	_mech.label.visible = false
 	var seat := (_mech.cabin as CageCabin).turret.frame.global_transform
 	var eye := seat * Vector3(0.0, 1.15, 0.02)
 	await _shot("1. al medio: las armas", eye, seat * Vector3(0.0, 0.92, -0.52), 60.0)
-	await _shot("2. a la izquierda: la munición", eye, seat * Vector3(-0.36, 0.82, -0.44), 60.0)
-	await _shot("3. a la derecha: el estado de la meca", eye, seat * Vector3(0.36, 0.82, -0.44), 60.0)
+	await _shot("2. a la izquierda: lo de la minigun", eye, seat * Vector3(-0.36, 0.82, -0.44), 60.0)
+	await _shot("3. a la derecha: lo de los misiles", eye, seat * Vector3(0.36, 0.82, -0.44), 60.0)
 	await _shot("los tres, desde los ojos", eye, eye + seat.basis * Vector3(0.0, -1.6, -3.0), 85.0)
 	_save()
 	get_tree().quit()
