@@ -1,6 +1,6 @@
 extends Node
 
-## LOS SONIDOS DE LA MECA, DE A UNO (18/11/2026; ver MechSounds, MechSynth): cada evento, numerado y con su nombre en
+## LOS SONIDOS DE LA MECA, DE A UNO (18/11/2026; ver MechSounds, MechSynth): cada evento, numerado y con su nombre y su nivel en
 ## pantalla, suena solo (los continuos, `LOOP_TIME` s, con su tono subiendo como sube en el juego). Para escucharlos
 ## desde el teléfono. Se graba (el .avi lleva el sonido):
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/sonidos.avi --fixed-fps 30 res://tests/mech_sounds_reel.tscn
@@ -46,8 +46,12 @@ func _ready() -> void:
 	var number := 0
 	for event: StringName in NAMES:
 		number += 1
-		_title.text = "%d. %s" % [number, NAMES[event]]
 		var made := MechSynth.build(event)
+		var level := float(MechSynth.LEVELS.get(event, MechSynth.LOW))
+		var tier: String = {MechSynth.STRONG: "fuerte", MechSynth.MEDIUM: "medio", MechSynth.LOW: "bajo",
+			MechSynth.SOFT: "muy bajo"}.get(level, "fuerte")
+		_title.text = "%d. %s\n%s" % [number, NAMES[event], tier]
+		print("%2d. %-45s %-9s se oye a %5.1f dB" % [number, NAMES[event], tier, MechSynth.loudness(made)])
 		var player := AudioStreamPlayer.new()
 		player.stream = made
 		add_child(player)
