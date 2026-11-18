@@ -40,10 +40,34 @@ static func attach(node: Node, amount: float) -> Health:
 
 
 ## LE SACA `amount` por `what`, empujándolo `with_push` (m/s; ver `push`). Ya sin vida, nada.
+## POR LA RED (18/11/2026): LA VIDA LA DECIDE EL HOST. Un golpe que pasa en otra máquina (la piña de alguien que maneja
+## la meca desde la suya) se le pide al host (`_ask_hurt`); el host la baja y le dice a todos cuánta queda, con qué le
+## pegaron y el empujón (`_set_left`), y en todas se muere igual (con el mismo empujón para el ragdoll).
 func hurt(amount: float, what: String, with_push := Vector3.ZERO) -> void:
 	if dead():
 		return
-	left = maxf(left - amount, 0.0)
+	if NetFollow.online(self) and not multiplayer.is_server():
+		_ask_hurt.rpc_id(1, amount, what, with_push)
+		return
+	_change(maxf(left - amount, 0.0), what, with_push)
+	if NetFollow.online(self):
+		_set_left.rpc(left, what, with_push)
+
+
+@rpc("any_peer", "call_remote", "reliable")
+func _ask_hurt(amount: float, what: String, with_push: Vector3) -> void:
+	if multiplayer.is_server():
+		hurt(amount, what, with_push)
+
+
+@rpc("authority", "call_remote", "reliable")
+func _set_left(now: float, what: String, with_push: Vector3) -> void:
+	if not dead():
+		_change(now, what, with_push)
+
+
+func _change(now: float, what: String, with_push: Vector3) -> void:
+	left = now
 	last = what
 	push = with_push
 	changed.emit()

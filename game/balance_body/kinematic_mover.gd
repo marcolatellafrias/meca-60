@@ -438,6 +438,11 @@ func net_state() -> Array:
 		tucks(), body_spring.y, body_spring.xz]
 
 
+## La simula esta máquina otra vez (ver BodyNet._owner_changed): lo que decía el dueño de antes ya no cuenta.
+func stop_following() -> void:
+	_net_tucked = -1
+
+
 ## LOS DEMÁS: el motor entre dos estados del dueño (`share`, de `from` a `to`), o derecho `ahead` s después del último.
 ## No simula nada: pone el lugar, el rumbo y lo que leen las piernas y el esqueleto, como `step`.
 func follow(from: Array, to: Array, share: float, ahead: float, delta: float) -> void:

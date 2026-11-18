@@ -130,6 +130,8 @@ var arena: BossArena = null
 var body: BrawlerBody = null
 ## DONDE SE LE PEGA (BossHurtbox): la caja que encuentran los tiros y el taladro de la meca de tres.
 var hurtbox: BossHurtbox = null
+## POR LA RED (BossNet): lo simula el host; las demás lo siguen.
+var net: BossNet = null
 
 var _ahead := MoveRamp.new()
 var _turn := MoveRamp.new()
@@ -191,6 +193,10 @@ func _ready() -> void:
 	add_collision_exception_with(_solid)
 	hurtbox = BossHurtbox.new()
 	_solid.add_child(hurtbox)
+	net = BossNet.new()
+	net.name = "Red"
+	net.boss = self
+	add_child(net)
 	_fit_scale()
 	add_to_group(SandboxPossession.GROUP)
 	_place_upper()
@@ -225,6 +231,12 @@ func _physics_process(delta: float) -> void:
 	var k := BrawlerSettings.current
 	if not is_equal_approx(_fitted, scale()):
 		_fit_scale()
+	# POR LA RED, lo simula el host: las demás lo ponen donde dice él y arman lo demás igual (ver BossNet).
+	if net.remote():
+		net.follow(delta)
+		rotation.y = hull_yaw
+		_after_move(k, delta)
+		return
 	_read()
 	landed_now = false
 	_height_was = global_position.y
@@ -305,16 +317,23 @@ func _physics_process(delta: float) -> void:
 		body_spring.land(maxf(drop, _drop_was) / scale())
 	_drop_was = drop
 	body_spring.update(delta)
-	_show_jets()
-	_solid.global_transform = global_transform
-	# Donde se le pega es un cuerpo aparte: no sigue solo a su padre (quedaba donde nació).
-	hurtbox.global_transform = global_transform
 	# LA CINTURA, hacia donde mira, con tope; en el trompo, gira sola.
 	var most := deg_to_rad(k.waist_speed) * hurry * delta
 	if spin != 0.0:
 		waist_yaw = wrapf(waist_yaw + deg_to_rad(spin) * delta, -PI, PI)
 	else:
 		waist_yaw = wrapf(waist_yaw + clampf(wrapf(aim_yaw - waist_yaw, -PI, PI), -most, most), -PI, PI)
+	_after_move(k, delta)
+	net.send(delta)
+
+
+## LO QUE SIGUE A DÓNDE QUEDÓ (en el host y en las que lo siguen): los propulsores, el cuerpo para las mecas, donde se
+## le pega, el horno y la ira, el esqueleto y la pose.
+func _after_move(k: BrawlerSettings, delta: float) -> void:
+	_show_jets()
+	_solid.global_transform = global_transform
+	# Donde se le pega es un cuerpo aparte: no sigue solo a su padre (quedaba donde nació).
+	hurtbox.global_transform = global_transform
 	opened = move_toward(opened, 1.0 if furnace else 0.0, delta / maxf(k.door_time, 0.01))
 	fury = move_toward(fury, 1.0 if rage else 0.0, delta / maxf(k.rage_time, 0.01))
 	_place_upper()
@@ -365,6 +384,21 @@ func ragdoll_parts(ragdoll: PartsRagdoll) -> void:
 	for side in bones.uppers.size():
 		var upper := ragdoll.add([bones.uppers[side]], top, bones.uppers[side].global_position)
 		ragdoll.add([bones.forearms[side]], upper, bones.forearms[side].global_position)
+
+
+## LO QUE MANDA EL HOST, puesto en esta máquina (ver BossNet): entre `from` y `to` (`share`).
+func follow_net(from: Array, to: Array, share: float) -> void:
+	global_position = (from[0] as Vector3).lerp(to[0], share)
+	hull_yaw = lerp_angle(float(from[1]), float(to[1]), share)
+	waist_yaw = lerp_angle(float(from[2]), float(to[2]), share)
+	pose = int(to[3]) as Pose
+	spin = float(to[4])
+	furnace = bool(to[5])
+	rage = bool(to[6])
+	_aloft = bool(to[7])
+	speed = lerpf(float(from[8]), float(to[8]), share)
+	body_spring.y = lerpf(float(from[9]), float(to[9]), share)
+	body_spring.set_xz((from[10] as Vector2).lerp(to[10], share))
 
 
 ## Sin lo que lo metería dentro de `block_at`: si su caja está a menos de su radio (y un poco), no avanza hacia él.

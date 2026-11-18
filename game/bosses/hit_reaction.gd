@@ -67,6 +67,11 @@ static func land(target: Node3D, damage: float, what: String, kind: Kind, away: 
 	if health != null:
 		health.hurt(damage, what, push_velocity(target, kind, away, distance))
 	reaction.react(kind, away, distance, at)
+	# POR LA RED: el golpe lo decidió esta máquina (la del jefe, el host); las demás hacen la misma reacción, y la del
+	# dueño de la meca, el empujón (ver BodyNet.relay_hit).
+	var body := target as BalanceBody
+	if body != null and body.net != null and body.net.networked():
+		body.net.relay_hit.rpc(int(kind), away, distance, at)
 	return true
 
 
@@ -122,6 +127,9 @@ func react(kind: Kind, away: Vector3, distance: float, at: Vector3) -> void:
 	if _away == Vector3.ZERO:
 		_away = Vector3.BACK
 	if kind == Kind.FLINCH or _body == null:
+		return
+	# El empujón y la caída, sólo donde se la simula (ver BodyNet): las demás lo ven llegar por la red.
+	if _body.net != null and _body.net.remote():
 		return
 	if kind == Kind.PUSH:
 		_body.shove(_away * distance, PUSH_TIME)
@@ -180,6 +188,9 @@ func grab(at: Vector3) -> void:
 	if _body != null:
 		state = State.HELD
 		_hold = _body.mover.global_position
+		# POR LA RED: mientras la lleva y la revolea, la simula la máquina del jefe (el host; ver BodyNet.borrow).
+		if _body.net != null:
+			_body.net.borrow()
 
 
 ## AGARRADA, va a `at` (el piso debajo de sus pies).
@@ -219,6 +230,9 @@ func _physics_process(delta: float) -> void:
 			_paint(false)
 	if _body == null:
 		return
+	# Ya suelta y parada otra vez: vuelve a quien la manejaba (ver `grab`).
+	if state == State.FREE and _body.net != null and _body.net.lent() and _body.state == BalanceBody.State.STANDING:
+		_body.net.give_back()
 	match state:
 		State.HELD:
 			_body.put(Transform3D(Basis(Vector3.UP, _body.mover.rotation.y), _hold))

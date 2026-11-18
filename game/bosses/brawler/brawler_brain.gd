@@ -115,6 +115,9 @@ func power(which: Act) -> BossPower:
 
 func _physics_process(delta: float) -> void:
 	_show()
+	# POR LA RED, PIENSA SÓLO EN EL HOST (ver BossNet): en las demás, el cuerpo sigue lo que decide él.
+	if boss.net != null and boss.net.remote():
+		return
 	if boss.hurtbox != null and boss.hurtbox.owner_of_hits == null:
 		boss.hurtbox.owner_of_hits = self
 	if target == null or not is_instance_valid(target):

@@ -40,7 +40,9 @@
    *Mundo*, **hecho** (probado con dos instancias: las dos la ven para 2, en el mismo lugar).
 7. **La salida a la arena**: «salir a la arena» abre la compuerta del techo, el elevador sube y todos pasan juntos a la
    escena de la arena (el mapa de pelea con el jefe del contrato). — *Mundo*, cuando estén 5 y 8.
-8. **El jefe por red**. — *Jefes*.
+8. **El jefe por red**. — *Jefes*, **hecho** (18/11/2026; ver [[red]]): el jefe lo simula el host y las demás siguen su
+   cuerpo; la vida la decide el host y la muerte (con su ragdoll) pasa en todas; los golpes del jefe a la meca los
+   decide el host y el empujón lo hace la máquina de su dueño. *Falta: lo que se ve de sus ataques en las demás.*
 9. **La vuelta**: la paga del contrato a la plata de la tripulación, lo que vuelve de la arena (ver [[progresion]]). —
    *Mundo*.
 
