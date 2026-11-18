@@ -30,6 +30,10 @@ const SAVED := "res://game/mech/cage/cage_shape.tres"
 static var current := CageShape.saved()
 
 @export_group("El cuerpo")
+## PARA CUÁNTOS JUGADORES (18/11/2026, el usuario: «haría la variante de 2 y 1… si yo quiero probar la meca de a 1»; el
+## diseño, en docs/conceptual/la-meca.md): de 3, todo; de 2, sin la torre del artillero; de 1, sólo la cápsula de abajo,
+## sin el bloque de arriba ni la torre (se maneja con el modo manejo, ver CageBoards). El número, `players`.
+@export_enum("1 jugador", "2 jugadores", "3 jugadores") var crew := 2
 ## EL TORSO: la cuadrada (la caja) o la redonda (el cubo chanfleado).
 @export_enum("cuadrada", "redonda") var torso := 0
 ## LA REDONDA: EL TALLE DEL CUERPO, de 0 (su cara de adelante, justo la cápsula con su marco) a 1 (su cara de arriba,
@@ -134,6 +138,11 @@ func pit_apothem() -> float:
 
 func is_round() -> bool:
 	return torso == 1
+
+
+## Para cuántos jugadores es (ver `crew`): 1, 2 o 3.
+func players() -> int:
+	return crew + 1
 
 
 ## El lado del cuerpo, de ancho y de fondo (en la cuadrada, también el del módulo de arriba).

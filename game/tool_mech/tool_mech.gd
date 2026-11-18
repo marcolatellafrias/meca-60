@@ -9,12 +9,14 @@ extends Mech
 ##     o la sierra, SpinTip) o un brazo de piñas; lo manejan sus teclas.
 ##   · LA ENERGÍA COMÚN (MechEnergy): la gastan los brazos, el dash y levitar.
 ##   · LEVITAR: el vuelo de la cinemática, gastando energía.
+##   · EL ESCUDO DE FUERZA (MechShield, 18/11/2026): frena todo golpe mientras está prendido, gastando energía.
 ##   · SUS TECLAS (ToolMechKeys), en lugar de las de siempre.
 ## *La Meca de tres, su fila (con la cabina cuadrada, el cañón a la izquierda, el taladro a la derecha y las fundas de
 ## blindaje en las piernas), se borró con la meca grande el 17/11/2026 (está en el commit 0bcaeaf); esto quedó como la
 ## base de la jaula.*
 
 var energy := MechEnergy.new()
+var shield := MechShield.new()
 ## LO QUE MANEJAN SUS TECLAS, de lo que lleva en los brazos (ver `_build_arms`; lo que no lleva, nada): el cañón, lo que
 ## gira (el taladro o la sierra) y el brazo de las piñas (el primero sin ninguno de los dos).
 var cannon: CannonTip = null
@@ -30,7 +32,18 @@ func _init() -> void:
 
 func _ready() -> void:
 	add_child(energy)
+	shield.energy = energy
+	add_child(shield)
 	super()
+
+
+## EL ESCUDO FRENA LOS GOLPES (ver MechShield): quien pega pregunta si se le puede pegar (HitReaction.land); con el
+## escudo prendido, no, y eso cuenta como un golpe frenado (su destello y el parry).
+func untouchable() -> bool:
+	if shield.on:
+		shield.stopped()
+		return true
+	return super()
 
 
 func _build() -> void:
@@ -68,7 +81,7 @@ func _arm_energy() -> MechEnergy:
 
 
 func possess_status() -> String:
-	var line := "energía %s" % energy.bar()
+	var line := "energía %s%s" % [energy.bar(), " · ESCUDO" if shield.on else ""]
 	var tools := PackedStringArray()
 	for arm in arms:
 		if arm.tip != null and arm.tip.status() != "":

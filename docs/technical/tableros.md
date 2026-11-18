@@ -146,8 +146,15 @@ redondas y rótulas, con **el mando de palo** del que maneja en la punta.
 - **Su valor** es 0 plegado y 1 traído, y viaja por red como el de cualquier control.
 - **Plegado**, el mando queda a 0,91 m del pecho del que maneja (el alcance es 1 m); traído, a 0,61 m.
 - **Más adelante**: que el mando repita la piña o el golpe que se da.
+- **El del manejo de la meca de 1** (`DriveHandle`, `FoldingArmArchetype.drive`; 18/11/2026): un manubrio en la punta,
+  que sale del costado izquierdo de la cápsula con el codo abajo, así no cruza la vista. *Primero salía del techo y su
+  palo cruzaba el medio.* **Su modo queda trabado** (`ControllableInteractable.latches_mode`): entra con el clic que lo
+  toma, el clic derecho también es suyo (`mode_use_alt`) y **la E lo suelta**, en vez de pararte de la silla
+  (`InteractionController`). Mientras, el teclado maneja la meca (`CageBoards._drive_keys`, a MechCockpit).
 
 ## Test
+`tests/cage_crew_check.tscn`: la meca de 1, 2 y 3 lado a lado, el manubrio de la de 1 y el escudo (ver [[meca-jaula]]).
+
 `tests/cage_cockpit_check.tscn` (unos 20 s, sin el sandbox): los controles de la meca para 3. Encuentra cada pieza, saca
 una hoja (desde la cápsula: adelante con las pantallas, el mando del cañón con sus botones, el del puño, los dos
 traídos; desde arriba: el tablero de adelante, de cerca las dos palancas quietas y movidas, el dash) y aprieta cada

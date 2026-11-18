@@ -12,7 +12,7 @@ extends ActivatableInteractable
 ## Las sillas son las de siempre (SeatInteractable): este nodo sólo elige cuál.
 
 ## Los puestos, en el orden en que se llenan (índices de CageCabin.chairs).
-const ORDER := [CageCabin.DRIVER, 0, 1]
+const ORDER := [CageCabin.DRIVER, CageCabin.LOCOMOTION, CageCabin.GUNNER]
 const NUMBER_KEYS := {KEY_1: 0, KEY_2: 1, KEY_3: 2, KEY_KP_1: 0, KEY_KP_2: 1, KEY_KP_3: 2}
 
 var cabin: CageCabin = null
@@ -78,8 +78,10 @@ func _next() -> int:
 	return -1
 
 
-## Libre: nadie sentado, o un maniquí.
+## Libre: nadie sentado, o un maniquí. Un puesto que esta meca no tiene (es para menos: CageShape.crew), no.
 func _free(post: int) -> bool:
+	if post >= cabin.chairs.size():
+		return false
 	var who := cabin.chairs[post].occupant()
 	return who == null or cabin.dummies.has(who)
 
@@ -89,6 +91,6 @@ func _post_of(bi: Node) -> int:
 	if cabin == null or not is_instance_valid(bi):
 		return -1
 	for post: int in ORDER:
-		if cabin.chairs[post].occupant() == bi:
+		if post < cabin.chairs.size() and cabin.chairs[post].occupant() == bi:
 			return post
 	return -1

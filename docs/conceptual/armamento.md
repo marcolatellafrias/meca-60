@@ -170,7 +170,8 @@ timing**: prenderlo **gasta un golpe de energía**, y mantenerlo gasta un poco m
   parry por zonas (desde adentro de la cabina no se lee si un misil va al torso o al brazo).
 - **El parry**: prendido justo antes del impacto, el golpe de energía del arranque es menor o no se cobra. Así no castiga
   tanto.
-- **Lo maneja quien ve lo global**: la espalda con cuatro, el movimiento con tres y con dos.
+- **Lo maneja quien ve lo global**: la espalda con cuatro, el movimiento con tres y con dos. **Hecho el 18/11/2026**
+  en la meca jaula (`MechShield`, ver [[meca-jaula]]): de a 2 y de a 3 el de arriba; de a 1, la Q en el modo manejo.
 
 ## El puesto: holograma, botones y estado (15/11/2026)
 **Reemplaza a los paneles que se traen** (abajo). Probado el primero, el usuario: «no es el camino este». Cada silla

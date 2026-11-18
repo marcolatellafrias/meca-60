@@ -330,6 +330,18 @@ func mode_steer(_world_yaw: float, _world_pitch: float) -> void:
 func mode_use(_pressed: bool) -> void:
 	pass
 
+
+## EL MODO TRABADO (18/11/2026, la meca de 1: «los modos, para jugar solo»): un control con `latches_mode` entra en su
+## modo con el clic que lo toma y QUEDA AHÍ HASTA LA E (no hay que mantener nada); mientras, el clic derecho también es
+## suyo (`mode_use_alt`). El primero, el manejo de la meca jaula de 1 (DriveHandle).
+func latches_mode() -> bool:
+	return false
+
+
+## EN EL MODO TRABADO, EL CLIC DERECHO apretado o soltado.
+func mode_use_alt(_pressed: bool) -> void:
+	pass
+
 func handle_scroll(_delta: float) -> void:
 	pass
 

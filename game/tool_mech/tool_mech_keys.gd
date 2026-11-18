@@ -78,6 +78,8 @@ func read() -> void:
 		_flying = false
 	_space_was = space
 	mech.jump = _jump_on
+	# EL ESCUDO: la Q poseyéndola, o el botón de adentro (su energía la cuida MechShield).
+	tool.shield.held = (mine and Input.is_physical_key_pressed(KEY_Q)) or (not keyed and cockpit.shield)
 	# LOS BRAZOS.
 	if tool.drill != null:
 		tool.drill.charging = mine and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
@@ -136,7 +138,7 @@ func _unhandled_input(event: InputEvent) -> void:
 func controls() -> PackedStringArray:
 	var tool := mech as ToolMech
 	var lines := PackedStringArray([
-		"PIERNAS: WASD · mouse gira · Shift+dirección dash · espacio salta, y en el aire levita · Ctrl se agacha"])
+		"PIERNAS: WASD · mouse gira · Shift+dirección dash · espacio salta, y en el aire levita · Ctrl se agacha · Q escudo"])
 	if tool.drill != null:
 		lines.append("%s: clic derecho mantenido carga · clic izquierdo descarga" % tool.drill._hit_name().to_upper())
 	elif tool.melee != null:

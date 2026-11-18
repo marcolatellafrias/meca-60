@@ -26,7 +26,8 @@ extends RefCounted
 ##     «nos da más variedad»). EL DASH, UN BOTÓN, en el tablero de la derecha, del lado de la de dirección: hacia donde
 ##     apunta ella (al medio, no sale). Con las dos palancas no entra en el de adelante, ni con levitar en el suyo.
 ##     AGACHAR, en el tablero de la izquierda: apoyada, se agacha; EN EL AIRE, BAJA RÁPIDO, como un dash hacia abajo
-##     (KinematicSettings.dive_speed; el usuario: «nos ahorramos un botón»).
+##     (KinematicSettings.dive_speed; el usuario: «nos ahorramos un botón»). EL ESCUDO (MechShield), al lado de saltar:
+##     lo maneja el de arriba, de a 2 y de a 3 (el usuario lo aprobó: el que ve lo global).
 ##   · LA PANTALLA DEL PROPULSOR (la barra de levitar, KinematicMover.fly_fuel: se gasta levitando y se llena apoyada), en
 ##     un brazo fijo corto al lado de levitar, abajo a la derecha de la vista del de arriba (`PIT_SCREEN_AT`). *Primero
 ##     salía de la pared del pozo: un palo de 1,2 m que cruzaba la vista.*
@@ -46,11 +47,17 @@ const LAYOUT := [
 	["cápsula izquierda arriba", ["pantalla energía"]],
 	["cápsula derecha arriba", ["pantalla carga"]],
 	["tablero adelante", ["palancas"]],
-	["tablero adelante izquierda", ["saltar"]],
+	["tablero adelante izquierda", ["saltar", "escudo"]],
 	["tablero adelante derecha", ["levitar", "pantalla propulsor"]],
 	["tablero derecha", ["dash"]],
 	["tablero izquierda", ["agachar"]],
 ]
+## LA MECA DE 1 (CageShape.crew; sin el bloque de arriba): además, EL MANEJO (DriveHandle), que sale del costado izquierdo
+## de la cápsula con el codo abajo: entra a la vista por abajo, como los mandos. *Primero salía del techo, y su palo
+## cruzaba el medio de la vista.*
+const SOLO := [["cápsula izquierda", ["manejo"]]]
+## Las teclas del modo manejo para los modos del cañón (los de sus tres botones).
+const SOLO_MODES := {KEY_1: CannonTip.Mode.BURST, KEY_2: CannonTip.Mode.BEAM, KEY_3: CannonTip.Mode.SUPER}
 ## LOS MANDOS PLEGABLES Y LAS PANTALLAS van ADELANTE en su cara (`FRONT` celdas de la punta de adelante, en la fila
 ## `ROW` de arriba). El mando, traído a la mano (`HAND`); las pantallas, arriba a los costados de la vista (`SCREEN_AT`),
 ## las dos desde los ojos del que maneja, en partes del radio de 0,75 m de la maqueta; la mirada, al frente, a la cúpula
@@ -65,7 +72,7 @@ const LOOK_AHEAD := 3.0
 const PIT_SCREEN_AT := Vector3(0.38, -0.3, -0.62)
 ## Los botones que se mantienen (el texto y el color): lo que piden mientras se aprietan (ver `_hold`).
 const HOLDS := {"saltar": ["SALTAR", Color(0.3, 0.8, 0.4)], "levitar": ["LEVITAR", Color(0.3, 0.8, 0.4)],
-	"agachar": ["AGACHAR", Color(0.45, 0.62, 0.85)]}
+	"agachar": ["AGACHAR", Color(0.45, 0.62, 0.85)], "escudo": ["ESCUDO", Color(0.45, 0.8, 1.0)]}
 ## Los modos del cañón que eligen sus botones: su nombre y su color.
 const MODES := {"modo ráfaga": [CannonTip.Mode.BURST, "RÁFAGA", Color(0.9, 0.62, 0.2)],
 	"modo barrido": [CannonTip.Mode.BEAM, "BARRIDO", Color(0.35, 0.7, 0.95)],
@@ -84,17 +91,18 @@ static var show_grid := false
 
 ## LA GRILLA Y LAS PIEZAS en `root` (el fondo de la caja de la cabina, CageCabin.board_root) de la forma `form`.
 ## Los de arriba (el tablero y el pozo) cuelgan de `upper_root` (el módulo de arriba, que puede girar: ver
-## CageCabin.upper), en el mismo espacio que `root`.
-static func dress(root: Node3D, form: CageShape, upper_root: Node3D = null) -> void:
+## CageCabin.upper), en el mismo espacio que `root`; sin `with_upper` (la meca de 1), no hay.
+static func dress(root: Node3D, form: CageShape, upper_root: Node3D = null, with_upper := true) -> void:
 	var wanted := {}
-	for entry: Array in LAYOUT:
-		wanted[entry[0]] = entry[1]
+	for entry: Array in LAYOUT + ([] if with_upper else SOLO):
+		wanted[entry[0]] = (wanted.get(entry[0], []) as Array) + (entry[1] as Array)
 	var top := upper_root if upper_root != null else root
 	var faces: Array = []
 	for board: FaceBoard in CageCabin.capsule_boards(form):
 		faces.append([board, root])
-	for board: FaceBoard in CageCabin.upper_boards(form):
-		faces.append([board, top])
+	if with_upper:
+		for board: FaceBoard in CageCabin.upper_boards(form):
+			faces.append([board, top])
 	# Lo de los controles que se lee de varios: desde cuándo se mantiene la piña (para la pantalla de la carga), hacia
 	# dónde apunta la palanca de dirección y cuánto el acelerador (para caminar y el dash).
 	var state := {"punch_from": -1.0, "way": Vector2.ZERO, "throttle": 0.0}
@@ -141,6 +149,26 @@ static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape,
 			else:
 				arm.use = func(pressed: bool) -> void:
 					_punch(_mech_of(arm), pressed, state)
+		"manejo":
+			var look := FoldingArmArchetype.new(1.0)
+			look.drive = true
+			var placed := _spotted(mount, look)
+			if placed == null:
+				return
+			placed.set_meta(PIECE, key)
+			var handle := FoldingArmArchetype.arm_of(placed) as DriveHandle
+			handle.reach_to(eye + Vector3(0.0, HAND.y, HAND.z) * k, eye + Vector3.FORWARD * LOOK_AHEAD, root)
+			handle.steer = func(world_yaw: float, world_pitch: float) -> void:
+				var mech := _mech_of(handle)
+				if mech != null:
+					mech.steer(world_yaw, world_pitch)
+			handle.use = func(pressed: bool) -> void:
+				var cockpit := _cockpit_of(handle)
+				if cockpit != null:
+					cockpit.fire = pressed
+			handle.use_alt = func(pressed: bool) -> void:
+				_punch(_mech_of(handle), pressed, state)
+			handle.drive = func(active: bool) -> void: _drive_keys(handle, active)
 		"pantalla energía", "pantalla carga":
 			var energy := key == "pantalla energía"
 			var look := ScreenArmArchetype.new("ENERGÍA" if energy else "CARGA",
@@ -196,9 +224,12 @@ static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape,
 					var world := board_axes.x * value.x - board_axes.y * value.y
 					state["way"] = _flat(stick, world, board_axes.z, 1.0) if value.length() >= DEAD else Vector2.ZERO
 					_walk(stick, state))
-		"saltar", "levitar", "agachar":
+		"saltar", "levitar", "agachar", "escudo":
 			var look := ButtonArchetype.power()
 			look.latching = false
+			if key == "escudo":
+				# Más chico: va al lado de saltar (dos de 4 × 4 no entran en una cara).
+				look.button_cells = Vector2i(3, 3)
 			look.text = HOLDS[key][0]
 			look.color = HOLDS[key][1]
 			look.head_size = 0.7
@@ -270,6 +301,31 @@ static func _charge(mech: CageMech, state: Dictionary) -> float:
 	return 0.0
 
 
+## EL TECLADO EN EL MODO MANEJO (la meca de 1, DriveHandle), mientras `active`: WASD camina (relativo al torso), espacio
+## salta y en el aire otra vez levita, Shift tira el dash hacia donde camina, Ctrl agacha (en el aire, baja rápido), Q
+## el escudo, y 1, 2 y 3 los modos del cañón (`SOLO_MODES`). Lo pide a MechCockpit, como los controles de la de 3.
+static func _drive_keys(from: Node, active: bool) -> void:
+	var cockpit := _cockpit_of(from)
+	if cockpit == null:
+		return
+	var live := active and UIState.gameplay_active()
+	var move := Vector2(MechKeys.axis(KEY_D, KEY_A), MechKeys.axis(KEY_W, KEY_S)).limit_length(1.0) if live \
+		else Vector2.ZERO
+	cockpit.move = move
+	cockpit.jump = live and Input.is_physical_key_pressed(KEY_SPACE)
+	cockpit.dash = live and Input.is_physical_key_pressed(KEY_SHIFT)
+	cockpit.dash_way = move.normalized() if move.length() > 0.1 else Vector2.ZERO
+	cockpit.crouch = live and Input.is_physical_key_pressed(KEY_CTRL)
+	cockpit.shield = live and Input.is_physical_key_pressed(KEY_Q)
+	var mech := _mech_of(from)
+	if not live or mech == null or mech.cannon == null:
+		return
+	for code: Key in SOLO_MODES:
+		if Input.is_physical_key_pressed(code) and mech.cannon.mode != SOLO_MODES[code]:
+			mech.cannon.mode = SOLO_MODES[code]
+			mech.cannon.charge = 0.0
+
+
 ## CAMINAR: hacia donde apunta la palanca de dirección, a lo que diga el acelerador.
 static func _walk(from: Node, state: Dictionary) -> void:
 	var cockpit := _cockpit_of(from)
@@ -289,6 +345,8 @@ static func _hold(from: Node, what: String, on: bool) -> void:
 			cockpit.levitate = on
 		"agachar":
 			cockpit.crouch = on
+		"escudo":
+			cockpit.shield = on
 
 
 ## UNA DIRECCIÓN DEL MUNDO `world` SOBRE UNA CARA (de normal `normal`), en el piso de la meca de `from` (x a la derecha,

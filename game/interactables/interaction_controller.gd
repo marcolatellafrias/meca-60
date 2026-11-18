@@ -190,7 +190,10 @@ func _read_intent() -> void:
 		intent.reach_steps -= step
 	if intent.activate:
 		intent.activate = false
-		if able:
+		# EN UN MODO TRABADO, la E lo suelta (no te para de la silla: ver ControllableInteractable.latches_mode).
+		if is_instance_valid(_mode) and _mode_latched:
+			_stop_control()
+		elif able:
 			try_activate(who)
 
 
@@ -290,6 +293,7 @@ func _start_control(ctrl: ControllableInteractable) -> void:
 	_want_grab(ctrl, handle, true)  # y que los proxies muevan los brazos al handle
 
 func _stop_control() -> void:
+	_mode_latched = false
 	if is_instance_valid(_mode) and _mode == _controlled:
 		var leaving := _mode
 		_mode = null
@@ -770,7 +774,13 @@ func try_interact() -> void:
 	elif hovered is GrabbableInteractable:
 		_start_grab(hovered as GrabbableInteractable)
 	elif hovered is ControllableInteractable:
-		_start_control(hovered as ControllableInteractable)
+		var ctrl := hovered as ControllableInteractable
+		_start_control(ctrl)
+		# EL MODO TRABADO: entra con este clic y queda hasta la E (ver ControllableInteractable.latches_mode).
+		if ctrl.latches_mode() and ctrl.has_mode() and not is_instance_valid(_mode):
+			_mode = ctrl
+			_mode_latched = true
+			ctrl.enter_mode()
 
 func release_interact() -> void:
 	_stop_grab()
@@ -793,9 +803,14 @@ func set_rotating(value: bool) -> void:
 ## lo pone en su modo; al soltarlo sale y lo suelta. Mientras está, no se lo suelta por lejos ni por fuera del cono: él
 ## mismo se trae a la mano.
 var _mode: ControllableInteractable = null
+## Si el modo es trabado (ver ControllableInteractable.latches_mode): entonces el clic derecho es suyo y la E lo suelta.
+var _mode_latched := false
 
 
 func _set_mode(on: bool) -> void:
+	if is_instance_valid(_mode) and _mode_latched:
+		_mode.mode_use_alt(on)
+		return
 	if on:
 		if is_instance_valid(_mode) or is_instance_valid(_grabbed) or is_instance_valid(_held):
 			return

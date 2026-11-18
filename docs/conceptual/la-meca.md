@@ -30,10 +30,11 @@ Lo decidió el usuario el 17/11/2026, tentativo hasta probarlo:
   persigue la mirada con un resorte**, no 1:1 (el usuario: «que la cámara sea libre y que lo que se limita sea qué tanto
   se mueve el torso yendo a ese target… se siente responsive y pesado»). *Primero se pensó con la cámara trabada.*
 - **La ruedita del mouse** no se usa por ahora (los componentes de character-parametric la leen; queda).
-- **Los modos, para jugar solo** (más adelante): un modo en el que se entra y del que se sale. Adentro, captura el
-  teclado y los dos clics para ese sistema (caminar con WASD y un brazo en cada clic); afuera, se mira libre el puesto y
-  se tocan otras cosas. Así cada sistema baja su complejidad para uno, sin volverse un shooter común: los sistemas
-  siguen siendo varios, y muchos pasan al teclado.
+- **Los modos, para jugar solo**: un modo en el que se entra y del que se sale. Adentro, captura el teclado y los dos
+  clics para ese sistema (caminar con WASD y un brazo en cada clic); afuera, se mira libre el puesto y se tocan otras
+  cosas. Así cada sistema baja su complejidad para uno, sin volverse un shooter común: los sistemas siguen siendo
+  varios, y muchos pasan al teclado. **El primero, hecho (18/11/2026): el manejo de la meca de 1**, todo al teclado (el
+  usuario: «todo el teclado»). Con un clic en su manubrio se entra y queda trabado; la E lo suelta. Ver [[meca-jaula]].
 
 ## Los controles para 3 (17/11/2026, hechos; el código en [[tableros]])
 - **Abajo, en la cápsula: los dos brazos y el torso.** Un mando por brazo: **el cañón** (tres botones eligen ráfaga,
@@ -42,8 +43,14 @@ Lo decidió el usuario el 17/11/2026, tentativo hasta probarlo:
 - **Arriba, en el pozo: la locomoción.** Dos palancas de palo negro y punta roja: **el acelerador** (cuánto) y **la de
   dirección** (hacia dónde; queda donde se la deja). Saltar, levitar —con la pantalla del propulsor, que se gasta y se
   recarga— y **el dash, un botón**, hacia donde apunta la de dirección. **Agachar**: en el aire, baja rápido (un dash
-  hacia abajo). El escudo, después.
-- **Atrás, el artillero**: todavía nada.
+  hacia abajo). **El escudo**, al lado de saltar.
+- **Atrás, el artillero**: lo lleva la sesión de las armas, con la artillería.
+
+## Para 2 y para 1 (18/11/2026, hechos)
+- **De a 2**: lo mismo, sin la torre del artillero.
+- **De a 1**: sólo la cápsula, y todo al teclado en el modo manejo (WASD, los dos clics para los brazos, espacio,
+  Shift, Ctrl, Q para el escudo, 1 a 3 para los modos del cañón).
+- **El escudo está en todas**: de a 2 y de a 3 lo maneja el de arriba; de a 1, la Q.
 
 ## Cómo se muestra un objeto en un puesto
 Dos formas (17/11/2026; el código, en [[tableros]]):
@@ -72,7 +79,7 @@ meca»):
    chanfleado (la cápsula alargada de hoy) y arriba el octógono con el pozo de ocho tableros inclinados (lo que más lugar
    da para controles); el cuerpo es el pegamento: se agranda o se le cambia el chanfle para que los módulos encajen.
    Las formas de encajar: `tests/round_torso_fit_look`. *Más adelante, quizás, arriba el tazón de cuatro cuadrados.*
-5. Manejarla de a 1, de a 2 y de a 3.
+5. Manejarla de a 1, de a 2 y de a 3: **hecho** (arriba), falta probarlo jugando.
 6. Atrás, la batería y el hueco de recursos, pasados a la grilla (hoy van a mano; sin apuro).
 - **Una sola vida, como los personajes**: si se rompe del todo, se pierde para siempre. La siguiente sale **distinta**:
   otras armas, otros controles por defecto, otras características (velocidad, energía y lo que se defina).

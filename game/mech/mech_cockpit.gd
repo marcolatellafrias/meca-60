@@ -16,5 +16,7 @@ var levitate := false
 var dash := false
 var dash_way := Vector2.ZERO
 var crouch := false
+## El escudo de fuerza, mantenido (MechShield).
+var shield := false
 ## El gatillo del cañón (el mando del cañón, clic izquierdo mantenido): lo que hace, según su modo (CannonTip).
 var fire := false

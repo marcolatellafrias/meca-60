@@ -16,6 +16,23 @@ cinemático, la arena de esquivar, el brazo suelto y el cubo con piernas archiva
 sus notas; está entera en el commit `0bcaeaf`. Lo que la jaula usaba de ella quedó: la meca con herramientas
 (`ToolMech`, abajo), los brazos ([[brazo]]), el cuerpo con equilibrio ([[base-comun]]) y la meca de práctica.
 
+## Para cuántos: 1, 2 o 3 jugadores — `CageShape.crew` (F2)
+Una perilla en la pestaña del cuerpo (18/11/2026, el usuario: «haría la variante de 2 y 1… si yo quiero probar la meca
+de a 1, puedo hacerlo»):
+- **De 3**: todo.
+- **De 2**: sin la torre del artillero. Su arma irá a otro lado; la hace la sesión de las armas.
+- **De 1**: sólo la cápsula de abajo, sin el bloque de arriba ni la torre. Se maneja con **el modo manejo**: un brazo
+  plegable con un manubrio (`DriveHandle`), del costado izquierdo de la cápsula, que con un clic se trae y **queda
+  trabado hasta la E**. Mientras:
+  - la mirada es libre y el torso la persigue;
+  - el clic izquierdo, el cañón; el derecho, la piña cargada;
+  - WASD camina; espacio salta, y en el aire levita; Shift, el dash hacia donde camina;
+  - Ctrl agacha, y en el aire baja rápido; Q, el escudo; 1, 2 y 3, los modos del cañón.
+
+  El diseño, en [[la-meca]] («los modos, para jugar solo»); el código, en [[tableros]].
+- **La meca de `n` tiene las primeras `n` sillas**: la de abajo va primera (`CageCabin.DRIVER` 0, `LOCOMOTION` 1,
+  `GUNNER` 2). *Hasta el 18/11/2026, abajo era la última.*
+
 ## El tamaño y la forma — `CageShape` (F2)
 Los brazos y las piernas son **los de sus perillas de «Brazos y piernas» al 30 %** (largos, grosor, cuánto se estiran
 las piernas y cuánto salen los hombros; `CageCabin.body`, `MechBody.shrink`). La cabina
@@ -87,9 +104,9 @@ Todo con mallas de caras propias (`CageMesh`), nada de cajas pegadas.
   las caras de adelante y de los costados (`CageBoards`). El lado del pozo, en celdas enteras (`CageShape.pit_apothem`).
 - **Atrás, la torre del artillero**: arriba, el plato que gira con su silla y el arma montada (sólo se ve; `gun`).
 - **La espalda del cubo**: el hueco de un recurso, la batería y la mochila del jetpack (sólo se ven).
-- Las tres sillas (`CageCabin.SEAT_NAMES`): **arriba la locomoción, atrás el artillero, abajo los brazos** (y con ellos
-  el torso); un maniquí en cada una (`MechCabin.seat_dummies`). La U deja en el pozo. *Hasta el 17/11/2026, arriba los
-  brazos y abajo el manejo.*
+- Las sillas (`CageCabin.SEAT_NAMES`): **abajo los brazos** (y con ellos el torso), **arriba la locomoción, atrás el
+  artillero**, en ese orden; las que tenga según para cuántos es (arriba). Un maniquí en cada una
+  (`MechCabin.seat_dummies`). *Hasta el 17/11/2026, arriba los brazos y abajo el manejo.*
 - **La caja no choca con nada de lo suyo** (`build_frame`): ni con las sillas ni con las bases de los tableros y los
   brazos plegables, que van adentro de ella. *Hasta el 17/11/2026, sólo con lo suelto: la jaula es cinemática y lo fijo
   no la toca; la de práctica, física, salía despedida por los 75 cuerpos fijos de sus tableros.*
@@ -197,20 +214,33 @@ cañón). Medido el 17/11/2026, antes y después de borrar la meca grande, igual
 cintura a 3,07 m, camina 7,6 m en 2 s y la mano del palo llega a 20 m/s.
 Más: `tests/cage_torsos_look` (los dos torsos: la cuadrada, tres redondas y una con el octógono girado a mano, con sus
 medidas, de afuera y desde los dos puestos), `tests/cage_boards_look` (los tableros), `tests/folding_arm_check` (los brazos plegables),
-`tests/cage_cockpit_check` (los controles de adentro, ver [[tableros]]), `tests/cage_boarding_check` (subirse con la E), `tests/frame_rebuild_check` (rearmarla con gente adentro),
+`tests/cage_cockpit_check` (los controles de adentro, ver [[tableros]]), `tests/cage_crew_check` (la de 1, 2 y 3: sus
+sillas y piezas, el manubrio de la de 1 manejado con el teclado y el escudo con el parry; medido el 18/11/2026: con W
+camina 3,4 m en un segundo, el parry devuelve el 0,12 y el escudo apagado deja entrar el golpe), `tests/cage_boarding_check` (subirse con la E), `tests/frame_rebuild_check` (rearmarla con gente adentro),
 `tests/crouch_time_check`, `tests/feet_ground_check`, `tests/equipment_check`, `tests/arm_tips_look`.
+
+## El escudo de fuerza — `MechShield` (`game/tool_mech/`)
+El de [[armamento]] («El escudo de fuerza», 18/11/2026; el usuario: «el del escudo, que tiene que estar en todos»): un
+campo celeste que envuelve a toda la meca mientras se mantiene.
+- **Lo que gasta**: prenderlo, un golpe de energía (0,12); mantenerlo, 0,2 por segundo. Si se vacía, se apaga y la meca
+  queda aturdida, como siempre.
+- **Frena todo golpe**: quien pega pregunta si se le puede pegar (`HitReaction.land` → `ToolMech.untouchable`), y con
+  el escudo, no.
+- **El parry**: el primer golpe frenado hasta 0,3 s después de prenderlo devuelve lo que costó prenderlo.
+- **Quién lo maneja**: de a 2 y de a 3, **el de arriba**, con su botón al lado de saltar (lo aprobó el usuario: el que
+  ve lo global). De a 1, **la Q** en el modo manejo. Poseyéndola, la Q.
 
 ## Subirse con la E — `CageBoarding`
 Nadie elige silla (el usuario: «se sientan… apretando en la meca y apretando E, y que se llenen por orden»): apuntando a
 la meca, **E** sienta al jugador en el primer puesto libre, en orden: abajo (los brazos), arriba (la locomoción), el
-artillero. Un puesto con maniquí
+artillero (los que tenga). Un puesto con maniquí
 cuenta como libre: el maniquí se va y el jugador ocupa su silla, la de siempre. **Sentado, 1 a 3** (fila o numpad) pasa
 a ese puesto si está libre; **E** lo para. Al dejar un puesto vuelve su maniquí. Sentado, se maneja con los controles de
 su puesto (ver [[tableros]]); el artillero, todavía nada. Prueba: `tests/cage_boarding_check` (en el sandbox entero).
 
 ## Lo que falta
-- Las variantes para 2 y para 1 (los modos para jugar solo, ver [[la-meca]]). El escudo.
-- Probar jugando los controles para 3 (hoy medidos en `tests/cage_cockpit_check`).
+- Probar jugando los controles para 1, 2 y 3 (hoy medidos en `tests/cage_cockpit_check` y `tests/cage_crew_check`).
+- De a 2 y de a 1, dónde va el arma del artillero (la sesión de las armas). De a 1, la pantalla del propulsor.
 - El puesto del artillero gira con el arma, y la silla gira aparte. Los controles del artillero y su arma.
 - Que el súper del cañón y los golpes la muevan (la cinemática todavía no la mueve un golpe propio).
 - Los tiros por la red.

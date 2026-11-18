@@ -53,8 +53,13 @@ const CELL := Color(0.62, 0.6, 0.42)
 const YELLOW := Color(0.68, 0.57, 0.26)
 ## Los puestos, en el orden de las sillas: arriba la locomoción, atrás el artillero, abajo (en la cápsula) los brazos y el
 ## torso (17/11/2026, la variante de 3: CageBoards). *Hasta entonces, arriba los brazos y abajo el manejo.*
-const SEAT_NAMES := ["locomoción", "artillero", "brazos"]
-const DRIVER := 2
+## La de abajo va primero: la meca de `n` jugadores tiene las primeras `n` (ver CageShape.crew). *Hasta el 18/11/2026,
+## abajo era la última.*
+const SEAT_NAMES := ["brazos", "locomoción", "artillero"]
+## Los puestos: abajo, en la cápsula, los brazos y el torso; arriba, la locomoción; en la torre, el artillero.
+const DRIVER := 0
+const LOCOMOTION := 1
+const GUNNER := 2
 
 ## El arma del artillero (la parte que cabecea), para cuando sea funcional.
 var gun: Node3D = null
@@ -168,16 +173,18 @@ func _ready() -> void:
 	_root.add_child(upper)
 	var form := shape()
 	var tall := form.height()
+	# PARA CUÁNTOS (CageShape.crew): de 1, sólo la cápsula; de 2, además el bloque de arriba con el pozo; de 3, la torre.
+	var crew := form.players()
 	_cube(form)
 	var pit := pit_of(form)
-	_upper(pit, tall)
+	if crew >= 2:
+		_upper(pit, tall)
 	# LOS TABLEROS DE VERDAD en las caras de la cápsula y del bloque de arriba (CageBoards; el usuario, 17/11/2026: «está
 	# bien ahora el sistema… lo pases a la meca»).
-	CageBoards.dress(_root, form, upper)
-	_tower(form, tall, pit)
+	CageBoards.dress(_root, form, upper, crew >= 2)
+	if crew >= 3:
+		_tower(form, tall, pit)
 	_back(form)
-	_chair(0, Vector3(0.0, tall, 0.05), form.arms_eye, upper)
-	_chair(1, Vector3(0.0, tower_top(form) + tall, form.upper_back() - form.tower_deep() * 0.5 + 0.05), GUNNER_SEATED, upper)
 	# LA DEL QUE MANEJA, la de siempre (BubbleSeat), en el piso de la cabina debajo de la cápsula (sale por su hueco de
 	# abajo), un poco detrás de los ojos, que van con el anillo de atrás.
 	var driver := BubbleSeat.new()
@@ -187,6 +194,11 @@ func _ready() -> void:
 	driver.seat_height = form.seat_height
 	_root.add_child(driver)
 	chairs.append(driver)
+	if crew >= 2:
+		_chair(LOCOMOTION, Vector3(0.0, tall, 0.05), form.arms_eye, upper)
+	if crew >= 3:
+		_chair(GUNNER, Vector3(0.0, tower_top(form) + tall, form.upper_back() - form.tower_deep() * 0.5 + 0.05),
+			GUNNER_SEATED, upper)
 
 
 ## ── LAS CARAS QUE PUEDEN LLEVAR TABLERO (ver FaceBoard) ──────────────────────────────────────────────────────────
@@ -575,6 +587,8 @@ func _prism(x: float, thick: float, profile: PackedVector2Array, color: Color) -
 ## meto es como que lo saco»): hay un maniquí en cada silla, y al tomar el puesto `index` (por ahora, poseerla: el que
 ## maneja) el de esa silla se va. `seat_back` vuelve a sentar uno al dejarlo.
 func evict(index: int) -> void:
+	if index >= chairs.size():
+		return
 	for dummy in dummies.duplicate():
 		if is_instance_valid(dummy) and dummy.intent.seat == chairs[index]:
 			chairs[index].release(dummy)
@@ -584,6 +598,8 @@ func evict(index: int) -> void:
 
 
 func seat_back(index: int) -> void:
+	if index >= chairs.size():
+		return
 	for dummy in dummies:
 		if is_instance_valid(dummy) and dummy.intent.seat == chairs[index]:
 			return
