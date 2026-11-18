@@ -40,11 +40,10 @@ Los maneja **`CharacterActions`**: aprieta los mismos botones que un jugador (mo
 las manos son las del jugador (un `InteractionController` con un ojo en la cabeza). Sigue un camino dado (`follow_path`, persecución pura) pero no lo busca ni esquiva nada. *Viene
 de la parcela «Experimentos de locomoción» y de `ExhibitOperator` de character-parametric (unas 3.500 líneas entre los
 dos), sin los pasillos de obstáculos, los botones, las sillas de la nave ni los controles.* Sus paneles, traídos de
-allá: **F1** lo de todos los arquetipos (`LocomotionPanel`: caerse, llevar, tirar, el aire) y **F3** lo de cada arquetipo
-(`LocomotionTuner`: caminata, pose, movimiento, equilibrio, salto y cuerpo). Los dos están en las filas Personajes y
-Locomoción (el usuario, 13/11/2026, entre uno solo como el de la meca y los dos: «los dos, en Personajes»), con
-«Guardar» y **«Volver a lo guardado»**, que deshace lo probado sin borrar nada (`LocomotionCommon.restore`,
-`BlockShapes.restore`); el F3 además «Olvidar lo guardado», que vuelve al código.
+allá. **Desde el 18/11/2026 son uno solo, el F3** (`LocomotionTuner`), en las filas Personajes y Locomoción: arriba se
+elige un arquetipo (caminata, pose, movimiento, equilibrio, salto y cuerpo) o **«todos»** (caerse, llevar, tirar, el
+aire, el resorte de los golpes: `LocomotionCommonKnobs`, que era el F1 aparte), con las mismas pestañas de tema.
+«Guardar» y «Volver a lo guardado» actúan sobre lo elegido; «Olvidar lo guardado» vuelve al código, sólo por arquetipo.
 
 **Las formas de cabeza** (17/11/2026): al final de la fila Locomoción, una parcela con las diez ranuras de `HeadForms`
 en fila, numeradas, × 3, con su nombre y los arquetipos que la usan (`HeadFormsArchetype`). Sólo para mirar; prueba con

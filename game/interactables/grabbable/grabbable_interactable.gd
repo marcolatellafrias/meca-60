@@ -133,7 +133,7 @@ const LIFT_MARGIN := 0.15
 ## cara». Lo agarrado sigue yendo adonde se apunta, a `LocomotionCommon.hold_reach` del pecho —la misma para todos, ver
 ## LocomotionCommon—, pero `hold_drop_deg` más abajo: mirando al horizonte o arriba, esa diferencia entera; mirando abajo se
 ## desvanece y a `hold_drop_fade_deg` hacia abajo ya no hay, así se lo apoya donde se mira. Es correr la puntería, no
-## aflojar el resorte: lo mismo para todos y con cualquier peso. Los números, en el F1 de los experimentos (ver LocomotionPanel).
+## aflojar el resorte: lo mismo para todos y con cualquier peso. Los números, en «todos» del F3 de Locomoción (ver LocomotionCommonKnobs).
 ## ── EL CONO DE LO QUE SE LLEVA (03/11/2026) ─────────────────────────────────────────────────────────────────────────
 ## Lo que se lleva se suelta si su punto sale de este cono alrededor de la mirada: el mismo para todos los arquetipos (el
 ## usuario: «no es algo que se lea visualmente… se podría sentir inconsistente o injusto»). Se achica mientras el

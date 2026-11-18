@@ -10,7 +10,7 @@ extends SeededArchetype
 ##
 ## *Viene de la parcela «Experimentos de locomoción» de character-parametric (2.261 líneas, con pasillos de obstáculos,
 ## botones, sillas de la meca y quince escenas): acá quedan seis escenas y lo mínimo.* Sus paneles: F1 lo de todos los
-## arquetipos (LocomotionPanel), F3 lo de cada arquetipo (LocomotionTuner).
+## arquetipos y F3 lo de cada uno; desde el 18/11/2026, todo en el F3 (LocomotionTuner, con «todos» arriba).
 
 enum Scene { RUN, JUMP, DROP, CARRY, CATCH, SLALOM }
 const NAMES := ["Correr y frenar", "Saltar", "Caer de alto", "Llevar y tirar", "Atajar",

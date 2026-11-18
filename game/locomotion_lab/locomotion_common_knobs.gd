@@ -1,10 +1,10 @@
-class_name LocomotionPanel
-extends TunerPanel
+class_name LocomotionCommonKnobs
+extends RefCounted
 
-## ── EL F1 DE LA FILA LOCOMOCIÓN: LO DE TODOS LOS ARQUETIPOS (de character-parametric, traído el 13/11/2026; allá el
-## usuario eligió «dos paneles» con las mismas pestañas) ───────────────────────────────────────────────────
-## Lo que vale igual para todos (ver LocomotionCommon), con las pestañas del F3 de Personajes, que es lo de cada arquetipo
-## (ver LocomotionTuner): si algo es del salto, está en la pestaña SALTO de uno o del otro. Cada sección, una lista de sus
+## ── LO DE TODOS LOS ARQUETIPOS, EN EL PANEL DE LOCOMOCIÓN (18/11/2026) ─────────────────────────────────────────────
+## Las secciones de lo que vale igual para todos (ver LocomotionCommon), con las mismas pestañas que lo de cada arquetipo:
+## las muestra el F3 (LocomotionTuner) cuando arriba se elige «todos». *Hasta el 18/11/2026 era un panel aparte, el F1
+## (LocomotionPanel); el usuario los unificó.* Si algo es del salto, está en la pestaña SALTO, de uno o de todos. Cada sección, una lista de sus
 ## números (`SECTIONS`): lo que decide dónde va un número es esa lista, y uno que no esté en ninguna sale en rojo, al final.
 ## En vivo para todos; un solo «Guardar». *Hasta entonces sus pestañas eran el cuerpo, llevar algo, echarse atrás, tirar y
 ## en el aire, guardadas en tres archivos, y la caída, la frenada y el alcance se elegían con botones.*
@@ -101,24 +101,8 @@ const AIR_FALL := ["torso_fall_deg", "torso_fall_s", "legs_fall_s", "arms_fall_s
 const UNASSIGNED_COLOR := Color(1.0, 0.35, 0.3)
 
 
-var _state: Label = null
-
-
-func setup_panel() -> void:
-	var save := TunerPanel.new_button("Guardar todo el panel", func() -> void:
-		if _state != null:
-			_state.text = "guardado" if LocomotionCommon.store() else "NO SE PUDO GUARDAR")
-	var restore := TunerPanel.new_button("Volver a lo guardado", func() -> void:
-		LocomotionCommon.restore()
-		rebuild()
-		_changed_rebuilding()
-		if _state != null:
-			_state.text = "como lo guardado")
-	setup(UIState.LOCOMOTION, "LO DE TODOS LOS ARQUETIPOS", [save, restore] as Array[Button])
-	_state = state_label()
-
-
-func sections() -> Array[Dictionary]:
+## LAS SECCIONES: `on_dirty` cuando algo cambia, `on_rebuild` cuando cambia algo que mueve los huesos (ver REBUILDS).
+static func sections(on_dirty: Callable, on_rebuild: Callable) -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var placed := {}
 	for each: Array in SECTIONS:
@@ -127,7 +111,7 @@ func sections() -> Array[Dictionary]:
 		for knob: String in knobs:
 			placed[knob] = true
 			colors[knob] = FALL_COLOR if AIR_FALL.has(knob) else (APEX_COLOR if AIR_APEX.has(knob) else each[2])
-		out.append(_section(each[0], each[1], each[2], knobs, colors))
+		out.append(_section(each[0], each[1], each[2], knobs, colors, on_dirty, on_rebuild))
 	# LOS QUE NO ESTÁN EN NINGUNA SECCIÓN, en rojo: un número nuevo no puede quedar sin ubicar sin que se vea.
 	var loose := []
 	for prop in LocomotionCommon.new().get_property_list():
@@ -136,30 +120,16 @@ func sections() -> Array[Dictionary]:
 				and not placed.has(field):
 			loose.append(field)
 	if not loose.is_empty():
-		out.append(_section(LocomotionTuner.TAB_BODY, "SIN SECCIÓN — agregalos a SECTIONS (LocomotionPanel)",
-			UNASSIGNED_COLOR, loose, {}))
+		out.append(_section(LocomotionTuner.TAB_BODY, "SIN SECCIÓN — agregalos a SECTIONS (LocomotionCommonKnobs)",
+			UNASSIGNED_COLOR, loose, {}, on_dirty, on_rebuild))
 	return out
 
 
-func _section(tab: String, title: String, color: Color, knobs: Array, colors: Dictionary) -> Dictionary:
+static func _section(tab: String, title: String, color: Color, knobs: Array, colors: Dictionary, on_dirty: Callable,
+		on_rebuild: Callable) -> Dictionary:
 	var rebuilds := false
 	for knob: String in knobs:
 		rebuilds = rebuilds or REBUILDS.has(knob)
 	return {"tab": tab, "title": title, "color": color, "target": LocomotionCommon.base(),
 		"only": PackedStringArray(knobs), "headers": false, "labels": LABELS, "help": HELP, "colors": colors,
-		"defaults": LocomotionCommon.new(), "on_change": _changed_rebuilding if rebuilds else _dirty}
-
-
-## TODOS LOS PERSONAJES, rearmados (el hombro y el alcance cambian sus huesos).
-func _changed_rebuilding() -> void:
-	_dirty()
-	for node in get_tree().get_nodes_in_group(CharacterRigidBody3D.CHARACTER_GROUP):
-		var bi := (node as Node).get_parent() as BoneInstantiator
-		if is_instance_valid(bi) and bi.entity_instantiation != null:
-			bi.initialize_skeleton()
-
-
-## ALGO CAMBIÓ Y NO SE GUARDÓ.
-func _dirty() -> void:
-	if _state != null:
-		_state.text = "probando, sin guardar (Guardar todo el panel lo deja)"
+		"defaults": LocomotionCommon.new(), "on_change": on_rebuild if rebuilds else on_dirty}

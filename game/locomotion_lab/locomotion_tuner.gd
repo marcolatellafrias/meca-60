@@ -4,7 +4,8 @@ extends TunerPanel
 ## ── LA LOCOMOCIÓN DE CADA ARQUETIPO (03/11/2026, lo pidió el usuario) ─────────────────────────────────────────
 ## «Un panel para cambiar animaciones de caminata de cada personaje y pose. Velocidad, estabilidad, fuerza de salto, todas
 ## las variantes de locomoción y animación, pero que estén bien separadas, así no se mezclan tantas cosas a la vez.»
-## Por arquetipo y guardado; un panel, cinco pestañas, una a la vez:
+## Por arquetipo y guardado; un panel, cinco pestañas, una a la vez. Arriba, los arquetipos y «todos»: lo de todos los
+## arquetipos (ver LocomotionCommonKnobs), con las mismas pestañas (18/11/2026: era el F1, aparte).
 ##   · CAMINATA: el andar del arquetipo (PoseShape, grupo Caminata), todo suyo.
 ##   · POSE: la postura (PoseShape, grupo Pose).
 ##   · MOVIMIENTO: la velocidad máxima y cuánto tarda en llegar, la de caminar (la de la animación), la fuerza.
@@ -148,6 +149,8 @@ const NOTE_COLOR := Color(0.62, 0.66, 0.72)
 
 ## Los arquetipos que se eligen: todos menos el genérico (el usuario no lo quiere ver).
 var _archetype := EntityArchetype.Archetype.fat_man
+## «TODOS» ELEGIDO ARRIBA: lo de todos los arquetipos (ver LocomotionCommonKnobs) en lugar de lo de uno.
+var _all := false
 var _pose: PoseShape = null
 var _base_pose: PoseShape = null
 var _code_pose: PoseShape = null
@@ -159,7 +162,7 @@ const SETTLE_S := 0.15
 
 
 func setup_panel() -> void:
-	var save := new_button("Guardar este arquetipo", _save)
+	var save := new_button("Guardar lo elegido arriba", _save)
 	var restore := new_button("Volver a lo guardado", _restore)
 	var forget := new_button("Olvidar lo guardado (volver al código)", _forget)
 	setup(UIState.LOCOMOTION_TUNING, "LOCOMOCIÓN", [save, restore, forget] as Array[Button])
@@ -168,6 +171,8 @@ func setup_panel() -> void:
 
 
 func sections() -> Array[Dictionary]:
+	if _all:
+		return LocomotionCommonKnobs.sections(_all_changed, _all_changed_rebuilding)
 	if _pose == null:
 		_adopt()
 	var labels := LABELS.duplicate()
@@ -274,13 +279,18 @@ const PICKED_COLOR := Color(0.95, 0.72, 0.2)
 
 func header() -> Array[Control]:
 	var tabs := HFlowContainer.new()
+	var everyone := new_button("todos", _pick_all)
+	everyone.focus_mode = Control.FOCUS_NONE
+	if _all:
+		_paint_picked(everyone)
+	tabs.add_child(everyone)
 	for value: int in EntityArchetype.Archetype.values():
 		if value == EntityArchetype.Archetype.generic:
 			continue
 		var at := value
 		var button := new_button(str(EntityArchetype.Archetype.keys()[value]).replace("_", " "), func() -> void: _pick(at))
 		button.focus_mode = Control.FOCUS_NONE
-		if value == int(_archetype):
+		if value == int(_archetype) and not _all:
 			_paint_picked(button)
 		tabs.add_child(button)
 	return [tabs, HSeparator.new()] as Array[Control]
@@ -306,9 +316,37 @@ func _name() -> String:
 
 
 func _pick(archetype: int) -> void:
+	_all = false
 	_archetype = archetype as EntityArchetype.Archetype
 	_adopt()
 	rebuild()
+
+
+func _pick_all() -> void:
+	_all = true
+	rebuild()
+	_refresh_state()
+
+
+## LO DE TODOS: algo cambió y no se guardó; y si mueve los huesos (el hombro, el alcance), todos se rearman.
+var _all_dirty := false
+
+
+func _all_changed() -> void:
+	_all_dirty = true
+	_refresh_state()
+
+
+func _all_changed_rebuilding() -> void:
+	_all_changed()
+	_rebuild_everyone()
+
+
+func _rebuild_everyone() -> void:
+	for node in get_tree().get_nodes_in_group(CharacterRigidBody3D.CHARACTER_GROUP):
+		var bi := (node as Node).get_parent() as BoneInstantiator
+		if is_instance_valid(bi) and bi.entity_instantiation != null:
+			bi.initialize_skeleton()
 
 
 ## LO QUE HAY: el código del arquetipo con lo guardado (o lo que se está probando) encima.
@@ -364,6 +402,11 @@ func _rebuild_characters() -> void:
 
 
 func _save() -> void:
+	if _all:
+		var stored := LocomotionCommon.store()
+		_all_dirty = not stored
+		_refresh_state("guardado" if stored else "NO SE PUDO GUARDAR")
+		return
 	var ok := PoseShapes.store(int(_archetype), _pose, _default_pose())
 	if _block_dirty:
 		ok = BlockShapes.store() and ok
@@ -373,6 +416,13 @@ func _save() -> void:
 
 ## DESHACE LO PROBADO: el arquetipo vuelve a lo guardado (la caminata, la pose y el cuerpo), sin borrar nada.
 func _restore() -> void:
+	if _all:
+		LocomotionCommon.restore()
+		_all_dirty = false
+		_rebuild_everyone()
+		rebuild()
+		_refresh_state()
+		return
 	PoseShapes.preview.erase(int(_archetype))
 	BlockShapes.restore(int(_archetype))
 	_adopt()
@@ -381,6 +431,9 @@ func _restore() -> void:
 
 
 func _forget() -> void:
+	if _all:
+		_refresh_state("lo de todos no se olvida: «Volver a lo guardado»")
+		return
 	PoseShapes.forget(int(_archetype))
 	# El cuerpo se olvida en memoria: queda «sin guardar» hasta que Guardar lo escriba (ver BlockShapes.store).
 	var had_body := BlockShapes.for_archetype(int(_archetype)) != null
@@ -394,6 +447,10 @@ func _forget() -> void:
 
 func _refresh_state(note := "") -> void:
 	if _state == null:
+		return
+	if _all:
+		var all_what := "PRUEBA SIN GUARDAR" if _all_dirty else "como lo guardado"
+		_state.text = "todos: %s" % (all_what if note.is_empty() else "%s · %s" % [note, all_what])
 		return
 	var what := "lo del código"
 	if PoseShapes.preview.has(int(_archetype)) or _block_dirty:

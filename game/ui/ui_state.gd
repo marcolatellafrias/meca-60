@@ -87,7 +87,7 @@ const NAVIGATION := "navigation"
 const SEAT := "seat"
 ## EL CUERPO DEL SANDBOX: ser ente o cuerpo, y con qué arquetipo (F9 desde cualquier parte, ver BodyPanel).
 const BODY := "body"
-## LA EXAGERACIÓN DE LA CAÍDA (F1 en los Experimentos de locomoción, ver LocomotionPanel).
+## LA EXAGERACIÓN DE LA CAÍDA («todos» en el F3 de Locomoción, ver LocomotionCommonKnobs).
 const LOCOMOTION := "locomotion"
 ## LOS PANELES DE TECLA F SE ANOTAN SOLOS al montarse (ver `register_panel` y TunerPanel.setup) (lo pidió el usuario, 07/11/2026: «puedo abrir varios paneles en simultáneo… cuando abro uno, no es que se cierre el anterior, sino que se apila… debería ser una regla que se enforcea automáticamente en el sistema de paneles»): así
 ## `open_only` cierra a TODOS, también al que se agregue mañana. *Hasta entonces era una lista escrita a mano (`PANELS`), y

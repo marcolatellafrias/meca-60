@@ -113,7 +113,7 @@ func seat_fit() -> Vector2:
 ## F1») ─────────────────────────────────────────────────────────────────────────────────────────────────────────────
 ## Prendido, como antes del 03/11: el hombro en el costado del pecho —la mitad del domo del brazo adentro del torso— y
 ## `arm_open` desde la vertical. Apagado, el brazo rozando (ver `arm_open`). Para todos; cambiarlo rearma a los
-## personajes (ver LocomotionPanel). Es de todos: LocomotionCommon.shoulder_inside.
+## personajes (ver LocomotionCommonKnobs, «todos» en el F3). Es de todos: LocomotionCommon.shoulder_inside.
 
 ## EL ÁNGULO DEL BRAZO ROZANDO EL TORSO (ver `arm_open`): colgando derecho, el brazo toca el costado del pecho (el
 ## hombro va un radio afuera). Lo que hay que abrir para que tampoco entre en la panza —que empieza a un tercio de la

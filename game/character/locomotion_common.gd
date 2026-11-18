@@ -4,7 +4,7 @@ extends Resource
 ## ── LO DE TODOS LOS ARQUETIPOS, POR LAS PESTAÑAS DEL F3 (07/11/2026, el usuario: «que el código refleje un poco más
 ## esta estructura… caminata, pose, movimiento, equilibrio, salto, cuerpo»; eligió dos paneles con las mismas pestañas) ─
 ## Lo de cada arquetipo está en su arquetipo (ver EntityArchetype, el F3 de Personajes); lo que vale igual para todos está
-## acá, con las mismas pestañas, y lo edita el F1 de los Experimentos de locomoción (ver LocomotionPanel), con un solo
+## acá, con las mismas pestañas, y lo edita la pestaña «todos» del F3 de Locomoción (ver LocomotionCommonKnobs), con un solo
 ## «Guardar». Lo leen el agarre, el cuerpo en el aire, la caída y el cuerpo de bloques, en vivo.
 ## *Hasta entonces eran tres lugares: CarryTuning (llevar, echarse atrás y tirar), AirTuning (el cuerpo en el aire) y
 ## BodyDefaults (interruptores sueltos en RagdollUtil, CharacterRigidBody3D, BlockShape, SkeletonSizesUtil y AirStyle). Lo
