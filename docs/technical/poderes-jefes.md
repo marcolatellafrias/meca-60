@@ -28,7 +28,8 @@ esa copia. Al guardar el panel, las perillas nuevas pasan a las copias.
 | `ThrowPower`, arrancar el piso | brazos | cuántas piedras (y con ira): las de más, adonde vas |
 | `SpinPower`, el trompo | brazos | cuánto corrige hacia vos (0, derecho) |
 | `HookPower`, el agarre | mano | el ancho de la franja, cuánto se queda quieta |
-| `FlamePower`, el lanzallamas | horno | cuántas bocanadas; de entrada, sólo con ira |
+| `FlamePower`, el lanzallamas | horno | cuántas bocanadas; de entrada, no tranquilo |
+| `BombPower`, el bombardeo | nada | cuántas, cada cuánto, físicas, con anillo; de entrada, sólo volando |
 
 ## Lo común: la cabeza
 `BrawlerBrain` es lo que comparten los poderes:
@@ -75,11 +76,44 @@ salto** en arco hasta un punto (`jump(a dónde, en cuánto, cuánto sube)`, con 
 puede pedir. En el aire le falta el «suelo»: los poderes que lo piden no se usan (`lacks_now`).
 `tests/boss_modes_check` (sin ventana, 30 s): cada modo, qué poderes deja, la altura, la vuelta al piso y un salto.
 
-## Lo que sigue (el plan acordado)
-1. **Piezas que se combinan dentro de los poderes**:
-   - un aviso opcional en el piso, aparte de la pose;
-   - el golpe desde una parte del cuerpo que barre, desde una zona alrededor o desde algo que larga al mundo;
-   - y eventos: «al pegar en el piso, larga una onda», sirve igual para un puño que para un misil.
-   - Los proyectiles se comparten con la artillería de la meca propia, cinemáticos o físicos.
-2. **La cabeza con fases y rutinas**: cómo se mueve entre ataques y qué la hace cambiar.
-3. **El cuerpo modular**: piezas con enchufes y reglas de qué va con qué.
+## Las zonas en el piso
+`BossZone` es la pieza común de todo ataque «geométrico»: **círculo, franja, cono y anillo** (que puede crecer solo:
+una onda redonda que se abre). Es la cuenta de si un punto está adentro (`covers`) y, si se quiere, la marca que avisa.
+**La marca es opcional**: `BossSettings.floor_marks` (en el F2) la apaga para todos, y entonces todo se lee por las
+poses y los sonidos, como en Souls; `marked` la apaga para una. No hace daño: el poder que la usa decide cuándo pega.
+La usan la onda y el agarre (franja), la piedra y las bombas (círculo), el lanzallamas (cono) y el anillo de las bombas.
+
+## Lo que se lanza al mundo
+`BossShot` es una bomba, un misil o un cascote. Vuela y **avisa al caer** (`landed`, con dónde): lo que pasa ahí lo
+decide el poder (pegar en una zona, largar un anillo, otra cosa). Dos maneras de volar:
+- **cinemática** (`launch`): un arco conocido; se puede marcar dónde cae desde que sale;
+- **física** (`toss`): un cuerpo de verdad que rebota en lo fijo y «cae» al cabo de tantos rebotes o de su mecha; no
+  se sabe dónde termina, hay que mirarla.
+
+`BombPower`, **el bombardeo**, las usa: larga bombas por arriba, una tras otra, alrededor tuyo. Variantes: cuántas y
+cada cuánto, la zona, la dispersión, **si son físicas** (rebotan, sin marca; estallan también si te tocan) y **si al
+caer largan un anillo** que se abre y hay que saltar. De entrada, sólo volando.
+*Los proyectiles viejos de la meca propia (`Missile`, `AreaStrike`, `ProjectileField`: por la red y empujando con
+física) son otro sistema; cuando se defina la artillería de la meca, se juntan.*
+
+## Las tres maneras de pegar (y de esquivar)
+Son tres juegos distintos, y un poder elige una o las mezcla:
+1. **Una pieza del cuerpo que barre** (`hit_with`): se lee por la animación, como en Souls.
+2. **Una zona** (`BossZone`): geométrica, con o sin marca.
+3. **Algo lanzado** (`BossShot`): cinemático o físico, y lo que hace al caer.
+
+## Reglas para quien siga
+- Un ataque nuevo es **un `BossPower` nuevo** en `game/bosses/powers/`, no código en la cabeza de un jefe.
+- Para pegar, usar **una de las tres maneras de arriba**; no escribir otra cuenta de «si lo toca» ni otra marca.
+- Lo que el golpe le hace al que recibe va **siempre por `HitReaction`** (`b.strike`).
+- Un tramo de la pelea con otras reglas es **un `BossMode`**, no un caso especial.
+- Las variantes son **pocas perillas del poder**; lo que depende del tamaño del jefe sale de su cuerpo y escala solo.
+- Cada pieza que haga falta y no esté (otra forma de zona, otra manera de volar) **se agrega a la pieza común**.
+
+## Lo que sigue
+1. **El cuerpo modular**: piezas (piernas, torso, brazos, cabeza) con enchufes y reglas de qué va con qué; cada pieza
+   trae sus zonas de golpe y lo que le da al jefe (`needs`). Hoy el Luchador es un cuerpo fijo.
+2. **La cabeza común a todos los jefes**: hoy es `BrawlerBrain`; al llegar el segundo jefe, lo común sube a una base.
+3. **Rutinas de rodeo por modo** (ir por zonas, mantener un lado) y más poderes.
+4. **Ajustar los poderes a la meca jaula** (a escala humana): hoy casi todo le pega.
+5. Juntar los proyectiles con la artillería de la meca propia.

@@ -19,7 +19,7 @@ extends Node
 ## tiros y el taladro llegan por BossHurtbox (`take_hit`). Mientras alguien lo posee, la cabeza no hace nada.
 
 ## Los poderes del Luchador, en este orden (Act: 0, rodea).
-enum Act { STALK, CHARGE, SLAM, THROW, SPIN, HOOK, FLAME }
+enum Act { STALK, CHARGE, SLAM, THROW, SPIN, HOOK, FLAME, BOMB }
 ## QUÉ PODERES USA (la L de la parcela): -1, todos los tildados; si no, uno solo (su índice), aunque no tenga ira.
 static var moves := -1
 
@@ -250,6 +250,14 @@ func hit_with(parts: Array, grow: float, damage: float, what: String, kind: HitR
 					hit_once = strike(damage, what, kind, away, push_distance, point)
 					return hit_once
 	return false
+
+
+## A cuánto están los pies del blanco sobre `level` (m): para lo que va por el piso y se salta.
+func feet_over(level: float) -> float:
+	var body := target as BalanceBody
+	if body != null and body.mover != null:
+		return body.mover.global_position.y - level
+	return 0.0
 
 
 func _target_height() -> float:

@@ -17,27 +17,16 @@ var way := Vector3.FORWARD
 var mouth := Vector3.ZERO
 var burning := false
 
-var _fan: MeshInstance3D = null
-var _fan_paint := StandardMaterial3D.new()
+var _zone: BossZone = null
 var _cones: Array[MeshInstance3D] = []
 var _fire: CPUParticles3D = null
 
 
-## LO ARMA: el abanico del piso (de `sweep` grados, centrado adelante) y el chorro, apagado.
-func setup(length: float, half: float, sweep: float) -> void:
+## LO ARMA: el cono del piso (BossZone) y el chorro, apagado.
+func setup(length: float, half: float, _sweep := 0.0) -> void:
 	reach = length
 	half_angle = half
-	_fan_paint.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_fan_paint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_fan_paint.cull_mode = BaseMaterial3D.CULL_DISABLED
-	_fan_paint.albedo_color = Color(1.0, 0.15, 0.1, 0.25)
-	_fan = MeshInstance3D.new()
-	_fan.name = "Abanico"
-	_fan.top_level = true
-	_fan.mesh = _sector(length, sweep + half * 2.0)
-	_fan.material_override = _fan_paint
-	_fan.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(_fan)
+	_zone = BossZone.cone(self, half, length)
 	# EL CHORRO: dos conos, uno de adentro (claro) y uno de afuera (naranja, transparente).
 	for index in 2:
 		var cone := MeshInstance3D.new()
@@ -101,13 +90,10 @@ func setup(length: float, half: float, sweep: float) -> void:
 	add_child(_fire)
 
 
-## EL AVISO: el abanico desde `from` (el piso), centrado hacia `center` (de costado). `locked`: ya apuntó (titila
-## rápido y más fuerte).
+## EL AVISO: el cono en el piso desde `from`, hacia `center` (de costado). `locked`: ya apuntó (titila rápido).
 func warn(from: Vector3, center: Vector3, locked := false) -> void:
-	var flat := Vector3(center.x, 0.0, center.z).normalized()
-	_fan.global_transform = Transform3D(Basis.looking_at(flat, Vector3.UP), Vector3(from.x, 0.08, from.z))
-	var beat := 0.04 if locked else 0.012
-	_fan_paint.albedo_color.a = (0.38 if locked else 0.2) + 0.12 * sin(Time.get_ticks_msec() * beat)
+	_zone.locked = locked
+	_zone.place(Vector3(from.x, 0.0, from.z), center)
 
 
 ## EL CHORRO, de `from` (la boca del horno) hacia `toward` (de costado): prendido o no.
@@ -132,32 +118,9 @@ func blow(from: Vector3, toward: Vector3, on: bool) -> void:
 		cone.global_transform = Transform3D(basis.scaled(Vector3(flicker, 1.0, flicker)), from + down * reach * 0.5)
 
 
-## Si un punto del piso (con su medio ancho, m) está dentro del chorro prendido.
+## Si un punto del piso (con su medio ancho, m) está dentro del chorro prendido: el cono, desde debajo de la boca.
 func covers(point: Vector3, half: float) -> bool:
 	if not burning:
 		return false
-	var flat := Vector3(point.x - mouth.x, 0.0, point.z - mouth.z)
-	var far := flat.length()
-	if far > reach + half or far < 0.01:
-		return false
-	var off := rad_to_deg(way.angle_to(flat / far))
-	var slack := rad_to_deg(atan2(half, far))
-	return off < half_angle + slack
-
-
-## Un abanico chato en el piso: `length` de largo y `degrees` de ancho, hacia −z.
-static func _sector(length: float, degrees: float) -> ArrayMesh:
-	var points := PackedVector3Array()
-	var steps := 24
-	for index in steps:
-		var a := deg_to_rad(-degrees * 0.5 + degrees * index / steps)
-		var b := deg_to_rad(-degrees * 0.5 + degrees * (index + 1) / steps)
-		points.append(Vector3.ZERO)
-		points.append(Vector3(sin(a), 0.0, -cos(a)) * length)
-		points.append(Vector3(sin(b), 0.0, -cos(b)) * length)
-	var arrays := []
-	arrays.resize(Mesh.ARRAY_MAX)
-	arrays[Mesh.ARRAY_VERTEX] = points
-	var mesh := ArrayMesh.new()
-	mesh.add_surface_from_arrays(Mesh.PRIMITIVE_TRIANGLES, arrays)
-	return mesh
+	_zone.place(Vector3(mouth.x, 0.0, mouth.z), way)
+	return _zone.covers(point, half)

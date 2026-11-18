@@ -15,3 +15,6 @@ static var current := KnobsFile.load_into(BossSettings.new(), SAVED) as BossSett
 @export_group("Todos los jefes")
 ## La escala de todos los jefes (1: las medidas de la maqueta; el Luchador, 30 m de alto).
 @export_range(0.1, 2.0, 0.05) var scale := 0.6
+## LAS MARCAS EN EL PISO (BossZone): si se ven los avisos de las zonas (la franja, el círculo, el cono). Apagadas, todo
+## se lee por las poses y los sonidos del jefe, como en Souls (el usuario: «esto sería algo más que podría o no poner»).
+@export var floor_marks := true

@@ -336,6 +336,11 @@ func hit_shapes(part: String) -> Array:
 	return shapes
 
 
+## Su cuerpo para las mecas (lo fijo que lo sigue): lo que él lanza no rebota contra él.
+func solid() -> PhysicsBody3D:
+	return _solid
+
+
 ## Si está en el aire (volando, bajando o saltando).
 func aloft() -> bool:
 	return _aloft or _jump_time > 0.0

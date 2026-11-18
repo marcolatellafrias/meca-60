@@ -1,10 +1,11 @@
 class_name BossSettingsPanel
 extends KnobsPanel
 
-## EL PANEL DE TODOS LOS JEFES (F2 en la fila del Luchador; ver BossSettings): hoy, la escala de todos los jefes, en
-## vivo. Como todos los paneles de perillas (KnobsPanel): borrador, «Guardar» y «Volver a lo guardado».
+## EL PANEL DE TODOS LOS JEFES (F2 en la fila del Luchador; ver BossSettings): la escala de todos los jefes y si se ven
+## las marcas de aviso en el piso, en vivo. Como todos los paneles de perillas (KnobsPanel): borrador, «Guardar» y «Volver a lo guardado».
 
-const LABELS := {"scale": "escala de todos los jefes (1: la maqueta)"}
+const LABELS := {"scale": "escala de todos los jefes (1: la maqueta)",
+	"floor_marks": "marcas de aviso en el piso"}
 
 
 func setup_panel() -> void:

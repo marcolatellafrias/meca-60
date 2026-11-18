@@ -26,7 +26,7 @@ const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Modos", "Golpes", "A
 ## Las perillas de los modos, en BrawlerSettings (en el orden de los tildes de los poderes).
 const MODES: Array[String] = ["rage", "flight"]
 ## Las perillas de los poderes, en BrawlerSettings (en el orden de BrawlerBrain.Act).
-const POWERS: Array[String] = ["charge", "slam", "throw", "spin", "hook", "flame"]
+const POWERS: Array[String] = ["charge", "slam", "throw", "spin", "hook", "flame", "bomb"]
 
 
 func setup_panel() -> void:

@@ -18,8 +18,7 @@ var launched := false
 var _width := 14.0
 var _reach := 140.0
 var _speed := 45.0
-var _strip: MeshInstance3D = null
-var _strip_paint := StandardMaterial3D.new()
+var _zone: BossZone = null
 var _ridge: Node3D = null
 
 
@@ -27,16 +26,7 @@ var _ridge: Node3D = null
 func setup(width: float, reach: float) -> void:
 	_width = width
 	_reach = reach
-	_strip_paint.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_strip_paint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_strip_paint.albedo_color = Color(1.0, 0.15, 0.1, 0.3)
-	_strip = MeshInstance3D.new()
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3(width, 0.08, reach)
-	_strip.mesh = mesh
-	_strip.material_override = _strip_paint
-	_strip.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	add_child(_strip)
+	_zone = BossZone.strip(self, width, reach)
 
 
 ## EL AVISO apunta desde `from` hacia `toward` (en el piso).
@@ -44,16 +34,15 @@ func aim(from: Vector3, toward: Vector3) -> void:
 	origin = Vector3(from.x, 0.0, from.z)
 	way = Vector3(toward.x, 0.0, toward.z).normalized()
 	global_transform = Transform3D(Basis.looking_at(way, Vector3.UP), origin)
-	_strip.position = Vector3(0.0, 0.05, -_reach * 0.5)
-	_strip_paint.albedo_color.a = 0.22 + 0.12 * sin(Time.get_ticks_msec() * 0.012)
+	_zone.place(origin, way)
 
 
 ## SALE LA ONDA, a `speed` m/s: el aviso se apaga y arranca el lomo.
 func launch(speed: float) -> void:
 	_speed = speed
 	launched = true
-	_strip.queue_free()
-	_strip = null
+	_zone.queue_free()
+	_zone = null
 	_ridge = Node3D.new()
 	add_child(_ridge)
 	var dirt := Color(0.5, 0.42, 0.33)

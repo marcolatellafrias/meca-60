@@ -1,8 +1,9 @@
 extends Node
 
-## LOS MODOS DE UN JEFE (sin ventana, unos 30 segundos): el Luchador entra en cada modo (BossMode) y se mira lo que
+## LOS MODOS DE UN JEFE (sin ventana, alrededor de un minuto): el Luchador entra en cada modo (BossMode) y se mira lo que
 ## cambia: qué poderes puede usar (los que tilda el modo y no piden lo que le falta), a qué altura va (el vuelo), que
-## vuelva al piso al salir, y un salto (Brawler.jump). Imprime cada cosa.
+## vuelva al piso al salir, el bombardeo desde el aire en sus tres variantes, y un salto (Brawler.jump). Imprime cada
+## cosa.
 
 var _boss: Brawler = null
 var _brain: BrawlerBrain = null
@@ -20,6 +21,7 @@ func _ready() -> void:
 	k.rage.every = 0.0
 	k.flight.on = true
 	k.flight.every = 0.0
+	k.flight.lasts = 0.0
 	var root := BrawlerArchetype.new().build(0, parent)
 	_boss = root.get_node("Luchador") as Brawler
 	_brain = _boss.get_node("Cabeza") as BrawlerBrain
@@ -33,6 +35,7 @@ func _ready() -> void:
 	_brain.enter_mode(-1)
 	await _wait(4.0)
 	print("de vuelta tranquilo: a %.1f m de alto, en el aire %s" % [_boss.global_position.y, _boss.aloft()])
+	await _bombs()
 	_brain.awake = false
 	await _wait(0.3)
 	var from := _boss.global_position
@@ -48,6 +51,27 @@ func _ready() -> void:
 	print("salto: cayó %s a los %.2f s, a %.1f m de donde salió, subió hasta %.1f m" % [landed, clock,
 		_boss.global_position.distance_to(from), top])
 	get_tree().quit()
+
+
+## EL BOMBARDEO, volando, contra la meca quieta: de arco (con marca), físicas (rebotan) y con el anillo al caer.
+func _bombs() -> void:
+	var bomb := _brain.power(BrawlerBrain.Act.BOMB) as BombPower
+	var mech := _brain.target as Mech
+	for variant: String in ["de arco", "físicas", "de arco con anillo"]:
+		bomb.physical = variant == "físicas"
+		bomb.ring = variant.ends_with("anillo")
+		_brain.enter_mode(1)
+		await _wait(3.0)
+		Health.of(mech).left = 100.0
+		HitReaction.of(mech).clear()
+		var used := bomb.uses
+		var hit := bomb.hits
+		_brain._begin(BrawlerBrain.Act.BOMB)
+		await _wait(9.0)
+		print("bombardeo, %s: lo usó %d, le pegó %d veces, la vida de la meca en %.0f, desde %.0f m de alto" % [variant,
+			bomb.uses - used, bomb.hits - hit, Health.of(mech).left, _boss.global_position.y])
+	_brain.enter_mode(-1)
+	await _wait(4.0)
 
 
 ## Los poderes que podría usar ahora (su modo y sus piezas), sin mirar la distancia.

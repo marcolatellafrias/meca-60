@@ -22,8 +22,7 @@ var radius := 18.0
 var just_landed := false
 
 var _rock: Node3D = null
-var _ring: MeshInstance3D = null
-var _ring_paint := StandardMaterial3D.new()
+var _zone: BossZone = null
 var _hole: Node3D = null
 var _from := Vector3.ZERO
 var _arc := 30.0
@@ -55,31 +54,16 @@ func setup(dig: Vector3, facing: float, hit_radius: float) -> void:
 	Clay.box(_rock, Vector3(SIZE.x * 0.9, 0.3, SIZE.z * 0.9), Vector3(0.0, SIZE.y * 0.5 + 0.1, 0.0),
 		Color(0.45, 0.5, 0.35))
 	_rock.global_transform = Transform3D(Basis(Vector3.UP, facing), Vector3(dig.x, -SIZE.y * 0.5, dig.z))
-	_ring_paint.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	_ring_paint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	_ring_paint.albedo_color = Color(1.0, 0.15, 0.1, 0.3)
-	_ring = MeshInstance3D.new()
-	_ring.name = "Aviso"
-	_ring.top_level = true
-	var disc := CylinderMesh.new()
-	disc.top_radius = radius
-	disc.bottom_radius = radius
-	disc.height = 0.08
-	disc.radial_segments = 48
-	_ring.mesh = disc
-	_ring.material_override = _ring_paint
-	_ring.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	_ring.visible = false
-	add_child(_ring)
+	_zone = BossZone.circle(self, radius)
+	_zone.marked = false
 
 
 ## EN LAS MANOS: la piedra va a `at` (mundo) y el aviso, si ya apunta, a `aim` (el piso).
 func hold(at: Vector3, facing: float, aim: Variant) -> void:
 	_rock.global_transform = Transform3D(Basis(Vector3.UP, facing), at)
 	if aim is Vector3:
-		_ring.visible = true
-		_ring.global_position = Vector3(aim.x, 0.05, aim.z)
-		_ring_paint.albedo_color.a = 0.22 + 0.12 * sin(Time.get_ticks_msec() * 0.012)
+		_zone.marked = true
+		_zone.place(Vector3(aim.x, 0.0, aim.z))
 
 
 ## Dónde está la piedra (mundo).
@@ -97,13 +81,14 @@ func throw(target: Vector3, flight: float, arc: float, stay: float) -> void:
 	_stay = stay
 	_clock = 0.0
 	_spin = Vector3(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * 2.5
-	_ring.visible = true
-	_ring.global_position = Vector3(spot.x, 0.05, spot.z)
+	_zone.marked = true
+	_zone.locked = true
+	_zone.place(spot)
 
 
 ## Si un punto del piso (con su medio ancho, m) cae dentro del golpe.
 func covers(point: Vector3, half: float) -> bool:
-	return Vector2(point.x - spot.x, point.z - spot.z).length() < radius + half
+	return _zone.covers(point, half)
 
 
 ## Le pegó a alguien: se rompe (no se queda, se hunde ya).
@@ -117,7 +102,6 @@ func _physics_process(delta: float) -> void:
 		State.HELD:
 			pass
 		State.FLYING:
-			_ring_paint.albedo_color.a = 0.3 + 0.2 * sin(Time.get_ticks_msec() * 0.03)
 			var t := minf(_clock / _flight, 1.0)
 			var at := _from.lerp(spot + Vector3.UP * SIZE.y * 0.5, t) + Vector3.UP * _arc * 4.0 * t * (1.0 - t)
 			_rock.global_position = at
@@ -126,7 +110,7 @@ func _physics_process(delta: float) -> void:
 				state = State.LANDED
 				just_landed = true
 				_clock = 0.0
-				_ring.visible = false
+				_zone.marked = false
 				_rock.global_transform = Transform3D(Basis(Vector3.UP, randf() * TAU), spot + Vector3.UP * SIZE.y * 0.4)
 				# AL CAER: tierra para todos lados, a la medida del golpe, y el ruido.
 				BossBursts.dirt(get_parent(), spot, radius / 6.0)
