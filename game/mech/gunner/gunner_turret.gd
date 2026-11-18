@@ -56,6 +56,8 @@ var weapons: GunnerWeapons = null
 ## Los botones redondos de los tableros, por acción: sus tramos del aro, su aguja, su botón y si es de un arma.
 var _radials := {}
 var _heat_fill: Node3D = null
+## Los caños de la minigun: giran con `GunnerWeapons.spin`.
+var _barrels: Node3D = null
 var _skip: Array[RID] = []
 ## Hacia dónde apunta, en el espacio de lo que la lleva (rad): el giro del plato y la inclinación de la cuna.
 var yaw := 0.0
@@ -288,12 +290,16 @@ func _support(parent: Node3D, x: float) -> void:
 func _minigun(parent: Node3D) -> void:
 	Clay.box(parent, Vector3(0.14, 0.14, 0.22), Vector3(0.0, 0.0, 0.06), GUNMETAL)
 	Clay.cylinder(parent, 0.075, 0.12, Vector3(0.0, 0.0, -0.1), CageCabin.METAL, Vector3(90.0, 0.0, 0.0))
+	# Los caños y sus aros giran juntos (`_barrels`).
+	_barrels = Node3D.new()
+	_barrels.name = "Caños"
+	parent.add_child(_barrels)
 	for k in 6:
 		var angle := TAU * k / 6.0
 		var spot := Vector3(cos(angle), sin(angle), 0.0) * 0.045
-		Clay.cylinder(parent, 0.014, 0.62, spot + Vector3(0.0, 0.0, -0.45), CageCabin.RIM_COLOR, Vector3(90.0, 0.0, 0.0))
+		Clay.cylinder(_barrels, 0.014, 0.62, spot + Vector3(0.0, 0.0, -0.45), CageCabin.RIM_COLOR, Vector3(90.0, 0.0, 0.0))
 	for z: float in [-0.42, -0.72]:
-		Clay.cylinder(parent, 0.068, 0.025, Vector3(0.0, 0.0, z), CageCabin.METAL, Vector3(90.0, 0.0, 0.0))
+		Clay.cylinder(_barrels, 0.068, 0.025, Vector3(0.0, 0.0, z), CageCabin.METAL, Vector3(90.0, 0.0, 0.0))
 	Clay.cylinder(parent, 0.09, 0.12, Vector3(0.0, -0.17, 0.05), CageCabin.YELLOW.darkened(0.25), Vector3(0.0, 0.0, 90.0))
 	Clay.box(parent, Vector3(0.05, 0.12, 0.04), Vector3(0.0, -0.08, -0.02), GUNMETAL)
 
@@ -430,9 +436,15 @@ func _radial(face: Node3D, at: Vector3, radius: float, tint: Color, title: Strin
 ## LO QUE MUESTRAN LOS TABLEROS, cada cuadro: EN CADA ARO, prendido hasta lo que tiene (el arma, lo que le queda
 ## cargado; una habilidad, lo que lleva de su tiempo de recarga). RECARGANDO un arma, su aro muestra la aguja y LA ZONA en
 ## ámbar (roja si se trabó). El botón del arma elegida, más claro. Y LA BARRA DEL CALOR (roja trabada).
-func _process(_delta: float) -> void:
+## A toda vuelta, cuántas vueltas por segundo dan los caños de la minigun.
+const BARREL_TURNS := 4.0
+
+
+func _process(delta: float) -> void:
 	if weapons == null:
 		return
+	if _barrels != null:
+		_barrels.rotate_object_local(Vector3.BACK, weapons.spin * TAU * BARREL_TURNS * delta)
 	for action: String in _radials:
 		var radial: Dictionary = _radials[action]
 		var ring: Array = radial["ring"]

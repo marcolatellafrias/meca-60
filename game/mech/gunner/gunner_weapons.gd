@@ -7,6 +7,9 @@ extends Node
 ##
 ##   · EL GATILLO (el clic izquierdo con el yugo agarrado) dispara LA ELEGIDA: la minigun mientras se lo mantiene, los
 ##     misiles uno por apretada (derecho, salvo lo que pidan sus botones).
+##   · LA MINIGUN ARRANCA (el usuario, 18/11/2026: «tenés que mantener apretado el clic un rato para que empiece a
+##     disparar»): con el gatillo mantenido los caños empiezan a girar (`spin`, en `SPIN_UP` s) y recién a toda vuelta
+##     dispara; suelto, se frenan en `SPIN_DOWN` s (soltar y volver a apretar rápido no pierde todo).
 ##   · LOS DOS BOTONES DE LAS ARMAS: elegir; y la elegida, RECARGAR CON RITMO: una aguja recorre su aro en `RELOAD_TIME`;
 ##     apretando otra vez con la aguja en LA ZONA (`ZONE`), recarga al instante y lo que se cargó pega más fuerte
 ##     (`GOOD_STRENGTH`); apretando fuera, se traba y tarda `JAM` más; sin apretar, termina sola al final del aro.
@@ -28,6 +31,8 @@ const HEAT_PER_SHOT := 0.012
 const COOL_RATE := 0.22
 const UNJAM_HEAT := 0.35
 const SPREAD := 1.2
+const SPIN_UP := 0.9
+const SPIN_DOWN := 1.2
 const TUBES := 6
 const MISSILE_GAP := 0.25
 const SALVO_GAP := 0.12
@@ -47,6 +52,8 @@ const LOCK_TIME := 8.0
 var turret: GunnerTurret = null
 var selected := Weapon.MINIGUN
 var heat := 0.0
+## Cuánto giran los caños de la minigun (0 quietos, 1 a toda vuelta: recién ahí dispara).
+var spin := 0.0
 var jammed := false
 var belt := BELT
 var tubes := TUBES
@@ -187,9 +194,12 @@ func _physics_process(delta: float) -> void:
 			_salvo_wait = SALVO_GAP
 			_salvo_left -= 1
 			_fire_missile(true)
+	# LOS CAÑOS: giran mientras se mantiene el gatillo con la minigun, y se frenan al soltar.
+	var spinning := _trigger and selected == Weapon.MINIGUN
+	spin = clampf(spin + (delta / SPIN_UP if spinning else -delta / SPIN_DOWN), 0.0, 1.0)
 	if not _trigger or turret == null:
 		return
-	if selected == Weapon.MINIGUN:
+	if selected == Weapon.MINIGUN and spin >= 1.0:
 		_fire_minigun()
 
 
