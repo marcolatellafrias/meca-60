@@ -2,7 +2,7 @@ extends Node
 
 ## EL TALLER DE JEFES (con ventana, unos 10 segundos, sin el sandbox): el cuerpo modular (BossParts, BossRecipe,
 ## BossFrame). Capturas del que se arma con tres recetas (una que encaja, otra de cuatro brazos y una que no encaja) y
-## de los ejemplos de atrás; imprime de cada una si encaja, qué le dan sus piezas y qué poderes podría usar. Guarda en
+## de los ejemplos de atrás; imprime de cada una si encaja y qué puntos y zonas de golpe ofrece. Guarda en
 ## la carpeta de --fotos= (si no, en user://).
 
 var _eye: Camera3D = null
@@ -46,9 +46,8 @@ func _ready() -> void:
 		BossWorkshopArchetype.refresh()
 		await _wait(0.3)
 		var made := BossWorkshopArchetype.recipe
-		print("%s\n   %s\n   le dan: %s\n   podría usar: %s" % [made.title(),
-			"encaja" if made.problems().is_empty() else "NO ENCAJA: " + "; ".join(made.problems()),
-			", ".join(made.gives()), ", ".join(made.usable(BrawlerSettings.current.powers()))])
+		print("%s · %s" % [made.title(), "encaja" if made.problems().is_empty() else "NO ENCAJA: " + "; ".join(made.problems())])
+		print("   puntos: %s · zonas de golpe: %s" % [", ".join(made.points()), ", ".join(made.zones())])
 		_look(Vector3(0.0, 13.0, -20.0), Vector3(22.0, 20.0, 22.0))
 		await _shot("%d_armado" % (index + 1))
 	get_tree().quit()

@@ -24,6 +24,13 @@ const RECOVER := 1.5
 ## Con ira, rebota en el borde una vez (y vuelve) en vez de estrellarse.
 @export var bounce_rage := true
 
+@export_group("Cuerpo")
+## Lo que usa del cuerpo (se elige entre lo que el cuerpo ofrece: ver BossPower).
+@export var hit_zone := 0
+@export var ready_pose := int(Brawler.Pose.CHARGE_READY)
+@export var strike_pose := int(Brawler.Pose.CHARGING)
+@export var exposes := true
+
 ## Cuántas veces se estrelló (para mirar).
 var crashes := 0
 var _bounced := false
@@ -39,13 +46,13 @@ func title() -> String:
 
 
 func needs() -> PackedStringArray:
-	return PackedStringArray(["embestir", "suelo"])
+	return PackedStringArray(["suelo"])
 
 
 func labels() -> Dictionary:
-	return {"windup": "aviso: abre el horno (s)", "speed": "velocidad (m/s)", "up_time": "llega a ella en (s)",
+	return BODY_LABELS.merged({"windup": "aviso: abre el horno (s)", "speed": "velocidad (m/s)", "up_time": "llega a ella en (s)",
 		"time": "dura como mucho (s)", "homing": "corrige hacia vos (°/s)", "stun": "estrellado, aturdido (s)",
-		"damage": "te saca (vida)", "push": "te tira (m)", "bounce_rage": "en modo fuerte, rebota en el borde"}
+		"damage": "te saca (vida)", "push": "te tira (m)", "bounce_rage": "en modo fuerte, rebota en el borde"})
 
 
 func start(_b: BrawlerBrain) -> void:
@@ -57,8 +64,8 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 	match b.step:
 		0:
 			b.stage = "embestida: abre el horno"
-			boss.furnace = true
-			boss.pose = Brawler.Pose.CHARGE_READY
+			b.expose(exposes)
+			boss.pose = ready_pose as Brawler.Pose
 			var error := b.error_to(b.to_target())
 			boss.move = Vector2(clampf(-error * 3.0, -1.0, 1.0), 0.0)
 			if b.clock >= windup and absf(error) < AIMED:
@@ -67,12 +74,12 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 		1:
 			b.stage = "embestida: ¡arranca!"
 			boss.rush(speed, up_time)
-			boss.pose = Brawler.Pose.CHARGING
+			boss.pose = strike_pose as Brawler.Pose
 			var error := b.error_to(b.to_target())
 			var correct := homing / maxf(BrawlerSettings.current.turn_speed, 1.0)
 			boss.move = Vector2(clampf(-error * 3.0, -correct, correct), 1.0)
 			# LA ZONA DE GOLPE: todo su cuerpo, mientras embiste.
-			hits += int(b.hit_with(["cuerpo"], 1.0, damage, "la embestida", HitReaction.Kind.KNOCKDOWN, boss.heading(),
+			hits += int(b.hit_with([Brawler.ZONES[hit_zone]], 1.0, damage, "la embestida", HitReaction.Kind.KNOCKDOWN, boss.heading(),
 				push))
 			var passed := boss.heading().dot(b.to_target()) < 0.0 and b.distance() > 20.0
 			var edge := boss.arena != null and boss.arena.at_edge(boss.global_position, boss.box().x * 0.5 + 0.5)
@@ -96,18 +103,19 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 			boss.move = Vector2(0.0, -1.0) if boss.speed > 1.0 else Vector2.ZERO
 			if boss.speed <= 1.0:
 				boss.rush(0.0)
-				boss.furnace = false
+				b.expose(false)
 				b.next(4)
 		3:
 			b.stage = "¡se estrelló! aturdido"
+			b.expose(true)
 			boss.pose = Brawler.Pose.STUNNED
 			boss.move = Vector2.ZERO
 			if b.clock >= stun:
-				boss.furnace = false
+				b.expose(false)
 				b.next(4)
 		5:
 			b.stage = "embestida: ¡rebota!"
-			boss.pose = Brawler.Pose.CHARGE_READY
+			boss.pose = ready_pose as Brawler.Pose
 			var error := b.error_to(b.to_target())
 			boss.move = Vector2(clampf(-error * 3.0, -1.0, 1.0), 0.0)
 			if b.clock >= 0.5 and absf(error) < AIMED * 2.0:

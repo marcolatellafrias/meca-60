@@ -23,6 +23,8 @@ const LABELS := {
 const POWER_LABELS := {"in_calm": "LO USA: tranquilo", "reach_from": "desde (m)", "reach_to": "hasta (m)"}
 ## Las pestañas del cuerpo; después, una por modo y una por poder.
 const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Modos", "Golpes", "Arena"]
+## Lo de todo poder: en qué modos lo usa y a qué distancia (va arriba en su pestaña).
+const WHEN: Array[String] = ["in_calm", "in_mode_1", "in_mode_2", "reach_from", "reach_to"]
 ## Las perillas de los modos, en BrawlerSettings (en el orden de los tildes de los poderes).
 const MODES: Array[String] = ["rage", "flight"]
 ## Las perillas de los poderes, en BrawlerSettings (en el orden de BrawlerBrain.Act).
@@ -68,6 +70,7 @@ func sections() -> Array[Dictionary]:
 	for index in MODES.size():
 		all.append({"title": "MODO: %s" % mode_names[index].to_upper(), "tab": "Modo %s" % mode_names[index],
 			"target": draft().get(MODES[index]), "labels": BossMode.LABELS, "headers": false,
+			"choices": BossPower.choice_spec(draft().get(MODES[index])),
 			"defaults": fresh_set.get(MODES[index])})
 	for field in POWERS:
 		var power := draft().get(field) as BossPower
@@ -79,6 +82,10 @@ func sections() -> Array[Dictionary]:
 		var title := power.title().to_upper()
 		if not missing.is_empty():
 			title += " (le falta: %s)" % ", ".join(missing)
-		all.append({"title": title, "tab": power.title().capitalize(), "target": power, "labels": labels,
-			"headers": false, "defaults": fresh_set.get(field)})
+		# Arriba, cuándo lo usa (lo de todo poder); abajo, lo suyo.
+		var tab := power.title().capitalize()
+		all.append({"title": title, "tab": tab, "target": power, "labels": labels, "headers": false,
+			"only": PackedStringArray(WHEN), "defaults": fresh_set.get(field)})
+		all.append({"title": "SUS VARIANTES", "tab": tab, "target": power, "labels": labels, "headers": false,
+			"skip": PackedStringArray(WHEN), "choices": BossPower.choice_spec(power), "defaults": fresh_set.get(field)})
 	return all

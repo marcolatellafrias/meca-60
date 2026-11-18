@@ -26,6 +26,11 @@ const HOLD := Vector2(12.0, 8.0)
 @export_range(0.0, 100.0, 1.0) var damage := 35.0
 @export_range(0.2, 4.0, 0.05) var recover := 1.0
 
+@export_group("Cuerpo")
+## Lo que usa del cuerpo (se elige entre lo que el cuerpo ofrece: ver BossPower).
+@export var ready_pose := int(Brawler.Pose.HOOK_READY)
+@export var strike_pose := int(Brawler.Pose.HOOK)
+
 ## La mano (mientras apunta, sale o vuelve).
 var hand: BrawlerHook = null
 
@@ -40,14 +45,14 @@ func title() -> String:
 
 
 func needs() -> PackedStringArray:
-	return PackedStringArray(["mano", "suelo"])
+	return PackedStringArray(["suelo"])
 
 
 func labels() -> Dictionary:
-	return {"windup": "aviso: la franja (s)", "lock": "ya apuntó, quieta (s)", "speed": "la mano sale a (m/s)",
+	return BODY_LABELS.merged({"windup": "aviso: la franja (s)", "lock": "ya apuntó, quieta (s)", "speed": "la mano sale a (m/s)",
 		"length": "llega hasta (m)", "width": "ancho (m)", "swing_time": "te revolea (s)", "swing_speed": "a (°/s)",
 		"fling_distance": "te tira a (m)", "fling_arc": "el arco sube (m)", "fling_time": "vuelo (s)",
-		"damage": "al caer te saca (vida)", "recover": "se queda después (s)"}
+		"damage": "al caer te saca (vida)", "recover": "se queda después (s)"})
 
 
 func act(b: BrawlerBrain, _delta: float) -> void:
@@ -55,7 +60,7 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 	var waist := b.waist()
 	match b.step:
 		0:
-			boss.pose = Brawler.Pose.HOOK_READY
+			boss.pose = ready_pose as Brawler.Pose
 			b.face()
 			if hand == null:
 				hand = BrawlerHook.new()
@@ -72,7 +77,7 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 				hand.aim(hand.origin, hand.way, true)
 			if b.clock >= windup + lock:
 				uses += 1
-				boss.pose = Brawler.Pose.HOOK
+				boss.pose = strike_pose as Brawler.Pose
 				hand.launch(speed)
 				b.next(1)
 		1:

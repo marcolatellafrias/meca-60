@@ -22,9 +22,21 @@ extends CharacterBody3D
 ## medidas de la maqueta, y el Luchador entero va a esa escala (el dibujo, su caja, su cuerpo para las mecas y el
 ## alcance de lo que sale de él: la embestida, los puños). *Del 15/11/2026: 0,6 (el usuario: «bajar un poco la escala
 ## del jefe e igualarla un poco más a la meca»).*
-## LO QUE TIENE (sus piezas, para los poderes: ver BossPower.needs): orugas que embisten, dos brazos con mano, el
-## horno en el pecho y propulsores para volar. «suelo» lo tiene mientras no vuela (ver `lacks_now`).
-const PARTS: Array[String] = ["embestir", "brazos", "mano", "horno", "volar", "suelo"]
+## LO QUE EL CUERPO LES OFRECE A LOS PODERES, POR NOMBRE LIBRE (17/11/2026; el usuario: «no está el concepto de que
+## existe un horno… yo decido desde qué punto sale algo… así como ahora es un horno, también podría ser un cañón»): sus
+## PUNTOS (de dónde puede salir algo: `point`), sus ZONAS DE GOLPE (`hit_shapes`), sus POSES (`pose`) y cómo se ve
+## (`LOOKS`). Un poder no sabe qué hay en cada uno: en el panel se elige cuál usa. Lo único que un poder puede PEDIR es
+## físico: «suelo» (lo tiene mientras no vuela: ver `lacks_now`).
+const PARTS: Array[String] = ["suelo"]
+const POINTS: Array[String] = ["pecho", "cabeza", "puño izquierdo", "puño derecho", "entre los puños", "arriba",
+	"frente"]
+const ZONES: Array[String] = ["cuerpo", "puños", "brazos", "puntas"]
+const LOOKS: Array[String] = ["normal", "con ira"]
+## Los nombres de las poses, en el orden de `Pose`.
+const POSE_NAMES: Array[String] = ["parado", "agachado, brazos atrás", "inclinado, puños adelante", "brazos arriba",
+	"puños al piso", "desplomado", "manos al piso", "carga sobre la cabeza", "tira", "brazos abiertos",
+	"brazos abiertos, girando", "brazos atrás", "brazos adelante", "brazos adelante (revoleo)", "echado atrás",
+	"pecho adelante"]
 ## Volando: a cuánto sube y baja (m/s, en la maqueta).
 const FLY_CLIMB := 22.0
 ## Lo que mide su caja contra lo fijo, en la maqueta (m): el ancho de las orugas, el alto y el largo.
@@ -444,6 +456,25 @@ func heading() -> Vector3:
 ## Dónde está la boca del horno (mundo): el punto débil.
 func furnace_point() -> Vector3:
 	return body.furnace()
+
+
+## DÓNDE ESTÁ EL PUNTO `index` de `POINTS`, ahora (mundo): de ahí puede salir lo que un poder lance.
+func point(index: int) -> Vector3:
+	var fists := body.fists()
+	match POINTS[clampi(index, 0, POINTS.size() - 1)]:
+		"pecho":
+			return body.furnace()
+		"cabeza":
+			return global_position + Vector3.UP * box().y
+		"puño izquierdo":
+			return fists[0]
+		"puño derecho":
+			return fists[1]
+		"entre los puños":
+			return (fists[0] + fists[1]) * 0.5
+		"arriba":
+			return global_position + Vector3.UP * (box().y + 2.0)
+	return global_position + Basis(Vector3.UP, waist_yaw) * Vector3.FORWARD * box().z * 0.5 + Vector3.UP * box().y * 0.4
 
 
 ## LO PONE en `where` (el punto del piso), quieto, mirando adonde mira `where`.

@@ -20,6 +20,13 @@ extends BossPower
 @export_range(0.0, 40.0, 0.5) var push := 12.0
 @export_range(0.2, 6.0, 0.1) var recover := 1.8
 
+@export_group("Cuerpo")
+## Lo que usa del cuerpo (se elige entre lo que el cuerpo ofrece: ver BossPower).
+@export var from_point := 0
+@export var ready_pose := int(Brawler.Pose.FLAME_READY)
+@export var strike_pose := int(Brawler.Pose.FLAME)
+@export var exposes := true
+
 ## El chorro (mientras dura el ataque).
 var flame: BrawlerFlame = null
 var _yaw := 0.0
@@ -38,13 +45,13 @@ func title() -> String:
 
 
 func needs() -> PackedStringArray:
-	return PackedStringArray(["horno"])
+	return PackedStringArray()
 
 
 func labels() -> Dictionary:
-	return {"windup": "abre el horno (s)", "aim": "cada bocanada te sigue (s)", "lock": "apuntó, quieta (s)",
+	return BODY_LABELS.merged({"windup": "abre el horno (s)", "aim": "cada bocanada te sigue (s)", "lock": "apuntó, quieta (s)",
 		"burn": "quema (s)", "bursts": "bocanadas", "length": "llega hasta (m)", "angle": "medio ancho (°)",
-		"damage": "te saca (vida)", "push": "te empuja (m)", "recover": "después, horno abierto (s)"}
+		"damage": "te saca (vida)", "push": "te empuja (m)", "recover": "después, horno abierto (s)"})
 
 
 func act(b: BrawlerBrain, _delta: float) -> void:
@@ -56,19 +63,19 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 		b.world().add_child(flame)
 		flame.setup(length, angle, 0.0)
 		_left = bursts
-	boss.furnace = true
+	b.expose(exposes)
 	boss.move = Vector2.ZERO
 	match b.step:
 		0:
 			b.stage = "lanzallamas: abre el horno"
-			boss.pose = Brawler.Pose.FLAME_READY
+			boss.pose = ready_pose as Brawler.Pose
 			b.face()
 			if b.clock >= windup:
 				uses += 1
 				b.next(1)
 		1:
 			b.stage = "lanzallamas: apunta"
-			boss.pose = Brawler.Pose.FLAME_READY
+			boss.pose = ready_pose as Brawler.Pose
 			b.face()
 			flame.warn(boss.global_position, waist)
 			if b.clock >= aim:
@@ -79,20 +86,20 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 			boss.aim_yaw = _yaw
 			flame.warn(boss.global_position, waist, true)
 			if b.clock >= lock:
-				BossSounds.play(BossSounds.Kind.FLAME, boss.furnace_point(), b.world(), -2.0)
+				BossSounds.play(BossSounds.Kind.FLAME, boss.point(from_point), b.world(), -2.0)
 				b.hit_once = false
 				b.next(3)
 		3:
 			b.stage = "¡lanzallamas!"
-			boss.pose = Brawler.Pose.FLAME
+			boss.pose = strike_pose as Brawler.Pose
 			boss.aim_yaw = _yaw
-			flame.blow(boss.furnace_point(), waist, true)
+			flame.blow(boss.point(from_point), waist, true)
 			if not b.hit_once and flame.covers(b.ground(), b.half_width()):
 				b.hit_once = b.strike(damage, "el lanzallamas", HitReaction.Kind.PUSH, b.to_target(), push,
 					b.ground() + Vector3.UP * 8.0)
 				hits += int(b.hit_once)
 			if b.clock >= burn:
-				flame.blow(boss.furnace_point(), waist, false)
+				flame.blow(boss.point(from_point), waist, false)
 				_left -= 1
 				b.next(1 if _left > 0 else 4)
 		_:

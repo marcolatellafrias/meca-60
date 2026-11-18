@@ -2,8 +2,8 @@ class_name BossRecipe
 extends Resource
 
 ## LA RECETA DE UN JEFE (17/11/2026): qué piezas lleva (BossParts): unas piernas, un torso, el brazo de sus hombros (y
-## otro para los hombros de más, si el torso tiene cuatro) y una cabeza. Dice SI ENCAJA (`problems`) y QUÉ LE DA
-## (`gives`: lo que piden los poderes, BossPower.needs). La arma BossFrame.
+## otro para los hombros de más, si el torso tiene cuatro) y una cabeza. Dice SI ENCAJA (`problems`) y QUÉ OFRECE a los
+## poderes: sus puntos y sus zonas de golpe, por nombre (`points`, `zones`), y lo físico (`gives`). La arma BossFrame.
 
 @export var legs := "orugas"
 @export var torso := "ancho"
@@ -47,18 +47,30 @@ func problems() -> PackedStringArray:
 	return out
 
 
-## LO QUE LE DAN SUS PIEZAS (lo que piden los poderes). «brazos» hace falta en dos.
+## LO FÍSICO que le dan sus piezas (lo único que un poder puede pedir: «suelo»).
 func gives() -> PackedStringArray:
-	var count := {}
-	for each: String in BossParts.LEGS[legs]["gives"] + BossParts.TORSOS[torso]["gives"] + BossParts.HEADS[head]["gives"]:
-		count[each] = 2
-	for each in arms():
-		for part: String in BossParts.ARMS[each]["gives"]:
-			count[part] = int(count.get(part, 0)) + 1
+	return PackedStringArray(BossParts.LEGS[legs]["gives"])
+
+
+## SUS PUNTOS, por nombre (de dónde puede salir lo que un poder lance): los de cada pieza; los de los brazos, uno por
+## brazo («punta 1», «punta 2»…).
+func points() -> PackedStringArray:
+	return _named("points")
+
+
+## SUS ZONAS DE GOLPE, por nombre (lo que un poder puede prender para pegar).
+func zones() -> PackedStringArray:
+	return _named("zones")
+
+
+func _named(what: String) -> PackedStringArray:
 	var out := PackedStringArray()
-	for part: String in count:
-		if part != "brazos" or int(count[part]) >= 2:
-			out.append(part)
+	for each: String in BossParts.LEGS[legs][what] + BossParts.TORSOS[torso][what] + BossParts.HEADS[head][what]:
+		out.append(each)
+	var each_arm := arms()
+	for index in each_arm.size():
+		for each: String in BossParts.ARMS[each_arm[index]][what]:
+			out.append("%s %d" % [each, index + 1])
 	return out
 
 

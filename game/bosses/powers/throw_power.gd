@@ -21,6 +21,12 @@ extends BossPower
 @export_range(0.0, 100.0, 1.0) var damage := 30.0
 @export_range(0.0, 60.0, 0.5) var push := 10.0
 
+@export_group("Cuerpo")
+## Lo que usa del cuerpo (se elige entre lo que el cuerpo ofrece: ver BossPower).
+@export var from_point := 4
+@export var ready_pose := int(Brawler.Pose.LIFT)
+@export var strike_pose := int(Brawler.Pose.THROW)
+
 ## Las piedras en el aire.
 var rocks: Array[BrawlerRock] = []
 var _rock: BrawlerRock = null
@@ -38,14 +44,14 @@ func title() -> String:
 
 
 func needs() -> PackedStringArray:
-	return PackedStringArray(["brazos", "suelo"])
+	return PackedStringArray(["suelo"])
 
 
 func labels() -> Dictionary:
-	return {"rip_time": "mete las manos y lo arranca en (s)", "lift_time": "aviso: la tiene arriba (s)",
+	return BODY_LABELS.merged({"rip_time": "mete las manos y lo arranca en (s)", "lift_time": "aviso: la tiene arriba (s)",
 		"flight": "vuela (s)", "arc": "el arco sube (m)", "radius": "radio del golpe (m)", "stay": "queda en el piso (s)",
 		"recover": "se queda después (s)", "count": "cuántas piedras", "count_rage": "cuántas, en modo fuerte",
-		"damage": "te saca (vida)", "push": "te tira (m)"}
+		"damage": "te saca (vida)", "push": "te tira (m)"})
 
 
 func act(b: BrawlerBrain, delta: float) -> void:
@@ -72,14 +78,13 @@ func act(b: BrawlerBrain, delta: float) -> void:
 				b.next(1)
 		1:
 			b.stage = "arranca el piso: la levanta"
-			boss.pose = Brawler.Pose.LIFT
+			boss.pose = ready_pose as Brawler.Pose
 			b.face()
-			var hands := boss.body.fists()
-			var over := (hands[0] + hands[1]) * 0.5 + Vector3.UP * (BrawlerRock.SIZE.y * 0.5 + 1.0)
+			var over := boss.point(from_point) + Vector3.UP * (BrawlerRock.SIZE.y * 0.5 + 1.0)
 			_rock.hold(_rock.held_at().lerp(over, 1.0 - exp(-6.0 * delta)), boss.waist_yaw, b.ground())
 			if b.clock >= lift_time:
 				uses += 1
-				boss.pose = Brawler.Pose.THROW
+				boss.pose = strike_pose as Brawler.Pose
 				_rock.throw(b.ground(), flight, arc, stay)
 				rocks.append(_rock)
 				for extra in (count_rage if b.strong() else count) - 1:

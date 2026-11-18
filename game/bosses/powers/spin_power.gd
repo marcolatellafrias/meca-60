@@ -17,6 +17,13 @@ extends BossPower
 @export_range(0.0, 100.0, 1.0) var damage := 20.0
 @export_range(0.0, 60.0, 0.5) var push := 16.0
 
+@export_group("Cuerpo")
+## Lo que usa del cuerpo (se elige entre lo que el cuerpo ofrece: ver BossPower).
+@export var hit_zone := 3
+@export var ready_pose := int(Brawler.Pose.SPIN_READY)
+@export var strike_pose := int(Brawler.Pose.SPIN)
+@export var exposes := true
+
 func _init() -> void:
 	reach_from = 30.0
 	reach_to = 110.0
@@ -27,13 +34,13 @@ func title() -> String:
 
 
 func needs() -> PackedStringArray:
-	return PackedStringArray(["brazos", "suelo"])
+	return PackedStringArray(["suelo"])
 
 
 func labels() -> Dictionary:
-	return {"windup": "aviso: abre los brazos (s)", "time": "gira (s)", "turn": "a (°/s)", "move": "anda a (m/s)",
+	return BODY_LABELS.merged({"windup": "aviso: abre los brazos (s)", "time": "gira (s)", "turn": "a (°/s)", "move": "anda a (m/s)",
 		"homing": "corrige hacia vos (°/s)", "dizzy": "mareado, horno abierto (s)", "damage": "te saca (vida)",
-		"push": "te empuja (m)"}
+		"push": "te empuja (m)"})
 
 
 func act(b: BrawlerBrain, delta: float) -> void:
@@ -41,7 +48,7 @@ func act(b: BrawlerBrain, delta: float) -> void:
 	match b.step:
 		0:
 			b.stage = "trompo: abre los brazos"
-			boss.pose = Brawler.Pose.SPIN_READY
+			boss.pose = ready_pose as Brawler.Pose
 			b.face()
 			boss.spin = turn * 0.25 * clampf(b.clock / maxf(windup, 0.01), 0.0, 1.0)
 			if b.clock >= windup:
@@ -49,13 +56,13 @@ func act(b: BrawlerBrain, delta: float) -> void:
 				b.next(1)
 		1:
 			b.stage = "¡trompo!"
-			boss.pose = Brawler.Pose.SPIN
+			boss.pose = strike_pose as Brawler.Pose
 			boss.spin = turn
 			boss.rush(move, 0.3)
 			var correct := homing / maxf(BrawlerSettings.current.turn_speed, 1.0)
 			boss.move = Vector2(clampf(-b.error_to(b.to_target()) * 3.0, -correct, correct), 1.0)
 			# LA ZONA DE GOLPE: la punta de cada brazo, mientras gira.
-			hits += int(b.hit_with(["puntas"], 1.0, damage, "el trompo", HitReaction.Kind.PUSH,
+			hits += int(b.hit_with([Brawler.ZONES[hit_zone]], 1.0, damage, "el trompo", HitReaction.Kind.PUSH,
 				Vector3.UP.cross(b.to_target().normalized()) * signf(boss.spin), push))
 			if b.clock >= time:
 				boss.rush(0.0)
@@ -65,7 +72,7 @@ func act(b: BrawlerBrain, delta: float) -> void:
 			boss.pose = Brawler.Pose.STUNNED
 			boss.spin = move_toward(boss.spin, 0.0, turn * 2.0 * delta)
 			boss.move = Vector2.ZERO
-			boss.furnace = true
+			b.expose(exposes)
 			if b.clock >= dizzy:
 				b.finish()
 

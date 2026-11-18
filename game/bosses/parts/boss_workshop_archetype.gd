@@ -3,8 +3,8 @@ extends SeededArchetype
 
 ## EL TALLER DE JEFES (17/11/2026): la parcela para armar cuerpos de jefes con piezas (BossParts, BossRecipe, BossFrame)
 ## y ver qué encaja. ADELANTE, EL QUE SE ARMA: cada tecla cambia una pieza (J las piernas, K el torso, L los brazos, H
-## los brazos del segundo par, P la cabeza), y su cartel dice qué lleva, SI ENCAJA (y por qué no), LO QUE LE DAN sus
-## piezas y QUÉ PODERES podría usar con eso. ATRÁS, EJEMPLOS ya armados. Todo de arcilla y quieto: el groundwork (el
+## los brazos del segundo par, P la cabeza), y su cartel dice qué lleva, SI ENCAJA (y por qué no) y LO QUE OFRECE a los
+## poderes: sus puntos y sus zonas de golpe, por nombre. ATRÁS, EJEMPLOS ya armados. Todo de arcilla y quieto: el groundwork (el
 ## usuario: «ir haciendo el groundwork para ver qué cosas se pueden combinar con qué»).
 
 const GROUP := "boss_workshop"
@@ -37,7 +37,7 @@ func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"armar el cuerpo de un jefe con piezas: piernas, torso, brazos y cabeza",
 		"el cartel dice si encaja (el tamaño de los hombros)",
-		"y qué le dan sus piezas: con eso, qué poderes podría usar",
+		"y qué ofrece a los poderes: sus puntos (de dónde sale algo) y sus zonas de golpe",
 		"J piernas · K torso · L brazos · H brazos del segundo par · P cabeza · F7 la escala de todos",
 	])
 
@@ -121,7 +121,8 @@ static func write(label: Label3D, made: BossRecipe, full: bool) -> void:
 		for problem in problems:
 			lines.append("NO ENCAJA: " + problem)
 	if full:
-		lines.append("le dan: " + ", ".join(made.gives()))
-		lines.append("podría usar: " + ", ".join(made.usable(BrawlerSettings.current.powers())))
+		lines.append("puntos: " + ", ".join(made.points()))
+		lines.append("zonas de golpe: " + ", ".join(made.zones()))
+		lines.append("en el piso" if made.gives().has("suelo") else "no pisa: sólo poderes que no pidan suelo")
 	label.text = "\n".join(lines)
 	label.modulate = Color(1, 1, 1) if problems.is_empty() else Color(1.0, 0.5, 0.4)

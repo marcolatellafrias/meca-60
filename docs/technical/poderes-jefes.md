@@ -17,19 +17,25 @@ cambiar unas variantes… libertad sin tantos sliders».
   - `tick`, siempre, porque lo que lanzó sigue en el mundo (las ondas, las piedras);
   - `drop`, si lo cortan.
 
-Lo que **pide del cuerpo** (`needs`: "embestir", "brazos", "mano", "horno", "suelo", "volar"). Si al jefe le falta, no lo usa, y la
-pestaña lo dice («le falta: …»). Cada jefe pelea con una **copia** de sus poderes: lo que guarda mientras pelea es de
-esa copia. Al guardar el panel, las perillas nuevas pasan a las copias.
+**De dónde sale y con qué pega es libre** (el usuario: «no está el concepto de que existe un horno… yo decido desde
+qué punto sale algo… así como ahora es un horno, también podría ser un cañón, un brazo de boxeo que le sale del pecho»).
+El poder no sabe qué hay en el cuerpo. El cuerpo ofrece, por nombre libre, **sus puntos** (de dónde puede salir algo),
+**sus zonas de golpe**, **sus poses** y **sus aspectos**; y en la pestaña de cada poder se elige de una lista: «sale
+de», «pega con», «pose del aviso», «pose del golpe», y el tilde «deja a la vista el punto débil» (en el Luchador, abrir
+el horno es eso). Son las perillas que terminan en `_point`, `_zone`, `_pose` (y `look` en los modos); el panel las
+vuelve listas con `BossPower.choice_spec`. Lo único que un poder **pide** (`needs`) es físico: «suelo»; si el jefe
+vuela, no lo usa. Cada jefe pelea con una **copia** de sus poderes: lo que guarda mientras pelea es de esa copia. Al
+guardar el panel, las perillas nuevas pasan a las copias.
 
-| Poder | Pide | Variantes |
-|---|---|---|
-| `ChargePower`, la embestida | embestir | con ira, rebota en el borde |
-| `SlamPower`, el golpe al piso | brazos | cuántas ondas (y con ira), abiertas cuánto |
-| `ThrowPower`, arrancar el piso | brazos | cuántas piedras (y con ira): las de más, adonde vas |
-| `SpinPower`, el trompo | brazos | cuánto corrige hacia vos (0, derecho) |
-| `HookPower`, el agarre | mano | el ancho de la franja, cuánto se queda quieta |
-| `FlamePower`, el lanzallamas | horno | cuántas bocanadas; de entrada, no tranquilo |
-| `BombPower`, el bombardeo | nada | cuántas, cada cuánto, físicas, con anillo; de entrada, sólo volando |
+| Poder | Pide | Usa del cuerpo (de entrada) | Variantes |
+|---|---|---|---|
+| `ChargePower`, la embestida | suelo | pega con «cuerpo»; expone el punto débil | en modo fuerte, rebota en el borde |
+| `SlamPower`, el golpe al piso | suelo | pega con «puños» | cuántas ondas (y en modo fuerte), abiertas cuánto |
+| `ThrowPower`, arrancar el piso | suelo | sale de «entre los puños» | cuántas piedras (y en modo fuerte) |
+| `SpinPower`, el trompo | suelo | pega con «puntas»; expone al marearse | cuánto corrige hacia vos |
+| `HookPower`, el agarre | suelo | — | el ancho de la franja, cuánto se queda quieta |
+| `FlamePower`, el lanzallamas | nada | sale de «pecho»; expone | cuántas bocanadas |
+| `BombPower`, el bombardeo | nada | sale de «arriba» | cuántas, cada cuánto, físicas, con anillo |
 
 ## Lo común: la cabeza
 `BrawlerBrain` es lo que comparten los poderes:
@@ -107,6 +113,8 @@ Son tres juegos distintos, y un poder elige una o las mezcla:
 - Para pegar, usar **una de las tres maneras de arriba**; no escribir otra cuenta de «si lo toca» ni otra marca.
 - Lo que el golpe le hace al que recibe va **siempre por `HitReaction`** (`b.strike`).
 - Un tramo de la pelea con otras reglas es **un `BossMode`**, no un caso especial.
+- **Nada figurativo en las reglas**: un poder no pide «un horno» ni «una mano»; elige un punto, una zona o una pose de
+  las que el cuerpo ofrece por nombre. Lo único que se pide es físico (suelo).
 - Las variantes son **pocas perillas del poder**; lo que depende del tamaño del jefe sale de su cuerpo y escala solo.
 - Cada pieza que haga falta y no esté (otra forma de zona, otra manera de volar) **se agrega a la pieza común**.
 
@@ -123,9 +131,10 @@ modelarlos a mano». En `game/bosses/parts/`:
   - Brazos: puño, pinza, cañón, escudo. Dicen qué tamaño de hombro piden y lo que dan (brazos, mano,
     cañón, escudo).
   - Cabezas: visor, antena, sin cabeza.
-- **`BossRecipe`, la receta**: qué piezas lleva un jefe. Dice **si encaja** (`problems`: sólo lo que es de lugar, un brazo entra en un
-  hombro de su tamaño o más grande; la regla de peso se sacó, el usuario la vio muy figurativa) y **qué le dan** sus piezas
-  (`gives`), que es lo que piden los poderes: de ahí sale qué poderes podría usar (`usable`).
+- **`BossRecipe`, la receta**: qué piezas lleva un jefe. Dice **si encaja** (`problems`: sólo lo que es de lugar, un
+  brazo entra en un hombro de su tamaño o más grande; la regla de peso se sacó, el usuario la vio muy figurativa) y
+  **qué ofrece** a los poderes: sus puntos y sus zonas de golpe, por nombre (`points`, `zones`), y lo físico (`gives`).
+  Una pieza no dice qué es («tiene un horno»): dice qué puntos y qué zonas tiene.
 - **`BossFrame`, el armazón**: monta la receta (las piernas, el torso en la cadera, un brazo en cada hombro, la
   cabeza), a la escala de todos los jefes, con sus zonas de golpe por nombre.
 - **La fila «Taller de jefes»** (`BossWorkshopArchetype`): adelante, el que se arma (J piernas, K torso, L brazos, H

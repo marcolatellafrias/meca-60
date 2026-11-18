@@ -10,7 +10,7 @@ extends Resource
 ##     (`below_health`: una fase, una sola vez). CUÁNTO DURA (`lasts`; 0, hasta el final).
 ##   · QUÉ CAMBIA: cuánto más rápido anda (`hurry`), si encadena ataques (`chain`), si los poderes usan sus variantes
 ##     fuertes (`strong`), a qué altura vuela (`fly_height`; 0, en el piso), a qué distancia se queda rodeando
-##     (`keep_from`/`keep_to`; 0, lo de siempre) y si se ve con ira (`fury_look`: el color, el humo).
+##     (`keep_from`/`keep_to`; 0, lo de siempre) y cómo se ve (`look`: uno de los aspectos del cuerpo).
 ## La cabeza del jefe (BrawlerBrain) entra y sale de los modos mientras rodea, nunca en medio de un ataque.
 
 ## Si existe para este jefe.
@@ -31,8 +31,8 @@ extends Resource
 ## Rodeando, se queda entre estas distancias (m; 0, las de siempre).
 @export_range(0.0, 200.0, 1.0) var keep_from := 0.0
 @export_range(0.0, 200.0, 1.0) var keep_to := 0.0
-## Se ve con ira (el color, el visor, el humo).
-@export var fury_look := true
+## Cómo se ve mientras dura: uno de los aspectos que ofrece el cuerpo (BossPower.choices: «normal», «con ira»…).
+@export var look := 1
 
 ## Su nombre (lo pone el jefe: «ira», «vuelo»).
 var title := "modo"
@@ -40,4 +40,4 @@ var title := "modo"
 const LABELS := {"on": "EXISTE", "every": "entra cada (s tranquilo; 0, no)", "below_health": "o con la vida bajo (parte; 0, no)",
 	"lasts": "dura (s; 0, hasta el final)", "hurry": "más rápido (veces)", "chain": "encadena ataques (chance)",
 	"strong": "variantes fuertes de los poderes", "fly_height": "vuela a (m; 0, en el piso)",
-	"keep_from": "rodea desde (m; 0, lo de siempre)", "keep_to": "rodea hasta (m)", "fury_look": "se ve con ira"}
+	"keep_from": "rodea desde (m; 0, lo de siempre)", "keep_to": "rodea hasta (m)", "look": "cómo se ve"}

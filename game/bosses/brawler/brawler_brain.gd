@@ -195,6 +195,11 @@ func finish() -> void:
 	_begin(Act.STALK)
 
 
+## DEJA A LA VISTA (o no) EL PUNTO DÉBIL del cuerpo (en el Luchador, abre el horno): lo pide el poder que lo expone.
+func expose(on: bool) -> void:
+	boss.furnace = on
+
+
 ## Las orugas de frente a vos, sin andar.
 func face() -> void:
 	boss.move = Vector2(clampf(-error_to(to_target()) * 3.0, -1.0, 1.0), 0.0)
@@ -290,7 +295,7 @@ func enter_mode(which: int) -> void:
 	mode = which
 	_mode_clock = 0.0
 	var now := mode_now()
-	var angry := now != null and now.fury_look
+	var angry := now != null and now.look == 1
 	if angry != boss.rage:
 		var at := boss.global_position + Vector3.UP * Brawler.box().y
 		BossSounds.play(BossSounds.Kind.RAGE_ON if angry else BossSounds.Kind.RAGE_OFF, at, world())

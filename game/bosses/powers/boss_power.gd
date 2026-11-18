@@ -8,8 +8,11 @@ extends Resource
 ##     y cada modo del jefe (BossMode: la ira, el vuelo…)—, a qué distancia `reach_from`/`reach_to`, y sus variantes;
 ##     las «fuertes» valen en los modos que lo dicen). Cada jefe usa una COPIA (`duplicate`): lo que guarda mientras
 ##     pelea (lo que lanzó, por dónde va) es de esa copia.
-##   · LO QUE NECESITA (`needs`): las piezas del cuerpo que lo hacen posible (un horno, dos brazos): si el jefe no las
-##     tiene, no lo puede usar (el panel lo dice).
+##   · DE DÓNDE SALE Y CON QUÉ PEGA, LIBRE (el usuario: «yo decido desde qué punto sale algo y no tanto algo tan
+##     figurativo»): el poder no sabe qué hay en el cuerpo. Sus perillas que terminan en `_point` (de qué punto sale),
+##     `_zone` (qué zona de golpe prende) y `_pose` (qué pose pone) se eligen, en el panel, entre los nombres que ofrece
+##     el cuerpo (`choices`); y `exposes`, si deja a la vista el punto débil mientras dura.
+##   · LO QUE PIDE (`needs`): sólo lo físico («suelo»): si el jefe no lo tiene ahora (vuela), no lo usa.
 ##   · CÓMO PELEA: `start` al elegirlo; `act` en cada paso mientras es el ataque de ahora, por tiempos (`b.step`,
 ##     `b.clock`, `b.next(n)`), y `b.finish()` al terminar; `tick` en cada paso aunque no sea el de ahora (lo que lanzó
 ##     sigue en el mundo: las ondas, las piedras); `drop` si lo cortan (lo que quedó a medio armar se va).
@@ -23,9 +26,29 @@ extends Resource
 @export_range(0.0, 300.0, 1.0) var reach_from := 30.0
 @export_range(0.0, 300.0, 1.0) var reach_to := 120.0
 
+## LO QUE OFRECE EL CUERPO, para elegir en el panel: los nombres de sus puntos, sus zonas de golpe, sus poses y sus
+## aspectos. Hoy, los del Luchador (el único cuerpo); con otro cuerpo, su panel pone los suyos antes de armarse.
+static var choices := {"point": Brawler.POINTS, "zone": Brawler.ZONES, "pose": Brawler.POSE_NAMES,
+	"look": Brawler.LOOKS}
+## Los nombres de las perillas de siempre.
+const BODY_LABELS := {"from_point": "sale de", "hit_zone": "pega con", "ready_pose": "pose del aviso",
+	"strike_pose": "pose del golpe", "exposes": "deja a la vista el punto débil"}
+
 ## Cuántas veces lo usó y cuántas pegó (para mirar).
 var uses := 0
 var hits := 0
+
+
+## LAS PERILLAS DE `target` QUE SON UNA LISTA DE NOMBRES DEL CUERPO (las que se llaman, o terminan en, `_point`,
+## `_zone`, `_pose` o `look`): {propiedad: [nombres]}, para el panel (`choices` de sus secciones; también los modos).
+static func choice_spec(target: Object) -> Dictionary:
+	var out := {}
+	for property in target.get_property_list():
+		var name := str(property["name"])
+		for kind: String in choices:
+			if name == kind or name.ends_with("_" + kind):
+				out[name] = choices[kind]
+	return out
 
 
 ## Su nombre (para el panel, el letrero y la L de la parcela).
@@ -33,7 +56,7 @@ func title() -> String:
 	return "poder"
 
 
-## Lo que pide del cuerpo (las piezas: "horno", "dos brazos"…). Vacío: nada.
+## Lo que pide (sólo lo físico: "suelo"). Vacío: nada.
 func needs() -> PackedStringArray:
 	return PackedStringArray()
 

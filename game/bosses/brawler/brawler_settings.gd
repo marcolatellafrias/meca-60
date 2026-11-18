@@ -92,7 +92,7 @@ static func make_flight() -> BossMode:
 	mode.fly_height = 30.0
 	mode.keep_from = 30.0
 	mode.keep_to = 55.0
-	mode.fury_look = false
+	mode.look = 0
 	return mode
 
 

@@ -264,8 +264,16 @@ static func _properties(spec: Dictionary, fold := false) -> Array[Dictionary]:
 		# de copiar escupe cosas que el panel no muestra y que no se pegan en ningun lado.
 		if not TUNABLE.has(int(prop["type"])) and not (int(prop["type"]) == TYPE_STRING and spec.get("strings", false)):
 			continue
-		out.append({"name": prop["name"], "type": prop["type"], "hint": prop["hint"],
-			"hint_string": prop["hint_string"], "group": section})
+		var hint: int = prop["hint"]
+		var hint_string := str(prop["hint_string"])
+		# `choices` ({propiedad: [nombres]}): un entero que se elige de una lista que no es un enum del código (por
+		# ejemplo los puntos que ofrece el cuerpo de un jefe: ver BossPower). Módulo Jefes, 17/11/2026.
+		var choices: Dictionary = spec.get("choices", {})
+		if choices.has(str(prop["name"])) and int(prop["type"]) == TYPE_INT:
+			hint = PROPERTY_HINT_ENUM
+			hint_string = ",".join(PackedStringArray(choices[str(prop["name"])]))
+		out.append({"name": prop["name"], "type": prop["type"], "hint": hint,
+			"hint_string": hint_string, "group": section})
 	# APAGADA, SÓLO SU INTERRUPTOR (ver `ACTIVE`).
 	if fold and not bool(target.get(_toggle_of(spec))):
 		var only_toggle: Array[Dictionary] = []

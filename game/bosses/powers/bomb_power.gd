@@ -30,6 +30,12 @@ extends BossPower
 @export_range(5.0, 80.0, 1.0) var ring_speed := 28.0
 @export_range(5.0, 120.0, 1.0) var ring_reach := 35.0
 
+@export_group("Cuerpo")
+## Lo que usa del cuerpo (se elige entre lo que el cuerpo ofrece: ver BossPower).
+@export var from_point := 5
+@export var ready_pose := int(Brawler.Pose.FLAME_READY)
+@export var strike_pose := int(Brawler.Pose.SLAM_READY)
+
 ## Los anillos que se abren (cada uno pega una vez).
 var rings: Array[BossZone] = []
 ## Las bombas físicas en el aire (estallan también si te tocan).
@@ -52,11 +58,11 @@ func title() -> String:
 
 
 func labels() -> Dictionary:
-	return {"windup": "aviso (s)", "count": "cuántas bombas", "interval": "cada (s)", "flight": "vuelan (s)",
+	return BODY_LABELS.merged({"windup": "aviso (s)", "count": "cuántas bombas", "interval": "cada (s)", "flight": "vuelan (s)",
 		"arc": "el arco sube (m)", "radius": "radio del golpe (m)", "scatter": "caen a hasta (m) de vos",
 		"damage": "te saca (vida)", "push": "te tira (m)", "recover": "se queda después (s)",
 		"physical": "físicas: rebotan (sin marca)", "bounces": "rebotes antes de estallar",
-		"ring": "al caer, un anillo que se abre", "ring_speed": "el anillo corre a (m/s)", "ring_reach": "llega hasta (m)"}
+		"ring": "al caer, un anillo que se abre", "ring_speed": "el anillo corre a (m/s)", "ring_reach": "llega hasta (m)"})
 
 
 func start(b: BrawlerBrain) -> void:
@@ -71,13 +77,13 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 	match b.step:
 		0:
 			b.stage = "bombardeo: carga"
-			boss.pose = Brawler.Pose.FLAME_READY
+			boss.pose = ready_pose as Brawler.Pose
 			if b.clock >= windup:
 				uses += 1
 				b.next(1)
 		1:
 			b.stage = "¡bombardeo!"
-			boss.pose = Brawler.Pose.SLAM_READY
+			boss.pose = strike_pose as Brawler.Pose
 			if _left > 0 and b.clock >= _next_at:
 				_next_at += interval
 				_drop_one(b, _left == count)
@@ -93,7 +99,7 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 
 ## UNA BOMBA: sale de arriba suyo hacia vos (la primera, encima; las demás, alrededor).
 func _drop_one(b: BrawlerBrain, first: bool) -> void:
-	var from := b.boss.global_position + Vector3.UP * (Brawler.box().y + 2.0)
+	var from := b.boss.point(from_point)
 	var off := Vector3.ZERO
 	if not first:
 		off = Vector3.RIGHT.rotated(Vector3.UP, b.random.randf() * TAU) * b.random.randf_range(scatter * 0.3, scatter)

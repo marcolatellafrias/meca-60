@@ -5,43 +5,45 @@ extends RefCounted
 ## «empezar a hacer un sistema modular de mecas… 2 o 3 modelos de piernas, de brazos, de torso y de cabeza… pensar en
 ## las mecas no como estéticas, sino simplemente como superficies que soportan o no soportan ciertos tipos de
 ## attachments… yo después en un futuro puedo agarrar módulos y empezar a modelarlos a mano».
-## Cada pieza es UN DATO (qué es, qué ofrece, qué pide) y UN DIBUJO DE ARCILLA provisorio (`draw_*`), en medidas de
-## maqueta (un jefe de unos 30 m; la escala de todos, BossSettings). Cambiar el dibujo por un modelo no toca el dato.
-##   · LAS PIERNAS dicen cómo se mueven (`move`: orugas, patas, vuelo), a qué altura dejan la cadera (`hip`) y lo que
-##     dan (suelo, embestir, saltar, volar).
-##   · EL TORSO dice cuántos hombros tiene y de qué tamaño (`shoulders`, `shoulder_size`: 1 chico, 2 medio,
-##     3 grande), y lo que da (horno, núcleo).
-##   · EL BRAZO dice qué tamaño de hombro pide (`size`) y lo que da (brazos, mano, cañón, escudo).
-##   · LA CABEZA, lo que da.
-## QUÉ ENCAJA (BossRecipe.problems): sólo lo que es de lugar: un brazo entra en un hombro de su tamaño o más grande. Lo que DA cada pieza es lo que piden los poderes (BossPower.needs).
+## Cada pieza es UN DATO y UN DIBUJO DE ARCILLA provisorio (`draw_*`), en medidas de maqueta (un jefe de unos 30 m; la
+## escala de todos, BossSettings). Cambiar el dibujo por un modelo no toca el dato.
+## UNA PIEZA NO DICE QUÉ ES («tiene un horno», «tiene una mano»): dice QUÉ OFRECE, por nombre libre (el usuario: «no
+## está el concepto de que existe un horno… yo decido desde qué punto sale algo»):
+##   · sus PUNTOS (`points`: de dónde puede salir algo: «pecho», «punta», «cabeza»): en un modelo, los que se marquen;
+##   · sus ZONAS DE GOLPE (`zones`: lo que puede pegar: «brazo», «punta», «cuerpo»);
+##   · y lo físico (`gives`: «suelo», si pisa).
+## Además, las piernas dicen cómo se mueven (`move`: orugas, patas, vuelo) y a qué altura dejan la cadera (`hip`); el
+## torso, cuántos hombros tiene y de qué tamaño (`shoulders`, `shoulder_size`: 1 chico, 2 medio, 3 grande); el brazo,
+## qué tamaño de hombro pide (`size`).
+## QUÉ ENCAJA (BossRecipe.problems): sólo lo que es de lugar: un brazo entra en un hombro de su tamaño o más grande.
 
 enum Kind { LEGS, TORSO, ARM, HEAD }
 const KIND_NAMES := ["piernas", "torso", "brazos", "cabeza"]
 
 const LEGS := {
-	"orugas": {"title": "orugas", "move": "orugas", "hip": 7.0, "gives": ["suelo", "embestir"]},
-	"bipedo": {"title": "dos patas", "move": "patas", "hip": 13.0, "gives": ["suelo", "saltar"]},
-	"cuatro": {"title": "cuatro patas", "move": "patas", "hip": 9.0, "gives": ["suelo"]},
-	"flotante": {"title": "flotante", "move": "vuelo", "hip": 10.0, "gives": ["volar"]},
+	"orugas": {"title": "orugas", "move": "orugas", "hip": 7.0, "gives": ["suelo"], "zones": ["cuerpo"], "points": []},
+	"bipedo": {"title": "dos patas", "move": "patas", "hip": 13.0, "gives": ["suelo"], "zones": ["cuerpo"], "points": []},
+	"cuatro": {"title": "cuatro patas", "move": "patas", "hip": 9.0, "gives": ["suelo"], "zones": ["cuerpo"], "points": []},
+	"flotante": {"title": "flotante", "move": "vuelo", "hip": 10.0, "gives": [], "zones": ["cuerpo"], "points": ["abajo"]},
 }
 const TORSOS := {
 	"ancho": {"title": "ancho", "size": Vector3(22, 13, 13), "shoulders": 2, "shoulder_size": 3,
-		"gives": ["horno"]},
+		"points": ["pecho", "espalda"], "zones": ["torso"]},
 	"angosto": {"title": "angosto", "size": Vector3(12, 14, 9), "shoulders": 2, "shoulder_size": 2,
-		"gives": []},
+		"points": ["pecho"], "zones": ["torso"]},
 	"cuatro": {"title": "de cuatro brazos", "size": Vector3(16, 18, 11), "shoulders": 4,
-		"shoulder_size": 2, "gives": ["núcleo"]},
+		"shoulder_size": 2, "points": ["pecho", "espalda"], "zones": ["torso"]},
 }
 const ARMS := {
-	"puno": {"title": "puño", "size": 3, "gives": ["brazos", "mano"]},
-	"pinza": {"title": "pinza", "size": 2, "gives": ["brazos", "mano"]},
-	"canon": {"title": "cañón", "size": 2, "gives": ["cañón"]},
-	"escudo": {"title": "escudo", "size": 3, "gives": ["escudo"]},
+	"puno": {"title": "puño", "size": 3, "points": ["punta"], "zones": ["brazo", "punta"]},
+	"pinza": {"title": "pinza", "size": 2, "points": ["punta"], "zones": ["brazo", "punta"]},
+	"canon": {"title": "cañón", "size": 2, "points": ["punta"], "zones": ["brazo"]},
+	"escudo": {"title": "escudo", "size": 3, "points": ["punta"], "zones": ["brazo", "punta"]},
 }
 const HEADS := {
-	"visor": {"title": "visor", "gives": ["cabeza"]},
-	"antena": {"title": "antena", "gives": ["cabeza", "sensor"]},
-	"ninguna": {"title": "sin cabeza", "gives": []},
+	"visor": {"title": "visor", "points": ["cabeza"], "zones": []},
+	"antena": {"title": "antena", "points": ["cabeza"], "zones": []},
+	"ninguna": {"title": "sin cabeza", "points": [], "zones": []},
 }
 const SIZE_NAMES := ["", "chico", "medio", "grande"]
 

@@ -25,6 +25,12 @@ const AHEAD := 4.0
 @export_range(0.0, 100.0, 1.0) var damage := 20.0
 @export_range(0.0, 40.0, 0.5) var push := 8.0
 
+@export_group("Cuerpo")
+## Lo que usa del cuerpo (se elige entre lo que el cuerpo ofrece: ver BossPower).
+@export var hit_zone := 1
+@export var ready_pose := int(Brawler.Pose.SLAM_READY)
+@export var strike_pose := int(Brawler.Pose.SLAM)
+
 ## Las ondas que corren (ya lanzadas) y las que avisan (todavía no).
 var waves: Array[BrawlerWave] = []
 var _aiming: Array[BrawlerWave] = []
@@ -40,14 +46,14 @@ func title() -> String:
 
 
 func needs() -> PackedStringArray:
-	return PackedStringArray(["brazos", "suelo"])
+	return PackedStringArray(["suelo"])
 
 
 func labels() -> Dictionary:
-	return {"windup": "aviso: los brazos arriba (s)", "recover": "se queda después (s)",
+	return BODY_LABELS.merged({"windup": "aviso: los brazos arriba (s)", "recover": "se queda después (s)",
 		"wave_speed": "la onda corre a (m/s)", "wave_reach": "llega hasta (m)", "wave_width": "ancho (m)",
 		"count": "cuántas ondas", "count_rage": "cuántas, en modo fuerte", "fan": "abiertas entre sí (°)",
-		"damage": "te saca (vida)", "push": "te tira (m)"}
+		"damage": "te saca (vida)", "push": "te tira (m)"})
 
 
 func act(b: BrawlerBrain, _delta: float) -> void:
@@ -57,7 +63,7 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 	match b.step:
 		0:
 			b.stage = "golpe al piso: levanta los brazos"
-			boss.pose = Brawler.Pose.SLAM_READY
+			boss.pose = ready_pose as Brawler.Pose
 			b.face()
 			var wanted := count_rage if b.strong() else count
 			while _aiming.size() < wanted:
@@ -72,13 +78,13 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 				_aiming[index].aim(mouth, waist.rotated(Vector3.UP, turn))
 			if b.clock >= windup:
 				uses += 1
-				boss.pose = Brawler.Pose.SLAM
+				boss.pose = strike_pose as Brawler.Pose
 				b.next(1)
 		1:
 			b.stage = "¡golpe al piso!"
 			boss.move = Vector2.ZERO
 			# LOS PUÑOS: si estás justo adelante, te pegan ellos (derriba).
-			hits += int(b.hit_with(["puños"], 2.0, damage, "los puños al piso", HitReaction.Kind.KNOCKDOWN,
+			hits += int(b.hit_with([Brawler.ZONES[hit_zone]], 2.0, damage, "los puños al piso", HitReaction.Kind.KNOCKDOWN,
 				b.to_target(), push))
 			if b.clock >= FALL:
 				for wave in _aiming:
