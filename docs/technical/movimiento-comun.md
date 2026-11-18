@@ -29,9 +29,29 @@ donde nace (el muslo de su cadera, la canilla de la punta del muslo, el pie, el 
 que las caderas no se muevan en la pelvis: todo 0 mm, «ESQUELETO OK». La huella de `cage_mech_look` y su hoja, igual.
 
 Por pasos (la nota compartida `jefes-revision-cuerpo-meca.md`): 1. el esqueleto sin cambio visible (HECHO: la pose la
-sigue calculando el código de siempre, MechBody, y se escribe en los huesos); 2. una sola IK sobre los huesos y las
-capas (caminar, inclinarse, el resorte, hundirse) en la pelvis y el torso; 3. los dos brazos sobre los huesos; 4. el
-ragdoll desde el esqueleto; 5. el jefe; 6. limpieza.
+sigue calculando el código de siempre, MechBody, y se escribe en los huesos); 2a. una sola IK sobre los huesos de las
+piernas; 2b. las capas (caminar, inclinarse, el resorte, hundirse) en la pelvis y el torso, con la cabina colgada del
+torso (con Cabinas); 3. los dos brazos sobre los huesos; 4. el ragdoll desde el esqueleto, y su vuelta (con los
+personajes); 5. el jefe; 6. limpieza.
+
+## Qué viaja por la red y qué se calcula en cada máquina (acordado con el usuario, 18/11/2026)
+Como los personajes (character-parametric, «Multiplayer & Sync»): VIAJA LO QUE LA OTRA MÁQUINA NO PUEDE DEDUCIR; lo
+deducible se calcula en cada una. LO FÍSICO VIAJA (el motor y la caja de juego); LA ANIMACIÓN (el esqueleto) se calcula
+en cada máquina y sólo puede depender de lo que viaja.
+- VIAJA SIEMPRE (del dueño, cada paso): dónde está el motor, hacia dónde mira y a qué velocidad va (en el marco de lo
+  que la lleva); hacia dónde apunta el torso; cuánto está agachada; el estado (parada, tirada, levantándose y cuánto
+  lleva); si dashea, levita o baja en picada; las dos salidas del resorte (la inclinación de un golpe, el hundirse).
+- VIAJA COMO EVENTO: una piña (cuál, con cuánta carga), el modo y el gatillo del cañón, el escudo; la muerte, con el
+  empujón que la mató.
+- EN EL RAGDOLL: viajan el lugar y el giro del tronco; los brazos y las piernas caen como caigan en cada máquina.
+- NO VIAJA: los pasos y los pies (la marcha y los rayos), la IK, el rumbo de la pelvis, el subir y bajar, el pisotón y
+  la inclinación de costado, recoger las piernas, el polvo, las chispas, los destellos y los sonidos.
+- LAS CAJAS DE GOLPE salen sólo de lo que viaja (el motor y cuánto está agachada): iguales en todas las máquinas.
+El usuario: el impacto viaja (lo causa un golpe que otra máquina puede no ver); el bobbing al caminar no (sale de la
+velocidad, que viaja).
+
+*Falta:* LA VUELTA DEL RAGDOLL, en común con los personajes (en character-parametric: los cuerpos se mezclan hacia la
+pose animada y las piernas plantan los pies mientras la pelvis sube).
 
 ## Las piezas (todas son DIBUJO: no se sincronizan, cada máquina las saca de lo que viaja)
 1. **La marcha** (`Gait`, game/common/, 18/11/2026): cuándo y adónde pisa cada pata, para 2, 4 o 6. **Un ciclo
