@@ -63,7 +63,6 @@ var random := RandomNumberGenerator.new()
 
 var _side := 1.0
 var _stalk_time := 3.0
-var _punched := {}
 var _label: Label3D = null
 var _mode_clock := 0.0
 var _calm_clocks: Array[float] = []
@@ -120,8 +119,7 @@ func _physics_process(delta: float) -> void:
 		boss.hurtbox.owner_of_hits = self
 	if target == null or not is_instance_valid(target):
 		return
-	# Las piñas de la meca y lo que lanzó (las ondas, las piedras) cuentan aunque no piense o lo posea alguien.
-	_check_punches()
+	# Lo que lanzó (las ondas, las piedras) cuenta aunque no piense o lo posea alguien.
 	for each in powers:
 		each.tick(self, delta)
 	_block()
@@ -423,47 +421,8 @@ func radius() -> float:
 
 ## ── LO QUE LE PEGA A ÉL ──────────────────────────────────────────────────────────────────────────────────────────
 
-## LAS PIÑAS DE LA MECA: el puño (su MechHand), con el brazo estirado, cerca del horno abierto le saca mucho; en el
-## cuerpo, poco. Una vez por piña.
-func _check_punches() -> void:
-	var mech := target as Mech
-	var own := Health.of(boss)
-	if mech == null or own == null:
-		return
-	var k := BrawlerSettings.current
-	var mouth := boss.furnace_point()
-	var center := boss.global_position + Vector3.UP * Brawler.box().y * 0.5
-	for arm in mech.arms:
-		# El taladro (o la sierra) pega por take_hit (no contarlo dos veces).
-		if arm.tip is SpinTip:
-			continue
-		var key := arm.get_instance_id()
-		var now := arm.stage()
-		if now == MechArm.Stage.IDLE or now == MechArm.Stage.WINDUP:
-			_punched.erase(key)
-			continue
-		# Se decide con el brazo estirado (al empezar el golpe, el puño todavía está lejos del horno).
-		if _punched.has(key) or now != MechArm.Stage.HOLD:
-			continue
-		for hand: Node3D in arm.find_children("*", "MechHand", true, false):
-			var at := hand.global_position
-			if boss.opened > 0.5 and at.distance_to(mouth) < FURNACE_REACH:
-				_punched[key] = true
-				furnace_hits += 1
-				own.hurt(k.furnace_damage, "una piña en el horno")
-				HitReaction.of(boss).show_hit(at, true)
-				break
-			var local := boss.global_transform.affine_inverse() * at
-			var half := Brawler.box() * 0.5 + Vector3.ONE * BODY_REACH
-			if absf(local.x) < half.x and absf(local.z) < half.z and local.y > -1.0 and local.y < Brawler.box().y + 1.0:
-				_punched[key] = true
-				body_hits += 1
-				own.hurt(k.punch_damage, "una piña")
-				HitReaction.of(boss).show_hit(at, false)
-				break
-
-
-## LOS GOLPES DE LA MECA DE TRES (sus tiros, el rayo, el taladro; llegan por BossHurtbox): le sacan según cuánto
+## LOS GOLPES DE LA MECA (sus piñas —«golpe»—, sus tiros, el rayo, el taladro; llegan todos por BossHurtbox, desde
+## EnergyBolt.lands): le sacan según cuánto
 ## empujan; en el horno abierto, mucho más. Se ven (blanco, chispas, sonido), el rayo de a ratos.
 func take_hit(strength: float, at: Vector3, source: String) -> void:
 	var own := Health.of(boss)
@@ -474,6 +433,9 @@ func take_hit(strength: float, at: Vector3, source: String) -> void:
 	var damage := minf(strength / 100000.0 * k.energy_damage, k.energy_cap)
 	if furnace:
 		damage *= k.furnace_damage / maxf(k.punch_damage, 0.01)
+	# UNA PIÑA (los brazos de la meca: «golpe») saca lo de la piña, pegue con la fuerza que pegue.
+	if source == "golpe":
+		damage = k.furnace_damage if furnace else k.punch_damage
 	own.hurt(damage, "%s en el horno" % source if furnace else source)
 	var now := Time.get_ticks_msec()
 	if source != "rayo" or now - _shown_at > 250:

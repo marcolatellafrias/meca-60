@@ -263,6 +263,8 @@ func _physics_process(delta: float) -> void:
 		global_position = arena.hold(global_position, box().x * 0.5)
 	_show_jets()
 	_solid.global_transform = global_transform
+	# Donde se le pega es un cuerpo aparte: no sigue solo a su padre (quedaba donde nació).
+	hurtbox.global_transform = global_transform
 	# LA CINTURA, hacia donde mira, con tope; en el trompo, gira sola.
 	var most := deg_to_rad(k.waist_speed) * hurry * delta
 	if spin != 0.0:
@@ -461,6 +463,8 @@ func put(where: Transform3D) -> void:
 	fly_height = 0.0
 	_solid.sync_to_physics = false
 	_solid.global_transform = global_transform
+	# Donde se le pega es un cuerpo aparte: no sigue solo a su padre (quedaba donde nació).
+	hurtbox.global_transform = global_transform
 	_solid.sync_to_physics = true
 	_place_upper()
 
