@@ -22,19 +22,23 @@ static var current := KnobsFile.load_into(LegSettings.new(), SAVED) as LegSettin
 @export_group("El paso")
 ## EL LARGO DEL PASO, lo que recorre un pie en el mundo (m, piernas medianas: se escala con su largo, F2): lo que avanza
 ## la caja en un ciclo de la marcha común (Gait; dos pasos, uno por pie).
-@export_range(1.0, 12.0, 0.1) var stride := 6.0
+@export_range(1.0, 24.0, 0.1) var stride := 12.0
 ## Cuánto sube el pie en un paso entero (m, piernas medianas).
-@export_range(0.0, 4.0, 0.1) var lift := 1.4
+@export_range(0.0, 4.0, 0.1) var lift := 2.0
 ## LO QUE DURA UN PASO EN EL AIRE, entre estos dos (s): un poco menos de medio ciclo, y el ciclo es lo que tarda la caja
 ## en recorrer un paso. Más rápido, más seguido; corriendo más que eso, el paso se alarga.
-@export_range(0.1, 1.5, 0.05) var fastest := 0.2
-@export_range(0.2, 2.0, 0.05) var slowest := 0.7
+@export_range(0.1, 1.5, 0.05) var fastest := 0.3
+@export_range(0.2, 2.0, 0.05) var slowest := 0.8
 
 @export_group("La caja al caminar")
 ## LO QUE HACE LA CAJA CON LOS PASOS (18/11/2026; módulo Jefes, el sistema común: GaitSignals y la tabla de los
 ## personajes, ProceduralBoneAnimator; sólo dibujo). El usuario: «una curva leve de subir y bajar la pelvis… le da el
 ## feeling de meca»; «de costado, el torso entero se inclina un poco… adelante y atrás, nunca».
 ## Cuánto sube a mitad de cada paso (m, piernas medianas; 0, nada).
-@export_range(0.0, 2.0, 0.05) var bob := 0.5
+@export_range(0.0, 2.0, 0.05) var bob := 0.3
+## EL PISOTÓN (18/11/2026; el usuario: «tunearlo para que se sienta más de una meca… pasos más largos»): el pie llega
+## alto y adelante y baja de golpe (0 a 1; ver Gait.stomp), y al pisar la caja se hunde esto (m, piernas medianas).
+@export_range(0.0, 1.0, 0.05) var stomp := 0.7
+@export_range(0.0, 2.0, 0.05) var stomp_dip := 0.4
 ## Cuánto se inclina yendo de costado a la velocidad de caminar (°; 0, nada).
 @export_range(0.0, 20.0, 0.5) var side_lean := 5.0

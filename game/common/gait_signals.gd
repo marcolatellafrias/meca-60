@@ -7,18 +7,30 @@ extends MotionSignals
 ##   · `step_progress`: el arco del paso (0 → 1 → 0 mientras algún pie está en el aire; el más alto).
 ##   · `horizontal_velocity_smooth`: la velocidad en los ejes del cuerpo (x a la derecha, y adelante negativo), suavizada.
 ##   · `speed_norm`: qué tan rápido va, de 0 a 1 (`full_speed`, la de caminar).
+##   · `plant`: el golpe de pisar (1 cuando un pie pisa, y se apaga en `plant_time` s): para que el cuerpo se hunda.
 
 ## La velocidad que cuenta como del todo (m/s) y qué tan rápido sigue la velocidad (1/s).
 var full_speed := 6.0
 var smoothing := 8.0
+var plant := 0.0
+var plant_time := 0.12
+var _down_was: Array[bool] = []
 
 
 ## Las lee de la marcha `gait`, el cuerpo mirando como `facing` y yendo a `velocity` (el mundo).
 func read(gait: Gait, facing: Basis, velocity: Vector3, delta: float) -> void:
 	var arc := 0.0
-	for share: float in gait.swing_share:
+	plant *= exp(-delta / maxf(plant_time, 0.001))
+	if _down_was.size() != gait.swing_share.size():
+		_down_was.resize(gait.swing_share.size())
+		_down_was.fill(true)
+	for leg in gait.swing_share.size():
+		var share: float = gait.swing_share[leg]
 		if share >= 0.0:
 			arc = maxf(arc, sin(share * PI))
+		elif not _down_was[leg]:
+			plant = 1.0
+		_down_was[leg] = share < 0.0
 	step_progress = arc
 	step_length_norm = gait.stride
 	var local := facing.inverse() * Vector3(velocity.x, 0.0, velocity.z)

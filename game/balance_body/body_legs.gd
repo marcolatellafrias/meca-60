@@ -147,6 +147,7 @@ func place(k: BodySettings, delta: float) -> void:
 		signals.read(_gait, Basis(Vector3.UP, yaw), body.support_speed, delta)
 	else:
 		signals.step_progress = 0.0
+		signals.plant = 0.0
 		signals.horizontal_velocity_smooth = signals.horizontal_velocity_smooth.lerp(Vector2.ZERO, 1.0 - exp(-8.0 * delta))
 	_table.update()
 	# LA PELVIS: cuelga de la caja, inclinada como ella, mirando al promedio de los dos pies.
@@ -291,13 +292,15 @@ func _gait_setup() -> void:
 		_gait.ground = _ground
 	_gait.stride = s.stride * _stride()
 	_gait.lift = s.lift * _stride()
+	_gait.stomp = s.stomp
 	_gait.fastest = s.fastest * 2.0 / _gait.swing_part
 	_gait.slowest = s.slowest * 2.0 / _gait.swing_part
 
 
-## LAS DOS FILAS DE LA TABLA: sube a mitad de cada paso (m) y se inclina de costado según la velocidad de costado (rad).
+## LAS DOS FILAS DE LA TABLA: sube a mitad de cada paso y se hunde al pisar (m) y se inclina de costado según la velocidad de costado (rad).
 func _bob_now() -> float:
-	return signals.step_progress * LegSettings.current.bob * _stride()
+	var s := LegSettings.current
+	return (signals.step_progress * s.bob - signals.plant * s.stomp_dip) * _stride()
 
 
 func _lean_now() -> float:

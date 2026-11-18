@@ -18,7 +18,8 @@ extends RefCounted
 ##   · QUIETO, TERMINA EL PASO Y SE ACOMODA: cada grupo da un paso hasta su lugar y el ciclo se para. Un pie que quedó
 ##     poco corrido (menos de `settle_gap` del paso) no da pasitos.
 ##   · EL PIE EN EL AIRE va en arco (`lift`, más bajo en un paso corto), de donde salió hacia donde va a pisar, que se
-##     mueve con el cuerpo.
+##     mueve con el cuerpo. CON PISOTÓN (`stomp`, 0 a 1: el usuario, «que se sienta más de una meca»): llega adelante y
+##     arriba antes y baja casi derecho y de golpe al final; en 0, un arco parejo.
 ## Lo que da: `feet` (el mundo), `swing_share` (0 a 1 por pata: cuánto lleva de su paso; −1 apoyada), `phase` y
 ## `steps_taken`. Uso: `setup(rests, groups)`, `place(root)` al ponerlo, y `update(delta, root, velocity)` en cada paso;
 ## `root`, el cuerpo en el piso (su giro y el punto debajo de su centro). El IK de cada pata, `knee`.
@@ -34,6 +35,8 @@ var fastest := 0.35
 var slowest := 1.1
 var swing_part := 0.9
 var settle_gap := 0.12
+## El pisotón (0, arco parejo; 1, llega alto y adelante y baja de golpe).
+var stomp := 0.0
 ## EL PISO DE VERDAD debajo de un punto (Callable(Vector3) -> Vector3). Sin él, el piso de `root`.
 var ground := Callable()
 
@@ -185,9 +188,11 @@ func _landing(leg: int, left: float) -> Vector3:
 ## EL PIE EN EL AIRE: de donde salió hacia donde va a pisar, en arco.
 func _in_air(leg: int, share: float, left: float) -> Vector3:
 	var to := _landing(leg, left)
-	var eased := smoothstep(0.0, 1.0, share)
+	# Con pisotón, lo de costado termina antes (después baja casi derecho) y lo más alto queda más tarde.
+	var eased := smoothstep(0.0, 1.0 - 0.25 * stomp, share)
+	var arc := sin(PI * pow(share, 1.0 + stomp))
 	var high := clampf(Vector2(to.x - _from[leg].x, to.z - _from[leg].z).length() / stride, 0.2, 1.0)
-	return _from[leg].lerp(to, eased) + Vector3.UP * sin(share * PI) * lift * high
+	return _from[leg].lerp(to, eased) + Vector3.UP * arc * lift * high
 
 
 func _floor(at: Vector3) -> Vector3:
