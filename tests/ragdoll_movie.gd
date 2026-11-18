@@ -107,6 +107,19 @@ func _watch(who: String, at: Vector3, from: Vector3, seconds: float) -> void:
 		if not found.has_meta("visto"):
 			found.set_meta("visto", true)
 			pieces.append(found)
+	if OS.get_cmdline_user_args().has("--huesos"):
+		for piece: RigidBody3D in pieces:
+			var size := ((piece.get_child(0) as CollisionShape3D).shape as BoxShape3D).size
+			print("    pedazo en %s: caja %s, %.1f kg, %d mallas" % [piece.global_position, size, piece.mass,
+				piece.get_child_count() - 1])
+		for joint in get_tree().root.find_children("*", "ConeTwistJoint3D", true, false):
+			if not joint.has_meta("visto"):
+				joint.set_meta("visto", true)
+				var a := joint.get_node_or_null(joint.node_a) as Node3D
+				var b := joint.get_node_or_null(joint.node_b) as Node3D
+				print("    unión en %s: a %.2f m del padre, a %.2f m del hijo" % [joint.global_position,
+					joint.global_position.distance_to(a.global_position) if a else -1.0,
+					joint.global_position.distance_to(b.global_position) if b else -1.0])
 	var still := -1.0
 	var clock := 0.0
 	while clock < seconds:

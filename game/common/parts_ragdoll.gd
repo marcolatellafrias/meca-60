@@ -10,9 +10,12 @@ extends RefCounted
 ##     cadera, la rodilla, el tobillo, el hombro, la cintura; sin él, la punta de la parte más cerca del padre). Todo
 ##     queda conectado (el usuario: «todos los huesos deberían estar conectados»). LO QUE NO ES DE NINGUNA PARTE va al
 ##     TRONCO (la parte 0).
-##   · SU CAJA: la que diga (`box`: la de verdad, como la caja de la meca, `set_core_box`) o la que envuelve su dibujo
-##     (en los ejes de su primera malla). *Hasta el 18/11/2026 el tronco de la jaula envolvía todo su dibujo (la cabina,
-##     las sillas, los maniquíes): más grande que la meca, y quedaba flotando en ella.*
+##   · SUS CAJAS Y SU PESO, UNA SOLA REGLA: CADA PIEZA DE ARCILLA ES SU PROPIA CAJA (la de su malla, donde está), y
+##     el peso sale de ese volumen (`DENSITY`), igual para todos. El tronco, con su caja de verdad (`set_core_box`: la de
+##     la meca), pesa lo que pesa: mucho más que un brazo. *Hasta el 18/11/2026 cada hueso era UNA caja que envolvía su
+##     dibujo: la del tronco de la jaula envolvía la cabina, las sillas y los maniquíes (quedaba flotando), y la de un
+##     brazo estirado era enorme (pesaba casi como el torso y lo frenaba; el usuario: «los brazos frenan el torso, que se
+##     supone que es mucho más pesado»).*
 ##   · SALE COMO LO EMPUJÓ EL GOLPE QUE LO MATÓ (`Health.push`, lo dice quien pega; el usuario: «se controla en base al
 ##     hit»): con una parte de esa velocidad (`PUSH_SHARE`, `LIFT_SHARE`), más la que traía, y se vuelca hacia allá (lo
 ##     de arriba, más). Sin empujón, se desploma. Con roce contra el piso, sin rebote.
@@ -24,8 +27,12 @@ extends RefCounted
 const FULL_GRAVITY_SIZE := 6.0
 const LEAST_GRAVITY := 0.4
 ## Cuánto dobla una articulación (°) y cuánto se tuerce.
-const SWING := 45.0
-const TWIST := 20.0
+const SWING := 60.0
+const TWIST := 25.0
+## Lo que pesa cada metro cúbico de pieza (kg), y lo poco que frena al girar (lo que la acomoda al final; el resto lo
+## hacen el peso y el roce).
+const DENSITY := 400.0
+const SPIN_DAMP := 0.8
 ## QUÉ PARTE DEL EMPUJÓN QUE LO MATÓ se lleva el ragdoll: de costado y para arriba. El empujón es el del motor, que
 ## frena con un roce fuerte en el piso (KinematicMover.knock); los pedazos ruedan y se deslizan: con todo, se iban 100 m.
 const PUSH_SHARE := 0.35
@@ -95,27 +102,31 @@ func activate(world: Node, velocity: Vector3) -> void:
 			made.append(null)
 			continue
 		var given: Dictionary = _parts[index]["box"]
-		var box := {}
-		if given.is_empty():
-			box = _box(own, _root.global_basis.orthonormalized() if index == 0 else Basis())
-		else:
-			var where: Transform3D = given["transform"]
-			box = {"basis": where.basis.orthonormalized(), "center": where.origin, "size": given["size"]}
 		var body := RigidBody3D.new()
 		body.name = "Pedazo"
 		body.add_to_group(GROUP)
 		world.add_child(body)
-		body.global_transform = Transform3D(box["basis"], box["center"])
-		var shape := CollisionShape3D.new()
-		var cube := BoxShape3D.new()
-		cube.size = (box["size"] as Vector3).max(Vector3.ONE * 0.1)
-		shape.shape = cube
-		body.add_child(shape)
-		body.mass = maxf(cube.size.x * cube.size.y * cube.size.z * 0.5, 1.0)
+		# El cuerpo, donde está su dibujo (sus ejes: los del tronco o los de su primera malla); sus cajas, adentro.
+		var frame := _box(own, _root.global_basis.orthonormalized() if index == 0 else Basis())
+		var volume := 0.0
+		if not given.is_empty():
+			var where: Transform3D = given["transform"]
+			body.global_transform = Transform3D(where.basis.orthonormalized(), where.origin)
+			volume += _add_box(body, Transform3D(where.basis.orthonormalized(), where.origin), given["size"])
+		else:
+			body.global_transform = Transform3D(frame["basis"], frame["center"])
+			for mesh: Node3D in own:
+				for drawn: VisualInstance3D in _drawn(mesh):
+					var aabb := drawn.get_aabb()
+					var scale := drawn.global_basis.get_scale()
+					var at := drawn.global_transform * aabb.get_center()
+					volume += _add_box(body, Transform3D(drawn.global_basis.orthonormalized(), at), aabb.size * scale)
+		if body.get_child_count() == 0:
+			volume += _add_box(body, body.global_transform, Vector3.ONE * 0.2)
+		body.mass = maxf(volume * DENSITY, 1.0)
 		body.gravity_scale = gravity
-		# Un poco de freno: se acomoda y se queda (sin él se mece sin parar en las articulaciones).
-		body.linear_damp = 0.4
-		body.angular_damp = 2.5
+		body.linear_damp = 0.2
+		body.angular_damp = SPIN_DAMP
 		body.collision_mask = 1 | PhysicsLayers.FIXED
 		body.physics_material_override = _rough
 		for mesh: Node3D in own:
@@ -145,6 +156,17 @@ func activate(world: Node, velocity: Vector3) -> void:
 	for a in bodies.size():
 		for b in range(a + 1, bodies.size()):
 			bodies[a].add_collision_exception_with(bodies[b])
+
+
+## UNA CAJA de `size` m en `where` (el mundo) dentro de `body`. Devuelve su volumen (m³).
+static func _add_box(body: RigidBody3D, where: Transform3D, size: Vector3) -> float:
+	var shape := CollisionShape3D.new()
+	var cube := BoxShape3D.new()
+	cube.size = size.abs().max(Vector3.ONE * 0.05)
+	shape.shape = cube
+	body.add_child(shape)
+	shape.global_transform = where
+	return cube.size.x * cube.size.y * cube.size.z
 
 
 ## LO VUELCA con `push` (m/s): a cada pedazo, lo de costado por la parte de su altura (0 el más bajo, 1 el más alto) por
@@ -216,7 +238,20 @@ static func _mech_parts(ragdoll: PartsRagdoll, body: BalanceBody) -> void:
 	if body is Mech:
 		var mech := body as Mech
 		for arm: MechArm in mech.arms:
-			ragdoll.add([arm], 0, mech.global_transform * arm.shoulder_local)
+			var upper := arm.get("_upper") as Node3D
+			var forearm := arm.get("_forearm") as Node3D
+			if upper == null or forearm == null:
+				ragdoll.add([arm], 0, mech.global_transform * arm.shoulder_local)
+				continue
+			# El brazo en dos: el brazo en el hombro (su punta de arriba) y el antebrazo, con la mano y lo que lleva,
+			# en el codo.
+			var shoulder := upper.global_transform * Vector3(0.0, 0.0, arm.upper_length() * 0.5)
+			var elbow := forearm.global_transform * Vector3(0.0, 0.0, arm.forearm_length() * 0.5)
+			var top := ragdoll.add([upper], 0, shoulder)
+			var parts: Array = [forearm]
+			if arm.get("tip") is Node3D:
+				parts.append(arm.get("tip"))
+			ragdoll.add(parts, top, elbow)
 
 
 ## Las mallas visibles debajo de `node` (las de más arriba: lo que cuelga de ellas va con ellas), sin las ya tomadas.

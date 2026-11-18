@@ -100,7 +100,14 @@ Aparte, porque es MOVIMIENTO y no dibujo:
   - UN ESQUELETO CONECTADO (el usuario: «todos los huesos deberían estar conectados»): cada parte es un hueso unido a su
     padre en su punto de verdad (ConeTwistJoint3D con límite). La jaula: el tronco con SU CAJA DE VERDAD (la del cuerpo;
     antes envolvía todo su dibujo —cabina, sillas, maniquíes— y quedaba flotando), la pelvis en la cintura, cada pierna
-    desde la pelvis (cadera, rodilla, tobillo) y cada brazo en su hombro (10 pedazos). El Luchador
+    desde la pelvis (cadera, rodilla, tobillo) y cada brazo en dos (el brazo en el hombro, el antebrazo con la mano y lo
+    que lleva en el codo; un brazo sin esas piezas, entero en el hombro): 11 pedazos.
+  - CAJAS Y PESO, UNA REGLA: cada pieza de arcilla es su propia caja y pesa por su volumen (`DENSITY`), igual para
+    todos; el tronco, con su caja de verdad. Así el torso pesa lo que pesa (la jaula: unos 9.400 kg; un brazo, 700 a
+    1.400; un tramo de pierna, 170 a 460). *Antes cada hueso era una caja que envolvía su dibujo: un brazo estirado
+    pesaba casi como el torso y lo frenaba (el usuario: «los brazos frenan el torso, que se supone que es mucho más
+    pesado»), y el brazo entero era un palo rígido que se veía desconectado.* Las articulaciones doblan más (60°) y casi
+    no frenan (`SPIN_DAMP`): lo que pesa manda. El Luchador
     (`Brawler.ragdoll_parts`): las orugas, lo de arriba en la cintura y cada brazo en su hombro (4).
   - SALE COMO LO EMPUJÓ EL GOLPE QUE LO MATÓ (el usuario: «se controla en base al hit»): quien pega dice el empujón
     (`Health.hurt(…, push)`: los ataques del jefe, `HitReaction.push_velocity`, el mismo que el retroceso; las piñas de
