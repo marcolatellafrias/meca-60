@@ -64,6 +64,12 @@ static func build(parent: Node3D) -> StaticBody3D:
 	var kinds := PackageArchetype.catalogue()
 	for i in supplies.size():
 		_supply(body, parent, supplies[i], kinds, i)
+	# TODO LO DEL MAPA ES LO FIJO DEL MUNDO (ver PhysicsLayers.FIXED): contra esto frena la meca, que sólo mira esa capa.
+	# *Hasta el 18/11/2026 no se marcaba: en el sandbox la sostenía el piso de la parcela y atravesaba los edificios; en
+	# tests/battlefield_check, sin el sandbox, caía para siempre (módulo Jefes, con aviso a Mundo).*
+	PhysicsLayers.mark_fixed(body)
+	for piece: Node in body.find_children("*", "StaticBody3D", true, false):
+		PhysicsLayers.mark_fixed(piece as StaticBody3D)
 	return body
 
 

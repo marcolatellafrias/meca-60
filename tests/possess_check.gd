@@ -1,6 +1,6 @@
 extends Node
 
-## POSEER, PROBADO POR CÓDIGO (unos 15 segundos; ver SandboxPossession): el jugador mira el cubo péndulo, la O lo posee,
+## POSEER, PROBADO POR CÓDIGO (unos 15 segundos; ver SandboxPossession): el jugador mira la primera meca del sandbox, la O lo posee,
 ## la T pasa por las tres vistas, la O lo suelta, y la O sin mirarlo lo retoma. Con ventana, capturas del cartel.
 ##   tools/godot_ventana.sh res://tests/possess_check.tscn -- --salida=C:/carpeta
 
@@ -20,6 +20,12 @@ func _ready() -> void:
 	# El jugador, a la altura del cubo, mirándolo.
 	player.place_at(cube.global_position + Vector3(0.0, -1.0, 34.0), 0.0)
 	await _seconds(0.6)
+	# Mirando a la caja: la meca jaula es de escala humana y la caja va arriba de las piernas, más alta que los ojos.
+	# *Hasta el 18/11/2026 miraba derecho: servía con la meca grande (de 14 m); con la jaula el rayo le pasaba por abajo.*
+	var eye := get_viewport().get_camera_3d().global_position
+	player.player_controller.camera_pitch = atan2(cube.global_position.y - eye.y, Vector2(cube.global_position.x - eye.x,
+		cube.global_position.z - eye.z).length())
+	await _seconds(0.2)
 	print("MIRÁNDOLO: apunta a %s" % [possession._aimed.call("possess_name") if possession._aimed != null else "nada"])
 	await _shot("1_pista")
 	await _key(KEY_O)
