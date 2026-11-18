@@ -133,7 +133,7 @@ static func build(parent: Node3D) -> StaticBody3D:
 	parent.add_child(body)
 	_floor(body)
 	_walls(body)
-	_bag(body)
+	_bag(parent)
 	_consoles(body)
 	_characters(body)
 	_roof(body)
@@ -232,20 +232,14 @@ static func _lights(body: StaticBody3D) -> void:
 		body.add_child(lamp)
 
 
-## LA BOLSA, colgada de una viga a lo ancho del gimnasio. Fija por ahora (la física, después).
-static func _bag(body: StaticBody3D) -> void:
-	var center := at(bag_at.x, bag_at.y)
-	Clay.box(body, Vector3(0.3, 0.4, NAVE), Vector3(center.x, height - 0.2, OFFSET.z + NAVE * 0.5), CAGE_COLOR)
-	Clay.cylinder(body, 0.05, height - BAG_HIGH, center + Vector3.UP * (BAG_HIGH + height) * 0.5, CAGE_COLOR)
-	# low poly, con las tapas chanfleadas (BaseBag); la soga y cómo se ata al techo, a elegir (tests/base_bag_ideas)
-	BaseBag.bag(body, BAG_RADIUS, BAG_HIGH - BAG_LOW, center + Vector3.UP * (BAG_LOW + BAG_HIGH) * 0.5, BAG_COLOR)
-	var shape := CollisionShape3D.new()
-	var cylinder := CylinderShape3D.new()
-	cylinder.radius = BAG_RADIUS
-	cylinder.height = BAG_HIGH - BAG_LOW
-	shape.shape = cylinder
-	shape.position = center + Vector3.UP * (BAG_LOW + BAG_HIGH) * 0.5
-	body.add_child(shape)
+## LA BOLSA CON FÍSICA (BaseBagRig): la chapa hexagonal en el techo, la cadena y la bolsa en tramos, a la altura de
+## los brazos de la meca.
+static func _bag(parent: Node3D) -> void:
+	var rig := BaseBagRig.new()
+	rig.name = "Bolsa"
+	rig.position = at(bag_at.x, bag_at.y, height)
+	parent.add_child(rig)
+	rig.build(BAG_RADIUS, BAG_HIGH - BAG_LOW, height - BaseBag.PLATE_THICK - BAG_HIGH, BAG_COLOR)
 
 
 ## LAS TRES CONSOLAS: los contratos en la pared bajo el elevador (mirando a la franja), la armería y los cosméticos en

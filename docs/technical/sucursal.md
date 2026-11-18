@@ -16,8 +16,8 @@ el elevador de 24 m, la nave de 22 m y el ascensor de personal metido en la pare
 - **La compuerta del techo** (`BaseHatch`), sobre el elevador: dos hojas que se corren hacia los costados. La abre y la
   cierra la **G** de la parcela.
 - **La línea de peligro** entre el gimnasio y la franja.
-- **La bolsa**: 1,8 m de diámetro, de 1 a 4,6 m de alto (se le pega con la meca agachada), colgada de una viga. Fija,
-  con su colisión.
+- **La bolsa**: 1,8 m de diámetro, de 1 a 4,6 m de alto (se le pega con la meca agachada), colgada con su cadena de la
+  chapa del techo, con física (`BaseBagRig`, abajo).
 - **La franja usa sus dos caras libres** (la del gimnasio es la línea de peligro y la de la punta, la esclusa):
   - **la pared bajo el elevador**: los contratos, al lado de la meca;
   - **el fondo**, desde ahí: la armería, los cosméticos y la pintura, el cuadro del empleado del mes y los casilleros
@@ -61,8 +61,7 @@ En `BaseLayout`, en metros sobre el plano (`at(x, z, alto)` pasa a la parcela).
 - **La bolsa con física** (`BaseBagRig`): la cadena en eslabones sueltos colgados con pernos, y la bolsa en cuatro tramos
   rígidos unidos por articulaciones de cono (se dobla 9° en cada una y casi no se tuerce). La piel es la malla low poly
   con cortes de lazo y sombreado suave (`BaseBag.skinned_mesh`), con un hueso por tramo: cada cuadro los huesos copian a
-  los tramos. 600 kg; los valores son para mirar, no los de la meca. **Todavía no está en la base** (la de la base es la
-  fija). La textura de píxeles, después. `tests/base_bag_movie.tscn` (con `--write-movie`): golpes de 600 a 3500 N·s a
+  los tramos. 600 kg; los valores son para mirar, no los de la meca. **Es la de la base** (desde el 17/11/2026). La textura de píxeles, después. `tests/base_bag_movie.tscn` (con `--write-movie`): golpes de 600 a 3500 N·s a
   distintas alturas.
 - La parcela se mide con todo lo más grande.
 - Los paneles F2 a F4 son los de la meca jaula, para modificarla desde la base.
