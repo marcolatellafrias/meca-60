@@ -8,8 +8,13 @@ El usuario: «los personajes tienen un sistema en el que abstrae varios ciclos�
 huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la meca… y de paso así compartimos código».
 
 ## Las piezas (todas son DIBUJO: no se sincronizan, cada máquina las saca de lo que viaja)
-1. **La marcha**: cuándo y adónde pisa cada pata (2, 4 o 6; grupos alternada, diagonal, trípode; pisar o recoger).
-   *Falta.*
+1. **La marcha** (`Gait`, game/common/, 18/11/2026): cuándo y adónde pisa cada pata, para 2, 4 o 6. Es la regla de
+   la jaula (BodyLegs, «cada pie tiene su lugar»: sale a un tercio de paso atrás, pisa un tercio adelante, largo fijo)
+   llevada a N patas y a GRUPOS que pisan juntos (`Gait.pattern`: dos, de a una; cuatro, las diagonales; seis, el
+   trípode) y se turnan. Sin BalanceBody: se le da dónde está el cuerpo y a qué velocidad va, y da los pies y cuánto
+   lleva cada paso (`swing_share`). Trae el IK de dos huesos (`Gait.knee`). `tests/gait_movie` (el video: un cuerpo de
+   4 y uno de 6, arrancar, doblar, frenar, de costado, girar en el lugar, correr). *Falta: usarla en los jefes de patas
+   (BossParts «cuatro») y, si las armas quieren, en la jaula (BodyLegs con dos caderas); «recoger» (dash, aire).*
 2. **Las señales** (`MotionSignals`, game/common/): lo que lee la tabla. La base común; cada cuerpo las calcula a su
    manera (los personajes, `LocomotionSignals`, de sus dos pies). Normalizadas por el largo de pierna. **Hecho.**
 3. **Los resortes** (`HitSpring`, game/common/, lo sacó Personajes de su cápsula): golpe y aterrizaje. **Hecho.**
@@ -32,7 +37,8 @@ huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la me
    piezas de una meca o un jefe) y lee **cualquier `MotionSignals`**. Quién mueve qué lo dice cada cuerpo (en los
    personajes, animations.gd). **Hecho**; `tests/procedural_node_check` (sin ventana): un torso de arcilla se inclina
    11,5° yendo de costado a 4 m/s y la pelvis baja 0,2 m a mitad de un paso, y vuelven.
-5. **Un solo IK de dos huesos.** *Falta.*
+5. **Un solo IK de dos huesos**: `Gait.knee` (lo usan las patas de la marcha). *Falta que lo usen la jaula y los
+   personajes.*
 
 `tests/cage_legs_movie` (con ventana): **el video de base** de las piernas de la jaula hoy, caso por caso (arrancar,
 frenar, doblar de golpe, girar en el lugar, de costado, el dash, saltar, levitar, bajar agachada), con una grilla en el
