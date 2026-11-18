@@ -56,6 +56,8 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 @export_group("Golpes")
 ## LO QUE LE SACA UNA PIÑA DE LA MECA: en el cuerpo, y en el horno abierto (el punto débil).
 @export_range(0.0, 100.0, 1.0) var punch_damage := 6.0
+## Una piña saca lo de arriba si pega con esta fuerza (kg·m/s); más fuerte, más (hasta el triple); más floja, menos.
+@export_range(1000.0, 1000000.0, 1000.0) var punch_reference := 100000.0
 @export_range(0.0, 200.0, 1.0) var furnace_damage := 30.0
 ## LOS TIROS, EL RAYO Y EL TALADRO DE LA MECA DE TRES (ver BossHurtbox): cuánta vida le sacan por cada 100.000 kg·m/s
 ## de empujón (un tiro simple empuja 70.000; el súper cargado, 600.000; el rayo, 150.000 por segundo). En el horno

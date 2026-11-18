@@ -16,6 +16,7 @@ const LABELS := {
 	"door_time": "la puerta tarda (s)", "door_angle": "se abre hasta (°)",
 	"rage_time": "la ira: cambia de color en (s)",
 	"punch_damage": "una piña en el cuerpo le saca", "furnace_damage": "una piña en el horno abierto le saca",
+	"punch_reference": "a esta fuerza (kg·m/s); más fuerte, más",
 	"energy_damage": "tiros y taladro: vida por 100.000 kg·m/s", "energy_cap": "lo más por golpe",
 	"arena_radius": "radio de la arena (m; los edificios, con R)",
 }

@@ -438,9 +438,12 @@ func take_hit(strength: float, at: Vector3, source: String) -> void:
 	var damage := minf(strength / 100000.0 * k.energy_damage, k.energy_cap)
 	if furnace:
 		damage *= k.furnace_damage / maxf(k.punch_damage, 0.01)
-	# UNA PIÑA (los brazos de la meca: «golpe») saca lo de la piña, pegue con la fuerza que pegue.
+	# UNA PIÑA (los brazos de la meca: «golpe») saca lo de la piña SEGÚN CON QUÉ FUERZA PEGA (el usuario, por la
+	# sesión de las armas: que pegar con el alcance al máximo pegue más fuerte): lo de la piña a la fuerza de
+	# referencia, proporcional, entre un tercio y el triple.
 	if source == "golpe":
-		damage = k.furnace_damage if furnace else k.punch_damage
+		var share := clampf(strength / maxf(k.punch_reference, 1.0), 0.33, 3.0)
+		damage = (k.furnace_damage if furnace else k.punch_damage) * share
 	own.hurt(damage, "%s en el horno" % source if furnace else source)
 	var now := Time.get_ticks_msec()
 	if source != "rayo" or now - _shown_at > 250:
