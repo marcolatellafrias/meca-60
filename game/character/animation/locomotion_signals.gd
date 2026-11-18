@@ -1,17 +1,13 @@
 class_name LocomotionSignals
+extends MotionSignals
+
+## LAS SEÑALES DE LA LOCOMOCIÓN DEL PERSONAJE (ver MotionSignals, la parte común que lee la tabla de animación): las
+## calcula de sus dos pies (IkUtil) y de su velocidad (AnimationInputs).
 
 var ik_util: IkUtil
 var inputs: AnimationInputs
 var sizes: SkeletonSizesUtil
 
-var foot_spread_unified: Vector2 = Vector2.ZERO
-var step_progress: float = 0.0
-var step_length_norm: float = 0.0
-var horizontal_velocity_smooth: Vector2 = Vector2.ZERO
-var foot_spread_norm: Vector2 = Vector2.ZERO
-var left_foot_local_norm: Vector2 = Vector2.ZERO
-var right_foot_local_norm: Vector2 = Vector2.ZERO
-var speed_norm: float = 0.0
 
 const H_SMOOTH: float = 8.0
 const SPREAD_SMOOTH: float = 10.0
@@ -30,6 +26,10 @@ static func create(ik: IkUtil, anim_inputs: AnimationInputs, sz: SkeletonSizesUt
 	s.inputs = anim_inputs
 	s.sizes = sz
 	return s
+
+func vertical_velocity() -> float:
+	return inputs.velocity.y
+
 
 func update(delta: float) -> void:
 	_update_step_signals(delta)

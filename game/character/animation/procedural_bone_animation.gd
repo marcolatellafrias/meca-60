@@ -1,5 +1,10 @@
 class_name ProceduralBoneAnimator
 
+## LA TABLA DE ANIMACIÓN PROCEDURAL: cada entrada es (qué mueve, en qué eje, qué señal o fórmula, peso, escala, curva),
+## y en cada pasada todo vuelve a su reposo y se le suma lo suyo. COMÚN (18/11/2026, módulo Jefes, con aviso a
+## Personajes): mueve cualquier Node3D (los huesos de un personaje, las piezas de una meca o de un jefe) y lee las
+## señales de cualquier cuerpo (MotionSignals). Quién mueve qué lo dice cada cuerpo (en los personajes, animations.gd).
+
 enum SignalType {
 	STEP_PROGRESS, STEP_LENGTH, STEP_DRIVEN,
 	H_VEL_X, H_VEL_Z, V_VEL,
@@ -14,10 +19,10 @@ enum Axis {
 }
 
 var is_seated:            bool       = false
-var _seated_locked_bone:  CustomBone = null
+var _seated_locked_bone:  Node3D = null
 
 class BoneAnimEntry:
-	var bone: CustomBone
+	var bone: Node3D
 	var axis: ProceduralBoneAnimator.Axis
 	var driver: Callable
 	## La señal que la mueve, si es una (`register`); −1 si es una fórmula. Ver `update`.
@@ -41,7 +46,7 @@ class NodeAnimEntry:
 	var rest_local_position: Vector3
 	var rest_signal_value: float = 0.0
 
-var locomotion_signals: LocomotionSignals
+var locomotion_signals: MotionSignals
 var _entries: Array = []
 var _node_entries: Array = []
 
@@ -57,24 +62,24 @@ var _values := PackedFloat64Array()
 var _applies := PackedByteArray()
 var _node_values := PackedFloat64Array()
 
-static func create(signals: LocomotionSignals) -> ProceduralBoneAnimator:
+static func create(signals: MotionSignals) -> ProceduralBoneAnimator:
 	var a := ProceduralBoneAnimator.new()
 	a.locomotion_signals = signals
 	return a
 
-func register(bone: CustomBone, axis: Axis, driver: SignalType, weight: float, curve: Curve = null,
+func register(bone: Node3D, axis: Axis, driver: SignalType, weight: float, curve: Curve = null,
 		scale := Callable()) -> void:
 	_register_internal(bone, axis, func(): return _get_signal_value(driver), weight, curve)
 	(_entries.back() as BoneAnimEntry).signal_type = driver
 	(_entries.back() as BoneAnimEntry).scale = scale
 
-func register_formula(bone: CustomBone, axis: Axis, formula: Callable, weight: float = 1.0, curve: Curve = null) -> void:
+func register_formula(bone: Node3D, axis: Axis, formula: Callable, weight: float = 1.0, curve: Curve = null) -> void:
 	_register_internal(bone, axis, formula, weight, curve)
 
 func register_node_formula(node: Node3D, direction: Vector3, formula: Callable, weight: float = 1.0, curve: Curve = null) -> void:
 	_register_node_internal(node, direction, formula, weight, curve)
 
-func _register_internal(bone: CustomBone, axis: Axis, driver_fn: Callable, weight: float, curve: Curve) -> void:
+func _register_internal(bone: Node3D, axis: Axis, driver_fn: Callable, weight: float, curve: Curve) -> void:
 	var entry := BoneAnimEntry.new()
 	entry.bone = bone
 	entry.axis = axis
@@ -136,7 +141,7 @@ func update() -> void:
 
 	for group: Array in _bone_groups:
 		var rest: BoneAnimEntry = group[1]
-		var t: Transform3D = (group[0] as CustomBone).transform
+		var t: Transform3D = (group[0] as Node3D).transform
 		t.origin.y = rest.rest_local_position.y
 		t.origin.z = rest.rest_local_position.z
 		t.basis = rest.rest_local_basis
@@ -155,7 +160,7 @@ func update() -> void:
 					t.origin.y += value
 				Axis.POS_Z:
 					t.origin.z += value
-		(group[0] as CustomBone).transform = t
+		(group[0] as Node3D).transform = t
 	for group: Array in _node_groups:
 		var p: Vector3 = (group[1] as NodeAnimEntry).rest_local_position
 		for i: int in group[2]:
@@ -205,7 +210,7 @@ func _get_signal_value(driver: SignalType) -> float:
 		SignalType.H_VEL_Z:
 			return locomotion_signals.horizontal_velocity_smooth.y
 		SignalType.V_VEL:
-			return locomotion_signals.inputs.velocity.y
+			return locomotion_signals.vertical_velocity()
 		SignalType.FOOT_SPREAD_X:
 			return locomotion_signals.foot_spread_norm.x
 		SignalType.FOOT_SPREAD_Z:
@@ -224,6 +229,6 @@ func _get_signal_value(driver: SignalType) -> float:
 			return locomotion_signals.foot_spread_unified.y
 	return 0.0
 
-func unregister_bone(bone: CustomBone) -> void:
+func unregister_bone(bone: Node3D) -> void:
 	_entries = _entries.filter(func(e): return e.bone != bone)
 	_groups_dirty = true
