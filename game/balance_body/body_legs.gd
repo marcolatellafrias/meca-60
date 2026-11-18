@@ -201,6 +201,21 @@ func place(k: BodySettings, delta: float) -> void:
 		var ahead := -waist.basis.z - facing.z
 		ahead.y = 0.0
 		var knee_way := ahead.normalized() + waist.basis.x * side * out
+		# CON EL ESQUELETO, LA IK COMÚN SOBRE LOS HUESOS (MechLeg.reach_to): el pie plano mirando hacia donde camina
+		# (recogido, con la punta abajo); tirada, todo volcado con la caja (`fall`). Plegándose (la física), como antes.
+		if body.skeleton != null and share <= 0.001:
+			var forward := -facing.z
+			forward.y = 0.0
+			forward = forward.normalized() if forward.length_squared() > 0.0001 else Vector3.FORWARD
+			var flat := Basis.looking_at(forward, Vector3.UP)
+			if tucked:
+				flat = flat * Basis(Vector3.RIGHT, -deg_to_rad(LegSettings.current.tuck_toes))
+			if lying:
+				ground = fall * ground
+				knee_way = fall.basis * knee_way
+				flat = fall.basis * flat
+			_legs[i].reach_to(ground, knee_way, flat)
+			continue
 		var open := body.measures.leg(hip, ground, facing, knee_way)
 		if tucked:
 			open = BodyLegs._toes_down(open, LegSettings.current.tuck_toes)

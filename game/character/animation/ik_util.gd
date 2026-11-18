@@ -280,7 +280,9 @@ static func create_ik_target(left: bool, reach: float, ik_util: IkUtil) -> Node3
 		ik_util.current_step_right_mesh_instance = stride_disc
 	return _ik_target
 
-func solve_two_bone_ik(upper_bone: CustomBone, lower_bone: CustomBone, ik_target: Vector3, pole_target: Vector3) -> void:
+## LA IK DE DOS HUESOS, UNA SOLA PARA TODOS (estática desde el 18/11/2026, módulo Jefes, con aviso a Personajes: la usan
+## también los huesos de la meca, MechSkeleton; no depende de nada del personaje).
+static func solve_two_bone_ik(upper_bone: CustomBone, lower_bone: CustomBone, ik_target: Vector3, pole_target: Vector3) -> void:
 	var root_pos: Vector3 = upper_bone.global_position
 	var target_pos: Vector3 = ik_target
 	var upper_len: float = upper_bone.length

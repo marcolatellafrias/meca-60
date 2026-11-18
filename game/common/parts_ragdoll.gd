@@ -217,41 +217,28 @@ static func fall_apart(body: Node3D) -> PartsRagdoll:
 	return ragdoll
 
 
-## EL ESQUELETO DE UNA MECA (BalanceBody con piernas y brazos): el tronco con SU CAJA DE VERDAD (la del cuerpo); la
-## pelvis, unida a él en la cintura (el piso de la caja); cada pierna en tres, desde la pelvis: el muslo en la cadera, la
-## canilla en la rodilla, el pie en el tobillo; y cada brazo entero, en su hombro.
+## EL ESQUELETO DE UNA MECA (BalanceBody con su MechSkeleton): UN PEDAZO POR HUESO, unido a su padre donde nace el
+## hueso (el origen del hueso: la cintura, la cadera, la rodilla, el tobillo, el hombro, el codo). El tronco, con su
+## caja de verdad (la del cuerpo); la pelvis con sus caderas fijas, un solo pedazo; lo que lleva la punta del brazo va
+## con el antebrazo. Las partes se juntan de la más chica a la más grande, así cada hueso se lleva lo suyo y no lo de
+## sus hijos.
 static func _mech_parts(ragdoll: PartsRagdoll, body: BalanceBody) -> void:
 	ragdoll.set_core_box(body.global_transform, body.size)
-	var pelvis := 0
-	if body.legs != null:
-		var waist := body.global_transform * Vector3(0.0, -body.size.y * 0.5, 0.0)
-		var pelvis_mesh = body.legs.get("_pelvis")
-		if pelvis_mesh != null:
-			pelvis = ragdoll.add([pelvis_mesh], 0, waist)
-		for leg: MechLeg in body.legs.get("_legs"):
-			var hip := leg.get("_hip") as Node3D
-			var knee := leg.get("_knee") as Node3D
-			var ankle := leg.get("_ankle") as Node3D
-			var thigh := ragdoll.add([leg.get("_thigh"), hip], pelvis, hip.global_position)
-			var shin := ragdoll.add([leg.get("_shin"), knee], thigh, knee.global_position)
-			ragdoll.add([leg.get("_foot"), ankle], shin, ankle.global_position)
-	if body is Mech:
-		var mech := body as Mech
-		for arm: MechArm in mech.arms:
-			var upper := arm.get("_upper") as Node3D
-			var forearm := arm.get("_forearm") as Node3D
-			if upper == null or forearm == null:
-				ragdoll.add([arm], 0, mech.global_transform * arm.shoulder_local)
-				continue
-			# El brazo en dos: el brazo en el hombro (su punta de arriba) y el antebrazo, con la mano y lo que lleva,
-			# en el codo.
-			var shoulder := upper.global_transform * Vector3(0.0, 0.0, arm.upper_length() * 0.5)
-			var elbow := forearm.global_transform * Vector3(0.0, 0.0, arm.forearm_length() * 0.5)
-			var top := ragdoll.add([upper], 0, shoulder)
-			var parts: Array = [forearm]
-			if arm.get("tip") is Node3D:
-				parts.append(arm.get("tip"))
-			ragdoll.add(parts, top, elbow)
+	var bones := body.skeleton
+	if bones == null:
+		return
+	var pelvis := ragdoll.add([bones.pelvis], 0, bones.waist.global_position)
+	for side in 2:
+		var thigh := ragdoll.add([bones.thighs[side]], pelvis, bones.thighs[side].global_position)
+		var shin := ragdoll.add([bones.shins[side]], thigh, bones.shins[side].global_position)
+		ragdoll.add([bones.feet[side]], shin, bones.feet[side].global_position)
+		var upper := ragdoll.add([bones.uppers[side]], 0, bones.uppers[side].global_position)
+		var forearm: Array = [bones.forearms[side]]
+		if body is Mech and side < (body as Mech).arms.size():
+			var arm := (body as Mech).arms[side]
+			if arm.tip != null:
+				forearm.append(arm.tip)
+		ragdoll.add(forearm, upper, bones.forearms[side].global_position)
 
 
 ## Las mallas visibles debajo de `node` (las de más arriba: lo que cuelga de ellas va con ellas), sin las ya tomadas.

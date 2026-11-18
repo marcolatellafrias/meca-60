@@ -24,13 +24,20 @@ escribe la pelvis (`put_pelvis`), MechLeg los huesos de la pierna y MechArm los 
 cede un poco (18 cm medidos) y el esqueleto no; su dibujo cuelga de los huesos (`move_drawing`) y los cuerpos quedan
 para empujar y chocar.
 
+PASO 2a (18/11/2026): LAS PIERNAS CON LA IK COMÚN. BodyLegs dice adónde va cada pie (el punto del piso, hacia dónde
+dobla la rodilla, los ejes del pie) y `MechLeg.reach_to` gira los huesos con la IK de los personajes
+(`IkUtil.solve_two_bone_ik`, estática desde ese día: una sola IK para todos, sin duplicar código), sin moverlos de donde
+nacen. La pierna plegándose de la meca física sigue por el camino de antes. EL RAGDOLL SALE DEL ESQUELETO
+(`PartsRagdoll._mech_parts`): un pedazo por hueso, unido a su padre en el origen del hueso; 12 pedazos (el brazo con
+músculos, también en dos).
+
 `tests/mech_skeleton_check` (sin ventana): caminando, doblando y con una piña, lo más que se separa cada hueso de
 donde nace (el muslo de su cadera, la canilla de la punta del muslo, el pie, el brazo de su hombro, el antebrazo) y
 que las caderas no se muevan en la pelvis: todo 0 mm, «ESQUELETO OK». La huella de `cage_mech_look` y su hoja, igual.
 
 Por pasos (la nota compartida `jefes-revision-cuerpo-meca.md`): 1. el esqueleto sin cambio visible (HECHO: la pose la
 sigue calculando el código de siempre, MechBody, y se escribe en los huesos); 2a. una sola IK sobre los huesos de las
-piernas; 2b. las capas (caminar, inclinarse, el resorte, hundirse) en la pelvis y el torso, con la cabina colgada del
+piernas (HECHO); 2b. las capas (caminar, inclinarse, el resorte, hundirse) en la pelvis y el torso, con la cabina colgada del
 torso (con Cabinas); 3. los dos brazos sobre los huesos; 4. el ragdoll desde el esqueleto, y su vuelta (con los
 personajes); 5. el jefe; 6. limpieza.
 

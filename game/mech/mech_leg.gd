@@ -65,6 +65,19 @@ func _joint(part: Node3D, piece: Node3D, local: Transform3D) -> void:
 func _foot_from_ankle() -> Vector3:
 	return Vector3(0.0, measures.FOOT_SIZE.y * 0.5 - measures.ANKLE, -measures.FOOT_AHEAD)
 
+## LA PIERNA HASTA UN PIE, CON SUS HUESOS (18/11/2026; paso 2a del esqueleto): el tobillo arriba del punto del piso
+## `ground`, la rodilla doblando hacia `knee_way` (una dirección, desde la cadera) y el pie con los ejes `foot_basis`
+## (plano, mirando hacia donde camina; recogido, con la punta abajo). LA IK ES UNA SOLA, LA DE LOS PERSONAJES
+## (IkUtil.solve_two_bone_ik): gira los huesos sin moverlos de donde nacen (la cadera, la rodilla), así que la pierna no
+## se separa nunca. Lo de afuera (la cadera) lo pone la pelvis.
+func reach_to(ground: Vector3, knee_way: Vector3, foot_basis: Basis) -> void:
+	global_transform = Transform3D()
+	var hip := thigh_bone.global_position
+	var ankle := ground + foot_basis.y.normalized() * measures.ANKLE
+	IkUtil.solve_two_bone_ik(thigh_bone, shin_bone, ankle, hip + knee_way)
+	foot_bone.transform.basis = shin_bone.global_basis.orthonormalized().inverse() * foot_basis.orthonormalized()
+
+
 ## La pone como dice `leg` (ver MechBody.leg): las partes, y las articulaciones en sus puntas (el muslo va de la cadera a la
 ## rodilla por su −Z; la canilla, de la rodilla al tobillo).
 func pose(leg: Dictionary) -> void:
