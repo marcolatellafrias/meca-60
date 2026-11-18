@@ -30,8 +30,7 @@ const LABELS := {
 	"desk_tilt": "inclinación del tablero (°)",
 	"arms_eye": "ojos del de los brazos, sobre su piso (m)",
 	"tower_round": "redonda (si no, cuadrada)",
-	"tower_width": "ancho (m)",
-	"tower_depth": "fondo (m; nunca más que el ancho)",
+	"tower_size": "tamaño (m; ancho y fondo, siempre iguales)",
 	"gunner_eye": "ojos del artillero, sobre el piso de arriba (m)",
 }
 ## Los de «Brazos y piernas»: los de la meca grande, más el adelanto de los hombros, que sólo tenía esta. *Hasta el

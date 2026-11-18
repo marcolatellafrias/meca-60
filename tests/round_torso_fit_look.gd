@@ -152,7 +152,7 @@ func _round(at: Node3D, size: float, chamfer: float, players: int) -> void:
 	_prism(at, apothem, pit.rim(), base, rim_y)
 	_pit(at, floor_y)
 	if players == 3:
-		var wide := form.tower_width
+		var wide := form.tower_wide()
 		var deep := form.tower_deep()
 		var up := CageCabin.tower_top(form)
 		var z := apothem - deep * 0.5
@@ -173,7 +173,7 @@ func _square(at: Node3D) -> void:
 	block.mesh = pit.mesh(SHELL)
 	block.position = Vector3(0.0, tall, 0.0)
 	at.add_child(block)
-	var wide := form.tower_width
+	var wide := form.tower_wide()
 	var deep := form.tower_deep()
 	var up := CageCabin.tower_top(form)
 	Clay.box(at, Vector3(wide, up, deep), Vector3(0.0, tall + up * 0.5, side * 0.5 - deep * 0.5), SHELL)

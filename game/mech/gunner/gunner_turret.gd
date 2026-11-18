@@ -264,17 +264,16 @@ func _panel(at: Vector3, angle: float, lean: float) -> Node3D:
 	return face
 
 
-## AL MEDIO: LAS ARMAS. Dos botones grandes para elegir (la minigun, gris; los misiles, amarillo), el reloj del calor
-## de la minigun, una luz por tubo de misil (seis) y la llave de cómo va el misil (derecho, guiado, fija un blanco).
+## AL MEDIO: LAS ARMAS. Dos botones grandes para elegir (la minigun, gris; los misiles, amarillo), la barra del calor
+## de la minigun (el usuario: «una simple barra por ahora»), una luz por tubo de misil (seis) y la llave de cómo va el misil (derecho, guiado, fija un blanco).
 func _weapons_board(face: Node3D) -> void:
 	var front := 0.012
 	Clay.box(face, Vector3(0.07, 0.07, 0.025), Vector3(-0.11, 0.04, front), CageCabin.METAL)
 	Clay.box(face, Vector3(0.07, 0.07, 0.025), Vector3(-0.11, -0.05, front), CageCabin.YELLOW)
-	# El calor: un reloj con la zona roja y la aguja.
-	Clay.cylinder(face, 0.055, 0.01, Vector3(0.0, 0.03, front), SCREEN, Vector3(90.0, 0.0, 0.0))
-	Clay.box(face, Vector3(0.04, 0.012, 0.012), Vector3(0.035, 0.065, front + 0.006), RED)
-	var needle := Clay.box(face, Vector3(0.006, 0.045, 0.012), Vector3(-0.008, 0.045, front + 0.008), LIT)
-	needle.rotation_degrees = Vector3(0.0, 0.0, 25.0)
+	# El calor: una barra que se llena, con su punta roja.
+	Clay.box(face, Vector3(0.1, 0.022, 0.012), Vector3(0.0, 0.05, front), OFF)
+	Clay.box(face, Vector3(0.055, 0.018, 0.014), Vector3(-0.022, 0.05, front + 0.002), AMBER)
+	Clay.box(face, Vector3(0.016, 0.022, 0.016), Vector3(0.042, 0.05, front + 0.003), RED)
 	# Los seis tubos: luces de dos por tres.
 	for c in 3:
 		for r in 2:
@@ -292,8 +291,8 @@ func _weapons_board(face: Node3D) -> void:
 
 
 ## A LA IZQUIERDA: LA MUNICIÓN. Tres ranuras de tipos de bala por color (lo que se encuentra en el mapa se mete acá),
-## cada una con cuánto le queda; la manivela para recargar los misiles de a un tubo, y la palanca para destrabar la
-## minigun.
+## cada una con cuánto le queda. *La manivela de recargar misiles y la palanca de destrabar se fueron el mismo día (el
+## usuario: «no me gustan»).*
 func _ammo_board(face: Node3D) -> void:
 	var front := 0.012
 	for k in 3:
@@ -302,16 +301,6 @@ func _ammo_board(face: Node3D) -> void:
 		Clay.box(face, Vector3(0.03, 0.05, 0.028), Vector3(x, 0.035, front), AMMO[k])
 		Clay.box(face, Vector3(0.04, 0.012, 0.012), Vector3(x, -0.03, front), OFF)
 		Clay.box(face, Vector3(0.04 * (1.0 - k * 0.3), 0.012, 0.014), Vector3(x - 0.02 * k * 0.3, -0.03, front + 0.002), LIT)
-	# La manivela: una rueda con su manija.
-	var crank := Vector3(0.09, 0.02, front + 0.01)
-	Clay.cylinder(face, 0.045, 0.02, crank, GUNMETAL, Vector3(90.0, 0.0, 0.0))
-	Clay.box(face, Vector3(0.012, 0.045, 0.012), crank + Vector3(0.025, 0.02, 0.015), GUNMETAL)
-	Clay.cylinder(face, 0.012, 0.04, crank + Vector3(0.045, 0.04, 0.03), GRAB, Vector3(90.0, 0.0, 0.0))
-	# La palanca de destrabar: corta, con su bocha roja, abajo.
-	Clay.box(face, Vector3(0.03, 0.03, 0.02), Vector3(0.09, -0.075, front), GUNMETAL)
-	var lever := Clay.box(face, Vector3(0.01, 0.045, 0.01), Vector3(0.09, -0.06, front + 0.02), GUNMETAL)
-	lever.rotation_degrees = Vector3(30.0, 0.0, 0.0)
-	Clay.sphere(face, 0.014, Vector3(0.09, -0.04, front + 0.032), RED)
 
 
 ## A LA DERECHA: EL ESTADO DE LA MECA. El dibujo de la meca con sus partes (casco, piernas, brazo izquierdo, brazo

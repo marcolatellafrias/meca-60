@@ -86,9 +86,10 @@ static var current := CageShape.saved()
 @export_group("La torre")
 ## Redonda; si no, cuadrada.
 @export var tower_round := false
-## Su ancho y su fondo (m); el fondo nunca pasa del ancho.
-@export_range(0.3, 2.5, 0.01) var tower_width := 1.2
-@export_range(0.2, 2.5, 0.01) var tower_depth := 0.56
+## SU TAMAÑO (m): el ancho y el fondo, que son el mismo —la base es siempre cuadrada (o un círculo); el usuario,
+## 18/11/2026: «la base de la torre ahora puede no tener cross section cuadrada, cosa que quiero que sea imposible, con
+## un solo valor… tamaño debería controlar eso»—. *Hasta ese día eran dos: el ancho y el fondo.*
+@export_range(0.5, 1.5, 0.01) var tower_size := 0.8
 ## Los ojos del artillero, sobre el piso de arriba (m): la torre llega a esa altura menos lo de uno sentado.
 @export_range(1.6, 4.0, 0.01) var gunner_eye := 2.75
 ## LOS CAMPOS DEL CUERPO (los de la pestaña «Brazos y piernas» de la meca grande, borrada el 17/11/2026; ver
@@ -223,6 +224,10 @@ func upper_back() -> float:
 	return octagon_apothem() if is_round() else side() * 0.5
 
 
-## El fondo de la torre: nunca más que su ancho.
+## El ancho y el fondo de la torre: los dos, su tamaño.
+func tower_wide() -> float:
+	return tower_size
+
+
 func tower_deep() -> float:
-	return minf(tower_depth, tower_width)
+	return tower_size

@@ -413,7 +413,7 @@ func _upper(pit: DeskPit, tall: float) -> void:
 ## LA TORRE, contra el borde de atrás (redonda o cuadrada, de su lado); arriba, el rulemán y el plato que gira, con la
 ## silla y, al frente, el pie del arma con su horquilla y el arma (sólo se ve).
 func _tower(form: CageShape, tall: float, pit: DeskPit) -> void:
-	var wide := form.tower_width
+	var wide := form.tower_wide()
 	var deep := form.tower_deep()
 	var middle := Vector2(0.0, form.upper_back() - deep * 0.5)
 	var outline := CageMesh.polygon(1.0, 32) if form.tower_round \
