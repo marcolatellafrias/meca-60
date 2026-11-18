@@ -134,7 +134,13 @@ func _build() -> void:
 		_beam(frame, foot, elbow, 0.02)
 		_beam(frame, elbow, spot + Vector3(0.0, -0.06, 0.0), 0.018)
 		Clay.sphere(frame, 0.03, elbow, GUNMETAL)
-		_panel(spot, angle, 35.0 if spot.x == 0.0 else 45.0)
+		var board := _panel(spot, angle, 35.0 if spot.x == 0.0 else 45.0)
+		if spot.x == 0.0:
+			_weapons_board(board)
+		elif spot.x < 0.0:
+			_ammo_board(board)
+		else:
+			_state_board(board)
 
 
 ## EL YUGO: una columna desde el borde de adelante del asiento, entre las rodillas, y la barra con las dos manijas, todo
@@ -236,29 +242,102 @@ func _missiles(parent: Node3D, columns: int, rows: int, cell: float) -> void:
 	Clay.box(parent, Vector3(size.x + 0.01, 0.02, size.z * 0.6), Vector3(0.0, size.y * 0.5 + 0.01, 0.0), CageCabin.YELLOW)
 
 
-## UN TABLERO en `at`, hacia `angle` (rad, 0 adelante), inclinado `lean` grados mirando al artillero. Por ahora, sólo se
-## ve: la munición por color, dos relojes, el calor y tres recargas.
-func _panel(at: Vector3, angle: float, lean: float) -> void:
+## LOS TRES TABLEROS (18/11/2026; el usuario aprobó el reparto: «dale»): pocas piezas cada uno, que se lean de un
+## vistazo —lo difícil queda en coordinarse con los otros dos y en el mapa, no en el tablero—. Por ahora sólo se ven.
+const BOARD := Vector2(0.32, 0.22)
+const LIT := Color(0.4, 1.0, 0.45)
+const OFF := Color(0.08, 0.1, 0.08)
+const AMBER := Color(1.0, 0.72, 0.2)
+
+
+## UN TABLERO en `at`, hacia `angle` (rad, 0 adelante), inclinado `lean` grados mirando al artillero: la chapa, y
+## devuelve su cara (donde van las piezas: x a lo ancho, y a lo alto, +Z hacia el artillero).
+func _panel(at: Vector3, angle: float, lean: float) -> Node3D:
 	var holder := Node3D.new()
 	holder.position = at
 	holder.rotation = Vector3(0.0, -angle, 0.0)
 	frame.add_child(holder)
-	var tilted := Node3D.new()
-	tilted.rotation_degrees = Vector3(-lean, 0.0, 0.0)
-	holder.add_child(tilted)
-	var w := 0.26
-	var h := 0.18
-	Clay.box(tilted, Vector3(w, h, 0.02), Vector3.ZERO, PLATE)
-	var front := 0.015
+	var face := Node3D.new()
+	face.rotation_degrees = Vector3(-lean, 0.0, 0.0)
+	holder.add_child(face)
+	Clay.box(face, Vector3(BOARD.x, BOARD.y, 0.02), Vector3.ZERO, PLATE)
+	return face
+
+
+## AL MEDIO: LAS ARMAS. Dos botones grandes para elegir (la minigun, gris; los misiles, amarillo), el reloj del calor
+## de la minigun, una luz por tubo de misil (seis) y la llave de cómo va el misil (derecho, guiado, fija un blanco).
+func _weapons_board(face: Node3D) -> void:
+	var front := 0.012
+	Clay.box(face, Vector3(0.07, 0.07, 0.025), Vector3(-0.11, 0.04, front), CageCabin.METAL)
+	Clay.box(face, Vector3(0.07, 0.07, 0.025), Vector3(-0.11, -0.05, front), CageCabin.YELLOW)
+	# El calor: un reloj con la zona roja y la aguja.
+	Clay.cylinder(face, 0.055, 0.01, Vector3(0.0, 0.03, front), SCREEN, Vector3(90.0, 0.0, 0.0))
+	Clay.box(face, Vector3(0.04, 0.012, 0.012), Vector3(0.035, 0.065, front + 0.006), RED)
+	var needle := Clay.box(face, Vector3(0.006, 0.045, 0.012), Vector3(-0.008, 0.045, front + 0.008), LIT)
+	needle.rotation_degrees = Vector3(0.0, 0.0, 25.0)
+	# Los seis tubos: luces de dos por tres.
+	for c in 3:
+		for r in 2:
+			var lit := c + r * 3 < 4
+			Clay.cylinder(face, 0.011, 0.01, Vector3(0.075 + c * 0.03, 0.06 - r * 0.03, front), LIT if lit else OFF,
+				Vector3(90.0, 0.0, 0.0))
+	# La llave de tres posiciones, con sus tres marcas.
+	var key := Vector3(0.105, -0.05, front)
+	Clay.cylinder(face, 0.025, 0.02, key, GUNMETAL, Vector3(90.0, 0.0, 0.0))
+	Clay.box(face, Vector3(0.008, 0.03, 0.03), key + Vector3(0.0, 0.01, 0.01), GRAB)
 	for k in 3:
-		Clay.box(tilted, Vector3(w * 0.12, h * 0.16, 0.012), Vector3(-w * 0.32 + k * w * 0.16, -h * 0.28, front), AMMO[k])
-	for k in 2:
-		Clay.cylinder(tilted, h * 0.13, 0.008, Vector3(-w * 0.3 + k * w * 0.22, h * 0.16, front), SCREEN,
+		var angle := deg_to_rad(-45.0 + k * 45.0)
+		Clay.box(face, Vector3(0.006, 0.006, 0.01), key + Vector3(sin(angle), cos(angle), 0.0) * 0.04, AMBER)
+	Clay.box(face, Vector3(0.1, 0.02, 0.01), Vector3(0.0, -0.075, front), OFF)
+
+
+## A LA IZQUIERDA: LA MUNICIÓN. Tres ranuras de tipos de bala por color (lo que se encuentra en el mapa se mete acá),
+## cada una con cuánto le queda; la manivela para recargar los misiles de a un tubo, y la palanca para destrabar la
+## minigun.
+func _ammo_board(face: Node3D) -> void:
+	var front := 0.012
+	for k in 3:
+		var x := -0.11 + k * 0.055
+		Clay.box(face, Vector3(0.04, 0.08, 0.02), Vector3(x, 0.03, front), CageCabin.HOLE)
+		Clay.box(face, Vector3(0.03, 0.05, 0.028), Vector3(x, 0.035, front), AMMO[k])
+		Clay.box(face, Vector3(0.04, 0.012, 0.012), Vector3(x, -0.03, front), OFF)
+		Clay.box(face, Vector3(0.04 * (1.0 - k * 0.3), 0.012, 0.014), Vector3(x - 0.02 * k * 0.3, -0.03, front + 0.002), LIT)
+	# La manivela: una rueda con su manija.
+	var crank := Vector3(0.09, 0.02, front + 0.01)
+	Clay.cylinder(face, 0.045, 0.02, crank, GUNMETAL, Vector3(90.0, 0.0, 0.0))
+	Clay.box(face, Vector3(0.012, 0.045, 0.012), crank + Vector3(0.025, 0.02, 0.015), GUNMETAL)
+	Clay.cylinder(face, 0.012, 0.04, crank + Vector3(0.045, 0.04, 0.03), GRAB, Vector3(90.0, 0.0, 0.0))
+	# La palanca de destrabar: corta, con su bocha roja, abajo.
+	Clay.box(face, Vector3(0.03, 0.03, 0.02), Vector3(0.09, -0.075, front), GUNMETAL)
+	var lever := Clay.box(face, Vector3(0.01, 0.045, 0.01), Vector3(0.09, -0.06, front + 0.02), GUNMETAL)
+	lever.rotation_degrees = Vector3(30.0, 0.0, 0.0)
+	Clay.sphere(face, 0.014, Vector3(0.09, -0.04, front + 0.032), RED)
+
+
+## A LA DERECHA: EL ESTADO DE LA MECA. El dibujo de la meca con sus partes (casco, piernas, brazo izquierdo, brazo
+## derecho, batería), cada una verde, amarilla a medias o roja rota; el máximo de la batería, y los kits de reparación
+## que hay a bordo.
+func _state_board(face: Node3D) -> void:
+	var front := 0.012
+	Clay.box(face, Vector3(0.14, 0.17, 0.01), Vector3(-0.06, 0.0, front), SCREEN)
+	var parts := [
+		[Vector3(0.05, 0.05, 0.01), Vector3(-0.06, 0.03, 0.0), LIT],
+		[Vector3(0.018, 0.045, 0.01), Vector3(-0.1, 0.025, 0.0), AMBER],
+		[Vector3(0.018, 0.045, 0.01), Vector3(-0.02, 0.025, 0.0), LIT],
+		[Vector3(0.015, 0.05, 0.01), Vector3(-0.072, -0.03, 0.0), LIT],
+		[Vector3(0.015, 0.05, 0.01), Vector3(-0.048, -0.03, 0.0), RED],
+		[Vector3(0.025, 0.015, 0.01), Vector3(-0.06, 0.07, 0.0), LIT],
+	]
+	for part: Array in parts:
+		Clay.box(face, part[0], (part[1] as Vector3) + Vector3(0.0, 0.0, front + 0.006), part[2])
+	# El máximo de la batería: una barra parada, con lo que perdió.
+	Clay.box(face, Vector3(0.03, 0.15, 0.012), Vector3(0.06, 0.0, front), OFF)
+	Clay.box(face, Vector3(0.026, 0.11, 0.014), Vector3(0.06, -0.018, front + 0.002), LIT)
+	Clay.box(face, Vector3(0.03, 0.006, 0.016), Vector3(0.06, 0.04, front + 0.004), RED)
+	# Los kits a bordo: tres luces.
+	for k in 3:
+		Clay.cylinder(face, 0.011, 0.01, Vector3(0.115, 0.05 - k * 0.035, front), AMBER if k < 2 else OFF,
 			Vector3(90.0, 0.0, 0.0))
-	Clay.box(tilted, Vector3(w * 0.05, h * 0.45, 0.012), Vector3(w * 0.4, -h * 0.12, front), RED)
-	for k in 3:
-		Clay.box(tilted, Vector3(w * 0.22 * (0.3 + k * 0.3), h * 0.06, 0.012),
-			Vector3(w * 0.15 - w * 0.11 * (0.7 - k * 0.3), h * (0.28 - k * 0.12), front), GREEN)
 
 
 ## UNA VIGA de `from` a `to`, de `radius`, en `parent`.
