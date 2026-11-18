@@ -250,15 +250,25 @@ a ese puesto si está libre; **E** lo para. Al dejar un puesto vuelve su maniqu�
 su puesto (ver [[tableros]]); el artillero, todavía nada. Prueba: `tests/cage_boarding_check` (en el sandbox entero).
 
 ## La tripulación cuando muere
-Al quedarse sin vida la meca se desarma (`PartsRagdoll.fall_apart`, de la sesión de Jefes): la meca viva se apaga y
-desaparece. **Los de adentro se quedan sentados donde estaban** (18/11/2026, el usuario: «podríamos hacer que salgan
-despedidos, pero por ahora vamos a dejar que se queden sentados nomás por simplicidad»). Prueba:
-`tests/crew_death_check` (el ente y los maniquíes siguen sentados, sin moverse ni errores).
+Al quedarse sin vida la meca se desarma (`PartsRagdoll.fall_apart`, de la sesión de Jefes): sus mallas pasan a pedazos
+con física y la meca viva se apaga y desaparece. **Los de adentro se quedan sentados** (18/11/2026, el usuario: «podríamos
+hacer que salgan despedidos, pero por ahora vamos a dejar que se queden sentados nomás por simplicidad»), **y las sillas
+van clavadas al tronco que cae** (el usuario: «las sillas deberían estar totalmente atornilladas a la meca… en
+ragdoll»).
+- **Cómo**: al apagarse la meca, la cabina se entera (`CageCabin._notification`, NOTIFICATION_DISABLED) y le clava cada
+  silla al pedazo que se llevó la caja de abajo. Lo hace con un pasador (RemoteTransform3D) que le lleva su lugar cada
+  paso, y la silla sigue andando aunque la meca esté apagada, así lleva a su sentado. Sirve para las tres, cuelguen de
+  donde cuelguen.
+- **Los pedazos no chocan con las sillas**, como la caja viva: clavadas adentro del tronco, lo despedían más de un
+  kilómetro.
+- *Mudar la silla de padre la sacaba del árbol un instante, y al salir la silla para a su sentado.*
+- **Prueba**: `tests/crew_death_check`. Con un golpe que la empuja, el ente y los maniquíes bajan con los restos de 7 a
+  12 m y siguen sentados, siempre a menos de un metro de su silla, que es la altura del cuerpo sobre el asiento.
 
-**Las sillas van clavadas a la meca**: cuelgan de la cabina. La que se ve con alguien sentado es una copia que cuelga de
-su cápsula (para esconderse con el cuerpo en primera persona) y se acomoda en cada cuadro en la silla. Medido el
-18/11/2026 con `tests/seat_lag_check` (caminando, en el dash y girando 90°, con maniquíes y con el ente): ni la silla, ni
-la que se ve, ni el sentado se corren de la meca. El usuario vio que se quedaban atrás; falta saber en qué situación.
+**Mientras está viva, las sillas también van clavadas**: cuelgan de la cabina. La que se ve con alguien sentado es una
+copia que cuelga de su cápsula (para esconderse con el cuerpo en primera persona) y se acomoda en cada cuadro en la
+silla. Medido el 18/11/2026 con `tests/seat_lag_check`, caminando, en el dash y girando 90°, con maniquíes y con el ente:
+ni la silla, ni la que se ve, ni el sentado se corren de la meca.
 
 ## Lo que falta
 - Probar jugando los controles para 1, 2 y 3 (hoy medidos en `tests/cage_cockpit_check` y `tests/cage_crew_check`).

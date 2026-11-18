@@ -75,6 +75,8 @@ var upper: Node3D = null
 ## Lo que gira, relativo a la cabina (rad).
 var upper_yaw := 0.0
 var _upper_colliders: Array = []
+## La caja de abajo, la malla: al desarmarse la meca, el pedazo que se la lleva es el que se lleva las sillas.
+var _box: Node3D = null
 
 
 ## ── LAS MEDIDAS (en el espacio de la caja: el centro, en el medio) ──────────────────────────────────────────────
@@ -371,6 +373,8 @@ func _both_sides(tool: SurfaceTool, color: Color, label: String, paint_with: Mat
 	if paint_with != null:
 		piece.material_override = paint_with
 	_root.add_child(piece)
+	if label == "Caja de abajo":
+		_box = piece
 	if piece.mesh.get_surface_count() > 0:
 		_mesh_solid(piece.mesh)
 
@@ -589,6 +593,43 @@ func seat_back(index: int) -> void:
 		if is_instance_valid(dummy) and dummy.intent.seat == chairs[index]:
 			return
 	seat_dummy(index)
+
+
+## ── AL DESARMARSE, LAS SILLAS VAN CON EL TRONCO (18/11/2026, el usuario: «las sillas deberían estar totalmente
+## atornilladas a la meca… cuando… se quedan atrás… en ragdoll»; y de la tripulación: «que se queden sentados») ────────
+## Al morir, la meca se desarma (PartsRagdoll.fall_apart): sus mallas se mudan a pedazos con física y el cuerpo vivo se
+## apaga, y con él lo que cuelga de él. Las sillas quedaban flotando donde estaban, sin llevar a nadie. Cuando se apaga,
+## CADA SILLA QUEDA CLAVADA AL PEDAZO QUE SE LLEVÓ LA CAJA DE ABAJO (el tronco): un pasador en él (RemoteTransform3D) le
+## lleva su lugar cada paso, y la silla sigue andando (procesa aunque la meca esté apagada), así lleva a su sentado
+## mientras cae. Las tres, cuelguen de donde cuelguen (la de la torreta también). Y los pedazos no chocan con las
+## sillas, como la caja viva (ver `build_frame`): clavadas adentro del tronco, lo despedían lejos. *Mudarla de padre la
+## sacaba del árbol un instante, y al salir la silla para a su sentado.*
+var _riding := false
+
+
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_DISABLED and not _riding:
+		_ride_wreck.call_deferred()
+
+
+func _ride_wreck() -> void:
+	var wreck := _box.get_parent() as RigidBody3D if is_instance_valid(_box) else null
+	if wreck == null or _riding:
+		return
+	_riding = true
+	var pieces := get_tree().get_nodes_in_group(PartsRagdoll.GROUP)
+	for chair in chairs:
+		if not is_instance_valid(chair):
+			continue
+		for found in chair.find_children("*", "PhysicsBody3D", true, false):
+			for piece in pieces:
+				(piece as PhysicsBody3D).add_collision_exception_with(found as PhysicsBody3D)
+		var pin := RemoteTransform3D.new()
+		pin.name = "Silla clavada"
+		wreck.add_child(pin)
+		pin.global_transform = chair.global_transform
+		pin.remote_path = pin.get_path_to(chair)
+		chair.process_mode = Node.PROCESS_MODE_ALWAYS
 
 
 ## EL MARCO: el cubo de abajo y, arriba, el bloque con la torre (lo que se camina adentro es el piso del pozo).
