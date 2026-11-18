@@ -67,14 +67,15 @@ func _ready() -> void:
 		var top: Array[float] = []
 		var fell: Array[bool] = []
 		var had: Array[bool] = []
+		while not lab.populated():
+			await get_tree().physics_frame
 		await get_tree().process_frame
-		for child in lab.get_children():
-			if child is BoneInstantiator:
-				people.append(child)
-				start.append((child as BoneInstantiator).char_rigidbody.global_position)
-				top.append(0.0)
-				fell.append(false)
-				had.append(false)
+		for child in lab.find_children("*", "BoneInstantiator", true, false):
+			people.append(child as BoneInstantiator)
+			start.append((child as BoneInstantiator).char_rigidbody.global_position)
+			top.append(0.0)
+			fell.append(false)
+			had.append(false)
 		var elapsed := 0.0
 		var shot := 0
 		while elapsed < RUN_S:

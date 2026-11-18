@@ -39,11 +39,17 @@ func _ready() -> void:
 		holder.position.x = x
 		add_child(holder)
 		var started := Time.get_ticks_usec()
-		row.build(0, holder)
-		await get_tree().process_frame  # el _ready de la escena arma los personajes
+		var lab := row.build(0, holder) as LocomotionLab
+		var worst := 0
+		var last := Time.get_ticks_usec()
+		while not lab.populated():  # arma a sus personas de a una por paso
+			await get_tree().physics_frame
+			var now := Time.get_ticks_usec()
+			worst = maxi(worst, now - last)
+			last = now
 		var spent := Time.get_ticks_usec() - started
 		total += spent
-		print("  %s: %d ms" % [row.display_name, spent / 1000])
+		print("  %s: %d ms en total, el peor cuadro %d ms" % [row.display_name, spent / 1000, worst / 1000])
 		x += 30.0
 	print("  TODAS: %d ms · personajes %d · cuerpos rígidos %d" % [total / 1000, _people().size(), _count("RigidBody3D")])
 	await _seconds(SETTLE_S)

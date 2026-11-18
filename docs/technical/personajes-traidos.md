@@ -82,6 +82,14 @@ las manos de las acciones (~20 ms), el `_physics_process` del personaje (~30 ms)
 cuerpos del ragdoll, que de pie se mueven con la cápsula en cada paso (~13 ms). Como un paso de física pasa los 16,7
 ms, cada cuadro hace varios pasos y todo se multiplica. El dibujo casi no cuenta.
 
+**La fila Locomoción despierta sólo con uno adentro** (17/11/2026): cada escena arma el piso y los obstáculos al
+toque, pero a sus personas recién cuando uno entra a su parcela, de a una por paso, y saliendo se duerme
+(`LocomotionLab`, DESPIERTA SÓLO CON UNO ADENTRO, por el aviso `entered` del arquetipo). Medido pasando por la fila en
+el sandbox (`tests/locomotion_walk_perf.tscn`): de las 55 personas que llegan a armarse, despiertas a la vez quedan las de
+la parcela donde uno está más las de la fila Personajes, que está al lado. Lo que sigue lento es **cada persona**:
+en el sandbox unos 5 a 8 ms por cuadro cada una (aislada, unos 2,5), y pasando los 16,7 ms la física hace varios pasos
+por cuadro y todo se multiplica. Al entrar a una parcela hay un tirón de unos 300 ms que todavía no está explicado.
+
 Pruebas:
 - `tests/people_look.tscn` (con ventana, unos 12 segundos): los seis en fila, sus cabezas de cerca, y caminando 3
   segundos (imprime cuánto anduvo cada uno y si quedó de pie). `--cabezas=0.29,0.28,…` prueba altos de cabeza.

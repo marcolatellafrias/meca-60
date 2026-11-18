@@ -38,6 +38,8 @@ var scene := Scene.RUN
 var option_j := 0
 var option_u := 0
 var sprint := true
+## Si uno está adentro de su parcela (ver LocomotionLab, DESPIERTA SÓLO CON UNO ADENTRO).
+var _inside := false
 
 
 static func catalogue() -> Array[SeededArchetype]:
@@ -81,9 +83,17 @@ func _what() -> String:
 func build(_seed_value: int, parent: Node3D) -> Node3D:
 	var lab := LocomotionLab.new()
 	lab.name = "Locomocion"
-	lab.setup(self)
+	# En el sandbox nace despierta sólo con uno adentro (la K la rearma estando adentro); fuera de él, siempre.
+	lab.setup(self, _inside or not (parent is SandboxParcel))
 	parent.add_child(lab)
 	return lab
+
+
+func entered(parcel: SandboxParcel, inside: bool) -> void:
+	_inside = inside
+	var lab := parcel.root() as LocomotionLab
+	if lab != null:
+		lab.set_awake(inside)
 
 
 ## LAS TECLAS: K otra vez; J y U, la variante (y otra vez); en las que tienen paso, U camina o corre.

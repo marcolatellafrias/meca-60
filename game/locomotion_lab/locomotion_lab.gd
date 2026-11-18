@@ -5,6 +5,13 @@ extends Node3D
 ## Arma el piso, los obstáculos y los seis personajes en carriles, y los hace actuar con una lista de pasos: cada paso
 ## hace algo (`do`) y espera a que pase algo (`until`) o a que se acabe su tiempo (`max`). Los personajes van de −Z a +Z
 ## (corren de costado a quien mira desde la entrada de la parcela).
+##
+## ── DESPIERTA SÓLO CON UNO ADENTRO (17/11/2026, el usuario: «cada vez que paso por arriba de la parcela de locomoción
+## se me tilda») ─────────────────────────────────────────────────────────────────────────────────────────────────────
+## La escena arma el piso y los obstáculos al toque, pero a las personas recién cuando uno entra a su parcela, DE A UNA
+## POR PASO (`_queue`), y los pasos arrancan cuando están todas. Saliendo, lo que vive (`_live`: las personas y los
+## cubos) se duerme. *Antes las siete escenas armaban sus 42 personas en un cuadro al acercarse (2,2 s) y seguían
+## andando todas aunque uno estuviera en otra.* Fuera del sandbox (las pruebas) nace despierta.
 
 const PEOPLE := PeopleArchetype.ROW_ORDER
 ## El ancho de un carril (m), y dónde arrancan y adónde van.
@@ -19,6 +26,10 @@ const OBSTACLE_COLOR := Color(0.55, 0.53, 0.5)
 const WALL_COLOR := Color(0.62, 0.6, 0.57)
 
 var _row: LocomotionLabArchetype
+## Lo que vive (las personas y los cubos), lo que falta armar —[arquetipo, lugar, hacia dónde]— y si está despierta.
+var _live: Node3D = null
+var _queue: Array = []
+var _awake := true
 var _people: Array[BoneInstantiator] = []
 var _cubes: Array[RigidBody3D] = []
 var _tags: Array[Label3D] = []
@@ -26,11 +37,28 @@ var _steps: Array[Dictionary] = []
 var _step_t := 0.0
 
 
-func setup(row: LocomotionLabArchetype) -> void:
+func setup(row: LocomotionLabArchetype, awake := true) -> void:
 	_row = row
+	_awake = awake
+
+
+## DESPIERTA O DORMIDA (ver DESPIERTA SÓLO CON UNO ADENTRO): lo que vive anda o se queda quieto.
+func set_awake(on: bool) -> void:
+	_awake = on
+	if is_instance_valid(_live):
+		_live.process_mode = Node.PROCESS_MODE_INHERIT if on else Node.PROCESS_MODE_DISABLED
+
+
+## Si ya están todas sus personas.
+func populated() -> bool:
+	return _queue.is_empty()
 
 
 func _ready() -> void:
+	_live = Node3D.new()
+	_live.name = "Vivos"
+	add_child(_live)
+	set_awake(_awake)
 	match _row.scene:
 		LocomotionLabArchetype.Scene.RUN:
 			_build_run()
@@ -46,15 +74,23 @@ func _ready() -> void:
 			_build_clash()
 		LocomotionLabArchetype.Scene.SLALOM:
 			_build_slalom()
-	for bi in _people:
-		var tag := Label3D.new()
-		tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-		tag.font_size = 48
-		tag.pixel_size = 0.004
-		tag.outline_size = 10
-		tag.no_depth_test = true
-		add_child(tag)
-		_tags.append(tag)
+
+
+## UNA PERSONA MÁS, la que sigue en la fila, con su cartel de velocidad.
+func _spawn_next() -> void:
+	var next: Array = _queue.pop_front()
+	var bi := PeopleArchetype.spawn(_live, next[0] as EntityArchetype.Archetype, to_global(next[1]),
+		0.0 if float(next[2]) < 0.0 else PI)
+	_people[int(next[3])] = bi
+	CharacterActions.of(bi)
+	var tag := Label3D.new()
+	tag.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	tag.font_size = 48
+	tag.pixel_size = 0.004
+	tag.outline_size = 10
+	tag.no_depth_test = true
+	_live.add_child(tag)
+	_tags.append(tag)
 
 
 ## ── LOS PASOS ──────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -67,6 +103,11 @@ func _wait(seconds: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if not _awake:
+		return
+	if not _queue.is_empty():
+		_spawn_next()
+		return
 	_update_tags()
 	if _steps.is_empty():
 		return
@@ -120,12 +161,11 @@ static func _lane_x(i: int, count := 6, width := LANE) -> float:
 	return (i - (count - 1) * 0.5) * width
 
 
-func _person(archetype: int, at_local: Vector3, facing_z := 1.0) -> BoneInstantiator:
-	var bi := PeopleArchetype.spawn(self, archetype as EntityArchetype.Archetype, to_global(at_local),
-		0.0 if facing_z < 0.0 else PI)
-	_people.append(bi)
-	CharacterActions.of(bi)
-	return bi
+## UNA PERSONA, a la fila: se arma recién despierta, de a una por paso (ver DESPIERTA SÓLO CON UNO ADENTRO). Los pasos
+## la leen de `_people` cuando ya está.
+func _person(archetype: int, at_local: Vector3, facing_z := 1.0) -> void:
+	_queue.append([archetype, at_local, facing_z, _people.size()])
+	_people.append(null)
 
 
 func _box(size: Vector3, at_local: Vector3, color := OBSTACLE_COLOR) -> StaticBody3D:
@@ -138,7 +178,7 @@ func _box(size: Vector3, at_local: Vector3, color := OBSTACLE_COLOR) -> StaticBo
 func _cube(kind: int, at_local: Vector3) -> RigidBody3D:
 	var catalogue := PackageArchetype.catalogue()
 	var body := (catalogue[kind % catalogue.size()] as PackageArchetype).build_body()
-	add_child(body)
+	_live.add_child(body)
 	body.global_position = to_global(at_local)
 	body.sleeping = false
 	_cubes.append(body)
