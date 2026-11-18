@@ -19,29 +19,37 @@ const LAND := &"land"
 const JUMP := &"jump"
 const DASH := &"dash"
 const LEVITATE := &"levitate"
+const FUEL_EMPTY := &"fuel_empty"
+const STEP := &"step"
 const EMPTY := &"empty"
+const HURT := &"hurt"
 ## ── LOS BRAZOS ──
+const SWING := &"swing"
+const PUNCH_CHARGE := &"punch_charge"
 const STRIKE_HIT := &"strike_hit"
 const SPIN := &"spin"
 const SPIN_STRIKE := &"spin_strike"
-const SHIELD_UP := &"shield_up"
-const SHIELD_HUM := &"shield_hum"
 const SHIELD_BLOCK := &"shield_block"
 ## ── EL CAÑÓN ──
 const CANNON_SHOT := &"cannon_shot"
 const CANNON_BURST := &"cannon_burst"
 const CANNON_BEAM := &"cannon_beam"
+const BEAM_HIT := &"beam_hit"
 const CANNON_CHARGE := &"cannon_charge"
 const CANNON_SUPER := &"cannon_super"
+const CANNON_HIT := &"cannon_hit"
 ## ── EL ARTILLERO ──
 const MINIGUN_SPIN := &"minigun_spin"
-const MINIGUN_SHOT := &"minigun_shot"
+const MINIGUN_FIRE := &"minigun_fire"
+const BULLET_HIT := &"bullet_hit"
 const MINIGUN_JAM := &"minigun_jam"
 const MISSILE_LAUNCH := &"missile_launch"
 const MISSILE_BLAST := &"missile_blast"
 const RELOAD := &"reload"
 const RELOAD_GOOD := &"reload_good"
 const RELOAD_BAD := &"reload_bad"
+const ABILITY_READY := &"ability_ready"
+const LOCK := &"lock"
 
 ## LA LISTA: cada evento, su clave.
 const SOUNDS := {
@@ -49,26 +57,34 @@ const SOUNDS := {
 	JUMP: &"meca_salta",
 	DASH: &"meca_dash",
 	LEVITATE: &"meca_levita",
+	FUEL_EMPTY: &"meca_propulsor_vacio",
+	STEP: &"meca_paso",
 	EMPTY: &"meca_sin_energia",
+	HURT: &"meca_recibe",
+	SWING: &"meca_pina_aire",
+	PUNCH_CHARGE: &"meca_pina_carga",
 	STRIKE_HIT: &"meca_golpe",
 	SPIN: &"meca_gira",
 	SPIN_STRIKE: &"meca_gira_golpe",
-	SHIELD_UP: &"meca_escudo_sube",
-	SHIELD_HUM: &"meca_escudo_zumba",
 	SHIELD_BLOCK: &"meca_escudo_para",
 	CANNON_SHOT: &"meca_canon_tiro",
 	CANNON_BURST: &"meca_canon_rafaga",
 	CANNON_BEAM: &"meca_canon_rayo",
+	BEAM_HIT: &"meca_canon_rayo_pega",
 	CANNON_CHARGE: &"meca_canon_carga",
 	CANNON_SUPER: &"meca_canon_super",
+	CANNON_HIT: &"meca_canon_pega",
 	MINIGUN_SPIN: &"meca_minigun_gira",
-	MINIGUN_SHOT: &"meca_minigun_tiro",
+	MINIGUN_FIRE: &"meca_minigun_dispara",
+	BULLET_HIT: &"meca_bala_pega",
 	MINIGUN_JAM: &"meca_minigun_traba",
 	MISSILE_LAUNCH: &"meca_misil_sale",
 	MISSILE_BLAST: &"meca_misil_explota",
 	RELOAD: &"meca_recarga",
 	RELOAD_GOOD: &"meca_recarga_bien",
 	RELOAD_BAD: &"meca_recarga_mal",
+	ABILITY_READY: &"meca_habilidad_lista",
+	LOCK: &"meca_fijado",
 }
 
 ## Lo que tiene que caer (m/s) para que suene el aterrizaje, y con eso a fondo.
@@ -76,6 +92,8 @@ const LAND_SOFT := 3.0
 const LAND_HARD := 14.0
 ## Cuánto más rápido que caminar va un dash (×).
 const DASH_OVER := 1.6
+## Lo que sigue sonando un continuo que se pide de a golpes (`pulse`: la minigun, bala por bala) después del último (s).
+const PULSE_TIME := 0.15
 
 var mech: Mech = null
 ## Cuántas veces sonó cada evento en esta máquina (los golpes y los loops al prenderse; para las pruebas).
@@ -87,10 +105,17 @@ var _grounded_was := true
 var _falling := 0.0
 var _dashing := false
 var _stunned_was := false
-var _shield_was := false
 var _jam_was := false
 var _reload_was := -1
 var _reload_bad_was := false
+var _fuel_asked_was := false
+var _life_was := NAN
+var _ready_was := {}
+var _locked_was: Node3D = null
+## Por pie, si estaba en el aire (ver `_steps`).
+var _foot_flying: Array[bool] = []
+## evento → [cuándo (ms), dónde] de su último golpe (ver `pulse`).
+var _pulses := {}
 
 
 ## LA DE LA MECA DE `node` (subiendo hasta ella), creada la primera vez; null si no está en una meca.
@@ -133,6 +158,12 @@ static func loose(event: StringName, point: Vector3, tree: SceneTree, pitch := 1
 
 ## Lo que dura un punto de `loose` (s): más que cualquier golpe.
 const SPOT_LIFE := 6.0
+
+
+## UN GOLPE DE UN CONTINUO (la minigun, cada bala): `event` suena seguido mientras sigan llegando, y se apaga
+## `PULSE_TIME` después del último.
+func pulse(event: StringName, at: Node3D = null) -> void:
+	_pulses[event] = [Time.get_ticks_msec(), at]
 
 
 ## UN GOLPE de `event` en el punto del mundo `point`.
@@ -189,7 +220,12 @@ func _physics_process(_delta: float) -> void:
 	if not is_instance_valid(mech):
 		return
 	_moves()
+	_steps()
+	_hurt()
 	_state(mech as ToolMech)
+	for event: StringName in _pulses:
+		var last: Array = _pulses[event]
+		hold(event, Time.get_ticks_msec() - int(last[0]) < int(PULSE_TIME * 1000.0), last[1] as Node3D)
 	_apply_holds()
 
 
@@ -201,17 +237,18 @@ func _state(tool: ToolMech) -> void:
 	if stunned and not _stunned_was:
 		play_sound(EMPTY)
 	_stunned_was = stunned
-	if tool.shield.on and not _shield_was:
-		play_sound(SHIELD_UP, _tip_node(tool.guard))
-	_shield_was = tool.shield.on
-	hold(SHIELD_HUM, tool.shield.on, _tip_node(tool.guard))
 	for arm in tool.arms:
+		if arm.charging_since >= 0.0:
+			var share := clampf((Time.get_ticks_msec() / 1000.0 - arm.charging_since) / CageHandling.current.punch_charge_time,
+				0.0, 1.0)
+			hold(PUNCH_CHARGE, true, _tip_node(arm.tip), 0.6 + 0.8 * share, 0.3 + 0.5 * share)
 		if arm.tip is SpinTip:
 			var spinner := arm.tip as SpinTip
 			hold(SPIN, spinner.spin > 0.02, spinner.forearm, 0.5 + spinner.spin, 0.3 + 0.7 * spinner.spin)
 		elif arm.tip is CannonTip:
 			var cannon := arm.tip as CannonTip
 			hold(CANNON_BEAM, cannon.beaming(), cannon.forearm)
+			hold(BEAM_HIT, cannon.beaming() and cannon.beam_hits, cannon.beam_end())
 			hold(CANNON_CHARGE, cannon.mode == CannonTip.Mode.SUPER and cannon.charge > 0.0, cannon.forearm,
 				0.6 + 0.8 * cannon.charge)
 	if tool.cabin is CageCabin and (tool.cabin as CageCabin).turret != null:
@@ -238,6 +275,34 @@ func _moves() -> void:
 		play_sound(DASH)
 	_dashing = dashing
 	hold(LEVITATE, mover.levitating)
+	# EL PROPULSOR VACÍO: pide levitar (mantiene saltar en el aire) y no le queda.
+	var fuel_asked := mech.jump and not grounded and mover.fly_fuel <= 0.0
+	if fuel_asked and not _fuel_asked_was:
+		play_sound(FUEL_EMPTY)
+	_fuel_asked_was = fuel_asked
+
+
+## LOS PASOS: cada pie que vuelve a apoyarse (la marcha común, Gait.swing_share: −1 apoyado), donde se apoya.
+func _steps() -> void:
+	if mech.legs == null or mech.legs._gait == null:
+		return
+	var gait := mech.legs._gait
+	_foot_flying.resize(gait.swing_share.size())
+	for foot in gait.swing_share.size():
+		var flying := gait.swing_share[foot] >= 0.0
+		if _foot_flying[foot] and not flying and mech.grounded and foot < gait.feet.size():
+			play_at(STEP, gait.feet[foot], randf_range(0.92, 1.08), 0.7)
+		_foot_flying[foot] = flying
+
+
+## LA MECA RECIBE UN GOLPE: su vida baja (Health; la baja quien pega).
+func _hurt() -> void:
+	var health := Health.of(mech)
+	if health == null:
+		return
+	if not is_nan(_life_was) and health.left < _life_was - 0.01:
+		play_sound(HURT, null, 1.0, clampf((_life_was - health.left) / 10.0, 0.4, 1.0))
+	_life_was = health.left
 
 
 ## El artillero: la minigun girando, trabarse y la recarga con ritmo.
@@ -255,6 +320,16 @@ func _gunner(turret: GunnerTurret) -> void:
 		play_sound(RELOAD_BAD, turret)
 	_reload_was = weapons.reloading
 	_reload_bad_was = weapons.reload_jammed
+	# UNA HABILIDAD LISTA DE NUEVO: su espera llega a cero.
+	for action: String in weapons.cooldown:
+		var ready := float(weapons.cooldown[action]) <= 0.0
+		if ready and _ready_was.get(action, true) == false:
+			play_sound(ABILITY_READY, turret)
+		_ready_was[action] = ready
+	# BLANCO FIJADO.
+	if is_instance_valid(weapons.locked) and weapons.locked != _locked_was:
+		play_sound(LOCK, turret)
+	_locked_was = weapons.locked if is_instance_valid(weapons.locked) else null
 
 
 func _tip_node(tip: ArmTip) -> Node3D:

@@ -80,6 +80,9 @@ var _trigger_was := false
 ## Lo que va de la punta de la pieza del antebrazo a la boca (m).
 var _barrel := 0.0
 var _beam: MeshInstance3D = null
+## Dónde termina el rayo, y si ahí toca algo (ver MechSounds).
+var beam_hits := false
+var _beam_end: Node3D = null
 var _ball: MeshInstance3D = null
 
 
@@ -235,6 +238,8 @@ func _beam_step(delta: float) -> void:
 		var body := EnergyBolt.struck(hit_info["collider"])
 		if body != null:
 			EnergyBolt.lands(body, way * BEAM_PUSH * delta, end, "rayo")
+	beam_hits = not hit_info.is_empty()
+	beam_end().global_position = end
 	var length := from.origin.distance_to(end)
 	_beam.global_transform = Transform3D(from.basis * Basis.from_scale(Vector3(1.0, 1.0, length)), (from.origin + end) * 0.5)
 	_kick(randf_range(-6.0, 6.0))
@@ -243,6 +248,15 @@ func _beam_step(delta: float) -> void:
 ## SI EL RAYO ESTÁ SALIENDO (lo que se ve; ver MechSounds).
 func beaming() -> bool:
 	return _beam != null and _beam.visible
+
+
+## DÓNDE TERMINA EL RAYO: un punto que lo sigue (se arma la primera vez).
+func beam_end() -> Node3D:
+	if _beam_end == null:
+		_beam_end = Node3D.new()
+		_beam_end.name = "Fin del rayo"
+		add_child(_beam_end)
+	return _beam_end
 
 
 func is_weapon() -> bool:

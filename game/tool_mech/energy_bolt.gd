@@ -43,6 +43,8 @@ func _physics_process(delta: float) -> void:
 		if body != null:
 			lands(body, -global_basis.z * push, hit["position"], "cañón")
 		flash(get_parent(), hit["position"], radius * 3.0, color)
+		MechSounds.loose(MechSounds.CANNON_HIT, hit["position"], get_tree(), clampf(0.6 / radius, 0.5, 1.6),
+			clampf(radius * 1.5, 0.4, 1.0))
 		queue_free()
 		return
 	global_position = to

@@ -74,6 +74,9 @@ var forearm_bone: CustomBone = null
 ## La postura pedida, y la piña que está tirando.
 var stance := Stance.COVER
 var punching := Punch.NONE
+## DESDE CUÁNDO SE ESTÁ CARGANDO UNA PIÑA (s, Time.get_ticks_msec / 1000; −1, no): lo pone quien la carga (el mando de su
+## brazo, CageBoards) y lo lee MechSounds.
+var charging_since := -1.0
 
 var _clock := 0.0
 var _from := Vector3.ZERO
@@ -142,6 +145,7 @@ func punch(kind: Punch) -> bool:
 	_from = _wanted()
 	punching = kind
 	_clock = 0.0
+	MechSounds.hit(self, MechSounds.SWING, tip.forearm if tip != null else null, randf_range(0.9, 1.1) / maxf(punch_pace, 0.5))
 	_aimed = []
 	_struck.clear()
 	last_hit_speed = 0.0

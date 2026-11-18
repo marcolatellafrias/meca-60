@@ -47,6 +47,7 @@ func _physics_process(delta: float) -> void:
 			break
 		var at: Vector3 = hit["position"]
 		GunnerFx.sparks(at, 0.35)
+		MechSounds.loose(MechSounds.BULLET_HIT, at, get_tree(), randf_range(0.85, 1.15), 0.5)
 		var body := EnergyBolt.struck(hit["collider"])
 		if body != null:
 			if not ProjectileField.is_client(self):

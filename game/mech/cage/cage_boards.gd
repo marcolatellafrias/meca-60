@@ -307,9 +307,11 @@ static func _punch(mech: CageMech, pressed: bool, state: Dictionary) -> void:
 		return
 	if pressed:
 		state["punch_from"] = Time.get_ticks_msec() / 1000.0
+		mech.melee.charging_since = state["punch_from"]
 		return
 	var from: float = state["punch_from"]
 	state["punch_from"] = -1.0
+	mech.melee.charging_since = -1.0
 	if from < 0.0 or not mech.energy.able():
 		return
 	var knobs := CageHandling.current

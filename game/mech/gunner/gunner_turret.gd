@@ -202,7 +202,9 @@ func _bullet(at: Transform3D, pierce: bool, power: float) -> void:
 	bullet.pierce = pierce
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_transform = at
-	MechSounds.hit(self, MechSounds.MINIGUN_SHOT, self, randf_range(0.95, 1.05), 0.6)
+	var sounds_node := MechSounds.of(self)
+	if sounds_node != null:
+		sounds_node.pulse(MechSounds.MINIGUN_FIRE, self)
 	GunnerFx.muzzle(at.origin, 0.12)
 
 
