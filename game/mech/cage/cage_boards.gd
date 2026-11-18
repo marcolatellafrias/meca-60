@@ -17,6 +17,8 @@ extends RefCounted
 ##         perillas, en el F7: CageHandling).
 ##       — EL ESCUDO (ShieldTip): mientras se mantiene, levantado; frena lo que viene de frente (MechShield,
 ##         ToolMech.block_hit). El canje: un arma menos.
+##       — EL TALADRO O LA SIERRA (SpinTip): mientras se mantiene, toma velocidad gastando energía; al soltar, el
+##         directo, más fuerte cuanto más giraba. *Hasta el 18/11/2026 no se cargaban desde acá y nunca giraban.*
 ##   · DOS PANTALLAS EN BRAZOS FIJOS (ScreenArmArchetype), arriba en la vista del que maneja: la ENERGÍA de la meca y la
 ##     CARGA de lo que se está manteniendo («que esté al máximo… hasta que estás cargando… al máximo»).
 ##   ARRIBA, EN EL POZO: LA LOCOMOCIÓN (lo piden a MechCockpit, que lee la meca con las reglas de energía de siempre).
@@ -279,6 +281,14 @@ static func _arm_use(from: Node, side: float, pressed: bool, state: Dictionary) 
 	elif arm.tip is ShieldTip:
 		state["shield"] = pressed
 		cockpit.shield = pressed
+	elif arm.tip is SpinTip:
+		# EL TALADRO Y LA SIERRA: mantenido, toma velocidad (gastando energía); al soltar, el directo (SpinTip).
+		var spinner := arm.tip as SpinTip
+		cockpit.spinning.erase(spinner)
+		if pressed:
+			cockpit.spinning.append(spinner)
+		else:
+			spinner.strike()
 	elif arm == mech.melee:
 		_punch(mech, pressed, state)
 
@@ -312,6 +322,10 @@ static func _charge(mech: CageMech, state: Dictionary) -> float:
 	var from: float = state["punch_from"]
 	if from >= 0.0:
 		return (Time.get_ticks_msec() / 1000.0 - from) / CageHandling.current.punch_charge_time
+	if mech != null:
+		for arm in mech.arms:
+			if arm.tip is SpinTip and (arm.tip as SpinTip).charging:
+				return (arm.tip as SpinTip).spin
 	if mech != null and mech.cannon != null and mech.cannon.mode == CannonTip.Mode.SUPER:
 		return mech.cannon.charge
 	return 0.0

@@ -20,3 +20,5 @@ var crouch := false
 var shield := false
 ## El gatillo del cañón (el mando del cañón, clic izquierdo mantenido): lo que hace, según su modo (CannonTip).
 var fire := false
+## Lo que gira que se está cargando desde adentro (el mando de su brazo, clic izquierdo mantenido; SpinTip).
+var spinning: Array[SpinTip] = []

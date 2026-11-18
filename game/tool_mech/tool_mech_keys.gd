@@ -82,8 +82,13 @@ func read() -> void:
 	# escudo, nada).
 	tool.shield.held = (mine and Input.is_physical_key_pressed(KEY_Q)) or (not keyed and cockpit.shield)
 	# LOS BRAZOS.
-	if tool.drill != null:
-		tool.drill.charging = mine and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)
+	# Lo que gira: el clic derecho poseyéndola (el primero, `drill`), o el mando de su brazo desde adentro (cada uno el
+	# suyo). *Hasta el 18/11/2026 esto lo apagaba cada cuadro sin nadie poseyéndola, y desde adentro nunca giraba.*
+	for arm in tool.arms:
+		if arm.tip is SpinTip:
+			var spinner := arm.tip as SpinTip
+			spinner.charging = (mine and spinner == tool.drill and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)) \
+				or (inside and cockpit.spinning.has(spinner))
 	if tool.cannon == null:
 		return
 	# El gatillo: la F poseyéndola, o el mando del cañón desde adentro (su energía la cuida el cañón).
