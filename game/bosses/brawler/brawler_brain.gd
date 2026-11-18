@@ -218,6 +218,13 @@ func world() -> Node:
 ## UN GOLPE AL BLANCO: el daño y la reacción, empujado `distance` m hacia `away`; `at`, dónde pegó. Devuelve si entró
 ## (tirado o agarrado no se le puede pegar).
 func strike(damage: float, what: String, kind: HitReaction.Kind, away: Vector3, push_distance: float, at: Vector3) -> bool:
+	var reaction := HitReaction.of(target)
+	if reaction.untouchable():
+		return false
+	# El escudo: se le pregunta una vez por golpe; si lo frenó, el golpe queda usado (no se reintenta).
+	if reaction.blocks(at):
+		hit_once = true
+		return false
 	return HitReaction.land(target, damage, what, kind, away, push_distance, at)
 
 
@@ -250,8 +257,9 @@ func hit_with(parts: Array, grow: float, damage: float, what: String, kind: HitR
 			for along in 7:
 				var point := from.lerp(to, along / 6.0)
 				if touches_target(point, float(now[index][2]) * grow):
-					hit_once = strike(damage, what, kind, away, push_distance, point)
-					return hit_once
+					var landed := strike(damage, what, kind, away, push_distance, point)
+					hit_once = hit_once or landed
+					return landed
 	return false
 
 

@@ -112,6 +112,11 @@ Son tres juegos distintos, y un poder elige una o las mezcla:
 - Un ataque nuevo es **un `BossPower` nuevo** en `game/bosses/powers/`, no código en la cabeza de un jefe.
 - Para pegar, usar **una de las tres maneras de arriba**; no escribir otra cuenta de «si lo toca» ni otra marca.
 - Lo que el golpe le hace al que recibe va **siempre por `HitReaction`** (`b.strike`).
+- **El escudo** (18/11/2026; el de la meca, de Cabinas): `b.strike` le pregunta **una sola vez por golpe**, con dónde
+  pega, si algo suyo lo frena (`HitReaction.blocks(at)` → `BalanceBody.block_hit(at)`; el escudo muestra el destello y
+  la onda). Si lo frenó, el golpe queda usado (`hit_once`): no se reintenta. Las ondas, las piedras y las bombas, una vez
+  cada una; el agarre, al tocar la mano (vuelve sin agarrar). Lo prueba `tests/boss_shield_check.tscn` (cada ataque,
+  sin escudo y con: con escudo, 0 de vida).
 - Un tramo de la pelea con otras reglas es **un `BossMode`**, no un caso especial.
 - **Nada figurativo en las reglas**: un poder no pide «un horno» ni «una mano»; elige un punto, una zona o una pose de
   las que el cuerpo ofrece por nombre. Lo único que se pide es físico (suelo).

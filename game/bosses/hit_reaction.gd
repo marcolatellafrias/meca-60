@@ -90,6 +90,13 @@ func untouchable() -> bool:
 	return state != State.FREE or (_body != null and _body.untouchable())
 
 
+## SI ALGO SUYO FRENA EL GOLPE (el escudo de la meca: BalanceBody.block_hit). Se pregunta UNA SOLA VEZ POR GOLPE, antes
+## de pegar; `at`, dónde pega (el mundo; la onda del escudo sale de ahí). True: el golpe se frenó (el escudo ya lo
+## mostró) y se da por usado.
+func blocks(at := Vector3.INF) -> bool:
+	return _body != null and _body.block_hit(at)
+
+
 ## Si está en el piso, agarrada o volando (el jefe no la frena: pasa).
 func down() -> bool:
 	return state != State.FREE or (_body != null and _body.state != BalanceBody.State.STANDING)

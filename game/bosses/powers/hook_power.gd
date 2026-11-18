@@ -84,7 +84,12 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 			b.stage = "agarre: ¡la mano!"
 			boss.aim_yaw = atan2(-hand.way.x, -hand.way.z)
 			boss.move = Vector2.ZERO
-			if hand.touches(b.ground(), b.half_width()) and not HitReaction.of(b.target).untouchable():
+			var touched := hand.touches(b.ground(), b.half_width()) and not HitReaction.of(b.target).untouchable()
+			if touched and HitReaction.of(b.target).blocks(hand.tip()):
+				# El escudo la frenó: la mano vuelve y el agarre queda usado.
+				hand.reel()
+				b.next(4)
+			elif touched:
 				hits += 1
 				hand.reel()
 				var reaction := HitReaction.of(b.target)

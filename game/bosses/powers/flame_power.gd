@@ -95,9 +95,10 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 			boss.aim_yaw = _yaw
 			flame.blow(boss.point(from_point), waist, true)
 			if not b.hit_once and flame.covers(b.ground(), b.half_width()):
-				b.hit_once = b.strike(damage, "el lanzallamas", HitReaction.Kind.PUSH, b.to_target(), push,
+				var landed := b.strike(damage, "el lanzallamas", HitReaction.Kind.PUSH, b.to_target(), push,
 					b.ground() + Vector3.UP * 8.0)
-				hits += int(b.hit_once)
+				b.hit_once = b.hit_once or landed
+				hits += int(landed)
 			if b.clock >= burn:
 				flame.blow(boss.point(from_point), waist, false)
 				_left -= 1
