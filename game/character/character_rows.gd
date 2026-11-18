@@ -2,12 +2,13 @@ class_name CharacterRows
 extends RefCounted
 
 ## LAS FILAS DEL SANDBOX DE LOS PERSONAJES (ver SandboxRow, docs/technical/sandbox.md): los seis arquetipos y los experimentos de
-## locomoción, con las formas de cabeza al final (HeadFormsArchetype). El panel de locomoción (F3: lo de cada arquetipo y lo de todos) está en las dos.
+## locomoción; y las formas de cabeza, con su editor (HeadFormsArchetype, HeadFormsPanel). El panel de locomoción (F3: lo de cada arquetipo y lo de todos) está en las dos.
 
 static func rows() -> Array[SandboxRow]:
 	return [
 		SandboxRow.new(SandboxSuper.Id.CHARACTERS, "Personajes") 			.add(SandboxRow.Build.NEAR, PeopleArchetype.catalogue()) 			.panel(KEY_F3, TUNER, _tuner("Personajes")),
-		SandboxRow.new(SandboxSuper.Id.CHARACTERS, "Locomoción") 			.add(SandboxRow.Build.NEAR, LocomotionLabArchetype.catalogue()) 			.add(SandboxRow.Build.NEAR, HeadFormsArchetype.catalogue()) 			.panel(KEY_F3, TUNER, _tuner("Locomoción")),
+		SandboxRow.new(SandboxSuper.Id.CHARACTERS, "Cabezas") 			.add(SandboxRow.Build.NEAR, HeadFormsArchetype.catalogue()) 			.panel(KEY_F3, "las formas de cabeza: editar, agregar, el aplanamiento de todas", HeadFormsPanel.new()),
+		SandboxRow.new(SandboxSuper.Id.CHARACTERS, "Locomoción") 			.add(SandboxRow.Build.NEAR, LocomotionLabArchetype.catalogue()) 			.panel(KEY_F3, TUNER, _tuner("Locomoción")),
 	]
 
 

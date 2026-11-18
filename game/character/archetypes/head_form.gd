@@ -20,7 +20,7 @@ extends Resource
 ## Es la primera parte del plan del usuario: hacer acá unas cuantas formas que le gusten; después, ver en
 ## cuántos cortes se descomponen y modelar el pelo sobre eso (quizás exportando la forma a Blender, con los cortes como
 ## blend shapes). Es LA cabeza del personaje desde el 15/10/2026 (la pila de vueltas se borró): cada arquetipo canónico
-## elige una forma (ver CharacterLook.head_form), y se edita en la fila «Formas de cabeza» (ver HeadFormArchetype).
+## elige una forma (ver CharacterLook.head_form), y se edita en la fila «Cabezas» del sandbox (ver HeadFormsPanel).
 
 ## Los cortes de plantilla y dónde caen por defecto.
 const CUTS := 7
@@ -45,9 +45,8 @@ const DOME_RINGS := 2
 ## está la línea.
 @export var flat_front := false
 ## ── LA CARA APLANADA ────────────────────────────────────────────────────────────────────────────
-## Cuánto se aplana ADELANTE cada anillo, de 0 —el círculo— a 1 —el frente casi recto de lado a lado—: los rasgos van
-## pintados en un paño al frente (ver FacePlane), y como en los Mii o en Animal Crossing se leen mejor sobre una cara
-## plana. Atrás y a los costados el anillo sigue siendo el círculo, y el punto de adelante no se mueve (ver
+## Cuánto se aplana ADELANTE cada anillo, de 0 —el círculo— a 1 —el frente casi recto de lado a lado—: los rasgos van a
+## ir pintados al frente, y como en los Mii o en Animal Crossing se leen mejor sobre una cara plana. Atrás y a los costados el anillo sigue siendo el círculo, y el punto de adelante no se mueve (ver
 ## `ring_point`). Es el horizontal de `flat_front`, que es el vertical.
 ##
 ## ES UNA PARA TODAS LAS CABEZAS (ver HeadForms.face_flat, lo pidió el usuario, 16/10/2026): no se guarda con la

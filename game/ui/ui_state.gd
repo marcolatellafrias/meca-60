@@ -23,10 +23,8 @@ const VIEW := "view"
 const TUNER := "tuner"
 ## EL PERSONAJE CANÓNICO DE LA PARCELA: la forma de su cabeza (F4 en la fila Personajes, ver CharacterLookPanel).
 const CHARACTER_LOOK := "character_look"
-## LAS FORMAS DE CABEZA del sistema nuevo, también de F1, en su fila (ver HeadFormTuner).
+## LAS FORMAS DE CABEZA: el F3 de la fila «Cabezas» (ver HeadFormsPanel).
 const HEAD_FORMS := "head_forms"
-## LA CARA DE UNA FORMA DE CABEZA, F2 en la misma fila (ver HeadFaceTuner): dónde va la boca.
-const HEAD_FACE := "head_face"
 ## LOS ANCHOS DE CALLE DE LA MAQUETA (F1 en su fila del sandbox, ver StreetTuner).
 const STREETS := "streets"
 ## LA LOCOMOCIÓN DE CADA ARQUETIPO: caminata, pose, movimiento, equilibrio y salto (F3 en la fila Personajes y F2 en los

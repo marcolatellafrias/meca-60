@@ -1,26 +1,35 @@
 class_name HeadForms
 extends Resource
 
-## LAS FORMAS DE CABEZA del sistema nuevo (ver HeadForm): unas ranuras que el usuario esculpe en la fila «Formas
-## de cabeza» del sandbox, guardadas ENTERAS en `res://` (como los aspectos, ver CharacterLooks): el defecto del código
-## es sólo de dónde arranca una ranura que nadie tocó.
+## LAS FORMAS DE CABEZA (ver HeadForm): unas ranuras que el usuario esculpe en la fila «Cabezas» del sandbox (F3, ver
+## HeadFormsPanel), guardadas ENTERAS en `res://`: la receta del código (`CHOSEN`) es sólo de dónde arranca una ranura
+## que nadie tocó. Las primeras son las de las recetas; las que se agregan desde el panel van después (`add`), y ésas se
+## pueden borrar (`remove`).
 ##
 ## ⚠ El archivo lo escribe el sandbox cuando él guarda: es suyo, no se commitea a mano.
 
 static var path := "res://game/character/archetypes/head_forms.tres"
 
-## CUÁNTAS RANURAS hay: una por forma elegida (ver CHOSEN). Una parcela por ranura.
-const SLOTS := 10
+## CUÁNTAS RANURAS hay: las de las recetas (ver CHOSEN) y las que se agregaron después, SEGUIDAS. Una guardada más
+## lejos, con huecos antes, no cuenta (quedó una de cuando había 25 formas, antes de renumerarlas: no se muestra ni se
+## toca).
+static func count() -> int:
+	var most := CHOSEN.size()
+	while table().by_slot.has(most):
+		most += 1
+	return most
 
 ## Ranura (int) → HeadForm.
 @export var by_slot: Dictionary = {}
 ## LA CARA APLANADA DE TODAS LAS CABEZAS (ver HeadForm.face_flat): una sola, para todos los personajes, y no una por
-## forma (lo pidió el usuario, 16/10/2026). Se mueve con el F1 de la fila «Formas de cabeza» o con U y J, se ve
-## en el momento y se guarda con «Guardar».
+## forma (lo pidió el usuario, 16/10/2026). Se mueve en el F3 de la fila «Cabezas» (pestaña Todas), se ve en el
+## momento y se guarda con «Guardar».
 @export_range(0.0, 1.0, 0.05) var face_flat := 0.0
 
 ## La capa de prueba: lo que el panel está tocando y todavía no se guardó (ranura → HeadForm).
 static var preview: Dictionary = {}
+## La que se está editando en el panel (−1: ninguna): la vitrina la pinta de otro color (ver HeadFormsArchetype).
+static var editing := -1
 
 static var _loaded: HeadForms = null
 static var _tried := false
@@ -41,6 +50,8 @@ static func form_for(slot: int) -> HeadForm:
 	var found: HeadForm = preview.get(slot) as HeadForm
 	if found == null:
 		found = table().by_slot.get(slot) as HeadForm
+	if found == null and slot >= CHOSEN.size():
+		found = code_form(0)
 	var out := found.copy() if found != null else code_form(slot)
 	out.ensure_cuts()
 	return out
@@ -66,6 +77,49 @@ static func forget(slot: int) -> bool:
 	var all := table()
 	all.by_slot.erase(slot)
 	preview.erase(slot)
+	return ResourceSaver.save(all, path) == OK
+
+
+## EL APLANAMIENTO, COMO ESTÁ GUARDADO (deshace lo probado en el panel).
+static func reload_face_flat() -> void:
+	var saved: HeadForms = null
+	if ResourceLoader.exists(path):
+		saved = ResourceLoader.load(path, "HeadForms", ResourceLoader.CACHE_MODE_IGNORE) as HeadForms
+	table().face_flat = saved.face_flat if saved != null else HeadForms.new().face_flat
+
+
+## GUARDA LA TABLA como está (lo de todas: el aplanamiento de la cara).
+static func store_table() -> bool:
+	return ResourceSaver.save(table(), path) == OK
+
+
+## UNA FORMA NUEVA al final, copia de `from`, y guardada. Devuelve su ranura.
+static func add(from: HeadForm) -> int:
+	var slot := count()
+	var form := from.copy()
+	form.name = "nueva %d" % (slot + 1)
+	store(slot, form)
+	return slot
+
+
+## SI SE PUEDE BORRAR: sólo las agregadas (las de las recetas se olvidan: vuelven a su receta).
+static func removable(slot: int) -> bool:
+	return slot >= CHOSEN.size()
+
+
+## BORRA UNA AGREGADA y corre las de después un lugar, así no quedan huecos.
+static func remove(slot: int) -> bool:
+	if not removable(slot):
+		return false
+	var all := table()
+	var last := count() - 1
+	for at in range(slot, last):
+		if all.by_slot.has(at + 1):
+			all.by_slot[at] = all.by_slot[at + 1]
+		else:
+			all.by_slot.erase(at)
+	all.by_slot.erase(last)
+	preview.clear()
 	return ResourceSaver.save(all, path) == OK
 
 

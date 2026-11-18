@@ -45,9 +45,14 @@ elige un arquetipo (caminata, pose, movimiento, equilibrio, salto y cuerpo) o **
 aire, el resorte de los golpes: `LocomotionCommonKnobs`, que era el F1 aparte), con las mismas pestañas de tema.
 «Guardar» y «Volver a lo guardado» actúan sobre lo elegido; «Olvidar lo guardado» vuelve al código, sólo por arquetipo.
 
-**Las formas de cabeza** (17/11/2026): al final de la fila Locomoción, una parcela con las diez ranuras de `HeadForms`
-en fila, numeradas, × 3, con su nombre y los arquetipos que la usan (`HeadFormsArchetype`). Sólo para mirar; prueba con
-captura: `tests/head_forms_look.tscn`.
+**Las formas de cabeza, en su fila «Cabezas»** (17 y 18/11/2026). El sistema es el de character-parametric, vivo: cada
+forma es una receta de números (`HeadForm`: dos tapas con diámetro, corrimiento y domo, y siete cortes de plantilla que
+se prenden de a uno; los anillos son círculos, el frente plano los alinea con la tapa de abajo y el aplanamiento de la
+cara es uno para todas) y la malla se arma de esos números (8 lados, sombreado suave). La parcela muestra todas, × 3,
+con los arquetipos que usan cada una (`HeadFormsArchetype`), y el F3 las edita en vivo (`HeadFormsPanel`): pestañas
+Forma, Cortes y Todas (el aplanamiento), «+ nueva», Guardar, Volver a lo guardado, Olvidar (vuelve a su receta) y Borrar
+(sólo las agregadas). Se guardan en `head_forms.tres` (del usuario). Pruebas con captura: `tests/head_forms_look.tscn`,
+`tests/head_forms_panel_look.tscn` (no guarda nada).
 
 **El movimiento: velocidad máxima y cuánto tarda en llegar** (17/11/2026, el usuario: «un movimiento puramente
 cinemático… sin mecánica de estamina, y solamente con el sistema de velocidad máxima y cuánto tiempo tarda en llegar»).
