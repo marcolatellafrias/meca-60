@@ -123,7 +123,7 @@ func _build() -> void:
 	var gun := Vector3(0.82, 0.9, PIVOT.z)
 	_arm(PIVOT + Vector3(BOLT_X + 0.08, 0.0, 0.0), gun + Vector3(-0.04, -0.16, 0.08), 1.0)
 	_minigun(_holder(gun))
-	var pod := Vector3(-0.98, 0.98, PIVOT.z)
+	var pod := Vector3(-0.8, 0.98, PIVOT.z)
 	_arm(PIVOT + Vector3(-BOLT_X - 0.08, 0.0, 0.0), pod + Vector3(0.08, -0.26, 0.0), -1.0)
 	_missiles(_holder(pod), 3, 2, 0.11)
 	_yoke()
