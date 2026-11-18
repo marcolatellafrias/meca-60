@@ -35,6 +35,7 @@ static func catalogue() -> Array[Dictionary]:
 		{"name": "Destello de explosión", "kind": ParticleMeshes.Kind.SPHERE, "make": explosion_flash, "burst": true},
 		{"name": "Chispas de explosión", "kind": ParticleMeshes.Kind.LINE, "make": explosion_sparks, "burst": true},
 		{"name": "Polvo de golpe", "kind": ParticleMeshes.Kind.SPHERE, "make": impact_dust, "burst": true},
+		{"name": "Polvo de aterrizar", "kind": ParticleMeshes.Kind.SPHERE, "make": landing_dust, "burst": true},
 		{"name": "Vapor", "kind": ParticleMeshes.Kind.SPHERE, "make": steam},
 		{"name": "Humo de chimenea", "kind": ParticleMeshes.Kind.SPHERE, "make": chimney_smoke},
 		{"name": "Chispazo", "kind": ParticleMeshes.Kind.LINE, "make": zap, "burst": true},
@@ -266,6 +267,51 @@ static func impact_dust(kind := ParticleMeshes.Kind.SPHERE, size := 1.0) -> GPUP
 	process.color_initial_ramp = _tones(DUST_TONES)
 	process.alpha_curve = _curve([Vector2(0.0, 0.0), Vector2(DUST_FADE_IN, 1.0), Vector2(1.0, 0.0)])
 	return _burst(_emitter(kind, DUST_AMOUNT, DUST_LIFETIME, process))
+
+
+# ── POLVO DE ATERRIZAR ───────────────────────────────────────────────────────────────────────────
+
+## LO QUE LEVANTA ALGO PESADO QUE CAE AL PISO (18/11/2026, módulo Jefes; la meca cuando cae fuerte: ver
+## KinematicMover). El usuario: «partículas de humo… una variación de las que tenemos… con el mismo ethos». Es el polvo
+## de golpe con otros números, y lo que lo hace OTRO se lee a simple vista: sale EN ANILLO, A RAS DEL PISO Y PARA AFUERA
+## (lo empuja lo que cayó, no sale de un punto), RUEDA, se frena y recién ahí sube un poco, y es MÁS GRANDE y dura más.
+## Con `size`, el ancho de lo que cayó: el anillo, las bolas y la velocidad.
+const LANDING_AMOUNT := 64
+const LANDING_LIFETIME := 1.5
+## Para afuera (m/s, con size 1) y cuánto sube al frenarse (m/s²; poco: es tierra).
+const LANDING_SPEED := 7.0
+const LANDING_RISE := 0.5
+const LANDING_SIZE_MIN := 0.35
+const LANDING_SIZE_MAX := 0.75
+const LANDING_GROWTH := 3.0
+## El anillo de donde nace (m, con size 1).
+const LANDING_RING := 0.6
+const LANDING_DAMPING_MIN := 4.0
+const LANDING_DAMPING_MAX := 7.0
+## Los tonos del polvo de golpe, más densos: es mucha tierra junta.
+const LANDING_TONES: Array[Color] = [Color(0.70, 0.66, 0.60, 0.55), Color(0.56, 0.52, 0.47, 0.7),
+	Color(0.42, 0.39, 0.36, 0.8)]
+
+
+static func landing_dust(kind := ParticleMeshes.Kind.SPHERE, size := 1.0) -> GPUParticles3D:
+	var process := _process(0.0, 0.0, LANDING_RISE, 0.0)
+	process.initial_velocity_min = 0.0
+	process.initial_velocity_max = 0.0
+	process.radial_velocity_min = LANDING_SPEED * size * 0.6
+	process.radial_velocity_max = LANDING_SPEED * size
+	process.emission_shape = ParticleProcessMaterial.EMISSION_SHAPE_RING
+	process.emission_ring_axis = Vector3.UP
+	process.emission_ring_radius = LANDING_RING * size
+	process.emission_ring_inner_radius = LANDING_RING * size * 0.7
+	process.emission_ring_height = 0.1 * size
+	_size(process, LANDING_SIZE_MIN * size, LANDING_SIZE_MAX * size, LANDING_GROWTH)
+	process.damping_min = LANDING_DAMPING_MIN * size
+	process.damping_max = LANDING_DAMPING_MAX * size
+	process.color_initial_ramp = _tones(LANDING_TONES)
+	process.alpha_curve = _curve([Vector2(0.0, 0.0), Vector2(DUST_FADE_IN, 1.0), Vector2(1.0, 0.0)])
+	var emitter := _burst(_emitter(kind, LANDING_AMOUNT, LANDING_LIFETIME, process))
+	emitter.visibility_aabb = AABB(Vector3(-16.0, -2.0, -16.0) * size, Vector3(32.0, 8.0, 32.0) * size)
+	return emitter
 
 
 # ── VAPOR ────────────────────────────────────────────────────────────────────────────────────────

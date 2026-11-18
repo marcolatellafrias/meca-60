@@ -15,7 +15,9 @@ huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la me
    más afuera girando; con topes). Cada pie pisa donde va a estar su lugar a mitad de su apoyo (el lugar al pisar más
    medio apoyo de avance, girado si gira): el apoyo queda centrado y no se corre. Quieto, cada grupo da un paso hasta su
    lugar y el ciclo se para; lo poco corrido no da pasitos (`settle_gap`). Sin BalanceBody. Trae el IK de dos huesos
-   (`Gait.knee`).
+   (`Gait.knee`). **Más de meca** (18/11/2026; el usuario: «pasos más largos o cosas así»): el paso de la jaula es el
+   doble de largo y más lento, con PISOTÓN (`stomp`: el pie llega alto y adelante y baja de golpe) y al pisar la caja
+   se hunde (`GaitSignals.plant`, `LegSettings.stomp_dip`).
    *La primera versión (el mismo día) era la regla de la jaula: un pie sale al quedar un tercio de paso atrás y pisa un
    tercio adelante. Entre un paso y el otro un tercio del ciclo nadie estaba en el aire; el usuario: «hacen paso, paso,
    pausa». Medido en el mismo recorrido: sin ningún pie en el aire el 21 % del tiempo andando, en pausas; ahora el 10 %,
@@ -44,6 +46,11 @@ huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la me
      cayendo a `land_full_speed` m/s (KinematicSettings, grupo Aterrizar; 0,6 m a 20 m/s): 0,40 m de un salto, 0,60 m
      en picada. El Luchador, `LAND_SINK` m de la maqueta a `LAND_FULL` m/s (3 a 80): 1,8 m de un salto de 12 m de
      alto, 3 de uno de 25. `tests/land_spring_movie` (el video).
+     **Con peso** (18/11/2026; el usuario: «se debería sentir más el peso»): la jaula baja de golpe hasta 0,9 m y vuelve
+     en `land_recover` s (0,8) casi sin rebote. **Y POLVO** cayendo fuerte (`dust_speed`, 16 m/s: un salto no, en picada
+     y de 15 m sí): un anillo a ras del piso que rueda para afuera (`ParticleSystems.landing_dust`, la variación del
+     polvo de golpe; fila Partículas). Lo detecta el motor: el paso en que `is_on_floor` pasa a verdadero, con la
+     velocidad de caída de antes de moverse.
    *Falta pasar sus salidas a señales de la tabla (hoy los personajes las leen por fórmula en animations.gd).*
 4. **La tabla** (`ProceduralBoneAnimator`): cada fila es (qué mueve, en qué eje, qué señal, peso, escala, curva); en
    cada pasada todo vuelve a su reposo y se le suma lo suyo. Ahora mueve **cualquier Node3D** (huesos de un personaje o

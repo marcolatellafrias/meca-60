@@ -87,8 +87,14 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 ## AL ATERRIZAR SE HUNDE (sólo dibujo: la caja baja y las piernas se doblan; el resorte vertical de HitSpring la devuelve;
 ## módulo Jefes, 18/11/2026): `land_sink` m cayendo a `land_full_speed` m/s o más (un salto cae a 2·alto/tiempo); menos
 ## rápido, menos. 0, no se hunde.
-@export_range(0.0, 3.0, 0.05) var land_sink := 0.6
+@export_range(0.0, 3.0, 0.05) var land_sink := 0.9
 @export_range(2.0, 80.0, 1.0) var land_full_speed := 20.0
+## CON PESO (el usuario: «se debería sentir más el peso»): baja de golpe y vuelve despacio, sin rebotar; en `land_recover`
+## s está de vuelta.
+@export_range(0.1, 3.0, 0.05) var land_recover := 0.8
+## EL POLVO (ParticleSystems.landing_dust, un anillo a ras del piso): cayendo a `dust_speed` m/s o más (un salto cae a
+## 2·alto/tiempo; en picada, a `dive_speed`). 0, nunca.
+@export_range(0.0, 80.0, 1.0) var dust_speed := 16.0
 
 @export_group("Agacharse")
 ## Agachada, la altura de la caja que le queda (parte de la de parada) y a qué ritmo cambia (partes por segundo).

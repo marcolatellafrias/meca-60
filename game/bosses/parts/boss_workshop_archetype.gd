@@ -47,18 +47,20 @@ func keys() -> Array[SandboxKey]:
 		_key(KEY_J, "las piernas", BossParts.Kind.LEGS, "legs"),
 		_key(KEY_K, "el torso", BossParts.Kind.TORSO, "torso"),
 		_key(KEY_L, "los brazos", BossParts.Kind.ARM, "arm"),
-		_key(KEY_H, "los brazos del segundo par", BossParts.Kind.ARM, "arm_b"),
-		_key(KEY_P, "la cabeza", BossParts.Kind.HEAD, "head"),
+		_key(KEY_H, "los brazos del segundo par", BossParts.Kind.ARM, "arm_b", SandboxKey.Weight.NORMAL),
+		_key(KEY_P, "la cabeza", BossParts.Kind.HEAD, "head", SandboxKey.Weight.NORMAL),
 	]
 
 
-## Una tecla que pasa por las piezas de `kind` y la pone en `field` de la receta.
-func _key(key: Key, label: String, kind: BossParts.Kind, field: String) -> SandboxKey:
+## Una tecla que pasa por las piezas de `kind` y la pone en `field` de la receta. Principales, las tres de siempre
+## (piernas, torso, brazos): más de tres no se distinguen (las reglas del sandbox).
+func _key(key: Key, label: String, kind: BossParts.Kind, field: String,
+		weight := SandboxKey.Weight.MAIN) -> SandboxKey:
 	var ids: Array = BossParts.of(kind).keys()
 	var names := []
 	for id: String in ids:
 		names.append(BossParts.of(kind)[id]["title"])
-	return SandboxKey.cycle(key, SandboxKey.Weight.MAIN, label, names,
+	return SandboxKey.cycle(key, weight, label, names,
 		func() -> int: return maxi(ids.find(recipe.get(field)), 0),
 		func(_parcel: SandboxParcel, index: int) -> void:
 			recipe.set(field, ids[index])

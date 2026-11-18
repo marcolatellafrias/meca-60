@@ -63,6 +63,9 @@ var body_spring := HitSpring.new()
 ## Cayendo, a cuánto bajaba en el último paso (m/s), y si estaba apoyada (para ver cuándo aterriza).
 var _fall_speed := 0.0
 var _grounded_was := true
+## El polvo al caer fuerte (se arma la primera vez) y cuántas veces salió (para las pruebas).
+var _dust: GPUParticles3D = null
+var dust_raised := 0
 var _fall_clock := 0.0
 var _cylinder := CylinderShape3D.new()
 var _holder := CollisionShape3D.new()
@@ -167,8 +170,15 @@ func step(delta: float) -> void:
 	# ATERRIZÓ: se hunde según a cuánto bajaba (el resorte vertical; ver `body_spring`).
 	body_spring.land_full_speed = k.land_full_speed
 	body_spring.land_threshold = k.land_full_speed * 0.15
+	# Con peso: vuelve en `land_recover` s, casi sin rebote (amortiguado cerca del crítico).
+	var firm := 4.5 / maxf(k.land_recover, 0.05)
+	body_spring.land_stiffness = firm * firm
+	body_spring.land_damping = 2.0 * 0.95 * firm
 	if is_on_floor() and not _grounded_was:
 		body_spring.land(_fall_speed)
+		# CAYÓ FUERTE: el polvo, a ras del piso (el piso de verdad: lo dice el motor al tocarlo).
+		if k.dust_speed > 0.0 and _fall_speed >= k.dust_speed:
+			_raise_dust(_fall_speed / k.dust_speed)
 	_grounded_was = is_on_floor()
 	body_spring.update(delta)
 	# LO QUE MIDEN LAS PIERNAS (ver BodyLegs): el apoyo es el piso debajo, y va a la velocidad de costado.
@@ -359,6 +369,20 @@ func speed() -> float:
 func dash_ready() -> bool:
 	return body.state == BalanceBody.State.STANDING and _shove_left <= 0.0 and _dash_left <= 0.0 \
 			and body.move.length() > 0.1 and dash_fuel >= body.kinematic_settings().dash_cost and _dash_wait <= 0.0
+
+
+## EL POLVO AL CAER FUERTE (ParticleSystems.landing_dust): un anillo del ancho de la caja, en el piso debajo; más
+## fuerte (`strength`, 1 en el umbral), más polvo.
+func _raise_dust(strength: float) -> void:
+	if _dust == null:
+		_dust = ParticleSystems.landing_dust(ParticleMeshes.Kind.SPHERE, maxf(body.size.x, body.size.z) * 0.5)
+		_dust.name = "PolvoDeAterrizar"
+		_dust.top_level = true
+		add_child(_dust)
+	_dust.global_position = global_position + Vector3.UP * 0.1
+	_dust.amount_ratio = clampf(0.5 + 0.5 * strength, 0.5, 1.0)
+	_dust.restart()
+	dust_raised += 1
 
 
 ## LO QUE QUEDA DEBAJO de la caja cuando baja (agachándose, o cayendo): se achata.
