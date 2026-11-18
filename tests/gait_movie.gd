@@ -3,7 +3,8 @@ extends Node
 ## LA MARCHA DE 4 Y 6 PATAS (con ventana, unos 25 segundos de video): dos cuerpos de arcilla, uno de CUATRO patas (pisan
 ## las diagonales) y uno de SEIS (el trípode), con la marcha común (Gait) y el IK común (Gait.knee), hacen el mismo
 ## recorrido: arrancar, doblar andando, frenar, ir de costado, girar en el lugar, correr y frenar. Una grilla en el piso
-## (cada 2 m) para ver si los pies patinan. Imprime cuántos pasos dio cada uno. Se graba con --write-movie:
+## (cada 2 m) para ver si los pies patinan. Imprime cuántos pasos dio cada uno, qué parte del tiempo andando no tenía
+## ningún pie en el aire (la pausa que vio el usuario: «paso, paso, pausa») y lo más que se corrió un pie apoyado. Se graba con --write-movie:
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/patas.avi --fixed-fps 30 res://tests/gait_movie.tscn
 
 ## El recorrido: [texto, s, adelante m/s, de costado m/s, giro °/s].
@@ -48,9 +49,22 @@ func _ready() -> void:
 			var velocity := turn * Vector3(float(leg[3]), 0.0, -float(leg[2]))
 			# Cada uno anda solo, con su giro y su velocidad: dobla y gira en el lugar sobre su medio.
 			var middle := Vector3.ZERO
+			var walking := velocity.length() > 0.1 or float(leg[4]) != 0.0
 			for body in _bodies:
 				body["at"] = (body["at"] as Vector3) + velocity * delta
+				var gait: Gait = body["gait"]
+				var before := gait.feet.duplicate()
+				var was_down := gait.swing_share.duplicate()
 				_move(body, Transform3D(turn, body["at"]), velocity, delta)
+				var flying := false
+				for foot in gait.feet.size():
+					flying = flying or gait.swing_share[foot] >= 0.0
+					if was_down[foot] < 0.0 and gait.swing_share[foot] < 0.0:
+						body["slip"] = maxf(body["slip"], (gait.feet[foot] - before[foot]).length())
+				if walking:
+					body["walking"] += delta
+					if not flying:
+						body["paused"] += delta
 				middle += (body["at"] as Vector3) / _bodies.size()
 			# La cámara, atrás y arriba de los dos, sin girar con ellos (para ver el giro).
 			middle += Vector3.UP * 1.5
@@ -61,7 +75,9 @@ func _ready() -> void:
 			await get_tree().physics_frame
 			clock += delta
 	for body in _bodies:
-		print("%s: %d pasos" % [body["title"], (body["gait"] as Gait).steps_taken])
+		print("%s: %d pasos · andando, sin ningún pie en el aire el %.0f %% del tiempo · un pie apoyado se corrió %.3f m" % [
+			body["title"], (body["gait"] as Gait).steps_taken, 100.0 * body["paused"] / maxf(body["walking"], 0.01),
+			body["slip"]])
 	get_tree().quit()
 
 
@@ -92,7 +108,7 @@ func _build(title: String, offset: Vector3, size: Vector3, height: float, rows: 
 	var root := Transform3D(Basis(), offset)
 	body.global_transform = root
 	gait.place(root)
-	return {"title": title, "body": body, "gait": gait, "hips": hips, "parts": parts, "at": offset,
+	return {"title": title, "body": body, "gait": gait, "hips": hips, "parts": parts, "at": offset, "walking": 0.0, "paused": 0.0, "slip": 0.0,
 		"upper": upper, "lower": lower}
 
 

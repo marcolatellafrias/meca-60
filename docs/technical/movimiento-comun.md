@@ -8,13 +8,21 @@ El usuario: «los personajes tienen un sistema en el que abstrae varios ciclos�
 huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la meca… y de paso así compartimos código».
 
 ## Las piezas (todas son DIBUJO: no se sincronizan, cada máquina las saca de lo que viaja)
-1. **La marcha** (`Gait`, game/common/, 18/11/2026): cuándo y adónde pisa cada pata, para 2, 4 o 6. Es la regla de
-   la jaula (BodyLegs, «cada pie tiene su lugar»: sale a un tercio de paso atrás, pisa un tercio adelante, largo fijo)
-   llevada a N patas y a GRUPOS que pisan juntos (`Gait.pattern`: dos, de a una; cuatro, las diagonales; seis, el
-   trípode) y se turnan. Sin BalanceBody: se le da dónde está el cuerpo y a qué velocidad va, y da los pies y cuánto
-   lleva cada paso (`swing_share`). Trae el IK de dos huesos (`Gait.knee`). `tests/gait_movie` (el video: un cuerpo de
-   4 y uno de 6, arrancar, doblar, frenar, de costado, girar en el lugar, correr). *Falta: usarla en los jefes de patas
-   (BossParts «cuatro») y, si las armas quieren, en la jaula (BodyLegs con dos caderas); «recoger» (dash, aire).*
+1. **La marcha** (`Gait`, game/common/, 18/11/2026): cuándo y adónde pisa cada pata, para 2, 4 o 6. **Un ciclo
+   continuo**, como se hace en todos lados: cada grupo de patas (`Gait.pattern`: dos, de a una; cuatro, las
+   diagonales; seis, el trípode) tiene su desfase y se reparten el ciclo (`swing_part`: apenas uno pisa, sale el otro,
+   con un instante de todos apoyados). El ciclo avanza con lo que anda (uno por `stride` m, o lo que recorre la pata de
+   más afuera girando; con topes). Cada pie pisa donde va a estar su lugar a mitad de su apoyo (el lugar al pisar más
+   medio apoyo de avance, girado si gira): el apoyo queda centrado y no se corre. Quieto, cada grupo da un paso hasta su
+   lugar y el ciclo se para; lo poco corrido no da pasitos (`settle_gap`). Sin BalanceBody. Trae el IK de dos huesos
+   (`Gait.knee`).
+   *La primera versión (el mismo día) era la regla de la jaula: un pie sale al quedar un tercio de paso atrás y pisa un
+   tercio adelante. Entre un paso y el otro un tercio del ciclo nadie estaba en el aire; el usuario: «hacen paso, paso,
+   pausa». Medido en el mismo recorrido: sin ningún pie en el aire el 21 % del tiempo andando, en pausas; ahora el 10 %,
+   parejo entre paso y paso. LAS PIERNAS DE LA JAULA (BodyLegs) TIENEN ESA MISMA PAUSA.*
+   `tests/gait_movie` (el video: un cuerpo de 4 y uno de 6, arrancar, doblar, frenar, de costado, girar en el lugar,
+   correr; imprime la pausa y lo que se corre un pie apoyado). *Falta: usarla en los jefes de patas (BossParts
+   «cuatro») y en la jaula (BodyLegs con dos caderas, con las armas); «recoger» (dash, aire).*
 2. **Las señales** (`MotionSignals`, game/common/): lo que lee la tabla. La base común; cada cuerpo las calcula a su
    manera (los personajes, `LocomotionSignals`, de sus dos pies). Normalizadas por el largo de pierna. **Hecho.**
 3. **Los resortes** (`HitSpring`, game/common/, lo sacó Personajes de su cápsula): golpe y aterrizaje. **Hecho.**
