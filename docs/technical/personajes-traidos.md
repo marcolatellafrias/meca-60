@@ -89,6 +89,12 @@ la cápsula para que los usen también la meca propia y los jefes (los adapta la
 común de movimiento y reacción). La cápsula lo tiene en `spring` y sigue mostrando `impact_xz`, `impact_y` y `hit_xz`
 con los nombres de siempre; los números no cambiaron (`tests/hit_check`, `tests/capsule_side_check`).
 
+**En los golpes, sólo el peso distingue** (18/11/2026, el usuario: con el peso alcanza). La firmeza es el peso sobre
+60 kg; se fueron las estabilidades de cada arquetipo de cada lado (adelante, atrás, de costado) y los multiplicadores de
+estabilidad de las especies, que no usaba nadie. La dureza y el amortiguado del resorte de costado pasaron a ser de
+todos, en el F1 (`impact_spring`, `impact_damp`). Con 150 N·s cae sólo el chico (antes también el viejo); con 300,
+el flaco alto, el chico y el viejo; los pesados se inclinan menos que antes.
+
 **Lo que cuesta la fila Locomoción** (17/11/2026, diagnóstico; nada arreglado todavía): `tests/locomotion_perf.tscn` arma
 las siete escenas juntas (42 personajes, 846 cuerpos rígidos) y mide de a una dimensión. Armarlas: 2,2 s en un cuadro
 (el tirón al acercarse). Prendido todo: 8 fps (124 ms por cuadro). Lo que más pesa, en orden: el guion de la cápsula

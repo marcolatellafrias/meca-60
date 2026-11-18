@@ -12,11 +12,6 @@ var speed : float = 1.0
 var sprint_multiplier : float = 2.2
 ## CUÁNTO TARDA EN LLEGAR A LA MÁXIMA desde quieto (s); 0, al instante. Frena al mismo ritmo.
 var time_to_top : float = 3.0
-var forward_stability : float = 1.0
-var backwards_stability : float = 1.0
-var sideways_stability : float = 1.0
-var stability_spring : float = 1.0
-var stability_damp : float = 1.0
 ## EL ATERRIZAJE FUERTE (m/s; 9 es caer de unos 4 m): al aterrizar frena según qué tan fuerte cayó contra esto (ver
 ## CharacterRigidBody3D._brake_on_landing). Desde el 17/11/2026 aterrizar no tumba.
 var landing_tolerance : float = 9.0
@@ -290,11 +285,6 @@ static func generic_arch() -> EntityArchetype:
 	arch.speed = 0.3
 	arch.sprint_multiplier = 2.6
 	arch.time_to_top = 3.4
-	arch.forward_stability = 1.0
-	arch.backwards_stability = 1.0
-	arch.sideways_stability = 1.0
-	arch.stability_spring = 1.0
-	arch.stability_damp = 1.0
 	arch.time_to_standup = 1.5
 	arch.throw_strength = 0.9
 	arch.jump_height = 1.12
@@ -380,7 +370,7 @@ static func fat_man_arch() -> EntityArchetype:
 	arch.sprint_multiplier = 2.3
 	arch.time_to_top = 4.6
 	# EL EQUILIBRIO (ver `balance`): pesado, cuesta moverlo; inclinado, tarda en volver y rebota como gelatina.
-	balance(arch, 120.0, Vector3(0.8, 0.6, 0.7), 0.6, 0.6)
+	balance(arch, 120.0)
 	arch.time_to_standup = 2.0
 	arch.throw_strength = 1.05
 	arch.jump_height = 0.45
@@ -434,7 +424,7 @@ static func kid_arch() -> EntityArchetype:
 	arch.sprint_multiplier = 2.5
 	arch.time_to_top = 2.8
 	# EL EQUILIBRIO (ver `balance`): muy liviano, cualquier golpe lo mueve; buen equilibrio, vuelve rápido y rebota.
-	balance(arch, 35.0, Vector3(0.8, 0.8, 0.8), 1.3, 0.7)
+	balance(arch, 35.0)
 	arch.time_to_standup = 1.0
 	arch.throw_strength = 0.5
 	arch.jump_height = 0.8
@@ -483,7 +473,7 @@ static func lanky_arch() -> EntityArchetype:
 	arch.sprint_multiplier = 2.3
 	arch.time_to_top = 4.6
 	# EL EQUILIBRIO (ver `balance`): liviano y angosto, se tumba más de costado; se endereza rápido pero se bambolea.
-	balance(arch, 70.0, Vector3(0.8, 0.8, 0.6), 1.1, 0.8)
+	balance(arch, 70.0)
 	arch.time_to_standup = 2.0
 	arch.throw_strength = 0.8
 	# EL SALTO DE CADA UNO (04/11/2026, el usuario: «algunos personajes con más salto, algunos con menos»): el
@@ -532,7 +522,7 @@ static func buff_arch() -> EntityArchetype:
 	arch.sprint_multiplier = 2.3
 	arch.time_to_top = 4.6
 	# EL EQUILIBRIO (ver `balance`): el más firme; vuelve seco a su lugar.
-	balance(arch, 95.0, Vector3(1.2, 1.0, 1.1), 1.4, 1.2)
+	balance(arch, 95.0)
 	arch.time_to_standup = 2.0
 	arch.throw_strength = 1.45
 	arch.jump_height = 1.0
@@ -581,7 +571,7 @@ static func fat_athletic_arch() -> EntityArchetype:
 	arch.sprint_multiplier = 1.9
 	arch.time_to_top = 3.4
 	# EL EQUILIBRIO (ver `balance`): entre el gordo y el fornido.
-	balance(arch, 107.5, Vector3(1.0, 0.8, 0.9), 1.0, 0.9)
+	balance(arch, 107.5)
 	arch.time_to_standup = 2.0
 	arch.throw_strength = 1.6
 	arch.jump_height = 0.85
@@ -626,13 +616,8 @@ static func fat_athletic_arch() -> EntityArchetype:
 ## inclinan los golpes y la inercia (ver CharacterRigidBody3D._firmness): todos caen en el mismo punto, así que
 ## inclinarse es estar cerca de caer. `spring`, qué tan duro se endereza; `damp`, cuánto frena el rebote (más, rebota
 ## menos). Caminar no cambia con el peso: su fuerza ya es proporcional a él.
-static func balance(arch: EntityArchetype, weight_kg: float, stability: Vector3, spring: float, damp: float) -> void:
+static func balance(arch: EntityArchetype, weight_kg: float) -> void:
 	arch.weight = weight_kg
-	arch.forward_stability = stability.x
-	arch.backwards_stability = stability.y
-	arch.sideways_stability = stability.z
-	arch.stability_spring = spring
-	arch.stability_damp = damp
 
 static func old_arch() -> EntityArchetype:
 	var arch = EntityArchetype.new()
@@ -641,7 +626,7 @@ static func old_arch() -> EntityArchetype:
 	arch.sprint_multiplier = 1.8
 	arch.time_to_top = 1.25
 	# EL EQUILIBRIO (ver `balance`): frágil, sobre todo para atrás; le cuesta enderezarse y casi no rebota.
-	balance(arch, 65.0, Vector3(0.5, 0.4, 0.5), 0.6, 1.2)
+	balance(arch, 65.0)
 	arch.time_to_standup = 1.0
 	arch.throw_strength = 0.6
 	arch.jump_height = 0.35
@@ -686,11 +671,6 @@ func blend_with(b: EntityArchetype, t: float) -> EntityArchetype:
 	r.speed                         = lerpf(speed, b.speed, t)
 	r.sprint_multiplier             = lerpf(sprint_multiplier, b.sprint_multiplier, t)
 	r.time_to_top                   = lerpf(time_to_top, b.time_to_top, t)
-	r.forward_stability             = lerpf(forward_stability, b.forward_stability, t)
-	r.backwards_stability           = lerpf(backwards_stability, b.backwards_stability, t)
-	r.sideways_stability            = lerpf(sideways_stability, b.sideways_stability, t)
-	r.stability_spring              = lerpf(stability_spring, b.stability_spring, t)
-	r.stability_damp                = lerpf(stability_damp, b.stability_damp, t)
 	r.landing_tolerance             = lerpf(landing_tolerance, b.landing_tolerance, t)
 	r.time_to_standup               = lerpf(time_to_standup, b.time_to_standup, t)
 	r.throw_strength                = lerpf(throw_strength, b.throw_strength, t)

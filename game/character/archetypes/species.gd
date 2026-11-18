@@ -8,11 +8,6 @@ var speed_forw_multiplier : float = 1.0
 var speed_back_multiplier : float = 1.0
 var speed_side_multiplier : float = 1.0
 var acceleration_multiplier : float = 1.0
-var forward_stability_multiplier : float = 1.0
-var backwards_stability_multiplier : float = 1.0
-var sideways_stability_multiplier : float = 1.0
-var stability_spring_multiplier : float = 1.0
-var stability_damp_multiplier : float = 1.0
 
 # REACH/ARMS
 var throw_strength_multiplier : float = 1.0
@@ -36,11 +31,6 @@ static func human_specie() -> EntitySpecie:
 	specie.speed_back_multiplier = 1.0
 	specie.speed_side_multiplier = 1.0
 	specie.acceleration_multiplier = 1.0
-	specie.forward_stability_multiplier = 1.0
-	specie.backwards_stability_multiplier = 1.0
-	specie.sideways_stability_multiplier = 1.0
-	specie.stability_spring_multiplier = 1.0
-	specie.stability_damp_multiplier = 1.0
 	specie.throw_strength_multiplier = 1.0
 	specie.reach_multiplier = 1.0
 	specie.jump_height_multiplier = 1.2
@@ -57,11 +47,6 @@ static func alien_specie() -> EntitySpecie:
 	specie.speed_back_multiplier = 1.0
 	specie.speed_side_multiplier = 1.0
 	specie.acceleration_multiplier = 1.0
-	specie.forward_stability_multiplier = 1.0
-	specie.backwards_stability_multiplier = 1.0
-	specie.sideways_stability_multiplier = 1.0
-	specie.stability_spring_multiplier = 1.0
-	specie.stability_damp_multiplier = 1.0
 	specie.throw_strength_multiplier = 1.0
 	specie.reach_multiplier = 1.5
 	specie.jump_height_multiplier = 1.0
@@ -78,11 +63,6 @@ static func robot_specie() -> EntitySpecie:
 	specie.speed_back_multiplier = 0.4
 	specie.speed_side_multiplier = 0.5
 	specie.acceleration_multiplier = 0.7
-	specie.forward_stability_multiplier = 0.9
-	specie.backwards_stability_multiplier = 0.6
-	specie.sideways_stability_multiplier = 0.3
-	specie.stability_spring_multiplier = 1.0
-	specie.stability_damp_multiplier = 1.0
 	specie.throw_strength_multiplier = 1.0
 	specie.reach_multiplier = 1.0
 	specie.jump_height_multiplier = 1.0

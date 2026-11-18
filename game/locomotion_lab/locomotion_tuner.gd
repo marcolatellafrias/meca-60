@@ -49,9 +49,7 @@ const LABELS := {
 	"speed": "ritmo del paso (sólo animación)",
 	"sprint_multiplier": "velocidad máxima (× caminar)", "time_to_top": "tarda en llegar a la máxima (s; 0, al instante)",
 	"strength": "fuerza (al llevar algo)", "throw_strength": "fuerza de tiro (y del empujón)",
-	"weight": "peso (kg)", "forward_stability": "estabilidad adelante", "backwards_stability": "estabilidad atrás",
-	"sideways_stability": "estabilidad de costado", "stability_spring": "qué tan duro se endereza",
-	"stability_damp": "cuánto frena el rebote", "landing_tolerance": "aterrizaje fuerte (m/s): con él frena del todo",
+	"weight": "peso (kg): lo que lo diferencia en los golpes", "landing_tolerance": "aterrizaje fuerte (m/s): con él frena del todo",
 	"time_to_standup": "tarda en levantarse (s)",
 	"jump_height": "altura del salto entero (m)", "time_to_max_jump": "tarda en cargarlo (s)",
 }

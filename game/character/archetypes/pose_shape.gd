@@ -108,15 +108,10 @@ extends Resource
 @export_range(0.1, 2.5, 0.05) var throw_strength := 1.0
 
 @export_group("Equilibrio")
-## EL PESO (kg): cuánto cuesta moverlo; en un choque, el liviano se lleva el cambio de velocidad.
+## EL PESO (kg): cuánto cuesta moverlo y lo único que lo diferencia en los golpes (la firmeza, ver
+## CharacterRigidBody3D._firmness). La estabilidad de cada lado y el resorte eran de cada arquetipo hasta el 18/11/2026;
+## el resorte pasó a ser de todos (LocomotionCommon).
 @export_range(20.0, 200.0, 1.0) var weight := 80.0
-## LA ESTABILIDAD adelante, atrás y de costado: con el peso, la firmeza que divide los golpes y la inercia.
-@export_range(0.1, 3.0, 0.05) var forward_stability := 1.0
-@export_range(0.1, 3.0, 0.05) var backwards_stability := 1.0
-@export_range(0.1, 3.0, 0.05) var sideways_stability := 1.0
-## QUÉ TAN DURO SE ENDEREZA y cuánto frena el rebote (más, rebota menos).
-@export_range(0.1, 3.0, 0.05) var stability_spring := 1.0
-@export_range(0.1, 3.0, 0.05) var stability_damp := 1.0
 ## EL ATERRIZAJE FUERTE (m/s; 9 es caer de unos 4 m): con él frena del todo al caer. Aterrizar ya no tumba.
 @export_range(3.0, 25.0, 0.5) var landing_tolerance := 9.0
 ## CUÁNTO TARDA EN LEVANTARSE (s).
@@ -140,8 +135,7 @@ const WALK_KNOBS: Array[String] = ["stride_reach", "step_height", "root_bouncine
 	"walk_posture_lean", "walk_hip_sway", "walk_bounce_up", "walk_arm_open", "walk_run_elbow", "walk_stride_growth",
 	"walk_swing_share", "walk_lead"]
 const MOVE_KNOBS: Array[String] = ["sprint_multiplier", "time_to_top", "speed", "strength", "throw_strength"]
-const BALANCE_KNOBS: Array[String] = ["weight", "forward_stability", "backwards_stability", "sideways_stability",
-	"stability_spring", "stability_damp", "landing_tolerance", "time_to_standup"]
+const BALANCE_KNOBS: Array[String] = ["weight", "landing_tolerance", "time_to_standup"]
 ## (La carga del salto es la misma para todos desde el 04/11/2026: EntityArchetype.JUMP_WINDUP_S.)
 const JUMP_KNOBS: Array[String] = ["jump_height"]
 

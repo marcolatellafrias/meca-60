@@ -101,12 +101,6 @@ var ragdoll_threshold: float:
 ## (ver `_brake_on_landing`). Aterrizar no tumba.
 var landing_tolerance: float = 9.0
 
-## Estabilidad direccional (de EntityArchetype): multiplican el umbral de impacto según de dónde
-## venga el golpe. >1 = más difícil de voltear en esa dirección; <1 = más fácil. Se setean por
-## arquetipo en create(). Ver character-parametric:docs/technical/characters.md.
-var stability_forward: float = 1.0
-var stability_backward: float = 1.0
-var stability_sideways: float = 1.0
 
 var velocity_indicator: Vector2 = Vector2.ZERO
 
@@ -492,23 +486,11 @@ func _brake_on_landing(hard: float) -> void:
 	shove *= 1.0 - share
 
 
-## LA FIRMEZA en la dirección de `local` (ejes de la cápsula): el peso respecto del de referencia por la estabilidad de
-## ese lado. 1 es el de referencia; 2, hace falta el doble para inclinarlo lo mismo. Divide los golpes y la inercia.
-func _firmness(local: Vector3) -> float:
-	return maxf(mass / REFERENCE_WEIGHT * _directional_stability(local), 0.05)
-
-## Estabilidad en la dirección del impacto (mezcla lateral / adelante / atrás según el vector local).
-## En Godot -z es el frente, así que z<0 = empujado hacia adelante. Multiplica el umbral de caída:
-## >1 cuesta más voltearte por ahí, <1 menos.
-func _directional_stability(local_impact: Vector3) -> float:
-	var ax := absf(local_impact.x)
-	var az := absf(local_impact.z)
-	var total := ax + az
-	if total < 0.001:
-		return stability_sideways
-	var side_frac := ax / total
-	var z_stab := stability_forward if local_impact.z < 0.0 else stability_backward
-	return stability_sideways * side_frac + z_stab * (1.0 - side_frac)
+## LA FIRMEZA: su peso respecto del de referencia. 1 es el de referencia; 2, hace falta el doble para inclinarlo lo
+## mismo. Divide los golpes y la inercia. *Hasta el 18/11/2026 la multiplicaba la estabilidad de cada arquetipo de cada
+## lado (adelante, atrás, de costado); lo pidió el usuario: con el peso alcanza.*
+func _firmness(_local: Vector3) -> float:
+	return maxf(mass / REFERENCE_WEIGHT, 0.05)
 
 func _update_velocity_indicator() -> void:
 	var local_vel := global_transform.basis.inverse() * linear_velocity
@@ -517,6 +499,9 @@ func _update_velocity_indicator() -> void:
 
 ## EL RESORTE, UN PASO: lo continuo va hacia la inercia del marco (ver HitSpring).
 func _update_impact_pd(delta: float) -> void:
+	# QUÉ TAN DURO SE ENDEREZA Y CUÁNTO REBOTA, de todos (el F1; antes de cada arquetipo).
+	spring.stiffness = LocomotionCommon.base().impact_spring
+	spring.damping = LocomotionCommon.base().impact_damp
 	spring.lean_target = _frame_lean
 	spring.update(delta)
 
@@ -717,13 +702,8 @@ static func create(root_size: Vector3, distance_from_ground: float, leg_height: 
 	# Resistencia a voltearse: la FIRMEZA (ver `_firmness`) sale del peso —la masa— y de las estabilidades
 	# direccionales del arquetipo, según de dónde venga. Así un chico rápido NO tumba a un gordo (el gordo recibe poco Δv
 	# por su masa Y es más firme), pero el gordo sí tumba al chico. Ver character-parametric:docs/technical/characters.md.
-	rb.stability_forward   = arch.forward_stability
-	rb.stability_backward  = arch.backwards_stability
-	rb.stability_sideways  = arch.sideways_stability
 	# EL RESORTE DE CADA UNO (02/11/2026): qué tan duro se endereza y cuánto rebota, del arquetipo.
 	rb.landing_tolerance = arch.landing_tolerance
-	rb.spring.stiffness *= arch.stability_spring
-	rb.spring.damping   *= arch.stability_damp
 	rb.spring.noise = HIT_NOISE
 	rb.spring.land_full_speed = LocomotionCommon.LANDING_FULL_SPEED
 	rb.spring.land_stiffness = LocomotionCommon.LANDING_SPRING

@@ -25,7 +25,7 @@ const SECTIONS := [
 		"throw_per_arm", "push_per_arm"]],
 	[LocomotionTuner.TAB_MOVE, "EL ALCANCE PARA INTERACTUAR", Color(0.62, 0.66, 0.72), ["interaction_reach"]],
 	[LocomotionTuner.TAB_BALANCE, "LA CAÍDA Y EL ATERRIZAJE", Color(0.78, 0.64, 1.0),
-		["impact_fall_linear", "landing_brake", "ragdoll_in_air", "ragdoll_speed"]],
+		["impact_spring", "impact_damp", "impact_fall_linear", "landing_brake", "ragdoll_in_air", "ragdoll_speed"]],
 	[LocomotionTuner.TAB_JUMP, "PASAR AL AIRE", Color(0.62, 0.66, 0.72), ["blend_s"]],
 	[LocomotionTuner.TAB_JUMP, "EN EL AIRE: TORSO — lower_spine", Color(0.56, 0.74, 1.0),
 		["torso_on", "torso_apex_deg", "torso_fall_deg", "torso_fall_s", "torso_follow_s"]],
@@ -63,6 +63,7 @@ const LABELS := {
 	"push_per_arm": "empujón: N·s por cada 1 de fuerza de brazos",
 	"interaction_reach": "alcance desde la punta del pecho (m)",
 	# Equilibrio.
+	"impact_spring": "golpes: qué tan duro se endereza", "impact_damp": "golpes: cuánto frena el rebote",
 	"impact_fall_linear": "exageración de la caída (× el empujón)", "landing_brake": "al aterrizar, frena el cuerpo",
 	"ragdoll_in_air": "se tira en el aire cayendo rápido", "ragdoll_speed": "a cuánta velocidad de caída (m/s)",
 	# Salto.
