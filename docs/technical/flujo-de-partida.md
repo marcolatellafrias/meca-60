@@ -48,8 +48,12 @@
    `Battlefield.build(hole)`, y el sol); la plataforma llega a ras de su piso y la baranda baja. En red lo dispara el
    host en todos (`BaseSync.launch`) y cada máquina lo anda con los mismos tiempos. Los contratos sólo firman (el
    «salir a la arena» de la terminal se fue). — *Mundo*, **hecho**. Probado: `tests/base_launch_look.tscn` (capturas)
-   y `tests/base_net_check.tscn` (los dos suben y se ven arriba, con la meca). *Falta*: el jefe del contrato en la
-   arena (el 8), los recursos del mapa (todavía no van por la red) y el hueco a los costados en lugar del medio.
+   y `tests/base_net_check.tscn` (los dos suben y se ven arriba, con la meca). **El jefe del contrato** se arma
+   con la arena, igual y con el mismo camino en todas las máquinas (`Arena/Jefe/Luchador`, `BaseWorld._spawn_boss`), a
+   50 m de la boca, dormido hasta que el ascensor llega; su blanco es la meca, que recibe su vida. Por ahora el único
+   jefe hecho es el Luchador y hace de todos los contratos (su barra lleva el nombre del contrato); su letrero de
+   prueba del sandbox, en la partida, no se ve. *Falta*: los recursos del mapa (todavía no van por la red) y el hueco a
+   los costados en lugar del medio.
 8. **El jefe por red**. — *Jefes*, **hecho** (18/11/2026; ver [[red]]): el jefe lo simula el host y las demás siguen su
    cuerpo; la vida la decide el host y la muerte (con su ragdoll) pasa en todas; los golpes del jefe a la meca los
    decide el host y el empujón lo hace la máquina de su dueño. *Falta: lo que se ve de sus ataques en las demás.*

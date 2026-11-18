@@ -11,8 +11,16 @@ extends Node3D
 ##     las máquinas. *Hasta el 19/11/2026 estuvo congelada, como decorado, mientras la meca no iba por la red.*
 ##   · LA ARENA, ARRIBA (el paso 7): al arrancar el ascensor (BaseElevator.launching) se arma el mapa de pelea sobre el
 ##     pozo, con el hueco del ascensor en el medio, y se prende el sol. Las compuertas ocultan que recién se arma.
+##   · EL JEFE DEL CONTRATO (el paso 8 es de Jefes: BossNet), en la arena, armado igual y con el mismo camino en todas las
+##     máquinas (Arena/Jefe/Luchador). Duerme hasta que el ascensor llega arriba. Su blanco es la meca, que recibe vida.
 
 const GROUP := "net_world"
+## EL JEFE EN LA ARENA: dónde nace (enfrente de la boca del ascensor, mirándola), el círculo del que no sale (lo libre del
+## medio del mapa: más allá están los barrios) y las vidas.
+const BOSS_AT := Vector3(0.0, 0.0, 50.0)
+const BOSS_RING := 62.0
+const BOSS_HEALTH := 400.0
+const MECH_HEALTH := 100.0
 var _spawner: CharacterSpawner
 var _environment: Environment
 ## El jugador local al que ya se le dio vuelta hacia la compuerta (se vuelve a hacer si nace de nuevo).
@@ -39,6 +47,7 @@ func _ready() -> void:
 	airlock.opened.connect(_crew_aboard.bind(base))
 	var elevator := base.find_child("Ascensor", true, false) as BaseElevator
 	elevator.launching.connect(_build_arena.bind(base))
+	elevator.arrived.connect(_wake_boss)
 	var characters := Node3D.new()
 	characters.name = "Personajes"
 	add_child(characters)
@@ -91,3 +100,45 @@ func _build_arena(base: Node3D) -> void:
 	sun.directional_shadow_max_distance = 300.0
 	arena.add_child(sun)
 	_environment.background_color = Color(0.75, 0.82, 0.9)
+	_spawn_boss(arena, base)
+
+
+## EL JEFE DEL CONTRATO. Por ahora hay uno solo hecho, el Luchador (Brawler), y hace de todos los contratos; el
+## nombre de su barra es el del contrato. Armado como su parcela (BrawlerArchetype), pero en la arena y dormido.
+func _spawn_boss(arena: Node3D, base: Node3D) -> void:
+	var holder := Node3D.new()
+	holder.name = "Jefe"
+	arena.add_child(holder)
+	var boss := Brawler.new()
+	boss.name = "Luchador"
+	boss.position = BOSS_AT
+	boss.rotation.y = PI
+	holder.add_child(boss)
+	Health.attach(boss, BOSS_HEALTH)
+	boss.arena = BossArena.new(holder, BOSS_RING)
+	var brain := BrawlerBrain.new()
+	brain.name = "Cabeza"
+	brain.awake = false
+	boss.add_child(brain)
+	# su letrero de lo que hace es del sandbox (para probar los poderes): en la partida, no
+	for sign: Node in boss.find_children("*", "Label3D", false, false):
+		(sign as Label3D).visible = false
+	var mech := base.get_node_or_null("Meca jaula") as Mech
+	if mech != null:
+		if mech.get_node_or_null(Health.NODE_NAME) == null:
+			Health.attach(mech, MECH_HEALTH)
+		brain.target = mech
+	var bars := FightBars.new()
+	bars.name = "Barras"
+	bars.boss = boss
+	bars.mech = mech
+	var contract := BaseState.current.contract
+	bars.boss_name = str(ContractsCatalog.CONTRACTS[contract].boss).to_upper() if contract >= 0 else "EL JEFE"
+	holder.add_child(bars)
+
+
+## Al llegar arriba, el jefe se despierta.
+func _wake_boss() -> void:
+	var brain := get_node_or_null("Arena/Jefe/Luchador/Cabeza") as BrawlerBrain
+	if brain != null:
+		brain.awake = true

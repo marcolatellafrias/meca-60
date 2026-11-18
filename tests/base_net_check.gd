@@ -79,6 +79,10 @@ func _report_arena(who: String) -> void:
 	print("%s: ascensor arrancó %s · arena %s · plataforma %.2f · meca %.2f · yo %.2f" % [who, str(elevator.launched),
 		str(_world.get_node_or_null("Arena") != null), platform.global_position.y,
 		mech.mover.global_position.y if mech else -1.0, spawner.local_player.char_rigidbody.global_position.y])
+	var boss := _world.get_node_or_null("Arena/Jefe/Luchador") as Node3D
+	if boss != null:
+		var at := boss.global_position
+		print("%s: jefe en (%.1f, %.1f, %.1f), vida %.0f" % [who, at.x, at.y, at.z, Health.of(boss).left])
 
 
 func _report(who: String) -> void:

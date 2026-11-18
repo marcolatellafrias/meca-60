@@ -55,6 +55,14 @@ func _ready() -> void:
 	# desde los ojos del jugador
 	_eye.current = false
 	await _shot("ascensor_4_ojos")
+	# el jefe del contrato, despierto: viene a la meca
+	var boss := world.get_node("Arena/Jefe/Luchador") as Node3D
+	print("jefe al llegar: a %.1f m de la meca" % boss.global_position.distance_to(mech.mover.global_position))
+	await get_tree().create_timer(8.0).timeout
+	print("jefe 8 s después: a %.1f m de la meca · vida de la meca %.0f" % [
+		boss.global_position.distance_to(mech.mover.global_position), Health.of(mech).left])
+	_look(top + Vector3(30.0, 14.0, -10.0), (boss.global_position + top) * 0.5)
+	await _shot("ascensor_5_el_jefe")
 	get_tree().quit()
 
 
