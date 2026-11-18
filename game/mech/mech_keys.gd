@@ -91,6 +91,9 @@ func controls() -> PackedStringArray:
 
 func begin() -> void:
 	driving = true
+	# Poseída desde esta máquina: la simula ésta (ver BodyNet).
+	if mech.net != null:
+		mech.net.take_control()
 	_chase_yaw = _view_yaw()
 
 

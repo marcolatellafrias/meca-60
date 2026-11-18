@@ -79,6 +79,8 @@ var levitating := false
 var _dust: GPUParticles3D = null
 var dust_raised := 0
 var _fall_clock := 0.0
+## SEGUIDA POR LA RED (ver BodyNet): si recoge las piernas, como lo dice el dueño (-1: la simula esta máquina).
+var _net_tucked := -1
 var _cylinder := CylinderShape3D.new()
 var _holder := CollisionShape3D.new()
 var _below := BoxShape3D.new()
@@ -418,12 +420,56 @@ func put(where: Transform3D) -> void:
 ## Sólo de lo que el motor sabe seguro, nunca de los rayos de los pies (un dash de costado en el piso los sigue tocando).
 ## Un salto común o una caída, no: cuelgan.
 func tucks() -> bool:
+	if _net_tucked >= 0:
+		return _net_tucked == 1
 	if _dash_left > 0.0:
 		return true
 	if body.grounded:
 		return false
 	var k := body.kinematic_settings()
 	return levitating or (body.crouch and k.dive_speed > 0.0)
+
+
+## ── POR LA RED (ver BodyNet) ───────────────────────────────────────────────────────────────────────────────────────
+
+## LO QUE MANDA EL DUEÑO: lo de juego del motor (lo que la otra máquina no puede deducir).
+func net_state() -> Array:
+	return [global_position, _yaw, velocity, body.aim_yaw, crouched, int(body.state), lean, is_on_floor(), levitating,
+		tucks(), body_spring.y, body_spring.xz]
+
+
+## LOS DEMÁS: el motor entre dos estados del dueño (`share`, de `from` a `to`), o derecho `ahead` s después del último.
+## No simula nada: pone el lugar, el rumbo y lo que leen las piernas y el esqueleto, como `step`.
+func follow(from: Array, to: Array, share: float, ahead: float, delta: float) -> void:
+	var was_grounded := body.grounded
+	var falling := maxf(-(velocity.y), 0.0)
+	global_position = (from[0] as Vector3).lerp(to[0], share) + (to[2] as Vector3) * ahead
+	_yaw = lerp_angle(float(from[1]), float(to[1]), share)
+	rotation.y = _yaw
+	velocity = (from[2] as Vector3).lerp(to[2], share)
+	body.aim_yaw = float(to[3])
+	crouched = lerpf(float(from[4]), float(to[4]), share)
+	_fit()
+	body.state = int(to[5]) as BalanceBody.State
+	lean = lerpf(float(from[6]), float(to[6]), share)
+	levitating = bool(to[8])
+	_net_tucked = 1 if bool(to[9]) else 0
+	body_spring.y = lerpf(float(from[10]), float(to[10]), share)
+	body_spring.set_xz((from[11] as Vector2).lerp(to[11], share))
+	body.grounded = bool(to[7])
+	body.airborne = not body.grounded
+	body.support = global_position
+	body.support_speed = Vector3(velocity.x, 0.0, velocity.z)
+	body.tilt = lean
+	body.height = _hover_now()
+	if body.state == BalanceBody.State.STANDING and body.legs != null and lean <= 0.0 and float(from[6]) > 0.0:
+		body.legs.replant()
+	# EL POLVO AL CAER FUERTE, también acá (es dibujo).
+	var k := body.kinematic_settings()
+	if body.grounded and not was_grounded and k.dust_speed > 0.0 and falling >= k.dust_speed:
+		_raise_dust(falling / k.dust_speed)
+	_grounded_was = body.grounded
+	_last_bottom = global_position.y + _hover_now()
 
 
 ## Cuánto se mueve de costado (m/s), para el cartel.

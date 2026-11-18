@@ -41,6 +41,8 @@ var mover: KinematicMover = null
 ## que sea solamente para esta»). Se pone antes de agregarla.
 var kinematic_knobs: KinematicSettings = null
 var stomp: StompFeet = null
+## POR LA RED (ver BodyNet): quién la simula y lo que viaja.
+var net: BodyNet = null
 ## Lo que sobresale de la caja hacia adelante (m; el vidrio de la meca): el cilindro de la cinemática lo envuelve.
 var outline_extra := 0.0
 ## A QUÉ ALTURA DEL PISO VA LA CARA DE ABAJO DE LA CAJA, parada (m). NO ES UNA
@@ -113,6 +115,10 @@ func _ready() -> void:
 	mover = KinematicMover.new()
 	mover.name = "Motor"
 	mover.body = self
+	net = BodyNet.new()
+	net.name = "Red"
+	net.body = self
+	add_child(net)
 	_build()
 	add_child(mover)
 	label = Label3D.new()
@@ -164,7 +170,12 @@ func _after_step(_delta: float) -> void:
 ## (los arma la primera vez, ya en su lugar: ver StompFeet.build).
 func _physics_process(delta: float) -> void:
 	_think()
-	mover.step(delta)
+	# Por la red, una sola máquina la simula (el dueño, que manda su estado); las demás la siguen (ver BodyNet).
+	if net.remote():
+		net.follow(delta)
+	else:
+		mover.step(delta)
+		net.send(delta)
 	_place_from_bones()
 	legs.place(delta)
 	var places := legs.foot_transforms()

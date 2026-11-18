@@ -80,6 +80,11 @@ en cada máquina y sólo puede depender de lo que viaja.
 - VIAJA COMO EVENTO: una piña (cuál, con cuánta carga), el modo y el gatillo del cañón, el escudo; la muerte, con el
   empujón que la mató.
 - EN EL RAGDOLL: viajan el lugar y el giro del tronco; los brazos y las piernas caen como caigan en cada máquina.
+- HECHO (18/11/2026) LO QUE VIAJA SIEMPRE, para todo cuerpo con equilibrio: `BodyNet` (game/balance_body/). Un dueño la
+  simula (el host, o quien la posee con la O: `take_control`) y manda `KinematicMover.net_state` 20 veces por segundo;
+  las demás no simulan el motor: lo ponen entre los dos estados que rodean 100 ms atrás (`KinematicMover.follow`), y el
+  esqueleto, las piernas, los pies y el polvo salen igual que en la del dueño. Ver [[red]]. *Faltan los eventos y el
+  ragdoll.*
 - NO VIAJA: los pasos y los pies (la marcha y los rayos), la IK, el rumbo de la pelvis, el subir y bajar, el pisotón y
   la inclinación de costado, recoger las piernas, el polvo, las chispas, los destellos y los sonidos.
 - LAS CAJAS DE GOLPE (la regla, acordada con el usuario y hecha el 18/11/2026):
