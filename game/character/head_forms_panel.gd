@@ -7,12 +7,14 @@ extends TunerPanel
 ## «+ nueva»; se edita la elegida, en vivo —la vitrina de la fila y los personajes que la usan se rearman—:
 ##   · FORMA: el alto del cilindro, el frente plano y las dos tapas (diámetro, cuánto se corre adelante y su domo).
 ##   · CORTES: los siete loop cuts de plantilla (ver HeadCut), cada uno prendido o no, dónde cae, su diámetro y su corrimiento.
+##   · RASGOS: las alturas de los ojos y de la boca, donde se apoyan los cosméticos (ver FaceCosmetic).
 ##   · TODAS: el aplanamiento de la cara, uno para todas las cabezas (HeadForms.face_flat).
 ## Guardar escribe la elegida (y el aplanamiento) en `head_forms.tres`; Volver a lo guardado deshace lo probado; Olvidar
 ## devuelve una de las recetas a su receta; Borrar saca una agregada.
 
 const TAB_FORM := "FORMA"
 const TAB_CUTS := "CORTES"
+const TAB_FEATURES := "RASGOS"
 const TAB_ALL := "TODAS"
 const LABELS := {
 	"height": "alto del cilindro (m)", "flat_front": "frente plano (todo a plomo con la tapa de abajo)",
@@ -20,6 +22,7 @@ const LABELS := {
 	"top_width": "arriba: diámetro (m)", "top_forward": "arriba: adelante (m)", "top_dome": "arriba: domo (m)",
 	"active": "prendido (manda en la forma)", "at": "dónde cae (0 abajo, 1 arriba)", "width": "diámetro (m)",
 	"forward": "adelante (m)", "face_flat": "aplanamiento de la cara (0 redonda, 1 plana)",
+	"eye_height": "altura de los ojos (0 abajo, 1 arriba)", "mouth_height": "altura de la boca (0 abajo, 1 arriba)",
 }
 ## Lo que tarda en rearmar a los personajes después del último cambio (s): rearmar es caro y el slider manda muchos.
 const SETTLE_S := 0.3
@@ -69,6 +72,8 @@ func sections() -> Array[Dictionary]:
 		"only": PackedStringArray(["bottom_width", "bottom_forward", "bottom_dome"]), "on_change": _changed})
 	out.append({"tab": TAB_FORM, "title": "TAPA DE ARRIBA", "target": _draft, "labels": LABELS, "headers": false,
 		"only": PackedStringArray(["top_width", "top_forward", "top_dome"]), "on_change": _changed})
+	out.append({"tab": TAB_FEATURES, "title": "DÓNDE SE APOYAN LOS COSMÉTICOS", "target": _draft, "labels": LABELS,
+		"headers": false, "only": PackedStringArray(["eye_height", "mouth_height"]), "on_change": _changed})
 	for i in _draft.cuts.size():
 		out.append({"tab": TAB_CUTS, "title": "CORTE %d" % (i + 1), "target": _draft.cuts[i], "labels": LABELS,
 			"headers": false, "on_change": _changed})

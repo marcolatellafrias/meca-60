@@ -65,6 +65,15 @@ var face_flat := -1.0
 @export_range(-0.08, 0.08, 0.001, "suffix:m") var top_forward := 0.0
 @export_range(0.0, 0.2, 0.001, "suffix:m") var top_dome := 0.07
 
+@export_group("Rasgos")
+## ── DÓNDE VAN LOS OJOS Y LA BOCA (18/11/2026) ─────────────────────────────────────────────────────────────────────
+## Lo pidió el usuario: «cada forma de cabeza tiene una altura de boca, una altura de ojos… cuando quiero poner un
+## bigote… lo hago relativo a la altura de boca». En fracción del alto entero (0 el fondo del domo de abajo, 1 la
+## punta del de arriba), así no cambian al agrandar la cabeza (ver `scaled`). Los cosméticos de la cara se apoyan ahí
+## (ver FaceCosmetic) y la superficie la da `surface_point`.
+@export_range(0.0, 1.0, 0.01) var eye_height := 0.5
+@export_range(0.0, 1.0, 0.01) var mouth_height := 0.22
+
 @export_group("")
 @export var cuts: Array[HeadCut] = []
 
@@ -99,7 +108,7 @@ func _set(property: StringName, _value: Variant) -> bool:
 func copy() -> HeadForm:
 	var out := HeadForm.new()
 	for property in ["name", "height", "flat_front", "face_flat", "bottom_width", "bottom_forward", "bottom_dome", "top_width",
-			"top_forward", "top_dome"]:
+			"top_forward", "top_dome", "eye_height", "mouth_height"]:
 		out.set(property, get(property))
 	for cut in cuts:
 		out.cuts.append(cut.copy())
@@ -297,6 +306,59 @@ func build_arrays(front_face := false) -> Array:
 	arrays[Mesh.ARRAY_NORMAL] = normals
 	arrays[Mesh.ARRAY_INDEX] = order
 	return arrays
+
+
+## ── DÓNDE APOYAR COSAS EN LA CARA (ver FaceCosmetic) ───────────────────────────────────────────────────────────────
+## EL PUNTO DE LA MALLA —la de pocas caras que se ve, no la curva ideal— a la altura `y` (m desde el fondo del domo de
+## abajo) y `x` de costado (positivo, +X), del lado de adelante. Entre dos anillos la malla es recta, así que se mide
+## el frente de cada anillo en `x` y se interpola: lo que se apoya acá queda pegado a la cara que se ve, plana o en la
+## esquina, en cualquier forma. `front_face`: el giro de la malla (ver `build_arrays`).
+func surface_point(y: float, x: float, front_face := false) -> Vector3:
+	var levels: Array[float] = [0.0]
+	levels.append_array(ring_heights())
+	levels.append(total_height())
+	var at := clampf(y, 0.0, total_height())
+	var i := 0
+	while i < levels.size() - 2 and at > levels[i + 1]:
+		i += 1
+	var span := maxf(levels[i + 1] - levels[i], 1e-6)
+	var t := clampf((at - levels[i]) / span, 0.0, 1.0)
+	return Vector3(x, at, lerpf(_front_z(levels[i], x, front_face), _front_z(levels[i + 1], x, front_face), t))
+
+
+## HACIA DÓNDE MIRA LA CARA en ese punto (la normal de la malla, hacia afuera y adelante).
+func surface_normal(y: float, x: float, front_face := false) -> Vector3:
+	var e := 0.002
+	var across := surface_point(y, x + e, front_face) - surface_point(y, x - e, front_face)
+	var up := surface_point(y + e, x, front_face) - surface_point(y - e, x, front_face)
+	var n := up.cross(across).normalized()
+	return -n if n.z > 0.0 else n
+
+
+## EL ANCHO DE LA CARA a la altura `y` (el diámetro del anillo de ahí): los cosméticos lo usan para abrirse.
+func width_at(y: float) -> float:
+	return section_at_height(y).x
+
+
+## El z del frente del anillo de la altura `y` (uno de los de la malla) en `x`: el lado de adelante que cruza `x`.
+func _front_z(y: float, x: float, front_face: bool) -> float:
+	var turn := PI / AROUND if front_face else 0.0
+	var s := section_at_height(y)
+	var ring: Array[Vector3] = []
+	for j in AROUND:
+		ring.append(ring_point(s.x, s.y, s.z, TAU * float(j) / float(AROUND) + turn, y))
+	var best := INF
+	var edge := ring[0]
+	for j in AROUND:
+		var a := ring[j]
+		var b := ring[(j + 1) % AROUND]
+		if a.z < edge.z:
+			edge = a
+		if (x - a.x) * (x - b.x) > 0.0:
+			continue
+		var k := 0.0 if is_equal_approx(a.x, b.x) else (x - a.x) / (b.x - a.x)
+		best = minf(best, lerpf(a.z, b.z, k))
+	return best if best < INF else edge.z
 
 
 ## UN PUNTO DEL ANILLO a `angle` radianes desde el frente (−Z) hacia +X, de ancho `width`, fondo `depth` y corrido
