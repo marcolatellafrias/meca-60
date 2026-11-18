@@ -9,6 +9,9 @@ superpuestos**. Se queda lo **monocromo** (verde esmeralda sobre negro) y la ide
 serían grises o degradés, son tramas de puntos**. Una **letra retro que no sea de píxeles** (se probaron la nuestra de
 trazos y la OCR-A). **Lo superpuesto se separa de lo de atrás** con una sombra de puntos, su propio fondo negro y un
 borde doble; una ventana que pide algo, además, **atenúa todo lo de atrás con una trama negra**.
+- **Lo elegido de la primera vuelta** (18/11/2026): **nuestra letra de trazos rectos**, dibujada en vector (no la OCR-A).
+  **La barra de arriba: una raya** (la alternativa 1): el título a la izquierda, a la derecha el capitán, la plata y la
+  cruz, sueltos, y debajo una raya a lo ancho; sin degradé ni barra llena.
 - Comprar y montar piezas a mano en la meca, los estantes y el receptáculo del techo quedan **de lado** por ahora: la
   complejidad explotaba (los controles de adentro cambiarían con alguien sentado; habría que acoplar la meca).
 
