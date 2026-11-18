@@ -20,8 +20,8 @@ el elevador de 24 m, la nave de 22 m y el ascensor de personal metido en la pare
   chapa del techo, con física (`BaseBagRig`, abajo).
 - **La franja usa sus dos caras libres** (la del gimnasio es la línea de peligro y la de la punta, la esclusa):
   - **la pared bajo el elevador**: los contratos, al lado de la meca;
-  - **el fondo**, desde ahí: la armería, los cosméticos y la pintura, el cuadro del empleado del mes y los casilleros
-    que entren, hasta la esclusa.
+  - **el fondo**: la armería y los cosméticos con la pintura, cada uno en el medio de su mitad. *Los casilleros y el
+    cuadro del empleado del mes salieron de la primera versión (17/11/2026): vuelven más tarde.*
 - **La esclusa** (`BaseAirlock`, con `BaseSlideDoor`), la sala de espera, en la punta de la franja: **un cuadrado del
   lado del fondo de la franja y de su alto**; si cambia el fondo, cambia ella. Dos bancos, una baliza roja que gira y el
   cartel «esperando tripulación».
@@ -49,8 +49,7 @@ En `BaseLayout`, en metros sobre el plano (`at(x, z, alto)` pasa a la parcela).
   Al guardar, la base se vuelve a armar en su lugar (`BaseLayout.rebuild`) y la meca, nueva, vuelve al centro del
   elevador (`BaseArchetype.place_mech`). Lo guardado, `game/base/base_humana.tres`, es del usuario: no va al
   repositorio (el de la meca grande, `base_settings.tres`, quedó de lado).
-- **El fondo de la franja se llena solo**: la armería, los cosméticos y el cuadro en fila desde la pared bajo el
-  elevador, y los casilleros, los que entren hasta la esclusa.
+- **El fondo de la franja**: la armería y los cosméticos se reparten su ancho, de hasta 5 m cada una.
 - La bolsa, de 1,8 m de diámetro, cuelga de 1 a 4,6 m: se le pega con la meca agachada.
 - **La bolsa es low poly** (`BaseBag`, 17/11/2026): un prisma de ocho lados con las dos tapas en bisel, de caras planas.
   Lo que la cuelga, en ideas para elegir (`tests/base_bag_ideas.tscn`): cuatro sogas (gruesa, cadena, soga con cuatro

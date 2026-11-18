@@ -30,9 +30,9 @@ jaula (≈ 7 m): *el plano 6 era para la meca grande, borrada ese día*.
 - **Una línea de peligro** en el piso separa el gimnasio de la franja de las consolas.
 - **El gimnasio** sigue al elevador, con **la bolsa** a la altura de los brazos de la meca.
 - **La franja de las consolas**, debajo del gimnasio, usa **sus dos caras libres** (el usuario: «si nuestro objetivo es
-  disminuir lugares residuales»): **el fondo** (la armería, los cosméticos con la pintura, el cuadro del empleado del
-  mes y los casilleros, junto a la esclusa) y **la pared bajo el elevador** (los contratos, al lado de la meca). Al
-  salir de la esclusa: primero la ropa, después la meca, al final el contrato.
+  disminuir lugares residuales»): **el fondo** (la armería y los cosméticos con la pintura) y **la pared bajo el
+  elevador** (los contratos, al lado de la meca). **En la primera versión no hay casilleros ni cuadro del empleado
+  del mes** (el usuario, 17/11/2026: «una complejidad extra que le voy a agregar más tarde»).
 - **LA ESCLUSA, la sala de espera** (el usuario: «una pequeña zona en la que todos los jugadores puedan estar juntos
   antes de comenzar la partida… y después de pasar esa puerta… se cierra para siempre»). El problema es el de
   character-parametric: la meca se arma para los que son, así que **no tiene que cambiar a la vista** cuando se une

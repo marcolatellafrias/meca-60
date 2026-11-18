@@ -7,8 +7,8 @@ extends RefCounted
 ##   · EL ELEVADOR, un cuadrado marcado del piso donde duerme la meca; arriba, la compuerta del techo (BaseHatch).
 ##   · EL GIMNASIO con la bolsa, a la altura de los brazos de la meca.
 ##   · LA FRANJA DE LAS CONSOLAS, abajo del gimnasio, separada por la línea de peligro. Usa sus dos caras libres (el
-##     usuario: «tenemos… dos caras… vos estás dejando una vacía»): EL FONDO, con la armería, los cosméticos, el cuadro
-##     del empleado del mes y los casilleros (junto a la esclusa: lo primero al salir); y LA PARED BAJO EL ELEVADOR, con
+##     usuario: «tenemos… dos caras… vos estás dejando una vacía»): EL FONDO, con la armería y los cosméticos, cada uno en
+##     el medio de su mitad; y LA PARED BAJO EL ELEVADOR, con
 ##     los contratos (al lado de la meca: lo último antes de salir).
 ##   · LA ESCLUSA (BaseAirlock), la sala de espera, en la punta de la franja: un cuadrado DEL LADO DEL FONDO DE LA FRANJA
 ##     (el usuario: «coincide siempre, por más de que cambie… el fondo de la franja… paramétrico»). Se aparece ahí; su
@@ -39,12 +39,11 @@ const SIZE := Vector2(MAX_DEPTH + MAX_WIDTH + MAX_STRIP, MAX_DEPTH + MAX_STRIP)
 const OFFSET := Vector3(-SIZE.x * 0.5, 0.0, -SIZE.y * 0.5)
 ## El grupo de los nodos que tienen una base armada adentro (para rearmarla al guardar el F1).
 const GROUP := "base_plano"
-## LO DEL FONDO DE LA FRANJA, en fila desde la pared bajo el elevador: la armería, los cosméticos y el cuadro; los
-## casilleros llenan lo que sobra hasta la esclusa (sin lugares vacíos: entran los que entran).
-const CONSOLE_WIDTH := 3.0
+## LO DEL FONDO DE LA FRANJA: la armería y los cosméticos, cada uno en el medio de su mitad, de hasta CONSOLE_WIDTH. *Hasta
+## el 17/11/2026 estaban también el cuadro del empleado del mes y los casilleros; el usuario los sacó de la primera
+## versión: «no vamos a poner casillero ni memorial… una complejidad extra que le voy a agregar más tarde».*
+const CONSOLE_WIDTH := 5.0
 const BACK_GAP := 0.4
-const FRAME_WIDTH := 0.7
-const LOCKER_WIDTH := 0.9
 
 ## LAS MEDIDAS QUE SE MUEVEN (BaseSettings, el F1), tomadas al armar (el usuario, 17/11/2026: «perillas para el alto
 ## de la zona de gimnasio más ascensor, la profundidad… el ancho de la franja de consolas y el fondo»):
@@ -74,8 +73,6 @@ const WALL_COLOR := Color(0.72, 0.69, 0.64)
 const BAG_COLOR := Color(0.55, 0.33, 0.25)
 const CONSOLE_COLOR := Color(0.42, 0.44, 0.46)
 const SCREEN_COLOR := Color(0.45, 0.6, 0.5)
-const LOCKER_COLOR := Color(0.5, 0.56, 0.52)
-const FRAME_COLOR := Color(0.75, 0.6, 0.25)
 const CAGE_COLOR := Color(0.5, 0.5, 0.48)
 
 
@@ -135,7 +132,6 @@ static func build(parent: Node3D) -> StaticBody3D:
 	_walls(body)
 	_bag(parent)
 	_consoles(body)
-	_characters(body)
 	_roof(body)
 	_lights(body)
 	var hatch := BaseHatch.new()
@@ -249,11 +245,12 @@ static func _consoles(body: StaticBody3D) -> void:
 	var contracts_width := minf(strip - 1.6, 4.0)
 	_console(body, Vector2(ELEVATOR + WALL * 0.5 + 0.5, NAVE + strip * 0.5), Basis(Vector3.UP, -PI * 0.5),
 		contracts_width, "Contratos", BaseTerminal.Screen.CONTRACTS)
-	var from := ELEVATOR + WALL * 0.5 + 1.0 + BACK_GAP
-	_console(body, Vector2(from + CONSOLE_WIDTH * 0.5, back), Basis(), CONSOLE_WIDTH, "Armería",
-		BaseTerminal.Screen.ARMORY)
-	from += CONSOLE_WIDTH + BACK_GAP
-	_console(body, Vector2(from + CONSOLE_WIDTH * 0.5, back), Basis(), CONSOLE_WIDTH, "Cosméticos y pintura")
+	# las dos del fondo, repartidas a lo ancho: cada una en el medio de su mitad, tan anchas como dé (hasta 5 m)
+	var from := ELEVATOR + WALL * 0.5 + 1.0
+	var span := LENGTH - WALL * 0.5 - from
+	var console_width := minf(span * 0.5 - BACK_GAP * 2.0, CONSOLE_WIDTH)
+	_console(body, Vector2(from + span * 0.25, back), Basis(), console_width, "Armería", BaseTerminal.Screen.ARMORY)
+	_console(body, Vector2(from + span * 0.75, back), Basis(), console_width, "Cosméticos y pintura")
 
 
 ## Una consola: su mueble y su pantalla inclinada, en un cuerpo propio para que se contornee sola al mirarla, con su
@@ -273,21 +270,6 @@ static func _console(body: StaticBody3D, where: Vector2, facing: Basis, width: f
 		terminal.screen = screen as BaseTerminal.Screen
 		terminal.position = Vector3(0, 1.2, 0)
 		console.add_child(terminal)
-
-
-## LOS PERSONAJES: el cuadro chiquito y los casilleros, en el fondo de la franja, junto a la esclusa.
-static func _characters(body: StaticBody3D) -> void:
-	var back := NAVE + strip - WALL * 0.5
-	var frame_x := ELEVATOR + WALL * 0.5 + 1.0 + BACK_GAP * 3.0 + CONSOLE_WIDTH * 2.0 + FRAME_WIDTH * 0.5
-	Clay.box(body, Vector3(FRAME_WIDTH - 0.1, 0.8, 0.05), at(frame_x, back - 0.03, 1.7), FRAME_COLOR)
-	_sign(body, "El empleado del mes", at(frame_x, back - 0.3, 2.4))
-	var first := frame_x + FRAME_WIDTH * 0.5 + BACK_GAP
-	var count := int((LENGTH - 0.2 - first) / LOCKER_WIDTH)
-	for i in count:
-		Clay.solid(body, Vector3(LOCKER_WIDTH - 0.04, 2.0, 0.55), at(first + (i + 0.5) * LOCKER_WIDTH, back - 0.3, 1.0),
-			LOCKER_COLOR)
-	if count > 0:
-		_sign(body, "Casilleros", at(first + count * LOCKER_WIDTH * 0.5, back - 0.3, 2.4))
 
 
 static func _sign(parent: Node3D, text: String, where: Vector3) -> void:
