@@ -70,7 +70,7 @@ func _stomp(where: Transform3D) -> void:
 	var space := get_world_3d().direct_space_state
 	for body in AreaStrike.loose_in(space, _under, where * Transform3D(Basis(), Vector3.DOWN * 0.25)):
 		# Para un pie, «debajo» es más abajo que su medio: lo bajo que toca al bajar, aunque sea con el borde.
-		if StompFeet.is_under(body, where, _size, 0.0) and StompFeet.flatten(body):
+		if StompFeet.is_under(body, where, _size, 0.0) and StompFeet.flatten(body, get_parent()):
 			flattened += 1
 
 
@@ -97,9 +97,11 @@ static func half_of(body: RigidBody3D) -> float:
 	return 0.3
 
 
-## ACHATA `body` (ver arriba): un sonido, polvo, y desaparece. Devuelve si lo acható (un personaje, todavía no).
-static func flatten(body: RigidBody3D) -> bool:
-	if body.is_queued_for_deletion() or StompFeet._is_person(body):
+## ACHATA `body` (ver arriba): un sonido, polvo, y desaparece. Devuelve si lo acható (un personaje, todavía no). LO DE
+## `by` MISMO NO (quien pisa: lo que cuelga de él, como las piezas de un brazo con músculos que quedaron debajo de su
+## caja; 17/11/2026: la meca se achataba el antebrazo y el brazo seguía andando con la pieza borrada).
+static func flatten(body: RigidBody3D, by: Node) -> bool:
+	if body.is_queued_for_deletion() or StompFeet._is_person(body) or (by != null and by.is_ancestor_of(body)):
 		return false
 	var holder := body.get_parent() as Node3D
 	if holder != null:

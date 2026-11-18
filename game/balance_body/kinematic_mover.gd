@@ -321,5 +321,5 @@ func _squash() -> void:
 	var place := body_place()
 	var under := place * Transform3D(Basis(), Vector3.DOWN * (body.size.y * 0.5 + 0.2))
 	for other in AreaStrike.loose_in(get_world_3d().direct_space_state, _below, under):
-		if other != body and StompFeet.is_under(other, place, body.size) and StompFeet.flatten(other):
+		if other != body and StompFeet.is_under(other, place, body.size) and StompFeet.flatten(other, body):
 			flattened += 1
