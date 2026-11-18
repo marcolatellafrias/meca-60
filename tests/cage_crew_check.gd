@@ -121,7 +121,10 @@ func _ready() -> void:
 	energy.level = 1.0
 	var health := Health.of(trio)
 	var life := health.left if health != null else -1.0
+	# Como un jefe: primero avisa el golpe una vez (block_hit; si lo frena el escudo, se da por usado) y si no, pega.
 	var hit := func() -> bool:
+		if trio.block_hit():
+			return false
 		return HitReaction.land(trio, 10.0, "prueba", HitReaction.Kind.FLINCH, Vector3.FORWARD, 0.0,
 			trio.global_position)
 	(trio.keys as ToolMechKeys).cockpit.shield = true

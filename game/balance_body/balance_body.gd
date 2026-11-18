@@ -475,6 +475,13 @@ func untouchable() -> bool:
 	return kinematic and state != State.STANDING
 
 
+## SI UN GOLPE LO FRENA ALGO SUYO (el escudo de la meca, ver ToolMech): quien pega lo llama UNA SOLA VEZ POR GOLPE, antes
+## de pegar (`untouchable` se pregunta muchas veces y no cuenta nada). True: el golpe se frenó y se da por usado (no se
+## reintenta). Lo de casi todos: nada lo frena.
+func block_hit() -> bool:
+	return false
+
+
 ## UN EMPUJÓN A LA CINEMÁTICA: se corre `offset` (m, de costado) en `time` (s), con un saltito de `hop` m, sin
 ## manejarse (ver KinematicMover.shove). A la física, nada: a ella se le pega con `push_impulse`.
 func shove(offset: Vector3, time: float, hop := 0.0) -> void:

@@ -8,7 +8,7 @@ extends Node3D
 ##     (`HOLD_COST`). Sin energía para prenderlo, no prende (hay que volver a apretar); si se vacía manteniéndolo, se
 ##     apaga y la meca queda aturdida, como siempre (MechEnergy).
 ##   · FRENA TODO GOLPE: quien pega pregunta si se le puede pegar (HitReaction.land → ToolMech.untouchable) y, con el
-##     escudo, no.
+##     escudo, no; y avisa el golpe frenado una vez por golpe (ToolMech.block_hit → `stopped`).
 ##   · EL PARRY: el primer golpe frenado hasta `PARRY` s después de prenderlo devuelve lo que costó prenderlo («así no
 ##     castiga tanto»).
 ## Se ve el campo, que aparece y se apaga, con un destello en cada golpe frenado.
@@ -75,7 +75,7 @@ func _process(delta: float) -> void:
 	_paint.albedo_color = Color(TINT, ALPHA * _shown + 0.5 * _flash)
 
 
-## UN GOLPE FRENADO (lo avisa ToolMech.untouchable): el destello y, si fue justo después de prenderlo, el parry.
+## UN GOLPE FRENADO (lo avisa ToolMech.block_hit): el destello y, si fue justo después de prenderlo, el parry.
 func stopped() -> void:
 	_flash = 1.0
 	if on and _since <= PARRY and not _refunded and energy != null:

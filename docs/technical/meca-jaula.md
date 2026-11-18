@@ -224,8 +224,10 @@ El de [[armamento]] («El escudo de fuerza», 18/11/2026; el usuario: «el del e
 campo celeste que envuelve a toda la meca mientras se mantiene.
 - **Lo que gasta**: prenderlo, un golpe de energía (0,12); mantenerlo, 0,2 por segundo. Si se vacía, se apaga y la meca
   queda aturdida, como siempre.
-- **Frena todo golpe**: quien pega pregunta si se le puede pegar (`HitReaction.land` → `ToolMech.untouchable`), y con
-  el escudo, no.
+- **Frena todo golpe**: quien pega pregunta si se le puede pegar (`HitReaction.land` → `ToolMech.untouchable`, sin
+  efectos), y con el escudo, no. **El golpe frenado se avisa una vez por golpe** (`BalanceBody.block_hit`, lo llama
+  quien pega): ahí van el destello y el parry. *La primera versión lo contaba en `untouchable`, que se pregunta varias
+  veces por golpe; lo avisó la sesión de Jefes.*
 - **El parry**: el primer golpe frenado hasta 0,3 s después de prenderlo devuelve lo que costó prenderlo.
 - **Quién lo maneja**: de a 2 y de a 3, **el de arriba**, con su botón al lado de saltar (lo aprobó el usuario: el que
   ve lo global). De a 1, **la Q** en el modo manejo. Poseyéndola, la Q.

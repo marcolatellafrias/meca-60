@@ -37,13 +37,18 @@ func _ready() -> void:
 	super()
 
 
-## EL ESCUDO FRENA LOS GOLPES (ver MechShield): quien pega pregunta si se le puede pegar (HitReaction.land); con el
-## escudo prendido, no, y eso cuenta como un golpe frenado (su destello y el parry).
+## CON EL ESCUDO PRENDIDO NO SE LE PUEDE PEGAR (ver MechShield). Se pregunta muchas veces por golpe: no cuenta nada.
 func untouchable() -> bool:
-	if shield.on:
-		shield.stopped()
-		return true
-	return super()
+	return shield.on or super()
+
+
+## UN GOLPE FRENADO POR EL ESCUDO (BalanceBody.block_hit, una vez por golpe: lo llama quien pega): el destello y el parry.
+## *Hasta el 18/11/2026 lo contaba `untouchable`, que se pregunta varias veces por golpe (lo avisó la sesión de Jefes).*
+func block_hit() -> bool:
+	if not shield.on:
+		return super()
+	shield.stopped()
+	return true
 
 
 func _build() -> void:
