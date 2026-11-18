@@ -42,3 +42,10 @@ static var current := KnobsFile.load_into(LegSettings.new(), SAVED) as LegSettin
 @export_range(0.0, 2.0, 0.05) var stomp_dip := 0.4
 ## Cuánto se inclina yendo de costado a la velocidad de caminar (°; 0, nada).
 @export_range(0.0, 20.0, 0.5) var side_lean := 5.0
+
+@export_group("Recogidas")
+## RECOGIDAS (en el dash, levitando y en picada: KinematicMover.tucks), SUTIL: la pose de parada con el pie subido esta
+## parte de la altura de la pierna (0 a 1) y la punta del pie hacia abajo (°). El usuario: «parecerse a la pose en
+## reposo pero un poco más recogida nomás, y con los pies un poco apuntando hacia abajo».
+@export_range(0.0, 0.8, 0.05) var tuck_lift := 0.25
+@export_range(0.0, 80.0, 1.0) var tuck_toes := 30.0

@@ -112,11 +112,11 @@ func place(k: BodySettings, delta: float) -> void:
 	var lying := body.kinematic and not standing and body.state != BalanceBody.State.STANDING
 	_tuck = move_toward(_tuck, 1.0 if folded else 0.0, delta / maxf(k.fold_time if folded else k.unfold_time, 0.01))
 	var share := smoothstep(0.0, 1.0, _tuck)
-	# RECOGIDAS EN EL DASH, LEVITANDO Y EN PICADA (KinematicMover.tucks), de una; al terminar se plantan debajo.
+	# RECOGIDAS EN EL DASH, LEVITANDO Y EN PICADA (KinematicMover.tucks), de una; al terminar se plantan debajo. SUTIL
+	# (el usuario: «parecerse a la pose en reposo pero un poco más recogida nomás, y con los pies un poco apuntando hacia
+	# abajo»): la pose de parada quieta con el pie subido hacia la cadera (LegSettings.tuck_lift) y la punta abajo.
 	var tucked := body.kinematic and body.mover != null and body.state == BalanceBody.State.STANDING \
 		and body.mover.tucks()
-	if tucked:
-		share = 1.0
 	var yaw := body.yaw()
 	var centre := body.global_position
 	var under := body.support if standing else Vector3(centre.x, centre.y - body.ground_distance(centre), centre.z)
@@ -174,6 +174,12 @@ func place(k: BodySettings, delta: float) -> void:
 		var ground := _foot_ground(k, i) if standing else (_feet[i] if folded else body.measures.foot_rest(root, side))
 		var facing := Basis(Vector3.UP, _feet_yaw[i]) if standing else root.basis.orthonormalized()
 		var hip := body.measures.hip(waist, side)
+		if tucked:
+			# Debajo de su lugar de parada, a la altura de parada menos lo que se recoge.
+			var rest := body.measures.foot_rest(Transform3D(Basis(Vector3.UP, yaw), body.global_position), side)
+			var drop := (body.hover - body.measures.HIP_DROP) * (1.0 - LegSettings.current.tuck_lift)
+			ground = Vector3(rest.x, hip.y - drop, rest.z)
+			facing = Basis(Vector3.UP, yaw)
 		var to_ankle := ground + Vector3.UP * body.measures.ANKLE - hip
 		var reach := body.measures.leg_reach()
 		if to_ankle.length() > reach:
@@ -183,6 +189,8 @@ func place(k: BodySettings, delta: float) -> void:
 		ahead.y = 0.0
 		var knee_way := ahead.normalized() + waist.basis.x * side * out
 		var open := body.measures.leg(hip, ground, facing, knee_way)
+		if tucked:
+			open = BodyLegs._toes_down(open, LegSettings.current.tuck_toes)
 		if lying:
 			open = BodyLegs._moved(open, fall)
 		_legs[i].pose(BodyLegs._blend(open, _tucked_leg(waist, side), share) if share > 0.001 else open)
@@ -359,6 +367,16 @@ func _tucked_leg(waist: Transform3D, side: float) -> Dictionary:
 			-body.measures.FOOT_AHEAD))),
 		"knee": waist * knee,
 	}
+
+
+## LA PUNTA DEL PIE `degrees` grados hacia abajo, girando sobre el tobillo (recogidas).
+static func _toes_down(pose: Dictionary, degrees: float) -> Dictionary:
+	var foot: Transform3D = pose["foot"]
+	var ankle: Vector3 = pose["ankle"]
+	var turn := Basis(foot.basis.x.normalized(), -deg_to_rad(degrees))
+	var out := pose.duplicate()
+	out["foot"] = Transform3D(turn * foot.basis, ankle + turn * (foot.origin - ankle))
+	return out
 
 
 ## UNA PIERNA ARMADA, movida entera por `by` (tirada: la pose de parada, volcada con la caja).

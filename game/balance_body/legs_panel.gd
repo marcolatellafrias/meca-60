@@ -12,6 +12,7 @@ const LABELS := {
 	"stride": "largo del paso (m, piernas medianas)", "lift": "cuánto sube el pie (m, piernas medianas)",
 	"fastest": "el paso más rápido (s)", "slowest": "el paso más lento (s)",
 	"bob": "la caja sube a mitad del paso (m, piernas medianas)", "side_lean": "de costado se inclina (°)",
+	"tuck_lift": "recogidas: suben (parte de la pierna)", "tuck_toes": "recogidas: la punta abajo (°)",
 	"stomp": "pisotón: baja de golpe (0 a 1)", "stomp_dip": "al pisar se hunde (m, piernas medianas)",
 }
 

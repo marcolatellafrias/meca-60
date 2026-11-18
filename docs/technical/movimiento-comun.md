@@ -27,7 +27,10 @@ huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la me
    giro de cada pie, la pelvis, las rodillas, la caída y recogerlas. En `tests/cage_legs_movie`, caminando: sin ningún
    pie en el aire el 20 % del tiempo antes, el 10 % ahora.
    **RECOGER LAS PIERNAS** (18/11/2026; las reglas las acordó el usuario): recogidas, de una, en un DASH (en el piso
-   también), LEVITANDO y BAJANDO EN PICADA; en un salto común o una caída, cuelgan; al terminar, se plantan debajo de
+   también), LEVITANDO y BAJANDO EN PICADA, SUTIL (el usuario: «parecerse a la pose en reposo pero un poco más
+   recogida nomás, y con los pies un poco apuntando hacia abajo»: la pose de parada con el pie subido `tuck_lift` de la
+   altura de la pierna, 0,25, y la punta `tuck_toes` hacia abajo, 30°; F4, «Recogidas»); en un salto común o una caída,
+   cuelgan; al terminar, se plantan debajo de
    las caderas. Lo decide el motor (`KinematicMover.tucks()`), sólo con lo que sabe seguro y NUNCA con los rayos de los
    pies (en un dash de costado en el piso siguen tocando). Las transiciones son instantáneas (el usuario: «para
    simplificar… instantánea por ahora, y después vemos si queda mal»). En `tests/cage_legs_movie`: recogidas 0,35 s en
