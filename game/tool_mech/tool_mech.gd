@@ -25,6 +25,8 @@ var drill: SpinTip = null
 var melee: MechArm = null
 ## El escudo de un brazo (ShieldTip), o null: sin él, no hay escudo.
 var guard: ShieldTip = null
+## LOS BRAZOS Y LA ENERGÍA POR LA RED (MechArmsNet).
+var arms_net := MechArmsNet.new()
 ## LO QUE FRENA EL ESCUDO: lo que viene de este ángulo del frente del torso, a cada lado (°).
 const GUARD_HALF := 75.0
 
@@ -38,6 +40,9 @@ func _ready() -> void:
 	add_child(energy)
 	shield.energy = energy
 	add_child(shield)
+	arms_net.name = "Red de los brazos"
+	arms_net.mech = self
+	add_child(arms_net)
 	# SUS SONIDOS (MechSounds): lo que depende del estado lo mira cada paso desde que nace.
 	MechSounds.of(self)
 	super()
@@ -96,6 +101,12 @@ func _build_arms() -> void:
 		if melee == null and not (arm.tip is CannonTip or arm.tip is SpinTip or arm.tip is ShieldTip):
 			melee = arm
 	ArmPoseIdeas.apply(self)
+
+
+## Después de leer lo que se pide, los brazos por la red (en las demás máquinas, lo del dueño pisa lo de acá).
+func _think() -> void:
+	super()
+	arms_net.after_read(get_physics_process_delta_time())
 
 
 func _arm_energy() -> MechEnergy:

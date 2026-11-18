@@ -62,6 +62,13 @@ func strike() -> bool:
 	return true
 
 
+## La que mandó el dueño (ver `strike`): lo que giraba, y gira mucho menos.
+func on_net_punch() -> void:
+	_strike_spin = spin
+	MechSounds.hit(arm, MechSounds.SPIN_STRIKE, forearm, 0.8 + 0.4 * spin)
+	spin *= 0.3
+
+
 func hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> bool:
 	var push := lerpf(PUSH_STILL, PUSH_FULL, _strike_spin)
 	EnergyBolt.lands(body, velocity * StrikeSettings.current.hit_mass * push, at, _hit_name())

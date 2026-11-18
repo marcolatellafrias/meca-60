@@ -71,6 +71,11 @@ func strike_path() -> Array:
 
 
 ## AL CONECTAR un golpe: si la punta se encarga (y no el golpe de siempre).
+## UNA PIÑA QUE MANDÓ EL DUEÑO por la red acaba de salir de este brazo (MechArmsNet): lo que la punta haga al tirarla.
+func on_net_punch() -> void:
+	pass
+
+
 func hit(_body: RigidBody3D, _at: Vector3, _velocity: Vector3) -> bool:
 	return false
 

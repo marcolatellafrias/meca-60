@@ -138,10 +138,16 @@ func charged_strike(power: float, slowest: float, strongest: float) -> bool:
 	return true
 
 
-## Tira una piña (si no está en otra). Devuelve si la tiró.
+## Tira una piña (si no está en otra). Devuelve si la tiró. POR LA RED, en las máquinas que la siguen sólo sale la que
+## manda el dueño (MechArmsNet), y el dueño avisa cada una.
 func punch(kind: Punch) -> bool:
 	if punching != Punch.NONE or kind == Punch.NONE:
 		return false
+	var net := MechArmsNet.of(self)
+	if net != null and not net.allows():
+		return false
+	if net != null:
+		net.announce(self)
 	_from = _wanted()
 	punching = kind
 	_clock = 0.0
@@ -165,6 +171,15 @@ func punch_at(point: Vector3) -> bool:
 		return false
 	_aimed = [straight[0], [straight[1][0], aim], [straight[2][0], aim]]
 	return true
+
+
+## LOS PUNTOS DE LA PIÑA de ahora si van por otro camino (vacío, los suyos), y ponerlos: para la red (MechArmsNet).
+func aimed_path() -> Array:
+	return _aimed
+
+
+func aim_path(path: Array) -> void:
+	_aimed = path
 
 
 ## Por dónde pasa el puño en la piña que está tirando.

@@ -66,7 +66,11 @@ static func struck(collider: Object) -> RigidBody3D:
 ## UN GOLPE DE LA MECA DE TRES LLEGA A `body`: el empujón (BalanceBody.hit) y, SI LO QUE RECIBE TIENE
 ## `take_hit(strength, at, source)`, se lo dice: cuánto empujó (kg·m/s), dónde (mundo) y con qué ("cañón", "rayo",
 ## "taladro"). Es la costura con lo que lleva vida (un jefe, ver game/bosses/): lo decide quien recibe, no el arma.
+## POR LA RED, SÓLO EN EL HOST: cada máquina tira sus tiros y barre sus piñas (ver MechArmsNet), y sólo los del host le
+## pegan de verdad; así un golpe cuenta una vez.
 static func lands(body: RigidBody3D, impulse: Vector3, at: Vector3, source: String) -> void:
+	if ProjectileField.is_client(body):
+		return
 	BalanceBody.hit(body, impulse, at - body.global_position)
 	var owner_of := struck(body)
 	if owner_of != null and owner_of.has_method("take_hit"):
