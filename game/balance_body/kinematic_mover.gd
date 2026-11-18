@@ -1,7 +1,8 @@
 class_name KinematicMover
 extends CharacterBody3D
 
-## EL MOTOR DE LA MECA CINEMÁTICA (13/11/2026): la pieza que la mueve cuando es cinemática (ver BalanceBody `kinematic`).
+## EL MOTOR DE LA MECA (13/11/2026): la pieza que mueve a todo cuerpo con equilibrio (ver BalanceBody). *Hasta el
+## 18/11/2026 había también el cuerpo físico con péndulo, y éste era el de las cinemáticas (`kinematic`).*
 ## Es lo que se probó en el Laboratorio cinemático con el cubo, pasado a la meca de verdad (el usuario: «la meca
 ## cinemática, que ahora es distinta del laboratorio cinemático, probablemente habría que unificarla»); hoy mueve a la
 ## meca jaula. *El laboratorio y la meca cinemática de la meca grande se borraron el 17/11/2026 (commit 0bcaeaf).*
@@ -28,9 +29,9 @@ extends CharacterBody3D
 ##     guionado: tantos metros en tanto tiempo con un saltito fijo.*
 ##   · EL REVOLEO (`carry`): un camino guionado hasta un punto, en tanto tiempo y con un arco (lo que lleva quien la
 ##     agarró y la tira); por este mismo motor (no atraviesa lo fijo), y termina en el piso.
-##   · LA CAÍDA (`knock_down`): cae de espaldas, queda tirada y se levanta (BalanceBody.State, como la física), animado.
-##     La inclinación es de la caja misma (`body_place`), así los brazos (que se arman desde ella) y las piernas (que se
-##     recogen, como en la física) la siguen solos.
+##   · LA CAÍDA (`knock_down`): cae de espaldas, queda tirada y se levanta (BalanceBody.State), animado.
+##     La inclinación es de la caja misma (`body_place`), así los brazos (que se arman desde ella) y las piernas la siguen
+##     solos.
 ## *Hasta el 15/11/2026 lo hacía desde afuera el módulo Jefes, después de cada paso, girando encima las piezas ya
 ## armadas derechas: los brazos se veían rotos.*
 
@@ -195,7 +196,6 @@ func step(delta: float) -> void:
 	body.support_speed = Vector3(real.x, 0.0, real.z)
 	body.tilt = lean
 	body.height = _hover_now()
-	body.moves.rod_scale = (body.size.y * 0.5 + _hover_now()) / (body.size.y * 0.5 + body.hover)
 	# Lo que queda debajo de la caja cuando baja, se achata (ver arriba).
 	var bottom := global_position.y + _hover_now()
 	if bottom < _last_bottom - 0.0001:
@@ -345,7 +345,7 @@ func _pushed(k: KinematicSettings, delta: float, grounded: bool) -> Vector3:
 
 
 ## LA CAÍDA, paso a paso: cae (acelerando) hasta `fall_lie`, queda tirada, y se levanta; a la mitad de levantarse (ver
-## BalanceBody.LAST_STRETCH) estira las piernas, como la física.
+## BalanceBody.LAST_STRETCH) estira las piernas.
 func _fall(k: KinematicSettings, delta: float) -> void:
 	if body.state == BalanceBody.State.STANDING:
 		lean = 0.0

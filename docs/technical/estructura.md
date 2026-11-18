@@ -15,12 +15,9 @@ está en el commit **`0bcaeaf`**.
 
 | Archivo | Clase | Qué es |
 |---|---|---|
-| `balance_body.gd` | `BalanceBody` | La caja (`size`, la masa) y **su equilibrio, el péndulo**: el apoyo, caerse, volver. Lo que se le pide (`move`, `sprint`, `crouch`, `jump`, `aim_yaw`). Arma sus piezas y las llama en orden; cada uno agrega lo suyo con tres ganchos: `_build` (sus piezas), `_think` (escribe lo que se le pide) y `_after_step`. |
-| `kinematic_mover.gd`, `kinematic_settings.gd`, `stomp_feet.gd` | `KinematicMover`, `KinematicSettings`, `StompFeet` | **El motor discreto** (`BalanceBody.kinematic`): el controlador de personaje del motor contra lo fijo, sus perillas y los pies con choque. Es como se mueve la jaula. |
+| `balance_body.gd` | `BalanceBody` | La caja (`size`, la masa), congelada: la mueve su motor. El apoyo, caerse y volver (los escribe el motor), la puerta para empujarla. Lo que se le pide (`move`, `sprint`, `crouch`, `jump`, `aim_yaw`). Arma sus piezas y las llama en orden; cada uno agrega lo suyo con tres ganchos: `_build` (sus piezas), `_think` (escribe lo que se le pide) y `_after_step`. |
+| `kinematic_mover.gd`, `kinematic_settings.gd`, `stomp_feet.gd` | `KinematicMover`, `KinematicSettings`, `StompFeet` | **El motor** (`BalanceBody.mover`): el controlador de personaje del motor contra lo fijo, sus perillas y los pies con choque. Es como se mueve toda meca. |
 | `body_legs.gd` | `BodyLegs` | La pelvis (un cilindro) y dos piernas debajo de la caja: dibujo. Los pasos, la marcha común (`Gait`, perillas en `LegSettings`, F4). Otro medio de moverse es otra pieza. |
-| `body_nozzles.gd` | `BodyNozzles` | Las toberas, invisibles: levantarse cuando se cae, y el propulsor. |
-| `body_moves.gd` | `BodyMoves` | Caminar, correr, agacharse, el salto cargado, el propulsor (la física). |
-| `body_settings.gd` | `BodySettings` | Todas sus perillas, en un recurso (`BalanceBody.knobs`; por defecto el de la meca). |
 | `move_curve.gd`, `move_ramp.gd` | `MoveCurve`, `MoveRamp` | Las curvas de los movimientos discretos (las usan el dash y el Luchador). |
 
 Usa de `game/mech/` las medidas y la pierna (`MechBody`, `MechLeg`) y la arcilla (`Clay`).
@@ -52,10 +49,10 @@ después se separó el cuerpo con equilibrio, para los jefes.*
 1. **Lo que se le pide está separado de quién lo pide.** El cuerpo tiene variables (`move`, `sprint`, `crouch`,
    `jump`, `aim_yaw`; la meca, además, `covering` y `punch()` en sus brazos). En la meca las escribe `MechKeys`;
    mañana, las consolas de adentro; en un jefe, su cerebro. Nada más lee teclas.
-2. **La caja sólo se mueve con fuerzas e impulsos** (la física) **o con su motor** (la discreta): nunca a mano. Adentro
+2. **La caja sólo se mueve con su motor**: nunca a mano. Adentro
    y por afuera se camina.
-3. **Una pieza, un archivo, un trabajo.** El cuerpo las llama en orden fijo en su paso: lo que se le pide, los
-   movimientos, el equilibrio, las toberas, las piernas, y lo de cada uno (en la meca, los brazos y el marco).
+3. **Una pieza, un archivo, un trabajo.** El cuerpo las llama en orden fijo en su paso: lo que se le pide, el motor,
+   el esqueleto, las piernas, y lo de cada uno (en la meca, los brazos y el marco).
 
 ## Los brazos
 - `game/pose_arm/` · `PoseArm`: el discreto (el del cañón de la jaula).
@@ -80,6 +77,5 @@ meca. Ver [[personajes-traidos]].
   consolas, las teclas se van a ellas y queda la cámara.
 - Con una sola meca, algunas costuras quedaron de más: `Mech.Cabin` y `cabin_kit` tienen una sola cabina; `ToolMech`
   es sólo la base de `CageMech`; `MechCabin`, de `CageCabin`. Se dejaron para no cambiar a la jaula en la limpieza.
-- La física del péndulo (`BodyMoves`, `BodyNozzles`, `BodySettings`) hoy la usa sólo la meca de práctica.
-- Las perillas de los brazos físicos (`MuscleArmSettings`) están aparte de `BodySettings`; las del discreto,
+- Las perillas de los brazos físicos (`MuscleArmSettings`) están aparte de las del cuerpo; las del discreto,
   en `PoseArmSettings`.

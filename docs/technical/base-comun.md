@@ -1,14 +1,17 @@
 # La base común de las mecas
 
 Lo que comparten **la meca propia** y **las mecas enemigas (los jefes)**: `BalanceBody`, en `game/balance_body/`
-(separada de `Mech` el 13/11/2026; ver [[estructura]] y [[pendulo]]). La meca propia hereda de ella; un jefe también.
-Esta nota junta lo acordado, para quien haga la meca y quien haga los jefes. Hoy la heredan la meca jaula, con el motor
-discreto (abajo), y su meca de práctica, con el péndulo (ver [[meca-jaula]]); a la meca, los jefes le pegan por su
+(separada de `Mech` el 13/11/2026; ver [[estructura]]). La meca propia hereda de ella; un jefe también.
+Esta nota junta lo acordado, para quien haga la meca y quien haga los jefes. Hoy la heredan la meca jaula y su meca de
+práctica, las dos con el motor discreto (abajo; ver [[meca-jaula]]); a la meca, los jefes le pegan por su
 puerta (`hit`, `shove`, `knock_down`; ver [[pelea-jefes]]). *Hasta el 17/11/2026 la heredaban también las de la meca
-grande, borrada ese día (commit 0bcaeaf).*
+grande, borrada ese día (commit 0bcaeaf). Hasta el 18/11/2026 había también un cuerpo físico, EL PÉNDULO (la caja la
+movía Jolt sobre un palo hasta un punto de apoyo que la seguía; se caía pasado un ángulo y se levantaba con toberas:
+`BodyMoves`, `BodyNozzles`, `BodySettings`); lo usaba sólo la meca de práctica y el usuario lo borró en la limpieza del
+esqueleto («Borrarlo»). Está en el commit d09b964, con su nota (`pendulo`).*
 
 ## Qué es
-**Un solo cuerpo físico** que se inclina, pierde el equilibrio y recibe golpes. Nada más. El usuario (13/11/2026): «los
+**Un solo cuerpo** que se inclina, pierde el equilibrio y recibe golpes. Nada más. El usuario (13/11/2026): «los
 jefes van a heredar una clase abstracta que comparten con la meca propia, que es todo el sistema de equilibrio… un
 cuerpo físico que se inclina y pierde equilibrio»; y a la vez «no quiero correr el riesgo de limitarme por compartir
 demasiado… las mecas de jefes tal vez puedan llegar a tener cosas más locas».
@@ -27,15 +30,14 @@ que lo limite.
   patas saliendo de los costados, en vez de abajo (el usuario, 13/11/2026). Hoy `BodyLegs` cuelga las dos piernas de una
   pelvis debajo de la caja; la pieza de las piernas tiene que poder decir **de dónde sale cada pata** —de una pelvis o de
   puntos del cuerpo— y cuántas son. «Es un detalle mínimo, pero se puede estandarizar.»
-- **El equilibrio es el péndulo** (el cuerpo sobre un punto de apoyo que lo sigue): con cuatro patas o con ruedas, lo
-  que cambia es cómo se dibuja y qué tan rápido lo alcanza el apoyo, no la regla.
-- **Todo se mueve con fuerzas e impulsos**, nunca por código.
+- **La caja la mueve su motor** (`KinematicMover`), nunca a mano: lo que la empuja pasa por su puerta (`knock_back`,
+  `shove`, `carry`, `knock_down`).
 - **Los brazos simulados** (`MuscleArm`) se guardan por si sirven para un jefe.
 
 ## Cómo se usa
 Un cuerpo nuevo hereda de `BalanceBody`, pone su `size` y su masa en `_init`, y redefine tres ganchos: `_build` (arma sus
 piezas: cerebro, armas, otro medio de moverse), `_think` (al empezar cada paso escribe lo que se le pide) y
-`_after_step`. Puede llevar sus propias perillas (`knobs`, un `BodySettings`).
+`_after_step`. Puede llevar sus propias perillas de moverse (`kinematic_knobs`, un `KinematicSettings`).
 
 **Lo que falta**: la pieza de las piernas todavía es una sola, `BodyLegs` (dos patas desde una pelvis). Las patas que
 salen del cuerpo, las cuatro patas o las ruedas son otra pieza que hay que poder elegir en `_build`; hoy el cuerpo arma
@@ -45,13 +47,12 @@ siempre `BodyLegs`.
 Es de la sesión de la meca; la de jefes la usa y le pide cambios.
 
 ## El motor discreto — `KinematicMover` (13/11/2026)
-**El mismo cuerpo, con todo lo suyo, pero lo mueve el controlador de personaje del motor**, con movimiento discreto, en
-vez de Jolt. Es como se mueve la meca jaula; los jefes lo usan por su puerta. Salió del laboratorio cinemático (un cubo
+**Al cuerpo lo mueve el controlador de personaje del motor**, con movimiento discreto. Es como se mueven la meca jaula
+y la de práctica; los jefes lo usan por su puerta. Salió del laboratorio cinemático (un cubo
 contra cajas sueltas, borrado el 17/11/2026 con la meca grande; el usuario: «un sistema simple, barebones, sólido y que
 use las cosas del motor, y no reglas inventadas»). *Esta parte vivía en las notas de la meca cinemática y del
 laboratorio, borradas ese día; están en el commit 0bcaeaf.*
-- **Un interruptor del cuerpo**: `BalanceBody.kinematic`, que se pone antes de armarlo. Con él la caja queda congelada y
-  la mueve **`KinematicMover`**, un `CharacterBody3D` (`move_and_slide`): se le da una velocidad, y él frena y se
+- **La caja queda congelada** y la mueve **`KinematicMover`**, un `CharacterBody3D` (`move_and_slide`): se le da una velocidad, y él frena y se
   desliza contra paredes y esquinas, sabe si está en el piso y se sale solo si queda metido en algo.
 - **Contra lo fijo del mundo, un cilindro** que envuelve la caja y lo que sobresale adelante (`outline_extra`), y mira
   **sólo la capa de lo fijo** (`PhysicsLayers.FIXED`). Un piso o una pared que no esté marcado como fijo, la meca lo
@@ -62,7 +63,7 @@ laboratorio, borradas ese día; están en el commit 0bcaeaf.*
 - **Movimiento discreto, en metros y segundos** (`KinematicSettings`; cada cuerpo puede llevar las suyas,
   `kinematic_knobs`: la jaula, en su F1): una velocidad y el tiempo para llegar a ella; giro con tope; salto sólo para
   arriba; vuelo con su barra; dash (Shift con dirección) en el piso y en el aire con su barra; agacharse.
-- **La altura**: la de las piernas (el F2), igual que la física.
+- **La altura**: la de las piernas (el F2).
 - **Lo que la mueve sin manejarse** (lo pidieron los jefes): `shove` la corre su motor (también el revoleo) y
   `knock_down` la tira y se levanta; tirada es intocable (`untouchable`).
 - Para ponerla en otro lugar sin barrer el camino: `put`. Para manejarla desde un test o un cerebro: `scripted` (en la

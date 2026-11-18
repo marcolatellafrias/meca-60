@@ -15,6 +15,12 @@ const SAVED := "res://game/balance_body/leg_settings.tres"
 
 static var current := KnobsFile.load_into(LegSettings.new(), SAVED) as LegSettings
 
+@export_group("Las rodillas")
+## LAS RODILLAS van hacia adelante y un poco hacia afuera; agachada, más hacia afuera (parte de adelante). *Estaban en
+## BodySettings hasta el 18/11/2026, cuando se borró con el cuerpo físico.*
+@export_range(0.0, 1.5, 0.05) var knee_out := 0.2
+@export_range(0.0, 2.0, 0.05) var knee_out_crouched := 0.6
+
 @export_group("El paso")
 ## EL LARGO DEL PASO, lo que recorre un pie en el mundo (m, piernas medianas: se escala con su largo, F2): lo que avanza
 ## la caja en un ciclo de la marcha común (Gait; dos pasos, uno por pie).

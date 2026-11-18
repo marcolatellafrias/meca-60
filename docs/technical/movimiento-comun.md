@@ -27,7 +27,7 @@ para empujar y chocar.
 PASO 2a (18/11/2026): LAS PIERNAS CON LA IK COMÚN. BodyLegs dice adónde va cada pie (el punto del piso, hacia dónde
 dobla la rodilla, los ejes del pie) y `MechLeg.reach_to` gira los huesos con la IK de los personajes
 (`IkUtil.solve_two_bone_ik`, estática desde ese día: una sola IK para todos, sin duplicar código), sin moverlos de donde
-nacen. La pierna plegándose de la meca física sigue por el camino de antes. EL RAGDOLL SALE DEL ESQUELETO
+nacen. EL RAGDOLL SALE DEL ESQUELETO
 (`PartsRagdoll._mech_parts`): un pedazo por hueso, unido a su padre en el origen del hueso; 12 pedazos (el brazo con
 músculos, también en dos).
 
@@ -167,8 +167,7 @@ esqueleto a 0 mm) y camina.
    «una curva leve de subir y bajar la pelvis… le da el feeling de meca»; «adelante y atrás, nunca». En
    `tests/cage_legs_movie`: sube hasta 0,15 m, de costado 5°, de frente 0,3° (el instante de doblar).
 5. **Un solo IK de dos huesos** (18/11/2026, la limpieza): `IkUtil.solve_two_bone_ik` sobre huesos y, sin huesos, su
-   misma cuenta `IkUtil.bend_point` (las poses de MechBody: lo que persigue el brazo de músculos, las piernas plegándose
-   de la meca física; las patas de gait_movie). *Se fueron `MechBody.joint` y `Gait.knee`.*
+   misma cuenta `IkUtil.bend_point` (las poses de MechBody: lo que persigue el brazo de músculos; las patas de gait_movie). *Se fueron `MechBody.joint` y `Gait.knee`.*
 
 `tests/cage_legs_movie` (con ventana): **el video de base** de las piernas de la jaula hoy, caso por caso (arrancar,
 frenar, doblar de golpe, girar en el lugar, de costado, el dash, saltar, levitar, bajar agachada), con una grilla en el

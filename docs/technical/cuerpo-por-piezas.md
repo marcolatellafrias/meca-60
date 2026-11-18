@@ -14,7 +14,7 @@ eligen por separado salen todas las combinaciones con menos código.
 | Pieza | Qué es | Opciones | En la meca | En el Luchador (el jefe que sigue) |
 |---|---|---|---|---|
 | **Torso** | la forma del cuerpo, que **es su hitbox**: una forma simple (a lo sumo, más adelante, dos) | — | una caja | una caja |
-| **Motor del torso** | quién lo mueve | **discreto** (el controlador de personaje del motor contra lo fijo, `KinematicMover`) o **físico** (un cuerpo simulado: el péndulo de `BalanceBody`) | los dos | primero, discreto |
+| **Motor del torso** | quién lo mueve | **discreto** (el controlador de personaje del motor contra lo fijo, `KinematicMover`) o **físico** (un cuerpo simulado; *el péndulo de `BalanceBody` se borró el 18/11/2026*) | los dos | primero, discreto |
 | **Piernas** | los pies que pisan; el cuerpo les dice adónde, y el IK hace el resto | — | sus piernas | las orugas |
 | **Brazos** (o armas) | lo que pega | **ninguno**, **discretos** (de pose) o **físicos** (con músculos) | los tres | los suyos, discretos |
 | **Dibujo** | cómo se ve | **completo** o **simplificado**: la hitbox más las piernas, sin cabina, brazos ni detalles | los dos | los dos |

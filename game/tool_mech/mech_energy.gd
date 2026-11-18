@@ -60,4 +60,4 @@ func _take(amount: float) -> void:
 
 ## La barra para el cartel de poseerla.
 func bar() -> String:
-	return "aturdida %.1f s" % stunned if not able() else BodyMoves._bar(level)
+	return "aturdida %.1f s" % stunned if not able() else Mech.bar(level)

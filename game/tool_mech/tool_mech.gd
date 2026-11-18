@@ -31,7 +31,6 @@ const GUARD_HALF := 75.0
 
 func _init() -> void:
 	super()
-	kinematic = true
 	arms_kind = Arms.POSE
 
 

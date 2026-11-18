@@ -35,7 +35,6 @@ El detalle, en [[partida]].
 | [[tableros]] | **Las caras con tablero**: la grilla de 4 cm en cada cara que puede llevar controles (`FaceBoard`), las piezas de character-parametric sobre su base, en la meca jaula. |
 | [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto, y lo que llevan en la punta (el cañón de energía, el taladro, el palo). |
 | [[base-comun]] | Lo que comparten la meca propia y los jefes (`BalanceBody`), el motor discreto (`KinematicMover`), los paneles de perillas y el resto en piezas. |
-| [[pendulo]] | El modelo de equilibrio físico: el torso es un péndulo y los pies lo siguen (hoy, el de la meca de práctica). |
 | [[cuerpo-por-piezas]] | La regla común (acordada, sin hacer): motor del torso discreto o físico, brazos y dibujo, por separado. |
 | [[maquetas-jefes]] | Jefes de arcilla, quietos: seis siluetas de jefe humanoide, seis con personalidad (la misma base de cuatro patas, dos brazos con armas distintas y un accesorio en el techo, normales y con ira), dos recorribles (seis y cuatro patas, con pasarelas y baterías detrás de compuertas) y una primera tanda de seis. |
 | [[luchador]] | El jefe humanoide: el Luchador sobre orugas. Paso 1: cómo se mueve (orugas con rampas, la cintura aparte, la arena), el horno con la puerta para arriba (el punto débil) y la ira con humo negro. Paso 2: la cabeza, que te rodea y te embiste (abre el horno antes; contra el borde se estrella). |
@@ -58,7 +57,8 @@ El detalle, en [[partida]].
 *El 17/11/2026 se borraron, con la meca grande, las notas de la meca péndulo (`meca`), la meca cinemática, el
 laboratorio cinemático, la Meca de tres, la meca de cápsulas, la cabina cuadrada (`cabina`), la redonda, los puestos de
 adelante (`paneles`) y el cubo de la línea de equilibrio (`cubo`, `cubo-con-piernas`): están en el commit `0bcaeaf`. Lo
-que de ellas sigue vivo pasó a [[meca-jaula]], [[brazo]] y [[base-comun]].*
+que de ellas sigue vivo pasó a [[meca-jaula]], [[brazo]] y [[base-comun]]. El 18/11/2026 se borró la del péndulo
+(`pendulo`), con el cuerpo físico: está en el commit `d09b964`.*
 
 ## Organización
 - [[modulos]] — **quién es dueño de qué**: las sesiones por módulo, sus carpetas y por dónde se tocan.

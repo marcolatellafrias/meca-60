@@ -146,7 +146,7 @@ func step(delta: float) -> void:
 
 
 func status() -> String:
-	return "cañón: %s%s" % [MODE_NAMES[mode], (" %s" % BodyMoves._bar(charge)) if mode == Mode.SUPER else ""]
+	return "cañón: %s%s" % [MODE_NAMES[mode], (" %s" % Mech.bar(charge)) if mode == Mode.SUPER else ""]
 
 
 ## LA BOCA del caño y hacia dónde mira (mundo).

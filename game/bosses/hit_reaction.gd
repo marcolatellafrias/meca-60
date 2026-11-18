@@ -14,7 +14,6 @@ extends Node
 ##   · MOVERLA Y CAERSE LO HACE LA MECA (módulo Meca, a pedido de este; el usuario: «estás peleando contra un sistema de
 ##     gravedad y IK… arreglalo de raíz»): `BalanceBody.shove` (la corre su motor, sin manejarse) y
 ##     `BalanceBody.knock_down` (cae, tirada y se levanta; los brazos y las piernas la siguen solos). Acá sólo se le pide.
-##     A la física, un impulso: se cae con su física.
 ## *Antes esto la movía e inclinaba desde afuera, pieza por pieza, después de su paso: se peleaba con sus piernas y sus
 ## brazos (el torso se salía, los brazos quedaban en el aire).*
 
@@ -27,8 +26,6 @@ const FLASH_TIME := 0.3
 const PUSH_TIME := 0.35
 const FALL_TIME := 0.5
 const FALL_HOP := 3.0
-## Lo que se corre la física por cada metro de empuje (m/s).
-const PHYSICAL_SPEED := 1.2
 
 ## Agarrada o revoleada (lo demás lo sabe la meca).
 var state := State.FREE
@@ -126,10 +123,6 @@ func react(kind: Kind, away: Vector3, distance: float, at: Vector3) -> void:
 		_away = Vector3.BACK
 	if kind == Kind.FLINCH or _body == null:
 		return
-	if not _kinematic():
-		var lift := 0.45 if kind == Kind.KNOCKDOWN else 0.15
-		BalanceBody.hit(_body, (_away + Vector3.UP * lift).normalized() * distance * PHYSICAL_SPEED * _body.mass)
-		return
 	if kind == Kind.PUSH:
 		_body.shove(_away * distance, PUSH_TIME)
 	else:
@@ -149,7 +142,7 @@ func sway(push: Vector3) -> void:
 
 ## El resorte de dibujo del cuerpo (HitSpring): la jaula, el de su motor; un jefe, el suyo. Sin resorte, nada.
 func _spring() -> HitSpring:
-	if _kinematic():
+	if _body != null:
 		return _body.mover.body_spring
 	return _target.get("body_spring") as HitSpring if "body_spring" in _target else null
 
@@ -160,7 +153,7 @@ const SWAY_PER_M := 0.15
 
 ## Hacia dónde mira el cuerpo (para pasar el golpe a sus ejes).
 func _facing() -> Basis:
-	if _kinematic():
+	if _body != null:
 		return Basis(Vector3.UP, _body.mover.rotation.y)
 	if "waist_yaw" in _target:
 		return Basis(Vector3.UP, float(_target.get("waist_yaw")))
@@ -175,12 +168,12 @@ func show_hit(at: Vector3, heavy: bool) -> void:
 	BossSounds.play(BossSounds.Kind.KNOCKDOWN if heavy else BossSounds.Kind.HIT, at, _target)
 
 
-## AGARRADA: la lleva quien la agarró (`hold_at` en cada paso). Sólo la cinemática.
+## AGARRADA: la lleva quien la agarró (`hold_at` en cada paso). Sólo un cuerpo con equilibrio.
 func grab(at: Vector3) -> void:
 	hits += 1
 	show_hit(at, false)
 	BossSounds.play(BossSounds.Kind.GRAB, at, _target)
-	if _kinematic():
+	if _body != null:
 		state = State.HELD
 		_hold = _body.mover.global_position
 
@@ -193,7 +186,7 @@ func hold_at(at: Vector3) -> void:
 ## REVOLEADA: de donde está, vuela en arco hasta `to` (el piso) en `time` s, subiendo `arc` m (la mueve ella:
 ## `shove`); al caer le saca `damage` por `what` y queda derribada.
 func fling(to: Vector3, arc: float, time: float, damage: float, what: String) -> void:
-	if not _kinematic():
+	if _body == null:
 		state = State.FREE
 		return
 	var from := _body.mover.global_position
@@ -220,7 +213,7 @@ func _physics_process(delta: float) -> void:
 		_white.albedo_color.a = 0.85 * clampf(_flash / FLASH_TIME, 0.0, 1.0)
 		if _flash <= 0.0:
 			_paint(false)
-	if not _kinematic():
+	if _body == null:
 		return
 	match state:
 		State.HELD:
@@ -235,10 +228,6 @@ func _physics_process(delta: float) -> void:
 				# En la caja (tirada, queda lejos de sus pies).
 				show_hit(_body.global_position, true)
 				_body.knock_down()
-
-
-func _kinematic() -> bool:
-	return _body != null and _body.mover != null
 
 
 ## SE PONE BLANCA (o vuelve): el material encima de todas sus mallas (las que no tenían otro).

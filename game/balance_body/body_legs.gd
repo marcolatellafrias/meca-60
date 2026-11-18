@@ -15,12 +15,11 @@ extends Node3D
 ##     cilindro acostado de cadera a cadera, el de la maqueta de la meca jaula (ver `_ready`). *Hasta el 17/11/2026 era
 ##     un tambor redondo y hueco, por el que pasaba el ascensor de la meca grande (PelvisLift), y la jaula lo cambiaba
 ##     por el cilindro.*
-##   · LAS RODILLAS doblan hacia adelante de la pelvis y del pie, un poco hacia afuera (`knee_out`); agachada, más
-##     (`knee_out_crouched`).
+##   · LAS RODILLAS doblan hacia adelante de la pelvis y del pie, un poco hacia afuera (LegSettings.knee_out); agachada,
+##     más (`knee_out_crouched`, según lo agachada que dice el motor).
 ##   · LA CAJA SUBE UN POCO A MITAD DE CADA PASO Y SE INCLINA DE COSTADO (`walk_rise`, `walk_lean`); lo demás lo
 ##     absorben las rodillas.
-##   · CAÍDA, SE PLIEGAN (no se achican: las piezas no se estiran) con easing; al empezar a enderezarse, se estiran
-##     hacia debajo de las caderas: al quedar derecha ya está parada.
+##   · TIRADA, LA POSE DE PARADA QUIETA, VOLCADA CON LA CAJA. *Hasta el 18/11/2026 la meca física se plegaba al caer.*
 ##   · EL PIE, NUNCA MÁS LEJOS DE LO QUE LA PIERNA ALCANZA: en el aire cuelga de la cadera.
 ##   · CADA PIE TIENE SU LUGAR: debajo de su cadera, pegado a la caja, EN EL PISO DE VERDAD (un rayo; pisa techos y
 ##     escalones, cada pie a su altura, y las rodillas lo absorben).
@@ -39,7 +38,6 @@ var _swing := -1
 ## arriba de la meca jaula, ver CageMech.upper_heading).
 var facing_yaw := 0.0
 var _planted := false
-var _tuck := 0.0
 ## LA MARCHA COMÚN (Gait), de dos caderas; y hacia dónde miraba cada pie al salir.
 var _gait := Gait.new()
 var _lift_yaw: Array[float] = [0.0, 0.0]
@@ -53,26 +51,19 @@ var _legs: Array[MechLeg] = []
 
 
 func _ready() -> void:
-	# LA PELVIS: el nodo que se mueve (centrado como la pelvis de MechBody) y, colgado de él, el cilindro.
+	# LA PELVIS: el cilindro, colgado del hueso de la pelvis (que apunta para abajo: se le deshace el medio giro).
 	var measures := body.measures
 	_pelvis = MeshInstance3D.new()
-	_pelvis.top_level = true
-	add_child(_pelvis)
+	body.skeleton.pelvis.add_child(_pelvis)
+	_pelvis.transform = Transform3D(Basis.from_euler(MechSkeleton.DOWN).inverse(), Vector3.ZERO)
 	Clay.cylinder(_pelvis, measures.LEG_THICKNESS * 0.55, measures.HIP_X * 2.0 - measures.LEG_THICKNESS * 0.9,
 		Vector3(0.0, measures.PELVIS_SIZE.y * 0.5 - measures.HIP_DROP, 0.0), MechBody.JOINT_COLOR, Vector3(0.0, 0.0, 90.0))
-	# En el esqueleto: cuelga del hueso de la pelvis (que apunta para abajo: se le deshace el medio giro).
-	if body.skeleton != null:
-		remove_child(_pelvis)
-		body.skeleton.pelvis.add_child(_pelvis)
-		_pelvis.top_level = false
-		_pelvis.transform = Transform3D(Basis.from_euler(MechSkeleton.DOWN).inverse(), Vector3.ZERO)
 	for i in 2:
 		var leg := MechLeg.new()
 		leg.measures = body.measures
-		if body.skeleton != null:
-			leg.thigh_bone = body.skeleton.thighs[i]
-			leg.shin_bone = body.skeleton.shins[i]
-			leg.foot_bone = body.skeleton.feet[i]
+		leg.thigh_bone = body.skeleton.thighs[i]
+		leg.shin_bone = body.skeleton.shins[i]
+		leg.foot_bone = body.skeleton.feet[i]
 		add_child(leg)
 		_legs.append(leg)
 
@@ -82,21 +73,16 @@ func replant() -> void:
 	_planted = false
 
 
-func place(k: BodySettings, delta: float) -> void:
+func place(delta: float) -> void:
 	var standing := body.state == BalanceBody.State.STANDING and body.grounded
-	# RECOGIDAS tirada y subiendo; ESTIRADAS parada y ya al empezar a enderezarse. LA CINEMÁTICA, NUNCA RECOGIDAS: se
-	# cae en su POSE DE REPOSO, la de parada quieta (las rodillas dobladas a su altura de siempre, los pies planos), y
-	# esa pose entera se vuelca con la caja: tirada de espaldas, los pies apuntan para arriba (el usuario, 15/11/2026:
+	# TIRADA, NUNCA RECOGIDAS: se cae en su POSE DE REPOSO, la de parada quieta (las rodillas dobladas a su altura de
+	# siempre, los pies planos), y esa pose entera se vuelca con la caja: tirada de espaldas, los pies apuntan para arriba (el usuario, 15/11/2026:
 	# «agarrar la pose de reposo… las piernas deberían quedar flexionadas como con el factor de distancia del piso»).
-	var folded := (body.state == BalanceBody.State.DOWN or body.state == BalanceBody.State.LIFT) and not body.kinematic
-	var lying := body.kinematic and not standing and body.state != BalanceBody.State.STANDING
-	_tuck = move_toward(_tuck, 1.0 if folded else 0.0, delta / maxf(k.fold_time if folded else k.unfold_time, 0.01))
-	var share := smoothstep(0.0, 1.0, _tuck)
+	var lying := not standing and body.state != BalanceBody.State.STANDING
 	# RECOGIDAS EN EL DASH, LEVITANDO Y EN PICADA (KinematicMover.tucks), de una; al terminar se plantan debajo. SUTIL
 	# (el usuario: «parecerse a la pose en reposo pero un poco más recogida nomás, y con los pies un poco apuntando hacia
 	# abajo»): la pose de parada quieta con el pie subido hacia la cadera (LegSettings.tuck_lift) y la punta abajo.
-	var tucked := body.kinematic and body.mover != null and body.state == BalanceBody.State.STANDING \
-		and body.mover.tucks()
+	var tucked := body.state == BalanceBody.State.STANDING and body.mover.tucks()
 	var yaw := body.yaw()
 	var centre := body.global_position
 	var under := body.support if standing else Vector3(centre.x, centre.y - body.ground_distance(centre), centre.z)
@@ -137,16 +123,13 @@ func place(k: BodySettings, delta: float) -> void:
 		waist = Transform3D(upright.basis, upright * Vector3(0.0, -body.size.y * 0.5, 0.0))
 	elif not standing:
 		waist.basis = body.global_basis
-	if body.skeleton != null:
-		body.skeleton.put_pelvis(fall * body.measures.pelvis(waist))
-	else:
-		_pelvis.global_transform = fall * body.measures.pelvis(waist)
-	var crouched := clampf((1.0 - body.moves.rod_scale) / maxf(1.0 - k.crouch_rod, 0.01), 0.0, 1.0)
-	var out := lerpf(k.knee_out, k.knee_out_crouched, crouched)
+	body.skeleton.put_pelvis(fall * body.measures.pelvis(waist))
+	var knobs := LegSettings.current
+	var out := lerpf(knobs.knee_out, knobs.knee_out_crouched, body.mover.crouched)
 	for i in 2:
 		var side := -1.0 if i == 0 else 1.0
-		# Estiradas: parada, donde pisan; recién caída, donde pisaban; enderezándose o en el aire, debajo de las caderas.
-		var ground := _feet[i] if standing else (_feet[i] if folded else body.measures.foot_rest(root, side))
+		# Parada, donde pisan; tirada o en el aire, debajo de las caderas.
+		var ground := _feet[i] if standing else body.measures.foot_rest(root, side)
 		var facing := Basis(Vector3.UP, _feet_yaw[i]) if standing else root.basis.orthonormalized()
 		var hip := body.measures.hip(waist, side)
 		if tucked:
@@ -164,26 +147,18 @@ func place(k: BodySettings, delta: float) -> void:
 		ahead.y = 0.0
 		var knee_way := ahead.normalized() + waist.basis.x * side * out
 		# CON EL ESQUELETO, LA IK COMÚN SOBRE LOS HUESOS (MechLeg.reach_to): el pie plano mirando hacia donde camina
-		# (recogido, con la punta abajo); tirada, todo volcado con la caja (`fall`). Plegándose (la física), como antes.
-		if body.skeleton != null and share <= 0.001:
-			var forward := -facing.z
-			forward.y = 0.0
-			forward = forward.normalized() if forward.length_squared() > 0.0001 else Vector3.FORWARD
-			var flat := Basis.looking_at(forward, Vector3.UP)
-			if tucked:
-				flat = flat * Basis(Vector3.RIGHT, -deg_to_rad(LegSettings.current.tuck_toes))
-			if lying:
-				ground = fall * ground
-				knee_way = fall.basis * knee_way
-				flat = fall.basis * flat
-			_legs[i].reach_to(ground, knee_way, flat)
-			continue
-		var open := body.measures.leg(hip, ground, facing, knee_way)
+		# (recogido, con la punta abajo); tirada, todo volcado con la caja (`fall`).
+		var forward := -facing.z
+		forward.y = 0.0
+		forward = forward.normalized() if forward.length_squared() > 0.0001 else Vector3.FORWARD
+		var flat := Basis.looking_at(forward, Vector3.UP)
 		if tucked:
-			open = BodyLegs._toes_down(open, LegSettings.current.tuck_toes)
+			flat = flat * Basis(Vector3.RIGHT, -deg_to_rad(knobs.tuck_toes))
 		if lying:
-			open = BodyLegs._moved(open, fall)
-		_legs[i].pose(BodyLegs._blend(open, _tucked_leg(waist, side), share) if share > 0.001 else open)
+			ground = fall * ground
+			knee_way = fall.basis * knee_way
+			flat = fall.basis * flat
+		_legs[i].reach_to(ground, knee_way, flat)
 
 
 ## LOS PASOS: la marcha común (Gait) con dos caderas; acá sólo el giro de cada pie, que va de
@@ -260,52 +235,6 @@ func _ground(at: Vector3) -> Vector3:
 			return Vector3(at.x, (hit["position"] as Vector3).y, at.z)
 		skip.append(other.get_rid())
 	return Vector3(at.x, body.support.y, at.z)
-
-
-## UNA PIERNA RECOGIDA, en el espacio de la cintura: el muslo adelante y casi horizontal, la canilla de vuelta abajo y
-## el pie debajo de la cadera.
-func _tucked_leg(waist: Transform3D, side: float) -> Dictionary:
-	var hip := Vector3(side * body.measures.HIP_X, -body.measures.HIP_DROP, 0.0)
-	var knee := hip + Vector3(0.0, 0.15, -1.0).normalized() * body.measures.THIGH
-	var ankle := knee + Vector3(0.0, -0.45, 1.0).normalized() * body.measures.SHIN
-	var up := waist.basis.y
-	return {
-		"thigh": MechBody.segment(waist * hip, waist * knee, up),
-		"shin": MechBody.segment(waist * knee, waist * ankle, up),
-		"foot": Transform3D(waist.basis, waist * (ankle + Vector3(0.0, body.measures.FOOT_SIZE.y * 0.5 - body.measures.ANKLE,
-			-body.measures.FOOT_AHEAD))),
-		"knee": waist * knee,
-	}
-
-
-## LA PUNTA DEL PIE `degrees` grados hacia abajo, girando sobre el tobillo (recogidas).
-static func _toes_down(pose: Dictionary, degrees: float) -> Dictionary:
-	var foot: Transform3D = pose["foot"]
-	var ankle: Vector3 = pose["ankle"]
-	var turn := Basis(foot.basis.x.normalized(), -deg_to_rad(degrees))
-	var out := pose.duplicate()
-	out["foot"] = Transform3D(turn * foot.basis, ankle + turn * (foot.origin - ankle))
-	return out
-
-
-## UNA PIERNA ARMADA, movida entera por `by` (tirada: la pose de parada, volcada con la caja).
-static func _moved(pose: Dictionary, by: Transform3D) -> Dictionary:
-	return {
-		"thigh": by * (pose["thigh"] as Transform3D),
-		"shin": by * (pose["shin"] as Transform3D),
-		"foot": by * (pose["foot"] as Transform3D),
-		"knee": by * (pose["knee"] as Vector3),
-		"ankle": by * (pose["ankle"] as Vector3),
-	}
-
-
-static func _blend(from: Dictionary, to: Dictionary, share: float) -> Dictionary:
-	return {
-		"thigh": (from["thigh"] as Transform3D).interpolate_with(to["thigh"], share),
-		"shin": (from["shin"] as Transform3D).interpolate_with(to["shin"], share),
-		"foot": (from["foot"] as Transform3D).interpolate_with(to["foot"], share),
-		"knee": (from["knee"] as Vector3).lerp(to["knee"], share),
-	}
 
 
 ## EL PASO DE ESTAS PIERNAS: el del F1 y el del F4 son los de piernas medianas; se escalan con su largo (el `stride` de

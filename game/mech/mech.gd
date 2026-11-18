@@ -153,7 +153,7 @@ func _think() -> void:
 
 ## LA POSTURA DE LOS BRAZOS: la elegida parada; recogidos caída y subiendo (se estiran al enderezarse, con las piernas).
 ## Y el marco: la caja deja de chocar con los que van adentro.
-func _after_step(_k: BodySettings, _delta: float) -> void:
+func _after_step(_delta: float) -> void:
 	var fallen := state == State.DOWN or state == State.LIFT
 	for arm in arms:
 		arm.stance = MechArm.Stance.TUCKED if fallen else (MechArm.Stance.COVER if covering else MechArm.Stance.NORMAL)
@@ -172,10 +172,14 @@ func possess_controls() -> PackedStringArray:
 
 
 func possess_status() -> String:
-	if kinematic:
-		return "dash %s   vuelo %s\n%.1f m/s%s · acható %d" % [BodyMoves._bar(mover.dash_fuel), BodyMoves._bar(mover.fly_fuel),
-			mover.speed(), "" if grounded else " · en el aire", mover.flattened + (stomp.flattened if stomp != null else 0)]
-	return moves.status()
+	return "dash %s   vuelo %s\n%.1f m/s%s · acható %d" % [Mech.bar(mover.dash_fuel), Mech.bar(mover.fly_fuel),
+		mover.speed(), "" if grounded else " · en el aire", mover.flattened + (stomp.flattened if stomp != null else 0)]
+
+
+## UNA BARRA de diez (0 a 1), para los carteles. *Era de BodyMoves, borrado con el cuerpo físico el 18/11/2026.*
+static func bar(share: float) -> String:
+	var full := roundi(clampf(share, 0.0, 1.0) * 10.0)
+	return "█".repeat(full) + "░".repeat(10 - full)
 
 
 func possess_begin() -> void:
@@ -190,7 +194,7 @@ func possess_camera(first: bool, delta: float) -> Transform3D:
 	return keys.camera(first, delta)
 
 
-## REARMA TODAS LAS MECAS, Y NADA MÁS: cada una se cambia por una nueva igual —sus brazos, si es cinemática, su lugar en
+## REARMA TODAS LAS MECAS, Y NADA MÁS: cada una se cambia por una nueva igual —sus brazos, su lugar en
 ## el piso, hacia dónde mira, parada sobre el piso de su parcela— con la forma y las perillas de ahora. Lo usan los
 ## paneles de la meca al probar y al guardar (el F2, la forma; el F1, las perillas). *Al principio se rearmaba la
 ## parcela entera, como la R, y lo demás volvía a como nace (lo vio el usuario).* Si se la estaba poseyendo, se la
@@ -209,7 +213,6 @@ static func rebuild_all(tree: SceneTree) -> void:
 		fresh.arms_kind = old.arms_kind
 		fresh.loadout = old.loadout
 		fresh.equipment = old.equipment
-		fresh.kinematic = old.kinematic
 		fresh.cabin_shape = old.cabin_shape
 		# Parada sobre el piso de su parcela (la altura 0 de lo que la tiene, como la arman sus arquetipos).
 		fresh.transform = Transform3D(Basis(Vector3.UP, old.yaw()), Vector3(old.position.x,

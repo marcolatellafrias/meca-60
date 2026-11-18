@@ -71,4 +71,4 @@ func _hit_name() -> String:
 
 
 func status() -> String:
-	return "%s %s" % [_hit_name(), BodyMoves._bar(spin)]
+	return "%s %s" % [_hit_name(), Mech.bar(spin)]

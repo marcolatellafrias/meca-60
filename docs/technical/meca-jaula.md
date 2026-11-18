@@ -203,9 +203,10 @@ en la fila **Base** (F2 a F4), para cambiarla desde la sucursal.
 
 ## La de práctica
 Adelante, a 18 m, **una meca sin brazos** (`Mech` con `arms_kind` NONE), con la misma cabina: es la que se usa para
-pegarle (N suave, M fuerte, la bola). Es **física**: su equilibrio es [[pendulo]] (con `BodySettings`), así un golpe la
-inclina, la tira y la levanta. *Hasta el 17/11/2026 era la de la meca grande (la cuadrada, a escala de la meca grande).*
-Medido ese día: un golpe suave la inclina 18° y vuelve; uno fuerte la tira y se levanta sola en unos 4 s.
+pegarle (N suave, M fuerte, la bola). Se mueve con el mismo motor que la jaula (ver [[base-comun]]): N y M la empujan de
+costado (`BalanceBody.knock`, un `knock_back` de 5 y 14 m/s). *Hasta el 17/11/2026 era la de la meca grande. Hasta el
+18/11/2026 era física, con el péndulo (un golpe suave la inclinaba 18° y volvía; uno fuerte la tiraba y se levantaba
+sola en unos 4 s); el usuario la pasó a la del motor al borrar el péndulo.*
 
 ## Test
 `tests/cage_mech_look.tscn` (unos 15 s, sin el sandbox): arma la parcela, la hace caminar, pegar con el palo y tirar

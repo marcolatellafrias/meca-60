@@ -80,23 +80,12 @@ func _punch(index: int, kind: MechArm.Punch) -> void:
 ## ── POSEERLA ─────────────────────────────────────────────────────────────────────────────────────────────────────
 
 func controls() -> PackedStringArray:
-	if mech.kinematic:
-		return PackedStringArray([
-			"W/S adelante y atrás · A/D de costado · mouse gira (con tope)",
-			"Ctrl se agacha (baja de a poco) · espacio salta (sólo para arriba)",
-			"en el aire, espacio otra vez: vuela (su barra se llena apoyada)",
-			"Shift con una dirección: dash, en el piso y en el aire (su barra se llena sola)",
-			"clic izq. / der.: directo · Q / E: gancho · Z / C: uppercut · 1 / 3: desde arriba",
-		])
 	return PackedStringArray([
-		"W/S adelante y atrás · A/D de costado",
-		"mouse mira: la cabeza al instante, el torso la alcanza",
-		"Shift corre (yendo hacia adelante) · Ctrl se agacha",
+		"W/S adelante y atrás · A/D de costado · mouse gira (con tope)",
+		"Ctrl se agacha (baja de a poco) · espacio salta (sólo para arriba)",
+		"en el aire, espacio otra vez: vuela (su barra se llena apoyada)",
+		"Shift con una dirección: dash, en el piso y en el aire (su barra se llena sola)",
 		"clic izq. / der.: directo · Q / E: gancho · Z / C: uppercut · 1 / 3: desde arriba",
-		"F: postura normal / cubriéndose",
-		"espacio: mantener carga el salto, soltar salta",
-		"espacio en el aire: propulsor",
-		"Shift en el aire: dash hacia donde apretás (uno por salto)",
 	])
 
 

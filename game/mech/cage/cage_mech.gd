@@ -90,8 +90,8 @@ const CANNON_REST_UP := -5.0
 
 ## ── EL MÓDULO DE ARRIBA, APARTE DEL TORSO (la redonda con `CageShape.upper_turns`; ver CageCabin.upper) ─────────────
 ## Cada paso, el octógono de arriba mira a `upper_heading`, gire como gire el torso. Apagado, va con el torso.
-func _after_step(k: BodySettings, delta: float) -> void:
-	super(k, delta)
+func _after_step(delta: float) -> void:
+	super(delta)
 	_tilt(delta)
 	var form := CageCabin.shape()
 	if form.is_round() and form.upper_turns and cabin is CageCabin:

@@ -23,7 +23,6 @@ func _ready() -> void:
 	sun.shadow_enabled = true
 	add_child(sun)
 	_mech = Mech.new()
-	_mech.kinematic = true
 	_mech.scripted = true
 	_mech.position = Vector3(0.0, Mech.standing_height(), 0.0)
 	add_child(_mech)

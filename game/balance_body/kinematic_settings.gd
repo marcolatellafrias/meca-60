@@ -5,7 +5,7 @@ extends Resource
 ## llevar las suyas (BalanceBody.kinematic_knobs): la jaula lleva las propias (CageMech.MOVES, su F1: CageMovesPanel);
 ## `current` es la copia de las que no llevan (y de donde la jaula arranca si no guardó nada). TODO EN METROS Y
 ## SEGUNDOS: cada movimiento se define por lo que hace, no por fuerzas («movimiento más discreto y menos físico»). Las
-## piernas (sus pasos) son las de la meca, con sus perillas (BodySettings) y su largo (el F2).
+## piernas (sus pasos) son las de la meca, con sus perillas (LegSettings, F4) y su largo (el F2).
 ## Se guarda (ver KnobsFile, KnobsPanel). El archivo es del usuario.
 ## *Eran las del cubo del Laboratorio (PillarSettings) hasta el 13/11/2026, cuando el cubo se reemplazó por la meca.
 ## Hasta el 17/11/2026 `current` era la de la Meca cinemática y la simplificada del Laboratorio, con su panel
