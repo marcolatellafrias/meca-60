@@ -12,8 +12,8 @@ extends SeededArchetype
 ## botones, sillas de la meca y quince escenas): acá quedan seis escenas y lo mínimo.* Sus paneles: F1 lo de todos los
 ## arquetipos (LocomotionPanel), F3 lo de cada arquetipo (LocomotionTuner).
 
-enum Scene { RUN, JUMP, DROP, CARRY, CATCH, CLASH, SLALOM }
-const NAMES := ["Correr y frenar", "Saltar", "Caer de alto", "Llevar y tirar", "Atajar", "Chocar",
+enum Scene { RUN, JUMP, DROP, CARRY, CATCH, SLALOM }
+const NAMES := ["Correr y frenar", "Saltar", "Caer de alto", "Llevar y tirar", "Atajar",
 	"Esquivar barriles"]
 
 const FOOTPRINT := Vector2(12.0, 24.0)
@@ -28,7 +28,6 @@ const DROP_HEIGHTS := [2.0, 4.0, 8.0]
 const THROW_CHARGES := [0.3, 0.6, 1.0]
 const CATCH_SPEEDS := [5.0, 8.0, 11.0]
 const CATCH_FROM := ["de frente", "alto", "al costado"]
-const CLASH_WAYS := ["de frente", "en ángulo", "contra uno quieto"]
 ## ESQUIVAR BARRILES (la de character-parametric del 04/11/2026, la más simple): un zigzag fijo alrededor de barriles
 ## en fila, sin ver nada; los barriles cada tantos m (la J: separados o juntos).
 const SLALOM_STEPS := [["separados", 6.5], ["juntos", 4.5]]
@@ -73,8 +72,6 @@ func _what() -> String:
 			return "levantan un cubo, lo llevan %s y lo tiran (carga %d %%)" % [pace, roundi(THROW_CHARGES[option_j] * 100.0)]
 		Scene.CATCH:
 			return "atajan un cubo a %.0f m/s, %s" % [CATCH_SPEEDS[option_j], CATCH_FROM[option_u]]
-		Scene.CLASH:
-			return "de a dos, %s, %s%s" % [CLASH_WAYS[option_j], pace, ", con un cubo" if option_u == 1 else ""]
 		Scene.SLALOM:
 			return "zigzag entre barriles %s, %s" % [SLALOM_STEPS[option_j][0], pace]
 	return ""
@@ -113,8 +110,6 @@ func keys() -> Array[SandboxKey]:
 			j_names = THROW_CHARGES.map(func(c: float) -> String: return "tiro al %d %%" % roundi(c * 100.0))
 		Scene.CATCH:
 			j_names = CATCH_SPEEDS.map(func(v: float) -> String: return "a %.0f m/s" % v)
-		Scene.CLASH:
-			j_names = CLASH_WAYS
 		Scene.SLALOM:
 			j_names = SLALOM_STEPS.map(func(o: Array) -> String: return "barriles " + o[0])
 	out.append(SandboxKey.cycle(KEY_J, SandboxKey.Weight.MAIN, "prueba", j_names, func() -> int: return option_j,
@@ -130,11 +125,6 @@ func keys() -> Array[SandboxKey]:
 		out.append(SandboxKey.toggle(KEY_U, SandboxKey.Weight.NORMAL, "corriendo", func() -> bool: return sprint,
 			func(parcel: SandboxParcel, on: bool) -> void:
 				sprint = on
-				_restart(parcel)))
-	if scene == Scene.CLASH:
-		out.append(SandboxKey.toggle(KEY_Y, SandboxKey.Weight.NORMAL, "con un cubo", func() -> bool: return option_u == 1,
-			func(parcel: SandboxParcel, on: bool) -> void:
-				option_u = 1 if on else 0
 				_restart(parcel)))
 	return out
 

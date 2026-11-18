@@ -70,8 +70,6 @@ func _ready() -> void:
 			_build_carry()
 		LocomotionLabArchetype.Scene.CATCH:
 			_build_catch()
-		LocomotionLabArchetype.Scene.CLASH:
-			_build_clash()
 		LocomotionLabArchetype.Scene.SLALOM:
 			_build_slalom()
 
@@ -282,42 +280,6 @@ func _build_catch() -> void:
 			cube.linear_velocity = Vector3(dir.x, (chest.y - start.y + 0.5 * gravity * t * t) / t, dir.y)
 			CharacterActions.of(bi).catch(cube),
 		_all(func(a: CharacterActions) -> bool: return a.carrying()), 1.0)
-
-
-## ── CHOCAR: de a dos, corren uno contra el otro (de frente, en ángulo o contra uno quieto), con o sin cubo.
-const PAIRS := [[EntityArchetype.Archetype.fat_man, EntityArchetype.Archetype.kid],
-	[EntityArchetype.Archetype.buff, EntityArchetype.Archetype.lanky],
-	[EntityArchetype.Archetype.fat_athletic, EntityArchetype.Archetype.old]]
-
-
-func _build_clash() -> void:
-	var way: int = _row.option_j
-	var half := 8.0
-	for p in PAIRS.size():
-		var x := _lane_x(p, PAIRS.size(), 3.6)
-		_person(PAIRS[p][0], Vector3(x, 0.0, -half))
-		if way == 1:
-			_person(PAIRS[p][1], Vector3(x + half * 0.7, 0.0, half * 0.7), -1.0)
-		else:
-			_person(PAIRS[p][1], Vector3(x, 0.0, half), -1.0)
-		if _row.option_u == 1:
-			_cube(p * 2, Vector3(x, SupplyLook.H, -half + 1.2))
-			_cube(p * 2 + 1, Vector3(x + (half * 0.7 if way == 1 else 0.0), SupplyLook.H,
-				(half * 0.7 if way == 1 else half) - 1.2))
-	_wait(SETTLE_S)
-	if _row.option_u == 1:
-		_step(_each(func(i: int, a: CharacterActions) -> void: a.carry(_cubes[i])),
-			_all(func(a: CharacterActions) -> bool: return a.carrying()))
-	_step(_each(func(i: int, a: CharacterActions) -> void:
-			if way == 2 and i % 2 == 1:
-				return
-			# Hasta 3 m más allá de donde arrancó el otro: no frena antes del choque. (La posición es la de la cápsula: el
-			# nodo del personaje se queda donde nació.)
-			var me := _people[i].char_rigidbody.global_position
-			var other := _people[i + 1 if i % 2 == 0 else i - 1].char_rigidbody.global_position
-			var through := other + (other - me).normalized() * 3.0
-			a.go_to(Vector3(through.x, me.y, through.z), _row.sprint)),
-		_all(func(a: CharacterActions) -> bool: return not a.moving()))
 
 
 ## ── ESQUIVAR BARRILES: cada uno en su carril, en zigzag a un costado y al otro de cada barril, por un camino fijo (no
