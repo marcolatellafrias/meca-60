@@ -15,7 +15,8 @@ extends Node3D
 ##
 ## SE APUNTA CON EL YUGO (GunnerYoke): agarrado (clic derecho mantenido), la mirada va al frente y la torreta PERSIGUE
 ## HACIA DONDE MIRA quien la maneja con un resorte (`aim`); suelto, queda donde quedó. La silla fija hace que el cuerpo
-## vaya con la cuna; la cabeza mira libre en su cono. Todavía no dispara (el usuario: primero cómo se siente girar).
+## vaya con la cuna; la cabeza mira libre en su cono. EL GATILLO del yugo y LOS BOTONES de los tableros manejan las armas
+## (GunnerWeapons); los aros de los botones muestran lo que tienen (ver «Los tres tableros»).
 ## *Hasta el 18/11/2026 la torre llevaba un racimo de caños en una horquilla, sólo de dibujo.*
 ##
 ## Todo en el espacio de la silla (`frame`, el de la cuna sin inclinar): −Z adelante, la base de la silla en el origen.
@@ -50,6 +51,12 @@ var yaw_node: Node3D = null
 var cradle: Node3D = null
 var frame: Node3D = null
 var yoke: GunnerYoke = null
+## LAS ARMAS: lo que disparan, sus tiempos y su calor.
+var weapons: GunnerWeapons = null
+## Los botones redondos de los tableros, por acción: sus tramos del aro, su aguja, su botón y si es de un arma.
+var _radials := {}
+var _heat_fill: Node3D = null
+var _skip: Array[RID] = []
 ## Hacia dónde apunta, en el espacio de lo que la lleva (rad): el giro del plato y la inclinación de la cuna.
 var yaw := 0.0
 var pitch := 0.0
@@ -73,6 +80,10 @@ func _init() -> void:
 	frame.name = "En la cuna"
 	frame.position = -PIVOT
 	cradle.add_child(frame)
+	weapons = GunnerWeapons.new()
+	weapons.name = "Armas"
+	weapons.turret = self
+	add_child(weapons)
 	_build()
 
 
@@ -109,6 +120,65 @@ func _spring(error: float, speed: float, delta: float) -> float:
 	return clampf(speed, -top, top)
 
 
+## ── LAS ARMAS: DE DÓNDE SALEN Y ADÓNDE APUNTAN (ver GunnerWeapons) ─────────────────────────────────────────────
+
+## Dónde está la minigun y su caja de misiles, en el espacio de la silla.
+const GUN_AT := Vector3(0.82, 0.9, PIVOT.z)
+const POD_AT := Vector3(-0.8, 0.98, PIVOT.z)
+const POD_CELL := 0.11
+## Los ojos del artillero, en el espacio de la silla: de ahí sale la mira.
+const EYE := Vector3(0.0, 1.15, 0.02)
+const AIM_REACH := 300.0
+
+
+## LA BOCA DE LA MINIGUN (mundo): la punta de los caños, mirando adonde mira la cuna.
+func minigun_muzzle() -> Transform3D:
+	var tip := GUN_AT + Vector3(0.0, 0.0, -0.76 * WEAPON_SCALE)
+	return Transform3D(frame.global_basis.orthonormalized(), frame.global_transform * tip)
+
+
+## LA BOCA DEL TUBO `index` de la caja de misiles (mundo): de tres por dos, de arriba a la izquierda.
+func missile_mouth(index: int) -> Transform3D:
+	var column := index % 3
+	var row := index / 3
+	var spot := Vector3((column - 1) * POD_CELL, (0.5 - row) * POD_CELL, -POD_CELL * 2.5 - 0.02) * WEAPON_SCALE
+	return Transform3D(frame.global_basis.orthonormalized(), frame.global_transform * (POD_AT + spot))
+
+
+## ADÓNDE APUNTA (mundo): lo primero que toca la mira, derecho adelante desde los ojos, o lejos.
+func aim_point() -> Vector3:
+	var hit := _aim_ray(1 | PhysicsLayers.FIXED)
+	if hit.is_empty():
+		var eye := frame.global_transform * EYE
+		return eye - frame.global_basis.z.normalized() * AIM_REACH
+	return hit["position"]
+
+
+## LO SUELTO QUE ESTÁ EN LA MIRA (un jefe, por la caja donde se le pega), o nada.
+func aimed_body() -> Node3D:
+	var hit := _aim_ray(1)
+	return null if hit.is_empty() else EnergyBolt.struck(hit["collider"])
+
+
+func _aim_ray(mask: int) -> Dictionary:
+	var eye := frame.global_transform * EYE
+	var far := eye - frame.global_basis.z.normalized() * AIM_REACH
+	return get_world_3d().direct_space_state.intersect_ray(PhysicsRayQueryParameters3D.create(eye, far, mask, skip()))
+
+
+## LO QUE LO SUYO NO TIENE QUE TOCAR: la meca que la lleva, con todo lo que choca de ella.
+func skip() -> Array[RID]:
+	if _skip.is_empty():
+		var node: Node = self
+		while node != null and not node is BalanceBody:
+			node = node.get_parent()
+		if node != null:
+			_skip.append((node as CollisionObject3D).get_rid())
+			for found in node.find_children("*", "CollisionObject3D", true, false):
+				_skip.append((found as CollisionObject3D).get_rid())
+	return _skip.duplicate()
+
+
 ## ── LO QUE SE VE ─────────────────────────────────────────────────────────────────────────────────────────────────
 
 func _build() -> void:
@@ -120,12 +190,10 @@ func _build() -> void:
 	for side: float in [-1.0, 1.0]:
 		Clay.cylinder(frame, 0.055, 0.1, PIVOT + Vector3(side * (BOLT_X + 0.02), 0.0, 0.0), CageCabin.RIM_COLOR,
 			Vector3(0.0, 0.0, 90.0))
-	var gun := Vector3(0.82, 0.9, PIVOT.z)
-	_arm(PIVOT + Vector3(BOLT_X + 0.08, 0.0, 0.0), gun + Vector3(-0.04, -0.16, 0.08), 1.0)
-	_minigun(_holder(gun))
-	var pod := Vector3(-0.8, 0.98, PIVOT.z)
-	_arm(PIVOT + Vector3(-BOLT_X - 0.08, 0.0, 0.0), pod + Vector3(0.08, -0.26, 0.0), -1.0)
-	_missiles(_holder(pod), 3, 2, 0.11)
+	_arm(PIVOT + Vector3(BOLT_X + 0.08, 0.0, 0.0), GUN_AT + Vector3(-0.04, -0.16, 0.08), 1.0)
+	_minigun(_holder(GUN_AT))
+	_arm(PIVOT + Vector3(-BOLT_X - 0.08, 0.0, 0.0), POD_AT + Vector3(0.08, -0.26, 0.0), -1.0)
+	_missiles(_holder(POD_AT), 3, 2, POD_CELL)
 	_yoke()
 	for spot: Vector3 in [Vector3(0.0, 0.92, -0.52), Vector3(-0.36, 0.82, -0.44), Vector3(0.36, 0.82, -0.44)]:
 		var angle := atan2(spot.x, -spot.z)
@@ -254,7 +322,8 @@ func _missiles(parent: Node3D, columns: int, rows: int, cell: float) -> void:
 ##     balas atraviesan) y enfriar (vacía el calor).
 ##   · A LA DERECHA, LO DE LOS MISILES: salva (los seis), guiado (uno, con el mouse) y fijar (marca un blanco y lo
 ##     persiguen).
-## Por ahora sólo se ven: los aros, a medio llenar como de muestra.
+## Los botones son de verdad (se aprietan: GunnerWeapons.press) y los aros, la barra y la aguja muestran lo que pasa
+## (`_process`).
 const BOARD := Vector2(0.32, 0.22)
 const LIT := Color(0.4, 1.0, 0.45)
 const OFF := Color(0.08, 0.1, 0.08)
@@ -280,52 +349,74 @@ func _panel(at: Vector3, angle: float, lean: float) -> Node3D:
 ## AL MEDIO: LAS ARMAS (ver arriba).
 func _weapons_board(face: Node3D) -> void:
 	_heat_bar(face, Vector3(0.0, 0.08, 0.012))
-	_radial(face, Vector3(-0.075, -0.025, 0.012), 0.05, CageCabin.METAL, 0.7, true, "MINIGUN")
-	_radial(face, Vector3(0.075, -0.025, 0.012), 0.05, CageCabin.YELLOW, 0.35, true, "MISILES")
+	_radial(face, Vector3(-0.075, -0.025, 0.012), 0.05, CageCabin.METAL, "MINIGUN", "minigun")
+	_radial(face, Vector3(0.075, -0.025, 0.012), 0.05, CageCabin.YELLOW, "MISILES", "misiles")
 
 
 ## A LA IZQUIERDA: LO DE LA MINIGUN (ver arriba).
 func _ammo_board(face: Node3D) -> void:
-	_radial(face, Vector3(-0.1, 0.0, 0.012), 0.036, Color(0.9, 0.45, 0.2), 1.0, false, "SOBRECARGA")
-	_radial(face, Vector3(0.0, 0.0, 0.012), 0.036, Color(0.7, 0.75, 0.85), 0.4, false, "PERFORANTE")
-	_radial(face, Vector3(0.1, 0.0, 0.012), 0.036, Color(0.3, 0.7, 0.95), 0.15, false, "ENFRIAR")
+	_radial(face, Vector3(-0.1, 0.0, 0.012), 0.036, Color(0.9, 0.45, 0.2), "SOBRECARGA", "sobrecarga")
+	_radial(face, Vector3(0.0, 0.0, 0.012), 0.036, Color(0.7, 0.75, 0.85), "PERFORANTE", "perforante")
+	_radial(face, Vector3(0.1, 0.0, 0.012), 0.036, Color(0.3, 0.7, 0.95), "ENFRIAR", "enfriar")
 
 
 ## A LA DERECHA: LO DE LOS MISILES (ver arriba).
 func _state_board(face: Node3D) -> void:
-	_radial(face, Vector3(-0.1, 0.0, 0.012), 0.036, CageCabin.YELLOW, 0.6, false, "SALVA")
-	_radial(face, Vector3(0.0, 0.0, 0.012), 0.036, Color(0.85, 0.35, 0.25), 1.0, false, "GUIADO")
-	_radial(face, Vector3(0.1, 0.0, 0.012), 0.036, Color(0.6, 0.85, 0.4), 0.25, false, "FIJAR")
+	_radial(face, Vector3(-0.1, 0.0, 0.012), 0.036, CageCabin.YELLOW, "SALVA", "salva")
+	_radial(face, Vector3(0.0, 0.0, 0.012), 0.036, Color(0.85, 0.35, 0.25), "GUIADO", "guiado")
+	_radial(face, Vector3(0.1, 0.0, 0.012), 0.036, Color(0.6, 0.85, 0.4), "FIJAR", "fijar")
 
 
-## LA BARRA DEL CALOR: se llena hacia la derecha, con la punta roja.
+## LA BARRA DEL CALOR: se llena hacia la derecha (`_heat_fill`, ver `_process`), con la punta roja.
+const HEAT_WIDTH := 0.2
+
+
 func _heat_bar(face: Node3D, at: Vector3) -> void:
-	Clay.box(face, Vector3(0.2, 0.022, 0.012), at, OFF)
-	Clay.box(face, Vector3(0.11, 0.018, 0.014), at + Vector3(-0.045, 0.0, 0.002), AMBER)
-	Clay.box(face, Vector3(0.025, 0.022, 0.016), at + Vector3(0.0875, 0.0, 0.003), RED)
+	Clay.box(face, Vector3(HEAT_WIDTH, 0.022, 0.012), at, OFF)
+	Clay.box(face, Vector3(0.025, 0.022, 0.016), at + Vector3(HEAT_WIDTH * 0.5 - 0.0125, 0.0, 0.003), RED)
+	_heat_fill = Node3D.new()
+	_heat_fill.position = at + Vector3(-HEAT_WIDTH * 0.5, 0.0, 0.002)
+	face.add_child(_heat_fill)
+	Clay.box(_heat_fill, Vector3(1.0, 0.018, 0.014), Vector3(0.5, 0.0, 0.0), AMBER)
+	_heat_fill.scale = Vector3(0.001, 1.0, 1.0)
 
 
-## UN BOTÓN REDONDO CON SU ARO en `at` (en la cara), de `radius` (el aro; el botón, la mitad): el botón de `tint` al
-## medio, y el aro en tramos, prendidos hasta `ready` (0 a 1: lo que lleva de su tiempo de recarga). Con `reload`, la
-## zona de la recarga con ritmo marcada en ámbar y la aguja. Abajo, su nombre.
-func _radial(face: Node3D, at: Vector3, radius: float, tint: Color, ready: float, reload: bool, title: String) -> void:
+## UN BOTÓN REDONDO CON SU ARO en `at` (en la cara), de `radius` (el aro; el botón, la mitad): EL BOTÓN de `tint` al
+## medio, que se aprieta (un TouchComponent: GunnerWeapons.press con `action`), y EL ARO en tramos (ver `_process`).
+## Abajo, su nombre.
+func _radial(face: Node3D, at: Vector3, radius: float, tint: Color, title: String, action: String) -> void:
 	Clay.cylinder(face, radius * 1.08, 0.008, at, SCREEN, Vector3(90.0, 0.0, 0.0))
-	Clay.cylinder(face, radius * 0.55, 0.022, at + Vector3(0.0, 0.0, 0.008), tint, Vector3(90.0, 0.0, 0.0))
+	var body := StaticBody3D.new()
+	body.name = "Botón %s" % action
+	body.position = at + Vector3(0.0, 0.0, 0.008)
+	face.add_child(body)
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(radius * 1.2, radius * 1.2, 0.03)
+	shape.shape = box
+	body.add_child(shape)
+	var button := TouchComponent.new()
+	button.name = "Control"
+	body.add_child(button)
+	button.build(box.size)
+	var cap := Clay.cylinder(button, radius * 0.55, 0.022, Vector3.ZERO, tint, Vector3(90.0, 0.0, 0.0))
+	button.highlighted.append(cap)
+	button.pressed.connect(func() -> void: weapons.press(action))
+	var ring: Array[MeshInstance3D] = []
 	var step := TAU / RING_STEPS
 	for k in RING_STEPS:
 		# De arriba, en el sentido del reloj.
 		var angle := k * step
 		var middle := Vector2(sin(angle + step * 0.5), cos(angle + step * 0.5)) * radius * 0.82
-		var zone := reload and k >= 13 and k <= 15
-		var color := AMBER if zone else (LIT if float(k + 1) / RING_STEPS <= ready else OFF)
-		var piece := Clay.box(face, Vector3(radius * 0.22, radius * 0.24, 0.01),
-			at + Vector3(middle.x, middle.y, 0.006), color)
+		var piece := Clay.box(face, Vector3(radius * 0.22, radius * 0.24, 0.01), at + Vector3(middle.x, middle.y, 0.006), OFF)
 		piece.rotation = Vector3(0.0, 0.0, -(angle + step * 0.5))
-	if reload:
-		var needle_angle := ready * TAU
-		var needle := Clay.box(face, Vector3(0.004, radius * 0.4, 0.012),
-			at + Vector3(sin(needle_angle), cos(needle_angle), 0.0) * radius * 0.82 + Vector3(0.0, 0.0, 0.012), Color.WHITE)
-		needle.rotation = Vector3(0.0, 0.0, -needle_angle)
+		ring.append(piece)
+	var needle := Node3D.new()
+	needle.position = at + Vector3(0.0, 0.0, 0.012)
+	face.add_child(needle)
+	Clay.box(needle, Vector3(0.004, radius * 0.4, 0.012), Vector3(0.0, radius * 0.82, 0.0), Color.WHITE)
+	needle.visible = false
+	_radials[action] = {"ring": ring, "needle": needle, "cap": cap, "tint": tint}
 	var label := Label3D.new()
 	label.text = title
 	label.font_size = 32
@@ -334,6 +425,60 @@ func _radial(face: Node3D, at: Vector3, radius: float, tint: Color, ready: float
 	label.modulate = Color(0.9, 0.92, 0.85)
 	label.position = at + Vector3(0.0, -radius * 1.35, 0.012)
 	face.add_child(label)
+
+
+## LO QUE MUESTRAN LOS TABLEROS, cada cuadro: EN CADA ARO, prendido hasta lo que tiene (el arma, lo que le queda
+## cargado; una habilidad, lo que lleva de su tiempo de recarga). RECARGANDO un arma, su aro muestra la aguja y LA ZONA en
+## ámbar (roja si se trabó). El botón del arma elegida, más claro. Y LA BARRA DEL CALOR (roja trabada).
+func _process(_delta: float) -> void:
+	if weapons == null:
+		return
+	for action: String in _radials:
+		var radial: Dictionary = _radials[action]
+		var ring: Array = radial["ring"]
+		var weapon := 0 if action == "minigun" else (1 if action == "misiles" else -1)
+		var reloading := weapon >= 0 and weapons.reloading == weapon
+		var ready := weapons.needle if reloading else weapons.ready_of(action)
+		for k in ring.size():
+			var at := (k + 0.5) / ring.size()
+			var paint := _off
+			if reloading and at >= GunnerWeapons.ZONE.x and at <= GunnerWeapons.ZONE.y:
+				paint = _red if weapons.reload_jammed else _amber
+			elif float(k + 1) / ring.size() <= ready + 0.001:
+				paint = _lit
+			(ring[k] as MeshInstance3D).material_override = paint
+		var needle := radial["needle"] as Node3D
+		needle.visible = reloading
+		if reloading:
+			needle.rotation.z = -minf(weapons.needle, 1.0) * TAU
+		if weapon >= 0:
+			var cap := radial["cap"] as MeshInstance3D
+			var tint: Color = radial["tint"]
+			cap.material_override = _glow(tint) if weapons.selected == weapon else null
+	if _heat_fill != null:
+		_heat_fill.scale = Vector3(maxf(weapons.heat, 0.001) * HEAT_WIDTH, 1.0, 1.0)
+		var fill := _heat_fill.get_child(0) as MeshInstance3D
+		fill.material_override = _red if weapons.jammed else _amber
+
+
+var _lit := EnergyBolt.shine(LIT)
+var _off := _flat(OFF)
+var _amber := EnergyBolt.shine(AMBER)
+var _red := EnergyBolt.shine(RED)
+var _glows := {}
+
+
+func _flat(color: Color) -> StandardMaterial3D:
+	var paint := StandardMaterial3D.new()
+	paint.albedo_color = color
+	return paint
+
+
+## El botón del arma elegida: su color, más claro y que brilla.
+func _glow(tint: Color) -> StandardMaterial3D:
+	if not _glows.has(tint):
+		_glows[tint] = EnergyBolt.shine(tint.lightened(0.35))
+	return _glows[tint]
 
 
 ## UNA VIGA de `from` a `to`, de `radius`, en `parent`.
