@@ -7,6 +7,10 @@ extends Node3D
 ## árbol, y LAS PIEZAS DE ARCILLA CUELGAN DE SUS HUESOS. Lo común se apoya acá: la IK, la tabla de animación, el ragdoll.
 ##
 ## EL ÁRBOL (en el mundo, `top_level`):
+## UN ESQUELETO PARA CUALQUIER CUERPO (paso 5, 18/11/2026: el jefe también): se arma por piezas —el tronco
+## (`build_trunk`), cada pierna (`add_leg`), cada brazo (`add_arm`)— y sus capas (`layers`). La meca: pelvis, dos
+## piernas y dos brazos (`build`); el Luchador: sin pelvis ni piernas (orugas), dos brazos de codo fijo.
+##
 ##   raíz (`root`: donde el motor pone el cuerpo, en el piso de la caja: lo de juego, lo que viaja por la red)
 ##   └ cintura (`waist`: donde se apoya el torso; la sube y la baja la tabla)
 ##   ├─ pelvis ── cadera izquierda / derecha (PUNTOS FIJOS) ── muslo ── canilla ── pie
@@ -58,9 +62,11 @@ func put_pelvis(center: Transform3D) -> void:
 	pelvis.global_transform = Transform3D(center.basis.orthonormalized() * Basis.from_euler(DOWN), center.origin)
 
 
-## LO ARMA con las medidas `measures` y la caja `size` (m): los huesos en su reposo (parada: las piernas y los brazos
-## para abajo), y `shoulder` el hombro derecho en el espacio de la caja (el izquierdo, espejado).
-func build(measures: MechBody, size: Vector3, shoulder: Vector3) -> void:
+## ── ARMARLO, POR PIEZAS (un cuerpo cualquiera: la meca, un jefe) ─────────────────────────────────────────────────
+
+## EL TRONCO: la raíz, la cintura a `waist_height` sobre la raíz, el torso (`torso_size`, apuntando para arriba; con
+## `torso_rest`, otro reposo: el Luchador, encorvado) y, si tiene piernas, la pelvis (`pelvis_size`, para abajo).
+func build_trunk(torso_size: Vector3, pelvis_size := Vector3.ZERO, waist_height := 0.0, torso_rest := Vector3.ZERO) -> void:
 	name = "Esqueleto"
 	top_level = true
 	root = Node3D.new()
@@ -68,43 +74,96 @@ func build(measures: MechBody, size: Vector3, shoulder: Vector3) -> void:
 	add_child(root)
 	waist = Node3D.new()
 	waist.name = "Cintura"
+	waist.position = Vector3(0.0, waist_height, 0.0)
 	root.add_child(waist)
-	var down := DOWN
-	var up := Vector3.ZERO
-	pelvis = CustomBone.create(Vector3(measures.PELVIS_SIZE.x, measures.PELVIS_SIZE.y, measures.PELVIS_SIZE.z), down)
-	pelvis.name = "Pelvis"
-	waist.add_child(pelvis)
-	torso = CustomBone.create(Vector3(size.x, size.y, size.z), up)
-	torso.name = "Torso"
-	waist.add_child(torso)
-	for index in 2:
-		var side := -1.0 if index == 0 else 1.0
-		var hip := Node3D.new()
-		hip.name = "Cadera" + ("I" if index == 0 else "D")
-		# La pelvis (su origen, su centro) apunta para abajo (su +Y, medio giro sobre X: la y y la z al revés): la cadera,
-		# al costado y la caída de la cadera por debajo de la cintura (la cintura está media pelvis arriba del centro).
-		hip.position = Vector3(side * measures.HIP_X, measures.HIP_DROP - measures.PELVIS_SIZE.y * 0.5, 0.0)
-		pelvis.add_child(hip)
-		hips.append(hip)
-		var thigh := _bone("Muslo", measures.THIGH, measures.LEG_THICKNESS, down, hip)
-		var shin := CustomBone.create(Vector3(measures.LEG_THICKNESS, measures.SHIN, measures.LEG_THICKNESS), down, thigh)
-		shin.name = "Canilla"
-		var foot := CustomBone.create(measures.FOOT_SIZE, down, shin)
-		foot.name = "Pie"
-		thighs.append(thigh)
-		shins.append(shin)
-		feet.append(foot)
-		var shoulder_point := Node3D.new()
-		shoulder_point.name = "Hombro" + ("I" if index == 0 else "D")
-		shoulder_point.position = Vector3(side * shoulder.x, shoulder.y + size.y * 0.5, shoulder.z)
-		torso.add_child(shoulder_point)
-		shoulders.append(shoulder_point)
-		var upper := _bone("Brazo", measures.UPPER_ARM, measures.LEG_THICKNESS, down, shoulder_point)
-		var forearm := CustomBone.create(Vector3(measures.LEG_THICKNESS, measures.FOREARM, measures.LEG_THICKNESS), down,
-			upper)
+	if pelvis_size != Vector3.ZERO:
+		pelvis = CustomBone.create(pelvis_size, DOWN)
+		pelvis.name = "Pelvis"
+		waist.add_child(pelvis)
+	torso = _bone("Torso", torso_size.y, maxf(torso_size.x, torso_size.z), torso_rest, waist)
+	torso.capsule_dimensions = torso_size
+
+
+## UNA PIERNA, desde la pelvis: la cadera en `hip` (un PUNTO FIJO, en el espacio de la pelvis), el muslo, la canilla y
+## el pie, para abajo.
+func add_leg(hip: Vector3, thigh_length: float, shin_length: float, foot_size: Vector3, thickness: float) -> void:
+	var index := hips.size()
+	var holder := Node3D.new()
+	holder.name = "Cadera%d" % index
+	holder.position = hip
+	pelvis.add_child(holder)
+	hips.append(holder)
+	var thigh := _bone("Muslo", thigh_length, thickness, DOWN, holder)
+	var shin := CustomBone.create(Vector3(thickness, shin_length, thickness), DOWN, thigh)
+	shin.name = "Canilla"
+	var foot := CustomBone.create(foot_size, DOWN, shin)
+	foot.name = "Pie"
+	thighs.append(thigh)
+	shins.append(shin)
+	feet.append(foot)
+
+
+## UN BRAZO, desde el torso: el hombro en `shoulder` (un PUNTO FIJO, en el espacio del torso), el brazo y el antebrazo.
+## En reposo, para abajo; o con `elbow` y `wrist` (en el espacio del torso, desde el hombro), apuntando a ellos: el
+## brazo al codo y el antebrazo a la muñeca (el Luchador: el codo fijo, el brazo en guardia).
+func add_arm(shoulder: Vector3, upper_length: float, forearm_length: float, thickness: float,
+		elbow := Vector3.ZERO, wrist := Vector3.ZERO) -> void:
+	var index := shoulders.size()
+	var holder := Node3D.new()
+	holder.name = "Hombro%d" % index
+	holder.position = shoulder
+	torso.add_child(holder)
+	shoulders.append(holder)
+	if elbow == Vector3.ZERO:
+		var upper := _bone("Brazo", upper_length, thickness, DOWN, holder)
+		var forearm := CustomBone.create(Vector3(thickness, forearm_length, thickness), DOWN, upper)
 		forearm.name = "Antebrazo"
 		uppers.append(upper)
 		forearms.append(forearm)
+		return
+	var upper_basis := MechSkeleton.along(elbow)
+	var upper := _bone("Brazo", upper_length, thickness, upper_basis.get_euler(), holder)
+	var forearm := _bone("Antebrazo", forearm_length, thickness,
+		(upper_basis.inverse() * MechSkeleton.along(wrist - elbow)).get_euler(), upper)
+	forearm.position = Vector3(0.0, upper_length, 0.0)
+	forearm.rest_transform = forearm.transform
+	uppers.append(upper)
+	forearms.append(forearm)
+
+
+## Unos ejes con su +Y a lo largo de `way` (y su Z lo más hacia atrás que se pueda).
+static func along(way: Vector3) -> Basis:
+	var y := way.normalized()
+	var z := Vector3.BACK - y * Vector3.BACK.dot(y)
+	if z.length_squared() < 0.0001:
+		z = Vector3.RIGHT.cross(y)
+	z = z.normalized()
+	return Basis(y.cross(z), y, z)
+
+
+## EL DE LA MECA, con las medidas `measures` y la caja `size` (m): la pelvis con sus dos caderas, dos piernas y dos
+## brazos, en su reposo (parada: las piernas y los brazos para abajo); `shoulder`, el hombro derecho en el espacio de la
+## caja (el izquierdo, espejado).
+func build(measures: MechBody, size: Vector3, shoulder: Vector3) -> void:
+	build_trunk(size, measures.PELVIS_SIZE)
+	for index in 2:
+		var side := -1.0 if index == 0 else 1.0
+		# La pelvis (su origen, su centro) apunta para abajo (su +Y, medio giro sobre X: la y y la z al revés): la cadera,
+		# al costado y la caída de la cadera por debajo de la cintura (la cintura está media pelvis arriba del centro).
+		add_leg(Vector3(side * measures.HIP_X, measures.HIP_DROP - measures.PELVIS_SIZE.y * 0.5, 0.0), measures.THIGH,
+			measures.SHIN, measures.FOOT_SIZE, measures.LEG_THICKNESS)
+	for index in 2:
+		var side := -1.0 if index == 0 else 1.0
+		add_arm(Vector3(side * shoulder.x, shoulder.y + size.y * 0.5, shoulder.z), measures.UPPER_ARM, measures.FOREARM,
+			measures.LEG_THICKNESS)
+
+
+## LAS CAPAS DE UN CUERPO CUALQUIERA: la tabla común sobre las señales `signals`, con sus filas `rows` ([nodo del
+## esqueleto, eje, fórmula]). La meca arma las suyas en `setup_layers`; un jefe, las suyas.
+func layers(signals: MotionSignals, rows: Array) -> void:
+	table = ProceduralBoneAnimator.create(signals)
+	for row: Array in rows:
+		table.register_formula(row[0], row[1], row[2])
 
 
 ## LAS CAPAS (ver arriba), leyendo del cuerpo `body`: sus piernas (el paso, el pisotón, la velocidad de costado: BodyLegs
@@ -112,10 +171,8 @@ func build(measures: MechBody, size: Vector3, shoulder: Vector3) -> void:
 ## armadas.
 func setup_layers(body: BalanceBody) -> void:
 	_body = body
-	table = ProceduralBoneAnimator.create(body.legs.signals)
-	table.register_formula(waist, ProceduralBoneAnimator.Axis.POS_Y, _rise)
-	table.register_formula(torso, ProceduralBoneAnimator.Axis.ROT_Z, _roll)
-	table.register_formula(torso, ProceduralBoneAnimator.Axis.ROT_X, _pitch)
+	layers(body.legs.signals, [[waist, ProceduralBoneAnimator.Axis.POS_Y, _rise],
+		[torso, ProceduralBoneAnimator.Axis.ROT_Z, _roll], [torso, ProceduralBoneAnimator.Axis.ROT_X, _pitch]])
 
 
 ## LAS CAPAS EN ESTE PASO, con la raíz ya puesta por el motor.

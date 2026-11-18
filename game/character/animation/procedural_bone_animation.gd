@@ -15,7 +15,10 @@ enum SignalType {
 	FOOT_SPREAD_UNIFIED_Z
 }
 enum Axis {
-	ROT_X, ROT_Y, ROT_Z, POS_Y, POS_Z
+	ROT_X, ROT_Y, ROT_Z, POS_Y, POS_Z,
+	## De costado (18/11/2026, módulo Jefes: el temblor del Luchador). Sólo en los huesos que lo usan se vuelve el x a su
+	## reposo; en los demás, el x queda como está (como siempre).
+	POS_X
 }
 
 var is_seated:            bool       = false
@@ -146,6 +149,10 @@ func update() -> void:
 		t.origin.z = rest.rest_local_position.z
 		t.basis = rest.rest_local_basis
 		for i: int in group[2]:
+			if (_entries[i] as BoneAnimEntry).axis == Axis.POS_X:
+				t.origin.x = rest.rest_local_position.x
+				break
+		for i: int in group[2]:
 			if _applies[i] == 0:
 				continue
 			var value := _values[i]
@@ -160,6 +167,8 @@ func update() -> void:
 					t.origin.y += value
 				Axis.POS_Z:
 					t.origin.z += value
+				Axis.POS_X:
+					t.origin.x += value
 		(group[0] as Node3D).transform = t
 	for group: Array in _node_groups:
 		var p: Vector3 = (group[1] as NodeAnimEntry).rest_local_position

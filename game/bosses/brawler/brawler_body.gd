@@ -12,6 +12,11 @@ extends RefCounted
 ##   · LAS POSES (15/11/2026; el usuario: «estaría bueno que tenga alguna animación… cuando se preparan para embestir y
 ##     cuando embiste»): `pose()` inclina el torso (adelante, positivo) y gira los dos brazos en el hombro (para
 ##     adelante y arriba, positivo), y lo sacude (el temblor de cargar). Las pone el Luchador (Brawler.Pose).
+##   · SU ESQUELETO (`skeleton`, MechSkeleton, el de la meca; 18/11/2026): la raíz en las orugas, la cintura a `HIP`,
+##     el torso encorvado (`HUNCH`) y dos brazos de codo fijo (el brazo y el antebrazo). LO DE ARRIBA CUELGA DE LA
+##     CINTURA Y LO ENCORVADO DEL TORSO; cada brazo, de sus dos huesos. Lo encorvado, la inclinación y el temblor de
+##     la pose, y el resorte de los golpes y del aterrizaje (Brawler), son capas de la tabla común
+##     (ProceduralBoneAnimator), como en la meca; los brazos los gira la pose en el hombro.
 ##   · LA IRA (`fury`, de 0 a 1): el color pasa al de la ira, el visor se pone rojo, el horno brilla más y las chimeneas
 ##     echan humo negro (el usuario: «los tubos de atrás son los perfectos para que tiren humo cuando está enojado»).
 
@@ -40,9 +45,16 @@ var hull: Node3D = null
 var upper: Node3D = null
 var door: Node3D = null
 var smoke: Array[GPUParticles3D] = []
-## LAS POSES: lo encorvado (el nodo que se inclina) y los dos hombros (giran el brazo entero, para adelante).
+## LAS POSES: lo encorvado (cuelga del torso, que se inclina) y los dos hombros (los puntos fijos del esqueleto; la pose
+## gira el brazo entero, para adelante).
 var bent: Node3D = null
 var shoulders: Array[Node3D] = []
+## EL ESQUELETO (ver arriba), las piezas de cada puño (para `fists`) y la pose de ahora (la leen las capas).
+var skeleton: MechSkeleton = null
+var _fists: Array[Node3D] = []
+var _arm_rest: Array[Basis] = []
+var lean_now := 0.0
+var shake_now := Vector3.ZERO
 
 var _paint := StandardMaterial3D.new()
 var _trim := StandardMaterial3D.new()
@@ -61,10 +73,12 @@ func build(owner: Node3D) -> void:
 	hull.name = "Orugas"
 	owner.add_child(hull)
 	_treads()
+	skeleton = MechSkeleton.new()
+	skeleton.build_trunk(CHEST, Vector3.ZERO, HIP, Vector3(-deg_to_rad(HUNCH), 0.0, 0.0))
+	owner.add_child(skeleton)
 	upper = Node3D.new()
 	upper.name = "Torso"
-	upper.top_level = true
-	owner.add_child(upper)
+	skeleton.waist.add_child(upper)
 	_torso()
 	show(0.0, 0.0, 0.0)
 
@@ -91,19 +105,21 @@ func show(opened: float, angle: float, fury: float) -> void:
 ## LA POSE: el torso inclinado `lean` grados adelante, los brazos girados `raise` grados en el hombro (adelante y
 ## arriba), el temblor `shake` (m, de lo de arriba) y cuánto se abren los brazos para los costados `spread` (°).
 func pose(lean: float, raise: float, shake: float, spread := 0.0) -> void:
-	bent.basis = Basis(Vector3.RIGHT, -deg_to_rad(HUNCH + lean))
-	for index in shoulders.size():
+	# Lo encorvado y el temblor los escribe la tabla (ver `lean_now`, `shake_now`); los brazos, acá, en el hombro.
+	lean_now = lean
+	for index in skeleton.uppers.size():
 		var side := -1.0 if index == 0 else 1.0
-		shoulders[index].basis = Basis(Vector3.BACK, side * deg_to_rad(spread)) * Basis(Vector3.RIGHT, deg_to_rad(raise))
+		var turn := Basis(Vector3.BACK, side * deg_to_rad(spread)) * Basis(Vector3.RIGHT, deg_to_rad(raise))
+		skeleton.uppers[index].transform.basis = turn * _arm_rest[index]
 	var time := Time.get_ticks_msec() * 0.001
-	bent.position = Vector3(sin(time * 41.0), sin(time * 53.0) * 0.5, sin(time * 37.0)) * shake
+	shake_now = Vector3(sin(time * 41.0), sin(time * 53.0) * 0.5, sin(time * 37.0)) * shake
 
 
 ## Dónde están los dos puños (mundo).
 func fists() -> Array[Vector3]:
 	var out: Array[Vector3] = []
-	for shoulder in shoulders:
-		out.append((shoulder.get_child(shoulder.get_child_count() - 1) as Node3D).global_position)
+	for fist in _fists:
+		out.append(fist.global_position)
 	return out
 
 
@@ -134,8 +150,8 @@ func _torso() -> void:
 	# Encorvado desde la cintura.
 	bent = Node3D.new()
 	bent.name = "Encorvado"
-	bent.basis = Basis(Vector3.RIGHT, -deg_to_rad(HUNCH))
-	upper.add_child(bent)
+	# Cuelga del torso del esqueleto, que ya está encorvado (su reposo).
+	skeleton.torso.add_child(bent)
 	_paint_part(Clay.box(bent, WAIST, Vector3(0.0, WAIST.y * 0.5 + 0.5, 0.0), COLOR), _trim)
 	var chest_at := Vector3(0.0, WAIST.y + CHEST.y * 0.5, 0.0)
 	_paint_part(Clay.box(bent, CHEST, chest_at, COLOR), _paint)
@@ -192,18 +208,30 @@ func _arms(at: Node3D, chest_at: Vector3) -> void:
 		var joint := chest_at + Vector3(side * (CHEST.x * 0.5 + SHOULDER.x * 0.35), CHEST.y * 0.3, 0.0)
 		_paint_part(Clay.box(at, SHOULDER, joint + Vector3(side * SHOULDER.x * 0.1, SHOULDER.y * 0.2, 0.0), COLOR),
 			_paint)
-		var shoulder := Node3D.new()
-		shoulder.name = "Hombro"
-		shoulder.position = joint
-		at.add_child(shoulder)
-		shoulders.append(shoulder)
 		var elbow := straight * Vector3(side * 0.8, -UPPER_ARM, -UPPER_ARM * REACH)
 		var wrist := elbow + straight * Vector3(0.0, -FOREARM * (1.0 - REACH), -FOREARM * REACH * 2.0)
 		var arm := SHOULDER.x * 0.45
-		_paint_part(_beam(shoulder, Vector3.ZERO, elbow, arm), _trim)
-		_paint_part(Clay.box(shoulder, Vector3.ONE * arm * 1.25, elbow, COLOR), _trim)
-		_paint_part(_beam(shoulder, elbow, wrist, arm * 1.25), _paint)
-		_paint_part(Clay.box(shoulder, Vector3.ONE * FIST, wrist + (wrist - elbow).normalized() * FIST * 0.5, COLOR), _trim)
+		# EN EL ESQUELETO: el hombro (punto fijo del torso), el brazo hacia el codo y el antebrazo hacia la muñeca.
+		skeleton.add_arm(joint, elbow.length(), (wrist - elbow).length(), arm, elbow, wrist)
+		var upper_bone := skeleton.uppers[skeleton.uppers.size() - 1]
+		var forearm_bone := skeleton.forearms[skeleton.forearms.size() - 1]
+		_arm_rest.append(upper_bone.transform.basis)
+		shoulders.append(skeleton.shoulders[skeleton.shoulders.size() - 1])
+		# Las piezas se arman desde el hombro y pasan a sus huesos (el brazo y el codo; el antebrazo y el puño).
+		var shoulder := Node3D.new()
+		shoulder.position = joint
+		at.add_child(shoulder)
+		var pieces := [_beam(shoulder, Vector3.ZERO, elbow, arm), Clay.box(shoulder, Vector3.ONE * arm * 1.25, elbow, COLOR),
+			_beam(shoulder, elbow, wrist, arm * 1.25),
+			Clay.box(shoulder, Vector3.ONE * FIST, wrist + (wrist - elbow).normalized() * FIST * 0.5, COLOR)]
+		_paint_part(pieces[0], _trim)
+		_paint_part(pieces[1], _trim)
+		_paint_part(pieces[2], _paint)
+		_paint_part(pieces[3], _trim)
+		for index in pieces.size():
+			(pieces[index] as Node3D).reparent(upper_bone if index < 2 else forearm_bone, true)
+		_fists.append(pieces[3])
+		shoulder.queue_free()
 
 
 func _beam(p: Node3D, from: Vector3, to: Vector3, width: float) -> MeshInstance3D:

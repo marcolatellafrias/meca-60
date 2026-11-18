@@ -49,6 +49,17 @@ ahora sobre la cintura y no sobre el piso de los pies. Medido: la caja baja 0,58
 inclina 5,4° con un empujón de 6 m y 14,4° con uno de 16 (antes 15,8°, por el pivote); camina igual (sube 0,09 m, de
 costado 5°). Las pruebas de Cabinas, iguales (cage_cockpit_check, seat_lag_check, crew_death_check, la huella).
 
+PASO 5 (18/11/2026): EL JEFE SOBRE EL ESQUELETO. `MechSkeleton` se arma por piezas para cualquier cuerpo: el tronco
+(`build_trunk`: la raíz, la cintura, el torso y, si tiene piernas, la pelvis), cada pierna (`add_leg`) y cada brazo
+(`add_arm`, para abajo o apuntando a un codo y una muñeca); sus capas, con `layers` (la tabla común). La meca: pelvis,
+dos piernas y dos brazos. EL LUCHADOR (BrawlerBody.skeleton): la raíz en las orugas, la cintura a su cadera, el torso
+encorvado y dos brazos de codo fijo; lo de arriba cuelga de la cintura, lo encorvado del torso, cada brazo de sus dos
+huesos. Sus capas en la tabla: hundirse al aterrizar (la cintura), la inclinación de la pose y la de un golpe y el
+temblor de cargar (el torso; la tabla ganó un eje de costado, `POS_X`, que sólo vuelve a su reposo en los huesos que lo
+usan); los brazos los gira la pose en el hombro. Su ragdoll sale de los huesos (6 pedazos: las orugas, lo de arriba,
+los brazos en dos). Medido: igual que antes (los modos, los seis ataques, los tiros de la meca, el salto; los videos de
+los golpes y de la embestida, lado a lado).
+
 `tests/mech_skeleton_check` (sin ventana): caminando, doblando y con una piña, lo más que se separa cada hueso de
 donde nace (el muslo de su cadera, la canilla de la punta del muslo, el pie, el brazo de su hombro, el antebrazo) y
 que las caderas no se muevan en la pelvis: todo 0 mm, «ESQUELETO OK». La huella de `cage_mech_look` y su hoja, igual.
@@ -57,7 +68,7 @@ Por pasos (la nota compartida `jefes-revision-cuerpo-meca.md`): 1. el esqueleto 
 sigue calculando el código de siempre, MechBody, y se escribe en los huesos); 2a. una sola IK sobre los huesos de las
 piernas (HECHO); 2b. las capas (caminar, inclinarse, el resorte, hundirse) en la cintura y el torso, con la cabina sobre el torso (con
 Cabinas; HECHO); 3. los dos brazos sobre los huesos (HECHO el discreto; el de músculos sigue a sus cuerpos); 4. el ragdoll desde el esqueleto, y su vuelta (con los
-personajes); 5. el jefe; 6. limpieza.
+personajes); 5. el jefe (HECHO); 6. limpieza.
 
 ## Qué viaja por la red y qué se calcula en cada máquina (acordado con el usuario, 18/11/2026)
 Como los personajes (character-parametric, «Multiplayer & Sync»): VIAJA LO QUE LA OTRA MÁQUINA NO PUEDE DEDUCIR; lo

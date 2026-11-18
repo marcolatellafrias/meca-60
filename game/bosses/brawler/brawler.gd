@@ -325,19 +325,38 @@ func _physics_process(delta: float) -> void:
 func _place_upper() -> void:
 	if _torso_shape != null:
 		_torso_shape.transform = Transform3D(Basis(Vector3.UP, waist_yaw - hull_yaw), _torso_shape.position)
-	var upright := Basis(Vector3.UP, waist_yaw)
-	var tilt := body_spring.tilt_degrees()
-	var sway := Basis(upright.x, deg_to_rad(tilt.x)) * Basis(upright.z, -deg_to_rad(tilt.y))
-	body.upper.global_transform = Transform3D((sway * upright).scaled(Vector3.ONE * scale()),
-		global_position + Vector3.UP * (BrawlerBody.HIP - body_spring.y * LAND_SINK) * scale())
+	# EL ESQUELETO (BrawlerBody.skeleton): la raíz en las orugas, girada como la cintura y a la escala; encima, sus capas
+	# (lo encorvado y la inclinación de la pose, el temblor, el resorte del golpe y del aterrizaje: `_layers`).
+	body.skeleton.root.global_transform = Transform3D(Basis(Vector3.UP, waist_yaw).scaled(Vector3.ONE * scale()),
+		global_position)
+	if body.skeleton.table == null:
+		_layers()
+	body.skeleton.animate()
 
 
-## SU ESQUELETO PARA EL RAGDOLL AL MORIR (PartsRagdoll): el tronco es lo de abajo (las orugas); lo de arriba, unido a
-## él en la cintura; cada brazo, unido a lo de arriba en su hombro.
+## LAS CAPAS DE SU ESQUELETO (la tabla común, como la meca: MechSkeleton.layers): en la cintura, hundirse al aterrizar;
+## en el torso, la inclinación de la pose (adelante), la de un golpe (adelante y de costado) y el temblor de cargar.
+func _layers() -> void:
+	var bones := body.skeleton
+	bones.layers(MotionSignals.new(), [
+		[bones.waist, ProceduralBoneAnimator.Axis.POS_Y, func() -> float: return -body_spring.y * LAND_SINK],
+		[bones.torso, ProceduralBoneAnimator.Axis.ROT_X,
+			func() -> float: return -deg_to_rad(body.lean_now) + deg_to_rad(body_spring.tilt_degrees().x)],
+		[bones.torso, ProceduralBoneAnimator.Axis.ROT_Z, func() -> float: return deg_to_rad(body_spring.tilt_degrees().y)],
+		[bones.torso, ProceduralBoneAnimator.Axis.POS_X, func() -> float: return body.shake_now.x],
+		[bones.torso, ProceduralBoneAnimator.Axis.POS_Y, func() -> float: return body.shake_now.y],
+		[bones.torso, ProceduralBoneAnimator.Axis.POS_Z, func() -> float: return body.shake_now.z],
+	])
+
+
+## SU ESQUELETO PARA EL RAGDOLL AL MORIR (PartsRagdoll), de sus huesos: el tronco es lo de abajo (las orugas); lo de
+## arriba (la cintura, con el torso), unido a él en la cintura; cada brazo en dos, en el hombro y en el codo.
 func ragdoll_parts(ragdoll: PartsRagdoll) -> void:
-	var top := ragdoll.add([body.upper], 0, global_position + Vector3.UP * BrawlerBody.HIP * scale())
-	for shoulder in body.shoulders:
-		ragdoll.add([shoulder], top, shoulder.global_position)
+	var bones := body.skeleton
+	var top := ragdoll.add([bones.waist], 0, bones.waist.global_position)
+	for side in bones.uppers.size():
+		var upper := ragdoll.add([bones.uppers[side]], top, bones.uppers[side].global_position)
+		ragdoll.add([bones.forearms[side]], upper, bones.forearms[side].global_position)
 
 
 ## Sin lo que lo metería dentro de `block_at`: si su caja está a menos de su radio (y un poco), no avanza hacia él.
