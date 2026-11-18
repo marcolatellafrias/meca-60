@@ -56,8 +56,9 @@ Parados y **siempre de frente** a quien mira (`SandboxLayout.signpost`). El alto
 - **Globales** (`SandboxCatalogue.global_panels()`): de **F9 a F12**.
 - **La F8 nunca**: en Godot detiene el juego.
 
-En el panel chico, el alcance lo dice el bloque donde aparece (ESTA PARCELA, ESTA FILA, SIEMPRE). Hay tres colores en
-total: gris para lo normal, ámbar para lo principal y celeste para las F.
+En el panel chico, el alcance lo dice el bloque donde aparece (ESTA PARCELA, ESTA FILA). Hay tres colores en total:
+gris para lo normal, ámbar para lo principal y celeste para las F. **El panel chico anota sólo lo del lugar donde uno
+está**: las globales no aparecen (18/11/2026, el usuario: dejar lo esencial y lo de ese lugar).
 
 ## Teclas reservadas (`SandboxKey.RESERVED`)
 - WASD, espacio, shift, Ctrl, E y Escape. Con el ente, shift corre; dos toques seguidos dan el turbo (×4) y tres el
@@ -69,7 +70,9 @@ total: gris para lo normal, ámbar para lo principal y celeste para las F.
   que no hay panel que se escape ni que tenga que anotarse. Cierra las F abiertas; abrir cualquier F, la pausa o la
   consola la devuelve.
 
-El panel chico tampoco usa F1–F12.
+El panel chico tampoco usa F1–F12. **Las reservadas no se anotan en el panel chico**: valen en cualquier lado. La única
+excepción es la R, mientras la parcela no está armada («armar la parcela», principal), porque sin ella no hay nada.
+*Hasta el 18/11/2026 iban apagadas abajo del panel R, C, B, V, O, I y Tab.*
 
 ## Las reglas se chequean
 `SandboxCatalogue.check` las revisa al arrancar:

@@ -290,34 +290,32 @@ static func _now() -> float:
 
 
 ## ── EL PANEL CHICO ───────────────────────────────────────────────────────────────────────────────────────────────
-## Lo que muestra: después de entrar, salir o apretar algo.
+## Lo que muestra: después de entrar, salir o apretar algo. SÓLO LO DE DONDE UNO ESTÁ (18/11/2026, el usuario, por Armas:
+## sacar las teclas reservadas y dejar lo esencial y lo de ese lugar): las teclas y las F de esta parcela y de esta fila.
+## Lo de cualquier lado (las reservadas, las F globales) no se anota; sólo la R, mientras la parcela no está armada,
+## porque sin ella no hay nada. *Hasta ese día, abajo iban apagadas R, C, B, V, O, I y Tab, y un bloque SIEMPRE con las F
+## globales.*
 func _refresh() -> void:
 	if _current == null:
 		_panel.hide_panel()
 		return
 	var parcel_lines := _key_lines(_current.own_keys())
 	var row_lines := _key_lines(_current.row_keys())
-	var global_lines: Array[Dictionary] = []
 	for entry in _tuners:
+		if entry["row"] != _current.row:
+			continue
 		var line := {"key": (entry["tuner"] as TunerPanel).menu_key, "text": "panel: " +
 			(entry["tuner"] as TunerPanel).menu_label, "kind": SandboxPanel.Line.PANEL}
-		if entry["row"] == null:
-			global_lines.append(line)
-		elif entry["row"] == _current.row and entry["archetype"] == _current.archetype:
+		if entry["archetype"] == _current.archetype:
 			parcel_lines.append(line)
-		elif entry["row"] == _current.row and entry["archetype"] == null:
+		elif entry["archetype"] == null:
 			row_lines.append(line)
-	var hints := PackedStringArray()
-	for hint in SandboxKey.HINTS:
-		var text: String = SandboxKey.RESERVED[hint]
-		if hint == KEY_R and not _current.built:
-			text = "armar la parcela"
-		hints.append("%s  %s" % [SandboxKey.name_of(hint), text])
+	if not _current.built:
+		parcel_lines.push_front({"key": KEY_R, "text": "armar la parcela", "kind": SandboxPanel.Line.MAIN})
 	_panel.show_parcel(_current, [
 		{"title": "esta parcela", "lines": parcel_lines},
 		{"title": "esta fila", "lines": row_lines},
-		{"title": "siempre", "lines": global_lines},
-	] as Array[Dictionary], hints)
+	] as Array[Dictionary])
 
 
 ## Las teclas, las principales primero. Sentado o manejando, sólo las que valen así.

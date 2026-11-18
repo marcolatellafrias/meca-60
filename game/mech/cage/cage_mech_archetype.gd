@@ -24,8 +24,8 @@ func _init() -> void:
 func describe(_seed_value: int) -> PackedStringArray:
 	return PackedStringArray([
 		"la meca jaula: abajo el que maneja, arriba el de los brazos, atrás el artillero; cañón a la izquierda, palo a la derecha",
-		"mirándola, O la posee (T cambia la vista): sus controles, abajo a la derecha · F1 su forma de moverse",
-		"adelante, la de práctica; a la derecha, cajas para tirarles · U a la cubierta · L la grilla de los tableros",
+		"mirándola, O la posee (T cambia la vista): sus controles, abajo a la derecha",
+		"adelante, la de práctica; a la derecha, cajas para tirarles",
 	])
 
 

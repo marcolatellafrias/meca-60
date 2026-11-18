@@ -2,12 +2,12 @@ class_name SandboxPanel
 extends CanvasLayer
 
 ## EL PANEL CHICO: a la derecha, mientras uno está en la zona de una parcela, qué es (categoría, nombre, semilla, lo que
-## diga el arquetipo) y qué teclas valen, en bloques: ESTA PARCELA, ESTA FILA y SIEMPRE. Tres colores, nada más:
+## diga el arquetipo) y qué teclas valen ahí, en bloques: ESTA PARCELA y ESTA FILA. Tres colores, nada más:
 ##   · gris claro   una tecla normal;
 ##   · ámbar        una principal (`SandboxKey.Weight.MAIN`), primero en su bloque;
 ##   · celeste      una F, que abre un panel.
-## El alcance de una F lo dice el bloque donde está, no un color (ver docs/technical/sandbox.md). Las teclas del sandbox van
-## al final, apagadas.
+## El alcance de una F lo dice el bloque donde está, no un color (ver docs/technical/sandbox.md). Las teclas del sandbox
+## (las reservadas) no se anotan: valen en cualquier lado (ver DesignSandbox._refresh).
 ##
 ## Arriba a la izquierda, en rojo, lo que esté mal en el catálogo (ver SandboxCatalogue.check), en cualquier lado.
 
@@ -18,7 +18,6 @@ const NORMAL_COLOR := Color(0.86, 0.87, 0.88)
 const MAIN_COLOR := Color(1.0, 0.76, 0.32)
 const PANEL_COLOR := Color(0.55, 0.76, 1.0)
 const TITLE_COLOR := Color(0.55, 0.56, 0.58)
-const HINT_COLOR := Color(0.6, 0.63, 0.68)
 const ERROR_COLOR := Color(1.0, 0.45, 0.4)
 
 ## Qué es cada renglón de un bloque.
@@ -81,9 +80,8 @@ func show_errors(problems: PackedStringArray) -> void:
 	_errors.visible = not problems.is_empty()
 
 
-## LOS BLOQUES: `{title, lines: [{key: Key, text: String, kind: Line}]}`, en orden; uno vacío no se muestra. `hints`, las
-## teclas del sandbox, al final.
-func show_parcel(parcel: SandboxParcel, blocks: Array[Dictionary], hints: PackedStringArray) -> void:
+## LOS BLOQUES: `{title, lines: [{key: Key, text: String, kind: Line}]}`, en orden; uno vacío no se muestra.
+func show_parcel(parcel: SandboxParcel, blocks: Array[Dictionary]) -> void:
 	_text.text = "\n".join(parcel.info_lines())
 	var out := PackedStringArray()
 	for block in blocks:
@@ -100,8 +98,6 @@ func show_parcel(parcel: SandboxParcel, blocks: Array[Dictionary], hints: Packed
 					color = PANEL_COLOR
 			out.append("[color=#%s]%s  %s[/color]" % [color.to_html(false), SandboxKey.name_of(line["key"]),
 				_escape(str(line["text"]))])
-	out.append("[color=#%s][font_size=12]%s[/font_size][/color]" % [HINT_COLOR.to_html(false),
-		_escape("\n".join(hints))])
 	_keys_text = "\n".join(out)
 	_keys.text = _keys_text
 	_frame.visible = true

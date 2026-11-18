@@ -19,7 +19,8 @@ enum Weight { MAIN, NORMAL }
 ## Más estados que esto en un ciclo ya no es «pocos»: va en un panel F.
 const MAX_CYCLE := 8
 
-## LAS TECLAS DEL SANDBOX, en cualquier parcela: lo que hacen, para el panel y para el aviso de choque.
+## LAS TECLAS DEL SANDBOX, en cualquier parcela: lo que hacen, para el aviso de choque. El panel chico no las anota
+## (desde el 18/11/2026; ver DesignSandbox._refresh).
 const RESERVED := {
 	KEY_W: "caminar", KEY_A: "caminar", KEY_S: "caminar", KEY_D: "caminar",
 	KEY_SPACE: "saltar", KEY_SHIFT: "correr", KEY_CTRL: "agacharse", KEY_E: "usar", KEY_ESCAPE: "el menú",
@@ -27,8 +28,6 @@ const RESERVED := {
 	KEY_B: "corta: modo creativo · larga: ente o cuerpo", KEY_I: "el inspector",
 	KEY_O: "poseer lo que se mira", KEY_T: "la vista de lo poseído", KEY_TAB: "ocultar toda la pantalla",
 }
-## Las que se anotan abajo del panel chico, en este orden (las de caminar no hace falta).
-const HINTS: Array[Key] = [KEY_R, KEY_C, KEY_B, KEY_V, KEY_O, KEY_I, KEY_TAB]
 
 ## LAS F (ver SandboxRow.panel y SandboxCatalogue.global_panels): las de parcela y de fila van de F1 a F7; las globales,
 ## de F9 a F12. La F8 nunca: es la de Godot para detener el juego.
