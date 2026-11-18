@@ -463,8 +463,6 @@ var _pose_band := 0
 ## resuelvan todos en el mismo cuadro.
 var _pose_slot := -1
 var _pose_phase := -1
-## Un proxy mueve los cuerpos de su ragdoll en un paso de cada dos (ver `_physics_process`).
-var _ragdoll_sync_skip := false
 
 
 func _physics_process(delta: float) -> void:
@@ -491,13 +489,6 @@ func _physics_process(delta: float) -> void:
 	# cada paso, y de la cápsula cuelgan la cámara y el rayo de interacción.
 	if is_seated and is_instance_valid(current_seat):
 		seating.pin_capsule_to_seat()
-	# Los cuerpos del ragdoll son cinemáticos y empujan lo que tocan (también lo que se tiene agarrado):
-	# siguen a los huesos —que cuelgan de la cápsula— a la tasa de antes y no sólo cuando se resuelve la
-	# pose: el jugador local en cada paso, un proxy en uno de cada dos (medido: 19 cuerpos cinemáticos por
-	# paso son lo que más cuesta de un proxy después del solve).
-	_ragdoll_sync_skip = not kind.is_local() and not _ragdoll_sync_skip
-	if not _ragdoll_sync_skip:
-		_sync_ragdoll_bodies()
 	_pose_delta += delta
 
 
@@ -719,11 +710,12 @@ func _pose_arms(delta: float) -> void:
 	ik_util.solve_two_bone_ik(custom_bones_util.right_upper_arm, custom_bones_util.right_lower_arm,
 		ik_util.right_arm_ik_target.global_position, ik_util.right_arm_pole.global_position)
 
-## Copia el pose de los huesos a los cuerpos del ragdoll mientras NO se está ragdolleando (regla
-## sync-before-snapshot). También sentado: antes solo corría parado y los cuerpos quedaban viejos
-## todo el rato que estabas en el asiento.
+## LOS CUERPOS DEL RAGDOLL, A LOS HUESOS: sólo si son lo que se ve (un personaje sin cuerpo que dibujar). De pie están
+## fuera de la física (ver RagdollUtil, DE PIE, LOS HUESOS NO ESTÁN EN LA FÍSICA) y al tumbarlo se ponen solos en la
+## pose de ese momento (RagdollUtil.activate → sync_to_bones). *Hasta el 18/11/2026 se copiaban en cada paso y en cada
+## cuadro, cuando eran cinemáticos y empujaban lo que tocaban: unos 50 µs por persona por paso, para nada.*
 func _sync_ragdoll_bodies() -> void:
-	if is_instance_valid(ragdoll_util) and not ragdoll_util.is_recovering:
+	if is_instance_valid(ragdoll_util) and not ragdoll_util.is_recovering and not is_instance_valid(body_visual):
 		ragdoll_util.sync_to_bones()
 
 ## Copia el pose del rig lógico al cuerpo visible. Va al FINAL del solve, después de que todo lo demás
