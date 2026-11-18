@@ -7,7 +7,7 @@ extends RefCounted
 static func rows() -> Array[SandboxRow]:
 	return [
 		SandboxRow.new(SandboxSuper.Id.CHARACTERS, "Personajes") 			.add(SandboxRow.Build.NEAR, PeopleArchetype.catalogue()) 			.panel(KEY_F3, TUNER, _tuner("Personajes")),
-		SandboxRow.new(SandboxSuper.Id.CHARACTERS, "Cabezas") 			.add(SandboxRow.Build.NEAR, HeadFormsArchetype.catalogue()) 			.add(SandboxRow.Build.NEAR, HeadPaintArchetype.catalogue()) 			.panel(KEY_F3, "las formas de cabeza: editar, agregar, el aplanamiento de todas", HeadFormsPanel.new()) 			.panel(KEY_F1, "pintar con píxeles la cara que mirás", _painter()),
+		SandboxRow.new(SandboxSuper.Id.CHARACTERS, "Cabezas") 			.add(SandboxRow.Build.NEAR, HeadFormsArchetype.catalogue()) 			.add(SandboxRow.Build.NEAR, HeadPaintArchetype.catalogue()) 			.panel(KEY_F3, "las formas de cabeza: editar, agregar, el aplanamiento de todas", HeadFormsPanel.new()) 			.panel(KEY_F1, "pintar con píxeles la cara que mirás", _painter()) 			.panel(KEY_F2, "las pinturas de cabeza: crear, duplicar, borrar", HeadPaintPanel.new()),
 		SandboxRow.new(SandboxSuper.Id.CHARACTERS, "Locomoción") 			.add(SandboxRow.Build.NEAR, LocomotionLabArchetype.catalogue()) 			.panel(KEY_F3, TUNER, _tuner("Locomoción")),
 	]
 

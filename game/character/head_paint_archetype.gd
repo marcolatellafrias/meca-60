@@ -12,7 +12,8 @@ extends SeededArchetype
 ## UNA PINTURA es un archivo de la herramienta (`faces/cabeza<forma>_<n>.json`) con su densidad, su giro y sus
 ## píxeles: está atada a su forma de cabeza (los píxeles se anclan a la posición de cada cara). Cada forma puede tener
 ## varias. El GIRO (`front_face`): el octógono con una esquina adelante, como siempre, o con un lado plano adelante (ver
-## HeadForm.build_arrays). La densidad y el giro se eligen para la pintura nueva (K, Y) y quedan guardados con ella.
+## HeadForm.build_arrays). La densidad y el giro se eligen para la pintura nueva en el F2 (HeadPaintPanel), que crea,
+## duplica y borra; quedan guardados con ella. En el panel chico, sólo J y N, para ver.
 ## El sombreado es suave, como en el juego.
 
 const FOLDER := "res://game/character/faces/"
@@ -48,7 +49,7 @@ func describe(_seed_value: int) -> PackedStringArray:
 	if not data.is_empty():
 		lines.append("%d px/m · %s" % [_per_meter(int(data.get("pixels_per_cell", 0))),
 			"lado adelante" if bool((data.get("extra", {}) as Dictionary).get("front_face", false)) else "esquina adelante"])
-	lines.append("mirá una cara y F1 la pinta")
+	lines.append("mirá una cara y F1 la pinta · F2 crea, duplica y borra")
 	return lines
 
 
@@ -107,7 +108,8 @@ static func _per_meter(per_cell: int) -> int:
 	return roundi(per_cell / PixelModel.CELL)
 
 
-## ── LAS TECLAS ──────────────────────────────────────────────────────────────────────────────────────────────────
+## ── LAS TECLAS: sólo para ver (lo que guarda —crear, duplicar, borrar, cómo nace la próxima— está en el F2, ver
+## HeadPaintPanel; el usuario: «todas las cosas que tienen función de guardarse tienen que ir en panel F») ──────────
 func keys() -> Array[SandboxKey]:
 	return [
 		SandboxKey.action(KEY_J, SandboxKey.Weight.MAIN, func() -> String: return "otra pintura de esta forma",
@@ -116,22 +118,11 @@ func keys() -> Array[SandboxKey]:
 				if painting >= paintings().size():
 					painting = 0
 				_rebuild(parcel)),
-		SandboxKey.action(KEY_U, SandboxKey.Weight.MAIN, func() -> String:
-				return "pintura nueva (%d px/m, %s)" % [DENSITIES[new_density],
-					"lado adelante" if new_front_face else "esquina adelante"],
-			func(parcel: SandboxParcel) -> void: _create(parcel)),
 		SandboxKey.action(KEY_N, SandboxKey.Weight.MAIN, func() -> String: return "otra forma de cabeza (%d)" % (head_slot + 1),
 			func(parcel: SandboxParcel) -> void:
 				head_slot = (head_slot + 1) % HeadForms.count()
 				painting = 0
 				_rebuild(parcel)),
-		SandboxKey.cycle(KEY_K, SandboxKey.Weight.NORMAL, "densidad de la nueva (px/m)", DENSITIES,
-			func() -> int: return new_density,
-			func(_parcel: SandboxParcel, i: int) -> void: new_density = i),
-		SandboxKey.toggle(KEY_Y, SandboxKey.Weight.NORMAL, "la nueva con un lado adelante", func() -> bool: return new_front_face,
-			func(_parcel: SandboxParcel, on: bool) -> void: new_front_face = on),
-		SandboxKey.action(KEY_X, SandboxKey.Weight.NORMAL, func() -> String: return "borrar esta pintura",
-			func(parcel: SandboxParcel) -> void: _delete(parcel)),
 	] as Array[SandboxKey]
 
 
@@ -157,6 +148,22 @@ func _make_painting() -> String:
 	model.save()
 	model.free()
 	return "%s%d" % [_prefix(), n]
+
+
+## UNA COPIA DE LA ELEGIDA (los mismos píxeles, la densidad y el giro), con el número libre que sigue.
+func _duplicate(parcel: SandboxParcel) -> void:
+	var names := paintings()
+	if names.is_empty():
+		return
+	var from := names[clampi(painting, 0, names.size() - 1)]
+	var n := 1
+	while names.has("%s%d" % [_prefix(), n]):
+		n += 1
+	var copy := "%s%d" % [_prefix(), n]
+	DirAccess.copy_absolute(ProjectSettings.globalize_path(FOLDER + from + ".json"),
+		ProjectSettings.globalize_path(FOLDER + copy + ".json"))
+	painting = paintings().find(copy)
+	_rebuild(parcel)
 
 
 func _delete(parcel: SandboxParcel) -> void:

@@ -2,7 +2,8 @@ extends Node
 
 ## PINTAR UNA CARA EN UNA CABEZA (con ventana, unos 20 segundos; ver HeadPaintArchetype): el jugador frente a la
 ## cabeza de la parcela «Pintar caras», abre el F1 mirando el frente, pinta dos ojos y una boca desde acá y saca
-## capturas; después lo mismo con el octógono con una esquina adelante. Al final borra las pinturas que hizo.
+## capturas; después lo mismo con el octógono con una esquina adelante, y el F2 crea y duplica. Al final borra las
+## pinturas que hizo.
 ##   tools/godot_ventana.sh res://tests/head_paint_look.tscn -- --salida=C:/carpeta
 
 var _folder := ""
@@ -30,6 +31,21 @@ func _ready() -> void:
 	row._create(parcel)
 	await get_tree().create_timer(1.0).timeout
 	await _paint_and_shoot("2_esquina_adelante")
+	# EL F2: crea y duplica desde sus botones (ver HeadPaintPanel), y la captura con el panel abierto.
+	var f2 := InputEventKey.new()
+	f2.keycode = KEY_F2
+	f2.physical_keycode = KEY_F2
+	f2.pressed = true
+	Input.parse_input_event(f2)
+	await get_tree().create_timer(0.8).timeout
+	for entry in _sandbox._tuners:
+		if entry["tuner"] is HeadPaintPanel and (entry["tuner"] as HeadPaintPanel).visible:
+			var panel := entry["tuner"] as HeadPaintPanel
+			panel._act("_create", "creada")
+			panel._act("_duplicate", "duplicada")
+			await get_tree().create_timer(0.6).timeout
+			if not _folder.is_empty():
+				get_viewport().get_texture().get_image().save_png("%s/3_panel_f2.png" % _folder)
 	print("PINTURAS de la forma 1: %s" % [row.paintings()])
 	for file in DirAccess.get_files_at(HeadPaintArchetype.FOLDER):
 		if not before.has(file):
