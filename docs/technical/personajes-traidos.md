@@ -65,6 +65,15 @@ estamina con su barra y **el choque blando entre personajes**: ahora chocan como
 Locomoción camina apretando a medias, hasta la velocidad de caminar. Las escaleras no cambiaron: la cápsula sube su
 rampa y los pies pisan los escalones (ver Stairs).
 
+**Los golpes son impulsos con nombre** (17/11/2026, el usuario: «el empuje es un impulso, no es una diferencia de
+velocidad»). Todo lo que golpea de costado llama a `CharacterRigidBody3D.hit(impulso)`: la R, lo que pega en lo que se
+lleva, la red, el choque de la meca. El impulso sobre la masa lo empuja; sobre la firmeza lo inclina con el resorte de
+costado; si un solo golpe pasa el umbral, lo tumba y cae hacia donde lo empujaron. Lo medido queda para lo que no tiene
+quien lo nombre: el aterrizaje (el resorte vertical; más alto, más hundido) y el objeto suelto que le pega. Paredes,
+otros personajes y su propio movimiento ya no cuentan, nada tumba de a poco y aterrizar no tumba (el «ragdoll en el
+aire» del F1 sigue, a pedido). Medido con `tests/hit_check.tscn`: 150 N·s tumba al chico y al viejo; 300, además al
+flaco alto; los pesados quedan inclinados.
+
 **Lo que cuesta la fila Locomoción** (17/11/2026, diagnóstico; nada arreglado todavía): `tests/locomotion_perf.tscn` arma
 las siete escenas juntas (42 personajes, 846 cuerpos rígidos) y mide de a una dimensión. Armarlas: 2,2 s en un cuadro
 (el tirón al acercarse). Prendido todo: 8 fps (124 ms por cuadro). Lo que más pesa, en orden: el guion de la cápsula

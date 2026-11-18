@@ -17,8 +17,8 @@ var backwards_stability : float = 1.0
 var sideways_stability : float = 1.0
 var stability_spring : float = 1.0
 var stability_damp : float = 1.0
-## LA CAÍDA DESDE ALTURA (03/11/2026): el golpe vertical, en m/s, que lo tumba al aterrizar (ver
-## CharacterRigidBody3D.landing_tolerance). 9 m/s es caer de unos 4 m; por debajo, el rebote de siempre y sigue.
+## EL ATERRIZAJE FUERTE (m/s; 9 es caer de unos 4 m): al aterrizar frena según qué tan fuerte cayó contra esto (ver
+## CharacterRigidBody3D._brake_on_landing). Desde el 17/11/2026 aterrizar no tumba.
 var landing_tolerance : float = 9.0
 ## (Lo del cuerpo en el aire, la agachada del salto y el aterrizaje son de todos desde el 04 y el 05/11/2026: LocomotionCommon.)
 var time_to_standup : float = 4.0

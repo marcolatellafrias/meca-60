@@ -270,8 +270,7 @@ func _apply_push(impulse: Vector3) -> void:
 	if is_instance_valid(bi) and is_instance_valid(bi.ragdoll_util) \
 			and (bi.ragdoll_util.is_active or bi.ragdoll_util.is_recovering):
 		return  # no empujar a un jugador ya caído/levantándose
-	rb.apply_central_impulse(impulse)
-	rb.push(impulse / rb.mass)  # adentro de la meca el cuerpo no se mide: va con nombre (ver CharacterRigidBody3D, EL MARCO)
+	rb.hit(impulse)  # un golpe con nombre: lo mueve y lo inclina o lo tumba (ver CharacterRigidBody3D.hit)
 
 # ── Sentado: sincronizar en qué asiento está cada jugador ──────────────────────
 # Análogo al grab: solo viaja la REFERENCIA al asiento (mismo path en todas las máquinas, spawn con

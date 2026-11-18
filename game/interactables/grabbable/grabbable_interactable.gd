@@ -719,7 +719,7 @@ static func outside_carry_cone(body: Node, origin: Vector3, look: Vector3, point
 static func strike_holder(holder: Node, impulse: Vector3) -> void:
 	if holder is CharacterRigidBody3D:
 		var rb := holder as CharacterRigidBody3D
-		rb.strike(impulse / maxf(rb.mass, 0.01) * STRUCK_SHARE)
+		rb.hit(impulse * STRUCK_SHARE)
 
 
 ## QUE LO QUE SE LLEVA NO CHOQUE CON QUIEN LO LLEVA (`on`), o que vuelva a chocar: ni con su cápsula ni con los cuerpos

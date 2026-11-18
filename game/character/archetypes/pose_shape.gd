@@ -117,7 +117,7 @@ extends Resource
 ## QUÉ TAN DURO SE ENDEREZA y cuánto frena el rebote (más, rebota menos).
 @export_range(0.1, 3.0, 0.05) var stability_spring := 1.0
 @export_range(0.1, 3.0, 0.05) var stability_damp := 1.0
-## EL GOLPE VERTICAL QUE LO TUMBA AL ATERRIZAR (m/s; 9 es caer de unos 4 m).
+## EL ATERRIZAJE FUERTE (m/s; 9 es caer de unos 4 m): con él frena del todo al caer. Aterrizar ya no tumba.
 @export_range(3.0, 25.0, 0.5) var landing_tolerance := 9.0
 ## CUÁNTO TARDA EN LEVANTARSE (s).
 @export_range(0.5, 8.0, 0.1) var time_to_standup := 1.5

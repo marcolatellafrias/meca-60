@@ -300,17 +300,23 @@ func _carry_ride() -> void:
 		axes * _ride_point)
 
 
-## UN EMPUJÓN CON NOMBRE: `dv`, cuánto le cambia la velocidad, en m/s y ejes del mundo. Va al resorte como un golpe
-## medido; afuera lo mide el cuerpo solo, así que esto sólo hace falta adentro del marco o sentado (ver EL MARCO).
-## UN GOLPE QUE LLEGA POR LO QUE LLEVA (ver GrabbableInteractable, LOS GOLPES A LO QUE SE LLEVA): como cualquier
-## golpe, lo inclina y le resta equilibrio; `dv` en m/s, del mundo.
-func strike(dv: Vector3) -> void:
+## ── LOS GOLPES SON IMPULSOS CON NOMBRE (17/11/2026) ──────────────────────────────────────────────────────────────
+## Lo pidió el usuario: «el empuje es un impulso, no es una diferencia de velocidad. Y el paquete también podríamos
+## pensarlo de la misma manera. Y los ataques del boss»; «si empujás a un compañero se entiende intuitivamente las
+## variables como fuerza». Todo lo que golpea de costado llama a `hit` con su impulso (N·s, del mundo): la R (ver
+## InteractionController._launch), lo que pega en lo que se lleva (GrabbableInteractable.strike_holder), la red y el
+## choque de la meca. El impulso sobre la masa le cambia la velocidad —sale empujado— y, sobre la FIRMEZA (el peso y la
+## estabilidad de ese lado, ver `_firmness`), lo inclina con el resorte de costado; si un solo golpe pasa el umbral
+## (`ragdoll_threshold`), lo tumba y cae para donde lo empujaron (el ragdoll sale con la velocidad de la cápsula). Así el
+## fuerte que empuja al chico lo voltea, y al revés no.
+## Lo único que se sigue MIDIENDO es lo que no tiene quien lo nombre: el aterrizaje (el resorte de arriba y abajo: más
+## alto, más hundido) y el objeto suelto que le pega (ver `_detect_external_impact`). Chocar contra una pared, contra
+## otro personaje o su propio movimiento ya no cuentan, y nada lo tumba de a poco ni al aterrizar.
+## *Hasta entonces todo cambio de velocidad que no fuera suyo era un golpe, y lo que se juntaba de a poco también tumbaba.*
+func hit(impulse: Vector3) -> void:
+	var dv := impulse / maxf(mass, 0.01)
+	_self_dv(dv)
 	_take_hit(dv)
-
-
-func push(dv: Vector3) -> void:
-	if frame != null or seated:
-		_take_hit(dv)
 
 
 ## UN CHOQUE DE LA NAVE que lo lleva (la señal `crashed` de su marco): `dv` es lo que perdió de velocidad la meca (m/s,
@@ -324,37 +330,20 @@ const CRASH_SCALE := 0.35
 func crash(dv: Vector3) -> void:
 	if not impact_synced:
 		_last_push = Vector3(dv.x, 0.0, dv.z) * CRASH_SCALE
-		push(dv * CRASH_SCALE)
+		_take_hit(dv * CRASH_SCALE)
 
 
 func _on_frame_crashed(dv: Vector3) -> void:
 	crash(dv)
 
 
-## ── LA CAÍDA, CON AVISO (02/11/2026) ──────────────────────────────────────────────────────────────────────────────
-## Lo que se junta hasta pasar el umbral —la inercia, varios empujoncitos— inclina primero —el resorte ya lo está
-## llevando— y la caída llega `FALL_WARNING` después, en la dirección del golpe. UN GOLPE SECO que solo ya pasa el umbral
-## tumba en el acto, sin resorte ni aviso (03/11/2026, ver `_take_hit`). Y LA INCLINACIÓN DEL MARCO SUMA: con la nave cabeceada
-## o ladeada más de `TILT_EASY`, el umbral baja a `TILT_FALL` (no tumba sola: sólo hace que un golpe tumbe antes). Lo
-## pidió el usuario por la meca.
-const FALL_WARNING := 0.15
-const TILT_EASY := deg_to_rad(20.0)
-const TILT_FALL := 2.0 / 3.0
+## LA CAÍDA: un golpe que pasó el umbral (ver `_take_hit`) la deja pedida, y en el paso cae —si su clase se cae
+## sola—; el resorte vuelve a cero.
 var _fall_in := -1.0
 
 
-func _tilt_factor() -> float:
-	if frame == null:
-		return 1.0
-	return TILT_FALL if frame.global_basis.y.normalized().angle_to(Vector3.UP) > TILT_EASY else 1.0
-
-
-## La caída que se avisó: cuando se cumple, cae (si su clase se cae sola), y el resorte vuelve a cero.
-func _count_fall(delta: float) -> void:
+func _count_fall(_delta: float) -> void:
 	if _fall_in < 0.0:
-		return
-	_fall_in -= delta
-	if _fall_in > 0.0:
 		return
 	_fall_in = -1.0
 	if seated or not kind.can_fall:
@@ -544,11 +533,23 @@ func _detect_external_impact(delta: float) -> void:
 	var expected_dv := (_frame_force / mass + gravity) * delta
 	var actual_dv   := linear_velocity - _prev_velocity
 	var impact_dv   := actual_dv - expected_dv
+	if not _struck_by_loose():
+		impact_dv = Vector3(0.0, impact_dv.y, 0.0)
 	_take_hit(impact_dv)
 
 
-## UN GOLPE de `impact_dv` (m/s, ejes del mundo): medido por el cuerpo (`_detect_external_impact`) o con nombre
-## (`push`, ver EL MARCO). Sentado no tumba: el resorte lo inclina y vuelve.
+## SI LO ESTÁ TOCANDO UN OBJETO SUELTO (un paquete, una caja: un cuerpo rígido que no es un personaje ni está quieto):
+## sólo entonces lo que le cambió la velocidad de costado es un golpe (ver LOS GOLPES SON IMPULSOS CON NOMBRE).
+func _struck_by_loose() -> bool:
+	for body in get_colliding_bodies():
+		var loose := body as RigidBody3D
+		if loose != null and not loose.freeze and not (loose is CharacterRigidBody3D):
+			return true
+	return false
+
+
+## UN GOLPE de `impact_dv` (m/s, ejes del mundo): con nombre (`hit`, `crash`) o medido (`_detect_external_impact`).
+## Sentado no tumba: el resorte lo inclina y vuelve.
 func _take_hit(impact_dv: Vector3) -> void:
 	if not has_body_physics():
 		return
@@ -577,26 +578,16 @@ func _take_hit(impact_dv: Vector3) -> void:
 		_hit_vel = Vector2.ZERO
 		impact_xz = hit_xz + _lean_xz
 
-		var fall_at := ragdoll_threshold * _tilt_factor()
-		if impact_xz.length() >= fall_at and seated:
-			hit_xz = impact_xz.limit_length(fall_at * 0.95) - _lean_xz
-			impact_xz = hit_xz + _lean_xz
-		elif xz.length() * LEAN_PER_MS / _firmness(local_impact) >= fall_at:
-			# UN GOLPE SECO QUE SOLO YA TUMBA, CAE EN EL ACTO: sin resorte ni aviso (el usuario, 03/11/2026: «caída
-			# repentina»). El aviso queda para lo que se junta de a poco.
+		# UN GOLPE QUE SOLO PASA EL UMBRAL LO TUMBA, en el acto; lo que se junta de a poco sólo inclina, hasta el borde.
+		if xz.length() * LEAN_PER_MS / _firmness(local_impact) >= ragdoll_threshold and not seated:
 			_snapshot_acc_after = impact_xz.length()
 			_fall_in = 0.0
-		elif impact_xz.length() >= fall_at and _fall_in < 0.0:
-			_snapshot_acc_after = impact_xz.length()
-			# CON AVISO (ver LA CAÍDA, CON AVISO): lo que se juntó —la inercia, varios empujoncitos— primero se ve.
-			_fall_in = FALL_WARNING
+		elif impact_xz.length() >= ragdoll_threshold:
+			hit_xz = impact_xz.limit_length(ragdoll_threshold * 0.95) - _lean_xz
+			impact_xz = hit_xz + _lean_xz
 
 	if LocomotionCommon.base().landing_brake and local_impact.y > impact_y_threshold and not seated:
 		_brake_on_landing(local_impact.y)
-	if local_impact.y > landing_tolerance and not seated:
-		if _last_impact_world_dir == Vector3.ZERO:
-			_last_impact_world_dir = -global_basis.z
-		_fall_in = 0.0
 	if abs(local_impact.y) > impact_y_threshold:
 		impact_y_signed = local_impact.y  # agregá esta línea
 		# Se hunde del todo a la velocidad de LocomotionCommon (ver Aterrizaje); es de todos.

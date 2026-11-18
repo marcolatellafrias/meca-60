@@ -616,9 +616,11 @@ func _launch(rb: RigidBody3D, impulse: Vector3) -> void:
 		if is_instance_valid(target_bi) and is_instance_valid(target_bi.net_sync):
 			target_bi.net_sync.push(impulse)
 			return
-	rb.apply_central_impulse(impulse)
+	# A UN PERSONAJE, UN GOLPE CON NOMBRE: lo mueve y lo inclina o lo tumba (ver CharacterRigidBody3D.hit).
 	if rb is CharacterRigidBody3D:
-		(rb as CharacterRigidBody3D).push(impulse / rb.mass)  # adentro de la meca, con nombre (ver EL MARCO)
+		(rb as CharacterRigidBody3D).hit(impulse)
+	else:
+		rb.apply_central_impulse(impulse)
 
 func _get_interaction_origin() -> Vector3:
 	var bi := char_rigidbody.get_parent() as BoneInstantiator

@@ -51,7 +51,7 @@ const LABELS := {
 	"strength": "fuerza (al llevar algo)", "throw_strength": "fuerza de tiro (y del empujón)",
 	"weight": "peso (kg)", "forward_stability": "estabilidad adelante", "backwards_stability": "estabilidad atrás",
 	"sideways_stability": "estabilidad de costado", "stability_spring": "qué tan duro se endereza",
-	"stability_damp": "cuánto frena el rebote", "landing_tolerance": "aterrizaje que lo tumba (m/s)",
+	"stability_damp": "cuánto frena el rebote", "landing_tolerance": "aterrizaje fuerte (m/s): con él frena del todo",
 	"time_to_standup": "tarda en levantarse (s)",
 	"jump_height": "altura del salto entero (m)", "time_to_max_jump": "tarda en cargarlo (s)",
 }
@@ -75,7 +75,7 @@ const HELP := {
 	"speed": "No cambia cuán rápido va: es la velocidad (× 10 m/s) a la que su paso tiene el largo de caminata. Más rápido el paso se alarga, se pisa menos tiempo y el codo se dobla; más lento, se acorta. Subirlo da pasos más cortos y seguidos a la misma velocidad; bajarlo, más largos.",
 	"time_to_top": "De quieto a la máxima, a ritmo parejo; frena igual. Manteniendo la tecla se gana la velocidad: no hay sprint ni estamina.",
 	"weight": "Cuánto cuesta moverlo: en un choque, el liviano se lleva el cambio de velocidad. Con la estabilidad es la firmeza, que divide lo que lo inclinan los golpes y la inercia.",
-	"landing_tolerance": "El golpe vertical al aterrizar que lo tumba. 9 es caer de unos 4 m; por debajo, el rebote de siempre.",
+	"landing_tolerance": "Al aterrizar frena según qué tan fuerte cayó, contra esto (9 es caer de unos 4 m). Aterrizar ya no tumba: sólo lo tumba un golpe con nombre.",
 	"jump_height": "Lo que sube con el salto cargado entero; un toque sin cargar sube el 30 %.",
 }
 
