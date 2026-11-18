@@ -63,6 +63,8 @@ var body_spring := HitSpring.new()
 ## Cayendo, a cuánto bajaba en el último paso (m/s), y si estaba apoyada (para ver cuándo aterriza).
 var _fall_speed := 0.0
 var _grounded_was := true
+## Levitando en este paso (el propulsor prendido en el aire; ver `_rise`).
+var levitating := false
 ## El polvo al caer fuerte (se arma la primera vez) y cuántas veces salió (para las pruebas).
 var _dust: GPUParticles3D = null
 var dust_raised := 0
@@ -142,6 +144,7 @@ func step(delta: float) -> void:
 	crouched = move_toward(crouched, 1.0 if body.crouch else 0.0, k.crouch_rate * delta)
 	_fit()
 	var grounded := is_on_floor()
+	levitating = false
 	dash_fuel = minf(dash_fuel + delta / k.dash_refill, 1.0)
 	_dash_wait = maxf(_dash_wait - delta, 0.0)
 	_fall(k, delta)
@@ -236,6 +239,7 @@ func _rise(k: KinematicSettings, delta: float, grounded: bool) -> float:
 		return minf(velocity.y - gravity * delta, -k.dive_speed)
 	if body.jump and _fly_armed and fly_fuel > 0.0:
 		fly_fuel = maxf(fly_fuel - delta / k.fly_time, 0.0)
+		levitating = true
 		return k.fly_speed
 	return velocity.y - gravity * delta
 
@@ -357,6 +361,19 @@ func put(where: Transform3D) -> void:
 	_last_bottom = global_position.y + _hover_now()
 	body_spring.reset()
 	_grounded_was = true
+
+
+## SI LAS PIERNAS VAN RECOGIDAS (18/11/2026, las reglas que acordó el usuario con el módulo Jefes; las lee BodyLegs):
+## en un dash (en el piso o en el aire: lo que dura `_dash_left`), levitando y bajando en picada (agachada en el aire).
+## Sólo de lo que el motor sabe seguro, nunca de los rayos de los pies (un dash de costado en el piso los sigue tocando).
+## Un salto común o una caída, no: cuelgan.
+func tucks() -> bool:
+	if _dash_left > 0.0:
+		return true
+	if body.grounded:
+		return false
+	var k := body.kinematic_settings()
+	return levitating or (body.crouch and k.dive_speed > 0.0)
 
 
 ## Cuánto se mueve de costado (m/s), para el cartel.

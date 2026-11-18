@@ -8,7 +8,8 @@ extends Node
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/piernas.avi --fixed-fps 30 res://tests/cage_legs_movie.tscn
 ## Imprime, caminando, qué parte del tiempo no tenía ningún pie en el aire (la pausa que vio el usuario: «paso, paso,
 ## pausa») y cuántos pasos dio; y la caja al caminar: cuánto sube con el paso y cuánto se inclina de costado (y de frente,
-## que no tiene que inclinarse).
+## que no tiene que inclinarse); y cuánto fueron recogidas las piernas en cada caso (en el dash, levitando y en picada sí;
+## en un salto común, no).
 
 var _mech: Mech = null
 var _eye: Camera3D = null
@@ -25,6 +26,8 @@ var _paused := 0.0
 var _bob := 0.0
 var _lean_side := 0.0
 var _lean_ahead := 0.0
+## Cuánto tiempo fueron recogidas las piernas en cada caso (KinematicMover.tucks), por cartel (s).
+var _tucked := {}
 
 
 func _ready() -> void:
@@ -85,6 +88,10 @@ func _ready() -> void:
 	await _run("parada", 1.0, Vector2.ZERO)
 	print("caminando: sin ningún pie en el aire el %.0f %% del tiempo · %d pasos" % [100.0 * _paused / maxf(_walking, 0.01),
 		_mech.legs.steps_taken])
+	var tucked := ""
+	for label: String in _tucked:
+		tucked += " %s %.2f s ·" % [label, _tucked[label]]
+	print("recogidas:%s" % tucked.trim_suffix(" ·"))
 	print("la caja al caminar: sube hasta %.2f m · de costado se inclina %.1f° · de frente %.1f°" % [_bob, _lean_side,
 		_lean_ahead])
 	get_tree().quit()
@@ -158,6 +165,10 @@ func _jump(fly: bool, dive: bool) -> void:
 func _tick() -> float:
 	await get_tree().physics_frame
 	var delta := 1.0 / Engine.physics_ticks_per_second
+	if not _tucked.has(_title.text):
+		_tucked[_title.text] = 0.0
+	if _mech.mover.tucks():
+		_tucked[_title.text] += delta
 	var at := _mech.mover.global_position + Vector3.UP * 2.6
 	_cam_at = at if _first else _cam_at.lerp(at, 1.0 - exp(-3.0 * delta))
 	_first = false

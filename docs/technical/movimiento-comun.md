@@ -26,6 +26,12 @@ huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la me
    (los lugares de `MechBody.foot_rest`, el piso de BodyLegs; las perillas del F4, LegSettings). BodyLegs sigue con el
    giro de cada pie, la pelvis, las rodillas, la caída y recogerlas. En `tests/cage_legs_movie`, caminando: sin ningún
    pie en el aire el 20 % del tiempo antes, el 10 % ahora.
+   **RECOGER LAS PIERNAS** (18/11/2026; las reglas las acordó el usuario): recogidas, de una, en un DASH (en el piso
+   también), LEVITANDO y BAJANDO EN PICADA; en un salto común o una caída, cuelgan; al terminar, se plantan debajo de
+   las caderas. Lo decide el motor (`KinematicMover.tucks()`), sólo con lo que sabe seguro y NUNCA con los rayos de los
+   pies (en un dash de costado en el piso siguen tocando). Las transiciones son instantáneas (el usuario: «para
+   simplificar… instantánea por ahora, y después vemos si queda mal»). En `tests/cage_legs_movie`: recogidas 0,35 s en
+   el dash, 1,45 s levitando, 0,14 s en picada, y nunca caminando ni en el salto común.
    `tests/gait_movie` (el video: un cuerpo de 4 y uno de 6, arrancar, doblar, frenar, de costado, girar en el lugar,
    correr; imprime la pausa y lo que se corre un pie apoyado). *Falta: usarla en los jefes de patas (BossParts
    «cuatro»); «recoger» (dash, aire).*

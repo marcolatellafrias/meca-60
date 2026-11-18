@@ -112,6 +112,11 @@ func place(k: BodySettings, delta: float) -> void:
 	var lying := body.kinematic and not standing and body.state != BalanceBody.State.STANDING
 	_tuck = move_toward(_tuck, 1.0 if folded else 0.0, delta / maxf(k.fold_time if folded else k.unfold_time, 0.01))
 	var share := smoothstep(0.0, 1.0, _tuck)
+	# RECOGIDAS EN EL DASH, LEVITANDO Y EN PICADA (KinematicMover.tucks), de una; al terminar se plantan debajo.
+	var tucked := body.kinematic and body.mover != null and body.state == BalanceBody.State.STANDING \
+		and body.mover.tucks()
+	if tucked:
+		share = 1.0
 	var yaw := body.yaw()
 	var centre := body.global_position
 	var under := body.support if standing else Vector3(centre.x, centre.y - body.ground_distance(centre), centre.z)
@@ -122,7 +127,7 @@ func place(k: BodySettings, delta: float) -> void:
 	if lying:
 		yaw = upright.basis.get_euler().y
 		root = Transform3D(upright.basis, body.mover.global_position)
-	if standing:
+	if standing and not tucked:
 		var classic := LegSettings.current.new_steps
 		if not _planted:
 			if classic:
@@ -143,7 +148,7 @@ func place(k: BodySettings, delta: float) -> void:
 		_swing = -1
 	# LA CAJA AL CAMINAR: las señales (parada, de la marcha; si no, se apagan) y la tabla.
 	signals.full_speed = body.kinematic_settings().walk_speed
-	if standing and LegSettings.current.new_steps:
+	if standing and not tucked and LegSettings.current.new_steps:
 		signals.read(_gait, Basis(Vector3.UP, yaw), body.support_speed, delta)
 	else:
 		signals.step_progress = 0.0
@@ -151,7 +156,7 @@ func place(k: BodySettings, delta: float) -> void:
 		signals.horizontal_velocity_smooth = signals.horizontal_velocity_smooth.lerp(Vector2.ZERO, 1.0 - exp(-8.0 * delta))
 	_table.update()
 	# LA PELVIS: cuelga de la caja, inclinada como ella, mirando al promedio de los dos pies.
-	var pelvis_yaw := lerp_angle(_feet_yaw[0], _feet_yaw[1], 0.5) if standing else yaw
+	var pelvis_yaw := lerp_angle(_feet_yaw[0], _feet_yaw[1], 0.5) if standing and not tucked else yaw
 	facing_yaw = pelvis_yaw
 	var leaning := Basis(Quaternion(Vector3.UP, body.global_basis.y.normalized())) if body.tilt > 0.01 else Basis()
 	var waist := Transform3D(leaning * Basis(Vector3.UP, pelvis_yaw),
