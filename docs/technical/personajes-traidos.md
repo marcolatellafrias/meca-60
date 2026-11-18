@@ -111,6 +111,18 @@ elegidos, duplicar y borrar. En el panel chico sólo J (otra pintura) y N (otra 
 cosas que tienen función de guardarse tienen que ir en panel F»). Sombreado suave (`PixelModel.smooth_normals`). A
 100 px/m, la cara del frente es de 7 × 7 píxeles. Prueba con captura: `tests/head_paint_look.tscn` (borra lo suyo).
 
+**Los cosméticos de la cara: bigotes y cejas** (18/11/2026, el usuario: «cada forma de cabeza tiene una altura de boca,
+una altura de ojos… cuando quiero poner un bigote… lo hago relativo a la altura de boca»). Cada forma tiene
+`eye_height` y `mouth_height` (fracción del alto entero, así no cambian al escalar), en la pestaña Rasgos del F3 de la
+fila Cabezas. Un cosmético (`FaceCosmetic`, en `game/character/cosmetics/`) es una tira de puntos `(x, arriba del
+ancla, medio alto)` desde su ancla (ojos o boca), de punta a punta (un bigote) o espejada en dos (cejas), que se apoya
+sobre LA MALLA que se ve (`HeadForm.surface_point` / `surface_normal`: el frente de cada anillo en esa `x`,
+interpolado entre anillos) y sale hacia afuera; lo vertical crece con el alto de la cabeza y lo de costado con su ancho
+en el ancla, así el mismo calza en todas. Los que hay están en `FaceCosmetics` (cuatro bigotes, cuatro cejas, y las
+marcas de las dos alturas). En la parcela «Formas de cabeza», M cambia el bigote, K las cejas y L las marcas, sólo para
+ver. Todavía no los lleva ningún personaje. El pelo, después: cuando estén definidos el aplanamiento y la inclinación
+de las cabezas. Prueba con captura: `tests/face_cosmetics_look.tscn` (todas las formas, una captura por combinación).
+
 **La silla fija** (18/11/2026, el usuario por la sesión de las armas: «una variante de la silla que sea fija… no se
 mueve directamente con la cámara del jugador… se va a limitar a movimiento de cabeza»). `SeatInteractable.fixed` y
 `look_cone` (grados de costado y arriba y abajo): sentado en una fija, el cuerpo y la silla que se ve miran al frente de
