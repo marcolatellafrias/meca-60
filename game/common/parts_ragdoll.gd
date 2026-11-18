@@ -49,6 +49,17 @@ var _parts: Array[Dictionary] = [{"nodes": [], "parent": -1, "joint": Vector3.IN
 var _root: Node3D = null
 ## Los cuerpos que quedaron (para las pruebas).
 var bodies: Array[RigidBody3D] = []
+## PARA LEVANTARSE (ver `get_up`): el cuerpo de cada parte (null si no tuvo), su hueso (lo que sigue al levantarse: el
+## cuerpo vivo para el tronco, el primer nodo de la parte para las otras), las uniones, y de dónde salió cada malla
+## ([malla, su padre, su lugar en él]).
+var _made: Array = []
+var _anchors: Array = []
+var _joints: Array[Node] = []
+var _homes: Array = []
+var _starts: Array[Transform3D] = []
+var _rise_left := 0.0
+var _rise_time := 1.0
+var _riser: Node = null
 ## El material de los pedazos: con roce, sin rebote.
 var _rough := PhysicsMaterial.new()
 
@@ -114,7 +125,16 @@ func activate(world: Node, velocity: Vector3) -> void:
 			body.global_transform = Transform3D(where.basis.orthonormalized(), where.origin)
 			volume += _add_box(body, Transform3D(where.basis.orthonormalized(), where.origin), given["size"])
 		else:
-			body.global_transform = Transform3D(frame["basis"], frame["center"])
+			# Una parte que sale de un hueso (o de un nodo del cuerpo) nace con su lugar y su giro, como en los
+			# personajes: así, al levantarse, la mezcla (RagdollBlend) la lleva de vuelta exacto a su hueso.
+			var first: Variant = (_parts[index]["nodes"] as Array)[0] if not (_parts[index]["nodes"] as Array).is_empty() else null
+			if index == 0:
+				first = _root
+			if first is Node3D:
+				body.global_transform = Transform3D((first as Node3D).global_basis.orthonormalized(),
+					(first as Node3D).global_position)
+			else:
+				body.global_transform = Transform3D(frame["basis"], frame["center"])
 			for mesh: Node3D in own:
 				for drawn: VisualInstance3D in _drawn(mesh):
 					var aabb := drawn.get_aabb()
@@ -130,6 +150,7 @@ func activate(world: Node, velocity: Vector3) -> void:
 		body.collision_mask = 1 | PhysicsLayers.FIXED
 		body.physics_material_override = _rough
 		for mesh: Node3D in own:
+			_homes.append([mesh, mesh.get_parent(), mesh.transform])
 			mesh.reparent(body, true)
 		body.linear_velocity = velocity
 		body.angular_velocity = Vector3(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * 0.6
@@ -142,6 +163,7 @@ func activate(world: Node, velocity: Vector3) -> void:
 			continue
 		var joint := ConeTwistJoint3D.new()
 		world.add_child(joint)
+		_joints.append(joint)
 		var at: Vector3 = _parts[index]["joint"]
 		if not at.is_finite():
 			at = _near_end(child, parent.global_position)
@@ -156,6 +178,137 @@ func activate(world: Node, velocity: Vector3) -> void:
 	for a in bodies.size():
 		for b in range(a + 1, bodies.size()):
 			bodies[a].add_collision_exception_with(bodies[b])
+	_made = made
+	_anchors.clear()
+	for index in _parts.size():
+		var nodes: Array = _parts[index]["nodes"]
+		_anchors.append(_root if index == 0 else (nodes[0] if not nodes.is_empty() else null))
+	_root.set_meta(META, self)
+
+
+## ── LEVANTARSE (18/11/2026; el usuario: «la capacidad de recuperarse, aunque no haga falta aún, así cuando la queramos
+## usar ya está lista y hay unificación de código») ──────────────────────────────────────────────────────────────────
+## El cuerpo vivo se para donde quedó el tronco (sin andar todavía) y cada pedazo va de donde quedó tirado a su hueso en
+## `time` s, con LA MEZCLA DE LOS PERSONAJES (RagdollBlend: el tronco con su lugar y su giro; cada otro, su giro respecto
+## del padre y su lugar sobre él). Al terminar, cada malla vuelve a colgar de donde salió, los pedazos se van y el cuerpo
+## vuelve a andar. Quien lo
+## llama le devuelve antes la vida (Health) si hace falta. *Hoy la meca sólo se desarma al morir y no se levanta: queda
+## lista para cuando se use (tests/ragdoll_rise_check).*
+const META := "ragdoll"
+
+
+## El ragdoll en el que está desarmado `body` (o null).
+static func of(body: Node) -> PartsRagdoll:
+	return body.get_meta(META) as PartsRagdoll if body != null and body.has_meta(META) else null
+
+
+## SE LEVANTA en `time` s (ver arriba). Devuelve si arrancó.
+func get_up(time := 0.8) -> bool:
+	if _riser != null or _made.is_empty() or _made[0] == null:
+		return false
+	for joint in _joints:
+		if is_instance_valid(joint):
+			joint.queue_free()
+	_joints.clear()
+	_starts.clear()
+	for body: Variant in _made:
+		var piece := body as RigidBody3D
+		if piece != null:
+			piece.freeze = true
+			piece.collision_layer = 0
+			piece.collision_mask = 0
+			_starts.append(piece.global_transform)
+		else:
+			_starts.append(Transform3D())
+	# El cuerpo vivo, parado donde quedó el tronco, mirando hacia donde mira (de costado).
+	var core := _made[0] as RigidBody3D
+	var ahead := -core.global_basis.z
+	ahead.y = 0.0
+	if ahead.length() < 0.01:
+		ahead = core.global_basis.y
+		ahead.y = 0.0
+	var yaw := atan2(-ahead.x, -ahead.z) if ahead.length() > 0.01 else 0.0
+	# PARADO DONDE QUEDÓ EL TRONCO, SIN ANDAR TODAVÍA: lo suyo busca sus mallas cada cuadro (la torreta del artillero,
+	# por ejemplo), y hasta `_stand` están en los pedazos. `put` lo para ahí con su pose de parado, y hacia esa pose van.
+	if _root is BalanceBody:
+		(_root as BalanceBody).state = BalanceBody.State.STANDING
+	if _root.has_method("put"):
+		_root.call("put", Transform3D(Basis(Vector3.UP, yaw), _floor_under(core.global_position)))
+	_rise_time = maxf(time, 0.05)
+	_rise_left = _rise_time
+	_riser = _Riser.new()
+	_riser.name = "Levantándose"
+	(_riser as _Riser).ragdoll = self
+	core.get_parent().add_child(_riser)
+	return true
+
+
+## Si se está levantando.
+func rising() -> bool:
+	return _riser != null
+
+
+## Un paso de levantarse (lo llama `_Riser`).
+func _rise_step(delta: float) -> void:
+	_rise_left -= delta
+	var t := 1.0 - clampf(_rise_left / _rise_time, 0.0, 1.0)
+	var eased := t * t * (3.0 - 2.0 * t)
+	var core := _made[0] as RigidBody3D
+	RagdollBlend.place_root(core, _root, _starts[0], _starts[0].origin.lerp(_root.global_position, eased), eased)
+	for index in range(1, _made.size()):
+		var piece := _made[index] as RigidBody3D
+		var bone := _anchors[index] as Node3D
+		if piece == null or bone == null:
+			continue
+		var parent := int(_parts[index]["parent"])
+		var parent_piece := _made[parent] as RigidBody3D
+		var parent_bone := _anchors[parent] as Node3D
+		if parent_piece != null and parent_bone != null:
+			RagdollBlend.place_child(piece, bone, parent_piece, parent_bone, _starts[index], _starts[parent], eased)
+		else:
+			RagdollBlend.place_loose(piece, bone, core, _root, _starts[index], eased)
+	if _rise_left <= 0.0:
+		_stand()
+
+
+## TERMINÓ DE LEVANTARSE: cada malla vuelve a donde salió, los pedazos se van y el cuerpo vivo se ve.
+func _stand() -> void:
+	for home: Array in _homes:
+		var mesh := home[0] as Node3D
+		var parent := home[1] as Node
+		if not is_instance_valid(mesh) or not is_instance_valid(parent):
+			continue
+		mesh.get_parent().remove_child(mesh)
+		parent.add_child(mesh)
+		mesh.transform = home[2]
+	_homes.clear()
+	for body: Variant in _made:
+		if body != null and is_instance_valid(body):
+			(body as Node).queue_free()
+	_made.clear()
+	bodies.clear()
+	_root.visible = true
+	_root.process_mode = Node.PROCESS_MODE_INHERIT
+	_root.remove_meta(META)
+	_riser.queue_free()
+	_riser = null
+
+
+## El piso debajo de `at` (lo fijo del mundo); sin piso, a la altura de `at`.
+func _floor_under(at: Vector3) -> Vector3:
+	var space := _root.get_world_3d().direct_space_state
+	var query := PhysicsRayQueryParameters3D.create(at + Vector3.UP * 2.0, at + Vector3.DOWN * 60.0, PhysicsLayers.FIXED)
+	var hit := space.intersect_ray(query)
+	return hit["position"] if not hit.is_empty() else at
+
+
+## Lo que mueve la mezcla en cada paso de física mientras se levanta.
+class _Riser extends Node:
+	var ragdoll: PartsRagdoll = null
+
+	func _physics_process(delta: float) -> void:
+		if ragdoll != null:
+			ragdoll._rise_step(delta)
 
 
 ## UNA CAJA de `size` m en `where` (el mundo) dentro de `body`. Devuelve su volumen (m³).

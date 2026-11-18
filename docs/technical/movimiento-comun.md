@@ -75,8 +75,16 @@ en cada máquina y sólo puede depender de lo que viaja.
 El usuario: el impacto viaja (lo causa un golpe que otra máquina puede no ver); el bobbing al caminar no (sale de la
 velocidad, que viaja).
 
-*Falta:* LA VUELTA DEL RAGDOLL, en común con los personajes (en character-parametric: los cuerpos se mezclan hacia la
-pose animada y las piernas plantan los pies mientras la pelvis sube).
+LA VUELTA DEL RAGDOLL, COMÚN CON LOS PERSONAJES (18/11/2026; el usuario: «la capacidad de recuperarse, aunque no haga
+falta aún… así hay unificación de código»): la mezcla de cada pedazo hacia su hueso salió de RagdollUtil a
+`RagdollBlend` (game/common): la raíz con su lugar y su giro, cada otro con su giro respecto del padre y su lugar sobre
+él. Los personajes la usan (y le suman su pelvis que sube desde el piso y sus piernas por IK); la meca, con
+`PartsRagdoll.get_up` (el cuerpo vivo se para donde quedó el tronco sin andar todavía, cada pedazo va a su hueso y al
+terminar cada malla vuelve a colgar de donde salió). Para eso cada pedazo que sale de un hueso nace con su lugar y su
+giro, como en los personajes. HOY LA MECA SÓLO SE DESARMA AL MORIR Y NO SE LEVANTA (el usuario: «todavía no va a entrar
+en ragdoll»): queda lista. `tests/ragdoll_rise_check`: los seis arquetipos de personaje se caen y se levantan (de 3,0 a
+4,4 s, los cuerpos a menos de 10 cm de sus huesos); la meca muere en 12 pedazos, revive, se levanta (ninguno queda, el
+esqueleto a 0 mm) y camina.
 
 ## Las piezas (todas son DIBUJO: no se sincronizan, cada máquina las saca de lo que viaja)
 1. **La marcha** (`Gait`, game/common/, 18/11/2026): cuándo y adónde pisa cada pata, para 2, 4 o 6. **Un ciclo

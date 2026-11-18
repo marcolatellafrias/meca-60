@@ -649,14 +649,13 @@ func _update_active(_delta: float) -> void:
 				_clear_body_mesh_color(rb)
 	_pending_bodies = still_pending
 
-## LA MEZCLA DE LA RECUPERACIÓN, SÓLO ROTACIONES: de `from` a `to` en `t`, tomando de cada base sólo su giro. Las bases
-## que se mezclan son de huesos (que pueden traer escala) y de cuerpos compuestos cuadro a cuadro (que se desvían de una
-## rotación pura de a poco); `Basis.slerp` exige rotaciones puras y con cualquiera de las dos daba cientos de errores
-## «must be normalized» al levantarse. El resultado nunca trae escala ni desvío.
+## LA MEZCLA DE LA RECUPERACIÓN, SÓLO ROTACIONES: común con la meca (ver RagdollBlend.blend).
 static func _blend(from: Basis, to: Basis, t: float) -> Basis:
-	return Basis(from.get_rotation_quaternion().slerp(to.get_rotation_quaternion(), t))
+	return RagdollBlend.blend(from, to, t)
 
 
+## LA VUELTA: la mezcla de cada cuerpo hacia su hueso es COMÚN con la meca (RagdollBlend, 18/11/2026, módulo Jefes);
+## lo de los personajes es lo de arriba (la pelvis que sube desde el piso) y las piernas por IK.
 func _update_recovery(delta: float) -> void:
 	_recovery_timer -= delta
 	var t: float        = 1.0 - clamp(_recovery_timer / recovery_duration, 0.0, 1.0)
@@ -684,8 +683,7 @@ func _update_recovery(delta: float) -> void:
 			# final a lo largo de la recuperación. Con los pies plantados, esto estira las piernas.
 			var start_y := floor_y + recovery_rise_start_height
 			pos.y = lerpf(start_y, root_bone.global_position.y, t_eased)
-		root_body.global_position = pos
-		root_body.global_basis    = _blend(start.basis, root_bone.global_transform.basis, t_eased)
+		RagdollBlend.place_root(root_body, root_bone, start, pos, t_eased)
 
 	for bone: CustomBone in _ordered_bones:
 		if bone == root_bone:
@@ -703,16 +701,9 @@ func _update_recovery(delta: float) -> void:
 
 		if is_instance_valid(parent_rb) and is_instance_valid(parent_bone):
 			var parent_start: Transform3D = _recovery_start_transforms.get(parent_bone, parent_rb.global_transform)
-			var local_start_basis: Basis  = parent_start.basis.inverse() * start.basis
-			var local_target_basis: Basis = parent_bone.global_transform.basis.inverse() * bone.global_transform.basis
-			rb.global_basis = parent_rb.global_basis * _blend(local_start_basis, local_target_basis, t_eased)
-			var local_anim_pos: Vector3 = parent_bone.to_local(bone.global_position)
-			rb.global_position = parent_rb.to_global(local_anim_pos)
+			RagdollBlend.place_child(rb, bone, parent_rb, parent_bone, start, parent_start, t_eased)
 		else:
-			rb.global_basis = _blend(start.basis, bone.global_transform.basis, t_eased)
-			if is_instance_valid(root_body) and is_instance_valid(root_bone):
-				var local_anim_pos: Vector3 = root_bone.to_local(bone.global_position)
-				rb.global_position = root_body.to_global(local_anim_pos)
+			RagdollBlend.place_loose(rb, bone, root_body, root_bone, start, t_eased)
 
 	if do_leg_ik:
 		_solve_recovery_leg(true,  root_body, root_bone, floor_y, t)
