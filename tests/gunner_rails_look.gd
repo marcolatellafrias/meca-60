@@ -16,13 +16,11 @@ extends Node
 const VIEW := Vector2i(1280, 720)
 const PER_SHEET := 6
 const IDEAS := [
-	["1. dos aros apilados: abajo el fijo con los paneles, arriba el que gira con las armas", "como el aro de una torreta"],
-	["2. dos aros a la misma altura: gira el de adentro, el de afuera es fijo", "uno dentro del otro"],
-	["3. un solo aro fijo: el carro de las armas corre por arriba, los paneles cuelgan afuera", "un riel, dos niveles"],
-	["4. mitad y mitad: paneles atrás y a los costados, las armas giran por adelante", "lo más simple; no da la vuelta"],
-	["5. las armas cuelgan de un aro arriba de la cabeza; los paneles, del aro de la cintura", "arriba gira, abajo queda"],
-	["6. un solo aro: los paneles se pliegan cuando pasa el carro de las armas", "el carro les abre paso"],
+	["los dos aros al pie de la silla", "afuera fijo (paneles); adentro gira (armas, tablero y yugo)"],
 ]
+## LOS DOS AROS (m, al medio de cada lado; alto sobre el piso): el de afuera, fijo; el de adentro, que gira.
+const OUTER := Vector2(0.4, 0.05)
+const INNER := Vector2(0.27, 0.12)
 ## El aro: ocho lados, como el pozo de la locomoción.
 const SIDES := 8
 const HIP := 0.5
@@ -90,8 +88,8 @@ func _ready() -> void:
 	_eye.make_current()
 	var layer := CanvasLayer.new()
 	add_child(layer)
-	_title = _label(layer, Vector2(20, 8), 56)
-	_note = _label(layer, Vector2(20, 150), 46)
+	_title = _label(layer, Vector2(20, 8), 44)
+	_note = _label(layer, Vector2(20, 64), 34)
 	_mech = CageMech.new()
 	_mech.scripted = true
 	_mech.position = Vector3(0.0, Mech.standing_height(Mech.Cabin.CAGE), 0.0)
@@ -135,6 +133,9 @@ func _ready() -> void:
 		if _carriage != null:
 			_carriage.rotation.y = deg_to_rad(-70.0)
 		await _shot(short + ". las armas giradas 70°", "", outside, at, 60.0)
+		# Los aros de cerca, de costado y bajo.
+		var low := seat * Vector3(0.0, 0.15, 0.0)
+		await _shot(short + ". los aros, de cerca", "", low + seat.basis * Vector3(1.1, 0.35, -0.6), low, 60.0)
 		_rig.queue_free()
 		await get_tree().process_frame
 		if (index + 1) % PER_SHEET == 0 or index == IDEAS.size() - 1:
@@ -144,54 +145,47 @@ func _ready() -> void:
 
 ## ── LAS IDEAS ────────────────────────────────────────────────────────────────────────────────────────────────────
 
-func _idea(number: int) -> void:
-	_hands = [Vector3(-0.15, 0.72, -0.42), Vector3(0.15, 0.72, -0.42)]
-	match number:
-		1:
-			_octagon(_rig, 0.32, 0.72, 0.06)
-			_fixed_panels(0.32, 0.72, [90.0, 135.0, 225.0, 270.0])
-			_carriage = _turning()
-			_octagon(_carriage, 0.6, 0.5, 0.05)
-			_arms_and_board(0.6, 0.5)
-		2:
-			_octagon(_rig, 0.5, 0.85, 0.05)
-			_fixed_panels(0.5, 0.85, [90.0, 135.0, 180.0, 225.0, 270.0])
-			_carriage = _turning()
-			_octagon(_carriage, 0.5, 0.5, 0.05)
-			_arms_and_board(0.5, 0.5)
-		3:
-			_octagon(_rig, 0.5, 0.62, 0.07)
-			for angle: float in [90.0, 150.0, 210.0, 270.0]:
-				_hanging_panel(angle, 0.62, 0.5)
-			_carriage = _turning()
-			Clay.box(_carriage, Vector3(0.3, 0.06, 0.16), Vector3(0.0, 0.56, -0.62), GUNMETAL)
-			_arms_and_board(0.56, 0.62)
-		4:
-			_octagon(_rig, 0.45, 0.65, 0.06)
-			_fixed_panels(0.45, 0.65, [110.0, 160.0, 200.0, 250.0])
-			_carriage = _turning()
-			_arms_and_board(0.45, 0.65)
-		5:
-			_octagon(_rig, 0.45, 0.7, 0.06)
-			_fixed_panels(0.45, 0.7, [90.0, 135.0, 225.0, 270.0])
-			for k in 4:
-				var angle := TAU * (k + 0.5) / 4.0
-				Clay.box(_rig, Vector3(0.04, 1.55, 0.04), Vector3(cos(angle) * 0.72, 0.78, sin(angle) * 0.72), GUNMETAL)
-			_octagon(_rig, 1.55, 0.72, 0.05)
-			_carriage = _turning()
-			# Las armas cuelgan del aro de arriba; el tablero con el yugo, al medio, desde el aro de abajo.
-			for s: float in [-1.0, 1.0]:
-				var at := Vector3(s * 0.55, 0.95, -0.35)
-				_beam_on(_carriage, Vector3(s * 0.5, 1.55, -0.5), at + Vector3(0.0, 0.1, 0.0), 0.03)
-				_weapon(_carriage, at, s)
-			_board_and_yoke(_carriage, 0.45)
-		6:
-			_octagon(_rig, 0.5, 0.65, 0.06)
-			# Los paneles: tres parados y, donde pasa el carro (adelante a la derecha), uno plegado.
-			_fixed_panels(0.5, 0.65, [135.0, 225.0, 270.0])
-			_folded_panel(55.0, 0.5, 0.65)
-			_carriage = _turning()
-			_arms_and_board(0.5, 0.65)
+func _idea(_number: int) -> void:
+	_hands = [Vector3(-0.15, 0.68, -0.4), Vector3(0.15, 0.68, -0.4)]
+	# El pie de la silla, y los dos aros alrededor, en el piso.
+	Clay.cylinder(_rig, 0.2, 0.05, Vector3(0.0, 0.025, 0.0), GUNMETAL)
+	_octagon(_rig, OUTER.y, OUTER.x, 0.06)
+	_floor_panels([100.0, 150.0, 210.0, 260.0])
+	_carriage = _turning()
+	_octagon(_carriage, INNER.y, INNER.x, 0.05)
+	# Las armas: un brazo de cada costado del aro de adentro, que sube por afuera de las rodillas.
+	for side: float in [-1.0, 1.0]:
+		var base := Vector3(side * INNER.x, INNER.y, -0.05)
+		var at := Vector3(side * 0.5, 0.88, -0.38)
+		var elbow := Vector3(side * 0.42, 0.45, 0.02)
+		_beam_on(_carriage, base, elbow, 0.03)
+		_beam_on(_carriage, elbow, at + Vector3(0.0, -0.09, 0.05), 0.028)
+		Clay.sphere(_carriage, 0.045, elbow, GUNMETAL)
+		_weapon(_carriage, at, side)
+	# El tablero de las armas y el yugo: una columna desde el frente del aro de adentro, entre las rodillas.
+	var foot := Vector3(0.0, INNER.y, -INNER.x)
+	var top := Vector3(0.0, 0.6, -0.42)
+	_beam_on(_carriage, foot, top, 0.028)
+	Clay.box(_carriage, Vector3(0.32, 0.045, 0.05), top + Vector3(0.0, 0.06, 0.02), GRAB)
+	for side: float in [-1.0, 1.0]:
+		Clay.box(_carriage, Vector3(0.045, 0.13, 0.055), top + Vector3(side * 0.14, 0.12, 0.02), GRAB)
+	_beam_on(_carriage, top, Vector3(0.0, 0.84, -0.5), 0.02)
+	_face_panel(_carriage, Vector3(0.0, 0.9, -0.5), 0.0, 25.0)
+
+
+## LOS PANELES FIJOS: en cada ángulo (grados, 0 adelante, a la derecha), un brazo articulado que sale del aro de afuera,
+## en el piso, y sube a la banda inclinada, a los costados y atrás.
+func _floor_panels(angles: Array) -> void:
+	for degrees: float in angles:
+		var angle := deg_to_rad(degrees)
+		var out := Vector3(sin(angle), 0.0, -cos(angle))
+		var base := out * OUTER.x + Vector3(0.0, OUTER.y, 0.0)
+		var elbow := out * (OUTER.x + 0.12) + Vector3(0.0, 0.45, 0.0)
+		var spot := out * 0.42 + Vector3(0.0, 0.8, 0.0)
+		_beam(base, elbow, 0.022)
+		_beam(elbow, spot + Vector3(0.0, -0.06, 0.0), 0.02)
+		Clay.sphere(_rig, 0.035, elbow, GUNMETAL)
+		_face_panel(_rig, spot, angle, 45.0)
 
 
 ## LO QUE GIRA: un nodo en el medio de la silla (las armas y su tablero cuelgan de él).
@@ -677,14 +671,14 @@ func _save(number: int) -> void:
 	if _shots.is_empty():
 		return
 	var first: Image = _shots[0]
-	var w := first.get_width() / 3
-	var h := first.get_height() / 3
-	var sheet := Image.create(w * 3, h * ceili(_shots.size() / 3.0), false, first.get_format())
+	var w := first.get_width() / 2
+	var h := first.get_height() / 2
+	var sheet := Image.create(w * 2, h * ceili(_shots.size() / 2.0), false, first.get_format())
 	for index in _shots.size():
 		var shot: Image = _shots[index]
 		shot.resize(w, h, Image.INTERPOLATE_BILINEAR)
-		sheet.blit_rect(shot, Rect2i(Vector2i.ZERO, shot.get_size()), Vector2i(w * (index % 3), h * (index / 3)))
-	var path := "%s/dos_rieles_%d.png" % [_folder, number]
+		sheet.blit_rect(shot, Rect2i(Vector2i.ZERO, shot.get_size()), Vector2i(w * (index % 2), h * (index / 2)))
+	var path := "%s/dos_rieles_tuneo_%d.png" % [_folder, number]
 	sheet.save_png(path)
 	print("CAPTURA ", path)
 	_shots.clear()
