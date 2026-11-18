@@ -100,8 +100,14 @@ en algunas, **los controles de verdad de la meca para 3** (17/11/2026, el usuari
   Camina hacia donde apunta la de dirección, a lo que diga el acelerador (`_walk`). **Saltar** adelante a la izquierda,
   **levitar** (en el aire) adelante a la derecha, y **el dash, un botón**, en el tablero de la derecha: hacia donde
   apunta la de dirección; al medio, no sale. Con las dos palancas no entraba en el de adelante, ni con levitar en el
-  suyo. El escudo, después. *Hasta el 17/11/2026 (el mismo día) caminaba una sola palanca de dos ejes que volvía sola al
-  medio, y el dash eran ocho botones en círculo, uno por dirección.*
+  suyo (el usuario: «el botón de dash yo nunca lo quise adelante»). **Agachar**, en el tablero de la izquierda:
+  apoyada se agacha y **en el aire baja rápido**, como un dash hacia abajo (`KinematicSettings.dive_speed`; el usuario:
+  «nos ahorramos un botón»). Saltar y levitar quedan como dos controles distintos («nos da más variedad»). **La
+  pantalla del propulsor** (`KinematicMover.fly_fuel`: se gasta levitando, se llena apoyada) va en un brazo fijo corto
+  al lado de levitar, abajo a la derecha de la vista (`CageBoards.PIT_SCREEN_AT`). El escudo, después. *Hasta el
+  17/11/2026 (el mismo día) caminaba una sola palanca de dos ejes que volvía sola al medio, y el dash eran ocho botones
+  en círculo, uno por dirección. La pantalla del propulsor salió primero de la pared del pozo: un palo de 1,2 m que
+  cruzaba la vista.*
 - **Hacia dónde apunta es en la meca** (`CageBoards._flat`): la de dirección empujada hacia el frente de la meca va
   adelante. La cara se acuesta sobre el piso girándola por su borde horizontal (lo de arriba de la cara va hacia la
   cara, los ángulos quedan como en ella), medido en el mundo con los ejes de la base (los de la palanca se inclinan con
@@ -148,7 +154,9 @@ traídos; desde arriba: el tablero de adelante, de cerca las dos palancas quieta
 control como la mano: imprime si la de dirección se queda, lo que camina con el acelerador a fondo y a la mitad, el dash
 hacia donde apunta (y al medio, nada), el salto, el modo del cañón, la carga del súper y de la piña, cómo sale la piña
 y el torso persiguiendo la mirada. Medido el 17/11/2026: la de dirección sigue donde se la dejó; a fondo camina 4,5 m
-en 1,2 s y a la mitad 2,7; el dash, 9,6 m derecho hacia donde apunta; el salto, 1,9 m; medio segundo
+en 1,2 s y a la mitad 2,7; el dash, 9,6 m derecho hacia donde apunta; el salto, 1,9 m; un segundo levitando gasta media
+barra del propulsor (y su pantalla lo muestra), apoyada se llena; de unos 7 m cae sola en 0,98 s y agachada en 0,3 s
+(a 26 m/s); medio segundo
 mantenido, la piña sale a 0,71× la velocidad y 1,78× el golpe; pedidos 50° de giro y 20° arriba, **el torso se pasa
 hasta 67° y vuelve a 50° en unos 2 s**, y se inclina hasta su tope (8°, un grado de rebote); soltado, se endereza.
 

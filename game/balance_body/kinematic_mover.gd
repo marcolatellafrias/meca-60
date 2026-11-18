@@ -193,6 +193,9 @@ func _rise(k: KinematicSettings, delta: float, grounded: bool) -> float:
 		return 0.0
 	if not body.jump:
 		_fly_armed = true
+	# AGACHADA EN EL AIRE, BAJA RÁPIDO (ver KinematicSettings.dive_speed): le gana al vuelo.
+	if body.crouch and k.dive_speed > 0.0:
+		return minf(velocity.y - gravity * delta, -k.dive_speed)
 	if body.jump and _fly_armed and fly_fuel > 0.0:
 		fly_fuel = maxf(fly_fuel - delta / k.fly_time, 0.0)
 		return k.fly_speed

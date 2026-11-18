@@ -40,8 +40,9 @@ Lo decidió el usuario el 17/11/2026, tentativo hasta probarlo:
   barrido o súper; el clic izquierdo dispara, barre o carga) y **el puño** (cuanto más se mantiene, más lenta y más
   fuerte la piña). Agarrando cualquiera, el torso sigue la mirada. Dos pantallas: la energía y la carga.
 - **Arriba, en el pozo: la locomoción.** Dos palancas de palo negro y punta roja: **el acelerador** (cuánto) y **la de
-  dirección** (hacia dónde; queda donde se la deja). Saltar, levitar y **el dash, un botón**, hacia donde apunta la de
-  dirección. El escudo, después.
+  dirección** (hacia dónde; queda donde se la deja). Saltar, levitar —con la pantalla del propulsor, que se gasta y se
+  recarga— y **el dash, un botón**, hacia donde apunta la de dirección. **Agachar**: en el aire, baja rápido (un dash
+  hacia abajo). El escudo, después.
 - **Atrás, el artillero**: todavía nada.
 
 ## Cómo se muestra un objeto en un puesto

@@ -18,6 +18,7 @@ const LABELS := {
 	"jump_height": "salto: sube (m)", "jump_time": "salto: tarda en subir (s)",
 	"fly_speed": "vuelo: sube a (m/s)", "fly_time": "vuelo: la barra dura (s)",
 	"fly_refill": "vuelo: se llena apoyada en (s)",
+	"dive_speed": "agachada en el aire: baja a (m/s; 0, no baja más rápido)",
 	"dash_distance": "recorre (m)", "dash_time": "en (s)",
 	"dash_cost": "gasta de la barra (parte)", "dash_refill": "la barra se llena en (s)",
 	"dash_cooldown": "espera entre dashes (s)",

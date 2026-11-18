@@ -83,6 +83,8 @@ func _ready() -> void:
 	var levers: Vector3 = (pieces["acelerador"].global_position + pieces["dirección"].global_position) * 0.5
 	await _shot(top, levers, 32.0)
 	await _shot(top, pieces["dash"].global_position, 40.0)
+	await _shot(top, pieces["agachar"].global_position, 40.0)
+	await _shot(top, top + forward + right * 0.6 - up * 0.1, 75.0)
 	# ── LO QUE HACE CADA CONTROL ──
 	var cockpit := (_mech.keys as ToolMechKeys).cockpit
 	var stick: TwoAxisComponent = pieces["dirección"].find_children("*", "TwoAxisComponent", true, false)[0]
@@ -136,6 +138,36 @@ func _ready() -> void:
 	jump.released.emit()
 	print("SALTAR: subió ", snappedf(highest - floor_y, 0.01), " m")
 	await get_tree().create_timer(1.5).timeout
+	# Levitar un segundo y caer: sin agacharse, y agachada (baja rápido).
+	var levitate := ButtonArchetype.button_of(pieces["levitar"])
+	var crouch := ButtonArchetype.button_of(pieces["agachar"])
+	var fuel_screen := ScreenArmArchetype.screen_of(pieces["pantalla propulsor"])
+	for diving: bool in [false, true]:
+		jump.pressed.emit()
+		await get_tree().create_timer(0.25).timeout
+		jump.released.emit()
+		for i in 3:
+			await get_tree().physics_frame
+		levitate.pressed.emit()
+		await get_tree().create_timer(1.0).timeout
+		print("LEVITAR un segundo: la barra en ", snappedf(_mech.mover.fly_fuel, 0.01), ", la pantalla dice ",
+			snappedf(float(fuel_screen.source.call()), 0.01))
+		levitate.released.emit()
+		var high := _mech.global_position.y - floor_y
+		if diving:
+			crouch.pressed.emit()
+		var fastest := 0.0
+		var time := 0.0
+		while not _mech.grounded and time < 6.0:
+			await get_tree().physics_frame
+			time += 1.0 / Engine.physics_ticks_per_second
+			fastest = maxf(fastest, -_mech.mover.velocity.y)
+		if diving:
+			crouch.released.emit()
+		print("  ", "AGACHADA, BAJA RÁPIDO" if diving else "CAE SOLA", ": desde ", snappedf(high, 0.1), " m, a lo más ",
+			snappedf(fastest, 0.1), " m/s, al piso en ", snappedf(time, 0.01), " s")
+		await get_tree().create_timer(3.5).timeout
+		print("  apoyada 3,5 s: la barra en ", snappedf(_mech.mover.fly_fuel, 0.01))
 	# Los modos del cañón.
 	for key: String in ["modo ráfaga", "modo barrido", "modo súper"]:
 		ButtonArchetype.button_of(pieces[key]).pressed.emit()

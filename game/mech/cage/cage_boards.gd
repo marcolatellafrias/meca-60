@@ -22,9 +22,14 @@ extends RefCounted
 ##     el usuario: «una que es de aceleración… y la otra… XZ, que se trabe y que decida para dónde ir»): a la izquierda
 ##     EL ACELERADOR (cuánto; adelante, más) y a la derecha LA DE DIRECCIÓN (hacia dónde; QUEDA DONDE SE LA DEJA, y cerca
 ##     del medio no pide nada: `DEAD`). Camina hacia donde apunta la de dirección, a lo que diga el acelerador.
-##   · SALTAR adelante a la izquierda y LEVITAR (en el aire) adelante a la derecha. EL DASH, UN BOTÓN, en el tablero de la
-##     derecha, del lado de la de dirección: hacia donde apunta ella (al medio, no sale). Con las dos palancas no entra
-##     en el de adelante, ni con levitar en el suyo.
+##   · SALTAR adelante a la izquierda y LEVITAR (en el aire) adelante a la derecha: dos controles distintos (el usuario:
+##     «nos da más variedad»). EL DASH, UN BOTÓN, en el tablero de la derecha, del lado de la de dirección: hacia donde
+##     apunta ella (al medio, no sale). Con las dos palancas no entra en el de adelante, ni con levitar en el suyo.
+##     AGACHAR, en el tablero de la izquierda: apoyada, se agacha; EN EL AIRE, BAJA RÁPIDO, como un dash hacia abajo
+##     (KinematicSettings.dive_speed; el usuario: «nos ahorramos un botón»).
+##   · LA PANTALLA DEL PROPULSOR (la barra de levitar, KinematicMover.fly_fuel: se gasta levitando y se llena apoyada), en
+##     un brazo fijo corto al lado de levitar, abajo a la derecha de la vista del de arriba (`PIT_SCREEN_AT`). *Primero
+##     salía de la pared del pozo: un palo de 1,2 m que cruzaba la vista.*
 ##   HACIA DÓNDE APUNTA ES EN LA MECA: la de dirección empujada hacia el frente de la meca va adelante (se mide en el
 ##   mundo y se pasa al torso: vale en cualquier cara, y aunque el módulo de arriba gire aparte; ver `_flat`).
 ##   *Hasta el 17/11/2026 (el mismo día) la palanca de dos ejes caminaba sola y volvía al medio al soltarla, y el dash
@@ -42,8 +47,9 @@ const LAYOUT := [
 	["cápsula derecha arriba", ["pantalla carga"]],
 	["tablero adelante", ["palancas"]],
 	["tablero adelante izquierda", ["saltar"]],
-	["tablero adelante derecha", ["levitar"]],
+	["tablero adelante derecha", ["levitar", "pantalla propulsor"]],
 	["tablero derecha", ["dash"]],
+	["tablero izquierda", ["agachar"]],
 ]
 ## LOS MANDOS PLEGABLES Y LAS PANTALLAS van ADELANTE en su cara (`FRONT` celdas de la punta de adelante, en la fila
 ## `ROW` de arriba). El mando, traído a la mano (`HAND`); las pantallas, arriba a los costados de la vista (`SCREEN_AT`),
@@ -54,6 +60,12 @@ const ROW := 6
 const HAND := Vector3(0.3, -0.42, -0.42)
 const SCREEN_AT := Vector3(0.3, 0.13, -0.5)
 const LOOK_AHEAD := 3.0
+## La pantalla del propulsor, desde los ojos del de arriba (m): abajo a la derecha de la vista, apenas arriba del
+## tablero (que empieza 0,58 m más abajo que los ojos).
+const PIT_SCREEN_AT := Vector3(0.38, -0.3, -0.62)
+## Los botones que se mantienen (el texto y el color): lo que piden mientras se aprietan (ver `_hold`).
+const HOLDS := {"saltar": ["SALTAR", Color(0.3, 0.8, 0.4)], "levitar": ["LEVITAR", Color(0.3, 0.8, 0.4)],
+	"agachar": ["AGACHAR", Color(0.45, 0.62, 0.85)]}
 ## Los modos del cañón que eligen sus botones: su nombre y su color.
 const MODES := {"modo ráfaga": [CannonTip.Mode.BURST, "RÁFAGA", Color(0.9, 0.62, 0.2)],
 	"modo barrido": [CannonTip.Mode.BEAM, "BARRIDO", Color(0.35, 0.7, 0.95)],
@@ -184,19 +196,30 @@ static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape,
 					var world := board_axes.x * value.x - board_axes.y * value.y
 					state["way"] = _flat(stick, world, board_axes.z, 1.0) if value.length() >= DEAD else Vector2.ZERO
 					_walk(stick, state))
-		"saltar", "levitar":
+		"saltar", "levitar", "agachar":
 			var look := ButtonArchetype.power()
 			look.latching = false
-			look.text = "SALTAR" if key == "saltar" else "LEVITAR"
+			look.text = HOLDS[key][0]
+			look.color = HOLDS[key][1]
 			look.head_size = 0.7
 			var placed := _spotted(mount, look)
 			if placed == null:
 				return
 			placed.set_meta(PIECE, key)
 			var button := ButtonArchetype.button_of(placed)
-			var jump := key == "saltar"
-			button.pressed.connect(func() -> void: _hold(button, jump, true))
-			button.released.connect(func() -> void: _hold(button, jump, false))
+			button.pressed.connect(func() -> void: _hold(button, key, true))
+			button.released.connect(func() -> void: _hold(button, key, false))
+		"pantalla propulsor":
+			var placed := _spotted(mount, ScreenArmArchetype.new("PROPULSOR", Color(0.4, 0.75, 0.95)))
+			if placed == null:
+				return
+			placed.set_meta(PIECE, key)
+			var screen := ScreenArmArchetype.screen_of(placed)
+			var top_eye := CageCabin.pit_eye(form)
+			screen.reach_to(top_eye + PIT_SCREEN_AT, top_eye, mount.get_parent_node_3d())
+			screen.source = func() -> float:
+				var mech := _mech_of(screen)
+				return mech.mover.fly_fuel if mech != null and mech.mover != null else 0.0
 		"dash":
 			var look := ButtonArchetype.power()
 			look.latching = false
@@ -254,15 +277,18 @@ static func _walk(from: Node, state: Dictionary) -> void:
 		cockpit.move = (state["way"] as Vector2) * float(state["throttle"])
 
 
-## SALTAR o LEVITAR, apretado o suelto.
-static func _hold(from: Node, jump: bool, on: bool) -> void:
+## SALTAR, LEVITAR o AGACHAR (`what`, ver `HOLDS`), apretado o suelto.
+static func _hold(from: Node, what: String, on: bool) -> void:
 	var cockpit := _cockpit_of(from)
 	if cockpit == null:
 		return
-	if jump:
-		cockpit.jump = on
-	else:
-		cockpit.levitate = on
+	match what:
+		"saltar":
+			cockpit.jump = on
+		"levitar":
+			cockpit.levitate = on
+		"agachar":
+			cockpit.crouch = on
 
 
 ## UNA DIRECCIÓN DEL MUNDO `world` SOBRE UNA CARA (de normal `normal`), en el piso de la meca de `from` (x a la derecha,

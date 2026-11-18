@@ -147,6 +147,11 @@ static func driver_eye(form: CageShape) -> Vector3:
 	return bubble_center(form) + Vector3(0.0, 0.0, belt_back(form) * 0.5)
 
 
+## Los ojos del de arriba, sentado en el pozo (la silla 0), desde el fondo de la caja.
+static func pit_eye(form: CageShape) -> Vector3:
+	return Vector3(0.0, form.height() + form.arms_eye, 0.05)
+
+
 func _ready() -> void:
 	name = "Cabina jaula"
 	interior = StaticBody3D.new()

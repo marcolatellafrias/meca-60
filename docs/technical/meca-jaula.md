@@ -147,7 +147,7 @@ base de la jaula: cinemática, con lo que sigue.
   gira (el taladro o la sierra) y el brazo de las piñas (el primero sin ninguno de los dos). Las puntas, en [[brazo]].
 - **Las teclas, poseyéndola** (`ToolMechKeys`; la jaula, `CageMechKeys`):
   - **Piernas**: WASD · el mouse gira · Shift con una dirección, dash · espacio salta, y en el aire otra vez, levita ·
-    Ctrl se agacha.
+    Ctrl se agacha, y **en el aire baja rápido** (`dive_speed`, la misma regla que el botón de agachar de adentro).
   - **Taladro o sierra**: clic derecho mantenido carga · clic izquierdo descarga. **Si no lleva**, el brazo de las
     piñas: clic izquierdo, un directo; clic derecho, un gancho.
   - **Cañón**: las flechas mueven la palanca · 1 simple, 2 ráfaga, 3 barrido, 4 súper · F, el gatillo.
@@ -156,7 +156,8 @@ base de la jaula: cinemática, con lo que sigue.
 - **Desde adentro** (17/11/2026, la variante para 3; ver [[tableros]]): lo que piden el acelerador, la palanca de
   dirección, saltar, levitar y el dash lo junta `MechCockpit` (`ToolMechKeys.cockpit`), y cuando nadie la posee la meca
   lo lee **con las mismas reglas de energía** que las teclas; el gatillo del cañón también (`fire`). **La de dirección
-  queda trabada donde se la deja** (el usuario lo quería así: para seguir caminando mientras se aprieta el dash).
+  queda trabada donde se la deja** (el usuario lo quería así: para seguir caminando mientras se aprieta el dash). Agachar
+  en el aire baja rápido, y la barra de levitar tiene su pantalla (el propulsor).
   *Antes se lo imaginaba con la cámara trabada mirando
   al frente; quedó libre, y lo que se limita es cuánto la sigue el torso. Esto cambia lo de [[armamento]] («el
   movimiento: te conectás», el mouse que gira el cuerpo sobre la silla).*
@@ -173,6 +174,8 @@ mitad. *Hasta el 17/11/2026 heredaba el panel de la Meca cinemática (`Kinematic
   **La inclinación** al mirar arriba o abajo, con el mismo resorte, hasta `pitch_limit` (8°: «un límite bastante
   fuerte»). Arrancan así (1,2 Hz, 0,55, 8°) **como valores del código**: el archivo guardado no escribe lo que es igual
   al código, así que un valor de arranque propio de la jaula se perdía al cargar uno guardado antes.
+- **Bajar rápido** (pestaña «Saltar y volar», 18/11/2026): agachada en el aire baja por lo menos a `dive_speed` (20 m/s;
+  0, nada) y le gana al vuelo. No gasta energía.
 
 ## El manejo desde adentro — `CageHandlingPanel` (F7)
 Lo de mantener apretado los mandos (`CageHandling`, guardado en `game/mech/cage/cage_handling.tres`): **la piña

@@ -52,6 +52,10 @@ static var current := KnobsFile.load_into(KinematicSettings.new(), SAVED) as Kin
 @export_range(1.0, 30.0, 0.5) var fly_speed := 8.0
 @export_range(0.2, 10.0, 0.1) var fly_time := 2.0
 @export_range(0.2, 10.0, 0.1) var fly_refill := 3.0
+## BAJAR RÁPIDO (18/11/2026, el usuario: «usar el botón de agachar cuando estás en el aire para bajar más rápido… como
+## un dash, pero hacia abajo… nos ahorramos un botón»): agachada en el aire, baja por lo menos a `dive_speed` (m/s) y le
+## gana al vuelo; si ya cae más rápido, sigue cayendo. En 0, agacharse en el aire no hace nada más.
+@export_range(0.0, 60.0, 0.5) var dive_speed := 20.0
 
 @export_group("Dash")
 ## EL DASH (Shift, con una dirección), UN EMPUJÓN CON INERCIA (el usuario, 15/11/2026: «más de esquivar y momentum»):
