@@ -2,6 +2,16 @@
 
 **Borrador** (17/11/2026). Primero que funcione; la capa estética, al final. Ver [[base]], [[progresion]].
 
+## La decisión tajante (18/11/2026)
+El usuario, ante la complejidad que crecía: **el menú se abre en la pantalla** (no se lee desde el costado, afuera; la
+pantalla de la consola en el mundo muestra un placeholder pixelado), **fuera de la grilla de casillas y con
+superpuestos**. Se queda lo **monocromo** (verde esmeralda sobre negro) y la idea general del ASCII: **lo que en color
+serían grises o degradés, son tramas de puntos**. Una **letra retro que no sea de píxeles** (se probaron la nuestra de
+trazos y la OCR-A). **Lo superpuesto se separa de lo de atrás** con una sombra de puntos, su propio fondo negro y un
+borde doble; una ventana que pide algo, además, **atenúa todo lo de atrás con una trama negra**.
+- Comprar y montar piezas a mano en la meca, los estantes y el receptáculo del techo quedan **de lado** por ahora: la
+  complejidad explotaba (los controles de adentro cambiarían con alguien sentado; habría que acoplar la meca).
+
 ## El giro retro (18/11/2026)
 El usuario: «quiero hacer un menú a lo viejo, a lo retro, que sea todo con píxeles… toda la pantalla… una grilla de
 píxeles… las fuentes… los marcos». **Fondo casi negro y fósforo verde**, en tres brillos (encendido, medio y apagado)
