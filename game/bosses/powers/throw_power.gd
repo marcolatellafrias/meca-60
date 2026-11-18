@@ -70,10 +70,10 @@ func act(b: BrawlerBrain, delta: float) -> void:
 			_dirt_clock -= delta
 			if _dirt_clock <= 0.0:
 				_dirt_clock = 0.25
-				BossBursts.dirt(b.world(), _dig + Vector3(b.random.randf_range(-6.0, 6.0), 0.0,
-					b.random.randf_range(-5.0, 5.0)), 0.8)
-			_rock.hold(_dig + Vector3.UP * lerpf(-BrawlerRock.SIZE.y * 0.5, BrawlerRock.SIZE.y * 0.5, up),
-				boss.waist_yaw, null)
+				b.boss.net.fx_dirt(_dig + Vector3(b.random.randf_range(-6.0, 6.0), 0.0, b.random.randf_range(-5.0, 5.0)),
+					0.8)
+			b.boss.net.fx_do(_rock, "hold", [_dig + Vector3.UP * lerpf(-BrawlerRock.SIZE.y * 0.5, BrawlerRock.SIZE.y * 0.5,
+				up), boss.waist_yaw, null], true)
 			if b.clock >= rip_time:
 				b.next(1)
 		1:
@@ -81,11 +81,12 @@ func act(b: BrawlerBrain, delta: float) -> void:
 			boss.pose = ready_pose as Brawler.Pose
 			b.face()
 			var over := boss.point(from_point) + Vector3.UP * (BrawlerRock.SIZE.y * 0.5 + 1.0)
-			_rock.hold(_rock.held_at().lerp(over, 1.0 - exp(-6.0 * delta)), boss.waist_yaw, b.ground())
+			b.boss.net.fx_do(_rock, "hold", [_rock.held_at().lerp(over, 1.0 - exp(-6.0 * delta)), boss.waist_yaw, b.ground()],
+				true)
 			if b.clock >= lift_time:
 				uses += 1
 				boss.pose = strike_pose as Brawler.Pose
-				_rock.throw(b.ground(), flight, arc, stay)
+				b.boss.net.fx_do(_rock, "throw", [b.ground(), flight, arc, stay])
 				rocks.append(_rock)
 				for extra in (count_rage if b.strong() else count) - 1:
 					rocks.append(_ahead(b, extra))
@@ -110,11 +111,11 @@ func tick(b: BrawlerBrain, _delta: float) -> void:
 		var over := body != null and not body.grounded and body.mover != null
 		over = over and body.mover.global_position.y - rock.spot.y > BrawlerRock.SIZE.y + 2.0
 		if not over and rock.covers(b.ground(), b.half_width()):
-			rock.shatter()
+			b.boss.net.fx_do(rock, "shatter")
 			hits += int(b.strike(damage, "la piedra", HitReaction.Kind.KNOCKDOWN, b.ground() - rock.spot, push,
 				rock.spot + Vector3.UP * BrawlerRock.SIZE.y))
 		elif rock.covers(b.boss.global_position, b.boss.box().x * 0.5):
-			rock.shatter()
+			b.boss.net.fx_do(rock, "shatter")
 
 
 func drop(_b: BrawlerBrain) -> void:
@@ -124,10 +125,8 @@ func drop(_b: BrawlerBrain) -> void:
 
 
 func _make(b: BrawlerBrain) -> BrawlerRock:
-	var rock := BrawlerRock.new()
-	rock.name = "Piedra"
-	b.world().add_child(rock)
-	rock.setup(_dig, b.boss.waist_yaw, radius)
+	var rock := b.boss.net.fx_make("rock") as BrawlerRock
+	b.boss.net.fx_do(rock, "setup", [_dig, b.boss.waist_yaw, radius])
 	return rock
 
 
@@ -135,7 +134,7 @@ func _make(b: BrawlerBrain) -> BrawlerRock:
 ## para un costado (alternando).
 func _ahead(b: BrawlerBrain, index: int) -> BrawlerRock:
 	var other := _make(b)
-	other.hold(_rock.held_at() + Vector3.UP * BrawlerRock.SIZE.y, b.boss.waist_yaw, null)
+	b.boss.net.fx_do(other, "hold", [_rock.held_at() + Vector3.UP * BrawlerRock.SIZE.y, b.boss.waist_yaw, null])
 	var body := b.target as BalanceBody
 	var going := body.velocity() if body != null else Vector3.ZERO
 	going.y = 0.0
@@ -145,5 +144,5 @@ func _ahead(b: BrawlerBrain, index: int) -> BrawlerRock:
 		if b.random.randf() < 0.5:
 			side = -side
 		ahead = side * radius * 2.2 * (1 + index / 2)
-	other.throw(b.ground() + ahead, flight, arc, stay)
+	b.boss.net.fx_do(other, "throw", [b.ground() + ahead, flight, arc, stay])
 	return other

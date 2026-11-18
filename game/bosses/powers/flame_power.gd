@@ -58,10 +58,8 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 	var boss := b.boss
 	var waist := b.waist()
 	if flame == null:
-		flame = BrawlerFlame.new()
-		flame.name = "Lanzallamas"
-		b.world().add_child(flame)
-		flame.setup(length, angle, 0.0)
+		flame = b.boss.net.fx_make("flame") as BrawlerFlame
+		b.boss.net.fx_do(flame, "setup", [length, angle, 0.0])
 		_left = bursts
 	b.expose(exposes)
 	boss.move = Vector2.ZERO
@@ -77,14 +75,14 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 			b.stage = "lanzallamas: apunta"
 			boss.pose = ready_pose as Brawler.Pose
 			b.face()
-			flame.warn(boss.global_position, waist)
+			b.boss.net.fx_do(flame, "warn", [boss.global_position, waist], true)
 			if b.clock >= aim:
 				_yaw = boss.waist_yaw
 				b.next(2)
 		2:
 			b.stage = "lanzallamas: ¡apuntó!"
 			boss.aim_yaw = _yaw
-			flame.warn(boss.global_position, waist, true)
+			b.boss.net.fx_do(flame, "warn", [boss.global_position, waist, true], true)
 			if b.clock >= lock:
 				BossSounds.play(BossSounds.Kind.FLAME, boss.point(from_point), b.world(), -2.0)
 				b.hit_once = false
@@ -93,14 +91,14 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 			b.stage = "¡lanzallamas!"
 			boss.pose = strike_pose as Brawler.Pose
 			boss.aim_yaw = _yaw
-			flame.blow(boss.point(from_point), waist, true)
+			b.boss.net.fx_do(flame, "blow", [boss.point(from_point), waist, true], true)
 			if not b.hit_once and flame.covers(b.ground(), b.half_width()):
 				var landed := b.strike(damage, "el lanzallamas", HitReaction.Kind.PUSH, b.to_target(), push,
 					b.ground() + Vector3.UP * 8.0)
 				b.hit_once = b.hit_once or landed
 				hits += int(landed)
 			if b.clock >= burn:
-				flame.blow(boss.point(from_point), waist, false)
+				b.boss.net.fx_do(flame, "blow", [boss.point(from_point), waist, false])
 				_left -= 1
 				b.next(1 if _left > 0 else 4)
 		_:

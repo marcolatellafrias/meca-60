@@ -16,8 +16,10 @@
 - **Los jefes** (18/11/2026, `BossNet`, en game/bosses/): los simula el host (su cabeza piensa sólo ahí) y las demás
   máquinas siguen su cuerpo (dónde está, los rumbos, la pose, el trompo, el horno, la ira, si vuela y el resorte). Lo
   común de seguir algo por la red (el dueño, mandar, el buffer y la mezcla) es `NetFollow` (game/common/), de la meca
-  y del jefe. *Falta: lo que se ve de sus ataques (las zonas, la piedra, el fuego, la onda, el gancho), hoy sólo en el
-  host.*
+  y del jefe. **Lo que se ve de sus ataques** (las zonas, la piedra, el fuego, la onda, la mano del gancho, las
+  bombas, la tierra): los poderes los piden y los mandan por `BossNet` (`fx_make`, `fx_do`, `fx_set`, `fx_dirt`); el
+  host le pone un número a cada efecto y las demás arman su copia y le dan las mismas órdenes (las de cada paso, sin
+  garantía). El daño lo decide sólo el host.
 - **La vida y la muerte** (`Health`): la decide el host. Un golpe en otra máquina se le pide al host; el host dice a
   todos cuánta queda, con qué y el empujón, y en todas se muere igual (el ragdoll con el mismo empujón). **Los golpes
   de un jefe a la meca** los decide el host; la reacción la hacen todas y el empujón y la caída, la máquina de su dueño
@@ -28,6 +30,8 @@
   la ven en el mismo lugar al centímetro (el motor, el rumbo y la caja); el host la sigue sin saltos (a lo más 0,3 m
   en un paso, en el dash). El jefe: `tests/boss_net_check.tscn` (dos instancias): el otro maneja la meca, el jefe la
   ataca (la tira, la agarra y la revolea) y después el otro lo mata: las dos ven al jefe muerto en el mismo lugar y en
-  6 pedazos, y la meca en el mismo lugar, con la misma vida y el mismo dueño.
+  6 pedazos, y la meca en el mismo lugar, con la misma vida y el mismo dueño. Con los ataques de a uno (la piedra, el
+  fuego, el golpe al piso, las bombas), las dos cuentan los mismos efectos (dos piedras y el fuego; el fuego mató a la
+  meca y las dos la vieron caer en 12 pedazos).
   Los brazos: `tests/arms_net_check.tscn` (igual): el otro dispara ráfaga y súper y tira dos piñas, y las dos máquinas
   cuentan los mismos tiros y piñas y la misma energía; la piña propia del host, sin ser dueño, no sale.

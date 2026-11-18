@@ -109,13 +109,13 @@ func _drop_one(b: BrawlerBrain, first: bool) -> void:
 	var shot: BossShot
 	var mark: BossZone = null
 	if physical:
-		shot = BossShot.toss(b.world(), from, to, flight, bounces, flight * 3.0, size, [b.boss.solid()])
+		shot = b.boss.net.fx_make("toss", [from, to, flight, bounces, flight * 3.0, size]) as BossShot
 		loose.append(shot)
 	else:
-		shot = BossShot.launch(b.world(), from, to, flight, arc, size)
-		mark = BossZone.circle(b.world(), radius)
-		mark.locked = true
-		mark.place(to)
+		shot = b.boss.net.fx_make("shot", [from, to, flight, arc, size]) as BossShot
+		mark = b.boss.net.fx_make("circle", [radius]) as BossZone
+		b.boss.net.fx_set(mark, "locked", true)
+		b.boss.net.fx_do(mark, "place", [to])
 	BossSounds.play(BossSounds.Kind.WINDUP, from, b.world(), -8.0)
 	shot.landed.connect(_blast.bind(mark))
 
@@ -132,16 +132,16 @@ func _blast(at: Vector3, mark: BossZone) -> void:
 		mark = BossZone.circle(b.world(), radius)
 		mark.marked = false
 		mark.place(spot)
-	BossBursts.dirt(b.world(), spot, radius / 8.0)
+	b.boss.net.fx_dirt(spot, radius / 8.0)
 	BossSounds.play(BossSounds.Kind.KNOCKDOWN, spot, b.world())
 	if mark.covers(b.ground(), b.half_width()) and b.feet_over(spot.y) < radius:
 		hits += int(b.strike(damage, "una bomba", HitReaction.Kind.KNOCKDOWN, b.ground() - spot, push,
 			spot + Vector3.UP * 2.0))
 	mark.queue_free()
 	if ring:
-		var wave := BossZone.ring(b.world(), radius, 3.0, ring_speed, ring_reach)
-		wave.locked = true
-		wave.place(spot)
+		var wave := b.boss.net.fx_make("ring", [radius, 3.0, ring_speed, ring_reach]) as BossZone
+		b.boss.net.fx_set(wave, "locked", true)
+		b.boss.net.fx_do(wave, "place", [spot])
 		rings.append(wave)
 
 
@@ -153,7 +153,7 @@ func tick(b: BrawlerBrain, _delta: float) -> void:
 	loose.assign(loose.filter(func(each: Variant) -> bool: return is_instance_valid(each)))
 	for shot: BossShot in loose.duplicate():
 		if b.touches_target(shot.at(), radius * 0.35):
-			shot.burst()
+			b.boss.net.fx_do(shot, "burst")
 	for wave: BossZone in rings.duplicate():
 		if b.feet_over(wave.origin.y) > 1.5 or not wave.covers(b.ground(), b.half_width()):
 			continue

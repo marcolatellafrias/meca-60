@@ -63,22 +63,20 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 			boss.pose = ready_pose as Brawler.Pose
 			b.face()
 			if hand == null:
-				hand = BrawlerHook.new()
-				hand.name = "Mano"
-				b.world().add_child(hand)
-				hand.setup(width, length)
+				hand = b.boss.net.fx_make("hook") as BrawlerHook
+				b.boss.net.fx_do(hand, "setup", [width, length])
 			if b.clock < windup:
 				b.stage = "agarre: apunta"
-				hand.aim(boss.global_position + waist * boss.box().z * 0.5, waist, false)
+				b.boss.net.fx_do(hand, "aim", [boss.global_position + waist * boss.box().z * 0.5, waist, false], true)
 			else:
 				# YA APUNTÓ: la franja (y la cintura) quietas.
 				b.stage = "agarre: ¡apuntó!"
 				boss.aim_yaw = atan2(-hand.way.x, -hand.way.z)
-				hand.aim(hand.origin, hand.way, true)
+				b.boss.net.fx_do(hand, "aim", [hand.origin, hand.way, true], true)
 			if b.clock >= windup + lock:
 				uses += 1
 				boss.pose = strike_pose as Brawler.Pose
-				hand.launch(speed)
+				b.boss.net.fx_do(hand, "launch", [speed])
 				b.next(1)
 		1:
 			b.stage = "agarre: ¡la mano!"
@@ -87,11 +85,11 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 			var touched := hand.touches(b.ground(), b.half_width()) and not HitReaction.of(b.target).untouchable()
 			if touched and HitReaction.of(b.target).blocks(hand.tip()):
 				# El escudo la frenó: la mano vuelve y el agarre queda usado.
-				hand.reel()
+				b.boss.net.fx_do(hand, "reel")
 				b.next(4)
 			elif touched:
 				hits += 1
-				hand.reel()
+				b.boss.net.fx_do(hand, "reel")
 				var reaction := HitReaction.of(b.target)
 				reaction.grab(hand.tip() + Vector3.UP * BrawlerHook.height())
 				if reaction.state == HitReaction.State.HELD:

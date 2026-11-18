@@ -67,15 +67,13 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 			b.face()
 			var wanted := count_rage if b.strong() else count
 			while _aiming.size() < wanted:
-				var wave := BrawlerWave.new()
-				wave.name = "Onda"
-				b.world().add_child(wave)
-				wave.setup(wave_width, wave_reach)
+				var wave := b.boss.net.fx_make("wave") as BrawlerWave
+				b.boss.net.fx_do(wave, "setup", [wave_width, wave_reach])
 				_aiming.append(wave)
 			# En abanico, centradas en la cintura.
 			for index in _aiming.size():
 				var turn := deg_to_rad(fan) * (index - (_aiming.size() - 1) * 0.5)
-				_aiming[index].aim(mouth, waist.rotated(Vector3.UP, turn))
+				b.boss.net.fx_do(_aiming[index], "aim", [mouth, waist.rotated(Vector3.UP, turn)], true)
 			if b.clock >= windup:
 				uses += 1
 				boss.pose = strike_pose as Brawler.Pose
@@ -88,7 +86,7 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 				b.to_target(), push))
 			if b.clock >= FALL:
 				for wave in _aiming:
-					wave.launch(wave_speed)
+					b.boss.net.fx_do(wave, "launch", [wave_speed])
 					waves.append(wave)
 				_aiming.clear()
 				b.next(2)

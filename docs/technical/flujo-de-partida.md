@@ -56,7 +56,7 @@
    los costados en lugar del medio.
 8. **El jefe por red**. — *Jefes*, **hecho** (18/11/2026; ver [[red]]): el jefe lo simula el host y las demás siguen su
    cuerpo; la vida la decide el host y la muerte (con su ragdoll) pasa en todas; los golpes del jefe a la meca los
-   decide el host y el empujón lo hace la máquina de su dueño. *Falta: lo que se ve de sus ataques en las demás.*
+   decide el host y el empujón lo hace la máquina de su dueño. Lo que se ve de sus ataques también llega a todas.
 9. **La vuelta**: la paga del contrato a la plata de la tripulación, lo que vuelve de la arena (ver [[progresion]]). —
    *Mundo*.
 
