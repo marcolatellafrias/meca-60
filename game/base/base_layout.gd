@@ -15,44 +15,56 @@ extends RefCounted
 ##     compuerta da a la franja y se abre una sola vez.
 ##
 ## Las medidas, en metros sobre el plano: X a lo largo (0 el borde del elevador), Z hacia la franja (0 la pared del
-## fondo). Todo se corre con OFFSET para quedar centrado en la parcela.
+## fondo). Todo se corre con OFFSET para quedar centrado en la parcela. Las grandes se mueven con el F1 (ver `measure`).
 ## *Hasta el 17/11/2026 la base era para la meca grande (14 m): el elevador de 24 m, la nave de 22 m de alto y el
 ## ascensor de personal metido en la pared, que la esclusa reemplaza.*
 
-const ELEVATOR := 10.0          # el lado del cuadrado del elevador (lo marcado: 9 m)
-const LENGTH := 24.0            # el largo del elevador más el gimnasio
-const NAVE := 10.0              # el fondo del elevador y del gimnasio
-## El fondo más grande que puede tener la franja (BaseSettings): la parcela se mide con él.
+## LO MÁS GRANDE QUE PUEDEN SER las medidas del F1 (BaseSettings): la parcela se mide con eso.
+const MAX_DEPTH := 20.0
+const MAX_WIDTH := 30.0
 const MAX_STRIP := 12.0
 const WALL := 0.3
 ## El grosor del techo y el borde de la compuerta: el mismo cuadrado marcado del elevador.
 const ROOF := 0.35
 const HATCH_INSET := 0.5
-## La bolsa: en el medio del gimnasio, a la altura de los brazos de la meca jaula, con margen alrededor.
-const BAG_AT := Vector2(17.0, 5.0)
+## LA BOLSA (ver `bag_at`): su radio, de qué alto a qué alto (que se le pegue con la meca agachada: el usuario, 17/11/2026,
+## «termina demasiado arriba… que se pueda pegar aunque la meca esté agachada»), y lo libre a su alrededor (para dar
+## vueltas pegándole, o para que un golpe fuerte no la lleve a la pared).
 const BAG_RADIUS := 0.9
-const BAG_LOW := 2.8
-const BAG_HIGH := 6.2
-## Cuánto puede ocupar todo, con la franja (y la esclusa) más hondas. El plano queda centrado en eso.
-const SIZE := Vector2(LENGTH + MAX_STRIP, NAVE + MAX_STRIP)
+const BAG_LOW := 1.0
+const BAG_HIGH := 4.6
+const BAG_CLEAR := 2.5
+## Cuánto puede ocupar todo, con todo lo más grande. El plano queda centrado en eso.
+const SIZE := Vector2(MAX_DEPTH + MAX_WIDTH + MAX_STRIP, MAX_DEPTH + MAX_STRIP)
 const OFFSET := Vector3(-SIZE.x * 0.5, 0.0, -SIZE.y * 0.5)
-## Dónde duerme la meca (el centro del elevador) y hacia dónde mira (al gimnasio).
-const MECH_AT := Vector2(ELEVATOR * 0.5, NAVE * 0.5)
 ## El grupo de los nodos que tienen una base armada adentro (para rearmarla al guardar el F1).
 const GROUP := "base_plano"
-## LO DEL FONDO DE LA FRANJA, desde la pared bajo el elevador: la armería, los cosméticos, el cuadro y los casilleros.
-const ARMORY_AT := 2.7
-const COSMETICS_AT := 6.1
+## LO DEL FONDO DE LA FRANJA, en fila desde la pared bajo el elevador: la armería, los cosméticos y el cuadro; los
+## casilleros llenan lo que sobra hasta la esclusa (sin lugares vacíos: entran los que entran).
 const CONSOLE_WIDTH := 3.0
-const FRAME_AT := 8.5
-const LOCKERS := 5
+const BACK_GAP := 0.4
+const FRAME_WIDTH := 0.7
 const LOCKER_WIDTH := 0.9
 
-## LAS MEDIDAS QUE SE MUEVEN (BaseSettings, el F1), tomadas al armar: el alto de la nave, y el fondo y el alto de la
-## franja (también los de la esclusa).
+## LAS MEDIDAS QUE SE MUEVEN (BaseSettings, el F1), tomadas al armar (el usuario, 17/11/2026: «perillas para el alto
+## de la zona de gimnasio más ascensor, la profundidad… el ancho de la franja de consolas y el fondo»):
+##   · `height`, el alto de la nave (el elevador y el gimnasio).
+##   · `depth`, su fondo, que es también EL LADO DEL ELEVADOR: es siempre un cuadrado, y crece hacia su lado (la franja
+##     queda alineada con él).
+##   · `width`, el ancho de la franja, que es también el largo del gimnasio.
+##   · `strip` y `strip_height`, el fondo y el alto de la franja (y de la esclusa, que los sigue).
 static var height := 12.0
+static var depth := 10.0
+static var width := 14.0
 static var strip := 6.0
 static var strip_height := 4.0
+## Lo que sale de ésas: el lado del elevador, el largo de todo (elevador y gimnasio) y el fondo de la nave.
+static var ELEVATOR := 10.0
+static var LENGTH := 24.0
+static var NAVE := 10.0
+## Dónde duerme la meca (el centro del elevador; mira al gimnasio) y dónde cuelga la bolsa.
+static var MECH_AT := Vector2(5.0, 5.0)
+static var bag_at := Vector2(17.0, 5.0)
 
 const FLOOR_COLOR := Color(0.62, 0.6, 0.56)
 const ELEVATOR_COLOR := Color(0.55, 0.57, 0.6)
@@ -76,8 +88,20 @@ static func at(x: float, z: float, y := 0.0) -> Vector3:
 static func measure() -> void:
 	var settings := BaseSettings.current
 	height = settings.nave_height
+	depth = settings.nave_depth
+	width = settings.strip_width
 	strip = settings.strip_depth
 	strip_height = settings.strip_height
+	ELEVATOR = depth
+	NAVE = depth
+	LENGTH = depth + width
+	MECH_AT = Vector2(ELEVATOR * 0.5, NAVE * 0.5)
+	# LA BOLSA (el usuario: «el toggle básicamente decide con qué criterio sitúas la bolsa»): AL MEDIO del gimnasio, para
+	# dar vueltas pegándole; o EN LA PUNTA, contra la pared del fondo con lo libre de margen, para pegarle de un lado.
+	var x := ELEVATOR + width * 0.5
+	if settings.bag_place == 1:
+		x = maxf(x, LENGTH - BAG_CLEAR - BAG_RADIUS)
+	bag_at = Vector2(x, NAVE * 0.5)
 
 
 ## Arma la base en un nodo propio, colgado de `parent` (en el grupo GROUP, para rearmarla).
@@ -96,6 +120,8 @@ static func rebuild(holder: Node3D) -> void:
 		holder.remove_child(child)
 		child.queue_free()
 	build(holder)
+	# la meca, de nuevo al centro del elevador (pudo cambiar el fondo de la nave)
+	BaseArchetype.place_mech(holder.get_parent() as Node3D)
 
 
 static func build(parent: Node3D) -> StaticBody3D:
@@ -195,7 +221,8 @@ static func _lights(body: StaticBody3D) -> void:
 	var high := height - 1.5
 	var low := strip_height - 0.4
 	var middle := NAVE + strip * 0.5
-	for spot: Vector3 in [Vector3(5, 5, high), Vector3(17, 5, high), Vector3(13, middle, low), Vector3(20, middle, low)]:
+	for spot: Vector3 in [Vector3(ELEVATOR * 0.5, NAVE * 0.5, high), Vector3(ELEVATOR + width * 0.5, NAVE * 0.5, high),
+			Vector3(ELEVATOR + width * 0.3, middle, low), Vector3(ELEVATOR + width * 0.75, middle, low)]:
 		var where := at(spot.x, spot.y, spot.z)
 		Clay.sphere(body, 0.2, where, Color(1.0, 0.95, 0.8))
 		var lamp := OmniLight3D.new()
@@ -207,7 +234,7 @@ static func _lights(body: StaticBody3D) -> void:
 
 ## LA BOLSA, colgada de una viga a lo ancho del gimnasio. Fija por ahora (la física, después).
 static func _bag(body: StaticBody3D) -> void:
-	var center := at(BAG_AT.x, BAG_AT.y)
+	var center := at(bag_at.x, bag_at.y)
 	Clay.box(body, Vector3(0.3, 0.4, NAVE), Vector3(center.x, height - 0.2, OFFSET.z + NAVE * 0.5), CAGE_COLOR)
 	Clay.cylinder(body, 0.05, height - BAG_HIGH, center + Vector3.UP * (BAG_HIGH + height) * 0.5, CAGE_COLOR)
 	Clay.cylinder(body, BAG_RADIUS, BAG_HIGH - BAG_LOW, center + Vector3.UP * (BAG_LOW + BAG_HIGH) * 0.5, BAG_COLOR)
@@ -227,8 +254,11 @@ static func _consoles(body: StaticBody3D) -> void:
 	var contracts_width := minf(strip - 1.6, 4.0)
 	_console(body, Vector2(ELEVATOR + WALL * 0.5 + 0.5, NAVE + strip * 0.5), Basis(Vector3.UP, -PI * 0.5),
 		contracts_width, "Contratos", BaseTerminal.Screen.CONTRACTS)
-	_console(body, Vector2(ELEVATOR + ARMORY_AT, back), Basis(), CONSOLE_WIDTH, "Armería", BaseTerminal.Screen.ARMORY)
-	_console(body, Vector2(ELEVATOR + COSMETICS_AT, back), Basis(), CONSOLE_WIDTH, "Cosméticos y pintura")
+	var from := ELEVATOR + WALL * 0.5 + 1.0 + BACK_GAP
+	_console(body, Vector2(from + CONSOLE_WIDTH * 0.5, back), Basis(), CONSOLE_WIDTH, "Armería",
+		BaseTerminal.Screen.ARMORY)
+	from += CONSOLE_WIDTH + BACK_GAP
+	_console(body, Vector2(from + CONSOLE_WIDTH * 0.5, back), Basis(), CONSOLE_WIDTH, "Cosméticos y pintura")
 
 
 ## Una consola: su mueble y su pantalla inclinada, en un cuerpo propio para que se contornee sola al mirarla, con su
@@ -253,13 +283,16 @@ static func _console(body: StaticBody3D, where: Vector2, facing: Basis, width: f
 ## LOS PERSONAJES: el cuadro chiquito y los casilleros, en el fondo de la franja, junto a la esclusa.
 static func _characters(body: StaticBody3D) -> void:
 	var back := NAVE + strip - WALL * 0.5
-	Clay.box(body, Vector3(0.6, 0.8, 0.05), at(ELEVATOR + FRAME_AT, back - 0.03, 1.7), FRAME_COLOR)
-	var first := LENGTH - 0.2 - LOCKERS * LOCKER_WIDTH
-	for i in LOCKERS:
+	var frame_x := ELEVATOR + WALL * 0.5 + 1.0 + BACK_GAP * 3.0 + CONSOLE_WIDTH * 2.0 + FRAME_WIDTH * 0.5
+	Clay.box(body, Vector3(FRAME_WIDTH - 0.1, 0.8, 0.05), at(frame_x, back - 0.03, 1.7), FRAME_COLOR)
+	_sign(body, "El empleado del mes", at(frame_x, back - 0.3, 2.4))
+	var first := frame_x + FRAME_WIDTH * 0.5 + BACK_GAP
+	var count := int((LENGTH - 0.2 - first) / LOCKER_WIDTH)
+	for i in count:
 		Clay.solid(body, Vector3(LOCKER_WIDTH - 0.04, 2.0, 0.55), at(first + (i + 0.5) * LOCKER_WIDTH, back - 0.3, 1.0),
 			LOCKER_COLOR)
-	_sign(body, "El empleado del mes", at(ELEVATOR + FRAME_AT, back - 0.3, 2.4))
-	_sign(body, "Casilleros", at(first + LOCKERS * LOCKER_WIDTH * 0.5, back - 0.3, 2.4))
+	if count > 0:
+		_sign(body, "Casilleros", at(first + count * LOCKER_WIDTH * 0.5, back - 0.3, 2.4))
 
 
 static func _sign(parent: Node3D, text: String, where: Vector3) -> void:

@@ -16,12 +16,12 @@ el elevador de 24 m, la nave de 22 m y el ascensor de personal metido en la pare
 - **La compuerta del techo** (`BaseHatch`), sobre el elevador: dos hojas que se corren hacia los costados. La abre y la
   cierra la **G** de la parcela.
 - **La línea de peligro** entre el gimnasio y la franja.
-- **La bolsa**: 1,8 m de diámetro, de 2,8 a 6,2 m de alto (a la altura de los brazos de la jaula), colgada de una viga.
-  Fija, con su colisión.
+- **La bolsa**: 1,8 m de diámetro, de 1 a 4,6 m de alto (se le pega con la meca agachada), colgada de una viga. Fija,
+  con su colisión.
 - **La franja usa sus dos caras libres** (la del gimnasio es la línea de peligro y la de la punta, la esclusa):
   - **la pared bajo el elevador**: los contratos, al lado de la meca;
-  - **el fondo**, desde ahí: la armería, los cosméticos y la pintura, el cuadro del empleado del mes y cinco casilleros
-    junto a la esclusa.
+  - **el fondo**, desde ahí: la armería, los cosméticos y la pintura, el cuadro del empleado del mes y los casilleros
+    que entren, hasta la esclusa.
 - **La esclusa** (`BaseAirlock`, con `BaseSlideDoor`), la sala de espera, en la punta de la franja: **un cuadrado del
   lado del fondo de la franja y de su alto**; si cambia el fondo, cambia ella. Dos bancos, una baliza roja que gira y el
   cartel «esperando tripulación».
@@ -36,13 +36,23 @@ el elevador de 24 m, la nave de 22 m y el ascensor de personal metido en la pare
 
 ## Las medidas
 En `BaseLayout`, en metros sobre el plano (`at(x, z, alto)` pasa a la parcela).
-- **Se mueven con el F1** de la fila (`BasePanel`, perillas en `BaseSettings`): **el alto de la nave** (8 a 25 m), **el
-  fondo de la franja** (4 a 12 m; también el lado de la esclusa) y **su alto** (3 a 10 m; también el de la esclusa). Al
-  guardar, la base se vuelve a armar en su lugar (`BaseLayout.rebuild`; la meca se queda). Lo guardado,
-  `game/base/base_humana.tres`, es del usuario: no va al repositorio (el de la meca grande, `base_settings.tres`, quedó
-  de lado).
-- Lo demás (el elevador, el largo, la bolsa, dónde va cada cosa del fondo), en las constantes de `BaseLayout`.
-- La parcela se mide con la franja más honda (12 m).
+- **Se mueven con el F1** de la fila (`BasePanel`, perillas en `BaseSettings`; el usuario, 17/11/2026: «tengo que
+  experimentar con distintas perillas, distintas escalas… se siente un poco claustrofóbico»):
+  - **el alto de la nave** (8 a 25 m);
+  - **el fondo de la nave** (6 a 20 m), que es también **el lado del elevador**: siempre cuadrado, crece hacia su lado
+    y la franja queda alineada con él;
+  - **el ancho de la franja** (11 a 30 m), que es también el largo del gimnasio;
+  - **el fondo** (4 a 12 m) y **el alto** (3 a 10 m) **de la franja**, también los de la esclusa;
+  - **dónde cuelga la bolsa**: al medio del gimnasio (para dar vueltas pegándole) o en la punta, contra la pared con
+    2,5 m libres (para pegarle de un lado).
+
+  Al guardar, la base se vuelve a armar en su lugar (`BaseLayout.rebuild`) y la meca, nueva, vuelve al centro del
+  elevador (`BaseArchetype.place_mech`). Lo guardado, `game/base/base_humana.tres`, es del usuario: no va al
+  repositorio (el de la meca grande, `base_settings.tres`, quedó de lado).
+- **El fondo de la franja se llena solo**: la armería, los cosméticos y el cuadro en fila desde la pared bajo el
+  elevador, y los casilleros, los que entren hasta la esclusa.
+- La bolsa, de 1,8 m de diámetro, cuelga de 1 a 4,6 m: se le pega con la meca agachada.
+- La parcela se mide con todo lo más grande.
 - Los paneles F2 a F4 son los de la meca jaula, para modificarla desde la base.
 
 ## Las terminales (15/11/2026)
@@ -105,7 +115,7 @@ Lo pidió el usuario: «empecemos a hacer maquetas de clay de todos los componen
 ## Para mirarla
 `tests/base_look.tscn` (con ventana, unos 10 s): desde arriba con la compuerta del techo abierta, adentro de la esclusa
 (cerrada y, después de apretar el botón, abierta), lo que se ve al salir, la franja con los contratos y la meca desde el
-gimnasio.
+gimnasio; y otra vez con otras medidas y la bolsa en la punta (lo que hace el F1 al guardar, sin guardarlas).
 `tests/base_terminals_look.tscn` (con ventana, unos 5 s): la armería con unas compras hechas y lo que dice con el mouse
 encima, y los contratos con uno firmado.
 `tests/armory_parts_look.tscn` (con ventana, unos 10 s): todos los componentes juntos, y después uno por uno, de cerca.

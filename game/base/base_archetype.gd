@@ -36,12 +36,23 @@ func build(_seed_value: int, parent: Node3D) -> Node3D:
 	parent.add_child(root)
 	BaseLayout.build_into(root)
 	_root = root
+	place_mech(root)
+	return root
+
+
+## LA MECA, nueva, parada en el centro del elevador mirando al gimnasio; la que había, afuera. La usa también el F1 al
+## rearmar la base: con otro fondo de nave, el elevador cambia. *Moverla con `put` dejaba a los brazos con músculos
+## buscando piezas que ya no estaban.*
+static func place_mech(root: Node3D) -> void:
+	for old in root.get_children():
+		if old is Mech:
+			root.remove_child(old)
+			old.queue_free()
 	var mech := CageMech.new()
 	mech.equipment = CageMechArchetype.ROW
 	var spot := BaseLayout.at(BaseLayout.MECH_AT.x, BaseLayout.MECH_AT.y, Mech.standing_height(mech.cabin_shape))
 	mech.transform = Transform3D(Basis(Vector3.UP, -PI * 0.5), spot)
 	root.add_child(mech)
-	return root
 
 
 func keys() -> Array[SandboxKey]:

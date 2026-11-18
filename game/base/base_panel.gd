@@ -7,8 +7,11 @@ extends KnobsPanel
 const PANEL_WIDTH := 380.0
 const LABELS := {
 	"nave_height": "nave (elevador y gimnasio): alto (m)",
-	"strip_depth": "franja de las consolas: fondo (m)",
+	"nave_depth": "nave: fondo, y el lado del elevador (m)",
+	"strip_width": "franja de las consolas: ancho, y el largo del gimnasio (m)",
+	"strip_depth": "franja de las consolas (y esclusa): fondo (m)",
 	"strip_height": "franja de las consolas (y esclusa): alto (m)",
+	"bag_place": "la bolsa",
 }
 
 

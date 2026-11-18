@@ -65,6 +65,25 @@ func _ready() -> void:
 	await _shot("base_gimnasio")
 	for node in base.find_children("*", "Mech", true, false):
 		print("la meca, en ", (node as Node3D).global_position)
+	# lo que hace el F1 al guardar: otras medidas (sin guardarlas), la bolsa en la punta, y la base se vuelve a armar
+	var settings := BaseSettings.current
+	settings.nave_height = 16.0
+	settings.nave_depth = 14.0
+	settings.strip_width = 20.0
+	settings.strip_depth = 8.0
+	settings.strip_height = 5.0
+	settings.bag_place = 1
+	BaseLayout.rebuild(base.get_node("Plano") as Node3D)
+	await get_tree().create_timer(2.0).timeout
+	(base.get_node("Plano/Compuerta") as BaseHatch).snap_open()
+	eye.global_position = BaseLayout.at(BaseLayout.LENGTH + 10.0, BaseLayout.NAVE + 24.0, 30.0)
+	eye.look_at(BaseLayout.at(BaseLayout.LENGTH * 0.55, BaseLayout.NAVE * 0.6, 2.0))
+	await _shot("base_otras_medidas_arriba")
+	eye.global_position = BaseLayout.at(BaseLayout.LENGTH - 0.6, BaseLayout.NAVE + BaseLayout.strip * 0.5, 1.7)
+	eye.look_at(BaseLayout.at(BaseLayout.ELEVATOR * 0.5, BaseLayout.NAVE * 0.6, 3.0))
+	await _shot("base_otras_medidas_al_salir")
+	for node in base.find_children("*", "Mech", true, false):
+		print("la meca, después, en ", (node as Node3D).global_position)
 	get_tree().quit()
 
 
