@@ -208,6 +208,8 @@ func _hang(part_name: String, mesh: ArrayMesh, skin: Skin) -> void:
 	mi.skin = skin
 	if piece_colors.has(part_name):
 		mi.material_override = CharacterBodyVisual.body_material(piece_colors[part_name])
+	elif part_name == BlockBody.FACE_HAIR:
+		mi.material_override = CharacterBodyVisual.body_material(FaceCosmetics.HAIR)
 	else:
 		mi.material_override = CharacterBodyVisual.body_material(_neck_color if part_name == "neck" else _skin_color)
 	skeleton.add_child(mi)

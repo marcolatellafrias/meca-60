@@ -16,6 +16,8 @@ class_name BlockBody
 ## Lo bajas que son las cápsulas: pocas caras, que se lea el volumen y no la superficie.
 const CAPSULE_SIDES := 12
 const CAPSULE_RINGS := 2
+## La pieza del pelo de la cara (va de su color, ver ProceduralBodyUtil._hang).
+const FACE_HAIR := "face_hair"
 
 
 ## ARMA LAS PIEZAS de `body` sobre su esqueleto de dibujo, ya con todos sus huesos, con `skin` (el de su reposo).
@@ -104,6 +106,10 @@ static func _neck_and_head(body: ProceduralBodyUtil, sizes: SkeletonSizesUtil, s
 	if head.is_empty() or sizes.head_form == null:
 		return
 	_add(parts, "head", (head[0] as PackedInt32Array)[0], (head[2] as Array)[0], sizes.head_form.build_arrays())
+	# EL PELO DE LA CARA (bigote, cejas: ver FaceCosmetic), apoyado en la forma y pegado al mismo hueso que la cabeza.
+	for cosmetic in FaceCosmetics.worn():
+		_add(parts, FACE_HAIR, (head[0] as PackedInt32Array)[0], (head[2] as Array)[0],
+			cosmetic.build_arrays(sizes.head_form))
 
 
 ## ── UN MIEMBRO, dos cápsulas del mismo radio ──────────────────────────────────────────────────────────────────────

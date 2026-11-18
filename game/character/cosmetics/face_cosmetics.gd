@@ -5,6 +5,17 @@ extends RefCounted
 ## Las primeras pruebas del sistema (ver FaceCosmetic): unos bigotes, apoyados en la altura de la boca, y unas cejas,
 ## en la de los ojos. Números de la cabeza de referencia, en metros: `(x, arriba del ancla, medio alto)`.
 
+## EL COLOR DEL PELO DE LA CARA de los personajes (uno para todos, por ahora).
+const HAIR := Color(0.22, 0.14, 0.09)
+
+
+## ── LO QUE LLEVAN LOS PERSONAJES (18/11/2026) ───────────────────────────────────────────────────────────────────────
+## Todos los arquetipos lo mismo, «como para tener algo por ahora» (el usuario, eligiendo la cuarta captura): el bigote
+## morsa y las cejas gruesas. Ver BlockBody._neck_and_head.
+static func worn() -> Array[FaceCosmetic]:
+	return [mustaches()[2], brows()[2]] as Array[FaceCosmetic]
+
+
 ## LAS MARCAS de las dos alturas, para verlas en la vitrina: una raya fina a lo ancho.
 static func eye_mark() -> FaceCosmetic:
 	return FaceCosmetic.make("ojos", FaceCosmetic.Anchor.EYES, [Vector3(0, 0, 0.0015), Vector3(0.05, 0, 0.0015)],

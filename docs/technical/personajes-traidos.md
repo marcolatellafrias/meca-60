@@ -120,7 +120,9 @@ sobre LA MALLA que se ve (`HeadForm.surface_point` / `surface_normal`: el frente
 interpolado entre anillos) y sale hacia afuera; lo vertical crece con el alto de la cabeza y lo de costado con su ancho
 en el ancla, así el mismo calza en todas. Los que hay están en `FaceCosmetics` (cuatro bigotes, cuatro cejas, y las
 marcas de las dos alturas). En la parcela «Formas de cabeza», M cambia el bigote, K las cejas y L las marcas, sólo para
-ver. Todavía no los lleva ningún personaje. El pelo, después: cuando estén definidos el aplanamiento y la inclinación
+ver. Los personajes los llevan (`FaceCosmetics.worn()`, todos el bigote morsa y las cejas gruesas, «como para tener
+algo por ahora»): `BlockBody._neck_and_head` los suma como la pieza `face_hair`, pegada al hueso de la cabeza y del
+color `FaceCosmetics.HAIR`; en primera persona no se ven. El pelo, después: cuando estén definidos el aplanamiento y la inclinación
 de las cabezas. Prueba con captura: `tests/face_cosmetics_look.tscn` (todas las formas, una captura por combinación).
 
 **La silla fija** (18/11/2026, el usuario por la sesión de las armas: «una variante de la silla que sea fija… no se

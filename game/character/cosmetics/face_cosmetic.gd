@@ -46,17 +46,30 @@ static func make(p_name: String, p_anchor: Anchor, p_points: Array, p_joined: bo
 ## LA MALLA, APOYADA EN `form` (en sus metros, con su frente a −Z como la cabeza). `front_face`: el giro de la malla de
 ## la cabeza (ver HeadForm.build_arrays), para apoyarse en la que se ve.
 func build_mesh(form: HeadForm, front_face := false) -> ArrayMesh:
+	var tool := _tool(form, front_face)
+	var material := StandardMaterial3D.new()
+	material.albedo_color = color
+	material.roughness = 1.0
+	tool.set_material(material)
+	return tool.commit()
+
+
+## LO MISMO COMO ARREGLOS (con índices), para sumarlo al cuerpo del personaje, pegado al hueso de la cabeza (ver
+## BlockBody._neck_and_head).
+func build_arrays(form: HeadForm, front_face := false) -> Array:
+	var tool := _tool(form, front_face)
+	tool.index()
+	return tool.commit_to_arrays()
+
+
+func _tool(form: HeadForm, front_face: bool) -> SurfaceTool:
 	var tool := SurfaceTool.new()
 	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
 	tool.set_smooth_group(-1)
 	for strip in _strips():
 		_add_strip(tool, form, front_face, strip)
 	tool.generate_normals()
-	var material := StandardMaterial3D.new()
-	material.albedo_color = color
-	material.roughness = 1.0
-	tool.set_material(material)
-	return tool.commit()
+	return tool
 
 
 ## Las tiras en la cara de referencia: una de punta a punta o dos espejadas.
