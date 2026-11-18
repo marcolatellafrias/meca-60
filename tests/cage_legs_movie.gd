@@ -21,7 +21,7 @@ var _cam_from := Vector3(17.0, 4.0, 5.0)
 ## Caminando: cuánto tiempo, y cuánto sin ningún pie en el aire (s).
 var _walking := 0.0
 var _paused := 0.0
-## La caja al caminar (BodyLegs.pose_offset): lo más que subió (m) y lo más que se inclinó de costado yendo de costado y
+## La caja al caminar (las capas del esqueleto: la cintura y el torso): lo más que subió (m) y lo más que se inclinó de costado yendo de costado y
 ## yendo de frente (°).
 var _bob := 0.0
 var _lean_side := 0.0
@@ -106,9 +106,9 @@ func _run(label: String, seconds: float, move: Vector2) -> void:
 		var delta := await _tick()
 		clock += delta
 		# Caminando de verdad (ya arrancó, en el piso): ¿algún pie en el aire?
-		var walk := _mech.legs.pose_offset()
-		var lean := absf(rad_to_deg(walk.basis.get_euler().z))
-		_bob = maxf(_bob, walk.origin.y)
+		# Las capas del esqueleto (MechSkeleton): la cintura sube y baja, el torso se inclina sobre ella.
+		var lean := absf(rad_to_deg(_mech.skeleton.torso.transform.basis.get_euler().z))
+		_bob = maxf(_bob, _mech.skeleton.waist.position.y)
 		if move.x != 0.0:
 			_lean_side = maxf(_lean_side, lean)
 		elif move.y != 0.0 and clock > 0.6:

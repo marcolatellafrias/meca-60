@@ -88,13 +88,16 @@ func _hit_mech(label: String, away: Vector3, distance: float) -> void:
 	HitReaction.land(_mech, 0.0, "prueba", HitReaction.Kind.PUSH, away, distance, _mech.global_position)
 	var at := _mech.mover.global_position
 	var clock := 0.0
+	var most := 0.0
 	while clock < 2.2:
+		most = maxf(most, rad_to_deg(_mech.global_basis.y.angle_to(Vector3.UP)))
 		# La cámara la sigue de costado (se corre con el empujón).
 		var now := _mech.mover.global_position
 		at = at.lerp(now, 0.1)
 		_look(at + Vector3.UP * 2.5, Vector3(16.0, 5.0, -6.0) + at)
 		await get_tree().physics_frame
 		clock += 1.0 / Engine.physics_ticks_per_second
+	print("%s: la caja se inclinó hasta %.1f°" % [label, most])
 
 
 func _look(at: Vector3, from: Vector3) -> void:

@@ -149,6 +149,7 @@ func _ready() -> void:
 	legs = BodyLegs.new()
 	legs.body = self
 	add_child(legs)
+	skeleton.setup_layers(self)
 	moves = BodyMoves.new(self)
 	if kinematic:
 		freeze_mode = RigidBody3D.FREEZE_MODE_KINEMATIC
@@ -182,13 +183,24 @@ func _shoulder() -> Vector3:
 	return Vector3(size.x * 0.5, size.y * 0.3, 0.0)
 
 
-## EL TORSO SIGUE A LA CAJA: el hueso del torso (y la cintura, su raíz) en el piso de la caja, con sus ejes.
+## EL TORSO SIGUE A LA CAJA (la física: la mueve Jolt): la raíz del esqueleto en el piso de la caja, con sus ejes.
 func _follow_bones() -> void:
 	if skeleton == null:
 		return
-	var floor_of_box := global_transform * Transform3D(Basis(), Vector3(0.0, -size.y * 0.5, 0.0))
-	skeleton.waist.global_transform = floor_of_box
-	skeleton.torso.global_transform = floor_of_box
+	skeleton.root.global_transform = global_transform * Transform3D(Basis(), Vector3(0.0, -size.y * 0.5, 0.0))
+
+
+## LA CAJA VA DONDE DICE EL TORSO (la cinemática; paso 2b del esqueleto, 18/11/2026): el motor pone la raíz (lo de
+## juego), el esqueleto pone encima sus capas (caminar, el resorte) y el cuerpo —la caja, y con ella la cabina, el
+## marco y las sillas— va donde quedó el torso, con el centro de la caja en el medio del hueso.
+func _place_from_bones() -> void:
+	var motor := mover.body_place()
+	if skeleton == null:
+		global_transform = motor
+		return
+	skeleton.root.global_transform = motor * Transform3D(Basis(), Vector3(0.0, -size.y * 0.5, 0.0))
+	skeleton.animate()
+	global_transform = skeleton.torso.global_transform * Transform3D(Basis(), Vector3(0.0, size.y * 0.5, 0.0))
 
 
 ## Al empezar cada paso: escribe lo que se le pide (las teclas, un cerebro).
@@ -244,8 +256,7 @@ func _physics_process(delta: float) -> void:
 ## donde pisan (los arma la primera vez, ya en su lugar: ver StompFeet.build).
 func _kinematic_step(k: BodySettings, delta: float) -> void:
 	mover.step(delta)
-	global_transform = mover.body_place()
-	_follow_bones()
+	_place_from_bones()
 	legs.place(k, delta)
 	var places := legs.foot_transforms()
 	if stomp == null:
@@ -266,8 +277,7 @@ func put(where: Transform3D) -> void:
 		return
 	mover.put(where)
 	freeze = true
-	global_transform = mover.body_place()
-	_follow_bones()
+	_place_from_bones()
 	if stomp != null:
 		legs.replant()
 		legs.place(knobs, 0.0)

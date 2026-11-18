@@ -106,6 +106,9 @@ func _jump_mech(label: String, dive: bool) -> void:
 ## Hasta que cae y se repone (`seconds`): cuánto se hundió y si levantó polvo.
 func _land_mech(label: String, dive: bool, seconds: float) -> void:
 	var dust := _mech.mover.dust_raised
+	# La caja de verdad (el nodo de la meca, que va donde dice el torso): lo más que bajó respecto de su motor.
+	var standing_gap := _mech.global_position.y - _mech.mover.global_position.y
+	var box_sink := 0.0
 	var deepest := 0.0
 	var over := 0.0
 	var deepest_at := 0.0
@@ -116,6 +119,8 @@ func _land_mech(label: String, dive: bool, seconds: float) -> void:
 		clock += 1.0 / Engine.physics_ticks_per_second
 		_mech.crouch = dive and clock > 0.25 and not _mech.grounded
 		var y := _mech.mover.body_spring.y
+		if _mech.grounded:
+			box_sink = maxf(box_sink, standing_gap - (_mech.global_position.y - _mech.mover.global_position.y))
 		over = minf(over, y)
 		if y > deepest:
 			deepest = y
@@ -127,6 +132,7 @@ func _land_mech(label: String, dive: bool, seconds: float) -> void:
 		" · levantó polvo" if _mech.mover.dust_raised > dust else "",
 		" · volvió en %.2f s" % ((back_at - deepest_at) * Engine.time_scale) if back_at > 0.0 else "",
 		" · rebotó %.2f m para arriba" % (-over * _mech.kinematic_settings().land_sink)])
+	print("    la caja bajó %.2f m" % box_sink)
 	await _wait(0.6)
 
 

@@ -116,7 +116,9 @@ func _fit() -> void:
 	_holder.position.y = _cylinder.height * 0.5
 
 
-## DÓNDE VA LA CAJA: sobre sus piernas, mirando como él. CAYÉNDOSE, LA POSE DE REPOSO DE UNA PIEZA (la caja, las
+## DÓNDE PONE EL MOTOR EL CUERPO (lo de juego: lo que viaja por la red): sobre sus piernas, mirando como él. Las capas
+## de dibujo (caminar, el resorte de un golpe, hundirse al aterrizar) las pone encima el esqueleto, sobre sus huesos
+## (MechSkeleton.setup_layers); *hasta el 18/11/2026 las sumaba acá.* CAYÉNDOSE, LA POSE DE REPOSO DE UNA PIEZA (la caja, las
 ## piernas y los brazos como parada) se vuelca `lean` grados PARA ATRÁS, siempre de espaldas, sobre el canto del piso
 ## debajo de su espalda: con 90°, la espalda en el piso (el usuario, 15/11/2026: «la animación debería ser mucho más
 ## simple, agarrar la pose de reposo, y hacer que siempre se caiga hacia arriba (espalda al suelo)»).
@@ -127,18 +129,6 @@ func body_place() -> Transform3D:
 		var turn := Basis(upright.basis.x, deg_to_rad(lean))
 		var pivot := global_position + back
 		upright = Transform3D(turn * upright.basis, pivot + turn * (upright.origin - pivot))
-	# EL RESORTE: la inclinación de un golpe (sobre el piso de sus pies) y lo que se hunde al aterrizar.
-	var tilt := body_spring.tilt_degrees()
-	if tilt != Vector2.ZERO:
-		var sway := Basis(upright.basis.x, deg_to_rad(tilt.x)) * Basis(upright.basis.z, -deg_to_rad(tilt.y))
-		upright = Transform3D(sway * upright.basis, global_position + sway * (upright.origin - global_position))
-	upright.origin.y -= body_spring.y * body.kinematic_settings().land_sink
-	# CAMINANDO (BodyLegs.pose_offset): sube con el paso y se inclina de costado sobre el piso de la caja.
-	if body.legs != null and body.state == BalanceBody.State.STANDING:
-		var walk := body.legs.pose_offset()
-		var pivot := upright * Vector3(0.0, -body.size.y * 0.5, 0.0)
-		var roll := upright.basis * walk.basis * upright.basis.inverse()
-		upright = Transform3D(roll * upright.basis, pivot + roll * (upright.origin - pivot) + upright.basis * walk.origin)
 	return upright
 
 

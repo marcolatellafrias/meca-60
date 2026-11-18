@@ -68,11 +68,10 @@ var _tuck := 0.0
 var _gait := Gait.new()
 var _lift_yaw: Array[float] = [0.0, 0.0]
 ## LA CAJA AL CAMINAR (sube con el paso, se inclina de costado; LegSettings, «La caja al caminar»): las señales de la
-## marcha (GaitSignals), la tabla común (ProceduralBoneAnimator) y la pieza que mueve, sin dibujo: la lee el motor
-## (`pose_offset`, en KinematicMover.body_place).
+## marcha (GaitSignals). Las escribe sobre los huesos la tabla del esqueleto (MechSkeleton.setup_layers), con
+## `walk_rise` y `walk_lean`. *Hasta el paso 2b del esqueleto (18/11/2026) la tabla vivía acá y movía un nodo sin
+## dibujo que sumaba a mano el motor.*
 var signals := GaitSignals.new()
-var _pose := Node3D.new()
-var _table: ProceduralBoneAnimator = null
 var _pelvis: MeshInstance3D = null
 var _legs: Array[MechLeg] = []
 
@@ -100,11 +99,6 @@ func _ready() -> void:
 			leg.foot_bone = body.skeleton.feet[i]
 		add_child(leg)
 		_legs.append(leg)
-	_pose.name = "LaCajaAlCaminar"
-	add_child(_pose)
-	_table = ProceduralBoneAnimator.create(signals)
-	_table.register_formula(_pose, ProceduralBoneAnimator.Axis.POS_Y, _bob_now)
-	_table.register_formula(_pose, ProceduralBoneAnimator.Axis.ROT_Z, _lean_now)
 
 
 ## Los pies vuelven a plantarse debajo (al aterrizar).
@@ -164,7 +158,6 @@ func place(k: BodySettings, delta: float) -> void:
 		signals.step_progress = 0.0
 		signals.plant = 0.0
 		signals.horizontal_velocity_smooth = signals.horizontal_velocity_smooth.lerp(Vector2.ZERO, 1.0 - exp(-8.0 * delta))
-	_table.update()
 	# LA PELVIS: cuelga de la caja, inclinada como ella, mirando al promedio de los dos pies.
 	var pelvis_yaw := lerp_angle(_feet_yaw[0], _feet_yaw[1], 0.5) if standing and not tucked else yaw
 	facing_yaw = pelvis_yaw
@@ -338,20 +331,16 @@ func _gait_setup() -> void:
 	_gait.slowest = s.slowest * 2.0 / _gait.swing_part
 
 
-## LAS DOS FILAS DE LA TABLA: sube a mitad de cada paso y se hunde al pisar (m) y se inclina de costado según la velocidad de costado (rad).
-func _bob_now() -> float:
+## LO QUE HACE LA CAJA CON LOS PASOS (lo escribe la tabla del esqueleto): sube a mitad de cada paso y se hunde al pisar
+## (m), y se inclina de costado según la velocidad de costado (rad).
+func walk_rise() -> float:
 	var s := LegSettings.current
 	return (signals.step_progress * s.bob - signals.plant * s.stomp_dip) * _stride()
 
 
-func _lean_now() -> float:
+func walk_lean() -> float:
 	var side := clampf(signals.horizontal_velocity_smooth.x / maxf(signals.full_speed, 0.01), -1.0, 1.0)
 	return side * deg_to_rad(LegSettings.current.side_lean)
-
-
-## LO QUE LA CAJA SUBE Y SE INCLINA CAMINANDO, en sus ejes (la tabla; ver `signals`): lo compone el motor.
-func pose_offset() -> Transform3D:
-	return _pose.transform
 
 
 ## Si algún pie está en el aire (para las pruebas: la pausa entre pasos).

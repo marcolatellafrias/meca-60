@@ -7,13 +7,21 @@ extends Node3D
 ## árbol, y LAS PIEZAS DE ARCILLA CUELGAN DE SUS HUESOS. Lo común se apoya acá: la IK, la tabla de animación, el ragdoll.
 ##
 ## EL ÁRBOL (en el mundo, `top_level`):
-##   cintura (la raíz, `waist`: donde se apoya el torso)
+##   raíz (`root`: donde el motor pone el cuerpo, en el piso de la caja: lo de juego, lo que viaja por la red)
+##   └ cintura (`waist`: donde se apoya el torso; la sube y la baja la tabla)
 ##   ├─ pelvis ── cadera izquierda / derecha (PUNTOS FIJOS) ── muslo ── canilla ── pie
 ##   └─ torso (la caja) ── hombro izquierdo / derecho (PUNTOS FIJOS) ── brazo ── antebrazo
 ## LA PELVIS ES RÍGIDA (el usuario: «los dos huesos de la pelvis… nunca pueden quebrarse… se calculan a partir de dónde
 ## están las piernas»): UN SOLO HUESO que se mueve; las dos caderas son puntos colgados de él a una distancia fija, que
 ## nada escribe (no son huesos: no se les puede dar una pose). Lo mismo los hombros, del torso. El ragdoll toma la pelvis
 ## con sus caderas como un solo cuerpo.
+##
+## LAS CAPAS DE ANIMACIÓN SON DE LOS HUESOS (paso 2b, 18/11/2026): la tabla común (ProceduralBoneAnimator, la de los
+## personajes) escribe sobre la cintura lo vertical —subir con el paso, hundirse al pisar y al aterrizar— y sobre el
+## torso los giros —inclinarse de costado caminando y con un golpe— (`setup_layers`, `animate`). EL NODO DEL CUERPO (la
+## caja, y con él la cabina, el marco y las sillas) VA DONDE DICE EL TORSO. *Hasta ese día las sumaba a mano el motor
+## (KinematicMover.body_place), con un nodo sin dibujo para lo de caminar.* Todo eso es dibujo: se calcula en cada
+## máquina con lo que viaja (ver docs/technical/movimiento-comun.md, «Qué viaja por la red»).
 ##
 ## QUIÉN MUEVE QUÉ: las piernas (BodyLegs, MechLeg), los brazos (MechArm) y el cuerpo (el torso, la caja) escriben sus
 ## huesos; las piezas los siguen. *Paso 1 (18/11/2026): la pose la sigue calculando el código de siempre y se escribe en
@@ -23,8 +31,12 @@ extends Node3D
 ## una pieza al hueso: un cuarto de vuelta sobre X (−Z → +Y).
 const ALONG := Basis(Vector3.RIGHT, PI * 0.5)
 
+var root: Node3D = null
 var waist: Node3D = null
 var pelvis: CustomBone = null
+## La tabla de las capas (ver arriba) y el cuerpo del que lee (sus piernas, su resorte, sus perillas).
+var table: ProceduralBoneAnimator = null
+var _body: BalanceBody = null
 var torso: CustomBone = null
 ## Por lado (0 izquierdo, 1 derecho).
 var hips: Array[Node3D] = []
@@ -51,9 +63,12 @@ func put_pelvis(center: Transform3D) -> void:
 func build(measures: MechBody, size: Vector3, shoulder: Vector3) -> void:
 	name = "Esqueleto"
 	top_level = true
+	root = Node3D.new()
+	root.name = "Raíz"
+	add_child(root)
 	waist = Node3D.new()
 	waist.name = "Cintura"
-	add_child(waist)
+	root.add_child(waist)
 	var down := DOWN
 	var up := Vector3.ZERO
 	pelvis = CustomBone.create(Vector3(measures.PELVIS_SIZE.x, measures.PELVIS_SIZE.y, measures.PELVIS_SIZE.z), down)
@@ -90,6 +105,50 @@ func build(measures: MechBody, size: Vector3, shoulder: Vector3) -> void:
 		forearm.name = "Antebrazo"
 		uppers.append(upper)
 		forearms.append(forearm)
+
+
+## LAS CAPAS (ver arriba), leyendo del cuerpo `body`: sus piernas (el paso, el pisotón, la velocidad de costado: BodyLegs
+## y sus señales) y su resorte (el golpe y el aterrizaje: KinematicMover.body_spring). Se arman con las piernas ya
+## armadas.
+func setup_layers(body: BalanceBody) -> void:
+	_body = body
+	table = ProceduralBoneAnimator.create(body.legs.signals)
+	table.register_formula(waist, ProceduralBoneAnimator.Axis.POS_Y, _rise)
+	table.register_formula(torso, ProceduralBoneAnimator.Axis.ROT_Z, _roll)
+	table.register_formula(torso, ProceduralBoneAnimator.Axis.ROT_X, _pitch)
+
+
+## LAS CAPAS EN ESTE PASO, con la raíz ya puesta por el motor.
+func animate() -> void:
+	if table != null:
+		table.update()
+
+
+## LO VERTICAL (m): sube con el paso y se hunde al pisar (caminando, parada), y se hunde al aterrizar (el resorte).
+func _rise() -> float:
+	var height := 0.0
+	if _body.state == BalanceBody.State.STANDING:
+		height += _body.legs.walk_rise()
+	if _body.mover != null:
+		height -= _body.mover.body_spring.y * _body.kinematic_settings().land_sink
+	return height
+
+
+## DE COSTADO (rad): caminando de costado (parada) y la inclinación de un golpe.
+func _roll() -> float:
+	var angle := 0.0
+	if _body.state == BalanceBody.State.STANDING:
+		angle += _body.legs.walk_lean()
+	if _body.mover != null:
+		angle += deg_to_rad(_body.mover.body_spring.tilt_degrees().y)
+	return angle
+
+
+## ADELANTE Y ATRÁS (rad): sólo la inclinación de un golpe (caminando, nunca: el usuario, «desorienta»).
+func _pitch() -> float:
+	if _body.mover == null:
+		return 0.0
+	return deg_to_rad(_body.mover.body_spring.tilt_degrees().x)
 
 
 ## Un hueso que cuelga de un punto fijo (no de la punta de otro hueso).
