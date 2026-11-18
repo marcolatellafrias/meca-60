@@ -9,7 +9,9 @@ extends Node3D
 ## ── DESPIERTA SÓLO CON UNO ADENTRO (17/11/2026, el usuario: «cada vez que paso por arriba de la parcela de locomoción
 ## se me tilda») ─────────────────────────────────────────────────────────────────────────────────────────────────────
 ## La escena arma el piso y los obstáculos al toque, pero a las personas recién cuando uno entra a su parcela, DE A UNA
-## POR PASO (`_queue`), y los pasos arrancan cuando están todas. Saliendo, lo que vive (`_live`: las personas y los
+## POR CUADRO DIBUJADO (`_queue`, en `_process`), y los pasos arrancan cuando están todas. *No por paso de física: un
+## cuadro atrasado hace varios pasos para ponerse al día, y armaba varias personas juntas (unos 50 ms cada una: el tirón
+## de 300 ms al entrar, medido el 18/11/2026).* Saliendo, lo que vive (`_live`: las personas y los
 ## cubos) se duerme. *Antes las siete escenas armaban sus 42 personas en un cuadro al acercarse (2,2 s) y seguían
 ## andando todas aunque uno estuviera en otra.* Fuera del sandbox (las pruebas) nace despierta.
 
@@ -100,11 +102,13 @@ func _wait(seconds: float) -> void:
 	_steps.append({"do": Callable(), "until": Callable(), "min": seconds})
 
 
-func _physics_process(delta: float) -> void:
-	if not _awake:
-		return
-	if not _queue.is_empty():
+func _process(_delta: float) -> void:
+	if _awake and not _queue.is_empty():
 		_spawn_next()
+
+
+func _physics_process(delta: float) -> void:
+	if not _awake or not _queue.is_empty():
 		return
 	_update_tags()
 	if _steps.is_empty():

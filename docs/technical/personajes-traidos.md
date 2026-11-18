@@ -103,7 +103,12 @@ toque, pero a sus personas recién cuando uno entra a su parcela, de a una por p
 el sandbox (`tests/locomotion_walk_perf.tscn`): de las 55 personas que llegan a armarse, despiertas a la vez quedan las de
 la parcela donde uno está más las de la fila Personajes, que está al lado. Lo que sigue lento es **cada persona**:
 en el sandbox unos 5 a 8 ms por cuadro cada una (aislada, unos 2,5), y pasando los 16,7 ms la física hace varios pasos
-por cuadro y todo se multiplica. Al entrar a una parcela hay un tirón de unos 300 ms que todavía no está explicado.
+por cuadro y todo se multiplica. *Medido el 18/11/2026 (`tests/person_cost.tscn`): una persona cuesta unos 0,7 ms
+por paso —la tabla procedural 0,22, las piernas 0,13, los brazos 0,13, copiar al cuerpo que se ve 0,05; la física,
+0,07—: con 1 a 3 jugadores, 1 a 2 ms por cuadro, sin problema; lo del sandbox es la cantidad. El tirón al entrar era
+que la escena armaba una persona por paso de física y un cuadro atrasado hacía varios pasos: ahora es una por cuadro
+dibujado, y el peor cuadro bajó de unos 300 ms a unos 110 (lo que tarda armar una persona en el sandbox). La primera
+persona de toda la sesión tarda 1,2 s (el motor prepara todo la primera vez).*
 
 Pruebas:
 - `tests/people_look.tscn` (con ventana, unos 12 segundos): los seis en fila, sus cabezas de cerca, y caminando 3
