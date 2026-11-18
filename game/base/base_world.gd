@@ -6,14 +6,11 @@ extends Node3D
 ## guardadas de BaseSettings), así lo que se mueve en el F1 cambia el juego.
 ##   · Un mundo de la red (grupo `net_world`, ver CharacterSpawner): los personajes NACEN EN LA ESCLUSA (`start_point`).
 ##   · La sucursal en red (BaseSync): el estado del host y la compuerta del techo, para todos.
-##   · La meca jaula en el elevador, CONGELADA (el usuario, 18/11/2026: «está bien si queda la meca sin interacción…
-##     como algo estático»): se deja asentar y después se apaga entera (sin física propia ni scripts; choca como algo
-##     fijo), hasta que la meca vaya por la red.
+##   · La meca jaula en el elevador, por la red (BodyNet: la simula su dueño, el host o el que la maneja). AL ABRIR LA
+##     ESCLUSA SE ARMA PARA LOS QUE SON (CageShape.crew: de 1, 2 o 3 puestos), con la cuenta del host, igual en todas
+##     las máquinas. *Hasta el 19/11/2026 estuvo congelada, como decorado, mientras la meca no iba por la red.*
 
 const GROUP := "net_world"
-## Lo que se la deja asentarse antes de congelarla (s).
-const SETTLE := 1.5
-
 var _spawner: CharacterSpawner
 ## El jugador local al que ya se le dio vuelta hacia la compuerta (se vuelve a hacer si nace de nuevo).
 var _faced: Node
@@ -34,7 +31,8 @@ func _ready() -> void:
 	add_child(base)
 	BaseLayout.build_into(base)
 	BaseArchetype.place_mech(base)
-	_freeze_mech.call_deferred(base)
+	var airlock := base.find_child("Esclusa", true, false) as BaseAirlock
+	airlock.opened.connect(_crew_aboard.bind(base))
 	var characters := Node3D.new()
 	characters.name = "Personajes"
 	add_child(characters)
@@ -63,9 +61,7 @@ func start_point() -> Vector3:
 	return middle + Vector3(randf_range(-1.0, 1.0), 0.0, randf_range(-1.0, 1.0))
 
 
-func _freeze_mech(base: Node3D) -> void:
-	await get_tree().create_timer(SETTLE).timeout
-	for mech: Node in base.get_children():
-		if mech is Mech:
-			(mech as Mech).disable_mode = CollisionObject3D.DISABLE_MODE_MAKE_STATIC
-			(mech as Mech).process_mode = Node.PROCESS_MODE_DISABLED
+## LA MECA PARA LOS QUE SON (el paso 6 de flujo-de-partida): de 1, 2 o 3 puestos (más de 3 jugadores, la de 3).
+func _crew_aboard(players: int, base: Node3D) -> void:
+	CageShape.crew = clampi(players, 1, 3) - 1
+	BaseArchetype.place_mech(base)

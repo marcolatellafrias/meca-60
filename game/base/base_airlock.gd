@@ -25,6 +25,10 @@ const SEALED := "CERRADA"
 const RED := Color(1.0, 0.18, 0.12)
 const GREEN := Color(0.25, 1.0, 0.35)
 
+## Se abrió la compuerta de adelante y empezó la partida, con `players` jugadores (los que había al abrirla, contados
+## en el host). Lo escucha BaseWorld para armar la meca para los que son.
+signal opened(players: int)
+
 ## Si todavía se puede abrir (no se abrió nunca, o se rearmó).
 var armed := true
 var _side := 6.0
@@ -144,7 +148,7 @@ func _on_front_pressed() -> void:
 	if not armed:
 		return
 	if multiplayer.is_server():
-		_open.rpc()
+		_open.rpc(_players())
 	else:
 		_request_open.rpc_id(1)
 
@@ -153,14 +157,20 @@ func _on_front_pressed() -> void:
 func _request_open() -> void:
 	# abre sólo el capitán (el host, por ahora); un pedido de otro no hace nada
 	if multiplayer.is_server() and multiplayer.get_remote_sender_id() == 1:
-		_open.rpc()
+		_open.rpc(_players())
+
+
+## Los que están (sin red, uno).
+func _players() -> int:
+	return maxi(1, SessionManager.players.size())
 
 
 @rpc("authority", "call_local", "reliable")
-func _open() -> void:
+func _open(players := 1) -> void:
 	if not armed:
 		return
 	armed = false
+	opened.emit(players)
 	# abrir la esclusa EMPIEZA LA PARTIDA: desde acá no se une nadie más (ver SessionManager.close_to_new_players)
 	if multiplayer.is_server():
 		SessionManager.close_to_new_players()

@@ -11,9 +11,8 @@
 - **Los guardados que usa el juego van al repositorio**, pero sólo cuando el usuario dice que ese valor va (hasta
   entonces son suyos y no se commitean). Si no están, el juego arma con los valores por defecto.
 - **El host es el capitán** y la autoridad: el estado de la sucursal vive en el host; los demás piden y el host aplica.
-- **La meca, congelada por ahora** (el usuario: «todavía la estamos modificando… está bien si queda la meca sin
-  interacción… como algo estático»): en la base es decorado quieto, sin poseer ni subirse, hasta que la sesión de la
-  meca la cierre y la sincronice.
+- **La meca va por la red** (BodyNet, de Jefes; los brazos y la energía, de Armas): en la base ya no está congelada.
+  *Hasta el 19/11/2026 fue decorado quieto («está bien si queda la meca sin interacción»), mientras no viajaba.*
 
 ## Los pasos
 1. **La escena de la base del juego** (`game/base/base_world.tscn`, `BaseWorld`): la base armada con `BaseLayout`, la
@@ -36,8 +35,9 @@
    abre la compuerta del techo en todos (`BaseSync.open_hatch`). — *Mundo*, **hecho**. Para probar con dos
    instancias: `tests/base_net_check.tscn` (`--host-local` y `--join-local`).
 5. **La meca por red**: posición, piernas, brazos, puestos. — *Meca*, cuando la cierre.
-6. **La meca armada para los que son**: al abrir la esclusa, la meca tiene los puestos de los que están. — *Meca* y
-   *Mundo*.
+6. **La meca armada para los que son**: al abrir la esclusa, el host cuenta los jugadores y en todas las máquinas la
+   meca se rearma para ellos (`CageShape.crew`: 1, 2 o 3 puestos; con más, la de 3), en `BaseWorld._crew_aboard`. —
+   *Mundo*, **hecho** (probado con dos instancias: las dos la ven para 2, en el mismo lugar).
 7. **La salida a la arena**: «salir a la arena» abre la compuerta del techo, el elevador sube y todos pasan juntos a la
    escena de la arena (el mapa de pelea con el jefe del contrato). — *Mundo*, cuando estén 5 y 8.
 8. **El jefe por red**. — *Jefes*.

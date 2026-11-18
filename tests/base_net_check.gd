@@ -5,7 +5,8 @@ extends Node3D
 ##   godot --headless res://tests/base_net_check.tscn --join-local   (otro)
 ## El host, con el otro adentro, compra un taladro, firma un contrato y aprieta el botón de la esclusa. El otro intenta
 ## firmar otro (no puede: no es el capitán) y, al final, dice lo que ve: la plata, el depósito, el contrato y si la
-## esclusa se abrió. Tienen que coincidir con el host.
+## esclusa se abrió, y la meca: para cuántos quedó armada al abrir (2, los que son) y dónde está. Tienen que coincidir
+## con el host.
 
 var _host := false
 var _world: Node
@@ -49,3 +50,8 @@ func _report(who: String) -> void:
 	var airlock := _world.get_node("Base/Plano/Esclusa") as BaseAirlock
 	print("%s: plata %d, depósito %s, contrato %d, esclusa abierta %s" % [who, state.money, str(state.depot),
 		state.contract, str(not airlock.armed)])
+	var mech := _world.get_node_or_null("Base/Meca jaula") as CageMech
+	if mech:
+		var at := mech.mover.global_position
+		print("%s: meca para %d jugadores, en (%.2f, %.2f, %.2f), dueño %d" % [who, CageShape.crew + 1, at.x, at.y, at.z,
+			mech.net.authority])
