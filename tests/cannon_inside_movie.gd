@@ -89,6 +89,7 @@ func _ready() -> void:
 		await _wait(1.4)
 		handle.use.call(false)
 		await _wait(1.5))
+	print("SONIDOS: ", MechSounds.heard)
 	get_tree().quit()
 
 

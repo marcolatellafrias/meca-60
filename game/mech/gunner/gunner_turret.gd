@@ -202,6 +202,7 @@ func _bullet(at: Transform3D, pierce: bool, power: float) -> void:
 	bullet.pierce = pierce
 	get_tree().current_scene.add_child(bullet)
 	bullet.global_transform = at
+	MechSounds.hit(self, MechSounds.MINIGUN_SHOT, self, randf_range(0.95, 1.05), 0.6)
 	GunnerFx.muzzle(at.origin, 0.12)
 
 
@@ -216,6 +217,7 @@ func shoot_missile(at: Transform3D, chase: Node3D, guided: bool, power: float) -
 
 @rpc("any_peer", "call_local", "reliable")
 func _missile(at: Transform3D, chase: NodePath, guided: bool, power: float) -> void:
+	MechSounds.hit(self, MechSounds.MISSILE_LAUNCH, self, randf_range(0.95, 1.05))
 	var missile := GunnerMissile.new()
 	missile.skip = skip()
 	missile.strength = power

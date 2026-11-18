@@ -438,6 +438,9 @@ func _hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> void:
 	if tip == null or not tip.hit(body, at, velocity):
 		EnergyBolt.lands(body, velocity * StrikeSettings.current.hit_mass * punch_strength, at, "golpe")
 	EnergyBolt.flash(get_tree().current_scene, at, strike_radius() * 1.2, Color(1.0, 0.93, 0.7))
+	var sounds_node := MechSounds.of(self)
+	if sounds_node != null:
+		sounds_node.play_at(MechSounds.STRIKE_HIT, at, 1.0, clampf(velocity.length() / 15.0, 0.3, 1.0))
 	last_hit_speed = velocity.length()
 	last_hit = body
 	if StrikeSettings.current.strikes_collide and _stops_on_hit() and not stuck and tip != null:

@@ -125,6 +125,7 @@ func _ready() -> void:
 		w.trigger(true)
 		w.trigger(false)
 		await _wait(2.0))
+	print("SONIDOS: ", MechSounds.heard)
 	get_tree().quit()
 
 

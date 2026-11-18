@@ -212,6 +212,9 @@ func _shot(spread: float, speed: float, push: float, radius: float) -> void:
 	arm.anchor.get_parent().add_child(bolt)
 	bolt.global_transform = Transform3D(from.basis * turn, from.origin)
 	EnergyBolt.flash(arm.anchor.get_parent(), from.origin, radius * 2.0, GLOW)
+	var sound: StringName = {Mode.BURST: MechSounds.CANNON_BURST, Mode.SUPER: MechSounds.CANNON_SUPER}.get(mode,
+		MechSounds.CANNON_SHOT)
+	MechSounds.hit(arm, sound, forearm)
 
 
 ## EL RETROCESO: una patada para arriba (grados por segundo) y un poco de costado.
@@ -235,6 +238,11 @@ func _beam_step(delta: float) -> void:
 	var length := from.origin.distance_to(end)
 	_beam.global_transform = Transform3D(from.basis * Basis.from_scale(Vector3(1.0, 1.0, length)), (from.origin + end) * 0.5)
 	_kick(randf_range(-6.0, 6.0))
+
+
+## SI EL RAYO ESTÁ SALIENDO (lo que se ve; ver MechSounds).
+func beaming() -> bool:
+	return _beam != null and _beam.visible
 
 
 func is_weapon() -> bool:

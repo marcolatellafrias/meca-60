@@ -75,6 +75,7 @@ func _physics_process(delta: float) -> void:
 ## EXPLOTA en `at`: lo que se ve, y el golpe a lo suelto del radio.
 func _explode(at: Vector3) -> void:
 	GunnerFx.blast(at, 1.6)
+	MechSounds.loose(MechSounds.MISSILE_BLAST, at, get_tree(), randf_range(0.9, 1.1))
 	var query := PhysicsShapeQueryParameters3D.new()
 	var ball := SphereShape3D.new()
 	ball.radius = RADIUS

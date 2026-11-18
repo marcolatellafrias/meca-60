@@ -1,7 +1,7 @@
 extends Node
 
 ## EL TALADRO Y LA SIERRA DESDE LOS MANDOS DE LA JAULA (18/11/2026; ver CageBoards._arm_use): la meca jaula con el
-## taladro a la izquierda (discreto) y la sierra a la derecha (con músculos), frente a dos blancos altos. Se agarra cada
+## taladro a la izquierda (discreto) y la sierra a la derecha (con músculos), frente a un blanco alto cada uno, puesto al frente en su turno. Se agarra cada
 ## mando y se mantiene el clic: gira y gasta energía; al soltar, el directo. Imprime lo que giraba y cuánto se movieron
 ## las cajas. Se graba:
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/giran.avi --fixed-fps 30 res://tests/spin_tips_movie.tscn
@@ -58,7 +58,7 @@ func _ready() -> void:
 		var crate := RigidBody3D.new()
 		crate.mass = 6000.0
 		Clay.solid(crate, Vector3(CRATE, TALL, CRATE), Vector3.ZERO, Clay.METAL.lerp(Color(0.7, 0.5, 0.3), 0.6))
-		crate.position = Vector3(side * 0.8, TALL * 0.5, -GAP)
+		crate.position = Vector3(side * 6.0, TALL * 0.5, -GAP)
 		add_child(crate)
 		_crates.append(crate)
 	await _wait(1.5)
@@ -69,13 +69,19 @@ func _ready() -> void:
 	await _wait(0.5)
 	var drill_arm := FoldingArmArchetype.arm_of(CageBoards.piece_of(cabin, "brazo izquierdo"))
 	var saw_arm := FoldingArmArchetype.arm_of(CageBoards.piece_of(cabin, "brazo derecho"))
-	await _use("taladro: mantener el clic", "soltar: el directo", drill_arm, -1.0)
-	await _use("sierra: mantener el clic", "soltar: el directo", saw_arm, 1.0)
+	await _use("taladro: mantener el clic", "soltar: el directo", drill_arm, -1.0, _crates[0])
+	await _use("sierra: mantener el clic", "soltar: el directo", saw_arm, 1.0, _crates[1])
+	print("SONIDOS: ", MechSounds.heard)
 	get_tree().quit()
 
 
-## Agarra el mando, mantiene 1,6 s y suelta; imprime lo que giraba y lo que se movieron las cajas de ese lado.
-func _use(holding: String, letting: String, arm: Node, side: float) -> void:
+## Pone `target` al frente, en el medio (adonde va el directo: hacia adentro); agarra el mando, mantiene 1,6 s y
+## suelta; imprime lo que giraba, hasta dónde llegó y lo que se movieron los blancos.
+func _use(holding: String, letting: String, arm: Node, side: float, target: RigidBody3D) -> void:
+	target.global_transform = Transform3D(Basis(), _mech.global_position * Vector3(1, 0, 1) + Vector3(0.0, TALL * 0.5, -GAP))
+	target.linear_velocity = Vector3.ZERO
+	target.angular_velocity = Vector3.ZERO
+	await _wait(0.3)
 	var before := _spots()
 	arm.enter_mode()
 	_title.text = holding
@@ -110,8 +116,8 @@ func _use(holding: String, letting: String, arm: Node, side: float) -> void:
 	var moved := 0.0
 	for i in _crates.size():
 		moved = maxf(moved, (after[i] - before[i]).length())
-	print("%-28s giraba %.2f · lo tiró %s · llega a %.2f m al frente (%.2f de costado, %.2f de alto) · la caja que más se movió: %.2f m"
-		% [holding, spin, thrown, far, across, high, moved])
+	print("%-28s giraba %.2f · lo tiró %s · llega a %.2f m al frente (%.2f de costado, %.2f de alto) · la caja que más se movió: %.2f m · pegó a %.1f m/s"
+		% [holding, spin, thrown, far, across, high, moved, tip.arm.last_hit_speed if tip != null else -1.0])
 
 
 func _spots() -> Array[Vector3]:

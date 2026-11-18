@@ -127,6 +127,8 @@ func _weapon_button(weapon: Weapon) -> void:
 		# La segunda apretada: en la zona, listo y más fuerte; fuera, trabada.
 		if not reload_jammed and needle >= ZONE.x and needle <= ZONE.y:
 			_finish_reload(GOOD_STRENGTH)
+			if turret != null:
+				MechSounds.hit(turret, MechSounds.RELOAD_GOOD, turret)
 		else:
 			reload_jammed = true
 		return

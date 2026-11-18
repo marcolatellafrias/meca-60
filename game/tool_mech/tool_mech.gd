@@ -38,6 +38,8 @@ func _ready() -> void:
 	add_child(energy)
 	shield.energy = energy
 	add_child(shield)
+	# SUS SONIDOS (MechSounds): lo que depende del estado lo mira cada paso desde que nace.
+	MechSounds.of(self)
 	super()
 
 

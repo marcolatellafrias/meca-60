@@ -55,6 +55,9 @@ func _physics_process(delta: float) -> void:
 func stopped(at := Vector3.INF) -> void:
 	if at.is_finite() and is_inside_tree():
 		EnergyBolt.flash(get_tree().current_scene, at, 0.5, FLASH)
+		var sounds_node := MechSounds.of(self)
+		if sounds_node != null:
+			sounds_node.play_at(MechSounds.SHIELD_BLOCK, at)
 	if on and _since <= PARRY and not _refunded and energy != null:
 		_refunded = true
 		energy.level = minf(energy.level + START_COST, 1.0)

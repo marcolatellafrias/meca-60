@@ -57,6 +57,7 @@ func strike() -> bool:
 	_strike_spin = spin
 	if not arm.punch(MechArm.Punch.STRAIGHT):
 		return false
+	MechSounds.hit(arm, MechSounds.SPIN_STRIKE, forearm, 0.8 + 0.4 * spin)
 	spin *= 0.3
 	return true
 
