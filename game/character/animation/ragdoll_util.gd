@@ -72,7 +72,19 @@ static func create(bones_util: CustomBonesUtil, skel_rb_node: Node3D, joints_nod
 	ru._joints_node  = joints_node
 	ru._bones_util   = bones_util
 	ru._build_bodies(bones_util)
+	ru._set_in_world(false)
 	return ru
+
+
+## ── DE PIE, LOS HUESOS NO ESTÁN EN LA FÍSICA (17/11/2026) ─────────────────────────────────────────────────────────
+## Los cuerpos existen siempre (la red, el dibujo y el levantarse los leen), pero sólo entran a la física al tumbarlo
+## (`activate`) y salen al terminar de levantarse (`_finish_recovery`): de pie no hacen nada y el motor los recorría en
+## cada paso —con la fila Locomoción entera, 846 cuerpos, unos 13 ms por cuadro—. Fuera de la física quiere decir
+## apagados (un cuerpo apagado sale del mundo de física; ver CollisionObject3D.disable_mode).
+func _set_in_world(on: bool) -> void:
+	for body: RigidBody3D in _bodies.values():
+		if is_instance_valid(body):
+			body.process_mode = Node.PROCESS_MODE_INHERIT if on else Node.PROCESS_MODE_DISABLED
 
 func _build_bodies(bu: CustomBonesUtil) -> void:
 	var all_bones: Array = [
@@ -259,6 +271,7 @@ func activate(char_rb: CharacterRigidBody3D, skeleton_root: CustomBone, trip := 
 		_recovering_char_rb = null
 		_recovery_start_transforms.clear()
 
+	_set_in_world(true)
 	is_active      = true
 	_char_rid      = char_rb.get_rid()
 	_char_rb       = char_rb
@@ -830,6 +843,7 @@ func _finish_recovery() -> void:
 			_recovering_char_rb.freeze = false
 
 	_recovering_char_rb = null
+	_set_in_world(false)
 
 func cleanup() -> void:
 	follow_frame(null)
