@@ -235,3 +235,7 @@ func _beam_step(delta: float) -> void:
 	var length := from.origin.distance_to(end)
 	_beam.global_transform = Transform3D(from.basis * Basis.from_scale(Vector3(1.0, 1.0, length)), (from.origin + end) * 0.5)
 	_kick(randf_range(-6.0, 6.0))
+
+
+func is_weapon() -> bool:
+	return true

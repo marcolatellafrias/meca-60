@@ -60,6 +60,9 @@ var _has_last := false
 ## piezas van de un salto a la pose (ver `_snap`).
 var _last_shoulder := Vector3.ZERO
 
+## Con qué choca lo que golpea (ver StrikeSettings): lo fijo del mundo (paredes, el cuerpo de un jefe) y lo suelto (la
+## caja donde se le pega a un jefe).
+const SOLID_MASK := 1 | PhysicsLayers.FIXED
 ## Lo más rápido que se le pide girar a una pieza por seguir la pose (rad/s): un salto de la IK no es una velocidad.
 const FOLLOW_MOST := 40.0
 
@@ -84,17 +87,26 @@ func _ready() -> void:
 	_dress(upper, forearm)
 	Clay.shape_box(forearm, Vector3(MechHand.PALM.y, MechHand.PALM.x * 2.2, MechHand.length() * 0.8) * measures.thick,
 		Vector3(0, 0, -forearm_length() * 0.5 - MechHand.length() * measures.thick * 0.4))
+	# LO QUE CHOCA (ver StrikeSettings): sólo lo que golpea —el puño (la caja de recién) y lo de la punta—; el brazo y el
+	# antebrazo, nunca.
+	for holder in upper.get_children():
+		if holder is CollisionShape3D:
+			(holder as CollisionShape3D).disabled = true
+	(forearm.get_child(0) as CollisionShape3D).disabled = true
+	for solid: Array in (tip.solid_shapes() if tip != null else []):
+		var holder := CollisionShape3D.new()
+		holder.shape = solid[0]
+		holder.transform = solid[1]
+		forearm.add_child(holder)
+	upper.collision_layer = 0
+	upper.collision_mask = 0
+	forearm.collision_layer = 0
 	# El hombro, una bola; el codo, una bisagra sobre su eje (el Z de la articulación).
 	var ball := PinJoint3D.new()
 	_join(ball, anchor, upper, Transform3D(Basis(), shoulder))
 	var hinge := HingeJoint3D.new()
 	_join(hinge, upper, forearm, Transform3D(Basis.looking_at(_hinge, (pose["upper"] as Transform3D).basis.z), pose["elbow"]))
 	forearm.add_collision_exception_with(anchor)
-	# QUE ATRAVIESE (ver MuscleArmSettings.pass_through): sus piezas no chocan con nada, y golpea lo que barre su punta.
-	if MuscleArmSettings.current.pass_through:
-		for piece: RigidBody3D in [upper, forearm]:
-			piece.collision_layer = 0
-			piece.collision_mask = 0
 	if not standalone:
 		return
 	_label = Label3D.new()
@@ -198,8 +210,8 @@ func _physics_process(delta: float) -> void:
 	var torque := hinge_axis * bend.dot(hinge_axis) * float(forearm.get_meta("across"))
 	forearm.apply_torque(torque)
 	upper.apply_torque(-torque)
-	if k.pass_through:
-		_strike(delta, [anchor.get_rid(), upper.get_rid(), forearm.get_rid()])
+	forearm.collision_mask = SOLID_MASK if _solid() else 0
+	_strike(delta, [anchor.get_rid(), upper.get_rid(), forearm.get_rid()])
 	# Lo que mide.
 	var hand := forearm.global_transform * Vector3(0, 0, -forearm_length() * 0.5)
 	hand_speed = (forearm.linear_velocity + forearm.angular_velocity.cross(hand - forearm.global_position)).length()
@@ -210,6 +222,20 @@ func _physics_process(delta: float) -> void:
 	_label.global_position = shoulder + Vector3(0, 5.0, 0)
 	_label.text = "%s (%s) · la mano a %.0f m/s (la última piña llegó a %.0f)\na %.1f m de donde se la pide%s" % [
 		NAMES[punching], STANCE_NAMES[stance], hand_speed, top_speed, off_target, " · TRABADO" if off_target > 1.5 else ""]
+
+
+## SI LO QUE GOLPEA CHOCA AHORA (ver StrikeSettings): chocando lo que golpea, mientras tira un golpe o siempre; y el
+## cañón, sólo si el arma también.
+func _solid() -> bool:
+	var k := StrikeSettings.current
+	if not k.strikes_collide or (tip != null and tip.is_weapon() and not k.weapon_collides):
+		return false
+	return k.collide_at_rest or punching != Punch.NONE
+
+
+## El que tiene cuerpo lo frena el choque de verdad (ver MechArm.stuck).
+func _stops_on_hit() -> bool:
+	return false
 
 
 ## LA PUSIERON EN OTRO LADO (ver `_last_shoulder`): las piezas, de un salto a `pose` y quietas. Si no, la articulación

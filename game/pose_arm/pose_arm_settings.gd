@@ -13,13 +13,5 @@ static var current := KnobsFile.load_into(PoseArmSettings.new(), SAVED) as PoseA
 ## Cuánto más rápidas van (×): armarse, pegar y volver.
 @export_range(0.2, 3.0, 0.05) var punch_speed := 1.0
 
-@export_group("Al conectar")
-## Lo que pesa el puño al pegar (kg): el impulso es esto por su velocidad. Con la caja de 50 t, un directo (unos 35 m/s)
-## le cambia la velocidad unos 5 m/s: la inclina sin tirarla.
-@export_range(500.0, 40000.0, 500.0) var hit_mass := 7000.0
-## El radio del puño que barre su camino (m, en una meca de grosor medio).
-@export_range(0.3, 4.0, 0.1) var fist_radius := 1.2
-## SE FRENA DONDE PEGA (17/11/2026, a prueba; el usuario: «que literalmente la zona de impacto colisione… pero sin
-## afectar al torso cinemático»): al conectar, el golpe se queda ahí —el puño donde estaba, el palo como estaba— hasta
-## volver. Apagado, sigue de largo y atraviesa. Vale para todos los brazos (MechArm, «El golpe»).
-@export var stops_on_hit := false
+## *Lo que pesa el puño al pegar y su radio eran de acá hasta el 18/11/2026: hoy son de todos los brazos
+## (StrikeSettings).*

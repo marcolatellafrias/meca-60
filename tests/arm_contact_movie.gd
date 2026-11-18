@@ -5,13 +5,13 @@ extends Node
 ## de cerca, no le vas a hacer tanto daño como si le pegaras de lejos justo con el rango al máximo»): la meca jaula le
 ## pega al Luchador quieto con el brazo derecho (con músculos, que atraviesa): el puño pesado con un directo y el palo
 ## con su mazazo (PoleTip.CHOP). Cada uno de las dos maneras (A: atraviesa; B: se frena donde pega, ver
-## PoseArmSettings.stops_on_hit), de cerca y al máximo del alcance, de costado y desde adentro. En pantalla, a qué
+## StrikeSettings.strikes_collide: con músculos, choca de verdad), de cerca y al máximo del alcance, de costado y desde adentro. En pantalla, a qué
 ## velocidad pegó lo que pegó. Se graba con:
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/contacto.avi --fixed-fps 30 res://tests/arm_contact_movie.tscn
 
 const AFTER := 1.0
 const TIPS := [[ArmLoadout.Tip.HEAVY_FIST, "el puño pesado, directo"], [ArmLoadout.Tip.POLE, "el palo, mazazo"]]
-const MODES := ["A. atraviesa", "B. se frena donde pega"]
+const MODES := ["A. atraviesa", "B. choca"]
 const RANGES := ["de cerca", "al máximo del alcance"]
 const VIEWS := ["de costado", "desde adentro"]
 ## Cuánto entra lo más lejano del golpe en donde se le pega, al máximo del alcance (m); y de cerca, cuánto más cerca
@@ -63,12 +63,11 @@ func _ready() -> void:
 		(found as Label3D).visible = false
 	var theirs := (_boss.get_node("Cabeza") as BrawlerBrain).target as Mech
 	theirs.put(Transform3D(Basis(), Vector3(300.0, 0.0, 300.0)))
-	MuscleArmSettings.current.pass_through = true
 	var number := 0
 	for tip: Array in TIPS:
 		var reach := await _build(tip[0])
 		for mode in MODES.size():
-			PoseArmSettings.current.stops_on_hit = mode == 1
+			StrikeSettings.current.strikes_collide = mode == 1
 			for near in RANGES.size():
 				var back := reach * CLOSE if near == 0 else 0.0  # de cerca, más adelante
 				_mech.put(Transform3D(Basis(Vector3.UP, PI), Vector3(0.0, 0.0, _hurt_front() + DEEP - reach + back)))
@@ -117,7 +116,7 @@ func _build(tip: ArmLoadout.Tip) -> float:
 	_mech.put(Transform3D(Basis(Vector3.UP, PI), Vector3(0.0, 0.0, -60.0)))
 	await _wait(1.5)
 	(_mech.cabin as CageCabin).evict(CageCabin.DRIVER)
-	PoseArmSettings.current.stops_on_hit = false
+	StrikeSettings.current.strikes_collide = false
 	var arm := _mech.arms[1]
 	var start := _mech.global_position.z
 	var most := 0.0

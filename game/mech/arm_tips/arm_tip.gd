@@ -54,6 +54,17 @@ func strike_points() -> PackedVector3Array:
 	return PackedVector3Array([forearm.global_transform * Vector3(0, 0, -arm.forearm_length() * 0.5 - MechHand.length() * k * 0.5)])
 
 
+## LO QUE CHOCA DE LA PUNTA, además del puño (ver StrikeSettings): [forma, dónde va en la pieza del antebrazo]. La de
+## siempre, nada más.
+func solid_shapes() -> Array:
+	return []
+
+
+## SI ES UN ARMA (el cañón): para StrikeSettings.weapon_collides.
+func is_weapon() -> bool:
+	return false
+
+
 ## EL GOLPE PRINCIPAL DE ESTA PUNTA, si no es una piña (puntos como MechArm.PUNCHES); vacío, la piña de siempre.
 func strike_path() -> Array:
 	return []

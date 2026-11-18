@@ -10,23 +10,28 @@ extends TunerPanel
 ## *Hasta ese día eran dos paneles, PoseArmPanel y MuscleArmPanel, y la meca jaula, que tiene uno de cada, no tenía
 ## ninguno.*
 
-enum Kind { POSE, MUSCLE }
+enum Kind { POSE, MUSCLE, STRIKE }
 
 ## *El ancho era el del panel del cubo (HoverPanel), borrado con él el 17/11/2026.*
 const PANEL_WIDTH := 420.0
-const TITLES := {Kind.POSE: "Discretos", Kind.MUSCLE: "Con músculos"}
+const TITLES := {Kind.POSE: "Discretos", Kind.MUSCLE: "Con músculos", Kind.STRIKE: "Golpes"}
 const POSE_LABELS := {
 	"punch_speed": "piñas: cuánto más rápidas (×)",
-	"hit_mass": "al conectar: lo que pesa el puño (kg)", "fist_radius": "al conectar: radio del puño (m)",
-	"stops_on_hit": "al conectar: se frena donde pega",
 }
 const MUSCLE_LABELS := {
 	"muscle_kp": "músculo: resorte (cuánto tira)", "muscle_kd": "músculo: freno",
 	"muscle_max": "músculo: fuerza tope (rad/s²)",
 	"follow": "músculo: sigue la velocidad pedida (0 no, 1 entera)",
-	"pass_through": "atraviesa y pega con la punta (al armar)",
 	"punch_speed": "piñas: cuánto más rápidas (×)",
 	"mouse_reach": "a mano: m por cada 100 px del mouse", "depth_speed": "a mano: W/S adelante y atrás (m/s)",
+}
+
+## LOS GOLPES, de todos los brazos (StrikeSettings): la pestaña de cualquier fila con brazos.
+const STRIKE_LABELS := {
+	"hit_mass": "lo que pesa lo que golpea (kg)", "fist_radius": "el radio de lo que golpea (m)",
+	"strikes_collide": "lo que golpea choca (apagado: atraviesa)",
+	"collide_at_rest": "choca también sin atacar",
+	"weapon_collides": "el cañón también choca",
 }
 
 ## Las clases de brazo de la meca de la fila, en orden.
@@ -36,7 +41,9 @@ var _state: Label = null
 
 
 func _init(with: Array[Kind] = [Kind.POSE]) -> void:
-	kinds = with
+	kinds = with.duplicate()
+	if not kinds.is_empty() and not kinds.has(Kind.STRIKE):
+		kinds.append(Kind.STRIKE)
 
 
 func setup_panel() -> void:
@@ -53,22 +60,46 @@ func sections() -> Array[Dictionary]:
 	var all: Array[Dictionary] = []
 	for kind in kinds:
 		all.append({"title": String(TITLES[kind]).to_upper(), "tab": TITLES[kind], "target": _drafts[kind],
-			"labels": POSE_LABELS if kind == Kind.POSE else MUSCLE_LABELS, "defaults": ArmsPanel._fresh(kind)})
+			"labels": ArmsPanel._labels(kind), "defaults": ArmsPanel._fresh(kind)})
 	return all
 
 
 ## ── LO DE CADA CLASE ─────────────────────────────────────────────────────────────────────────────────────────────
 
 static func _knobs(kind: Kind) -> Resource:
-	return PoseArmSettings.current if kind == Kind.POSE else MuscleArmSettings.current
+	match kind:
+		Kind.POSE:
+			return PoseArmSettings.current
+		Kind.MUSCLE:
+			return MuscleArmSettings.current
+	return StrikeSettings.current
 
 
 static func _fresh(kind: Kind) -> Resource:
-	return PoseArmSettings.new() if kind == Kind.POSE else MuscleArmSettings.new()
+	match kind:
+		Kind.POSE:
+			return PoseArmSettings.new()
+		Kind.MUSCLE:
+			return MuscleArmSettings.new()
+	return StrikeSettings.new()
 
 
 static func _path(kind: Kind) -> String:
-	return PoseArmSettings.SAVED if kind == Kind.POSE else MuscleArmSettings.SAVED
+	match kind:
+		Kind.POSE:
+			return PoseArmSettings.SAVED
+		Kind.MUSCLE:
+			return MuscleArmSettings.SAVED
+	return StrikeSettings.SAVED
+
+
+static func _labels(kind: Kind) -> Dictionary:
+	match kind:
+		Kind.POSE:
+			return POSE_LABELS
+		Kind.MUSCLE:
+			return MUSCLE_LABELS
+	return STRIKE_LABELS
 
 
 ## ── GUARDAR Y VOLVER ─────────────────────────────────────────────────────────────────────────────────────────────

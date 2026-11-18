@@ -103,7 +103,7 @@ var last_hit_speed := 0.0
 var last_hit: Node = null
 var _struck := {}
 var _strike_was := PackedVector3Array()
-## SE FRENÓ DONDE PEGÓ (ver PoseArmSettings.stops_on_hit): desde ahí y hasta volver, el puño se pide donde estaba al
+## SE FRENÓ DONDE PEGÓ (un brazo sin cuerpo, si lo que golpea choca: ver StrikeSettings): desde ahí y hasta volver, el puño se pide donde estaba al
 ## conectar (como `_moves`).
 var stuck := false
 var _stuck_at := Vector3.ZERO
@@ -411,11 +411,11 @@ func _strike(delta: float, skip: Array[RID]) -> void:
 func _hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> void:
 	_struck[body.get_instance_id()] = true
 	if tip == null or not tip.hit(body, at, velocity):
-		EnergyBolt.lands(body, velocity * PoseArmSettings.current.hit_mass * punch_strength, at, "golpe")
+		EnergyBolt.lands(body, velocity * StrikeSettings.current.hit_mass * punch_strength, at, "golpe")
 	EnergyBolt.flash(get_tree().current_scene, at, strike_radius() * 1.2, Color(1.0, 0.93, 0.7))
 	last_hit_speed = velocity.length()
 	last_hit = body
-	if PoseArmSettings.current.stops_on_hit and not stuck and tip != null:
+	if StrikeSettings.current.strikes_collide and _stops_on_hit() and not stuck and tip != null:
 		# Se queda donde está el puño ahora (el de verdad: el de músculos llega tarde a lo pedido).
 		var base := anchor.global_transform
 		var from_shoulder := base.basis.inverse() * (tip.strike_points()[0] - base * shoulder_local)
@@ -425,4 +425,9 @@ func _hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> void:
 
 ## El radio de lo que golpea (m): el del puño, a la medida de esta meca.
 func strike_radius() -> float:
-	return PoseArmSettings.current.fist_radius * measures.thick
+	return StrikeSettings.current.fist_radius * measures.thick
+
+
+## SI SE FRENA DONDE PEGA a mano (ver `stuck`): el brazo sin cuerpo; el que tiene cuerpo lo frena el choque de verdad.
+func _stops_on_hit() -> bool:
+	return true

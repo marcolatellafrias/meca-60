@@ -2,7 +2,7 @@ extends Node
 
 ## PEGARLE AL JEFE ATRAVESÁNDOLO (17/11/2026; el usuario: «que lo atraviese, pero que le pegue y mostrar que le pegó con
 ## alguna partícula… me prepares algunos videos con el primer approach solamente»): la meca jaula, con el brazo derecho
-## con músculos que ATRAVIESA (MuscleArmSettings.pass_through) y pega con lo que barre su punta (MechArm, «El golpe»),
+## con músculos que ATRAVIESA (StrikeSettings.strikes_collide apagado) y pega con lo que barre su punta (MechArm, «El golpe»),
 ## le tira al Luchador quieto las cuatro piñas, primero con el puño pesado y después con el palo, cada vez desde tres
 ## lados: de costado, desde atrás de la meca y desde adentro (donde va el que maneja). Imprime cuántas conectaron y cuánta
 ## vida le sacaron. Se graba con:
@@ -65,7 +65,7 @@ func _ready() -> void:
 	# La meca que trae el jefe, lejos: ésta es otra, con el brazo que se prueba.
 	var theirs := (_boss.get_node("Cabeza") as BrawlerBrain).target as Mech
 	theirs.put(Transform3D(Basis(), Vector3(300.0, 0.0, 300.0)))
-	MuscleArmSettings.current.pass_through = true
+	StrikeSettings.current.strikes_collide = false
 	var number := 0
 	for tip: Array in TIPS:
 		await _build(tip[0])

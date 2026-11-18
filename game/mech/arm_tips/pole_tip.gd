@@ -15,10 +15,7 @@ const POLE_RADIUS := 0.3
 ## animación del puño»; y después: «la muñeca no la quebraría, se haría solamente movimiento de brazo, con un swing»):
 ## el puño sube por encima del hombro y baja adelante, estirado. El palo va SIEMPRE FIJO EN EL PUÑO (ver `_build`): el
 ## arco lo hace el brazo. La punta del palo hace el arco más largo: es la que más rápido va.
-const CHOP := [[0.5, Vector3(-0.2, 2.6, -2.4)], [0.24, Vector3(-0.4, -4.6, -7.6)], [0.25, Vector3(-0.4, -4.6, -7.6)]]
-## LA MUÑECA, FIJA (°): el puño va inclinado hacia los dedos, como se agarra un garrote (el mango cruza la palma), así el
-## palo apunta adelante con el antebrazo apenas bajo. No se mueve nunca: puño y palo van con el antebrazo.
-const WRIST_TILT := -45.0
+const CHOP := [[0.5, Vector3(-0.2, 2.6, -2.4)], [0.24, Vector3(-0.2, -7.8, -2.8)], [0.25, Vector3(-0.2, -7.8, -2.8)]]
 ## EL CODO, EN UN PLANO PARADO (ver `_bend`): el brazo dobla como el de quien lleva un garrote, así el pulgar —y el palo—
 ## van para arriba y no cruzados delante del cuerpo; cuánto sale hacia afuera.
 const ELBOW_OUT := 0.15
@@ -34,7 +31,6 @@ func _build() -> void:
 	_mouth()
 	arm.mount_common_hand(forearm)
 	var hand := arm._hand
-	hand.basis = hand.basis * Basis(Vector3.RIGHT, deg_to_rad(WRIST_TILT))
 	hand.fist = true
 	ArmoryParts.make_heavy(hand, arm.measures.thick)
 	grip = Node3D.new()
@@ -79,6 +75,19 @@ func _bend() -> void:
 
 func strike_path() -> Array:
 	return CHOP
+
+
+## EL PALO CHOCA: un cilindro de punta a punta, donde está el palo (fijo en el puño: la muñeca no se mueve).
+func solid_shapes() -> Array:
+	if grip == null:
+		return []
+	var size := grip.global_basis.get_scale().x
+	var shape := CylinderShape3D.new()
+	shape.radius = POLE_RADIUS * size
+	shape.height = (POLE_HIGH - POLE_LOW + 0.85) * size
+	var middle := grip.global_transform * Vector3(0, (POLE_HIGH + 0.85 + POLE_LOW) * 0.5, 0)
+	var placed := Transform3D(grip.global_basis.orthonormalized(), middle)
+	return [[shape, forearm.global_transform.affine_inverse() * placed]]
 
 
 ## LA VARA, sus topes, cuatro bobinas debajo de la cabeza y dos puntas con una bola entre ellas.

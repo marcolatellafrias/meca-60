@@ -23,10 +23,7 @@ static var current := KnobsFile.load_into(MuscleArmSettings.new(), SAVED) as Mus
 ## (frena todo movimiento); 1: sigue la velocidad entera. La fuerza tope es la misma: no empuja más fuerte.
 @export_range(0.0, 1.0, 0.05) var follow := 1.0
 
-## QUE ATRAVIESE (17/11/2026, a prueba; el usuario: «que lo atraviese, pero que le pegue y mostrar que le pegó»): sus
-## piezas no chocan con nada —ni paredes ni jefes— y pega lo que barre su punta (MechArm, «El golpe»). Apagado, como
-## antes: choca y empuja con su cuerpo. Vale al armar el brazo.
-@export var pass_through := false
+## *Atravesar o no (17/11/2026) pasó a los golpes de todos los brazos (StrikeSettings) el 18/11/2026.*
 
 @export_group("Las piñas")
 ## Cuánto más rápido (o más lento) se piden las piñas: los tiempos de cada una, divididos por esto.

@@ -61,7 +61,7 @@ func strike() -> bool:
 
 func hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> bool:
 	var push := lerpf(PUSH_STILL, PUSH_FULL, _strike_spin)
-	EnergyBolt.lands(body, velocity * PoseArmSettings.current.hit_mass * push, at, _hit_name())
+	EnergyBolt.lands(body, velocity * StrikeSettings.current.hit_mass * push, at, _hit_name())
 	return true
 
 
