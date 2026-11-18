@@ -56,6 +56,9 @@ var _chase_yaw := 0.0
 var _last_upper := Basis()
 var _last_forearm := Basis()
 var _has_last := false
+## Dónde estaba el hombro el paso anterior: si saltó más que lo que se mueve una meca (la pusieron en otro lado), las
+## piezas van de un salto a la pose (ver `_snap`).
+var _last_shoulder := Vector3.ZERO
 
 ## Lo más rápido que se le pide girar a una pieza por seguir la pose (rad/s): un salto de la IK no es una velocidad.
 const FOLLOW_MOST := 40.0
@@ -87,6 +90,11 @@ func _ready() -> void:
 	var hinge := HingeJoint3D.new()
 	_join(hinge, upper, forearm, Transform3D(Basis.looking_at(_hinge, (pose["upper"] as Transform3D).basis.z), pose["elbow"]))
 	forearm.add_collision_exception_with(anchor)
+	# QUE ATRAVIESE (ver MuscleArmSettings.pass_through): sus piezas no chocan con nada, y golpea lo que barre su punta.
+	if MuscleArmSettings.current.pass_through:
+		for piece: RigidBody3D in [upper, forearm]:
+			piece.collision_layer = 0
+			piece.collision_mask = 0
 	if not standalone:
 		return
 	_label = Label3D.new()
@@ -157,6 +165,9 @@ func _physics_process(delta: float) -> void:
 	var shoulder := base * shoulder_local
 	var fist := shoulder + base.basis * _local(_wanted())
 	var pose := _pose(shoulder, fist, base.basis)
+	if _has_last and shoulder.distance_to(_last_shoulder) > JUMP:
+		_snap(pose)
+	_last_shoulder = shoulder
 	# EL HOMBRO gira el brazo, que lleva al antebrazo en la punta: su resistencia a girar de punta a punta y sobre su
 	# largo sale de dónde está el antebrazo ahora (estirado, sobre su largo casi no pesa; doblado, sí).
 	var out := forearm.global_position - shoulder
@@ -187,6 +198,8 @@ func _physics_process(delta: float) -> void:
 	var torque := hinge_axis * bend.dot(hinge_axis) * float(forearm.get_meta("across"))
 	forearm.apply_torque(torque)
 	upper.apply_torque(-torque)
+	if k.pass_through:
+		_strike(delta, [anchor.get_rid(), upper.get_rid(), forearm.get_rid()])
 	# Lo que mide.
 	var hand := forearm.global_transform * Vector3(0, 0, -forearm_length() * 0.5)
 	hand_speed = (forearm.linear_velocity + forearm.angular_velocity.cross(hand - forearm.global_position)).length()
@@ -197,6 +210,18 @@ func _physics_process(delta: float) -> void:
 	_label.global_position = shoulder + Vector3(0, 5.0, 0)
 	_label.text = "%s (%s) · la mano a %.0f m/s (la última piña llegó a %.0f)\na %.1f m de donde se la pide%s" % [
 		NAMES[punching], STANCE_NAMES[stance], hand_speed, top_speed, off_target, " · TRABADO" if off_target > 1.5 else ""]
+
+
+## LA PUSIERON EN OTRO LADO (ver `_last_shoulder`): las piezas, de un salto a `pose` y quietas. Si no, la articulación
+## del hombro las arrastraba de golpe desde donde estaban, a cientos de m/s, y el brazo quedaba revoleado (17/11/2026).
+func _snap(pose: Dictionary) -> void:
+	for pair: Array in [[upper, pose["upper"]], [forearm, pose["forearm"]]]:
+		var piece := pair[0] as RigidBody3D
+		piece.global_transform = pair[1]
+		piece.linear_velocity = Vector3.ZERO
+		piece.angular_velocity = Vector3.ZERO
+		PhysicsServer3D.body_set_state(piece.get_rid(), PhysicsServer3D.BODY_STATE_TRANSFORM, pair[1])
+	_strike_was = PackedVector3Array()
 
 
 ## LO QUE PIDE UN MÚSCULO: la aceleración de giro (rad/s², ejes del mundo) que lleva a `body` hacia `wanted` (la

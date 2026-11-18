@@ -37,6 +37,19 @@ func _build() -> void:
 	_pole()
 
 
+## LO QUE GOLPEA: el puño y el palo entero, de punta a punta, con puntos a menos de un radio uno del otro.
+func strike_points() -> PackedVector3Array:
+	var points := super()
+	if grip == null:
+		return points
+	var low := grip.global_transform * Vector3(0, POLE_LOW, 0)
+	var high := grip.global_transform * Vector3(0, POLE_HIGH + 0.85, 0)
+	var count := maxi(int(ceil(low.distance_to(high) / maxf(arm.strike_radius(), 0.05))), 1)
+	for i in count + 1:
+		points.append(low.lerp(high, float(i) / count))
+	return points
+
+
 ## Siempre cerrado: agarra el palo.
 func step(_delta: float) -> void:
 	if arm._hand != null:

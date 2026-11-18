@@ -21,6 +21,14 @@ extends Node3D
 ## LO QUE VA EN LA PUNTA (`tip`, un ArmTip) Y LA PLACA (`plated`), APARTE DE CÓMO SE MUEVE (16/11/2026, el usuario:
 ## «unificar el sistema de los brazos… qué cosas se equipan»; que cada brazo elija discreto o con músculos): el puño, el
 ## palo, el taladro, la sierra o el cañón se montan igual en un brazo discreto o en uno con músculos (ver ArmLoadout).
+## EL GOLPE, UNA SOLA REGLA PARA LOS DOS (`_strike`; 17/11/2026, el usuario: que la piña lo atraviese, «pero que le
+## pegue y mostrar que le pegó»): mientras PEGA (ver `stage`), lo que golpea de la punta (ArmTip.strike_points: el puño,
+## o el palo entero) barre su camino en el mundo desde donde estaba el paso anterior —así cuenta lo que se movió la meca:
+## una piña en pleno dash pega más fuerte—, y a cada cuerpo suelto que toca le pega una vez por piña (EnergyBolt.lands:
+## el empujón y, si es un jefe, el daño), con un destello en el punto. Lo fijo (paredes, el cuerpo del jefe) no lo frena:
+## lo atraviesa. *Hasta ese día sólo lo hacía el brazo discreto, y sin daño; el de músculos pegaba sólo por choque, y a
+## un jefe no le sacaba vida.*
+##
 ## *Hasta ese día el cañón, el taladro y el palo eran clases de brazo (CannonArm, CageCannonArm, DrillArm, PoleArm): el
 ## cañón no podía tener músculos ni el palo ser discreto, y el cañón de la jaula llevaba otra armadura que el palo.*
 
@@ -89,6 +97,13 @@ var _aimed: Array = []
 ## El eje de la bisagra del codo, en el mundo: sale del brazo y el antebrazo pedidos; con el brazo estirado no se puede
 ## calcular y queda el último.
 var _hinge := Vector3.RIGHT
+## LO QUE GOLPEA (ver `_strike`): la última piña, a qué velocidad conectó (0 si no tocó nada) y a qué; lo que ya tocó
+## en esta piña; y dónde estaban los puntos que golpean el paso anterior.
+var last_hit_speed := 0.0
+var last_hit: Node = null
+var _struck := {}
+var _strike_was := PackedVector3Array()
+var _sphere := SphereShape3D.new()
 
 
 ## Tira una piña (si no está en otra). Devuelve si la tiró.
@@ -99,6 +114,9 @@ func punch(kind: Punch) -> bool:
 	punching = kind
 	_clock = 0.0
 	_aimed = []
+	_struck.clear()
+	last_hit_speed = 0.0
+	last_hit = null
 	return true
 
 
@@ -285,3 +303,72 @@ func _dress(upper: Node3D, forearm: Node3D) -> void:
 	ArmoryParts.plate(upper, out, measures.thick, float(MechBody.BASE["UPPER_ARM"]) * 0.75)
 	if tip == null or tip.plates_forearm():
 		ArmoryParts.plate(forearm, out, measures.thick, float(MechBody.BASE["FOREARM"]) * 0.7)
+
+
+## ── EL GOLPE (ver arriba) ────────────────────────────────────────────────────────────────────────────────────────
+
+## Con qué choca lo que golpea: el mundo (la capa 1, la de los cuerpos sueltos y la caja donde se le pega a un jefe).
+const HIT_MASK := 1
+## Más que esto en un paso no es un golpe que se mueve: es la meca que reapareció (m).
+const JUMP := 30.0
+
+
+## UN PASO DEL GOLPE: los puntos que golpean de la punta barren su camino desde el paso anterior (mientras pega), y le
+## pegan a lo suelto que tocan. `skip`, lo que no se golpea (lo que lo sostiene, sus propias piezas).
+func _strike(delta: float, skip: Array[RID]) -> void:
+	var now := tip.strike_points() if tip != null else PackedVector3Array()
+	var was := _strike_was
+	_strike_was = now
+	# Pega mientras pega y mientras se queda en la punta: el brazo con músculos llega un poco después que la pose.
+	if not (stage() == Stage.STRIKE or stage() == Stage.HOLD) or was.size() != now.size() or delta <= 0.0:
+		return
+	_sphere.radius = strike_radius()
+	var query := PhysicsShapeQueryParameters3D.new()
+	query.shape = _sphere
+	query.collision_mask = HIT_MASK
+	var space := get_world_3d().direct_space_state
+	for index in now.size():
+		var motion := now[index] - was[index]
+		if motion.length() < 0.001 or motion.length() > JUMP:
+			continue
+		query.exclude = skip.duplicate()
+		# Lo que no se golpea se saltea y se sigue barriendo: el brazo atraviesa.
+		for attempt in 6:
+			query.transform = Transform3D(Basis(), was[index])
+			query.motion = motion
+			var fractions := space.cast_motion(query)
+			if fractions[1] >= 1.0:
+				break
+			query.transform = Transform3D(Basis(), was[index] + motion * fractions[1])
+			query.motion = Vector3.ZERO
+			var info := space.get_rest_info(query)
+			if info.is_empty():
+				break
+			var body := instance_from_id(int(info["collider_id"])) as RigidBody3D
+			if body != null and not _struck.has(body.get_instance_id()):
+				_hit(body, info["point"], motion / delta)
+			query.exclude = query.exclude + [info["rid"]]
+		# Y lo que ya tiene adentro donde quedó (si arrancó adentro, el barrido no lo ve).
+		query.transform = Transform3D(Basis(), now[index])
+		query.motion = Vector3.ZERO
+		for found in space.intersect_shape(query, 8):
+			var inside := found["collider"] as RigidBody3D
+			if inside != null and not _struck.has(inside.get_instance_id()):
+				_hit(inside, now[index], motion / delta)
+
+
+## LE PEGA a `body` en `at` con lo que golpea yendo a `velocity` (mundo): una vez por piña, lo que haga la punta (el
+## taladro y la sierra, ver SpinTip.hit) o el golpe de siempre (EnergyBolt.lands: el empujón, y si es un jefe, el daño),
+## y un destello donde pegó.
+func _hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> void:
+	_struck[body.get_instance_id()] = true
+	if tip == null or not tip.hit(body, at, velocity):
+		EnergyBolt.lands(body, velocity * PoseArmSettings.current.hit_mass, at, "golpe")
+	EnergyBolt.flash(get_tree().current_scene, at, strike_radius() * 1.2, Color(1.0, 0.93, 0.7))
+	last_hit_speed = velocity.length()
+	last_hit = body
+
+
+## El radio de lo que golpea (m): el del puño, a la medida de esta meca.
+func strike_radius() -> float:
+	return PoseArmSettings.current.fist_radius * measures.thick

@@ -47,7 +47,14 @@ func wanted(asked: Vector3) -> Vector3:
 	return asked
 
 
-## AL CONECTAR una piña del brazo discreto: si la punta se encarga del golpe (y no el impulso de siempre).
+## LO QUE GOLPEA DE LA PUNTA (puntos en el mundo; ver MechArm._strike). La de siempre: el medio del puño, en la punta
+## del antebrazo.
+func strike_points() -> PackedVector3Array:
+	var k := arm.measures.thick
+	return PackedVector3Array([forearm.global_transform * Vector3(0, 0, -arm.forearm_length() * 0.5 - MechHand.length() * k * 0.5)])
+
+
+## AL CONECTAR un golpe: si la punta se encarga (y no el golpe de siempre).
 func hit(_body: RigidBody3D, _at: Vector3, _velocity: Vector3) -> bool:
 	return false
 
