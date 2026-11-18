@@ -34,7 +34,7 @@ huesos… tal vez sea buena idea abstraer este sistema y reutilizarlo para la me
    el dash, 1,45 s levitando, 0,14 s en picada, y nunca caminando ni en el salto común.
    `tests/gait_movie` (el video: un cuerpo de 4 y uno de 6, arrancar, doblar, frenar, de costado, girar en el lugar,
    correr; imprime la pausa y lo que se corre un pie apoyado). *Falta: usarla en los jefes de patas (BossParts
-   «cuatro»); «recoger» (dash, aire).*
+   «cuatro»).*
 2. **Las señales** (`MotionSignals`, game/common/): lo que lee la tabla. La base común; cada cuerpo las calcula a su
    manera (los personajes, `LocomotionSignals`, de sus dos pies; los de patas, `GaitSignals`, de su marcha: el arco del
    paso, la velocidad en sus ejes suavizada). Normalizadas por el largo de pierna. **Hecho.**
