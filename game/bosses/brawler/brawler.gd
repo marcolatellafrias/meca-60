@@ -332,12 +332,12 @@ func _place_upper() -> void:
 		global_position + Vector3.UP * (BrawlerBody.HIP - body_spring.y * LAND_SINK) * scale())
 
 
-## SUS PARTES PARA EL RAGDOLL AL MORIR (PartsRagdoll): el tronco es lo de abajo (las orugas); lo de arriba, una parte
-## unida a él, y cada brazo, una parte unida a lo de arriba.
+## SU ESQUELETO PARA EL RAGDOLL AL MORIR (PartsRagdoll): el tronco es lo de abajo (las orugas); lo de arriba, unido a
+## él en la cintura; cada brazo, unido a lo de arriba en su hombro.
 func ragdoll_parts(ragdoll: PartsRagdoll) -> void:
-	var top := ragdoll.add([body.upper], 0)
+	var top := ragdoll.add([body.upper], 0, global_position + Vector3.UP * BrawlerBody.HIP * scale())
 	for shoulder in body.shoulders:
-		ragdoll.add([shoulder], top)
+		ragdoll.add([shoulder], top, shoulder.global_position)
 
 
 ## Sin lo que lo metería dentro de `block_at`: si su caja está a menos de su radio (y un poco), no avanza hacia él.

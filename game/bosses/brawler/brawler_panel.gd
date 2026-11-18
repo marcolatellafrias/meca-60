@@ -18,7 +18,8 @@ const LABELS := {
 	"punch_damage": "una piña en el cuerpo le saca", "furnace_damage": "una piña en el horno abierto le saca",
 	"punch_reference": "a esta fuerza (kg·m/s); más fuerte, más",
 	"energy_damage": "tiros y taladro: vida por 100.000 kg·m/s",
-	"hit_sway": "se inclina con un golpe (por 100.000 kg·m/s)", "energy_cap": "lo más por golpe",
+	"hit_sway": "se inclina con un golpe (por 100.000 kg·m/s)",
+	"death_push": "si lo mata, lo empuja (m/s por 100.000)", "energy_cap": "lo más por golpe",
 	"arena_radius": "radio de la arena (m; los edificios, con R)",
 }
 ## Lo de siempre de cada poder (ver BossPower); los nombres de los modos los pone `sections`.

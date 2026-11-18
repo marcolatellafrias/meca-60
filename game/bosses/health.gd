@@ -18,6 +18,10 @@ var falls_apart := true
 @export var full := 100.0
 var left := 100.0
 var last := ""
+## CÓMO LO EMPUJÓ EL ÚLTIMO GOLPE (m/s, en el mundo): lo dice quien pega. El que mata decide hacia dónde y con cuánta
+## fuerza sale el ragdoll (el usuario: «generalmente cuando revolee… va a ser porque el boss le hizo alguna habilidad que
+## lo hizo revolear en una cierta dirección con un cierto impulso… se controla en base al hit»).
+var push := Vector3.ZERO
 
 
 ## La vida de `node`, si tiene.
@@ -35,12 +39,13 @@ static func attach(node: Node, amount: float) -> Health:
 	return made
 
 
-## LE SACA `amount` por `what`. Ya sin vida, nada.
-func hurt(amount: float, what: String) -> void:
+## LE SACA `amount` por `what`, empujándolo `with_push` (m/s; ver `push`). Ya sin vida, nada.
+func hurt(amount: float, what: String, with_push := Vector3.ZERO) -> void:
 	if dead():
 		return
 	left = maxf(left - amount, 0.0)
 	last = what
+	push = with_push
 	changed.emit()
 	if dead():
 		died.emit()

@@ -1,8 +1,9 @@
 extends Node
 
-## EL RAGDOLL AL MORIR (con ventana, unos 15 segundos de video): la meca jaula y el Luchador se desarman al quedarse sin
-## vida (PartsRagdoll.fall_apart, desde Health): cada parte, un cuerpo físico unido a la que la lleva, con la velocidad
-## que traían; los grandes caen más lento. LA JAULA muere caminando; EL JEFE, quieto. Imprime cuántos pedazos, su
+## EL RAGDOLL AL MORIR (con ventana, unos 25 segundos de video): la meca jaula y el Luchador se desarman al quedarse sin
+## vida (PartsRagdoll.fall_apart, desde Health): un esqueleto de partes unidas en sus puntos, que sale como lo empujó el
+## golpe que lo mató (Health.push); los grandes caen más lento. LA JAULA: la mata un golpe fuerte de frente, un empujón
+## de costado, y muere sin empujón; EL JEFE: lo mata una piña fuerte. Imprime cuántos pedazos, su
 ## gravedad y cuánto tardan en quedarse quietos. Se graba con --write-movie:
 ##   tools/godot_ventana.sh --resolution 960x540 --write-movie C:/carpeta/ragdoll.avi --fixed-fps 30 res://tests/ragdoll_movie.tscn
 
@@ -54,32 +55,49 @@ func _ready() -> void:
 	_mech.scripted = true
 	_mech.label.visible = false
 	_brain._label.visible = false
-	_boss.put(Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(40.0, 0.0, 60.0)))
-	_mech.put(Transform3D(Basis(Vector3.UP, PI), Vector3(0.0, 0.0, 0.0)))
-	# LA JAULA: camina y muere.
-	_title.text = "la jaula muere caminando"
-	var clock := 0.0
-	while clock < 1.6:
-		_mech.move = Vector2(0.0, 1.0)
-		var at := _mech.mover.global_position
-		_look(at + Vector3.UP * 2.0, at + Vector3(14.0, 5.0, 4.0))
-		await get_tree().physics_frame
-		clock += 1.0 / Engine.physics_ticks_per_second
-	var spot := _mech.mover.global_position
-	Health.of(_mech).hurt(1000.0, "prueba")
-	await get_tree().physics_frame
-	await _watch("la jaula", spot + Vector3.UP * 1.5, spot + Vector3(14.0, 5.0, 4.0), 4.0)
-	# EL JEFE: muere quieto.
-	_title.text = "el jefe muere"
+	_boss.put(Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(60.0, 0.0, 60.0)))
+	_mech.label.visible = false
+	# LA JAULA: muere de un golpe fuerte de frente (la tira: hacia atrás y arriba), de un empujón de costado, y sin
+	# empujón (se desploma). Cada vez, una jaula nueva.
+	await _kill_mech("la jaula: la mata un golpe fuerte de frente (la tira, 16 m)", HitReaction.Kind.KNOCKDOWN,
+		Vector3.FORWARD, 16.0, Vector3(0.0, 0.0, 0.0))
+	await _kill_mech("la jaula: la mata un empujón de costado (8 m)", HitReaction.Kind.PUSH, Vector3.RIGHT, 8.0,
+		Vector3(0.0, 0.0, 30.0))
+	await _kill_mech("la jaula: muere sin empujón (se desploma)", HitReaction.Kind.FLINCH, Vector3.ZERO, 0.0,
+		Vector3(30.0, 0.0, 0.0))
+	# EL JEFE: lo mata una piña fuerte de frente.
+	_title.text = "el jefe: lo mata una piña fuerte de frente"
 	var boss_at := _boss.global_position
-	var far := Vector3(70.0, 30.0, 25.0) * Brawler.scale()
+	var far := Vector3(-20.0, 30.0, 75.0) * Brawler.scale()
 	_look(boss_at + Vector3.UP * 12.0 * Brawler.scale(), boss_at + far)
 	await _wait(0.8)
-	_boss.velocity = Vector3.ZERO
-	Health.of(_boss).hurt(100000.0, "prueba")
+	Health.of(_boss).left = 1.0
+	_brain.take_hit(400000.0, boss_at + Vector3.UP * 12.0 * Brawler.scale() + Vector3.RIGHT * Brawler.box().x * 0.5,
+		"golpe")
 	await get_tree().physics_frame
 	await _watch("el jefe", boss_at + Vector3.UP * 10.0 * Brawler.scale(), boss_at + far, 6.0)
 	get_tree().quit()
+
+
+## Una jaula nueva en `at`, mirando a −z; un golpe del jefe que la mata (HitReaction.land: le saca todo, con `kind`,
+## empujándola `distance` m hacia `away`), y los pedazos.
+func _kill_mech(label: String, kind: HitReaction.Kind, away: Vector3, distance: float, at: Vector3) -> void:
+	_title.text = label
+	var mech := CageMech.new()
+	mech.scripted = true
+	mech.position = at + Vector3(0.0, Mech.standing_height(Mech.Cabin.CAGE), 0.0)
+	add_child(mech)
+	mech.label.visible = false
+	Health.attach(mech, 100.0)
+	var eye_from := at + Vector3(16.0, 6.0, 9.0)
+	_look(at + Vector3.UP * 2.0, eye_from)
+	await _wait(1.0)
+	if kind == HitReaction.Kind.FLINCH:
+		Health.of(mech).hurt(1000.0, "prueba")
+	else:
+		HitReaction.land(mech, 1000.0, "prueba", kind, away, distance, mech.global_position)
+	await get_tree().physics_frame
+	await _watch("%s" % label, at + Vector3.UP * 1.5 + away * distance * 0.4, eye_from + away * distance * 0.4, 4.0)
 
 
 ## Mira los pedazos de `who` (los cuerpos «Pedazo» nuevos) hasta `seconds`: cuántos, su gravedad y cuándo se aquietan.
@@ -95,6 +113,9 @@ func _watch(who: String, at: Vector3, from: Vector3, seconds: float) -> void:
 		_look(at, from)
 		await get_tree().physics_frame
 		clock += 1.0 / Engine.physics_ticks_per_second
+		if OS.get_cmdline_user_args().has("--traza") and not pieces.is_empty() and int(clock * 60) % 15 == 0:
+			var core := pieces[0] as RigidBody3D
+			print("      %.2f s: tronco en %s, a %s" % [clock, core.global_position, core.linear_velocity])
 		var moving := false
 		for piece: RigidBody3D in pieces:
 			moving = moving or piece.linear_velocity.length() > 0.3

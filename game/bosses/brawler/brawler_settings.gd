@@ -68,6 +68,8 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 ## CUÁNTO SE INCLINA CON UN GOLPE (sólo dibujo, el resorte de los golpes): m/s del resorte por cada 100.000 kg·m/s.
 ## Más grande el jefe, menos (bajarlo).
 @export_range(0.0, 10.0, 0.1) var hit_sway := 1.5
+## Si un golpe lo mata, con cuánto lo empuja el ragdoll (m/s de la maqueta por cada 100.000 de fuerza).
+@export_range(0.0, 40.0, 0.5) var death_push := 6.0
 
 @export_group("Arena")
 ## EL RADIO DE LA ARENA (m; BossArena): el círculo del que no sale. El anillo del piso lo sigue al guardar; los edificios

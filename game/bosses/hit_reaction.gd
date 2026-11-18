@@ -68,9 +68,25 @@ static func land(target: Node3D, damage: float, what: String, kind: Kind, away: 
 		return false
 	var health := Health.of(target)
 	if health != null:
-		health.hurt(damage, what)
+		health.hurt(damage, what, push_velocity(target, kind, away, distance))
 	reaction.react(kind, away, distance, at)
 	return true
+
+
+## CÓMO EMPUJA UN GOLPE (m/s): el que recorre `distance` m en el piso hacia `away` (con el roce del motor; ver
+## KinematicMover.shove) y, si tira (KNOCKDOWN), el saltito. Lo que se lleva la vida (Health.push): si mata, el ragdoll
+## sale así.
+static func push_velocity(target: Node3D, kind: Kind, away: Vector3, distance: float) -> Vector3:
+	var flat := Vector3(away.x, 0.0, away.z)
+	if flat.length() < 0.01 or kind == Kind.FLINCH:
+		return Vector3.ZERO
+	var k := KinematicSettings.current
+	var body := target as BalanceBody
+	if body != null:
+		k = body.kinematic_settings()
+	var gravity := 2.0 * k.jump_height / (k.jump_time * k.jump_time)
+	var up := sqrt(2.0 * gravity * FALL_HOP) if kind == Kind.KNOCKDOWN else 0.0
+	return flat.normalized() * sqrt(2.0 * k.knock_friction * maxf(distance, 0.0)) + Vector3.UP * up
 
 
 func _ready() -> void:

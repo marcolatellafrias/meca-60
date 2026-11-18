@@ -96,13 +96,21 @@ Aparte, porque es MOVIMIENTO y no dibujo:
   con saltito y en el aire, unos 14 m en curva; contra una pared, se corta.
 - **El ragdoll al morir** (18/11/2026; el usuario: «todos… se caen con ragdoll al morir; los grandes, quizás más lento
   para que se lea la escala»): `PartsRagdoll` (game/common), para los cuerpos de piezas; los personajes siguen con el
-  suyo de huesos (RagdollUtil). Lo dispara la vida (`Health`, al morir: `falls_apart`). Cada parte del dibujo pasa a
-  ser un cuerpo físico con una caja que la envuelve, unida a la que la lleva con una articulación con límite
-  (ConeTwistJoint3D); lo que no es de ninguna parte va al tronco. Heredan la velocidad, se vuelcan hacia atrás
-  (`TOPPLE`), no chocan entre ellos y los grandes caen más lento (`gravity_for`: una jaula de 4 m, entera; el
-  Luchador, 0,63). El cuerpo vivo se apaga. Las partes: la jaula, el tronco, cada pierna en tres (muslo, canilla, pie)
-  y cada brazo; el Luchador (`Brawler.ragdoll_parts`), las orugas, lo de arriba y cada brazo. `tests/ragdoll_movie`
-  (el video): la jaula muere caminando (9 pedazos) y el jefe quieto (4). *Primera versión: no hay vuelta (para volver a
+  suyo de huesos (RagdollUtil). Lo dispara la vida (`Health`, al morir: `falls_apart`).
+  - UN ESQUELETO CONECTADO (el usuario: «todos los huesos deberían estar conectados»): cada parte es un hueso unido a su
+    padre en su punto de verdad (ConeTwistJoint3D con límite). La jaula: el tronco con SU CAJA DE VERDAD (la del cuerpo;
+    antes envolvía todo su dibujo —cabina, sillas, maniquíes— y quedaba flotando), la pelvis en la cintura, cada pierna
+    desde la pelvis (cadera, rodilla, tobillo) y cada brazo en su hombro (10 pedazos). El Luchador
+    (`Brawler.ragdoll_parts`): las orugas, lo de arriba en la cintura y cada brazo en su hombro (4).
+  - SALE COMO LO EMPUJÓ EL GOLPE QUE LO MATÓ (el usuario: «se controla en base al hit»): quien pega dice el empujón
+    (`Health.hurt(…, push)`: los ataques del jefe, `HitReaction.push_velocity`, el mismo que el retroceso; las piñas de
+    la meca al jefe, por su fuerza, `BrawlerSettings.death_push`). El ragdoll se lleva una parte (`PUSH_SHARE`,
+    `LIFT_SHARE`: con todo, rodaba 100 m) y se vuelca hacia allá (lo de arriba, más). Sin empujón, se desploma.
+  - Con roce contra el piso, algo de freno, sin chocar entre ellos; los grandes caen más lento (`gravity_for`: la
+    jaula, entera; el Luchador, 0,63). El destello del golpe se apaga antes (si no, quedaba blanco). El cuerpo vivo se
+    apaga.
+  `tests/ragdoll_movie` (el video): la jaula muerta por un golpe fuerte de frente (sale tirada unos 20 m), por un
+  empujón de costado y sin empujón; el jefe, por una piña fuerte. *Primera versión: no hay vuelta (para volver a
   pelear se rearma la parcela) y lo que viaja adentro de la jaula no se mira.*
 
 ## Lo de la jaula que no hay que pisar

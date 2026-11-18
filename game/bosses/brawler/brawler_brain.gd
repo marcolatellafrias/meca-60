@@ -452,7 +452,13 @@ func take_hit(strength: float, at: Vector3, source: String) -> void:
 	if source == "golpe":
 		var share := clampf(strength / maxf(k.punch_reference, 1.0), 0.33, 3.0)
 		damage = (k.furnace_damage if furnace else k.punch_damage) * share
-	own.hurt(damage, "%s en el horno" % source if furnace else source)
+	# Cómo lo empuja (para el ragdoll si lo mata): de donde vino hacia afuera, según la fuerza (BrawlerSettings.death_push).
+	var from_hit := boss.global_position - at
+	from_hit.y = 0.0
+	var shove := Vector3.ZERO
+	if from_hit.length() > 0.01:
+		shove = (from_hit.normalized() + Vector3.UP * 0.4) * strength / 100000.0 * k.death_push * Brawler.scale()
+	own.hurt(damage, "%s en el horno" % source if furnace else source, shove)
 	var now := Time.get_ticks_msec()
 	if source != "rayo" or now - _shown_at > 250:
 		_shown_at = now
