@@ -38,13 +38,13 @@ func title() -> String:
 
 
 func needs() -> PackedStringArray:
-	return PackedStringArray(["brazos"])
+	return PackedStringArray(["brazos", "suelo"])
 
 
 func labels() -> Dictionary:
 	return {"rip_time": "mete las manos y lo arranca en (s)", "lift_time": "aviso: la tiene arriba (s)",
 		"flight": "vuela (s)", "arc": "el arco sube (m)", "radius": "radio del golpe (m)", "stay": "queda en el piso (s)",
-		"recover": "se queda después (s)", "count": "cuántas piedras", "count_rage": "cuántas, con ira",
+		"recover": "se queda después (s)", "count": "cuántas piedras", "count_rage": "cuántas, en modo fuerte",
 		"damage": "te saca (vida)", "push": "te tira (m)"}
 
 
@@ -82,7 +82,7 @@ func act(b: BrawlerBrain, delta: float) -> void:
 				boss.pose = Brawler.Pose.THROW
 				_rock.throw(b.ground(), flight, arc, stay)
 				rocks.append(_rock)
-				for extra in (count_rage if boss.rage else count) - 1:
+				for extra in (count_rage if b.strong() else count) - 1:
 					rocks.append(_ahead(b, extra))
 				_rock = null
 				b.next(2)

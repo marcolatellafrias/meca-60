@@ -115,7 +115,8 @@ func blow(from: Vector3, toward: Vector3, on: bool) -> void:
 	burning = on
 	mouth = from
 	way = Vector3(toward.x, 0.0, toward.z).normalized()
-	var aim := (way + Vector3.DOWN * 0.18).normalized()
+	# Hacia el piso, a su alcance: desde arriba (volando), baja más.
+	var aim := (way * reach + Vector3.DOWN * maxf(from.y - 1.0, reach * 0.18)).normalized()
 	_fire.global_transform = Transform3D(Basis.looking_at(aim, Vector3.UP), from)
 	_fire.emitting = on
 	for index in _cones.size():
@@ -125,7 +126,7 @@ func blow(from: Vector3, toward: Vector3, on: bool) -> void:
 			continue
 		# El cono del motor va a lo largo de su eje y (la punta angosta arriba): se acuesta con la punta en la boca, hacia
 		# adelante y un poco abajo.
-		var down := (way + Vector3.DOWN * 0.18).normalized()
+		var down := aim
 		var flicker := 1.0 + 0.08 * sin(Time.get_ticks_msec() * (0.05 + index * 0.02))
 		var basis := Basis.looking_at(down, Vector3.UP) * Basis(Vector3.RIGHT, PI * 0.5)
 		cone.global_transform = Transform3D(basis.scaled(Vector3(flicker, 1.0, flicker)), from + down * reach * 0.5)

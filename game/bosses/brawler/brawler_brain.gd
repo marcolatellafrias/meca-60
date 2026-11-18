@@ -7,8 +7,10 @@ extends Node
 ##   · RODEA: la cintura te mira siempre; las orugas se acercan si estás lejos, se alejan si estás encima y, en el medio,
 ##     andan de costado a vos. Al rato, ELIGE uno de los poderes tildados que tengan tu distancia a tiro (los «sólo con
 ##     ira», si tiene ira), al azar (la L de la parcela deja uno solo).
-##   · CON IRA (por tiempos: BrawlerSettings), ENCADENA: al terminar un ataque, a veces sigue con otro sin rodearte. Lo
-##     demás de la ira lo dice cada poder (sus variantes «con ira»).
+##   · LOS MODOS (BossMode, de BrawlerSettings: la ira, el vuelo…): entra en uno cada tanto tiempo tranquilo o cuando su
+##     vida baja, y sale cuando se le termina; siempre mientras rodea. El modo dice cuánto más rápido anda, si ENCADENA
+##     (al terminar un ataque, a veces sigue con otro sin rodearte), si los poderes usan sus variantes fuertes, si VUELA
+##     (y entonces va para cualquier lado), a qué distancia rodea y si se ve con ira. Cada poder dice en qué modos se usa.
 ##   · LO COMÚN A LOS PODERES: el blanco (dónde está, su ancho y su alto), los golpes (`strike`, por HitReaction), si
 ##     un punto lo toca (`touches_target`), manejar las orugas (`face`, `error_to`) y los tiempos (`step`, `clock`,
 ##     `next`, `finish`).
@@ -25,8 +27,8 @@ static var moves := -1
 const KEEP := Vector2(45.0, 80.0)
 ## Rodeando: cuánto (s, entre los dos).
 const STALK_TIME := Vector2(2.0, 4.0)
-## Con ira, cuántos ataques encadena como mucho seguidos (además del primero).
-const RAGE_CHAIN_MAX := 2
+## Cuántos ataques encadena como mucho seguidos (además del primero).
+const CHAIN_MAX := 2
 ## Las piñas: a cuánto del horno cuentan en él (m), y a cuánto de su caja en el cuerpo.
 const FURNACE_REACH := 5.0
 const BODY_REACH := 3.0
@@ -44,6 +46,9 @@ var current: BossPower = null
 var stage := ""
 ## Sus poderes (copias de los de BrawlerSettings: ver BossPower), en el orden de Act (sin STALK).
 var powers: Array[BossPower] = []
+## Sus modos (los de BrawlerSettings) y en cuál está (-1, tranquilo).
+var modes: Array[BossMode] = []
+var mode := -1
 ## Las piñas que recibió en el cuerpo y en el horno (para mirar).
 var body_hits := 0
 var furnace_hits := 0
@@ -60,9 +65,12 @@ var _side := 1.0
 var _stalk_time := 3.0
 var _punched := {}
 var _label: Label3D = null
-var _rage_clock := 0.0
+var _mode_clock := 0.0
+var _calm_clocks: Array[float] = []
+var _phases_spent := {}
 var _chain := 0
 var _shown_at := 0
+var _shapes_were := []
 
 
 ## Los nombres para la L: todos, y cada poder solo.
@@ -90,6 +98,7 @@ func _ready() -> void:
 ## SUS PODERES, de las perillas guardadas: la primera vez, copias; después (el panel guardó), las perillas nuevas pasan
 ## a las copias (lo que llevan peleando, no).
 func refresh_powers(fresh := false) -> void:
+	modes = BrawlerSettings.current.modes()
 	var defs := BrawlerSettings.current.powers()
 	if fresh or powers.size() != defs.size():
 		powers.clear()
@@ -132,7 +141,7 @@ func _physics_process(delta: float) -> void:
 		return
 	if stage in ["quieto", "derrotado", "ganó"]:
 		_begin(Act.STALK)
-	_rage_cycle(delta)
+	_mode_cycle(delta)
 	clock += delta
 	boss.aim_yaw = yaw_to_target()
 	if current == null:
@@ -147,9 +156,13 @@ func _stalk() -> void:
 	var gap := distance()
 	var toward := to_target().normalized()
 	var way := toward
-	if gap < KEEP.x:
+	var keep := KEEP
+	var now := mode_now()
+	if now != null and now.keep_to > 0.0:
+		keep = Vector2(now.keep_from, now.keep_to)
+	if gap < keep.x:
 		way = -toward
-	elif gap < KEEP.y:
+	elif gap < keep.y:
 		way = toward.rotated(Vector3.UP, _side * deg_to_rad(70.0))
 	drive(way, 0.8)
 	if clock < _stalk_time:
@@ -165,8 +178,8 @@ func _can() -> Array[Act]:
 	var can: Array[Act] = []
 	for index in powers.size():
 		var each := powers[index]
-		var chosen := moves == index if moves >= 0 else each.on and (boss.rage or not each.rage_only)
-		if chosen and each.ready_at(gap) and Brawler.lacks(each.needs()).is_empty():
+		var chosen := moves == index if moves >= 0 else each.used_in(mode)
+		if chosen and each.ready_at(gap) and boss.lacks_now(each.needs()).is_empty():
 			can.append((index + 1) as Act)
 	return can
 
@@ -213,6 +226,32 @@ func touches_target(point: Vector3, point_radius: float) -> bool:
 		and point.y < at.y + _target_height() + point_radius
 
 
+## PRENDE LAS ZONAS DE GOLPE de las piezas `parts` del cuerpo (Brawler.hit_shapes) en este paso: si alguna toca al
+## blanco (barriendo desde donde estaba el paso anterior; `grow`: el radio, tantas veces), le pega: `damage` por
+## `what`, la reacción `kind`, empujado `push_distance` m hacia `away`. UNA VEZ por ataque (`hit_once`; si no entró,
+## puede entrar después). El poder la llama en cada paso mientras dura su golpe. Devuelve si pegó ahora.
+func hit_with(parts: Array, grow: float, damage: float, what: String, kind: HitReaction.Kind, away: Vector3,
+		push_distance: float) -> bool:
+	var now := []
+	for part: String in parts:
+		now.append_array(boss.hit_shapes(part))
+	var were: Array = _shapes_were if _shapes_were.size() == now.size() else now
+	_shapes_were = now
+	if hit_once:
+		return false
+	for sub in 4:
+		var t := (sub + 1) / 4.0
+		for index in now.size():
+			var from: Vector3 = (were[index][0] as Vector3).lerp(now[index][0], t)
+			var to: Vector3 = (were[index][1] as Vector3).lerp(now[index][1], t)
+			for along in 7:
+				var point := from.lerp(to, along / 6.0)
+				if touches_target(point, float(now[index][2]) * grow):
+					hit_once = strike(damage, what, kind, away, push_distance, point)
+					return hit_once
+	return false
+
+
 func _target_height() -> float:
 	var body := target as BalanceBody
 	if body != null:
@@ -227,23 +266,68 @@ func _block() -> void:
 	boss.block_radius = half_width() if free else 0.0
 
 
-## LA IRA, POR TIEMPOS: tranquilo `rage_calm` s, con ira `rage_last` s, y así (con su sonido al cambiar).
-func _rage_cycle(delta: float) -> void:
-	var k := BrawlerSettings.current
-	if k.rage_calm <= 0.0:
+## EL MODO DE AHORA (null, tranquilo).
+func mode_now() -> BossMode:
+	return modes[mode] if mode >= 0 and mode < modes.size() else null
+
+
+## Si los poderes usan sus variantes fuertes (lo dice el modo).
+func strong() -> bool:
+	var now := mode_now()
+	return now != null and now.strong
+
+
+## ENTRA EN EL MODO `which` (-1, vuelve a tranquilo): lo que cambia en el cuerpo, y su sonido.
+func enter_mode(which: int) -> void:
+	if which == mode:
 		return
-	_rage_clock += delta
-	var angry := boss.rage
-	if (not angry and _rage_clock >= k.rage_calm) or (angry and _rage_clock >= k.rage_last):
-		_rage_clock = 0.0
-		boss.rage = not angry
+	mode = which
+	_mode_clock = 0.0
+	var now := mode_now()
+	var angry := now != null and now.fury_look
+	if angry != boss.rage:
 		var at := boss.global_position + Vector3.UP * Brawler.box().y
-		BossSounds.play(BossSounds.Kind.RAGE_ON if boss.rage else BossSounds.Kind.RAGE_OFF, at, world())
+		BossSounds.play(BossSounds.Kind.RAGE_ON if angry else BossSounds.Kind.RAGE_OFF, at, world())
+	boss.rage = angry
+	boss.hurry = now.hurry if now != null else 1.0
+	boss.fly_height = now.fly_height if now != null else 0.0
+	boss.go = Vector3.ZERO
 
 
-## LAS ORUGAS HACIA `way` (de costado): giran hacia ahí y, si ya miran más o menos para ahí, andan (a `push`).
+## LOS MODOS, MIENTRAS RODEA: tranquilo, entra en el primero al que le llegó la hora (cada tanto tiempo tranquilo) o
+## la vida (una vez); en un modo, sale cuando se le termina.
+func _mode_cycle(delta: float) -> void:
+	if _calm_clocks.size() != modes.size():
+		_calm_clocks.resize(modes.size())
+		_calm_clocks.fill(0.0)
+	var now := mode_now()
+	if now != null:
+		_mode_clock += delta
+		if current == null and (not now.on or (now.lasts > 0.0 and _mode_clock >= now.lasts)):
+			enter_mode(-1)
+		return
+	var own := Health.of(boss)
+	for index in modes.size():
+		var each := modes[index]
+		if not each.on:
+			continue
+		_calm_clocks[index] += delta
+		var by_time := each.every > 0.0 and _calm_clocks[index] >= each.every
+		var by_health := each.below_health > 0.0 and own != null and own.share() < each.below_health \
+			and not _phases_spent.has(index)
+		if current == null and (by_time or by_health):
+			_calm_clocks[index] = 0.0
+			if by_health:
+				_phases_spent[index] = true
+			enter_mode(index)
+			return
+
+
+## HACIA `way` (de costado), a `push` de su velocidad: con las orugas, giran hacia ahí y, si ya miran más o menos para
+## ahí, andan; volando (o de patas), va derecho para ahí (`go`) y las orugas sólo giran.
 func drive(way: Vector3, push: float) -> void:
 	var error := error_to(way)
+	boss.go = way * push
 	boss.move = Vector2(clampf(-error * 2.0, -1.0, 1.0), push if absf(error) < 0.6 else 0.15)
 
 
@@ -253,9 +337,10 @@ func error_to(way: Vector3) -> float:
 
 
 func _begin(which: Act) -> void:
-	# CON IRA, ENCADENA: en vez de volver a rodear, a veces sigue con otro ataque.
-	if which == Act.STALK and act != Act.STALK and boss.rage and _chain < RAGE_CHAIN_MAX \
-			and random.randf() < BrawlerSettings.current.rage_chain:
+	# ENCADENA (si el modo lo dice): en vez de volver a rodear, a veces sigue con otro ataque.
+	var now := mode_now()
+	if which == Act.STALK and act != Act.STALK and now != null and _chain < CHAIN_MAX \
+			and random.randf() < now.chain:
 		var can := _can()
 		if not can.is_empty():
 			_chain += 1
@@ -269,6 +354,7 @@ func _begin(which: Act) -> void:
 	clock = 0.0
 	step = 0
 	hit_once = false
+	_shapes_were = []
 	boss.rush(0.0)
 	boss.spin = 0.0
 	boss.pose = Brawler.Pose.REST
@@ -420,9 +506,11 @@ func _still() -> void:
 ## EL LETRERO: qué hace y, de cada poder, cuántas veces lo usó y cuántas te pegó.
 func _show() -> void:
 	var head := stage if awake or stage == "derrotado" else "quieto (J lo despierta)"
+	if mode_now() != null:
+		head += " · " + mode_now().title.to_upper()
 	var lines := PackedStringArray([head])
 	for each in powers:
-		if each.on or each.uses > 0:
+		if each.used() or each.uses > 0:
 			lines.append("%s %d · te pegó %d" % [each.title(), each.uses, each.hits])
 	_label.text = "\n".join(lines)
 	_label.position = Vector3.UP * (Brawler.box().y + 12.0)

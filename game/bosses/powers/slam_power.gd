@@ -40,13 +40,13 @@ func title() -> String:
 
 
 func needs() -> PackedStringArray:
-	return PackedStringArray(["brazos"])
+	return PackedStringArray(["brazos", "suelo"])
 
 
 func labels() -> Dictionary:
 	return {"windup": "aviso: los brazos arriba (s)", "recover": "se queda después (s)",
 		"wave_speed": "la onda corre a (m/s)", "wave_reach": "llega hasta (m)", "wave_width": "ancho (m)",
-		"count": "cuántas ondas", "count_rage": "cuántas, con ira", "fan": "abiertas entre sí (°)",
+		"count": "cuántas ondas", "count_rage": "cuántas, en modo fuerte", "fan": "abiertas entre sí (°)",
 		"damage": "te saca (vida)", "push": "te tira (m)"}
 
 
@@ -59,7 +59,7 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 			b.stage = "golpe al piso: levanta los brazos"
 			boss.pose = Brawler.Pose.SLAM_READY
 			b.face()
-			var wanted := count_rage if boss.rage else count
+			var wanted := count_rage if b.strong() else count
 			while _aiming.size() < wanted:
 				var wave := BrawlerWave.new()
 				wave.name = "Onda"
@@ -78,11 +78,8 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 			b.stage = "¡golpe al piso!"
 			boss.move = Vector2.ZERO
 			# LOS PUÑOS: si estás justo adelante, te pegan ellos (derriba).
-			for fist in boss.body.fists():
-				if not b.hit_once and b.touches_target(fist, boss.fist() * 1.5):
-					b.hit_once = b.strike(damage, "los puños al piso", HitReaction.Kind.KNOCKDOWN, b.to_target(),
-						push, fist)
-					hits += int(b.hit_once)
+			hits += int(b.hit_with(["puños"], 2.0, damage, "los puños al piso", HitReaction.Kind.KNOCKDOWN,
+				b.to_target(), push))
 			if b.clock >= FALL:
 				for wave in _aiming:
 					wave.launch(wave_speed)

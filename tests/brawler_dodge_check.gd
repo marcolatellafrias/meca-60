@@ -33,7 +33,7 @@ func _ready() -> void:
 	_mech.scripted = true
 	var k := BrawlerSettings.current
 	# Sin ira (viene por tiempos): cada ataque, el de siempre.
-	k.rage_calm = 0.0
+	k.rage.every = 0.0
 	# Para probar otros números sin tocar las perillas: --homing=, --tiempo=, --aviso=, --dash=, --radio= (de la piedra).
 	for argument in OS.get_cmdline_user_args():
 		var pair := argument.trim_prefix("--").split("=")

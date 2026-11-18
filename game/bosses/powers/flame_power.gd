@@ -29,7 +29,8 @@ var _left := 0
 func _init() -> void:
 	reach_from = 20.0
 	reach_to = 60.0
-	rage_only = true
+	in_calm = false
+	in_mode_2 = true
 
 
 func title() -> String:

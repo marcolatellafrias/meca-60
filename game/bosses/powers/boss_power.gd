@@ -4,9 +4,10 @@ extends Resource
 ## UN PODER DE UN JEFE (17/11/2026): un ataque que se tilda o no, con sus pocas variantes como perillas. El usuario:
 ## «un sistema robusto… más modularizados distintos tipos de ataque… que yo después pueda hacer variaciones… tildo
 ## los poderes… y después cada poder le puedo cambiar unas variantes… libertad sin tantos sliders».
-##   · LO QUE ES: sus perillas (`@export`, en el panel del jefe una pestaña por poder: tilde `on`, a qué distancia lo
-##     usa `reach_from`/`reach_to`, si es sólo con ira `rage_only`, y sus variantes). Cada jefe usa una COPIA (`duplicate`): lo que
-##     guarda mientras pelea (lo que lanzó, por dónde va) es de esa copia.
+##   · LO QUE ES: sus perillas (`@export`, en el panel del jefe una pestaña por poder: EN QUÉ MODOS LO USA —tranquilo,
+##     y cada modo del jefe (BossMode: la ira, el vuelo…)—, a qué distancia `reach_from`/`reach_to`, y sus variantes;
+##     las «fuertes» valen en los modos que lo dicen). Cada jefe usa una COPIA (`duplicate`): lo que guarda mientras
+##     pelea (lo que lanzó, por dónde va) es de esa copia.
 ##   · LO QUE NECESITA (`needs`): las piezas del cuerpo que lo hacen posible (un horno, dos brazos): si el jefe no las
 ##     tiene, no lo puede usar (el panel lo dice).
 ##   · CÓMO PELEA: `start` al elegirlo; `act` en cada paso mientras es el ataque de ahora, por tiempos (`b.step`,
@@ -14,13 +15,13 @@ extends Resource
 ##     sigue en el mundo: las ondas, las piedras); `drop` si lo cortan (lo que quedó a medio armar se va).
 ## Lo común (el blanco, los golpes, manejar, la ira) lo da la cabeza (BrawlerBrain, `b`).
 
-## Si lo usa (el tilde).
-@export var on := true
+## En qué modos lo usa: tranquilo (sin modo), y en el primero y el segundo de los modos del jefe.
+@export var in_calm := true
+@export var in_mode_1 := true
+@export var in_mode_2 := false
 ## Desde y hasta qué distancia lo usa (m, de su medio al blanco).
 @export_range(0.0, 300.0, 1.0) var reach_from := 30.0
 @export_range(0.0, 300.0, 1.0) var reach_to := 120.0
-## Sólo con ira.
-@export var rage_only := false
 
 ## Cuántas veces lo usó y cuántas pegó (para mirar).
 var uses := 0
@@ -42,7 +43,17 @@ func labels() -> Dictionary:
 	return {}
 
 
-## Si lo puede usar ahora, a `gap` metros (además del tilde y de la ira).
+## Si lo usa en el modo de índice `mode` (-1, tranquilo).
+func used_in(mode: int) -> bool:
+	return in_calm if mode < 0 else (in_mode_1 if mode == 0 else in_mode_2)
+
+
+## Si lo usa en algún modo.
+func used() -> bool:
+	return in_calm or in_mode_1 or in_mode_2
+
+
+## Si lo puede usar ahora, a `gap` metros (además de sus modos).
 func ready_at(gap: float) -> bool:
 	return gap > reach_from and gap < reach_to
 

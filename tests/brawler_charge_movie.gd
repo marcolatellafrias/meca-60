@@ -63,7 +63,7 @@ func _ready() -> void:
 	add_child(parent)
 	BrawlerArchetype.thinking = true
 	# La ira la pone el video (no por tiempos).
-	BrawlerSettings.current.rage_calm = 0.0
+	BrawlerSettings.current.rage.every = 0.0
 	var root := BrawlerArchetype.new().build(0, parent)
 	_boss = root.get_node("Luchador") as Brawler
 	_brain = _boss.get_node("Cabeza") as BrawlerBrain
@@ -81,7 +81,7 @@ func _ready() -> void:
 	if OS.get_cmdline_user_args().has("--corto"):
 		BrawlerBrain.moves = int(BrawlerBrain.Act.THROW) - 1
 		await _run(mech, 14.0)
-		_boss.rage = true
+		_brain.enter_mode(0)
 		BrawlerBrain.moves = int(BrawlerBrain.Act.FLAME) - 1
 		await _run(mech, 16.0)
 		get_tree().quit()
@@ -92,13 +92,13 @@ func _ready() -> void:
 	await _run(mech, SPINS)
 	BrawlerBrain.moves = -1
 	await _run(mech, FIGHT)
-	_boss.rage = true
+	_brain.enter_mode(0)
 	BossSounds.play(BossSounds.Kind.RAGE_ON, _boss.global_position + Vector3.UP * Brawler.box().y, _boss.get_parent())
 	BrawlerBrain.moves = int(BrawlerBrain.Act.FLAME) - 1
 	await _run(mech, FLAMES)
 	BrawlerBrain.moves = -1
 	await _run(mech, RAGE)
-	_boss.rage = false
+	_brain.enter_mode(-1)
 	# CONTRA EL BORDE.
 	var crashes := (_brain.power(BrawlerBrain.Act.CHARGE) as ChargePower).crashes
 	var arena := _boss.arena

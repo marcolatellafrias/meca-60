@@ -14,18 +14,17 @@ const LABELS := {
 	"reverse_share": "para atrás: parte de la tope", "turn_speed": "giro de las orugas (°/s)",
 	"turn_time": "el giro llega y para en (s)", "waist_speed": "giro de la cintura (°/s)",
 	"door_time": "la puerta tarda (s)", "door_angle": "se abre hasta (°)",
-	"rage_time": "cambia en (s)", "rage_speed": "más rápido (veces)",
-	"rage_calm": "tranquilo (s; 0, sólo con la tecla)", "rage_last": "con ira (s)",
-	"rage_chain": "encadena otro ataque (chance)",
+	"rage_time": "la ira: cambia de color en (s)",
 	"punch_damage": "una piña en el cuerpo le saca", "furnace_damage": "una piña en el horno abierto le saca",
 	"energy_damage": "tiros y taladro: vida por 100.000 kg·m/s", "energy_cap": "lo más por golpe",
 	"arena_radius": "radio de la arena (m; los edificios, con R)",
 }
-## Lo de siempre de cada poder (ver BossPower).
-const POWER_LABELS := {"on": "LO USA", "reach_from": "desde (m)", "reach_to": "hasta (m)",
-	"rage_only": "sólo con ira"}
-## Las pestañas del cuerpo; después, una por poder.
-const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Ira", "Golpes", "Arena"]
+## Lo de siempre de cada poder (ver BossPower); los nombres de los modos los pone `sections`.
+const POWER_LABELS := {"in_calm": "LO USA: tranquilo", "reach_from": "desde (m)", "reach_to": "hasta (m)"}
+## Las pestañas del cuerpo; después, una por modo y una por poder.
+const TABS: Array[String] = ["Orugas", "Cintura", "Horno", "Modos", "Golpes", "Arena"]
+## Las perillas de los modos, en BrawlerSettings (en el orden de los tildes de los poderes).
+const MODES: Array[String] = ["rage", "flight"]
 ## Las perillas de los poderes, en BrawlerSettings (en el orden de BrawlerBrain.Act).
 const POWERS: Array[String] = ["charge", "slam", "throw", "spin", "hook", "flame"]
 
@@ -55,17 +54,26 @@ func applied() -> void:
 			brain.refresh_powers()
 
 
-## UNA PESTAÑA POR GRUPO DEL CUERPO, Y UNA POR PODER (su tilde, a qué distancia, si es sólo con ira y sus variantes; si
-## al Luchador le falta lo que pide, lo dice).
+## UNA PESTAÑA POR GRUPO DEL CUERPO, UNA POR MODO (cuándo entra, cuánto dura, qué cambia) Y UNA POR PODER (en qué
+## modos lo usa, a qué distancia y sus variantes; si al Luchador le falta lo que pide, lo dice).
 func sections() -> Array[Dictionary]:
 	var all: Array[Dictionary] = []
 	for tab in TABS:
 		all.append({"title": tab.to_upper(), "tab": tab, "target": draft(), "labels": LABELS,
 			"include": PackedStringArray([tab]), "headers": false, "defaults": BrawlerSettings.new()})
 	var fresh_set := BrawlerSettings.new()
+	var mode_names := PackedStringArray()
+	for mode in (draft() as BrawlerSettings).modes():
+		mode_names.append(mode.title)
+	for index in MODES.size():
+		all.append({"title": "MODO: %s" % mode_names[index].to_upper(), "tab": "Modo %s" % mode_names[index],
+			"target": draft().get(MODES[index]), "labels": BossMode.LABELS, "headers": false,
+			"defaults": fresh_set.get(MODES[index])})
 	for field in POWERS:
 		var power := draft().get(field) as BossPower
 		var labels := POWER_LABELS.duplicate()
+		labels["in_mode_1"] = "LO USA: en %s" % mode_names[0]
+		labels["in_mode_2"] = "LO USA: en %s" % mode_names[1]
 		labels.merge(power.labels())
 		var missing := Brawler.lacks(power.needs())
 		var title := power.title().to_upper()

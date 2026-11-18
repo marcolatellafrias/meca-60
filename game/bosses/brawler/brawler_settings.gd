@@ -33,16 +33,14 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 @export_range(0.05, 3.0, 0.05) var door_time := 0.45
 @export_range(30.0, 150.0, 5.0) var door_angle := 110.0
 
-@export_group("Ira")
-## CON IRA: cuánto tarda en cambiar de color y prender el humo (s) y cuánto más rápido andan las orugas y gira la
-## cintura (veces). LA IRA VIENE POR TIEMPOS (15/11/2026, el usuario: «debería suceder por intervalos de tiempo»):
-## tranquilo tanto (s; 0, nunca: sólo con la tecla) y con ira tanto (s), con su sonido al cambiar.
+@export_group("Modos")
+## SUS MODOS (BossMode, 17/11/2026): tramos de la pelea con otras reglas, una pestaña por modo en el panel. LA IRA (cada
+## 40 s tranquilo, 18 s: más rápido, encadena, variantes fuertes, se ve con ira) y EL VUELO (apagado de entrada: sube
+## con sus propulsores y pelea desde arriba con lo que no pide suelo). El orden es el de los tildes de cada poder.
+## `rage_time`: cuánto tarda en cambiar de color y prender el humo (s).
 @export_range(0.1, 5.0, 0.1) var rage_time := 1.2
-@export_range(1.0, 3.0, 0.05) var rage_speed := 1.35
-@export_range(0.0, 180.0, 1.0) var rage_calm := 40.0
-@export_range(1.0, 120.0, 1.0) var rage_last := 18.0
-## Con ira: qué chance tiene de encadenar otro ataque al terminar uno (0 a 1). Lo demás de la ira, en cada poder.
-@export_range(0.0, 1.0, 0.05) var rage_chain := 0.6
+@export var rage: BossMode = BrawlerSettings.make_rage()
+@export var flight: BossMode = BrawlerSettings.make_flight()
 
 @export_group("Poderes")
 ## SUS PODERES (BossPower, 17/11/2026): cada uno con su tilde y sus variantes, una pestaña por poder en el panel. El
@@ -69,6 +67,32 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 ## EL RADIO DE LA ARENA (m; BossArena): el círculo del que no sale. El anillo del piso lo sigue al guardar; los edificios
 ## de afuera se acomodan regenerando la parcela (R).
 @export_range(60.0, 220.0, 5.0) var arena_radius := 150.0
+
+
+## Sus modos, en el orden de los tildes de los poderes (con su nombre).
+func modes() -> Array[BossMode]:
+	rage.title = "ira"
+	flight.title = "vuelo"
+	return [rage, flight]
+
+
+static func make_rage() -> BossMode:
+	return BossMode.new()
+
+
+static func make_flight() -> BossMode:
+	var mode := BossMode.new()
+	mode.on = false
+	mode.every = 60.0
+	mode.lasts = 20.0
+	mode.hurry = 1.0
+	mode.chain = 0.0
+	mode.strong = false
+	mode.fly_height = 30.0
+	mode.keep_from = 30.0
+	mode.keep_to = 55.0
+	mode.fury_look = false
+	return mode
 
 
 ## Sus poderes, en el orden de BrawlerBrain.Act.

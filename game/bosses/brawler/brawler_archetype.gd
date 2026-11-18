@@ -62,8 +62,13 @@ func keys() -> Array[SandboxKey]:
 			func(_parcel: SandboxParcel, index: int) -> void: BrawlerBrain.moves = index - 1),
 		SandboxKey.toggle(KEY_H, SandboxKey.Weight.NORMAL, "el horno abierto", func() -> bool: return _all(func(b: Brawler) -> bool: return b.furnace),
 			func(_parcel: SandboxParcel, on: bool) -> void: _each(func(b: Brawler) -> void: b.furnace = on)),
-		SandboxKey.toggle(KEY_P, SandboxKey.Weight.NORMAL, "con ira", func() -> bool: return _all(func(b: Brawler) -> bool: return b.rage),
-			func(_parcel: SandboxParcel, on: bool) -> void: _each(func(b: Brawler) -> void: b.rage = on)),
+		SandboxKey.cycle(KEY_P, SandboxKey.Weight.NORMAL, "el modo", ["tranquilo", "ira", "vuelo"],
+			func() -> int: return _mode() + 1,
+			func(_parcel: SandboxParcel, index: int) -> void:
+				for brawler in _brawlers():
+					var brain := brawler.get_node_or_null("Cabeza") as BrawlerBrain
+					if brain != null:
+						brain.enter_mode(index - 1)),
 	]
 
 
@@ -130,6 +135,15 @@ static func swap_mech(brain: BrawlerBrain) -> void:
 	brain.target = mech
 	for bars: FightBars in root.find_children("*", "FightBars", false, false):
 		bars.mech = mech
+
+
+## El modo del primer Luchador (-1, tranquilo).
+static func _mode() -> int:
+	for brawler in _brawlers():
+		var brain := brawler.get_node_or_null("Cabeza") as BrawlerBrain
+		if brain != null:
+			return brain.mode
+	return -1
 
 
 ## Los Luchadores que hay (los paneles los avisan).

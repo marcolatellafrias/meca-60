@@ -16,7 +16,7 @@ func _ready() -> void:
 	var parent := Node3D.new()
 	add_child(parent)
 	BrawlerArchetype.thinking = false
-	BrawlerSettings.current.rage_calm = 0.0
+	BrawlerSettings.current.rage.every = 0.0
 	var root := BrawlerArchetype.new().build(0, parent)
 	_boss = root.get_node("Luchador") as Brawler
 	await _wait(0.5)

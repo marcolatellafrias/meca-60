@@ -40,7 +40,7 @@ func title() -> String:
 
 
 func needs() -> PackedStringArray:
-	return PackedStringArray(["mano"])
+	return PackedStringArray(["mano", "suelo"])
 
 
 func labels() -> Dictionary:

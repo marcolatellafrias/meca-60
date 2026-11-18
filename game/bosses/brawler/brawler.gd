@@ -22,9 +22,11 @@ extends CharacterBody3D
 ## medidas de la maqueta, y el Luchador entero va a esa escala (el dibujo, su caja, su cuerpo para las mecas y el
 ## alcance de lo que sale de él: la embestida, los puños). *Del 15/11/2026: 0,6 (el usuario: «bajar un poco la escala
 ## del jefe e igualarla un poco más a la meca»).*
-## LO QUE TIENE (sus piezas, para los poderes: ver BossPower.needs): orugas que embisten, dos brazos con mano y el
-## horno en el pecho.
-const PARTS: Array[String] = ["embestir", "brazos", "mano", "horno"]
+## LO QUE TIENE (sus piezas, para los poderes: ver BossPower.needs): orugas que embisten, dos brazos con mano, el
+## horno en el pecho y propulsores para volar. «suelo» lo tiene mientras no vuela (ver `lacks_now`).
+const PARTS: Array[String] = ["embestir", "brazos", "mano", "horno", "volar", "suelo"]
+## Volando: a cuánto sube y baja (m/s, en la maqueta).
+const FLY_CLIMB := 22.0
 ## Lo que mide su caja contra lo fijo, en la maqueta (m): el ancho de las orugas, el alto y el largo.
 const BOX_BASE := Vector3(24.0, 30.0, 20.0)
 ## Cuánto cae (m/s²) si no hay piso.
@@ -69,6 +71,18 @@ var rage := false
 ## siempre), con esta rampa (s).
 var rush_speed := 0.0
 var rush_up := 0.3
+## CÓMO SE MUEVE (lo pone su cabeza, según el modo: ver BossMode):
+##   · `hurry`: cuánto más rápido anda y gira (veces).
+##   · `fly_height`: vuela a esta altura (m; 0, en el piso). Volando no usa las orugas: va PARA CUALQUIER LADO, hacia
+##     `go` (en el mundo, de largo 0 a 1), y gira igual que siempre.
+##   · `omni`: en el piso también va para cualquier lado (para un jefe de patas; el Luchador, no).
+##   · `jump(to, time, arc)`: un salto en arco hasta un punto (cualquier poder lo puede pedir); `landed_now` es cierto
+##     el paso en que cae.
+var hurry := 1.0
+var fly_height := 0.0
+var go := Vector3.ZERO
+var omni := false
+var landed_now := false
 var pose := Pose.REST
 ## EL TROMPO: la cintura gira sola a tantos °/s (positivo, a la izquierda), sin mirar a `aim_yaw`; 0, como siempre.
 var spin := 0.0
@@ -100,6 +114,14 @@ var _torso_shape: CollisionShape3D = null
 var _tracks_shape := CollisionShape3D.new()
 var _holder := CollisionShape3D.new()
 var _fitted := -1.0
+var _aloft := false
+var _drift := Vector3.ZERO
+var _jump_from := Vector3.ZERO
+var _jump_to := Vector3.ZERO
+var _jump_time := 0.0
+var _jump_clock := 0.0
+var _jump_arc := 0.0
+var _jets: CPUParticles3D = null
 var _driving := false
 var _chase_yaw := 0.0
 var _furnace_was := false
@@ -173,7 +195,7 @@ func _physics_process(delta: float) -> void:
 	if not is_equal_approx(_fitted, scale()):
 		_fit_scale()
 	_read()
-	var hurry := lerpf(1.0, k.rage_speed, fury)
+	landed_now = false
 	# LAS ORUGAS: girar y andar, cada una con su rampa.
 	var turning := _turn.step(delta, clampf(move.x, -1.0, 1.0), k.turn_time, MoveCurve.Shape.LINEAR, k.turn_time,
 		MoveCurve.Shape.LINEAR)
@@ -186,21 +208,60 @@ func _physics_process(delta: float) -> void:
 		k.brake_time if braking else k.coast_time, k.brake_shape if braking else k.coast_shape) * top
 	rotation.y = hull_yaw
 	var heading := Basis(Vector3.UP, hull_yaw) * Vector3.FORWARD
-	var fall := 0.0 if is_on_floor() else velocity.y - GRAVITY * delta
-	velocity = heading * speed + Vector3.UP * fall
 	if arena != null:
 		arena.resize(k.arena_radius)
-		velocity = arena.keep(global_position, velocity, box().x * 0.5)
-	if block_radius > 0.0:
-		velocity = _blocked(velocity)
-	move_and_slide()
+	if fly_height > 0.0:
+		_aloft = true
+	if _jump_time > 0.0:
+		# SALTANDO: el arco, sin nada más.
+		_jump_clock += delta
+		var t := clampf(_jump_clock / _jump_time, 0.0, 1.0)
+		global_position = _jump_from.lerp(_jump_to, t) + Vector3.UP * _jump_arc * 4.0 * t * (1.0 - t)
+		velocity = Vector3.ZERO
+		speed = 0.0
+		_ahead.level = 0.0
+		if t >= 1.0:
+			_jump_time = 0.0
+			landed_now = true
+	elif _aloft or omni:
+		# VOLANDO (o de patas): para cualquier lado, hacia `go`, con algo de peso.
+		var top_now := top if rushing else k.speed * hurry
+		_drift = _drift.move_toward(Vector3(go.x, 0.0, go.z).limit_length(1.0) * top_now, top_now / 0.6 * delta)
+		var rise := 0.0 if is_on_floor() else velocity.y - GRAVITY * delta
+		if _aloft:
+			var climb := FLY_CLIMB * scale()
+			rise = clampf((fly_height - global_position.y) * 2.5, -climb, climb)
+			# Bajando a tierra: hasta tocar el piso.
+			if fly_height <= 0.0:
+				rise = minf(rise, -climb * 0.25)
+		velocity = _drift + Vector3.UP * rise
+		speed = _drift.dot(heading)
+		_ahead.level = 0.0
+		floor_snap_length = 0.0 if _aloft else 0.5
+		if arena != null:
+			velocity = arena.keep(global_position, velocity, box().x * 0.5)
+		move_and_slide()
+		if _aloft and fly_height <= 0.0 and is_on_floor():
+			_aloft = false
+			_drift = Vector3.ZERO
+			landed_now = true
+	else:
+		floor_snap_length = 0.5
+		var fall := 0.0 if is_on_floor() else velocity.y - GRAVITY * delta
+		velocity = heading * speed + Vector3.UP * fall
+		if arena != null:
+			velocity = arena.keep(global_position, velocity, box().x * 0.5)
+		if block_radius > 0.0:
+			velocity = _blocked(velocity)
+		move_and_slide()
+		# Lo que de verdad avanzó: si chocó, la rampa baja hasta ahí.
+		var forward := get_real_velocity().dot(heading)
+		if absf(forward) < absf(speed) - 0.5:
+			_ahead.level = clampf(forward / maxf(top, 0.01), -1.0, 1.0)
+			speed = forward
 	if arena != null:
 		global_position = arena.hold(global_position, box().x * 0.5)
-	# Lo que de verdad avanzó: si chocó, la rampa baja hasta ahí.
-	var forward := get_real_velocity().dot(heading)
-	if absf(forward) < absf(speed) - 0.5:
-		_ahead.level = clampf(forward / maxf(top, 0.01), -1.0, 1.0)
-		speed = forward
+	_show_jets()
 	_solid.global_transform = global_transform
 	# LA CINTURA, hacia donde mira, con tope; en el trompo, gira sola.
 	var most := deg_to_rad(k.waist_speed) * hurry * delta
@@ -246,6 +307,95 @@ func _blocked(wanted: Vector3) -> Vector3:
 func rush(top: float, up := 0.3) -> void:
 	rush_speed = top
 	rush_up = up
+
+
+## SUS ZONAS DE GOLPE, POR PIEZA (17/11/2026; el usuario: «que cada componente pueda tener hitboxes y un poder activa
+## una cierta cantidad de hitboxes durante un cierto periodo»): las cápsulas de `part` ahora, en el mundo, cada una
+## [desde, hasta, radio]. Escalan con él. Un poder las prende con BrawlerBrain.hit_with mientras dura su golpe.
+##   · "cuerpo": todo el casco, de atrás a adelante (la embestida).
+##   · "puños": los dos puños. · "brazos": cada brazo, del hombro al puño. · "puntas": la punta de cada brazo.
+func hit_shapes(part: String) -> Array:
+	var shapes := []
+	var size := box()
+	var grip := fist()
+	match part:
+		"cuerpo":
+			var middle := global_position + Vector3.UP * size.y * 0.4
+			var along := heading() * maxf(size.z * 0.5 - size.x * 0.5, 0.0)
+			shapes.append([middle - along, middle + along + heading() * 0.01, size.x * 0.5])
+		"puños":
+			for point in body.fists():
+				shapes.append([point, point, grip * 0.75])
+		"brazos", "puntas":
+			var fists := body.fists()
+			for index in body.shoulders.size():
+				var from := body.shoulders[index].global_position
+				if part == "puntas":
+					from = from.lerp(fists[index], 0.9)
+				shapes.append([from, fists[index], grip * 0.8])
+	return shapes
+
+
+## Si está en el aire (volando, bajando o saltando).
+func aloft() -> bool:
+	return _aloft or _jump_time > 0.0
+
+
+## UN SALTO en arco hasta `to` (el piso), en `time` s, subiendo `arc` m. Mientras dura no hace otra cosa.
+func jump(to: Vector3, time: float, arc: float) -> void:
+	_jump_from = global_position
+	_jump_to = to
+	_jump_time = maxf(time, 0.05)
+	_jump_clock = 0.0
+	_jump_arc = arc
+
+
+## Lo que le falta AHORA de `needs`: sus piezas, y el suelo si está en el aire.
+func lacks_now(needs: PackedStringArray) -> PackedStringArray:
+	var missing := lacks(needs)
+	if aloft() and needs.has("suelo"):
+		missing.append("suelo")
+	return missing
+
+
+## LOS PROPULSORES (sólo se ven): fuego para abajo mientras está en el aire.
+func _show_jets() -> void:
+	if not _aloft and _jets == null:
+		return
+	if _jets == null:
+		_jets = CPUParticles3D.new()
+		_jets.name = "Propulsores"
+		var ball := SphereMesh.new()
+		ball.radius = 1.2
+		ball.height = 2.4
+		ball.radial_segments = 8
+		ball.rings = 4
+		var paint := StandardMaterial3D.new()
+		paint.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+		paint.vertex_color_use_as_albedo = true
+		paint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+		ball.material = paint
+		_jets.mesh = ball
+		_jets.local_coords = false
+		_jets.amount = 90
+		_jets.lifetime = 0.6
+		_jets.direction = Vector3.DOWN
+		_jets.spread = 18.0
+		_jets.initial_velocity_min = 25.0
+		_jets.initial_velocity_max = 40.0
+		_jets.gravity = Vector3.ZERO
+		_jets.emission_shape = CPUParticles3D.EMISSION_SHAPE_BOX
+		var ramp := Gradient.new()
+		ramp.set_color(0, Color(1.0, 0.9, 0.5, 0.9))
+		ramp.set_color(1, Color(1.0, 0.3, 0.05, 0.0))
+		_jets.color_ramp = ramp
+		_jets.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+		add_child(_jets)
+	var size := box()
+	_jets.emission_box_extents = Vector3(size.x * 0.4, 0.2, size.z * 0.4)
+	_jets.scale_amount_min = scale()
+	_jets.scale_amount_max = scale() * 1.8
+	_jets.emitting = _aloft
 
 
 ## Lo que le falta de `needs` (las piezas que pide un poder).
@@ -300,6 +450,10 @@ func put(where: Transform3D) -> void:
 	speed = 0.0
 	_ahead.level = 0.0
 	_turn.level = 0.0
+	_aloft = false
+	_drift = Vector3.ZERO
+	_jump_time = 0.0
+	fly_height = 0.0
 	_solid.sync_to_physics = false
 	_solid.global_transform = global_transform
 	_solid.sync_to_physics = true
