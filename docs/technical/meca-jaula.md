@@ -249,6 +249,17 @@ cuenta como libre: el maniquí se va y el jugador ocupa su silla, la de siempre.
 a ese puesto si está libre; **E** lo para. Al dejar un puesto vuelve su maniquí. Sentado, se maneja con los controles de
 su puesto (ver [[tableros]]); el artillero, todavía nada. Prueba: `tests/cage_boarding_check` (en el sandbox entero).
 
+## La tripulación cuando muere
+Al quedarse sin vida la meca se desarma (`PartsRagdoll.fall_apart`, de la sesión de Jefes): la meca viva se apaga y
+desaparece. **Los de adentro se quedan sentados donde estaban** (18/11/2026, el usuario: «podríamos hacer que salgan
+despedidos, pero por ahora vamos a dejar que se queden sentados nomás por simplicidad»). Prueba:
+`tests/crew_death_check` (el ente y los maniquíes siguen sentados, sin moverse ni errores).
+
+**Las sillas van clavadas a la meca**: cuelgan de la cabina. La que se ve con alguien sentado es una copia que cuelga de
+su cápsula (para esconderse con el cuerpo en primera persona) y se acomoda en cada cuadro en la silla. Medido el
+18/11/2026 con `tests/seat_lag_check` (caminando, en el dash y girando 90°, con maniquíes y con el ente): ni la silla, ni
+la que se ve, ni el sentado se corren de la meca. El usuario vio que se quedaban atrás; falta saber en qué situación.
+
 ## Lo que falta
 - Probar jugando los controles para 1, 2 y 3 (hoy medidos en `tests/cage_cockpit_check` y `tests/cage_crew_check`).
 - De a 2 y de a 1, dónde va el arma del artillero (la sesión de las armas). De a 1, la pantalla del propulsor.

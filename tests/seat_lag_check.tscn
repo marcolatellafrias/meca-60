@@ -1,0 +1,6 @@
+[gd_scene format=3]
+
+[ext_resource type="Script" path="res://tests/seat_lag_check.gd" id="1"]
+
+[node name="SeatLagCheck" type="Node"]
+script = ExtResource("1")
