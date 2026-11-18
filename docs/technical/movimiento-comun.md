@@ -94,7 +94,16 @@ Aparte, porque es MOVIMIENTO y no dibujo:
   escudo se iba unos 90 m: por eso el lanzallamas pegaba una sola ráfaga; ahora, quieta, las tres).* Medido en
   `tests/knock_back_movie` (el video): 6 y 16 m en el piso recorren 6,0 y 16,0 m y se maneja a los 0,5 y 0,9 s; tirada
   con saltito y en el aire, unos 14 m en curva; contra una pared, se corta.
-- **El ragdoll al morir**, para todos. *Falta.*
+- **El ragdoll al morir** (18/11/2026; el usuario: «todos… se caen con ragdoll al morir; los grandes, quizás más lento
+  para que se lea la escala»): `PartsRagdoll` (game/common), para los cuerpos de piezas; los personajes siguen con el
+  suyo de huesos (RagdollUtil). Lo dispara la vida (`Health`, al morir: `falls_apart`). Cada parte del dibujo pasa a
+  ser un cuerpo físico con una caja que la envuelve, unida a la que la lleva con una articulación con límite
+  (ConeTwistJoint3D); lo que no es de ninguna parte va al tronco. Heredan la velocidad, se vuelcan hacia atrás
+  (`TOPPLE`), no chocan entre ellos y los grandes caen más lento (`gravity_for`: una jaula de 4 m, entera; el
+  Luchador, 0,63). El cuerpo vivo se apaga. Las partes: la jaula, el tronco, cada pierna en tres (muslo, canilla, pie)
+  y cada brazo; el Luchador (`Brawler.ragdoll_parts`), las orugas, lo de arriba y cada brazo. `tests/ragdoll_movie`
+  (el video): la jaula muere caminando (9 pedazos) y el jefe quieto (4). *Primera versión: no hay vuelta (para volver a
+  pelear se rearma la parcela) y lo que viaja adentro de la jaula no se mira.*
 
 ## Lo de la jaula que no hay que pisar
 La inclinación al apuntar (`CageMech._tilt`, cabin.rotation.x: la inclinación de costado se suma, no la reemplaza),

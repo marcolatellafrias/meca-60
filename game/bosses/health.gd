@@ -11,6 +11,9 @@ signal died
 
 const NODE_NAME := "Vida"
 
+## AL MORIR, SU DUEÑO SE DESARMA (PartsRagdoll.fall_apart; 18/11/2026, el usuario: «todos… se caen con ragdoll al
+## morir»). Apagado, sólo avisa (`died`).
+var falls_apart := true
 ## Lo que tiene entera, lo que le queda y con qué le pegaron la última vez.
 @export var full := 100.0
 var left := 100.0
@@ -41,6 +44,8 @@ func hurt(amount: float, what: String) -> void:
 	changed.emit()
 	if dead():
 		died.emit()
+		if falls_apart and get_parent() is Node3D:
+			PartsRagdoll.fall_apart.call_deferred(get_parent())
 
 
 func dead() -> bool:
