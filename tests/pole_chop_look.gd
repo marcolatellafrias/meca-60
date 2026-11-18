@@ -45,7 +45,15 @@ func _ready() -> void:
 	await get_tree().create_timer(1.5).timeout
 	for i in 3:
 		_mech.arms[1].main_strike()
+		var last := MechArm.Stage.IDLE
 		while _mech.arms[1].punching != MechArm.Punch.NONE:
 			await get_tree().physics_frame
+			var stage := _mech.arms[1].stage()
+			if stage != last:
+				last = stage
+				# Hacia dónde va el palo, en la meca (x a su derecha, y arriba, z atrás).
+				var grip := (_mech.arms[1].tip as PoleTip).grip
+				var way := _mech.global_basis.orthonormalized().inverse() * grip.global_basis.y.normalized()
+				print("etapa %d: el palo hacia %s" % [stage, way])
 		await get_tree().create_timer(0.4).timeout
 	get_tree().quit()

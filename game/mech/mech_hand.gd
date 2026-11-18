@@ -36,6 +36,9 @@ const CLOSE_TIME := 0.16
 
 ## La postura pedida: el puño, o abierta.
 var fist := false
+## AGARRANDO ALGO (ver `grip_on`): cuánto se cierra cada falange en el puño (grados), en lugar de `FIST_CURL`; negativo,
+## el puño de siempre.
+var hold_curl := -1.0
 
 var _side := 1.0
 var _closed := 0.0
@@ -91,7 +94,8 @@ func _place(share: float) -> void:
 	_shown = share
 	for finger: Dictionary in _fingers:
 		var thumb := bool(finger["thumb"])
-		var curl := deg_to_rad(lerpf(THUMB_CURL.x, THUMB_CURL.y, share) if thumb else lerpf(OPEN_CURL, FIST_CURL, share))
+		var closed := hold_curl if hold_curl >= 0.0 else FIST_CURL
+		var curl := deg_to_rad(lerpf(THUMB_CURL.x, THUMB_CURL.y, share) if thumb else lerpf(OPEN_CURL, closed, share))
 		var turn := Basis(Vector3.RIGHT, deg_to_rad(lerpf(THUMB_RISE.x, THUMB_RISE.y, share))) if thumb else Basis()
 		var at: Vector3 = finger["from"]
 		var lengths: Array = finger["lengths"]
@@ -105,3 +109,44 @@ func _place(share: float) -> void:
 			(pieces[index] as MeshInstance3D).transform = Transform3D(turn * Basis(Vector3.RIGHT, -PI * 0.5),
 				at + along * length * 0.5)
 			at += along * length
+
+
+## AGARRA ALGO DE `radius` (en la medida de la mano) QUE PASA A LO LARGO DE SU Y —por adentro de los cuatro dedos, como
+## un palo—: cierra los dedos lo más que puede sin que lo atraviesen (`hold_curl`) y devuelve DÓNDE VA SU EJE (en la
+## mano, con y = 0): el medio del hueco que dejan los dedos cerrados, contando su grosor. Lo pidió el usuario el
+## 17/11/2026: «el puño cerrado tenga en su centro [lo que agarra]… tener en cuenta los grosores de los dedos».
+## El hueco: los puntos de un dedo (de donde sale, y la punta de cada falange) vistos desde arriba, cerrado con un
+## ángulo; su medio es el promedio de esos puntos, y lo que entra es la distancia del medio a la falange más cercana
+## menos el radio del dedo. Se prueba de lo más cerrado a lo más abierto y se queda con el primero en que entra.
+func grip_on(radius: float) -> Vector3:
+	var finger: Dictionary = _fingers[0]
+	var lengths: Array = finger["lengths"]
+	var thick := ((finger["pieces"] as Array)[0] as MeshInstance3D).mesh.get("top_radius") as float
+	var start: Vector3 = finger["from"]
+	start.y = 0.0
+	var best := Vector3(start.x, 0.0, start.z)
+	var curl := FIST_CURL
+	while curl >= OPEN_CURL:
+		var points: Array[Vector3] = [start]
+		var turn := Basis()
+		var at := start
+		for length: float in lengths:
+			turn = turn * Basis(Vector3.UP, _side * deg_to_rad(curl))
+			at += turn * Vector3.FORWARD * length
+			points.append(at)
+		var middle := Vector3.ZERO
+		for point in points:
+			middle += point
+		middle /= points.size()
+		var room := INF
+		for index in points.size() - 1:
+			room = minf(room, Geometry3D.get_closest_point_to_segment(middle, points[index], points[index + 1]).distance_to(middle))
+		best = middle
+		if room - thick >= radius:
+			hold_curl = curl
+			_shown = -1.0
+			return best
+		curl -= 1.0
+	hold_curl = OPEN_CURL
+	_shown = -1.0
+	return best
