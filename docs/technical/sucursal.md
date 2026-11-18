@@ -55,7 +55,15 @@ En `BaseLayout`, en metros sobre el plano (`at(x, z, alto)` pasa a la parcela).
 - **La bolsa es low poly** (`BaseBag`, 17/11/2026): un prisma de ocho lados con las dos tapas en bisel, de caras planas.
   Lo que la cuelga, en ideas para elegir (`tests/base_bag_ideas.tscn`): cuatro sogas (gruesa, cadena, soga con cuatro
   correas al borde, cadena con cuatro cadenas cortas) y cuatro maneras de atarla al techo (chapa con argolla, viga doble
-  T con gancho, riel con carro, brazo desde la pared). La física, los huesos y la textura de píxeles, después.
+  T con gancho, riel con carro, brazo desde la pared).
+- **Lo elegido** (17/11/2026): **la chapa hexagonal** al techo, con tornillos hexagonales y sin argolla, y **la cadena**,
+  de eslabones grandes (`BaseBag.CHAIN_LINK`).
+- **La bolsa con física** (`BaseBagRig`): la cadena en eslabones sueltos colgados con pernos, y la bolsa en cuatro tramos
+  rígidos unidos por articulaciones de cono (se dobla 9° en cada una y casi no se tuerce). La piel es la malla low poly
+  con cortes de lazo y sombreado suave (`BaseBag.skinned_mesh`), con un hueso por tramo: cada cuadro los huesos copian a
+  los tramos. 600 kg; los valores son para mirar, no los de la meca. **Todavía no está en la base** (la de la base es la
+  fija). La textura de píxeles, después. `tests/base_bag_movie.tscn` (con `--write-movie`): golpes de 600 a 3500 N·s a
+  distintas alturas.
 - La parcela se mide con todo lo más grande.
 - Los paneles F2 a F4 son los de la meca jaula, para modificarla desde la base.
 

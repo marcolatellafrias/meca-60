@@ -19,6 +19,11 @@ const CHAMFER := 0.35
 const ROPE_COLOR := Color(0.62, 0.52, 0.36)
 const METAL := Color(0.4, 0.41, 0.43)
 const STRAP_COLOR := Color(0.3, 0.26, 0.22)
+## LO ELEGIDO (17/11/2026): la chapa hexagonal al techo y la cadena, de eslabones grandes («los exageraría un poquito
+## más»). El largo de un eslabón, y la chapa: su radio y su grosor.
+const CHAIN_LINK := 0.42
+const PLATE_RADIUS := 0.5
+const PLATE_THICK := 0.07
 
 
 ## LA BOLSA: centrada en `at`, de `radius` y `tall`, colgada de su tapa de arriba.
@@ -69,14 +74,14 @@ static func rope(parent: Node3D, kind: Rope, top: Vector3, bag_top: Vector3, rad
 			_strand(parent, top, bag_top, 0.07, ROPE_COLOR, 6)
 			Clay.box(parent, Vector3(0.3, 0.22, 0.3), bag_top + Vector3.UP * 0.1, STRAP_COLOR)
 		Rope.CHAIN:
-			_chain(parent, top, bag_top, 0.22)
+			_chain(parent, top, bag_top, CHAIN_LINK)
 		Rope.FOUR_STRAPS:
 			_strand(parent, top, ring, 0.07, ROPE_COLOR, 6)
 			Clay.cylinder(parent, 0.14, 0.08, ring, METAL)
 			for point in edge:
 				_strand(parent, ring, point, 0.035, STRAP_COLOR, 4)
 		Rope.CHAIN_AND_FOUR:
-			_chain(parent, top, ring, 0.22)
+			_chain(parent, top, ring, CHAIN_LINK)
 			Clay.cylinder(parent, 0.16, 0.1, ring, METAL)
 			for point in edge:
 				_chain(parent, ring, point, 0.12)
@@ -87,12 +92,10 @@ static func rope(parent: Node3D, kind: Rope, top: Vector3, bag_top: Vector3, rad
 static func mount(parent: Node3D, kind: Mount, top: Vector3, ceiling: float, wall_x: float) -> void:
 	match kind:
 		Mount.PLATE:
-			Clay.box(parent, Vector3(0.8, 0.06, 0.8), Vector3(top.x, ceiling - 0.03, top.z), METAL)
-			for corner: Vector2 in [Vector2(-1, -1), Vector2(1, -1), Vector2(-1, 1), Vector2(1, 1)]:
-				Clay.cylinder(parent, 0.04, 0.05, Vector3(top.x + corner.x * 0.3, ceiling - 0.08, top.z + corner.y * 0.3),
-					Clay.DARK)
-			_strand(parent, Vector3(top.x, ceiling - 0.06, top.z), top + Vector3.UP * 0.1, 0.06, METAL, 6)
-			_eye(parent, top)
+			# hexagonal, con tornillos hexagonales y sin argolla (el usuario, 17/11/2026: «la área hexagonal en vez de
+			# cuadrada… le sacaría la argolla… los tornillos… hexagonales»)
+			plate(parent, Vector3(top.x, ceiling, top.z))
+			_strand(parent, Vector3(top.x, ceiling - PLATE_THICK, top.z), top + Vector3.UP * 0.1, 0.06, METAL, 6)
 		Mount.BEAM:
 			var beam := 0.5
 			for y: float in [ceiling - 0.04, ceiling - beam + 0.04]:
@@ -127,6 +130,76 @@ static func mount(parent: Node3D, kind: Mount, top: Vector3, ceiling: float, wal
 			_eye(parent, top)
 
 
+## LA CHAPA HEXAGONAL al techo, con su cara de arriba en `at`, y seis tornillos hexagonales.
+static func plate(parent: Node3D, at: Vector3) -> void:
+	var hexagon := Clay.cylinder(parent, PLATE_RADIUS, PLATE_THICK, at + Vector3.DOWN * PLATE_THICK * 0.5, METAL)
+	(hexagon.mesh as CylinderMesh).radial_segments = 6
+	for i in 6:
+		var angle := TAU * (i + 0.5) / 6.0
+		var bolt := Clay.cylinder(parent, 0.05, 0.05, at + Vector3(cos(angle) * PLATE_RADIUS * 0.72, -PLATE_THICK - 0.02,
+			sin(angle) * PLATE_RADIUS * 0.72), Clay.DARK)
+		(bolt.mesh as CylinderMesh).radial_segments = 6
+
+
+## UN ESLABÓN de lado `link`, colgado de `parent` con su largo en Y, centrado en el origen: cuatro barras. Ancho en X o en
+## Z (`turned`), uno y uno, como en una cadena.
+static func chain_link(parent: Node3D, link: float, turned: bool) -> void:
+	var bar := link * 0.13
+	var holder := Node3D.new()
+	if turned:
+		holder.basis = Basis(Vector3.UP, PI * 0.5)
+	parent.add_child(holder)
+	for s: float in [-1.0, 1.0]:
+		Clay.box(holder, Vector3(bar, link, bar), Vector3(s * link * 0.25, 0, 0), METAL)
+		Clay.box(holder, Vector3(link * 0.5 + bar, bar, bar), Vector3(0, s * link * 0.5, 0), METAL)
+
+
+## LA MALLA DE LA BOLSA CON HUESOS (para BaseBagRig): la misma forma low poly (el prisma de SIDES lados y las tapas en
+## bisel), con CORTES DE LAZO (`cuts` anillos más a lo largo, para que se doble) y SOMBREADO SUAVE (el usuario: «tiene
+## que tener shading a smooth»). Su origen es el centro de la tapa de arriba y cuelga hacia −Y. Cada vértice va a los
+## dos huesos más cercanos (`bones` huesos iguales, de arriba abajo), mezclados según la altura.
+static func skinned_mesh(radius: float, tall: float, bones: int, cuts: int) -> ArrayMesh:
+	var cut := radius * CHAMFER
+	var rings: Array[Vector2] = [Vector2(0.0, -tall), Vector2(radius - cut, -tall), Vector2(radius, -tall + cut)]
+	for k in cuts:
+		rings.append(Vector2(radius, -tall + cut + (tall - cut * 2.0) * (k + 1) / (cuts + 1)))
+	rings.append_array([Vector2(radius, -cut), Vector2(radius - cut, 0.0), Vector2(0.0, 0.0)])
+	var piece := tall / bones
+	var tool := SurfaceTool.new()
+	tool.begin(Mesh.PRIMITIVE_TRIANGLES)
+	tool.set_smooth_group(0)
+	for i in SIDES:
+		var a0 := TAU * i / SIDES
+		var a1 := TAU * (i + 1) / SIDES
+		for k in rings.size() - 1:
+			var p := rings[k]
+			var q := rings[k + 1]
+			var v00 := Vector3(cos(a0) * p.x, p.y, sin(a0) * p.x)
+			var v01 := Vector3(cos(a1) * p.x, p.y, sin(a1) * p.x)
+			var v10 := Vector3(cos(a0) * q.x, q.y, sin(a0) * q.x)
+			var v11 := Vector3(cos(a1) * q.x, q.y, sin(a1) * q.x)
+			if p.x > 0.0001:
+				for v: Vector3 in [v00, v10, v01]:
+					_skinned_vertex(tool, v, piece, bones)
+			if q.x > 0.0001:
+				for v: Vector3 in [v01, v10, v11]:
+					_skinned_vertex(tool, v, piece, bones)
+	tool.index()
+	tool.generate_normals()
+	return tool.commit()
+
+
+## Un vértice con sus dos huesos: el del tramo donde está y el vecino, según cuán cerca está del medio de cada uno.
+static func _skinned_vertex(tool: SurfaceTool, v: Vector3, piece: float, bones: int) -> void:
+	var along := clampf(-v.y / piece - 0.5, 0.0, bones - 1.0)
+	var first := mini(int(floor(along)), bones - 1)
+	var second := mini(first + 1, bones - 1)
+	var share := along - first
+	tool.set_bones(PackedInt32Array([first, second, 0, 0]))
+	tool.set_weights(PackedFloat32Array([1.0 - share, share, 0.0, 0.0]))
+	tool.add_vertex(v)
+
+
 ## UNA SOGA de `from` a `to`: un prisma de pocos lados.
 static func _strand(parent: Node3D, from: Vector3, to: Vector3, radius: float, color: Color, sides: int) -> void:
 	var part := Clay.cylinder(parent, radius, from.distance_to(to), (from + to) * 0.5, color)
@@ -146,18 +219,12 @@ static func _chain(parent: Node3D, from: Vector3, to: Vector3, link: float) -> v
 	var dir := along.normalized()
 	var side := Vector3.RIGHT if absf(dir.dot(Vector3.RIGHT)) < 0.9 else Vector3.BACK
 	var x := side.cross(dir).normalized()
-	var z := x.cross(dir)
-	var bar := link * 0.13
 	for i in count:
-		var center := from + step * (i + 0.5)
-		var wide := x if i % 2 == 0 else z
 		var holder := Node3D.new()
-		holder.basis = Basis(wide, dir, wide.cross(dir))
-		holder.position = center
+		holder.basis = Basis(x, dir, x.cross(dir))
+		holder.position = from + step * (i + 0.5)
 		parent.add_child(holder)
-		for s: float in [-1.0, 1.0]:
-			Clay.box(holder, Vector3(bar, link, bar), Vector3(s * link * 0.25, 0, 0), METAL)
-			Clay.box(holder, Vector3(link * 0.5 + bar, bar, bar), Vector3(0, s * link * 0.5, 0), METAL)
+		chain_link(holder, link, i % 2 == 1)
 
 
 ## UNA ARGOLLA: un aro de pocos lados, de canto.
