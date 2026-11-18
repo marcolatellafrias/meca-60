@@ -22,6 +22,9 @@ func has_mode() -> bool:
 func enter_mode() -> void:
 	visual_value = 1.0
 	_emit_if_changed(1.0)
+	# Agarrarlo es tomar la torreta (ver GunnerTurret, «La red»).
+	if turret != null:
+		turret.take_control()
 
 
 func exit_mode() -> void:

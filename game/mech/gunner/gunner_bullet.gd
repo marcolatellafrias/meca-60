@@ -4,7 +4,8 @@ extends Node3D
 ## UNA BALA DE LA MINIGUN DEL ARTILLERO (ver GunnerWeapons): una trazadora fina que va derecho a `SPEED`, y en cada paso
 ## barre su camino con un rayo. Lo que toca: lo suelto (un jefe, por la caja donde se le pega) recibe el golpe
 ## (EnergyBolt.lands: el empujón y, si lo lleva, el daño), y lo fijo (una pared, el cuerpo de un jefe) la frena; las dos
-## cosas dejan chispas. PERFORANTE (`pierce`): sigue de largo después de pegarle a lo suelto. Todavía no viaja por red.
+## cosas dejan chispas. PERFORANTE (`pierce`): sigue de largo después de pegarle a lo suelto. EN RED cada máquina tiene
+## la suya (ver GunnerTurret, «La red»); el golpe lo aplica sólo el host.
 
 const SPEED := 260.0
 const LIFE := 1.6
@@ -20,9 +21,12 @@ var strength := 1.0
 ## Lo que no tiene que tocar (la meca que la tira).
 var skip: Array[RID] = []
 var _age := 0.0
+## Cuántas se dibujaron en esta máquina (para los tests de red).
+static var made := 0
 
 
 func _ready() -> void:
+	made += 1
 	var tracer := Clay.box(self, Vector3(0.025, 0.025, 1.4), Vector3(0.0, 0.0, 0.7), TRACER)
 	var paint := EnergyBolt.shine(TRACER)
 	tracer.material_override = paint
@@ -45,7 +49,8 @@ func _physics_process(delta: float) -> void:
 		GunnerFx.sparks(at, 0.35)
 		var body := EnergyBolt.struck(hit["collider"])
 		if body != null:
-			EnergyBolt.lands(body, -global_basis.z * IMPULSE * strength, at, "minigun")
+			if not ProjectileField.is_client(self):
+				EnergyBolt.lands(body, -global_basis.z * IMPULSE * strength, at, "minigun")
 			if pierce:
 				skip.append(hit["rid"])
 				continue

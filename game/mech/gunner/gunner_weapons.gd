@@ -21,7 +21,8 @@ extends Node
 ##       — SALVA: los misiles que queden, todos seguidos.
 ##       — GUIADO: el próximo misil va adonde apunta la torreta mientras se la mueve.
 ##       — FIJAR: marca lo que está en la mira; los misiles lo persiguen un rato.
-## Todavía no viaja por red: lo dispara y lo ve quien lo maneja.
+## EN RED (ver GunnerTurret, «La red»): lo simula el dueño de la torreta, que manda su estado (`get_state`) y cada
+## disparo (GunnerTurret.shoot_bullet, shoot_missile); los demás aplican el estado (`apply_state`) y dibujan los disparos.
 
 enum Weapon { MINIGUN, MISSILES }
 
@@ -170,7 +171,42 @@ func _ability(action: String) -> bool:
 	return true
 
 
+## EL ESTADO, para la red: todo lo que muestran los tableros y lo que decide el próximo disparo.
+func get_state() -> Dictionary:
+	return {"selected": selected, "heat": heat, "jammed": jammed, "belt": belt, "tubes": tubes,
+		"strength": strength.duplicate(), "reloading": reloading, "needle": needle, "reload_jammed": reload_jammed,
+		"cooldown": cooldown.duplicate(), "overcharge": overcharge_left, "pierce": pierce_left, "guided": guided_next,
+		"locked": locked.get_path() if is_instance_valid(locked) else NodePath(), "lock_left": lock_left, "spin": spin,
+		"trigger": _trigger}
+
+
+func apply_state(state: Dictionary) -> void:
+	selected = state["selected"]
+	heat = state["heat"]
+	jammed = state["jammed"]
+	belt = state["belt"]
+	tubes = state["tubes"]
+	strength = (state["strength"] as Dictionary).duplicate()
+	reloading = state["reloading"]
+	needle = state["needle"]
+	reload_jammed = state["reload_jammed"]
+	cooldown = (state["cooldown"] as Dictionary).duplicate()
+	overcharge_left = state["overcharge"]
+	pierce_left = state["pierce"]
+	guided_next = state["guided"]
+	var path: NodePath = state["locked"]
+	locked = null if path.is_empty() else get_node_or_null(path) as Node3D
+	lock_left = state["lock_left"]
+	spin = state["spin"]
+	_trigger = state["trigger"]
+
+
 func _physics_process(delta: float) -> void:
+	# LO QUE NO MANDA: sólo el giro de los caños (se ve), el resto lo trae la red.
+	if turret != null and not turret.is_mine():
+		var spinning := _trigger and selected == Weapon.MINIGUN
+		spin = clampf(spin + (delta / SPIN_UP if spinning else -delta / SPIN_DOWN), 0.0, 1.0)
+		return
 	for action: String in cooldown:
 		cooldown[action] = maxf(float(cooldown[action]) - delta, 0.0)
 	overcharge_left = maxf(overcharge_left - delta, 0.0)
@@ -216,15 +252,10 @@ func _fire_minigun() -> void:
 	var muzzle := turret.minigun_muzzle()
 	var spread := deg_to_rad(SPREAD)
 	var aim := muzzle.basis * Basis.from_euler(Vector3(_rng.randf_range(-spread, spread), _rng.randf_range(-spread, spread), 0.0))
-	var bullet := GunnerBullet.new()
-	bullet.skip = turret.skip()
-	bullet.strength = float(strength[Weapon.MINIGUN])
-	if pierce_left > 0:
-		bullet.pierce = true
+	var pierce := pierce_left > 0
+	if pierce:
 		pierce_left -= 1
-	get_tree().current_scene.add_child(bullet)
-	bullet.global_transform = Transform3D(aim.orthonormalized(), muzzle.origin)
-	GunnerFx.muzzle(muzzle.origin, 0.12)
+	turret.shoot_bullet(Transform3D(aim.orthonormalized(), muzzle.origin), pierce, float(strength[Weapon.MINIGUN]))
 
 
 ## UN MISIL, del próximo tubo cargado: derecho, guiado (si se lo pidió) o persiguiendo lo fijado. `salvo`: los de la
@@ -235,15 +266,7 @@ func _fire_missile(salvo: bool) -> void:
 	_fire_wait = MISSILE_GAP
 	var tube := TUBES - tubes
 	tubes -= 1
-	var mouth := turret.missile_mouth(tube)
-	var missile := GunnerMissile.new()
-	missile.skip = turret.skip()
-	missile.strength = float(strength[Weapon.MISSILES])
-	if is_instance_valid(locked):
-		missile.chase = locked
-	elif guided_next:
-		missile.steer = turret.aim_point
+	var guided := guided_next and not is_instance_valid(locked)
+	if guided:
 		guided_next = false
-	get_tree().current_scene.add_child(missile)
-	missile.global_transform = mouth
-	GunnerFx.muzzle(mouth.origin, 0.2)
+	turret.shoot_missile(turret.missile_mouth(tube), locked, guided, float(strength[Weapon.MISSILES]))

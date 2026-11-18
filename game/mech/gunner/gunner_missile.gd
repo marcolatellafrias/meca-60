@@ -8,7 +8,8 @@ extends Node3D
 ##     a lo más `TURN` grados por segundo.
 ##   · PERSIGUIENDO: `chase`, un nodo (el blanco fijado), se tuerce hacia él igual.
 ## Al tocar algo —o al cumplir su vida— EXPLOTA: destello, chispas y polvo, y a todo lo suelto en `RADIUS` le da su golpe
-## (EnergyBolt.lands), entero en el medio y la mitad en el borde. Todavía no viaja por red.
+## (EnergyBolt.lands), entero en el medio y la mitad en el borde. EN RED cada máquina tiene el suyo (ver GunnerTurret,
+## «La red»); el golpe lo aplica sólo el host.
 
 const START := 25.0
 const TOP := 85.0
@@ -28,10 +29,13 @@ var strength := 1.0
 var skip: Array[RID] = []
 var _speed := START
 var _age := 0.0
+## Cuántos se dibujaron en esta máquina (para los tests de red).
+static var made := 0
 var _trail: GPUParticles3D = null
 
 
 func _ready() -> void:
+	made += 1
 	Clay.cylinder(self, 0.05, 0.42, Vector3.ZERO, BODY, Vector3(90.0, 0.0, 0.0))
 	Clay.sphere(self, 0.05, Vector3(0.0, 0.0, -0.21), Color(0.85, 0.35, 0.25))
 	_trail = ParticleSystems.thruster_smoke(ParticleMeshes.Kind.SPHERE, 0.5)
@@ -79,7 +83,8 @@ func _explode(at: Vector3) -> void:
 	query.collision_mask = 1
 	query.exclude = skip
 	var struck := {}
-	for found in get_world_3d().direct_space_state.intersect_shape(query, 16):
+	var hits: Array = [] if ProjectileField.is_client(self) else get_world_3d().direct_space_state.intersect_shape(query, 16)
+	for found in hits:
 		var body := EnergyBolt.struck(found["collider"])
 		if body == null or struck.has(body.get_instance_id()):
 			continue

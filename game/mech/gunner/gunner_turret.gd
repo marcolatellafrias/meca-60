@@ -19,6 +19,18 @@ extends Node3D
 ## (GunnerWeapons); los aros de los botones muestran lo que tienen (ver «Los tres tableros»).
 ## *Hasta el 18/11/2026 la torre llevaba un racimo de caños en una horquilla, sólo de dibujo.*
 ##
+## LA RED (18/11/2026; el usuario: «que esté bien sincronizado online… adosarla a un sistema ya existente»): el yugo y
+## los botones son controles de siempre (ControllableInteractable: se sincronizan solos y uno solo los maneja a la vez).
+## Encima:
+##   · LA TORRETA TIENE UN DUEÑO (`_authority`): el último que agarró el yugo o apretó un botón (lo avisa a todos,
+##     `take_control`). EL DUEÑO SIMULA LAS ARMAS y MANDA el giro y la inclinación (`_aim_state`, `AIM_RATE` veces por
+##     segundo) y el estado de las armas (`_weapons_state`, `STATE_RATE`); los demás lo siguen.
+##   · CADA DISPARO ES UN MENSAJE (`_bullet`, `_missile`, a todos y a él mismo): cada máquina dibuja su bala o su misil,
+##     y SÓLO EL HOST APLICA EL GOLPE (GunnerBullet, GunnerMissile: como ProjectileField). El misil guiado va adonde
+##     apunta la torreta en cada máquina (la torreta viaja); el que persigue, al mismo nodo (su camino).
+##   · EL QUE SE UNE le pide al host cómo está (`_request_state`).
+## Sin red es lo mismo en una sola máquina (el host es ella).
+##
 ## Todo en el espacio de la silla (`frame`, el de la cuna sin inclinar): −Z adelante, la base de la silla en el origen.
 
 ## Los ejes de la cuna: a la altura del asiento, en las caras de sus costados (`BOLT_X` del medio).
@@ -59,6 +71,16 @@ var _heat_fill: Node3D = null
 ## Los caños de la minigun: giran con `GunnerWeapons.spin`.
 var _barrels: Node3D = null
 var _skip: Array[RID] = []
+## LA RED (ver arriba): quién manda (su número de par; 1, el host), cada cuánto se manda y lo último que llegó.
+const AIM_RATE := 20.0
+const STATE_RATE := 10.0
+## Lo que se acerca por segundo a lo que llegó (los que no mandan): suave, sin saltar entre mensajes.
+const FOLLOW := 14.0
+var _authority := 1
+var _aim_clock := 0.0
+var _state_clock := 0.0
+var _net_yaw := 0.0
+var _net_pitch := 0.0
 ## Hacia dónde apunta, en el espacio de lo que la lleva (rad): el giro del plato y la inclinación de la cuna.
 var yaw := 0.0
 var pitch := 0.0
@@ -99,7 +121,131 @@ func aim(world_yaw: float, world_pitch: float) -> void:
 	_aim_left = AIM_HOLD
 
 
+func _ready() -> void:
+	if _networked() and not multiplayer.is_server():
+		_request_state.rpc_id(1)
+
+
+## ── LA RED (ver arriba) ───────────────────────────────────────────────────────────────────────────────────────────
+
+## Si hay una sesión de red de verdad (con alguien conectado o esperando): sin ella, todo es local.
+func _networked() -> bool:
+	var peer := multiplayer.multiplayer_peer
+	return peer != null and not peer is OfflineMultiplayerPeer 		and peer.get_connection_status() == MultiplayerPeer.CONNECTION_CONNECTED
+
+
+## Si esta máquina manda en la torreta (sin red, siempre).
+func is_mine() -> bool:
+	return not _networked() or _authority == multiplayer.get_unique_id()
+
+
+## LA TOMA el jugador de esta máquina (agarró el yugo o apretó un botón): se lo dice a todos.
+func take_control() -> void:
+	if is_mine() or not _networked():
+		return
+	_owner_is.rpc(multiplayer.get_unique_id())
+
+
+@rpc("any_peer", "call_local", "reliable")
+func _owner_is(peer: int) -> void:
+	_authority = peer
+	_net_yaw = yaw
+	_net_pitch = pitch
+
+
+@rpc("any_peer", "call_remote", "unreliable_ordered")
+func _aim_state(net_yaw: float, net_pitch: float) -> void:
+	if multiplayer.get_remote_sender_id() != _authority:
+		return
+	_net_yaw = net_yaw
+	_net_pitch = net_pitch
+
+
+@rpc("any_peer", "call_remote", "unreliable_ordered")
+func _weapons_state(state: Dictionary) -> void:
+	if multiplayer.get_remote_sender_id() != _authority:
+		return
+	weapons.apply_state(state)
+
+
+## EL QUE SE UNE pide cómo está; el host le contesta con todo, por el camino seguro.
+@rpc("any_peer", "reliable")
+func _request_state() -> void:
+	if not multiplayer.is_server():
+		return
+	_full_state.rpc_id(multiplayer.get_remote_sender_id(), _authority, yaw, pitch, weapons.get_state())
+
+
+@rpc("authority", "reliable")
+func _full_state(authority: int, net_yaw: float, net_pitch: float, state: Dictionary) -> void:
+	_authority = authority
+	yaw = net_yaw
+	pitch = net_pitch
+	_net_yaw = net_yaw
+	_net_pitch = net_pitch
+	weapons.apply_state(state)
+
+
+## UNA BALA, en todas las máquinas (la pide el dueño: GunnerWeapons).
+func shoot_bullet(at: Transform3D, pierce: bool, power: float) -> void:
+	if _networked():
+		_bullet.rpc(at, pierce, power)
+	else:
+		_bullet(at, pierce, power)
+
+
+@rpc("any_peer", "call_local", "unreliable")
+func _bullet(at: Transform3D, pierce: bool, power: float) -> void:
+	var bullet := GunnerBullet.new()
+	bullet.skip = skip()
+	bullet.strength = power
+	bullet.pierce = pierce
+	get_tree().current_scene.add_child(bullet)
+	bullet.global_transform = at
+	GunnerFx.muzzle(at.origin, 0.12)
+
+
+## UN MISIL, en todas las máquinas: persiguiendo `chase` (su camino; vacío, nada), o guiado, o derecho.
+func shoot_missile(at: Transform3D, chase: Node3D, guided: bool, power: float) -> void:
+	var path := chase.get_path() if is_instance_valid(chase) else NodePath()
+	if _networked():
+		_missile.rpc(at, path, guided, power)
+	else:
+		_missile(at, path, guided, power)
+
+
+@rpc("any_peer", "call_local", "reliable")
+func _missile(at: Transform3D, chase: NodePath, guided: bool, power: float) -> void:
+	var missile := GunnerMissile.new()
+	missile.skip = skip()
+	missile.strength = power
+	if not chase.is_empty():
+		missile.chase = get_node_or_null(chase) as Node3D
+	if missile.chase == null and guided:
+		missile.steer = aim_point
+	get_tree().current_scene.add_child(missile)
+	missile.global_transform = at
+	GunnerFx.muzzle(at.origin, 0.2)
+
+
 func _physics_process(delta: float) -> void:
+	if not is_mine():
+		# LA SIGUE: hacia lo último que mandó el dueño, suave.
+		var k := 1.0 - exp(-FOLLOW * delta)
+		yaw = wrapf(yaw + angle_difference(yaw, _net_yaw) * k, -PI, PI)
+		pitch = lerpf(pitch, _net_pitch, k)
+		yaw_node.rotation.y = yaw
+		cradle.rotation.x = pitch
+		return
+	if _networked():
+		_aim_clock -= delta
+		_state_clock -= delta
+		if _aim_clock <= 0.0:
+			_aim_clock = 1.0 / AIM_RATE
+			_aim_state.rpc(yaw, pitch)
+		if _state_clock <= 0.0:
+			_state_clock = 1.0 / STATE_RATE
+			_weapons_state.rpc(weapons.get_state())
 	_aim_left = maxf(_aim_left - delta, 0.0)
 	if _aim_left > 0.0:
 		_yaw_speed = _spring(angle_difference(yaw, _target_yaw), _yaw_speed, delta)
@@ -407,7 +553,11 @@ func _radial(face: Node3D, at: Vector3, radius: float, tint: Color, title: Strin
 	button.build(box.size)
 	var cap := Clay.cylinder(button, radius * 0.55, 0.022, Vector3.ZERO, tint, Vector3(90.0, 0.0, 0.0))
 	button.highlighted.append(cap)
-	button.pressed.connect(func() -> void: weapons.press(action))
+	# Sólo en la máquina de quien lo apretó (el botón avisa en todas): ésa toma la torreta y manda.
+	button.pressed.connect(func() -> void:
+		if button.is_controlled_here():
+			take_control()
+			weapons.press(action))
 	var ring: Array[MeshInstance3D] = []
 	var step := TAU / RING_STEPS
 	for k in RING_STEPS:
