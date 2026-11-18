@@ -18,6 +18,7 @@ const TITLES := {Kind.POSE: "Discretos", Kind.MUSCLE: "Con músculos"}
 const POSE_LABELS := {
 	"punch_speed": "piñas: cuánto más rápidas (×)",
 	"hit_mass": "al conectar: lo que pesa el puño (kg)", "fist_radius": "al conectar: radio del puño (m)",
+	"stops_on_hit": "al conectar: se frena donde pega",
 }
 const MUSCLE_LABELS := {
 	"muscle_kp": "músculo: resorte (cuánto tira)", "muscle_kd": "músculo: freno",

@@ -103,6 +103,10 @@ var last_hit_speed := 0.0
 var last_hit: Node = null
 var _struck := {}
 var _strike_was := PackedVector3Array()
+## SE FRENÓ DONDE PEGÓ (ver PoseArmSettings.stops_on_hit): desde ahí y hasta volver, el puño se pide donde estaba al
+## conectar (como `_moves`).
+var stuck := false
+var _stuck_at := Vector3.ZERO
 var _sphere := SphereShape3D.new()
 
 
@@ -138,6 +142,7 @@ func punch(kind: Punch) -> bool:
 	_struck.clear()
 	last_hit_speed = 0.0
 	last_hit = null
+	stuck = false
 	return true
 
 
@@ -198,7 +203,23 @@ func main_strike() -> bool:
 		return false
 	if not main_path.is_empty():
 		_aimed = main_path
+	elif tip != null and not tip.strike_path().is_empty():
+		_aimed = tip.strike_path()
 	return true
+
+
+## CUÁNTO VA DE LA PARTE DE LA PIÑA EN QUE ESTÁ (0 a 1; ver `stage`): lo usan las puntas que animan algo propio (el
+## golpe de muñeca del palo).
+func stage_share() -> float:
+	if punching == Punch.NONE:
+		return 0.0
+	var clock := _clock * _punch_speed()
+	for step: Array in _steps():
+		var time := float(step[0])
+		if clock <= time:
+			return clampf(clock / maxf(time, 0.001), 0.0, 1.0)
+		clock -= time
+	return clampf(clock / RETURN_TIME, 0.0, 1.0)
 
 
 ## EL LARGO DE ESTE BRAZO: el factor de las posturas y las piñas (el `reach` de sus medidas), y el brazo y el antebrazo
@@ -234,9 +255,13 @@ func _moves() -> Vector3:
 	for step: Array in _steps():
 		var time := float(step[0]) / speed
 		if clock <= time:
+			if stuck:
+				return _stuck_at
 			return from.lerp((step[1] as Vector3) * reach(), smoothstep(0.0, 1.0, clock / time))
 		clock -= time
 		from = (step[1] as Vector3) * reach()
+	if stuck:
+		from = _stuck_at
 	return from.lerp(home, smoothstep(0.0, 1.0, clock / (RETURN_TIME / speed)))
 
 
@@ -390,6 +415,12 @@ func _hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> void:
 	EnergyBolt.flash(get_tree().current_scene, at, strike_radius() * 1.2, Color(1.0, 0.93, 0.7))
 	last_hit_speed = velocity.length()
 	last_hit = body
+	if PoseArmSettings.current.stops_on_hit and not stuck and tip != null:
+		# Se queda donde está el puño ahora (el de verdad: el de músculos llega tarde a lo pedido).
+		var base := anchor.global_transform
+		var from_shoulder := base.basis.inverse() * (tip.strike_points()[0] - base * shoulder_local)
+		_stuck_at = Vector3(side * from_shoulder.x, from_shoulder.y, from_shoulder.z)
+		stuck = true
 
 
 ## El radio de lo que golpea (m): el del puño, a la medida de esta meca.

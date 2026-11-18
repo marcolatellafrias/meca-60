@@ -54,6 +54,11 @@ func strike_points() -> PackedVector3Array:
 	return PackedVector3Array([forearm.global_transform * Vector3(0, 0, -arm.forearm_length() * 0.5 - MechHand.length() * k * 0.5)])
 
 
+## EL GOLPE PRINCIPAL DE ESTA PUNTA, si no es una piña (puntos como MechArm.PUNCHES); vacío, la piña de siempre.
+func strike_path() -> Array:
+	return []
+
+
 ## AL CONECTAR un golpe: si la punta se encarga (y no el golpe de siempre).
 func hit(_body: RigidBody3D, _at: Vector3, _velocity: Vector3) -> bool:
 	return false
