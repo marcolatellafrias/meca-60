@@ -1,0 +1,12 @@
+[gd_resource type="Resource" script_class="CageShape" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/mech/cage/cage_shape.gd" id="1_7yb4r"]
+
+[resource]
+script = ExtResource("1_7yb4r")
+bubble_radius = 0.89
+padding = 0.25
+floor_thick = 0.49
+ceiling_thick = 0.15000000000000002
+leg_stretch = 0.9
+shoulder_forward = 1.0

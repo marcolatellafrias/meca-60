@@ -1,0 +1,11 @@
+[gd_resource type="Resource" script_class="KinematicSettings" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/balance_body/kinematic_settings.gd" id="1_ol1k2"]
+
+[resource]
+script = ExtResource("1_ol1k2")
+walk_speed = 4.0
+jump_height = 4.0
+fly_speed = 4.0
+dash_distance = 9.0
+crouch_rate = 5.0
