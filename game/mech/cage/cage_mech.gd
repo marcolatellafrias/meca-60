@@ -118,6 +118,11 @@ func _build() -> void:
 	var boarding := CageBoarding.new()
 	boarding.cabin = cabin as CageCabin
 	add_child(boarding)
+	# LAS TECLAS COMPARTIDAS de los que van arriba (ver MechCrew).
+	var crew := MechCrew.new()
+	crew.mech = self
+	add_child(crew)
+	(keys as CageMechKeys).crew = crew
 
 
 ## AL POSEERLA SE TOMA EL PUESTO DEL QUE MANEJA: su maniquí se va, y vuelve al soltarla (ver CageCabin.evict).

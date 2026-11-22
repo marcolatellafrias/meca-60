@@ -14,7 +14,7 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/.." && (pwd -W 2>/dev/null || pwd))"
-CASCARA="${GODOT_AGENTES:-D:/Godot/agentes/meca}"
+CASCARA="${GODOT_AGENTES:-D:/Godot/agentes/meca-60}"
 GODOT="${GODOT_EXE:-D:/Godot/Godot_v4.5.1-stable_win64.exe/Godot_v4.5.1-stable_win64_console.exe}"
 
 mkdir -p "$CASCARA"

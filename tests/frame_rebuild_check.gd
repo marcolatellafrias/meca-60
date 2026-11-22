@@ -7,6 +7,7 @@ extends Node3D
 
 
 func _ready() -> void:
+	MechCabin.dummies_on = true
 	var ground := StaticBody3D.new()
 	Clay.shape_box(ground, Vector3(200, 1, 200), Vector3(0, -0.5, 0))
 	PhysicsLayers.mark_fixed(ground)

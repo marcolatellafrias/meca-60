@@ -56,6 +56,8 @@ func _ready() -> void:
 	_spawner.name = "CharacterSpawner"
 	_spawner.characters_root = characters
 	add_child(_spawner)
+	# LA PARTIDA SE VE EN ISOMÉTRICA (ver IsoView).
+	add_child(IsoView.new())
 
 
 ## NACER MIRANDO A LA COMPUERTA DE ADELANTE (la que da a la franja, hacia −X): apenas el jugador local tiene su

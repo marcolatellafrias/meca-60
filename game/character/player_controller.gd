@@ -103,7 +103,7 @@ func rebind(target: BoneInstantiator) -> void:
 		target.player_camera   = player_camera
 		player_camera.position = Vector3.ZERO
 		player_camera.rotation = Vector3(camera_pitch, 0.0, 0.0)
-		player_camera.current  = true
+		player_camera.current  = not is_instance_valid(iso_view)
 
 	if is_instance_valid(_hud):
 		_hud.queue_free()
@@ -158,6 +158,9 @@ func _input(event: InputEvent) -> void:
 		bi.intent.turbo = 0
 
 	# ── Mouse motion ─────────────────────────────────────────────────────────
+	# CON LA CÁMARA ISOMÉTRICA el mouse no mira ni usa: se interactúa con la E (ver `set_iso`).
+	if is_instance_valid(iso_view) and (event is InputEventMouseMotion or event is InputEventMouseButton):
+		return
 	if event is InputEventMouseMotion:
 		if not _is_ragdoll_active():
 			# La sensibilidad que eligió el jugador en Opciones (GameOptions), por encima de la del control que maneja.
@@ -282,9 +285,24 @@ func _write_move() -> void:
 	if not is_instance_valid(bi):
 		return
 	var live := UIState.gameplay_active()
+	if is_instance_valid(iso_view):
+		_write_iso_move(bi, live and not bi.is_seated)
+		return
 	bi.intent.move = Vector2(Input.get_axis("move_left", "move_right"),
 		Input.get_axis("move_forward", "move_backward")) if live else Vector2.ZERO
 	bi.intent.sprint = live and Input.is_action_pressed("sprint")
+
+
+## CON LA CÁMARA ISOMÉTRICA: WASD va según la pantalla y el personaje mira hacia donde camina. Sentado, las teclas son de
+## la meca (ver MechCrew).
+func _write_iso_move(bi: BoneInstantiator, live: bool) -> void:
+	var screen := Vector2(Input.get_axis("move_left", "move_right"),
+		Input.get_axis("move_backward", "move_forward")) if live else Vector2.ZERO
+	var way := IsoSettings.current.screen_to_world(screen)
+	bi.intent.move = Vector2(0.0, -minf(way.length(), 1.0))
+	bi.intent.sprint = live and Input.is_action_pressed("sprint")
+	if way.length() > 0.01:
+		camera_yaw = atan2(-way.x, -way.z)
 
 
 func _update_hud(delta: float) -> void:
@@ -316,15 +334,34 @@ func _update_ragdoll_camera(_delta: float) -> void:
 ## true cuando la cámara activa es la del jugador, o sea cuando hay que esconderle la cabeza y el torso. Lo lee
 ## BoneInstantiator al final de initialize_skeleton. *Hasta el 13/11/2026 había una cámara orbital de debug (el numpad).*
 func is_first_person_view() -> bool:
-	return true
+	return not is_instance_valid(iso_view)
 
-## LA CÁMARA DEL JUGADOR, la activa, y su cuerpo escondido en primera persona.
+## LA CÁMARA DEL JUGADOR, la activa, y su cuerpo escondido en primera persona. Con la isométrica, ésa y el cuerpo entero.
 func take_camera() -> void:
-	if is_instance_valid(player_camera):
+	var iso := is_instance_valid(iso_view)
+	if iso:
+		iso_view.make_current()
+	elif is_instance_valid(player_camera):
 		player_camera.current = true
 	var bi := _get_bi()
 	if is_instance_valid(bi):
-		bi.set_first_person_visibility(true)
+		bi.set_first_person_visibility(not iso)
+
+
+## ── LA CÁMARA ISOMÉTRICA (ver IsoView) ──────────────────────────────────────────────────────────────────────────────
+## La que lo sigue, o null. La cámara de los ojos sigue existiendo, sin dibujar: de ella salen la cabeza y el rumbo.
+var iso_view: IsoView = null
+
+
+func set_iso(view: IsoView) -> void:
+	iso_view = view
+	if is_instance_valid(interaction_controller) and is_instance_valid(interaction_controller.detector):
+		interaction_controller.detector.iso = view != null
+	if is_instance_valid(_crosshair):
+		_crosshair.off = view != null
+	if view != null:
+		apply_camera_pitch(0.0)
+	take_camera()
 
 
 ## Suelta la barra espaciadora: si estaba cargando, salta (lo hace el cuerpo, ver BoneInstantiator, EL SALTO CARGADO).
@@ -436,7 +473,10 @@ func _face_camera() -> void:
 
 ## APAGADO O PRENDIDO (ver BoneInstantiator.set_active): sin cámara, sin mira y sin HUD mientras está apagado.
 func set_active(on: bool) -> void:
-	if is_instance_valid(player_camera):
+	if is_instance_valid(iso_view):
+		if on:
+			iso_view.make_current()
+	elif is_instance_valid(player_camera):
 		player_camera.current = on
 	if is_instance_valid(_crosshair):
 		_crosshair.visible = on

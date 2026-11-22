@@ -1,4 +1,9 @@
-# Meca
+# Meca 60
+
+**Este proyecto es un duplicado independiente de `D:\Godot\meca`** (22/11/2026), hecho para la cámara de 60° y para
+simplificar con libertad. No comparte archivos ni GitHub con aquél: nunca leer, escribir ni lanzar nada de esa carpeta.
+**Se simplifica de a poco y con el usuario**: los resortes y lo vertical que sirven como animación se quedan hasta que
+él decida.
 
 Juego cooperativo de **1 a 3 jugadores** que manejan **una meca a escala humana desde adentro** —la **meca jaula**—
 contra **mecas enemigas** (los jefes, que maneja la computadora) en una arena. Cada jugador maneja una parte desde su
@@ -17,6 +22,11 @@ palanca, perilla, volante, la inercia, la red de los controles). Qué se trajo y
 *Hasta el 17/11/2026 había una meca grande (de 14 m, con cinco cabinas, la arena de esquivar y el laboratorio
 cinemático): se borró entera (el usuario: «limitarnos solamente a un approach de meca a una escala más humana»); está en
 el commit `0bcaeaf`.*
+
+**Cambio de rumbo (22/11/2026):** la partida pasa a **cámara isométrica**, todos ven la meca entera y pueden tocar todas
+sus teclas, y una tecla apretada por dos se bloquea. Donde lo de abajo hable de puestos, primera persona o mouse, vale
+[docs/technical/camara-isometrica.md](docs/technical/camara-isometrica.md). **Las decisiones de diseño las toma el
+usuario: preguntar antes y no agregar nada que no pidió.**
 
 ## La documentación: `docs/`
 Una bóveda de Obsidian, separada en **conceptual** (`docs/conceptual/`: el diseño del juego —el loop, la tripulación, la
@@ -116,7 +126,7 @@ ordenan, en [docs/technical/estructura.md](docs/technical/estructura.md).
 
 ## Verificación
 - **Todo Godot con ventana se lanza con `tools/godot_ventana.sh`** (no le roba el foco al usuario; carpeta de los
-  agentes `D:/Godot/agentes/meca`).
+  agentes `D:/Godot/agentes/meca-60`).
 - **Nunca cerrar un Godot que no sea de los agentes**: sólo los de `--path D:/Godot/agentes/...`.
 - Chequeo de compilación: `godot --headless --path . --editor --quit`; los warnings son errores (correrlo dos veces
   después de agregar o borrar clases: la primera puede no ver los errores).

@@ -80,8 +80,82 @@ func _ray_end() -> Vector3:
 	# El centro de la pantalla es hacia donde mira el ojo (−Z), con cámara o sin ella.
 	return player_camera.global_position - player_camera.global_basis.z.normalized() * ray_length
 
+## ── CON LA CÁMARA ISOMÉTRICA (22/11/2026; el usuario: «cuando vos estás cerca de la meca y apuntando tu personaje hacia
+## la meca, si apretás E te subís, y también sale el outline. Y lo mismo con las consolas»): no hay mira. Vale lo que esté
+## cerca y adelante del personaje y se use con la E; la meca cuenta entera, sin importar qué silla quede más cerca.
+const ISO_REACH := 1.6
+const ISO_CONE := 0.35
+const ISO_OUTLINE := 0.03
+var iso := false:
+	set(on):
+		iso = on
+		force_clear()
+		if is_instance_valid(_outline_material):
+			_outline_material.set_shader_parameter("outline_thickness", ISO_OUTLINE if on else outline_size)
+
+
+func _iso_pick() -> Interactable:
+	var from := _get_chest_tip()
+	var ahead := -char_rigidbody.global_basis.z
+	ahead.y = 0.0
+	ahead = ahead.normalized()
+	var query := PhysicsShapeQueryParameters3D.new()
+	var sphere := SphereShape3D.new()
+	sphere.radius = ISO_REACH
+	query.shape = sphere
+	query.transform = Transform3D(Basis(), from + ahead * ISO_REACH * 0.75)
+	query.collision_mask = 0xFFFFFFFF & ~PhysicsLayers.PARCEL_BOUND & ~MotionFrame.LAYER
+	query.exclude = [char_rigidbody.get_rid()]
+	var best: Interactable = null
+	var best_score := ISO_CONE
+	for hit: Dictionary in player_camera.get_world_3d().direct_space_state.intersect_shape(query, 32):
+		var collider := hit["collider"] as Node
+		if not is_instance_valid(collider) or _is_own_character(collider):
+			continue
+		var found := _iso_usable(collider)
+		if found == null or not found.can_interact():
+			continue
+		var to := found.global_position - from
+		to.y = 0.0
+		var score := to.normalized().dot(ahead)
+		if score > best_score:
+			best = found
+			best_score = score
+	# LA MECA SE MIDE EN PLANTA: su caja va arriba de las piernas, por encima de la cabeza del que está al lado.
+	for node in get_tree().get_nodes_in_group(CageBoarding.GROUP):
+		var boarding := node as CageBoarding
+		var mech := boarding.get_parent() as Mech
+		if mech == null or not boarding.can_interact():
+			continue
+		if from.y < mech.support.y - 1.0 or from.y > mech.global_position.y + mech.size.y:
+			continue
+		var flat := mech.global_position - from
+		flat.y = 0.0
+		if flat.length() > maxf(mech.size.x, mech.size.z) * 0.5 + ISO_REACH:
+			continue
+		var score := flat.normalized().dot(ahead)
+		if score > best_score:
+			best = boarding
+			best_score = score
+	return best
+
+
+## Lo que la E usa de `node`: lo que se activa o se aprieta. Las piezas de una meca no (se sube a ella entera, arriba).
+func _iso_usable(node: Node) -> Interactable:
+	var at := node
+	while at != null:
+		if at is Mech:
+			return null
+		at = at.get_parent()
+	var found := _find_interactable(node)
+	return found if found is ActivatableInteractable or found is TouchComponent else null
+
+
 func _process_hover() -> void:
 	if not is_instance_valid(player_camera):
+		return
+	if iso:
+		_set_hovered(_iso_pick())
 		return
 	var hit := cast_aim_ray()
 	if hit.is_empty():

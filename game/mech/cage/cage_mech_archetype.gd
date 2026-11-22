@@ -39,6 +39,11 @@ func keys() -> Array[SandboxKey]:
 		func(parcel: SandboxParcel, crew: int) -> void:
 			CageShape.crew = crew
 			Mech.rebuild_all(parcel.get_tree())))
+	out.append(SandboxKey.toggle(KEY_Y, SandboxKey.Weight.NORMAL, "maniquíes en las sillas",
+		func() -> bool: return MechCabin.dummies_on,
+		func(parcel: SandboxParcel, on: bool) -> void:
+			MechCabin.dummies_on = on
+			Mech.rebuild_all(parcel.get_tree())))
 	out.append(SandboxKey.toggle(KEY_L, SandboxKey.Weight.NORMAL, "la grilla de los tableros",
 		func() -> bool: return CageBoards.show_grid,
 		func(parcel: SandboxParcel, on: bool) -> void: CageBoards.set_grid_visible(parcel.get_tree(), on)))

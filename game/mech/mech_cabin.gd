@@ -28,6 +28,9 @@ var interior: StaticBody3D = null
 ## Las sillas (las pone cada una, en su orden) y los maniquíes sentados en ellas (ver `seat_dummies`).
 var chairs: Array[SeatInteractable] = []
 var dummies: Array[Node3D] = []
+## SI LAS SILLAS LLEVAN MANIQUÍES (22/11/2026; el usuario: «esos dummies yo los tenía para testear nomás… que sea un
+## toggle»). Apagado: la partida y el sandbox arrancan sin ellos; en la fila Meca jaula, la Y los prende.
+static var dummies_on := false
 
 var _riders := {}
 
@@ -64,7 +67,7 @@ func seat_dummies() -> void:
 ## UN MANIQUÍ EN LA SILLA `i` (ver `seat_dummies`).
 func seat_dummy(i: int) -> void:
 	var holder := mech.get_parent() as Node3D
-	if holder == null:
+	if holder == null or not dummies_on:
 		return
 	var dummy := (load(DUMMY_SCENE) as PackedScene).instantiate() as BoneInstantiator
 	dummy.kind = CharacterKind.npc()

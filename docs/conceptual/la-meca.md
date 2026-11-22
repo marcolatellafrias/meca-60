@@ -75,7 +75,7 @@ meca»):
    **Un solo idioma para las dos cápsulas** (17/11/2026, el usuario: «son como dos esferas distintas»): o todo cubo
    chanfleado (arriba, el tazón de la misma cápsula: cuatro cuadrados inclinados de tablero y cuatro triángulos), o todo
    en anillos de ocho planos (la cápsula de abajo hecha como el pozo de arriba). Con las dos cápsulas del mismo tamaño,
-   el cuerpo redondo a la medida de la cápsula calza en las dos caras. Maquetas: `tests/capsule_language_look`.
+   el cuerpo redondo a la medida de la cápsula calza en las dos caras. *Sus maquetas (`tests/capsule_language_look`) se borraron el 22/11/2026: están en el commit `99568ad`.*
    **Por ahora** (el usuario, 17/11/2026): la cuadrada como está, y la redonda con el cuerpo y la cápsula de cubo
    chanfleado (la cápsula alargada de hoy) y arriba el octógono con el pozo de ocho tableros inclinados (lo que más lugar
    da para controles); el cuerpo es el pegamento: se agranda o se le cambia el chanfle para que los módulos encajen.

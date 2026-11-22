@@ -22,6 +22,10 @@ static func rows() -> Array[SandboxRow]:
 			.panel(KEY_F5, EQUIPMENT_PANEL, EquipmentPanel.new(cage)) \
 			.panel(KEY_F6, POSES_PANEL, ArmPosesPanel.new()) \
 			.panel(KEY_F7, HANDLING_PANEL, CageHandlingPanel.new()),
+		# LA CÁMARA ISOMÉTRICA (22/11/2026): la meca, subirse con la E y las teclas compartidas.
+		SandboxRow.new(SandboxSuper.Id.MECH, "Cámara isométrica") \
+			.add(SandboxRow.Build.NEAR, [IsoArchetype.new()]) \
+			.panel(KEY_F1, "la cámara isométrica: proyección, zoom y ángulo", IsoPanel.new()),
 	]
 
 

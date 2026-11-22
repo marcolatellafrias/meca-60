@@ -183,5 +183,18 @@ func gameplay_active() -> bool:
 	return _open.is_empty()
 
 func _refresh() -> void:
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if _open.is_empty() else Input.MOUSE_MODE_VISIBLE
+	_apply_mouse()
 	changed.emit()
+
+
+## EL MOUSE A LA VISTA SIN FRENAR EL JUEGO (Alt arriba de la meca, ver MechCrewHud): no es un overlay, las teclas siguen.
+var mouse_peek := false
+
+
+func peek_mouse(on: bool) -> void:
+	mouse_peek = on
+	_apply_mouse()
+
+
+func _apply_mouse() -> void:
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if _open.is_empty() and not mouse_peek else Input.MOUSE_MODE_VISIBLE

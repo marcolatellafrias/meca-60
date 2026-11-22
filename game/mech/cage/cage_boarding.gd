@@ -14,6 +14,8 @@ extends ActivatableInteractable
 ## Los puestos, en el orden en que se llenan (índices de CageCabin.chairs).
 const ORDER := [CageCabin.DRIVER, CageCabin.LOCOMOTION, CageCabin.GUNNER]
 const NUMBER_KEYS := {KEY_1: 0, KEY_2: 1, KEY_3: 2, KEY_KP_1: 0, KEY_KP_2: 1, KEY_KP_3: 2}
+## Con la cámara isométrica, la E las busca por cercanía (ver InteractionDetector._iso_pick).
+const GROUP := "cage_boarding"
 
 var cabin: CageCabin = null
 ## El puesto donde estaba sentado el jugador en el último paso (−1, ninguno): al dejarlo, vuelve su maniquí.
@@ -22,15 +24,21 @@ var _player_post := -1
 
 func _init() -> void:
 	name = "Subirse"
+	add_to_group(GROUP)
 
 
 func can_interact() -> bool:
 	return _next() >= 0
 
 
-## Nada que resaltar: es la meca entera.
+## Con la cámara isométrica se resalta la meca entera (ver InteractionDetector, `iso`); en primera persona, nada.
 func get_outline_targets() -> Array[Node]:
-	return []
+	var targets: Array[Node] = []
+	var player := DesignSandbox.player_of(get_tree())
+	if is_instance_valid(player) and is_instance_valid(player.player_controller) \
+			and is_instance_valid(player.player_controller.iso_view):
+		targets.append(get_parent())
+	return targets
 
 
 func activate(actor: Node = null) -> void:

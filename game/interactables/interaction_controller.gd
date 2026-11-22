@@ -877,6 +877,10 @@ func try_activate(bi: Node) -> void:
 	var hovered := detector.get_hovered() if is_instance_valid(detector) else null
 	if hovered is ActivatableInteractable:
 		(hovered as ActivatableInteractable).activate(bi)
+	elif detector.iso and hovered is TouchComponent:
+		# CON LA CÁMARA ISOMÉTRICA, la E aprieta y suelta un botón (no hay clic).
+		_start_control(hovered as TouchComponent)
+		_stop_control()
 
 func start_throw_charge() -> void:
 	if _is_charging_throw: return

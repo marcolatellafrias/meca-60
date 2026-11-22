@@ -131,7 +131,7 @@ mueve directamente con la cámara del jugador… se va a limitar a movimiento de
 la silla —la gira otra cosa, como la torreta del artillero con su yugo— (`BoneInstantiator.fixed_seat`, `_apply_look`);
 la cámara del jugador mira libre dentro del cono (`PlayerController._cap_seated_look`, `_face_camera`,
 `apply_camera_pitch`) y la cabeza gira lo que se aparta del frente, con todo el cabeceo y nada del tronco
-(`fixed_seat_look_yaw`, animations.gd). Sin fijar, como siempre. Prueba con captura: `tests/fixed_seat_look.tscn`.
+(`fixed_seat_look_yaw`, animations.gd). Sin fijar, como siempre. *Su prueba con captura (`tests/fixed_seat_look.tscn`) se borró el 22/11/2026: está en el commit `99568ad`.*
 
 **Lo que cuesta la fila Locomoción** (17/11/2026, diagnóstico; nada arreglado todavía): `tests/locomotion_perf.tscn` arma
 las siete escenas juntas (42 personajes, 846 cuerpos rígidos) y mide de a una dimensión. Armarlas: 2,2 s en un cuadro

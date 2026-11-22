@@ -14,6 +14,7 @@ var _shots: Array = []
 
 
 func _ready() -> void:
+	MechCabin.dummies_on = true
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--salida="):
 			_folder = argument.trim_prefix("--salida=")

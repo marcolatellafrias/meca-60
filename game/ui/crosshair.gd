@@ -20,6 +20,8 @@ const EDGE := 2.0
 const EDGE_COLOR := Color(0.0, 0.0, 0.0, 0.7)
 
 var _dot: Control = null
+## Sin mira (la cámara isométrica, ver PlayerController.set_iso).
+var off := false
 
 
 func _ready() -> void:
@@ -37,7 +39,7 @@ func _ready() -> void:
 
 
 func _process(_delta: float) -> void:
-	var on := UIState.gameplay_active()
+	var on := UIState.gameplay_active() and not off
 	if on != visible:
 		visible = on
 

@@ -5,6 +5,7 @@ extends Node
 ## se para. Imprime dónde está y cuántos maniquíes hay en cada paso.
 
 func _ready() -> void:
+	MechCabin.dummies_on = true
 	add_child((load("res://game/sandbox/sandbox.tscn") as PackedScene).instantiate())
 	await get_tree().create_timer(8.0, true, false, true).timeout
 	var mech := get_tree().root.find_children("*", "CageMech", true, false)[0] as CageMech

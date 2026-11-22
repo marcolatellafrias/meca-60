@@ -37,6 +37,10 @@ var _swing := -1
 ## HACIA DÓNDE APUNTAN LAS PIERNAS (el giro en Y de la pelvis, en el mundo): lo lee quien quiera seguirlas (el módulo de
 ## arriba de la meca jaula, ver CageMech.upper_heading).
 var facing_yaw := 0.0
+## LAS PIERNAS SIEMPRE BUSCAN EL FRENTE (22/11/2026; el usuario: «las piernas/hip siempre intentan apuntar al frente de
+## la meca»): sin esto, un pie sólo gira cuando da un paso. Lo prende quien la maneja con las teclas compartidas (MechCrew).
+var pivot_feet := false
+const PIVOT_SPEED := PI
 var _planted := false
 ## LA MARCHA COMÚN (Gait), de dos caderas; y hacia dónde miraba cada pie al salir.
 var _gait := Gait.new()
@@ -179,6 +183,9 @@ func _walk(delta: float, yaw: float) -> void:
 			if _lift_yaw[i] != INF:
 				_feet_yaw[i] = yaw
 			_lift_yaw[i] = INF
+			# GIRANDO QUIETA, el pie apoyado pivota hacia el frente (ver `pivot_feet`).
+			if pivot_feet and _feet_yaw.size() > i:
+				_feet_yaw[i] = rotate_toward(_feet_yaw[i], yaw, PIVOT_SPEED * delta)
 		_feet[i] = _gait.feet[i]
 
 

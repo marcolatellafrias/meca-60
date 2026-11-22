@@ -3,7 +3,7 @@
 `game/mech/cage/` · fila **Meca jaula** (la única meca del sandbox) · ver [[dos-paradigmas]], [[brazo]],
 [[base-comun]], [[tableros]], [[armamento]]
 
-**La jaula de las maquetas, hecha meca** (16/11/2026). Sale de `tests/cage_ideas_look`, la 166 (el usuario: «empezar a
+**La jaula de las maquetas, hecha meca** (16/11/2026). Sale de `tests/cage_ideas_look` (borrada el 22/11/2026, está en el commit `99568ad`), la 166 (el usuario: «empezar a
 migrar esta meca a algo funcional… que camine… que se pueda poseer la meca y que los brazos anden y las piernas anden»).
 Es la cabina de la meca (`Mech.Cabin.CAGE`). Se maneja entera poseyéndola (la O; la T cambia la vista) o, **desde el
 17/11/2026, desde adentro, con los controles de la variante para 3** (ver [[tableros]]): abajo los brazos y el torso,

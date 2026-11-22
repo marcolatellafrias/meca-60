@@ -10,6 +10,15 @@ extends ToolMechKeys
 const CHASE := Vector3(0.0, 4.5, 10.0)
 const LOOK_UP := 1.0
 
+## Las teclas de los que van arriba: escriben lo que se pide antes de leerlo.
+var crew: MechCrew = null
+
+
+func read() -> void:
+	if crew != null:
+		crew.apply()
+	super()
+
 
 func camera(first: bool, delta: float) -> Transform3D:
 	if first:

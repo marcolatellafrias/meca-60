@@ -10,7 +10,7 @@ config_version=5
 
 [application]
 
-config/name="Meca"
+config/name="Meca 60"
 run/main_scene="res://game/sandbox/sandbox.tscn"
 config/features=PackedStringArray("4.5")
 

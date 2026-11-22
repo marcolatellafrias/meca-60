@@ -31,6 +31,7 @@ El detalle, en [[partida]].
 | Nota | Qué tiene |
 |---|---|
 | [[estructura]] | **Cómo está armado el código**: la meca y sus piezas, los brazos, lo traído. La meca grande se borró el 17/11/2026 (está en el commit `0bcaeaf`). |
+| [[camara-isometrica]] | **El rumbo desde el 22/11/2026**: la cámara isométrica, la E por cercanía, las teclas compartidas que se bloquean y sus cuadrados. Donde contradiga notas viejas de puestos y primera persona, vale ésta. |
 | [[meca-jaula]] | **La meca, la jaula de las maquetas** (la única desde el 17/11/2026): chica, cinemática con brazos físicos (el cañón en lugar del antebrazo, el palo en el puño pesado), tres cabinas, la energía común, sus teclas, su propio F1 de moverse, la de práctica. |
 | [[tableros]] | **Las caras con tablero**: la grilla de 4 cm en cada cara que puede llevar controles (`FaceBoard`), las piezas de character-parametric sobre su base, en la meca jaula. |
 | [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto, y lo que llevan en la punta (el cañón de energía, el taladro, el palo). |

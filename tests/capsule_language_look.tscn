@@ -1,6 +1,0 @@
-[gd_scene format=3]
-
-[ext_resource type="Script" path="res://tests/capsule_language_look.gd" id="1"]
-
-[node name="CapsuleLanguageLook" type="Node"]
-script = ExtResource("1")
