@@ -52,6 +52,7 @@ static var current := KnobsFile.load_into(BrawlerSettings.new(), SAVED) as Brawl
 @export var hook: HookPower = HookPower.new()
 @export var flame: FlamePower = FlamePower.new()
 @export var bomb: BombPower = BombPower.new()
+@export var orbs: OrbsPower = OrbsPower.new()
 
 @export_group("Golpes")
 ## LO QUE LE SACA UNA PIÑA DE LA MECA: en el cuerpo, y en el horno abierto (el punto débil).
@@ -96,13 +97,13 @@ static func make_flight() -> BossMode:
 	mode.hurry = 1.0
 	mode.chain = 0.0
 	mode.strong = false
-	mode.fly_height = 30.0
-	mode.keep_from = 30.0
-	mode.keep_to = 55.0
+	mode.fly_height = 9.0
+	mode.keep_from = 7.0
+	mode.keep_to = 11.0
 	mode.look = 0
 	return mode
 
 
 ## Sus poderes, en el orden de BrawlerBrain.Act.
 func powers() -> Array[BossPower]:
-	return [charge, slam, throw, spin, hook, flame, bomb]
+	return [charge, slam, throw, spin, hook, flame, bomb, orbs]

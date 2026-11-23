@@ -62,6 +62,16 @@ func draft() -> Resource:
 	return _draft
 
 
+## LAS PERILLAS DE VERDAD CAMBIARON POR OTRO LADO (un experimento, Experiments): el borrador las toma y el panel se
+## rearma, con su línea de arriba.
+func reload_draft() -> void:
+	if _draft == null:
+		return
+	KnobsFile.copy(_draft, knobs())
+	rebuild()
+	say(note())
+
+
 func say(text: String) -> void:
 	if _state != null:
 		_state.text = text

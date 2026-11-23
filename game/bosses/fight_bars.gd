@@ -2,7 +2,7 @@ class_name FightBars
 extends CanvasLayer
 
 ## LAS BARRAS DE VIDA DE LA PELEA (13/11/2026): la del jefe, ancha arriba al medio, con su nombre (como en los Souls); la
-## de la meca, abajo a la izquierda. Se ven sólo cuando la cámara está cerca del jefe. Leen las vidas (Health) en cada
+## de la meca, abajo a la izquierda, sólo si no tiene tripulación (la que tiene muestra la suya arriba: MechStatusBars). Se ven sólo cuando la cámara está cerca del jefe. Leen las vidas (Health) en cada
 ## cuadro: no hay que avisarles nada.
 
 ## A cuánto del jefe tiene que estar la cámara para verlas (m).
@@ -32,7 +32,7 @@ func _process(_delta: float) -> void:
 	var size := get_viewport().get_visible_rect().size
 	_show(_boss_bar, near, Health.of(boss) if near else null, boss_name,
 		Vector2((size.x - BOSS_SIZE.x) * 0.5, 84.0))
-	var mech_ok := near and mech != null and is_instance_valid(mech)
+	var mech_ok := near and mech != null and is_instance_valid(mech) and mech.get_node_or_null("Tripulacion") == null
 	_show(_mech_bar, mech_ok, Health.of(mech) if mech_ok else null, str(mech.name) if mech_ok else "",
 		Vector2(24.0, size.y - 60.0))
 

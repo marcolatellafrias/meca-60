@@ -65,9 +65,9 @@ func wanted(asked: Vector3) -> Vector3:
 	return asked.lerp(arm.stance_at(MechArm.Stance.COVER), smoothstep(0.0, 1.0, _raise))
 
 
-## No pega con el escudo: nada suyo golpea.
-func strike_points() -> PackedVector3Array:
-	return PackedVector3Array()
+## No pega con el escudo.
+func zone() -> Dictionary:
+	return {}
 
 
 func status() -> String:

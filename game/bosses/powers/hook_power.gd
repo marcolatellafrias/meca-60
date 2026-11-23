@@ -15,13 +15,13 @@ const HOLD := Vector2(12.0, 8.0)
 ## qué arco (m de alto, s de vuelo) y cuánta vida te saca al caer. Después se queda (s).
 @export_range(0.2, 4.0, 0.05) var windup := 1.0
 @export_range(0.0, 2.0, 0.05) var lock := 0.6
-@export_range(20.0, 200.0, 5.0) var speed := 90.0
-@export_range(20.0, 150.0, 5.0) var length := 85.0
-@export_range(2.0, 20.0, 0.5) var width := 6.0
+@export_range(20.0, 200.0, 5.0) var speed := 40.0
+@export_range(5.0, 150.0, 5.0) var length := 13.0
+@export_range(2.0, 20.0, 0.5) var width := 2.5
 @export_range(0.2, 4.0, 0.05) var swing_time := 1.2
 @export_range(90.0, 1080.0, 10.0) var swing_speed := 400.0
-@export_range(10.0, 150.0, 5.0) var fling_distance := 70.0
-@export_range(0.0, 60.0, 1.0) var fling_arc := 25.0
+@export_range(2.0, 150.0, 5.0) var fling_distance := 8.0
+@export_range(0.0, 60.0, 1.0) var fling_arc := 5.0
 @export_range(0.3, 4.0, 0.05) var fling_time := 1.3
 @export_range(0.0, 100.0, 1.0) var damage := 35.0
 @export_range(0.2, 4.0, 0.05) var recover := 1.0
@@ -36,8 +36,12 @@ var hand: BrawlerHook = null
 
 
 func _init() -> void:
-	reach_from = 25.0
-	reach_to = 80.0
+	reach_from = 5.0
+	reach_to = 13.0
+
+
+func reach_knobs() -> PackedStringArray:
+	return PackedStringArray(["speed", "length", "width", "fling_distance", "fling_arc"])
 
 
 func title() -> String:
@@ -124,7 +128,7 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 				boss.spin = 0.0
 				boss.pose = Brawler.Pose.THROW
 				var to := hold + waist * fling_distance
-				to.y = 0.0
+				to.y = boss.global_position.y
 				if boss.arena != null:
 					to = boss.arena.hold(to, b.half_width() + 2.0)
 				HitReaction.of(b.target).fling(to, fling_arc, fling_time, damage, "el revoleo")

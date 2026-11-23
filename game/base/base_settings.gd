@@ -14,11 +14,11 @@ static var current := KnobsFile.load_into(BaseSettings.new(), SAVED) as BaseSett
 ## (≈ 7 m) quepa parada.
 @export_range(8.0, 25.0, 0.25) var nave_height := 12.0
 ## EL FONDO DE LA NAVE (m), que es también el lado del elevador: un cuadrado que crece hacia su lado.
-@export_range(6.0, BaseLayout.MAX_DEPTH, 0.25) var nave_depth := 10.0
+@export_range(6.0, BaseLayout.MAX_DEPTH, 0.25) var nave_depth := 18.0
 ## LA FRANJA DE LAS CONSOLAS: su ancho (también el largo del gimnasio), su fondo (también el lado de la esclusa) y su
 ## alto (también el de la esclusa) (m). Desde 11 de ancho: lo que necesitan las consolas, el cuadro y dos casilleros.
-@export_range(11.0, BaseLayout.MAX_WIDTH, 0.25) var strip_width := 14.0
-@export_range(4.0, BaseLayout.MAX_STRIP, 0.25) var strip_depth := 6.0
+@export_range(11.0, BaseLayout.MAX_WIDTH, 0.25) var strip_width := 28.0
+@export_range(4.0, BaseLayout.MAX_STRIP, 0.25) var strip_depth := 16.0
 @export_range(3.0, 10.0, 0.25) var strip_height := 4.0
 ## EL POZO DEL ASCENSOR (m): del techo de la base a la segunda compuerta, la del piso de la arena (el usuario, 19/11/2026:
 ## «la columna vertical larga, o no tan larga»).

@@ -9,13 +9,13 @@ extends BossPower
 ## El aviso (s), cuánto gira (s) y a cuántos °/s, a qué velocidad anda (m/s) y cuánto corrige hacia vos (°/s; 0,
 ## derecho), y cuánto queda mareado (s). Si te tocan los brazos, cuánta vida te saca y cuánto te empuja (m).
 @export_range(0.2, 4.0, 0.05) var windup := 1.0
-@export_range(0.5, 8.0, 0.1) var time := 3.5
+@export_range(0.5, 8.0, 0.1) var time := 1.6
 @export_range(90.0, 1440.0, 10.0) var turn := 1080.0
-@export_range(1.0, 40.0, 0.5) var move := 20.0
+@export_range(1.0, 40.0, 0.5) var move := 8.0
 @export_range(0.0, 90.0, 1.0) var homing := 0.0
 @export_range(0.2, 6.0, 0.1) var dizzy := 2.0
 @export_range(0.0, 100.0, 1.0) var damage := 20.0
-@export_range(0.0, 60.0, 0.5) var push := 16.0
+@export_range(0.0, 60.0, 0.5) var push := 6.0
 
 @export_group("Cuerpo")
 ## Lo que usa del cuerpo (se elige entre lo que el cuerpo ofrece: ver BossPower).
@@ -25,8 +25,12 @@ extends BossPower
 @export var exposes := true
 
 func _init() -> void:
-	reach_from = 30.0
-	reach_to = 110.0
+	reach_from = 4.0
+	reach_to = 11.0
+
+
+func reach_knobs() -> PackedStringArray:
+	return PackedStringArray(["move", "push"])
 
 
 func title() -> String:

@@ -19,6 +19,9 @@ const SAVED_MOVES := "res://game/mech/cage/cage_moves.tres"
 const START_SHRINK := 0.5
 static var MOVES := CageMech.load_moves()
 
+var guns: MechGuns = null
+var dasher: MechDash = null
+
 
 ## LAS PERILLAS DE MOVERSE: las guardadas; si no hay, las de las otras mecas con las distancias achicadas.
 static func load_moves() -> KinematicSettings:
@@ -118,11 +121,28 @@ func _build() -> void:
 	var boarding := CageBoarding.new()
 	boarding.cabin = cabin as CageCabin
 	add_child(boarding)
+	# LA AMETRALLADORA Y LOS MISILES, a los costados, en todas las versiones (ver MechGuns).
+	guns = MechGuns.new()
+	guns.mech = self
+	add_child(guns)
+	dasher = MechDash.new()
+	dasher.mech = self
+	var thrusters := MechThrusters.new()
+	thrusters.mech = self
+	add_child(thrusters)
 	# LAS TECLAS COMPARTIDAS de los que van arriba (ver MechCrew).
 	var crew := MechCrew.new()
 	crew.mech = self
 	add_child(crew)
 	(keys as CageMechKeys).crew = crew
+
+
+## INTOCABLE EN LA RÁFAGA (MechDash, DashSettings.burst_untouchable): el golpe se da por usado, sin destello; si no,
+## lo de siempre (el escudo, ToolMech.block_hit).
+func block_hit(at := Vector3.INF) -> bool:
+	if dasher != null and dasher.untouchable():
+		return true
+	return super(at)
 
 
 ## AL POSEERLA SE TOMA EL PUESTO DEL QUE MANEJA: su maniquí se va, y vuelve al soltarla (ver CageCabin.evict).
@@ -144,8 +164,8 @@ func default_loadout() -> Array[ArmLoadout]:
 ## Lo que lleva de arranque (sin nada guardado en el F5): el cañón a la izquierda y el puño pesado a la derecha (el
 ## usuario, 17/11/2026: «el puño lo haría que reemplace el palo por ahora para estas pruebas iniciales»).
 static func default_arms() -> Array[ArmLoadout]:
-	return [ArmLoadout.of(ArmLoadout.Motion.POSE, ArmLoadout.Tip.CANNON, true),
-		ArmLoadout.of(ArmLoadout.Motion.MUSCLE, ArmLoadout.Tip.HEAVY_FIST, true)]
+	return [ArmLoadout.of(ArmLoadout.Tip.CANNON, true),
+		ArmLoadout.of(ArmLoadout.Tip.HEAVY_FIST, true)]
 
 
 ## LAS PLACAS DE LAS PIERNAS (al frente del muslo y de la canilla).

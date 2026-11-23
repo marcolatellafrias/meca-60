@@ -61,9 +61,9 @@ const DRIVER := 0
 const LOCOMOTION := 1
 const GUNNER := 2
 
-## El arma del artillero (la cuna de su torreta, lo que cabecea) y LA TORRETA (GunnerTurret).
-var gun: Node3D = null
-var turret: GunnerTurret = null
+## Dónde va la silla del artillero, sobre su plato. *Hasta el 22/11/2026 tenía una torreta con yugo, armas y tableros: las
+## armas pasaron a los costados de toda meca (MechGuns), y lo demás está en el commit 5238ff8.*
+var _gunner_at := Vector3.ZERO
 var _root: Node3D = null
 ## ── EL MÓDULO DE ARRIBA, EN SU PROPIO PIVOTE (17/11/2026, el usuario: «le daría la habilidad de girar aparte… por ahora
 ## lo único que dejaría sería el groundwork bien hecho para que sea fácil de hacerlo en el futuro») ────────────────────
@@ -200,11 +200,7 @@ func _ready() -> void:
 	if crew >= 2:
 		_chair(LOCOMOTION, Vector3(0.0, tall, 0.05), form.arms_eye, upper)
 	if crew >= 3:
-		# La del artillero va en la cuna de su torreta, FIJA: el cuerpo va con la torreta y la cabeza mira en su cono
-		# (SeatInteractable.fixed; el usuario, 18/11/2026: «una variante de la silla que sea fija… se va a mover con el
-		# yugo»).
-		_chair(GUNNER, Vector3.ZERO, GUNNER_SEATED, turret.frame)
-		(chairs[GUNNER] as SeatInteractable).fixed = true
+		_chair(GUNNER, _gunner_at, GUNNER_SEATED, upper)
 
 
 ## ── LAS CARAS QUE PUEDEN LLEVAR TABLERO (ver FaceBoard) ──────────────────────────────────────────────────────────
@@ -414,8 +410,7 @@ func _upper(pit: DeskPit, tall: float) -> void:
 
 ## ── EL ARTILLERO ─────────────────────────────────────────────────────────────────────────────────────────────────
 
-## LA TORRE, contra el borde de atrás (redonda o cuadrada, de su lado); arriba, el rulemán y el plato que gira, con la
-## silla y, al frente, el pie del arma con su horquilla y el arma (sólo se ve).
+## LA TORRE, contra el borde de atrás (redonda o cuadrada, de su lado); arriba, el rulemán y el plato, con la silla.
 func _tower(form: CageShape, tall: float, pit: DeskPit) -> void:
 	var wide := form.tower_wide()
 	var deep := form.tower_deep()
@@ -437,11 +432,8 @@ func _tower(form: CageShape, tall: float, pit: DeskPit) -> void:
 	var at := Vector3(0.0, head, middle.y)
 	var plate := minf(minf(wide, deep) * 0.5, 0.42)
 	Clay.cylinder(upper, plate, 0.08, at + Vector3(0.0, 0.04, 0.0), RIM_COLOR)
-	# EL PUESTO DEL ARTILLERO: la torreta (GunnerTurret, del módulo de las armas desde el 18/11/2026), sobre el plato.
-	turret = GunnerTurret.new()
-	turret.position = at + Vector3(0.0, 0.08, 0.05)
-	upper.add_child(turret)
-	gun = turret.cradle
+	# EL PUESTO DEL ARTILLERO: por ahora, sólo su silla sobre el plato.
+	_gunner_at = at + Vector3(0.0, 0.08, 0.05)
 
 
 ## ── LA ESPALDA ──────────────────────────────────────────────────────────────────────────────────────────────────

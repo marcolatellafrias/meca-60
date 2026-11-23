@@ -31,7 +31,7 @@ const WHEN: Array[String] = ["in_calm", "in_mode_1", "in_mode_2", "reach_from", 
 ## Las perillas de los modos, en BrawlerSettings (en el orden de los tildes de los poderes).
 const MODES: Array[String] = ["rage", "flight"]
 ## Las perillas de los poderes, en BrawlerSettings (en el orden de BrawlerBrain.Act).
-const POWERS: Array[String] = ["charge", "slam", "throw", "spin", "hook", "flame", "bomb"]
+const POWERS: Array[String] = ["charge", "slam", "throw", "spin", "hook", "flame", "bomb", "orbs"]
 
 
 func setup_panel() -> void:
@@ -47,8 +47,9 @@ func fresh() -> Resource:
 	return BrawlerSettings.new()
 
 
+## Con un experimento firmado, el suyo (Experiments; el F5 de la partida).
 func saved_path() -> String:
-	return BrawlerSettings.SAVED
+	return Experiments.path_for(BrawlerSettings.SAVED)
 
 
 ## Lo que pelea toma las perillas nuevas (sus copias de cada poder).

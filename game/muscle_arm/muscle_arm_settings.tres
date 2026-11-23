@@ -1,6 +1,0 @@
-[gd_resource type="Resource" script_class="MuscleArmSettings" load_steps=2 format=3]
-
-[ext_resource type="Script" path="res://game/muscle_arm/muscle_arm_settings.gd" id="1_187dn"]
-
-[resource]
-script = ExtResource("1_187dn")

@@ -83,7 +83,7 @@ en algunas, **los controles de verdad de la meca para 3** (17/11/2026, el usuari
       en columna justo detrás de su mando, de arriba abajo **ráfaga, barrido y súper**. Ráfaga y barrido, mientras se
       mantiene; el súper carga mientras se mantiene y tira al soltar (`CannonTip`).
     - **El puño** (el de la derecha; el usuario: «el puño lo haría que reemplace el palo por ahora»): **cuanto más se
-      mantiene, más lenta y más fuerte la piña** (`MechArm.charged_strike`; en cuánto se carga y lo lenta y lo fuerte
+      mantiene, más se arma y más fuerte pega la piña** (`MechArm.charged_strike`; sale siempre a la misma velocidad; en cuánto se carga y lo fuerte
       que sale cargada del todo, en el F7: `CageHandling`). Sin energía, no sale.
   - **Dos pantallas en brazos fijos** (`ScreenArmArchetype`, 3 × 3 celdas en las caras de arriba de la cápsula): la
     **energía** de la meca y la **carga** de lo que se está manteniendo (la piña, o el súper del cañón). Quedan arriba

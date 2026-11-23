@@ -18,6 +18,8 @@ extends Mech
 
 var energy := MechEnergy.new()
 var shield := MechShield.new()
+## EL ESTADO DE STUN: lo que se ve, y la puerta para aturdirla desde afuera.
+var stun := MechStun.new()
 ## LO QUE MANEJAN SUS TECLAS, de lo que lleva en los brazos (ver `_build_arms`; lo que no lleva, nada): el cañón, lo que
 ## gira (el taladro o la sierra) y el brazo de las piñas (el primero sin ninguno de los dos).
 var cannon: CannonTip = null
@@ -40,6 +42,8 @@ func _ready() -> void:
 	add_child(energy)
 	shield.energy = energy
 	add_child(shield)
+	stun.mech = self
+	add_child(stun)
 	arms_net.name = "Red de los brazos"
 	arms_net.mech = self
 	add_child(arms_net)
@@ -64,11 +68,13 @@ func _from_front(at: Vector3) -> bool:
 		return true
 	var toward := at - global_position
 	toward.y = 0.0
-	var ahead := -global_basis.z
+	# Apuntado con el mouse (la V), frena de ese lado; si no, del frente del torso.
+	var aimed := shield.way.length() > 0.1
+	var ahead := shield.way if aimed else -global_basis.z
 	ahead.y = 0.0
 	if toward.length() < 0.01 or ahead.length() < 0.01:
 		return true
-	return rad_to_deg(ahead.angle_to(toward)) <= GUARD_HALF
+	return rad_to_deg(ahead.angle_to(toward)) <= (HitSettings.current.shield_half if aimed else GUARD_HALF)
 
 
 func _build() -> void:

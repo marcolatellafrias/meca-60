@@ -16,11 +16,9 @@ static var current := KnobsFile.load_into(IsoSettings.new(), SAVED) as IsoSettin
 ## Lo inclinada hacia abajo (°) y su giro alrededor de la vertical (°). 60° Y SIN GIRO (22/11/2026, elegido por el usuario
 ## entre seis ángulos): se leen los ataques en el piso y se sigue viendo la meca.
 @export_range(10.0, 89.0, 0.1) var pitch := 60.0
-@export_range(-180.0, 180.0, 1.0) var yaw := 0.0
+@export_range(-180.0, 180.0, 1.0) var yaw := 180.0
 ## La apertura con perspectiva (°; más baja, más parecida a la ortográfica).
 @export_range(5.0, 70.0, 1.0) var fov := 30.0
-## Lo alto que se ve sobre el personaje (m): lo que empieza más arriba (un techo, el piso de la arena) no se dibuja.
-@export_range(1.0, 30.0, 0.5) var cut := 3.0
 
 
 ## La orientación de la cámara.

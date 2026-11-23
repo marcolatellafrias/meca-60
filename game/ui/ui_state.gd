@@ -196,5 +196,21 @@ func peek_mouse(on: bool) -> void:
 	_apply_mouse()
 
 
+## APUNTAR CON EL MOUSE, a pie con la cámara isométrica (ver PlayerController._look_at_mouse): se ve y no sale de la ventana.
+var mouse_aim := false
+
+
+func aim_with_mouse(on: bool) -> void:
+	if on == mouse_aim:
+		return
+	mouse_aim = on
+	_apply_mouse()
+
+
 func _apply_mouse() -> void:
-	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED if _open.is_empty() and not mouse_peek else Input.MOUSE_MODE_VISIBLE
+	if not _open.is_empty() or mouse_peek:
+		Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	elif mouse_aim:
+		Input.mouse_mode = Input.MOUSE_MODE_CONFINED
+	else:
+		Input.mouse_mode = Input.MOUSE_MODE_CAPTURED

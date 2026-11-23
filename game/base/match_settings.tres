@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="MatchSettings" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/base/match_settings.gd" id="1_3npom"]
+
+[resource]
+script = ExtResource("1_3npom")
+controls = 1

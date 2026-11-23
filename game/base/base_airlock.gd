@@ -6,9 +6,9 @@ extends Node3D
 ## cierra para siempre»). Un cuadrado chico, del lado del fondo de la franja, en su punta:
 ##   · SE APARECE ACÁ. Dos bancos enfrentados, una luz roja que gira y el cartel «esperando tripulación». Mientras tanto,
 ##     la meca se arma del otro lado de la compuerta (con los que son): al abrirla no cambia a la vista.
-##   · EL BOTÓN, al lado de la compuerta de adelante (un botón de compuerta de los tableros, ButtonArchetype; el usuario:
-##     «un botoncito ahí de los de controllables»). Al apretarlo: la luz pasa a verde, un poco de vapor, la compuerta
-##     se abre; a los OPEN_TIME se cierra y no se abre más (el botón ya no hace nada).
+##   · LA COMPUERTA DE ADELANTE SE APUNTA Y SE ABRE CON LA E (BaseDoorUse; *hasta el 22/11/2026, con un botoncito al
+##     costado, difícil de apuntar*): la luz pasa a verde, un poco de vapor, la compuerta se abre; a los OPEN_TIME se
+##     cierra y no se abre más.
 ##   · LA COMPUERTA DE ATRÁS, la de «afuera», sellada en el juego. PARA PROBAR EN EL SANDBOX se abre con un botón de
 ##     afuera, así se puede entrar caminando; y la tecla de la parcela la rearma (ver BaseArchetype).
 ## En su marco: X hacia afuera de la franja (0 la compuerta de adelante), Z a lo largo de la punta de la franja, y = 0
@@ -19,6 +19,8 @@ const OPEN_TIME := 6.0
 const BACK_OPEN_TIME := 5.0
 ## El hueco de las compuertas.
 const DOOR := Vector2(2.2, 2.6)
+## El alto que se ve de la pared del lado de la cámara.
+const NEAR_WALL := 0.9
 const WAITING := "ESPERANDO TRIPULACIÓN"
 const GO := "ADELANTE"
 const SEALED := "CERRADA"
@@ -53,10 +55,10 @@ func build(side: float, tall: float) -> void:
 	var wall := BaseLayout.WALL
 	var color := BaseLayout.WALL_COLOR
 	Clay.solid(walls, Vector3(side, 0.4, side), Vector3(side * 0.5, -0.2, side * 0.5), BaseLayout.FLOOR_COLOR)
-	Clay.solid(walls, Vector3(side + wall, BaseLayout.ROOF, side + wall), Vector3(side * 0.5, tall + BaseLayout.ROOF * 0.5,
-		side * 0.5), color)
-	for z: float in [0.0, side]:
-		Clay.solid(walls, Vector3(side + wall, tall, wall), Vector3(side * 0.5, tall * 0.5, z), color)
+	# SIN TECHO, Y BAJA DEL LADO DE LA CÁMARA (22/11/2026): se ve adentro sin esconder nada; lo que frena sigue alto.
+	Clay.solid(walls, Vector3(side + wall, tall, wall), Vector3(side * 0.5, tall * 0.5, side), color)
+	Clay.box(walls, Vector3(side + wall, NEAR_WALL, wall), Vector3(side * 0.5, NEAR_WALL * 0.5, 0.0), color)
+	Clay.shape_box(walls, Vector3(side + wall, tall, wall), Vector3(side * 0.5, tall * 0.5, 0.0))
 	for x: float in [0.0, side]:
 		_door_wall(walls, x)
 	# los dos bancos, contra los costados
@@ -79,10 +81,12 @@ func build(side: float, tall: float) -> void:
 	_sign.outline_size = 10
 	_sign.transform = Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(wall * 0.5 + 0.02, DOOR.y + 0.45, side * 0.5))
 	add_child(_sign)
-	# el botón de adentro, al lado de la compuerta de adelante, mirando a la esclusa; el de afuera, al lado de la de
-	# atrás, mirando afuera (sólo para probar)
-	_button(Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(wall * 0.5, 1.25, side * 0.5 + DOOR.x * 0.5 + 0.45)),
-		_on_front_pressed)
+	# LA DE ADELANTE SE ABRE APUNTÁNDOLA A ELLA (BaseDoorUse); el botón de afuera, al lado de la de atrás, es sólo para
+	# probar en el sandbox
+	var use := BaseDoorUse.new()
+	use.airlock = self
+	use.position = Vector3(0.0, DOOR.y * 0.5, 0.0)
+	_front.add_child(use)
 	_button(Transform3D(Basis(Vector3.UP, PI * 0.5), Vector3(side + wall * 0.5, 1.25, side * 0.5 - DOOR.x * 0.5 - 0.45)),
 		_on_back_pressed)
 	_show()
@@ -101,13 +105,13 @@ func _door_wall(walls: StaticBody3D, x: float) -> void:
 ## LA LUZ QUE GIRA: una baliza en el techo con un foco que barre las paredes, y un brillo del mismo color.
 func _beacon_light() -> void:
 	_beacon = Node3D.new()
-	_beacon.position = Vector3(_side * 0.5, _tall - 0.25, _side * 0.5)
+	_beacon.position = Vector3(_side * 0.5, _tall + 0.15, _side)
 	add_child(_beacon)
 	_bulb = Clay.cylinder(_beacon, 0.16, 0.25, Vector3.ZERO, RED)
 	# propio: el de Clay es compartido por color, y éste cambia
 	_bulb.material_override = (_bulb.material_override as StandardMaterial3D).duplicate()
 	_lamp = SpotLight3D.new()
-	_lamp.basis = Basis(Vector3.RIGHT, deg_to_rad(-20.0))
+	_lamp.basis = Basis(Vector3.RIGHT, deg_to_rad(-35.0))
 	_lamp.spot_range = _side * 1.5
 	_lamp.spot_angle = 25.0
 	_lamp.light_energy = 6.0
@@ -141,7 +145,7 @@ func _process(delta: float) -> void:
 		_beacon.rotate_y(delta * (3.0 if armed else 0.0))
 
 
-## EL BOTÓN DE ADENTRO, EN RED (ver docs/technical/flujo-de-partida.md): lo aprieta el capitán, que es el host; el host
+## ABRIR LA DE ADELANTE, EN RED (ver docs/technical/flujo-de-partida.md): la usa el capitán, que es el host; el host
 ## la abre en todos (`_open`, para todos y para él). Si lo aprieta otro, se lo pide al host, que no le hace caso: abre
 ## sólo el capitán. Sin red (el sandbox), el host es uno mismo.
 func _on_front_pressed() -> void:

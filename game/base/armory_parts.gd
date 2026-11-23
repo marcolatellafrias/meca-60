@@ -279,7 +279,7 @@ static func _wrap(root: Node3D, frame: Transform3D, length: float) -> void:
 ## de cada miembro (el brazo y el antebrazo, el muslo y la canilla). `tool_out`: el brazo (−1 o 1) que tiene la
 ## herramienta afuera y el puño adentro; 0, ninguno.
 ## *Es para mirar: toca adentro de los brazos y las piernas (`_upper`, `_forearm`, `_hand`, `_thigh`, `_shin`). Si queda,
-## los brazos y las piernas tienen que saber ponerse esto solos. Los brazos con músculos (MuscleArm) no se visten, y un
+## los brazos y las piernas tienen que saber ponerse esto solos. Un
 ## brazo sin mano (el del cañón de la meca jaula) no pierde ni engorda la suya. Hasta el 17/11/2026 lo mostraban
 ## tests/armory_dressed_look y armory_dressed_movie, con la meca grande; se borraron con ella.*
 static func dress(mech: Mech, loadout: Dictionary, tool_out := 0.0) -> void:

@@ -14,13 +14,13 @@ const RECOVER := 1.5
 ## El aviso (s), la velocidad (m/s) y en cuánto llega a ella (s), cuánto dura como mucho (s), cuánto corrige hacia vos
 ## (°/s: poco) y, estrellado, cuánto queda aturdido (s). Si te alcanza, cuánta vida te saca y cuánto te tira (m).
 @export_range(0.2, 4.0, 0.05) var windup := 1.4
-@export_range(5.0, 120.0, 0.5) var speed := 55.0
+@export_range(5.0, 120.0, 0.5) var speed := 20.0
 @export_range(0.0, 3.0, 0.05) var up_time := 0.3
-@export_range(0.5, 8.0, 0.1) var time := 3.0
+@export_range(0.5, 8.0, 0.1) var time := 0.8
 @export_range(0.0, 60.0, 1.0) var homing := 6.0
 @export_range(0.2, 8.0, 0.1) var stun := 2.5
 @export_range(0.0, 100.0, 1.0) var damage := 25.0
-@export_range(0.0, 60.0, 0.5) var push := 22.0
+@export_range(0.0, 60.0, 0.5) var push := 6.0
 ## Con ira, rebota en el borde una vez (y vuelve) en vez de estrellarse.
 @export var bounce_rage := true
 
@@ -37,8 +37,12 @@ var _bounced := false
 
 
 func _init() -> void:
-	reach_from = 35.0
-	reach_to = 140.0
+	reach_from = 5.0
+	reach_to = 13.0
+
+
+func reach_knobs() -> PackedStringArray:
+	return PackedStringArray(["speed", "push"])
 
 
 func title() -> String:
@@ -81,7 +85,7 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 			# LA ZONA DE GOLPE: todo su cuerpo, mientras embiste.
 			hits += int(b.hit_with([Brawler.ZONES[hit_zone]], 1.0, damage, "la embestida", HitReaction.Kind.KNOCKDOWN, boss.heading(),
 				push))
-			var passed := boss.heading().dot(b.to_target()) < 0.0 and b.distance() > 20.0
+			var passed := boss.heading().dot(b.to_target()) < 0.0 and b.distance() > 6.0 * BossSettings.current.reach_share()
 			var edge := boss.arena != null and boss.arena.at_edge(boss.global_position, boss.box().x * 0.5 + 0.5)
 			if edge and bounce_rage and b.strong() and not _bounced:
 				_bounced = true

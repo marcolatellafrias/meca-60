@@ -7,9 +7,8 @@ extends ArmTip
 ## también):
 ##   · CARGAR (`charging`, mantenido): toma velocidad (`spin`, de 0 a 1, en SPIN_UP) y gasta energía de a poco, más
 ##     cuanto más rápido gira. Suelto, se va frenando solo.
-##   · DESCARGAR (`strike`): un directo al frente, sin apuntar. En un brazo discreto, lo que toca recibe el impulso de la
-##     piña por lo que giraba al tirarlo (`hit`); en uno con músculos, pega como pega el brazo. Después de pegar, gira
-##     mucho menos.
+##   · DESCARGAR (`strike`): un directo al frente, sin apuntar. Su zona (un cono corto) pega según lo que giraba al tirarlo.
+##     Después de pegar, gira mucho menos.
 ## *Era DrillArm, un brazo discreto con la mecha en vez de mano, hasta el 16/11/2026.*
 
 ## En cuánto llega a girar a fondo cargando, y en cuánto se frena solo (s).
@@ -36,8 +35,6 @@ var _spinner: Node3D = null
 var _axis := Vector3.UP
 ## Lo que giraba al tirar el golpe de ahora.
 var _strike_spin := 0.0
-## Hasta dónde llega lo que gira, en el antebrazo (ver `_far`; 0, sin medir).
-var _reach_z := 0.0
 
 
 func step(delta: float) -> void:
@@ -69,43 +66,17 @@ func on_net_punch() -> void:
 	spin *= 0.3
 
 
-func hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> bool:
-	var push := lerpf(PUSH_STILL, PUSH_FULL, _strike_spin)
-	EnergyBolt.lands(body, velocity * StrikeSettings.current.hit_mass * push, at, _hit_name())
-	return true
+func zone() -> Dictionary:
+	return MechSkills.spin()
 
 
-## LO QUE GOLPEA: además del puño, lo que gira, a lo largo del antebrazo hasta su punta más lejana (la del cono del
-## taladro, el borde del disco de la sierra). *Hasta el 18/11/2026 golpeaba sólo el puño, que en éstas va adentro de la
-## boca: la mecha y el disco atravesaban lo que tocaban sin pegarle.*
-func strike_points() -> PackedVector3Array:
-	var points := super()
-	var start := -arm.forearm_length() * 0.5
-	var far := _far()
-	var count := maxi(int(ceil((start - far) / maxf(arm.strike_radius(), 0.05))), 1)
-	for i in count + 1:
-		points.append(forearm.global_transform * Vector3(0.0, 0.0, lerpf(start, far, float(i) / count)))
-	return points
+func zone_source() -> String:
+	return _hit_name()
 
 
-## HASTA DÓNDE LLEGA LO QUE GIRA, en el antebrazo (su −z): lo más adelante de sus mallas, medido una vez armado.
-func _far() -> float:
-	if _reach_z < 0.0:
-		return _reach_z
-	var start := -arm.forearm_length() * 0.5
-	if _spinner == null or not _spinner.is_inside_tree():
-		return start
-	var into := forearm.global_transform.affine_inverse()
-	var far := start
-	for found in _spinner.find_children("*", "MeshInstance3D", true, false) + [_spinner]:
-		var mesh := found as MeshInstance3D
-		if mesh == null or mesh.mesh == null:
-			continue
-		var box := mesh.get_aabb()
-		for corner in 8:
-			far = minf(far, (into * mesh.global_transform * box.get_endpoint(corner)).z)
-	_reach_z = far
-	return far
+## Lo que giraba al tirarlo: de quieto a fondo.
+func zone_power() -> float:
+	return lerpf(PUSH_STILL, PUSH_FULL, _strike_spin)
 
 
 ## El nombre del golpe (ver EnergyBolt.lands).

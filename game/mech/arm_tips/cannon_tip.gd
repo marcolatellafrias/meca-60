@@ -48,10 +48,9 @@ const BURST_WAIT := 0.09
 const BURST_PUSH := 15000.0
 const BURST_KICK := 14.0
 const BURST_SPREAD := 1.5
-## BARRIDO: lo que gasta y empuja por segundo, y hasta dónde llega (m).
+## BARRIDO: lo que gasta y empuja por segundo (llega hasta el largo de su zona).
 const BEAM_COST := 0.32
 const BEAM_PUSH := 150000.0
-const BEAM_RANGE := 90.0
 ## SÚPER: en cuánto carga a fondo (s), lo que gasta por segundo cargando (y ya cargado), lo mínimo para tirar, lo que
 ## empuja a fondo y la patada a fondo.
 const SUPER_TIME := 1.2
@@ -61,6 +60,9 @@ const SUPER_MIN := 0.15
 const SUPER_PUSH := 600000.0
 const SUPER_KICK := 260.0
 
+## CON LAS TECLAS DE LA MECA CARGA EN SEGMENTOS (22/11/2026, ver DashSettings «Golpes»).
+const SEGMENTS := 3
+
 const GLOW := Color(1.0, 0.55, 0.15)
 
 var mode := Mode.SIMPLE
@@ -69,6 +71,11 @@ var trigger := false
 var lever := Vector2(0.0, -5.0)
 ## La carga del súper tiro (0 a 1).
 var charge := 0.0
+## CARGADO CON LAS TECLAS DE LA MECA (22/11/2026, MechCrew): un toque tira el simple, y la carga NUNCA SE CORTA: si no
+## alcanza la energía, la batería queda en negativo y al disparar viene el stun (ver `_charge_with_keys`, MechEnergy).
+var overcharge := false
+## Cuántos segmentos ya se pagaron en esta carga.
+var _paid := 0
 
 ## Lo que se estira apuntando (ver STRETCH); lo cambian las maquetas de reposo (tests/arm_rest_look).
 var stretch := STRETCH
@@ -174,7 +181,7 @@ func _fire(delta: float) -> void:
 				_wait = SIMPLE_WAIT
 		Mode.BURST:
 			if trigger and _wait <= 0.0 and energy != null and energy.spend(BURST_COST):
-				_shot(BURST_SPREAD, 160.0, BURST_PUSH, 0.18)
+				_shot(BURST_SPREAD, 160.0, BURST_PUSH, 0.18, 0.06)
 				_kick(BURST_KICK)
 				_wait = BURST_WAIT
 		Mode.BEAM:
@@ -182,16 +189,16 @@ func _fire(delta: float) -> void:
 			if beaming:
 				_beam_step(delta)
 		Mode.SUPER:
-			if trigger:
+			if overcharge:
+				_segments(pressed, released, delta)
+			elif trigger:
 				var cost := SUPER_COST if charge < 1.0 else SUPER_HOLD_COST
 				if energy != null and energy.drain(cost, delta):
 					charge = minf(charge + delta / SUPER_TIME, 1.0)
 				else:
 					charge = 0.0
 			elif released and charge >= SUPER_MIN:
-				_shot(0.0, 110.0, SUPER_PUSH * charge, 0.5 + 0.6 * charge)
-				_kick(SUPER_KICK * charge)
-				charge = 0.0
+				_super_shot()
 			else:
 				charge = 0.0
 	_beam.visible = beaming
@@ -201,20 +208,105 @@ func _fire(delta: float) -> void:
 		_ball.scale = Vector3.ONE * (0.4 + 1.6 * charge)
 
 
-## UN TIRO desde la boca, abierto hasta `spread` grados.
-func _shot(spread: float, speed: float, push: float, radius: float) -> void:
+## CUÁNTOS SEGMENTOS COMPLETOS LLEVA (0 a 3).
+func segments_full() -> int:
+	return mini(int(charge * SEGMENTS + 0.0001), SEGMENTS)
+
+
+## CARGAR CON LAS TECLAS DE LA MECA, POR SEGMENTOS. Para empezar tiene que alcanzar el primero; los que siguen se pagan aunque
+## no alcance, y lo que falte queda como batería negativa (el stun viene al disparar). Soltar antes del primero no dispara:
+## lo gastado se pierde. Ya cargado, sostenerlo gasta lo que quede, sin hundirla más.
+func _segments(pressed: bool, released: bool, delta: float) -> void:
+	if released:
+		if segments_full() >= 1:
+			_super_shot()
+		charge = 0.0
+		_paid = 0
+	if not trigger or energy == null:
+		return
+	if not energy.able():
+		charge = 0.0
+		_paid = 0
+		return
+	var knobs := DashSettings.current
+	var cost := knobs.cannon_segment_cost / MechEnergy.UNIT
+	var follows := (arm.anchor as BalanceBody) != null and (arm.anchor as BalanceBody).net != null \
+		and (arm.anchor as BalanceBody).net.remote()
+	if _paid == 0:
+		var can_start := energy.able() and energy.level >= cost
+		if not pressed and not follows or not can_start:
+			return
+		if not follows:
+			energy.spend(cost)
+		_paid = 1
+	charge = minf(charge + delta / (SEGMENTS * knobs.cannon_segment_time), 1.0)
+	while _paid < mini(segments_full() + 1, SEGMENTS):
+		_paid += 1
+		if not follows:
+			energy.overdraw(cost)
+	if not follows:
+		if charge >= 1.0 and energy.level > 0.0:
+			energy.overdraw(minf(SUPER_HOLD_COST * delta, energy.level))
+		energy.pause_refill()
+
+
+## EL TIRO CARGADO, y con las teclas de la meca, el stun si la batería quedó en negativo.
+func _super_shot() -> void:
+	var power := float(segments_full()) / SEGMENTS if overcharge else charge
+	_shot(0.0, 110.0, SUPER_PUSH * power, 0.5 + 0.6 * power, power)
+	_kick(SUPER_KICK * power)
+	var knobs := DashSettings.current
+	_recoil(lerpf(knobs.tap_recoil, knobs.cannon_recoil, (power * SEGMENTS - 1.0) / (SEGMENTS - 1.0)))
+	charge = 0.0
+	if overcharge and energy != null:
+		energy.settle()
+
+
+## EL RETROCESO DE UN TIRO CON LAS TECLAS DE LA MECA: la empuja `meters` hacia atrás del torso (KinematicMover.add_recoil).
+## Lo aplica quien la simula.
+func _recoil(meters: float) -> void:
+	var body := arm.anchor as BalanceBody
+	if not overcharge or not DashSettings.current.recoil_on or body == null or body.mover == null or body.net.remote():
+		return
+	var back := body.global_basis.z
+	back.y = 0.0
+	body.mover.add_recoil(back.normalized(), meters, DashSettings.current.recoil_time)
+
+
+## HACIA DÓNDE SALE EL TIRO, plano.
+func _fire_way(from: Transform3D) -> Vector3:
+	var ahead := -from.basis.z
+	ahead.y = 0.0
+	return ahead.normalized() if ahead.length() > 0.01 else Vector3.FORWARD
+
+
+## SU ZONA: una línea, más larga cuanto más cargado. Por segmentos, salta de uno a otro.
+func zone() -> Dictionary:
+	if overcharge:
+		return MechSkills.cannon(float(maxi(segments_full(), 1) - 1) / (SEGMENTS - 1))
+	return MechSkills.cannon(charge)
+
+
+## UN TIRO: PEGA SU ZONA (MechSkills) y la bola de luz sólo se ve, hasta el final de la línea. `power`, cuánto de la ficha
+## del cañón lleva (ver HitCard): un tiro simple, un cuarto.
+func _shot(spread: float, speed: float, push: float, radius: float, power := 0.25) -> void:
 	var from := muzzle()
-	var turn := Basis(Vector3.UP, deg_to_rad(randf_range(-spread, spread))) * Basis(Vector3.RIGHT,
-		deg_to_rad(randf_range(-spread, spread)))
+	var way := Basis(Vector3.UP, deg_to_rad(randf_range(-spread, spread))) * _fire_way(from)
+	var shape := zone()
+	var body := arm.anchor
+	MechSkills.land(body, shape, body.global_position, way, "cañón", power, push)
 	var bolt := EnergyBolt.new()
 	bolt.speed = speed
 	bolt.push = push
 	bolt.radius = radius
+	bolt.power = power
 	bolt.color = GLOW
-	bolt.exclude = [arm.anchor.get_rid()]
-	arm.anchor.get_parent().add_child(bolt)
-	bolt.global_transform = Transform3D(from.basis * turn, from.origin)
-	EnergyBolt.flash(arm.anchor.get_parent(), from.origin, radius * 2.0, GLOW)
+	bolt.harmless = true
+	bolt.reach = maxf(float(shape["length"]) - (from.origin - body.global_position).dot(way), 0.5)
+	bolt.exclude = [body.get_rid()]
+	body.get_parent().add_child(bolt)
+	bolt.global_transform = Transform3D(Basis.looking_at(way, Vector3.UP), from.origin)
+	EnergyBolt.flash(body.get_parent(), from.origin, radius * 2.0, GLOW)
 	var sound: StringName = {Mode.BURST: MechSounds.CANNON_BURST, Mode.SUPER: MechSounds.CANNON_SUPER}.get(mode,
 		MechSounds.CANNON_SHOT)
 	MechSounds.hit(arm, sound, forearm)
@@ -225,23 +317,24 @@ func _kick(strength: float) -> void:
 	_aim_speed += Vector2(randf_range(-0.25, 0.25) * strength, strength)
 
 
-## EL RAYO este paso: hasta lo primero que toca (o su alcance), y lo que toca, empujado.
+## EL RAYO este paso: su zona a lo largo, hasta lo fijo que lo corte; lo que toca, empujado.
 func _beam_step(delta: float) -> void:
 	var from := muzzle()
-	var way := -from.basis.z
-	var query := PhysicsRayQueryParameters3D.create(from.origin, from.origin + way * BEAM_RANGE, EnergyBolt.MASK,
+	var way := _fire_way(from)
+	var shape := MechSkills.cannon(1.0)
+	var length := float(shape["length"])
+	var query := PhysicsRayQueryParameters3D.create(from.origin, from.origin + way * length, PhysicsLayers.FIXED,
 		[arm.anchor.get_rid()])
 	var hit_info := get_world_3d().direct_space_state.intersect_ray(query)
-	var end := from.origin + way * BEAM_RANGE
+	var end := from.origin + way * length
 	if not hit_info.is_empty():
 		end = hit_info["position"]
-		var body := EnergyBolt.struck(hit_info["collider"])
-		if body != null:
-			EnergyBolt.lands(body, way * BEAM_PUSH * delta, end, "rayo")
-	beam_hits = not hit_info.is_empty()
+	beam_hits = MechSkills.land(arm.anchor, shape, arm.anchor.global_position, way, "rayo", delta, BEAM_PUSH * delta) > 0 \
+		or not hit_info.is_empty()
 	beam_end().global_position = end
-	var length := from.origin.distance_to(end)
-	_beam.global_transform = Transform3D(from.basis * Basis.from_scale(Vector3(1.0, 1.0, length)), (from.origin + end) * 0.5)
+	var long := from.origin.distance_to(end)
+	_beam.global_transform = Transform3D(Basis.looking_at(way, Vector3.UP) * Basis.from_scale(Vector3(1.0, 1.0, long)),
+		(from.origin + end) * 0.5)
 	_kick(randf_range(-6.0, 6.0))
 
 
@@ -257,7 +350,3 @@ func beam_end() -> Node3D:
 		_beam_end.name = "Fin del rayo"
 		add_child(_beam_end)
 	return _beam_end
-
-
-func is_weapon() -> bool:
-	return true

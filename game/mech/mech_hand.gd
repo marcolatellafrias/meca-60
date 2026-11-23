@@ -15,7 +15,7 @@ extends Node3D
 ##
 ## ES UNA MANO IZQUIERDA O UNA DERECHA (`side`, −1 o 1), UNA EL ESPEJO DE LA OTRA. En sus ejes: los dedos hacia −Z, EL
 ## PULGAR HACIA +Y, y LA PALMA MIRA HACIA −side·X (para ahí cierran los dedos). Quien la monta la gira para que el pulgar
-## y la palma queden donde van en un cuerpo (ver MuscleArm, LA MANO). *Dos veces estuvo mal (12/11/2026, «tiene las manos
+## y la palma queden donde van en un cuerpo (ver MechArm.mount_common_hand). *Dos veces estuvo mal (12/11/2026, «tiene las manos
 ## invertidas»; «los pulgares, los dos apuntan para el mismo lado… no es la primera vez que pasa»): el lado se elegía a
 ## ojo con un signo suelto, el mismo para los dos brazos, y la mano copiaba los ejes del antebrazo, que no son espejo
 ## entre un brazo y el otro.*

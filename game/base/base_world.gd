@@ -17,7 +17,7 @@ extends Node3D
 const GROUP := "net_world"
 ## EL JEFE EN LA ARENA: dónde nace (enfrente de la boca del ascensor, mirándola), el círculo del que no sale (lo libre del
 ## medio del mapa: más allá están los barrios) y las vidas.
-const BOSS_AT := Vector3(0.0, 0.0, 50.0)
+const BOSS_AT := Vector3(0.0, 0.0, 13.0)
 const BOSS_RING := 62.0
 const BOSS_HEALTH := 400.0
 const MECH_HEALTH := 100.0
@@ -52,6 +52,9 @@ func _ready() -> void:
 	characters.name = "Personajes"
 	add_child(characters)
 	add_child(BaseSync.new())
+	add_child(BaseSupplies.new())
+	add_child(BaseRoomCode.new())
+	add_child(BasePanels.new())
 	_spawner = CharacterSpawner.new()
 	_spawner.name = "CharacterSpawner"
 	_spawner.characters_root = characters
@@ -101,7 +104,8 @@ func _build_arena(base: Node3D) -> void:
 	sun.shadow_enabled = true
 	sun.directional_shadow_max_distance = 300.0
 	arena.add_child(sun)
-	_environment.background_color = Color(0.75, 0.82, 0.9)
+	# SIN VERSE HASTA LLEGAR: su piso queda entre la cámara y la base, y ya nada lo oculta solo.
+	arena.visible = false
 	_spawn_boss(arena, base)
 
 
@@ -137,10 +141,16 @@ func _spawn_boss(arena: Node3D, base: Node3D) -> void:
 	var contract := BaseState.current.contract
 	bars.boss_name = str(ContractsCatalog.CONTRACTS[contract].boss).to_upper() if contract >= 0 else "EL JEFE"
 	holder.add_child(bars)
+	if mech != null:
+		MatchEnd.watch(holder, mech, boss)
 
 
 ## Al llegar arriba, el jefe se despierta.
 func _wake_boss() -> void:
+	var arena := get_node_or_null("Arena") as Node3D
+	if arena != null:
+		arena.visible = true
+		_environment.background_color = Color(0.75, 0.82, 0.9)
 	var brain := get_node_or_null("Arena/Jefe/Luchador/Cabeza") as BrawlerBrain
 	if brain != null:
 		brain.awake = true

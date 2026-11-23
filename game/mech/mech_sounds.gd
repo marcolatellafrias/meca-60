@@ -106,12 +106,9 @@ var _falling := 0.0
 var _dashing := false
 var _stunned_was := false
 var _jam_was := false
-var _reload_was := -1
-var _reload_bad_was := false
+var _reload_was := false
 var _fuel_asked_was := false
 var _life_was := NAN
-var _ready_was := {}
-var _locked_was: Node3D = null
 ## Por pie, si estaba en el aire (ver `_steps`).
 var _foot_flying: Array[bool] = []
 ## evento → [cuándo (ms), dónde] de su último golpe (ver `pulse`).
@@ -260,8 +257,8 @@ func _state(tool: ToolMech) -> void:
 			hold(BEAM_HIT, cannon.beaming() and cannon.beam_hits, cannon.beam_end())
 			hold(CANNON_CHARGE, cannon.mode == CannonTip.Mode.SUPER and cannon.charge > 0.0, cannon.forearm,
 				0.6 + 0.8 * cannon.charge)
-	if tool.cabin is CageCabin and (tool.cabin as CageCabin).turret != null:
-		_gunner((tool.cabin as CageCabin).turret)
+	if tool is CageMech and (tool as CageMech).guns != null:
+		_gunner((tool as CageMech).guns)
 
 
 ## La meca: aterrizar (más fuerte cuanto más caía), saltar, el dash y levitar.
@@ -314,31 +311,17 @@ func _hurt() -> void:
 	_life_was = health.left
 
 
-## El artillero: la minigun girando, trabarse y la recarga con ritmo.
-func _gunner(turret: GunnerTurret) -> void:
-	var weapons := turret.weapons
-	if weapons == null:
-		return
-	hold(MINIGUN_SPIN, weapons.spin > 0.02, turret, 0.5 + weapons.spin, 0.2 + 0.6 * weapons.spin)
+## Las armas de los costados: la ametralladora girando, trabarse y recargar.
+func _gunner(guns: MechGuns) -> void:
+	var weapons := guns.weapons
+	hold(MINIGUN_SPIN, weapons.spin > 0.02, guns, 0.5 + weapons.spin, 0.2 + 0.6 * weapons.spin)
 	if weapons.jammed and not _jam_was:
-		play_sound(MINIGUN_JAM, turret)
+		play_sound(MINIGUN_JAM, guns)
 	_jam_was = weapons.jammed
-	if weapons.reloading >= 0 and _reload_was < 0:
-		play_sound(RELOAD, turret)
-	if weapons.reload_jammed and not _reload_bad_was:
-		play_sound(RELOAD_BAD, turret)
-	_reload_was = weapons.reloading
-	_reload_bad_was = weapons.reload_jammed
-	# UNA HABILIDAD LISTA DE NUEVO: su espera llega a cero.
-	for action: String in weapons.cooldown:
-		var ready := float(weapons.cooldown[action]) <= 0.0
-		if ready and _ready_was.get(action, true) == false:
-			play_sound(ABILITY_READY, turret)
-		_ready_was[action] = ready
-	# BLANCO FIJADO.
-	if is_instance_valid(weapons.locked) and weapons.locked != _locked_was:
-		play_sound(LOCK, turret)
-	_locked_was = weapons.locked if is_instance_valid(weapons.locked) else null
+	var reloading := weapons.reloading()
+	if reloading and not _reload_was:
+		play_sound(RELOAD, guns)
+	_reload_was = reloading
 
 
 func _tip_node(tip: ArmTip) -> Node3D:

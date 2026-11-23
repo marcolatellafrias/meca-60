@@ -6,7 +6,7 @@ extends BalanceBody
 ##   · CageCabin    la cabina jaula: el que maneja abajo, el de los brazos arriba y el artillero atrás, y el marco que
 ##                  lleva a los que van adentro.
 ##   · MechKeys     el teclado y el mouse de quien la posee: escribe LO QUE SE LE PIDE (ver `_think`).
-##   · los brazos   MechArm: PoseArm (discretos) o MuscleArm (físicos), cada uno el suyo (ver `loadout`). Sin brazos es
+##   · los brazos   MechArm: PoseArm, cada uno con lo suyo (ver `loadout`). Sin brazos es
 ##                  la meca de práctica, para pegarle.
 ## *Hasta el 13/11/2026 el cuerpo y el equilibrio vivían acá; se separaron para compartirlos con los jefes (ver
 ## docs/technical/base-comun.md). Hasta el 17/11/2026 llevaba también las cabinas de la meca grande —la cuadrada, la
@@ -23,8 +23,7 @@ enum Cabin { CAGE }
 
 const MASS := 50000.0
 ## LOS BRAZOS: el hombro, en el espacio de la caja (`x` del lado derecho), lo da la cabina (CageCabin.shoulder), más lo
-## que los corre afuera (MechBody.shoulder_out, el F2: «Brazos y piernas»). Y cuánto pesan los físicos, en partes de lo
-## que pesa el brazo solo (ver MuscleArm.weight).
+## que los corre afuera (MechBody.shoulder_out, el F2: «Brazos y piernas»).
 
 
 static func shoulder(shape := Cabin.CAGE) -> Vector3:
@@ -39,7 +38,6 @@ static func cabin_kit(_shape := Cabin.CAGE) -> Dictionary:
 	return {"box": CageCabin.box(), "shoulder": CageCabin.shoulder(), "body": CageCabin.body()}
 
 
-const ARM_WEIGHT := 0.4
 
 ## Qué brazos lleva. Se pone antes de agregarla al árbol.
 var arms_kind := Arms.POSE
@@ -96,7 +94,7 @@ func _build_arms() -> void:
 		return
 	for index in 2:
 		var side := -1.0 if index == 0 else 1.0
-		var arm := (_loadout_now()[index] as ArmLoadout).make_arm(ARM_WEIGHT, _arm_energy())
+		var arm := (_loadout_now()[index] as ArmLoadout).make_arm(_arm_energy())
 		arm.side = side
 		arm.anchor = self
 		arm.measures = measures
@@ -130,7 +128,7 @@ func default_loadout() -> Array[ArmLoadout]:
 
 
 static func fists() -> Array[ArmLoadout]:
-	return [ArmLoadout.of(ArmLoadout.Motion.POSE, ArmLoadout.Tip.FIST), ArmLoadout.of(ArmLoadout.Motion.POSE, ArmLoadout.Tip.FIST)]
+	return [ArmLoadout.of(ArmLoadout.Tip.FIST), ArmLoadout.of(ArmLoadout.Tip.FIST)]
 
 
 ## De dónde sacan la energía los brazos (sin energía propia, nada: lo que la gasta no anda; ver ToolMech).

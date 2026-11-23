@@ -65,6 +65,15 @@ var _values := PackedFloat64Array()
 var _applies := PackedByteArray()
 var _node_values := PackedFloat64Array()
 
+## LO SUELTA TODO (lo llama su personaje al destruirse): las fórmulas son funciones que capturan a quien las registró, y
+## entre ellas y esta tabla quedaba un ciclo que nunca se liberaba y hacía fallar a Godot al cerrar (22/11/2026).
+func release() -> void:
+	_entries.clear()
+	_node_entries.clear()
+	_bone_groups.clear()
+	_node_groups.clear()
+	_groups_dirty = true
+
 static func create(signals: MotionSignals) -> ProceduralBoneAnimator:
 	var a := ProceduralBoneAnimator.new()
 	a.locomotion_signals = signals

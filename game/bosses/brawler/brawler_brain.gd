@@ -19,12 +19,12 @@ extends Node
 ## tiros y el taladro llegan por BossHurtbox (`take_hit`). Mientras alguien lo posee, la cabeza no hace nada.
 
 ## Los poderes del Luchador, en este orden (Act: 0, rodea).
-enum Act { STALK, CHARGE, SLAM, THROW, SPIN, HOOK, FLAME, BOMB }
+enum Act { STALK, CHARGE, SLAM, THROW, SPIN, HOOK, FLAME, BOMB, ORBS }
 ## QUÉ PODERES USA (la L de la parcela): -1, todos los tildados; si no, uno solo (su índice), aunque no tenga ira.
 static var moves := -1
 
 ## Las distancias a las que se queda rodeando (m, de su medio al blanco).
-const KEEP := Vector2(45.0, 80.0)
+const KEEP := Vector2(7.0, 11.0)
 ## Rodeando: cuánto (s, entre los dos).
 const STALK_TIME := Vector2(2.0, 4.0)
 ## Cuántos ataques encadena como mucho seguidos (además del primero).
@@ -70,13 +70,17 @@ var _phases_spent := {}
 var _chain := 0
 var _shown_at := 0
 var _shapes_were := []
+## Lo que le queda de aturdido (s; las balas eléctricas, ver HitEffects).
+var _dazed := 0.0
 
 
-## Los nombres para la L: todos, y cada poder solo.
+## Los nombres para la L: todos, y cada poder solo. Las bolitas no entran (una tecla pasa por ocho estados como mucho, ver
+## docs/technical/sandbox.md): se prenden en su pestaña del panel o con su contrato.
 static func move_names() -> Array:
 	var names := ["todos"]
 	for power in BrawlerSettings.current.powers():
-		names.append("sólo " + power.title())
+		if not power is OrbsPower:
+			names.append("sólo " + power.title())
 	return names
 
 
@@ -103,9 +107,11 @@ func refresh_powers(fresh := false) -> void:
 		powers.clear()
 		for def in defs:
 			powers.append(def.duplicate() as BossPower)
-		return
-	for index in defs.size():
-		powers[index].copy_knobs(defs[index])
+	else:
+		for index in defs.size():
+			powers[index].copy_knobs(defs[index])
+	for each in powers:
+		each.fit_reach(BossSettings.current.reach_share())
 
 
 ## El poder de `which` (Act).
@@ -127,6 +133,11 @@ func _physics_process(delta: float) -> void:
 		each.tick(self, delta)
 	_block()
 	if boss.driven():
+		return
+	if _dazed > 0.0:
+		_dazed -= delta
+		boss.move = Vector2.ZERO
+		boss.go = Vector3.ZERO
 		return
 	if not awake:
 		if stage != "quieto":
@@ -157,10 +168,10 @@ func _stalk() -> void:
 	var gap := distance()
 	var toward := to_target().normalized()
 	var way := toward
-	var keep := KEEP
+	var keep := KEEP * BossSettings.current.reach_share()
 	var now := mode_now()
 	if now != null and now.keep_to > 0.0:
-		keep = Vector2(now.keep_from, now.keep_to)
+		keep = Vector2(now.keep_from, now.keep_to) * BossSettings.current.reach_share()
 	if gap < keep.x:
 		way = -toward
 	elif gap < keep.y:
@@ -479,6 +490,13 @@ func take_hit(strength: float, at: Vector3, source: String) -> void:
 			furnace_hits += 1
 		else:
 			body_hits += 1
+
+
+## LO ATURDEN `seconds`: corta lo que estaba haciendo y se queda quieto. Al pasar, vuelve a rodear.
+func daze(seconds: float) -> void:
+	if _dazed <= 0.0:
+		_still()
+	_dazed = maxf(_dazed, seconds)
 
 
 ## ── LO DEMÁS ─────────────────────────────────────────────────────────────────────────────────────────────────────

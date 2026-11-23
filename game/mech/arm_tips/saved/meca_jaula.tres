@@ -6,6 +6,5 @@
 script = ExtResource("1_ep0ox")
 left_tip = 5
 left_plate = true
-right_motion = 1
-right_tip = 4
+right_tip = 1
 right_plate = true

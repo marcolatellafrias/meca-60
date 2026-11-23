@@ -30,10 +30,14 @@ var marked := true
 ## EL ANILLO QUE CRECE: a cuántos m/s y hasta qué radio (0, no crece).
 var grow_speed := 0.0
 var grow_to := 0.0
+## DE UNA HABILIDAD DE LA MECA (ver `skill`): su color, y se ve aunque las marcas del jefe estén apagadas.
+var tint := COLOR
+var always := false
 
 var _mark: MeshInstance3D = null
 var _paint := StandardMaterial3D.new()
 var _drawn := Vector2(-1.0, -1.0)
+var _drawn_shape := -1
 
 
 static func circle(parent: Node, radius: float) -> BossZone:
@@ -56,6 +60,14 @@ static func ring(parent: Node, radius: float, thick: float, speed := 0.0, top :=
 	return made
 
 
+## La marca de una habilidad de la meca (MechSkills): la forma se le pone después.
+static func skill(parent: Node, color: Color) -> BossZone:
+	var made := _make(parent, Shape.CIRCLE, 1.0, 0.0)
+	made.tint = color
+	made.always = true
+	return made
+
+
 static func _make(parent: Node, kind: Shape, a: float, b: float) -> BossZone:
 	var made := BossZone.new()
 	made.name = "Zona"
@@ -71,7 +83,7 @@ func _ready() -> void:
 	_paint.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	_paint.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	_paint.cull_mode = BaseMaterial3D.CULL_DISABLED
-	_paint.albedo_color = Color(COLOR, 0.25)
+	_paint.albedo_color = Color(tint, 0.25)
 	_mark = MeshInstance3D.new()
 	_mark.material_override = _paint
 	_mark.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
@@ -87,14 +99,15 @@ func place(from: Vector3, toward := Vector3.FORWARD) -> void:
 
 
 func _process(_delta: float) -> void:
-	_mark.visible = marked and BossSettings.current.floor_marks
+	_mark.visible = marked and (always or BossSettings.current.floor_marks)
 	if not _mark.visible:
 		return
-	if _drawn != Vector2(size, length):
+	if _drawn != Vector2(size, length) or _drawn_shape != int(shape):
 		_drawn = Vector2(size, length)
+		_drawn_shape = int(shape)
 		_mark.mesh = _mesh()
 	var beat := 0.035 if locked else 0.012
-	_paint.albedo_color.a = (0.36 if locked else 0.22) + 0.12 * sin(Time.get_ticks_msec() * beat)
+	_paint.albedo_color = Color(tint, (0.36 if locked else 0.22) + 0.12 * sin(Time.get_ticks_msec() * beat))
 
 
 func _physics_process(delta: float) -> void:
@@ -106,23 +119,29 @@ func _physics_process(delta: float) -> void:
 
 ## Si un punto del piso (con su medio ancho, m) está adentro.
 func covers(point: Vector3, half := 0.0) -> bool:
-	var local := Vector3(point.x - origin.x, 0.0, point.z - origin.z)
+	return BossZone.shape_covers(shape, size, length, origin, way, point, half)
+
+
+## LA CUENTA DE UNA FORMA, sin hacer falta una zona armada (la usan también las habilidades, MechSkills).
+static func shape_covers(kind: Shape, a: float, b: float, from: Vector3, ahead_way: Vector3, point: Vector3,
+		half := 0.0) -> bool:
+	var local := Vector3(point.x - from.x, 0.0, point.z - from.z)
 	var far := local.length()
-	match shape:
+	match kind:
 		Shape.CIRCLE:
-			return far < size + half
+			return far < a + half
 		Shape.RING:
-			return absf(far - size) < length * 0.5 + half
+			return absf(far - a) < b * 0.5 + half
 		Shape.STRIP:
-			var ahead := way.dot(local)
-			var aside := absf(way.cross(Vector3.UP).dot(local))
-			return ahead > -half and ahead < length + half and aside < size * 0.5 + half
+			var ahead := ahead_way.dot(local)
+			var aside := absf(ahead_way.cross(Vector3.UP).dot(local))
+			return ahead > -half and ahead < b + half and aside < a * 0.5 + half
 		_:
-			if far > length + half:
+			if far > b + half:
 				return false
 			if far < 0.01:
 				return true
-			return rad_to_deg(way.angle_to(local / far)) < size + rad_to_deg(atan2(half, far))
+			return rad_to_deg(ahead_way.angle_to(local / far)) < a + rad_to_deg(atan2(half, far))
 
 
 ## La malla chata de su forma, hacia −z.

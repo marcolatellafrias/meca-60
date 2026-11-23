@@ -558,6 +558,10 @@ func _control_share() -> float:
 	return 1.0 if is_grounded else air_control
 
 
+## EL ROLL (CharacterRoll): mientras dura, va a esta velocidad, por encima de lo que pida la intención.
+var roll_velocity := Vector3.ZERO
+
+
 ## ADONDE VA (ver EL MOVIMIENTO, arriba): la velocidad contra el marco va hacia la que pide la intención, a ritmo parejo.
 ## Sin poder moverse (sentado, levantándose), hacia cero. Es un cambio de velocidad PROPIO (ver `_self_dv`): no es un
 ## golpe. Con movimiento DIRECTO (el ente), al instante y con sus propias velocidades.
@@ -574,7 +578,7 @@ func _move(delta: float) -> void:
 		var pace := DIRECT_WALK * crouch_speed_factor
 		if input != Vector2.ZERO and intent.sprint and crouch_speed_factor >= 1.0:
 			pace *= DIRECT_SPRINT * turbo_factor()
-		linear_velocity += direction * pace - horizontal
+		linear_velocity += (roll_velocity if roll_velocity != Vector3.ZERO else direction * pace) - horizontal
 		return
 	# QUIETA (sentada, tirada): nada que llevar.
 	if freeze:
@@ -589,7 +593,7 @@ func _move(delta: float) -> void:
 	var target := direction * minf(top_speed * crouch_speed_factor * carry_speed_factor, speed_cap)
 	var share := _control_share()
 	var step := INF if time_to_top <= 0.0 else top_speed / time_to_top * carry_speed_factor * share * delta
-	_walk_h = _walk_h.move_toward(target, step)
+	_walk_h = roll_velocity if roll_velocity != Vector3.ZERO else _walk_h.move_toward(target, step)
 	# EL RETROCESO SE FRENA COMO SU ANDAR: al mismo ritmo parejo que acelera (con `time_to_top` en 0, al instante),
 	# la misma curva que tenía cuando era un cuerpo más.
 	shove = shove.move_toward(Vector3.ZERO, step)

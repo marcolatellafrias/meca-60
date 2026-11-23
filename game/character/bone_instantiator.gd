@@ -19,6 +19,10 @@ var kind: CharacterKind = CharacterKind.npc()
 ## LO QUE QUIERE HACER (ver CharacterIntent): lo escribe quien lo maneja —el teclado, la red, el guion— y el cuerpo lo
 ## hace igual para todos. Reemplaza a `held_target`, `seated_turn` y `head_pitch`.
 var intent := CharacterIntent.new()
+## EL ROLL A PIE (ver CharacterRoll).
+var roll := CharacterRoll.new()
+## EL PAQUETE QUE LLEVA (SupplyCrate): cinemático, atado a las dos manos.
+var carried: SupplyCrate = null
 @export var master_seed: int = 0
 ## When true (and this character is the active player), unlocks creative mode + the debug panel.
 @export var debug_enabled: bool = false
@@ -420,6 +424,12 @@ func _clear_prior_generations() -> void:
 
 	player_camera = null
 
+## AL DESTRUIRSE, la tabla de animación suelta sus fórmulas (ver ProceduralBoneAnimator.release).
+func _notification(what: int) -> void:
+	if what == NOTIFICATION_PREDELETE and procedural_animator != null:
+		procedural_animator.release()
+
+
 # ── CUÁNDO SE RESUELVE LA POSE ────────────────────────────────────────────────────────────────────
 # UNA VEZ POR CUADRO DIBUJADO, en `_process`, y no en cada paso de física: la física corre a 240 Hz y la
 # pantalla muestra una pose por cuadro, así que las otras se tiraban (medido: el solve era todo lo que
@@ -476,6 +486,11 @@ func _physics_process(delta: float) -> void:
 	jump.update_jump(delta)
 	jump.update_crouch()
 	fall.maybe_ragdoll_in_air()
+	roll.step(delta)
+	if _is_ragdolling() or is_seated:
+		roll.stop()
+	if is_instance_valid(char_rigidbody):
+		char_rigidbody.roll_velocity = roll.velocity()
 
 	# RAGDOLL Y RECUPERACIÓN, EN CADA PASO, COMO SIEMPRE: ahí la cápsula sigue a los cuerpos y el blend de
 	# recuperación cuenta tiempo; a menos tasa tardaría más y _update_active se atrasaría. El solve pesado ya
@@ -704,6 +719,8 @@ func _pose_arms(delta: float) -> void:
 
 	if is_instance_valid(arms_controller):
 		arms_controller.apply_world_overrides(delta)
+	if is_instance_valid(carried):
+		carried.carry_pose(self)
 
 	ik_util.solve_two_bone_ik(custom_bones_util.left_upper_arm, custom_bones_util.left_lower_arm,
 		ik_util.left_arm_ik_target.global_position, ik_util.left_arm_pole.global_position)
@@ -728,10 +745,15 @@ func _sync_ragdoll_bodies() -> void:
 func _sync_body_visual() -> void:
 	if not is_instance_valid(body_visual):
 		return
+	var drawn := body_visual as ProceduralBodyUtil
+	if drawn != null and is_instance_valid(drawn.skeleton):
+		roll.before_sync(drawn.skeleton)
 	if is_instance_valid(ragdoll_util) and (ragdoll_util.is_active or ragdoll_util.is_recovering):
 		body_visual.sync_from_ragdoll(ragdoll_util.get_bodies())
 	else:
 		body_visual.sync_from_bones()
+	if drawn != null and is_instance_valid(drawn.skeleton):
+		roll.after_sync(drawn.skeleton, custom_bones_util.lower_spine.global_position)
 
 ## Ubica local_targets (raycasts de pies, targets/poles de brazos) siguiendo el transform del
 ## personaje. Lee animation_inputs (no la cápsula en vivo): así el facing viene de una sola fuente

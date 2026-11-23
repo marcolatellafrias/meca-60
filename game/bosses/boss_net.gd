@@ -83,6 +83,9 @@ func _build(kind: String, args: Array) -> Node3D:
 		"rock":
 			made = BrawlerRock.new()
 			made.name = "Piedra"
+		"orbs":
+			made = BossOrbField.new()
+			made.name = "Bolitas"
 		"circle":
 			return BossZone.circle(world, float(args[0]))
 		"ring":

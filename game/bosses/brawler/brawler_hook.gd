@@ -8,8 +8,9 @@ extends Node3D
 
 enum State { AIM, OUT, BACK }
 
-## El puño (m) y a qué altura va la cadena (m sobre el piso).
+## El puño y el grosor de la cadena (m), con el jefe a Brawler.FX_DRAWN_AT.
 const FIST := 6.0
+const CHAIN := 1.6
 ## (La altura de la cadena sigue la escala de los jefes: `height()`.)
 const COLOR := Color(0.62, 0.2, 0.18)
 
@@ -36,7 +37,7 @@ func setup(width: float, reach: float) -> void:
 
 ## EL AVISO apunta desde `from` hacia `toward` (en el piso). `locked`: ya apuntó (titila rápido).
 func aim(from: Vector3, toward: Vector3, locked: bool) -> void:
-	origin = Vector3(from.x, 0.0, from.z)
+	origin = from
 	way = Vector3(toward.x, 0.0, toward.z).normalized()
 	global_transform = Transform3D(Basis.looking_at(way, Vector3.UP), origin)
 	_zone.locked = locked
@@ -49,8 +50,9 @@ func launch(speed: float) -> void:
 	state = State.OUT
 	_zone.queue_free()
 	_zone = null
-	_chain = Clay.box(self, Vector3(1.6, 1.6, 1.0), Vector3.ZERO, COLOR.darkened(0.4))
-	_fist = Clay.box(self, Vector3.ONE * FIST, Vector3.ZERO, COLOR)
+	var k := Brawler.fx_scale()
+	_chain = Clay.box(self, Vector3(CHAIN * k, CHAIN * k, 1.0), Vector3.ZERO, COLOR.darkened(0.4))
+	_fist = Clay.box(self, Vector3.ONE * FIST * k, Vector3.ZERO, COLOR)
 	_place()
 
 
@@ -71,7 +73,7 @@ func touches(point: Vector3, half: float) -> bool:
 	var local := point - origin
 	var ahead := way.dot(local)
 	var aside := absf(way.cross(Vector3.UP).dot(local))
-	return absf(ahead - front) < FIST * 0.5 + half and aside < _width * 0.5 + half
+	return absf(ahead - front) < FIST * Brawler.fx_scale() * 0.5 + half and aside < _width * 0.5 + half
 
 
 ## A qué altura va la cadena (m sobre el piso): la del pecho del Luchador, a la escala de los jefes.

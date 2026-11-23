@@ -34,7 +34,7 @@ El detalle, en [[partida]].
 | [[camara-isometrica]] | **El rumbo desde el 22/11/2026**: la cámara isométrica, la E por cercanía, las teclas compartidas que se bloquean y sus cuadrados. Donde contradiga notas viejas de puestos y primera persona, vale ésta. |
 | [[meca-jaula]] | **La meca, la jaula de las maquetas** (la única desde el 17/11/2026): chica, cinemática con brazos físicos (el cañón en lugar del antebrazo, el palo en el puño pesado), tres cabinas, la energía común, sus teclas, su propio F1 de moverse, la de práctica. |
 | [[tableros]] | **Las caras con tablero**: la grilla de 4 cm en cada cara que puede llevar controles (`FaceBoard`), las piezas de character-parametric sobre su base, en la meca jaula. |
-| [[brazo]] | Los brazos: lo que se les pide, el físico con músculos y el discreto, y lo que llevan en la punta (el cañón de energía, el taladro, el palo). |
+| [[brazo]] | Los brazos: lo que se les pide, el discreto (los músculos se sacaron), y lo que llevan en la punta (el cañón de energía, el taladro, el palo). |
 | [[base-comun]] | Lo que comparten la meca propia y los jefes (`BalanceBody`), el motor discreto (`KinematicMover`), los paneles de perillas y el resto en piezas. |
 | [[cuerpo-por-piezas]] | La regla común (acordada, sin hacer): motor del torso discreto o físico, brazos y dibujo, por separado. |
 | [[maquetas-jefes]] | Jefes de arcilla, quietos: seis siluetas de jefe humanoide, seis con personalidad (la misma base de cuatro patas, dos brazos con armas distintas y un accesorio en el techo, normales y con ira), dos recorribles (seis y cuatro patas, con pasarelas y baterías detrás de compuertas) y una primera tanda de seis. |
@@ -44,6 +44,7 @@ El detalle, en [[partida]].
 | [[pelea-jefes]] | Lo común de la pelea con los jefes: la vida por código, las barras y la arena (un círculo del que el jefe no sale); y lo que se aprendió con el jefe bola, borrado el 15/11/2026. |
 | [[proyectiles]] | Los proyectiles por red y las zonas que pegan. |
 | [[mapa]] | El mapa de pelea: una arena circular con barrios, escaleras y recursos en el borde. |
+| [[experimentos]] | **Los contratos de prueba** (22/11/2026): firmar uno cambia las perillas del dash y del jefe; esquivar por posición y esquivar por tiempo, con la ráfaga intocable. |
 | [[sucursal]] | La base en el sandbox: el plano 6 en arcilla (elevador, gimnasio, consolas, casilleros). |
 | [[escaleras]] | La regla de toda escalera (`Stairs`). |
 | [[pixel-art]] | Pintar con píxeles (experimento), cara por cara. |

@@ -1,12 +1,8 @@
 class_name MechArm
 extends Node3D
 
-## UN BRAZO DE LA MECA: LO QUE SE LE PIDE, escrito una sola vez. Los dos caminos de la meca (el usuario, 13/11/2026:
-## «bifurcar el progreso… un approach más físico o más discreto») comparten esto y difieren en cómo lo cumplen:
-##   · MuscleArm, EL FÍSICO: el brazo y el antebrazo son cuerpos con músculos que persiguen la pose; chocan, se traban,
-##     ceden. Para la arena entre dos grupos.
-##   · PoseArm, EL DISCRETO: el brazo se dibuja en la pose pedida, sin cuerpos; atraviesa lo que haya y, al conectar una
-##     piña, le da un impulso a lo que tocó. Para las peleas contra jefes.
+## UN BRAZO DE LA MECA: LO QUE SE LE PIDE, escrito una sola vez, y dibujado en su pose por PoseArm. *Hasta el 22/11/2026
+## había también un brazo físico, con músculos (MuscleArm): se sacó al pasar a las habilidades por zonas.*
 ##
 ## LO QUE SE PIDE es DÓNDE VA EL PUÑO en cada momento, desde el hombro, en el espacio de lo que lo sostiene (`anchor`):
 ##   · LAS POSTURAS (`stance`), donde descansa: NORMAL, el brazo al costado y la mano abierta; CUBRIÉNDOSE, los puños
@@ -18,19 +14,9 @@ extends Node3D
 ## De ahí, LA POSE (`_target`): el codo y la muñeca salen de la IK del cuerpo de la meca (MechBody.arm), y cada pieza va
 ## con su −Z a lo largo y su Y sobre EL EJE DEL CODO. Y LA MANO (`_mount_hand`), montada por regla.
 ##
-## LO QUE VA EN LA PUNTA (`tip`, un ArmTip) Y LA PLACA (`plated`), APARTE DE CÓMO SE MUEVE (16/11/2026, el usuario:
-## «unificar el sistema de los brazos… qué cosas se equipan»; que cada brazo elija discreto o con músculos): el puño, el
-## palo, el taladro, la sierra o el cañón se montan igual en un brazo discreto o en uno con músculos (ver ArmLoadout).
-## EL GOLPE, UNA SOLA REGLA PARA LOS DOS (`_strike`; 17/11/2026, el usuario: que la piña lo atraviese, «pero que le
-## pegue y mostrar que le pegó»): mientras PEGA (ver `stage`), lo que golpea de la punta (ArmTip.strike_points: el puño,
-## o el palo entero) barre su camino en el mundo desde donde estaba el paso anterior —así cuenta lo que se movió la meca:
-## una piña en pleno dash pega más fuerte—, y a cada cuerpo suelto que toca le pega una vez por piña (EnergyBolt.lands:
-## el empujón y, si es un jefe, el daño), con un destello en el punto. Lo fijo (paredes, el cuerpo del jefe) no lo frena:
-## lo atraviesa. *Hasta ese día sólo lo hacía el brazo discreto, y sin daño; el de músculos pegaba sólo por choque, y a
-## un jefe no le sacaba vida.*
-##
-## *Hasta ese día el cañón, el taladro y el palo eran clases de brazo (CannonArm, CageCannonArm, DrillArm, PoleArm): el
-## cañón no podía tener músculos ni el palo ser discreto, y el cañón de la jaula llevaba otra armadura que el palo.*
+## LO QUE VA EN LA PUNTA (`tip`, un ArmTip) Y LA PLACA (`plated`): el puño, el palo, el taladro, la sierra o el cañón.
+## EL GOLPE ES SU ZONA (22/11/2026, ver MechSkills): el brazo es la animación. Cuando la piña llega a la punta, la zona de lo
+## que lleva le pega a lo que esté adentro, al frente del torso.
 
 enum Punch { NONE, STRAIGHT, HOOK, UPPERCUT, HAMMER }
 enum Stance { NORMAL, COVER, TUCKED }
@@ -104,38 +90,56 @@ var _aimed: Array = []
 ## El eje de la bisagra del codo, en el mundo: sale del brazo y el antebrazo pedidos; con el brazo estirado no se puede
 ## calcular y queda el último.
 var _hinge := Vector3.RIGHT
-## LO QUE GOLPEA (ver `_strike`): la última piña, a qué velocidad conectó (0 si no tocó nada) y a qué; lo que ya tocó
-## en esta piña; y dónde estaban los puntos que golpean el paso anterior.
-var last_hit_speed := 0.0
-var last_hit: Node = null
-var _struck := {}
-var _strike_was := PackedVector3Array()
-## SE FRENÓ DONDE PEGÓ (un brazo sin cuerpo, si lo que golpea choca: ver StrikeSettings): desde ahí y hasta volver, el puño se pide donde estaba al
-## conectar (como `_moves`).
-var stuck := false
-var _stuck_at := Vector3.ZERO
-var _sphere := SphereShape3D.new()
+## Si la piña de ahora ya pegó.
+var _landed := false
 
 
-## LA PIÑA CARGADA (17/11/2026, el usuario: «mientras más tiempo hacés clic, más tarda la animación y más pega, pero
-## más difícil es de pegarle porque dura más y te exponés más»): la que se está tirando va `punch_pace` de rápida (×) y
-## pega `punch_strength` de fuerte (×). Las pone `charged_strike`; al terminar la piña vuelven a 1.
-var punch_pace := 1.0
+## LA PIÑA CARGADA (22/11/2026; el usuario: «más carga, más animación, y cuando libera el golpe, siempre tiene la misma
+## velocidad»). Mientras se mantiene, el puño SE VA ARMANDO HACIA ATRÁS según lo cargado (`windup_share`, ver `_windup_at`); al
+## soltar sale desde ahí, sin otro armado y con el mismo tiempo siempre. La carga sólo cambia la fuerza (`punch_strength`).
 var punch_strength := 1.0
+var windup_share := 0.0
+## HASTA DÓNDE PUEDE LLEGAR LA CARGA: sin energía para el golpe pesado, se queda en el liviano (MechCrew).
+var charge_cap := 1.0
+## SI EL GOLPE LO TIRÓ ESTA MÁQUINA: sólo acá destella su zona en el piso (lo escribe MechCrew).
+var cast_here := true
+## LOS BRAZOS CAÍDOS DEL STUN (0 a 1; lo mueve MechStun): cuelgan del hombro, temblando.
+var limp := 0.0
+const LIMP_WAY := Vector3(0.14, -0.98, 0.1)
+const LIMP_REACH := 0.94
+const LIMP_SHAKE := 0.05
+## Hasta dónde se echa atrás a fondo, además del armado de su golpe (como `PUNCHES`).
+const WINDUP_BACK := Vector3(0.2, 0.15, 1.0)
+## Hasta qué parte de ese camino llega a fondo.
+const WINDUP_MAX := 0.6
+## Cuánto más rápido que una piña común sale al soltarla (×).
+const RELEASE_SPEED := 4.0
+## Lo que tarda en pasar a su punto de salida: casi nada, porque ya está armado.
+const RELEASE_TIME := 0.01
 
 
-## TIRA EL GOLPE PRINCIPAL CARGADO `power` (0 a 1): de la de siempre (0) a la más lenta (`slowest` de la velocidad) y
-## más fuerte (`strongest` del golpe). Devuelve si lo tiró.
-func charged_strike(power: float, slowest: float, strongest: float) -> bool:
+## TIRA EL GOLPE PRINCIPAL CARGADO `power` (0 a 1), hasta `strongest` de fuerte. Devuelve si lo tiró.
+func charged_strike(power: float, strongest: float) -> bool:
 	if punching != Punch.NONE:
 		return false
-	punch_pace = lerpf(1.0, slowest, clampf(power, 0.0, 1.0))
 	punch_strength = lerpf(1.0, strongest, clampf(power, 0.0, 1.0))
 	if not main_strike():
-		punch_pace = 1.0
 		punch_strength = 1.0
 		return false
+	var steps := _steps()
+	_aimed = [[RELEASE_TIME, _from / reach()], [float(steps[1][0]) / RELEASE_SPEED, steps[1][1]], steps[2]]
+	windup_share = 0.0
 	return true
+
+
+## DÓNDE QUEDA EL PUÑO ARMADO A FONDO (como `_moves`): el armado de su golpe más lo que se echa atrás.
+func _windup_at() -> Vector3:
+	var path: Array = main_path
+	if path.is_empty() and tip != null:
+		path = tip.strike_path()
+	if path.is_empty():
+		path = PUNCHES[main_punch]
+	return ((path[0][1] as Vector3) + WINDUP_BACK) * reach()
 
 
 ## Tira una piña (si no está en otra). Devuelve si la tiró. POR LA RED, en las máquinas que la siguen sólo sale la que
@@ -151,12 +155,9 @@ func punch(kind: Punch) -> bool:
 	_from = _wanted()
 	punching = kind
 	_clock = 0.0
-	MechSounds.hit(self, MechSounds.SWING, tip.forearm if tip != null else null, randf_range(0.9, 1.1) / maxf(punch_pace, 0.5))
+	MechSounds.hit(self, MechSounds.SWING, tip.forearm if tip != null else null, randf_range(0.9, 1.1))
 	_aimed = []
-	_struck.clear()
-	last_hit_speed = 0.0
-	last_hit = null
-	stuck = false
+	_landed = false
 	return true
 
 
@@ -192,20 +193,31 @@ func _punch_speed() -> float:
 	return 1.0
 
 
-## AVANZA LO QUE SE PIDE un paso: el reloj de la piña, el descanso hacia su postura, y la mano (el puño, cerrado mientras
-## tira una piña y cubriéndose; abierta en lo demás).
+## AVANZA LO QUE SE PIDE un paso: el reloj de la piña y el descanso hacia su postura. *Hasta el 22/11/2026 la mano sólo se
+## cerraba al pegar y cubrirse; ahora es siempre un puño (ver `mount_common_hand`).*
 func _advance(delta: float) -> void:
 	if punching != Punch.NONE:
 		_clock += delta
+		if not _landed and (stage() == Stage.HOLD or stage() == Stage.RETURN):
+			_land()
 		if _clock >= _punch_time():
 			punching = Punch.NONE
-			punch_pace = 1.0
 			punch_strength = 1.0
 	_rest = _rest.move_toward(stance_at(stance), STANCE_SPEED * reach() * delta)
-	if _hand != null:
-		_hand.fist = punching != Punch.NONE or stance == Stance.COVER
+	_follow_charge()
 	if tip != null:
 		tip.step(delta)
+
+
+## LO CARGADO AHORA: lo mide quien la simula (`charging_since`); en las demás máquinas llega por la red (MechArmsNet).
+func _follow_charge() -> void:
+	if charging_since >= 0.0:
+		windup_share = clampf((Time.get_ticks_msec() / 1000.0 - charging_since) / CageHandling.current.punch_charge_time, 0.0,
+			charge_cap)
+		return
+	var net := MechArmsNet.of(self)
+	if net == null or not net.remote():
+		windup_share = 0.0
 
 
 ## Un punto de las piñas o la guardia, en el espacio de lo que lo sostiene: `x` va hacia afuera de su lado.
@@ -263,7 +275,12 @@ func forearm_length() -> float:
 ## sobre lo que piden las piñas y las posturas (`_moves`).
 func _wanted() -> Vector3:
 	var asked := _moves()
-	return tip.wanted(asked) if tip != null else asked
+	var wanted := tip.wanted(asked) if tip != null else asked
+	if limp <= 0.0:
+		return wanted
+	var hanging := LIMP_WAY.normalized() * (upper_length() + forearm_length()) * LIMP_REACH
+	var shake := Vector3(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0), randf_range(-1.0, 1.0)) * LIMP_SHAKE * limp
+	return wanted.lerp(hanging, smoothstep(0.0, 1.0, limp)) + shake
 
 
 ## Lo que piden las piñas y las posturas: a lo largo de la piña y de vuelta a su postura, o en su postura más lo que lo
@@ -271,6 +288,8 @@ func _wanted() -> Vector3:
 func _moves() -> Vector3:
 	var home := _rest + _offset
 	if punching == Punch.NONE:
+		if windup_share > 0.0:
+			return home.lerp(_windup_at(), smoothstep(0.0, 1.0, windup_share) * WINDUP_MAX)
 		return home
 	var speed := _punch_speed()
 	var clock := _clock
@@ -278,13 +297,9 @@ func _moves() -> Vector3:
 	for step: Array in _steps():
 		var time := float(step[0]) / speed
 		if clock <= time:
-			if stuck:
-				return _stuck_at
 			return from.lerp((step[1] as Vector3) * reach(), smoothstep(0.0, 1.0, clock / time))
 		clock -= time
 		from = (step[1] as Vector3) * reach()
-	if stuck:
-		from = _stuck_at
 	return from.lerp(home, smoothstep(0.0, 1.0, clock / (RETURN_TIME / speed)))
 
 
@@ -305,7 +320,7 @@ func _punch_time() -> float:
 	var total := RETURN_TIME
 	for step: Array in _steps():
 		total += float(step[0])
-	return total / (_punch_speed() * punch_pace)
+	return total / _punch_speed()
 
 
 ## ── LA POSE ──────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -380,6 +395,8 @@ func _mount_hand(forearm: Node3D) -> void:
 ## EL PUÑO COMÚN, en la punta de `forearm` (ver `_mount_hand`): lo que monta la punta de siempre (ArmTip).
 func mount_common_hand(forearm: Node3D) -> void:
 	_hand = MechHand.build(forearm, side)
+	# SIEMPRE UN PUÑO (22/11/2026; el usuario: «debería estar con la mano siempre cerrada»).
+	_hand.fist = true
 	# La escala, después de la transformación (que la pisaría): la mano del ancho del brazo. *Hasta el 16/11/2026 iba
 	# antes y la mano quedaba siempre de 1; con el ancho mediano no se notaba, en la jaula (al 30 %) era enorme.*
 	_hand.transform = Transform3D(Basis(Vector3.BACK, PI * 0.5), Vector3(0, 0, -forearm_length() * 0.5))
@@ -397,84 +414,27 @@ func _dress(upper: Node3D, forearm: Node3D) -> void:
 		ArmoryParts.plate(forearm, out, measures.thick, float(MechBody.BASE["FOREARM"]) * 0.7)
 
 
-## ── EL GOLPE (ver arriba) ────────────────────────────────────────────────────────────────────────────────────────
+## ── EL GOLPE: SU ZONA (ver MechSkills) ──────────────────────────────────────────────────────────────────────────────
 
-## Con qué choca lo que golpea: el mundo (la capa 1, la de los cuerpos sueltos y la caja donde se le pega a un jefe).
-const HIT_MASK := 1
-## Más que esto en un paso no es un golpe que se mueve: es la meca que reapareció (m).
-const JUMP := 30.0
-
-
-## UN PASO DEL GOLPE: los puntos que golpean de la punta barren su camino desde el paso anterior (mientras pega), y le
-## pegan a lo suelto que tocan. `skip`, lo que no se golpea (lo que lo sostiene, sus propias piezas).
-func _strike(delta: float, skip: Array[RID]) -> void:
-	var now := tip.strike_points() if tip != null else PackedVector3Array()
-	var was := _strike_was
-	_strike_was = now
-	# Pega mientras pega y mientras se queda en la punta: el brazo con músculos llega un poco después que la pose.
-	if not (stage() == Stage.STRIKE or stage() == Stage.HOLD) or was.size() != now.size() or delta <= 0.0:
+## LA PIÑA LLEGÓ: le pega a lo que esté en la zona de lo que lleva, una vez.
+func _land() -> void:
+	_landed = true
+	if tip == null:
 		return
-	_sphere.radius = strike_radius()
-	var query := PhysicsShapeQueryParameters3D.new()
-	query.shape = _sphere
-	query.collision_mask = HIT_MASK
-	var space := get_world_3d().direct_space_state
-	for index in now.size():
-		var motion := now[index] - was[index]
-		if motion.length() < 0.001 or motion.length() > JUMP:
-			continue
-		query.exclude = skip.duplicate()
-		# Lo que no se golpea se saltea y se sigue barriendo: el brazo atraviesa.
-		for attempt in 6:
-			query.transform = Transform3D(Basis(), was[index])
-			query.motion = motion
-			var fractions := space.cast_motion(query)
-			if fractions[1] >= 1.0:
-				break
-			query.transform = Transform3D(Basis(), was[index] + motion * fractions[1])
-			query.motion = Vector3.ZERO
-			var info := space.get_rest_info(query)
-			if info.is_empty():
-				break
-			var body := instance_from_id(int(info["collider_id"])) as RigidBody3D
-			if body != null and not _struck.has(body.get_instance_id()):
-				_hit(body, info["point"], motion / delta)
-			query.exclude = query.exclude + [info["rid"]]
-		# Y lo que ya tiene adentro donde quedó (si arrancó adentro, el barrido no lo ve).
-		query.transform = Transform3D(Basis(), now[index])
-		query.motion = Vector3.ZERO
-		for found in space.intersect_shape(query, 8):
-			var inside := found["collider"] as RigidBody3D
-			if inside != null and not _struck.has(inside.get_instance_id()):
-				_hit(inside, now[index], motion / delta)
-
-
-## LE PEGA a `body` en `at` con lo que golpea yendo a `velocity` (mundo): una vez por piña, lo que haga la punta (el
-## taladro y la sierra, ver SpinTip.hit) o el golpe de siempre (EnergyBolt.lands: el empujón, y si es un jefe, el daño),
-## y un destello donde pegó.
-func _hit(body: RigidBody3D, at: Vector3, velocity: Vector3) -> void:
-	_struck[body.get_instance_id()] = true
-	if tip == null or not tip.hit(body, at, velocity):
-		EnergyBolt.lands(body, velocity * StrikeSettings.current.hit_mass * punch_strength, at, "golpe")
-	EnergyBolt.flash(get_tree().current_scene, at, strike_radius() * 1.2, Color(1.0, 0.93, 0.7))
-	var sounds_node := MechSounds.of(self)
-	if sounds_node != null:
-		sounds_node.play_at(MechSounds.STRIKE_HIT, at, 1.0, clampf(velocity.length() / 15.0, 0.3, 1.0))
-	last_hit_speed = velocity.length()
-	last_hit = body
-	if StrikeSettings.current.strikes_collide and _stops_on_hit() and not stuck and tip != null:
-		# Se queda donde está el puño ahora (el de verdad: el de músculos llega tarde a lo pedido).
-		var base := anchor.global_transform
-		var from_shoulder := base.basis.inverse() * (tip.strike_points()[0] - base * shoulder_local)
-		_stuck_at = Vector3(side * from_shoulder.x, from_shoulder.y, from_shoulder.z)
-		stuck = true
-
-
-## El radio de lo que golpea (m): el del puño, a la medida de esta meca.
-func strike_radius() -> float:
-	return StrikeSettings.current.fist_radius * measures.thick
-
-
-## SI SE FRENA DONDE PEGA a mano (ver `stuck`): el brazo sin cuerpo; el que tiene cuerpo lo frena el choque de verdad.
-func _stops_on_hit() -> bool:
-	return true
+	var zone := tip.zone()
+	if zone.is_empty():
+		return
+	var way := -anchor.global_basis.z
+	way.y = 0.0
+	way = way.normalized()
+	var power := punch_strength * tip.zone_power()
+	var origin := anchor.global_position
+	var floor_at := origin
+	if anchor is BalanceBody:
+		floor_at.y = (anchor as BalanceBody).support.y
+	if cast_here:
+		MechSkills.blast(anchor.get_parent(), zone, floor_at, way)
+	if MechSkills.land(anchor, zone, origin, way, tip.zone_source(), power, MechSkills.STRIKE_IMPULSE * power) > 0:
+		var sounds_node := MechSounds.of(self)
+		if sounds_node != null:
+			sounds_node.play_at(MechSounds.STRIKE_HIT, origin + way * float(zone["length"]) * 0.5, 1.0, 1.0)

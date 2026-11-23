@@ -193,6 +193,13 @@ func _ready() -> void:
 	add_collision_exception_with(_solid)
 	hurtbox = BossHurtbox.new()
 	_solid.add_child(hurtbox)
+	# SU BLANCO EN EL PISO (HitTarget): lo encuentran las formas planas, y el golpe sigue entrando por su caja.
+	var aim := HitTarget.new()
+	aim.anchor = self
+	aim.receiver = hurtbox
+	aim.radius_source = func() -> float: return maxf(Brawler.box().x, Brawler.box().z) * 0.5
+	aim.bind(hurtbox)
+	add_child(aim)
 	net = BossNet.new()
 	net.name = "Red"
 	net.boss = self
@@ -408,7 +415,8 @@ func _blocked(wanted: Vector3) -> Vector3:
 	var gap := Vector2(maxf(absf(local.x) - box_now.x * 0.5, 0.0), maxf(absf(local.z) - box_now.z * 0.5, 0.0)).length()
 	var toward := block_at - global_position
 	toward.y = 0.0
-	if gap > block_radius + 1.0 or toward.length() < 0.01:
+	# Un margen chico: con el jefe a escala, un metro lo frenaba antes de que la embestida llegara a tocar.
+	if gap > block_radius + 0.15 or toward.length() < 0.01:
 		return wanted
 	toward = toward.normalized()
 	var into := wanted.dot(toward)
@@ -522,6 +530,15 @@ static func lacks(needs: PackedStringArray) -> PackedStringArray:
 		if not PARTS.has(part):
 			missing.append(part)
 	return missing
+
+
+## LA ESCALA DE LO QUE TIRA (la piedra, el lomo de la onda, la mano del agarre, el fuego): sus medidas se dibujaron con el
+## jefe a `FX_DRAWN_AT`, y siguen a la escala de ahora (22/11/2026; el usuario: «las piedras… siguen siendo el tamaño viejo»).
+const FX_DRAWN_AT := 0.6
+
+
+static func fx_scale() -> float:
+	return scale() / FX_DRAWN_AT
 
 
 ## La escala de todos los jefes (ver BossSettings).

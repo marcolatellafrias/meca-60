@@ -13,7 +13,7 @@ extends RefCounted
 ##     izquierdo usa SU BRAZO, según lo que lleve (`_arm_use`; lo que lleva cada uno se elige en el F5):
 ##       — EL CAÑÓN: el gatillo, según el modo que eligen TRES BOTONES al lado del mando de la izquierda —RÁFAGA y
 ##         BARRIDO mientras se mantiene, SÚPER carga mientras se mantiene y tira al soltar (CannonTip).
-##       — EL PUÑO (o el palo): cuanto más se mantiene, más lenta y más fuerte la piña (MechArm.charged_strike; sus
+##       — EL PUÑO (o el palo): cuanto más se mantiene, más se arma y más fuerte pega la piña (MechArm.charged_strike; sus
 ##         perillas, en el F7: CageHandling).
 ##       — EL ESCUDO (ShieldTip): mientras se mantiene, levantado; frena lo que viene de frente (MechShield,
 ##         ToolMech.block_hit). El canje: un arma menos.
@@ -175,7 +175,7 @@ static func _place(key: String, mount: FaceMount, root: Node3D, form: CageShape,
 			if energy:
 				screen.source = func() -> float:
 					var mech := _mech_of(screen)
-					return mech.energy.level if mech != null and mech.energy != null else 0.0
+					return mech.energy.share() if mech != null and mech.energy != null else 0.0
 			else:
 				screen.source = func() -> float: return _charge(_mech_of(screen), state)
 		"modo ráfaga", "modo barrido", "modo súper":
@@ -316,7 +316,7 @@ static func _punch(mech: CageMech, pressed: bool, state: Dictionary) -> void:
 		return
 	var knobs := CageHandling.current
 	var power := clampf((Time.get_ticks_msec() / 1000.0 - from) / knobs.punch_charge_time, 0.0, 1.0)
-	mech.melee.charged_strike(power, knobs.punch_slowest, knobs.punch_strongest)
+	mech.melee.charged_strike(power, knobs.punch_strongest)
 
 
 ## LA CARGA que muestra su pantalla (0 a 1): la de la piña que se está manteniendo, o la del súper del cañón.

@@ -14,4 +14,4 @@ static var current := KnobsFile.load_into(PoseArmSettings.new(), SAVED) as PoseA
 @export_range(0.2, 3.0, 0.05) var punch_speed := 1.0
 
 ## *Lo que pesa el puño al pegar y su radio eran de acá hasta el 18/11/2026: hoy son de todos los brazos
-## (StrikeSettings).*
+## (StrikeSettings, borrado el 22/11/2026 con los golpes físicos).*

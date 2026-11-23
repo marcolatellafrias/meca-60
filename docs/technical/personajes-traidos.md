@@ -206,3 +206,6 @@ La recuperación mezclaba bases de huesos (con escala) y de cuerpos compuestos c
 rotación pura) con `Basis.slerp`, que exige rotaciones puras. Ahora toda mezcla pasa por `RagdollUtil._blend`, que toma
 sólo el giro de cada base: ninguna base deformada puede llegar a la mezcla.
 
+
+## El roll (22/11/2026)
+Con la cámara isométrica no se salta: el **Shift** a pie hace un roll (`CharacterRoll`), hacia donde camina o, quieto, hacia donde mira. Lo mueve la cápsula, se dibuja girando el esqueleto de dibujo y llega a las otras máquinas por `CharacterNetSync`. Mantenido, después sigue corriendo.

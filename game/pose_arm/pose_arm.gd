@@ -1,18 +1,8 @@
 class_name PoseArm
 extends MechArm
 
-## UN BRAZO DISCRETO: EL OTRO CAMINO de los brazos de la meca (13/11/2026; lo que se le pide —posturas, piñas, la pose—,
-## en MechArm). El usuario: «si los jefes son NPCs… áreas y zonas que esquivar y más proyectiles… ahí tiene mucho más
-## sentido de que los brazos sean discretos»; «tal vez sí puedo hacer que los brazos atraviesen más las paredes… pero la
-## caja, la base, no».
-##
-##   · SE DIBUJA EN LA POSE PEDIDA, sin cuerpos ni músculos: va exacto adonde se lo pide, no se traba y ATRAVIESA lo que
-##     haya. Lo que choca de la meca es su caja.
-##   · AL CONECTAR, EMPUJA (y a un jefe, le saca vida): el golpe de todos los brazos (MechArm, «El golpe»).
-##   · Lo que no se mueve (una pared, el piso) no lo frena ni recibe nada.
-
-## Lo que pesa lo que golpea, su radio y lo rápido de las piñas: perillas (PoseArmSettings, F3). Cómo golpea: MechArm,
-## «El golpe».
+## UN BRAZO DISCRETO (lo que se le pide —posturas, piñas, la pose—, en MechArm): SE DIBUJA EN LA POSE PEDIDA, sin cuerpos, y
+## atraviesa lo que haya. Lo que choca de la meca es su caja, y lo que pega es la zona de la habilidad (MechSkills).
 
 var _upper: Node3D = null
 var _forearm: Node3D = null
@@ -45,7 +35,6 @@ func _physics_process(delta: float) -> void:
 	_advance(delta)
 	var pose := _target()
 	_place(pose)
-	_strike(delta, [anchor.get_rid()])
 
 
 func _place(pose: Dictionary) -> void:

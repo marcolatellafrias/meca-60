@@ -192,7 +192,7 @@ func _ready() -> void:
 	await get_tree().create_timer(0.5).timeout
 	print("PUÑO: medio segundo mantenido, la pantalla dice ", snappedf(charge_screen.source.call(), 0.01))
 	fist_arm.mode_use(false)
-	print("  soltado: la piña sale a ", snappedf(_mech.melee.punch_pace, 0.01), "× la velocidad y ",
+	print("  soltado: la piña sale a ", 1.0, "× la velocidad y ",
 		snappedf(_mech.melee.punch_strength, 0.01), "× el golpe (", MechArm.Punch.keys()[_mech.melee.punching], ")")
 	await get_tree().create_timer(1.5).timeout
 	# El torso persigue la mirada: 50° a la derecha y 20° arriba, con su resorte.

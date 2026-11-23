@@ -3,7 +3,7 @@ extends RefCounted
 
 ## LAS PERILLAS QUE SE GUARDAN (13/11/2026; el usuario, del F1 de la meca: «no entiendo por qué este panel no tiene
 ## opción de guardado»; y «fijate si hay otros paneles que les falta guardado»): un recurso de perillas (`current` de
-## LegSettings, KinematicSettings, MuscleArmSettings) se carga de un `.tres` al arrancar, y su panel F tiene «Guardar» y
+## LegSettings, KinematicSettings, PoseArmSettings) se carga de un `.tres` al arrancar, y su panel F tiene «Guardar» y
 ## «Volver a lo guardado». Una sola pieza para todos, así se guarda igual en todos lados.
 ##   · `skip`: perillas que no se guardan ni se vuelven a lo guardado, porque las pone otra cosa. En el archivo quedan las
 ##     del código. (Hoy no lo usa nadie: cada número tiene un solo dueño.)

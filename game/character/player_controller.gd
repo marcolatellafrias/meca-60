@@ -142,7 +142,8 @@ func _input(event: InputEvent) -> void:
 	var seated := is_instance_valid(bi) and bi.is_seated
 
 	# V alterna creative (solo en gameplay; la tecla es CreativeFlight.TOGGLE_KEY, la misma del sandbox).
-	if CreativeFlight.toggled(event) and not (seated and _direct()):
+	# Sentado con la cámara isométrica, la V es de la meca (los misiles, ver MechCrew).
+	if CreativeFlight.toggled(event) and not (seated and (_direct() or is_instance_valid(iso_view))):
 		_set_creative(not _creative)
 		return
 
@@ -154,12 +155,21 @@ func _input(event: InputEvent) -> void:
 		_sprint_taps = _sprint_taps + 1 if now - _last_sprint_tap < TURBO_TAP else 1
 		_last_sprint_tap = now
 		bi.intent.turbo = clampi(_sprint_taps - 1, 0, 2) if _direct() else 0
+		# CON LA CÁMARA ISOMÉTRICA, A PIE, EL SHIFT ES EL ROLL (CharacterRoll); mantenido, después sigue corriendo.
+		if is_instance_valid(iso_view) and not seated:
+			_roll(bi)
 	elif is_instance_valid(bi) and event.is_action_released("sprint"):
 		bi.intent.turbo = 0
 
 	# ── Mouse motion ─────────────────────────────────────────────────────────
-	# CON LA CÁMARA ISOMÉTRICA el mouse no mira ni usa: se interactúa con la E (ver `set_iso`).
+	# CON LA CÁMARA ISOMÉTRICA el mouse no mira como en primera persona (ver `set_iso`). A PIE, EL CLIC IZQUIERDO USA LO QUE
+	# ESTÁ RESALTADO, como la E (22/11/2026; el usuario: «con el clic interactúe con los objetos que se me outlinean»).
 	if is_instance_valid(iso_view) and (event is InputEventMouseMotion or event is InputEventMouseButton):
+		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT and not seated \
+				and is_instance_valid(bi) and ic != null and is_instance_valid(ic.detector) \
+				and (is_instance_valid(ic.detector.get_hovered()) or is_instance_valid(bi.carried)) \
+				and get_viewport().gui_get_hovered_control() == null:
+			bi.intent.activate = true
 		return
 	if event is InputEventMouseMotion:
 		if not _is_ragdoll_active():
@@ -194,7 +204,8 @@ func _input(event: InputEvent) -> void:
 		if event.pressed:
 			match event.keycode:
 				# Movimiento
-				KEY_SPACE:
+				# CON LA CÁMARA ISOMÉTRICA NO SE SALTA (22/11/2026): a pie el Shift rolea y sentado el espacio es de la meca.
+				KEY_SPACE when not is_instance_valid(iso_view):
 					if _direct() and not (is_instance_valid(bi) and bi.intent.crouch) and not seated:
 						char_rigidbody.jump_direct()  # el ente salta ya, sin carga
 					elif is_instance_valid(bi):
@@ -293,16 +304,54 @@ func _write_move() -> void:
 	bi.intent.sprint = live and Input.is_action_pressed("sprint")
 
 
-## CON LA CÁMARA ISOMÉTRICA: WASD va según la pantalla y el personaje mira hacia donde camina. Sentado, las teclas son de
-## la meca (ver MechCrew).
+## CON LA CÁMARA ISOMÉTRICA, A PIE (22/11/2026; el usuario: «que el personaje mire hacia donde está apuntando el mouse y
+## que corra hacia donde apunto con las teclas… el equivalente a la meca, que con las flechitas mira»): WASD va según la
+## pantalla y el rumbo sale del mouse, cada uno por su lado. Sentado, las teclas son de la meca (ver MechCrew).
 func _write_iso_move(bi: BoneInstantiator, live: bool) -> void:
+	# Sentado, el mouse sólo se ve con los controles de clic (MechCrew).
+	UIState.aim_with_mouse(_shown and (not bi.is_seated or MatchSettings.current.clicking()))
 	var screen := Vector2(Input.get_axis("move_left", "move_right"),
 		Input.get_axis("move_backward", "move_forward")) if live else Vector2.ZERO
 	var way := IsoSettings.current.screen_to_world(screen)
-	bi.intent.move = Vector2(0.0, -minf(way.length(), 1.0))
+	if live and _shown and not _is_ragdoll_active():
+		_look_at_mouse(bi)
+	# La cápsula camina en sus propios ejes (ver CharacterRigidBody3D._move): la dirección de la pantalla, en ellos.
+	var turn := Basis(Vector3.UP, camera_yaw)
+	bi.intent.move = Vector2(way.dot(turn.x), way.dot(turn.z)).limit_length(1.0)
 	bi.intent.sprint = live and Input.is_action_pressed("sprint")
-	if way.length() > 0.01:
-		camera_yaw = atan2(-way.x, -way.z)
+
+
+## EL ROLL: hacia donde camina; quieto, hacia donde mira. Sólo en el piso.
+func _roll(bi: BoneInstantiator) -> void:
+	if _is_ragdoll_active() or _creative or not char_rigidbody.is_grounded or is_instance_valid(bi.carried):
+		return
+	var screen := Vector2(Input.get_axis("move_left", "move_right"), Input.get_axis("move_backward", "move_forward"))
+	var way := IsoSettings.current.screen_to_world(screen) if screen != Vector2.ZERO \
+		else Basis(Vector3.UP, camera_yaw) * Vector3.FORWARD
+	if bi.roll.start(way) and is_instance_valid(bi.net_sync):
+		bi.net_sync.tell_roll(bi.roll.way)
+
+
+## El rumbo, hacia el punto del mouse a la altura de su pecho. Con el mouse encima de él, queda como estaba.
+func _look_at_mouse(bi: BoneInstantiator) -> void:
+	var chest := bi.get_interaction_origin()
+	var aim := iso_view.pointed_at(chest.y)
+	if not aim.is_finite():
+		return
+	var flat := aim - chest
+	flat.y = 0.0
+	if flat.length() > MOUSE_DEAD_ZONE:
+		camera_yaw = atan2(-flat.x, -flat.z)
+
+
+## Lo cerca del pecho (m) que el mouse deja de girarlo: ahí una pizca de mouse daría media vuelta.
+const MOUSE_DEAD_ZONE := 0.2
+## Si está prendido (ver `set_active`): apagado, el mouse es de lo que se posee.
+var _shown := true
+
+
+func _exit_tree() -> void:
+	UIState.aim_with_mouse(false)
 
 
 func _update_hud(delta: float) -> void:
@@ -355,6 +404,8 @@ var iso_view: IsoView = null
 
 func set_iso(view: IsoView) -> void:
 	iso_view = view
+	if view == null:
+		UIState.aim_with_mouse(false)
 	if is_instance_valid(interaction_controller) and is_instance_valid(interaction_controller.detector):
 		interaction_controller.detector.iso = view != null
 	if is_instance_valid(_crosshair):
@@ -473,6 +524,9 @@ func _face_camera() -> void:
 
 ## APAGADO O PRENDIDO (ver BoneInstantiator.set_active): sin cámara, sin mira y sin HUD mientras está apagado.
 func set_active(on: bool) -> void:
+	_shown = on
+	if not on:
+		UIState.aim_with_mouse(false)
 	if is_instance_valid(iso_view):
 		if on:
 			iso_view.make_current()

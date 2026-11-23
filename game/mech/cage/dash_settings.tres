@@ -1,0 +1,7 @@
+[gd_resource type="Resource" script_class="DashSettings" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://game/mech/cage/dash_settings.gd" id="1_eklg4"]
+
+[resource]
+script = ExtResource("1_eklg4")
+style = 2

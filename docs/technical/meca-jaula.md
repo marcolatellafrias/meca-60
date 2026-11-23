@@ -132,7 +132,7 @@ La meca con herramientas (`ToolMech`, abajo: la energía común, el dash, saltar
 - **Sus brazos** (`loadout`, ver [[brazo]], «Lo que lleva en la punta»): a la izquierda **el cañón** (`CannonTip`) en
   un brazo discreto, en lugar del antebrazo, con sus cuatro modos y la palanca; a la derecha **el puño pesado**
   (`HEAVY_FIST`) en un brazo con músculos (choca y se traba): pega las piñas de siempre y, desde adentro, **la piña
-  cargada** (`MechArm.charged_strike`: más lenta y más fuerte). Los dos con la placa del acorazado. *Hasta el
+  cargada** (`MechArm.charged_strike`: se arma hacia atrás según la carga, pega más fuerte y sale siempre a la misma velocidad). Los dos con la placa del acorazado. *Hasta el
   17/11/2026, a la derecha el palo (`PoleTip`): el puño pesado agarrando el palo eléctrico, que sólo se veía (el
   usuario: «el puño lo haría que reemplace el palo por ahora»).* *Hasta el 16/11/2026, `CageCannonArm` y
   `PoleArm`; el cañón llevaba además la funda de la Meca de tres, por eso el brazo entero se veía distinto.*
@@ -279,3 +279,6 @@ ni la silla, ni la que se ve, ni el sentado se corren de la meca.
 - El puesto del artillero gira con el arma, y la silla gira aparte. Los controles del artillero y su arma.
 - Que el súper del cañón y los golpes la muevan (la cinemática todavía no la mueve un golpe propio).
 - Los tiros por la red.
+
+## Las armas de arriba (22/11/2026)
+La ametralladora y los misiles (`MechGuns`) van en dos torretas de 360° centradas en profundidad a los dos costados de la tapa, contra el borde, para no tapar el pozo. Sin nadie que las use vuelven al frente. Los tiros que no tocan nada se apagan sin destello ni chispas; el misil sí explota al final, porque su explosión es su zona.

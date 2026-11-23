@@ -52,9 +52,11 @@ también»). Nada queda huérfano.
 - **Los tableros van en las caras, en una grilla de 4 cm** (`FaceBoard`), y cada pieza sobre su base de exactamente
   sus celdas (`FaceMount`), como la nave de character-parametric; lo que lleva tableros se mide en celdas enteras. Lo
   otro que se muestra va en la punta de un brazo de dos articulaciones (`FoldingArm`). Ver docs/technical/tableros.md.
-- **Los brazos de la meca, uno por uno**: cada brazo elige ser discreto (`PoseArm`, se dibuja en su pose) o físico
-  (`MuscleArm`, músculos que persiguen la pose) y qué lleva en la punta (puño, puño pesado, palo, taladro, sierra,
-  cañón; ver docs/technical/brazo.md). Lo que se le pide a un brazo está una sola vez, en `MechArm`.
+- **Las habilidades de la meca son zonas** (22/11/2026; `MechSkills`): conos, líneas y círculos con alcance, que se ven en
+  el piso antes de salir; nada pega fuera de la vista. Los largos son partes de un solo número (`HitSettings.skill_range`).
+  Los brazos son animación (`PoseArm`) y cada uno elige qué lleva en la punta (puño, puño pesado, palo, taladro, sierra,
+  cañón; ver docs/technical/brazo.md). Lo que se le pide a un brazo está una sola vez, en `MechArm`. *Los músculos se
+  sacaron ese día.*
 - **El cuerpo con equilibrio es la base común de la meca y los jefes** (`BalanceBody`, ver docs/technical/base-comun.md):
   la jaula se mueve cinemática (`KinematicMover`) y la de práctica con el péndulo físico.
 - **Toda escalera se arma con `Stairs`** (13/11/2026; ver docs/technical/escaleras.md).
@@ -83,6 +85,10 @@ cajas para tirarles. **E** sobre la meca sienta en el primer puesto libre (manej
 los brazos, **F4** las piernas, **F5** lo que lleva cada brazo, **F6** las poses (temporal). **L** muestra la grilla de
 los tableros.
 
+**En la partida, el F6 del host** (`BaseMatchPanel`, `MatchSettings`): teclas o **clic en los cuadrados** (palanca que se
+queda, giro que sigue solo, armas que se toman y se apuntan con la mira), el zoom arriba y a pie, y **reiniciar**. A pie
+no se salta: **Shift** es el roll (`CharacterRoll`). Ver docs/technical/flujo-de-partida.md.
+
 **Las parcelas tienen paredes invisibles** (`SandboxParcel`): las ve lo que se mueve con física y vive en una parcela;
 el jugador y la bola pasan.
 
@@ -109,13 +115,14 @@ ordenan, en [docs/technical/estructura.md](docs/technical/estructura.md).
   - `game/mech/boards/` — **las caras con tablero**: `FaceBoard`, `FaceMount`, `FoldingArm`.
   - `game/mech/arm_tips/` — **lo que lleva cada brazo en la punta** y el panel de equipo.
 - `game/tool_mech/` — `ToolMech` (la energía común, el dash, saltar y levitar), del que hereda la jaula.
-- `game/pose_arm/`, `game/muscle_arm/` — los dos brazos.
+- `game/pose_arm/` — el brazo. `game/combat/` — los golpes y las zonas de las habilidades (`MechSkills`, `HitTarget`).
 - `game/balance_body/` — **el cuerpo con equilibrio, la base común de la meca y los jefes**: `BalanceBody`, `BodyLegs`,
   `BodyMoves`, `BodySettings`, `KinematicMover`, `KinematicSettings`.
 - `game/interactables/` — agarrar, sentarse y **los controles** (`ControllableInteractable` con su modo, el tablero de
   character-parametric, el botón y la palanca).
 - `game/bosses/` — los jefes; `game/base/` — la sucursal; `game/battlefield/` — el mapa de pelea.
-- `game/supplies/` — **los recursos**: `SupplyLook`, `PackageArchetype`, `PackageDamage`, `ObjectLotArchetype`.
+- `game/supplies/` — **los recursos**: `SupplyKinds`, `SupplyCrate` (el paquete cinemático), `SupplyLook`, `PackageArchetype`,
+  `PackageDamage`, `ObjectLotArchetype`. Los tubos y quién lleva qué, en `game/base/` (`BaseSupplies`, `BaseSupplyTube`).
 - `game/sandbox/` — el sandbox de parcelas (ver `docs/technical/sandbox.md`), poseer (`SandboxPossession`), la bola de
   la J (`TestBall`) y la sesión de red del sandbox. Las teclas reservadas, en `SandboxKey.RESERVED`.
 - `game/ui/` — la pausa (autoload `PauseMenu`, Escape), el menú de inicio, las Opciones (`GameOptions`), `UIState`
@@ -141,5 +148,10 @@ ordenan, en [docs/technical/estructura.md](docs/technical/estructura.md).
   `tests/mech_fall_look.tscn`: los recursos, pintar con píxeles, la mano, poseer y la caída de la meca.
 - `tests/net_check.tscn`: dos instancias sin ventana, una con `--host-local` y otra con `--join-local` (antes del
   `--`); cada una dice cuántos jugadores, personajes y objetos compartidos ve.
+- `tests/match_net_check.tscn`: dos instancias sin ventana (`--host-local` y `--join-local`): los controles de clic, el
+  roll, pelear, morir y reiniciar; cada una termina con «MATCH … OK».
+- `tests/boss_orbs_check.tscn`: el contrato de las bolitas, cada tipo, los patrones y el stun; dice «BOLITAS OK».
+- `tests/supplies_loop_look.tscn`: agarrar, llevar, cargar, reparar y cada munición; dice «RECURSOS OK». `tests/supplies_net_check.tscn`:
+  lo mismo con dos instancias sin ventana; cada una dice «PAQUETES … OK».
 - `tests/load_all.tscn`: carga todos los scripts del juego y de los tests uno por uno (el chequeo del editor no los
   compila a todos).

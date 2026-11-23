@@ -51,10 +51,8 @@ func _ready() -> void:
 	await get_tree().create_timer(2.0).timeout
 	print("ANTES ", _tips())
 	var draft := panel.draft() as MechLoadout
-	draft.left_motion = ArmLoadout.Motion.POSE
 	draft.left_tip = ArmLoadout.Tip.SAW
 	draft.left_plate = false
-	draft.right_motion = ArmLoadout.Motion.MUSCLE
 	draft.right_tip = ArmLoadout.Tip.DRILL
 	panel.rebuild()
 	panel.visible = true
@@ -83,7 +81,7 @@ func _tips() -> String:
 	var out := PackedStringArray()
 	for arm in mech.arms:
 		out.append("%s %s %s%s" % ["izq." if arm.side < 0.0 else "der.", arm.tip.get_script().get_global_name(),
-			"con músculos" if arm is MuscleArm else "discreto", " con placa" if arm.plated else ""])
+			"discreto", " con placa" if arm.plated else ""])
 	return " · ".join(out)
 
 

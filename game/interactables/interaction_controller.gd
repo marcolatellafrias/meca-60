@@ -193,6 +193,9 @@ func _read_intent() -> void:
 		# EN UN MODO TRABADO, la E lo suelta (no te para de la silla: ver ControllableInteractable.latches_mode).
 		if is_instance_valid(_mode) and _mode_latched:
 			_stop_control()
+		elif able and is_instance_valid(who.carried) and BaseSupplies.current != null:
+			# CON UN PAQUETE EN LAS MANOS, la E es para él: ponérselo a la meca o dejarlo (BaseSupplies).
+			BaseSupplies.current.use_carried(who)
 		elif able:
 			try_activate(who)
 

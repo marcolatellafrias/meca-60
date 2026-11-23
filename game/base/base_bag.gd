@@ -46,12 +46,12 @@ static func bag(parent: Node3D, radius: float, tall: float, at: Vector3, color: 
 			var v01 := Vector3(cos(a1) * p.x, p.y, sin(a1) * p.x)
 			var v10 := Vector3(cos(a0) * q.x, q.y, sin(a0) * q.x)
 			var v11 := Vector3(cos(a1) * q.x, q.y, sin(a1) * q.x)
-			# el frente de una cara es horario (ver la memoria del proyecto): de afuera, v00 → v10 → v11
+			# el frente de una cara es horario visto de afuera (*hasta el 22/11/2026 iban al revés y se veía por dentro*)
 			if p.x > 0.0001:
-				for v in [v00, v10, v01]:
+				for v in [v00, v01, v10]:
 					tool.add_vertex(v)
 			if q.x > 0.0001:
-				for v in [v01, v10, v11]:
+				for v in [v01, v11, v10]:
 					tool.add_vertex(v)
 	tool.generate_normals()
 	var part := MeshInstance3D.new()
@@ -179,10 +179,10 @@ static func skinned_mesh(radius: float, tall: float, bones: int, cuts: int) -> A
 			var v10 := Vector3(cos(a0) * q.x, q.y, sin(a0) * q.x)
 			var v11 := Vector3(cos(a1) * q.x, q.y, sin(a1) * q.x)
 			if p.x > 0.0001:
-				for v: Vector3 in [v00, v10, v01]:
+				for v: Vector3 in [v00, v01, v10]:
 					_skinned_vertex(tool, v, piece, bones)
 			if q.x > 0.0001:
-				for v: Vector3 in [v01, v10, v11]:
+				for v: Vector3 in [v01, v11, v10]:
 					_skinned_vertex(tool, v, piece, bones)
 	tool.index()
 	tool.generate_normals()

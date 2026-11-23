@@ -24,7 +24,16 @@ const BAG_MASS := 600.0
 const LINK_MASS := 20.0
 const LINEAR_DAMP := 0.15
 const ANGULAR_DAMP := 0.6
+## LA HAMACA DE UN GOLPE (m/s): por punto de daño, lo mínimo, lo más que da el daño, lo que suma cada metro de empuje y el
+## tope de todo.
+const SWING_PER_DAMAGE := 0.06
+const SWING_MIN := 0.05
+const SWING_HIT := 1.2
+const SWING_PER_METER := 1.0
+const SWING_TOP := 4.0
 
+## Donde se le pega (ver HitTarget).
+var target: HitTarget = null
 var _pieces: Array[RigidBody3D] = []
 var _skeleton: Skeleton3D
 var _piece_tall := 1.0
@@ -83,6 +92,24 @@ func build(radius: float, tall: float, chain: float, color: Color) -> void:
 		above = body
 		_pieces.append(body)
 	_skin(radius, tall, top, color)
+	# SU BLANCO (HitTarget): los golpes van por su ficha, y la física de acá sólo la hamaca (ver `_swing`).
+	target = HitTarget.new()
+	target.anchor = _pieces[1]
+	target.radius = radius
+	target.bar_height = tall * 0.5 + 0.7
+	add_child(target)
+	for child in get_children():
+		if child is RigidBody3D:
+			target.bind(child)
+	target.struck.connect(_swing)
+
+
+## LA REACCIÓN, CON TOPE (22/11/2026; el usuario: «hay algunos impactos que le lanzan volando muchísimo y hay otros que casi
+## nada»): se hamaca según el daño y, si le rompieron el aguante, además según el empuje. Sólo se ve.
+func _swing(damage: float, way: Vector3, push: float, _broke: bool) -> void:
+	var speed := minf(clampf(damage * SWING_PER_DAMAGE, SWING_MIN, SWING_HIT) + push * SWING_PER_METER, SWING_TOP)
+	for body in _pieces:
+		body.apply_central_impulse(way * speed * body.mass)
 
 
 ## UN PERNO entre dos cuerpos, en `at` (marco de la bolsa).

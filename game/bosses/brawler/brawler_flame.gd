@@ -16,6 +16,8 @@ var half_angle := 12.0
 var way := Vector3.FORWARD
 var mouth := Vector3.ZERO
 var burning := false
+## La altura del piso donde pelea (m): la arena de la partida no está en 0.
+var _floor_y := 0.0
 
 var _zone: BossZone = null
 var _cones: Array[MeshInstance3D] = []
@@ -32,7 +34,7 @@ func setup(length: float, half: float, _sweep := 0.0) -> void:
 		var cone := MeshInstance3D.new()
 		var shape := CylinderMesh.new()
 		var wide := length * tan(deg_to_rad(half)) * (1.0 if index == 1 else 0.55)
-		shape.top_radius = 0.8
+		shape.top_radius = 0.8 * Brawler.fx_scale()
 		shape.bottom_radius = wide
 		shape.height = length
 		shape.radial_segments = 16
@@ -53,8 +55,8 @@ func setup(length: float, half: float, _sweep := 0.0) -> void:
 	_fire = CPUParticles3D.new()
 	_fire.name = "Fuego"
 	var ball := SphereMesh.new()
-	ball.radius = 1.5
-	ball.height = 3.0
+	ball.radius = 1.5 * Brawler.fx_scale()
+	ball.height = 3.0 * Brawler.fx_scale()
 	ball.radial_segments = 8
 	ball.rings = 4
 	var paint := StandardMaterial3D.new()
@@ -70,7 +72,7 @@ func setup(length: float, half: float, _sweep := 0.0) -> void:
 	_fire.spread = half * 0.8
 	_fire.initial_velocity_min = length / 0.9 * 0.85
 	_fire.initial_velocity_max = length / 0.9 * 1.05
-	_fire.gravity = Vector3(0.0, 6.0, 0.0)
+	_fire.gravity = Vector3(0.0, 6.0 * Brawler.fx_scale(), 0.0)
 	_fire.scale_amount_min = 0.8
 	_fire.scale_amount_max = 1.6
 	var grow := Curve.new()
@@ -93,7 +95,8 @@ func setup(length: float, half: float, _sweep := 0.0) -> void:
 ## EL AVISO: el cono en el piso desde `from`, hacia `center` (de costado). `locked`: ya apuntó (titila rápido).
 func warn(from: Vector3, center: Vector3, locked := false) -> void:
 	_zone.locked = locked
-	_zone.place(Vector3(from.x, 0.0, from.z), center)
+	_floor_y = from.y
+	_zone.place(from, center)
 
 
 ## EL CHORRO, de `from` (la boca del horno) hacia `toward` (de costado): prendido o no.
@@ -102,7 +105,7 @@ func blow(from: Vector3, toward: Vector3, on: bool) -> void:
 	mouth = from
 	way = Vector3(toward.x, 0.0, toward.z).normalized()
 	# Hacia el piso, a su alcance: desde arriba (volando), baja más.
-	var aim := (way * reach + Vector3.DOWN * maxf(from.y - 1.0, reach * 0.18)).normalized()
+	var aim := (way * reach + Vector3.DOWN * maxf(from.y - _floor_y - 1.0, reach * 0.18)).normalized()
 	_fire.global_transform = Transform3D(Basis.looking_at(aim, Vector3.UP), from)
 	_fire.emitting = on
 	for index in _cones.size():
@@ -122,5 +125,5 @@ func blow(from: Vector3, toward: Vector3, on: bool) -> void:
 func covers(point: Vector3, half: float) -> bool:
 	if not burning:
 		return false
-	_zone.place(Vector3(mouth.x, 0.0, mouth.z), way)
+	_zone.place(Vector3(mouth.x, _floor_y, mouth.z), way)
 	return _zone.covers(point, half)

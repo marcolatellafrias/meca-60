@@ -98,7 +98,6 @@ func _ready() -> void:
 	mech.melee.punch(MechArm.Punch.STRAIGHT)
 	await get_tree().create_timer(0.62).timeout
 	await _shot("el palo: un directo", now + forward * 6.0 + right * 5.0 + Vector3.UP * 2.0, now + forward * 1.0, 50.0)
-	print("PALO: la mano llegó a ", (mech.melee as MuscleArm).top_speed, " m/s")
 	await get_tree().create_timer(1.0).timeout
 	# EL CAÑÓN: un tiro simple.
 	mech.cannon.mode = CannonTip.Mode.SIMPLE

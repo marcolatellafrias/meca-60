@@ -32,7 +32,6 @@ que lo limite.
   puntos del cuerpo— y cuántas son. «Es un detalle mínimo, pero se puede estandarizar.»
 - **La caja la mueve su motor** (`KinematicMover`), nunca a mano: lo que la empuja pasa por su puerta (`knock_back`,
   `shove`, `carry`, `knock_down`).
-- **Los brazos simulados** (`MuscleArm`) se guardan por si sirven para un jefe.
 
 ## Cómo se usa
 Un cuerpo nuevo hereda de `BalanceBody`, pone su `size` y su masa en `_init`, y redefine tres ganchos: `_build` (arma sus

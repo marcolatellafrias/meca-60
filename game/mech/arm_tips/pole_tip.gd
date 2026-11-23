@@ -40,17 +40,9 @@ func _build() -> void:
 	_pole()
 
 
-## LO QUE GOLPEA: el puño y el palo entero, de punta a punta, con puntos a menos de un radio uno del otro.
-func strike_points() -> PackedVector3Array:
-	var points := super()
-	if grip == null:
-		return points
-	var low := grip.global_transform * Vector3(0, POLE_LOW, 0)
-	var high := grip.global_transform * Vector3(0, POLE_HIGH + 0.85, 0)
-	var count := maxi(int(ceil(low.distance_to(high) / maxf(arm.strike_radius(), 0.05))), 1)
-	for i in count + 1:
-		points.append(low.lerp(high, float(i) / count))
-	return points
+## SU ZONA: una línea, a lo largo del palo.
+func zone() -> Dictionary:
+	return MechSkills.pole()
 
 
 ## Siempre cerrado: agarra el palo. Y el codo, en su plano (ver `_bend`).
@@ -75,19 +67,6 @@ func _bend() -> void:
 
 func strike_path() -> Array:
 	return CHOP
-
-
-## EL PALO CHOCA: un cilindro de punta a punta, donde está el palo (fijo en el puño: la muñeca no se mueve).
-func solid_shapes() -> Array:
-	if grip == null:
-		return []
-	var size := grip.global_basis.get_scale().x
-	var shape := CylinderShape3D.new()
-	shape.radius = POLE_RADIUS * size
-	shape.height = (POLE_HIGH - POLE_LOW + 0.85) * size
-	var middle := grip.global_transform * Vector3(0, (POLE_HIGH + 0.85 + POLE_LOW) * 0.5, 0)
-	var placed := Transform3D(grip.global_basis.orthonormalized(), middle)
-	return [[shape, forearm.global_transform.affine_inverse() * placed]]
 
 
 ## LA VARA, sus topes, cuatro bobinas debajo de la cabeza y dos puntas con una bola entre ellas.

@@ -16,14 +16,14 @@ const AHEAD := 4.0
 ## puños), cuánta vida te saca y cuánto te tira (m).
 @export_range(0.3, 4.0, 0.05) var windup := 1.3
 @export_range(0.2, 4.0, 0.05) var recover := 1.4
-@export_range(5.0, 120.0, 1.0) var wave_speed := 60.0
-@export_range(20.0, 250.0, 5.0) var wave_reach := 140.0
-@export_range(2.0, 40.0, 0.5) var wave_width := 14.0
+@export_range(5.0, 120.0, 1.0) var wave_speed := 26.0
+@export_range(5.0, 250.0, 5.0) var wave_reach := 13.0
+@export_range(2.0, 40.0, 0.5) var wave_width := 5.0
 @export_range(1, 7, 1) var count := 1
 @export_range(1, 7, 1) var count_rage := 3
 @export_range(0.0, 60.0, 1.0) var fan := 28.0
 @export_range(0.0, 100.0, 1.0) var damage := 20.0
-@export_range(0.0, 40.0, 0.5) var push := 8.0
+@export_range(0.0, 40.0, 0.5) var push := 4.0
 
 @export_group("Cuerpo")
 ## Lo que usa del cuerpo (se elige entre lo que el cuerpo ofrece: ver BossPower).
@@ -37,8 +37,12 @@ var _aiming: Array[BrawlerWave] = []
 
 
 func _init() -> void:
-	reach_from = 25.0
-	reach_to = 120.0
+	reach_from = 5.0
+	reach_to = 13.0
+
+
+func reach_knobs() -> PackedStringArray:
+	return PackedStringArray(["wave_speed", "wave_reach", "wave_width", "push"])
 
 
 func title() -> String:
@@ -59,7 +63,7 @@ func labels() -> Dictionary:
 func act(b: BrawlerBrain, _delta: float) -> void:
 	var boss := b.boss
 	var waist := b.waist()
-	var mouth := boss.global_position + waist * (boss.box().z * 0.5 + AHEAD)
+	var mouth := boss.global_position + waist * (boss.box().z * 0.5 + AHEAD * Brawler.fx_scale())
 	match b.step:
 		0:
 			b.stage = "golpe al piso: levanta los brazos"
@@ -105,12 +109,12 @@ func tick(b: BrawlerBrain, _delta: float) -> void:
 	for wave: BrawlerWave in waves.duplicate():
 		var over := body != null and not body.grounded
 		if over and body.mover != null:
-			over = body.mover.global_position.y - wave.origin.y > BrawlerWave.RIDGE.x
+			over = body.mover.global_position.y - wave.origin.y > BrawlerWave.ridge().x
 		if over or not wave.covers(b.ground(), b.half_width()):
 			continue
 		waves.erase(wave)
 		hits += int(b.strike(damage, "el golpe al piso", HitReaction.Kind.KNOCKDOWN, wave.way, push,
-			b.ground() + Vector3.UP * BrawlerWave.RIDGE.x))
+			b.ground() + Vector3.UP * BrawlerWave.ridge().x))
 
 
 ## Las franjas que avisaban sin onda (lo cortaron) se van.

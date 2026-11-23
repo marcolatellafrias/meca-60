@@ -7,7 +7,7 @@ extends KnobsPanel
 const LABELS := {
 	"orthographic": "ortográfica (apagada: perspectiva)", "zoom": "zoom: metros de alto en pantalla",
 	"pitch": "inclinación (°; 90 es desde arriba)", "yaw": "giro (°)",
-	"fov": "apertura con perspectiva (°)", "cut": "corte: lo alto que se ve sobre el personaje (m)",
+	"fov": "apertura con perspectiva (°)",
 }
 
 

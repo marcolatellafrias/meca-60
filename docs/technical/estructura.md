@@ -56,7 +56,6 @@ después se separó el cuerpo con equilibrio, para los jefes.*
 
 ## Los brazos
 - `game/pose_arm/` · `PoseArm`: el discreto (el del cañón de la jaula).
-- `game/muscle_arm/` · `MuscleArm`, con sus perillas (el del palo de la jaula).
 Los dos heredan de `MechArm`; cada brazo de una meca elige el suyo (`ArmLoadout`). Ver [[brazo]].
 
 ## El sandbox — `game/sandbox/`
@@ -77,5 +76,5 @@ meca. Ver [[personajes-traidos]].
   consolas, las teclas se van a ellas y queda la cámara.
 - Con una sola meca, algunas costuras quedaron de más: `Mech.Cabin` y `cabin_kit` tienen una sola cabina; `ToolMech`
   es sólo la base de `CageMech`; `MechCabin`, de `CageCabin`. Se dejaron para no cambiar a la jaula en la limpieza.
-- Las perillas de los brazos físicos (`MuscleArmSettings`) están aparte de las del cuerpo; las del discreto,
+- Las perillas del brazo,
   en `PoseArmSettings`.

@@ -45,12 +45,21 @@ var flattened := 0
 
 var _yaw := 0.0
 var _yaw_speed := 0.0
+## EL GIRO DIRECTO (rad/s; 0, ninguno): lo pide quien lo maneja con teclas (MechCrew). Mientras dura, gira parejo, sin resorte
+## ni aceleración (22/11/2026; el usuario: «simplemente que mueven la meca a un right y listo»).
+var key_turn := 0.0
 var _jump_was := false
 var _dash_was := false
 var _fly_armed := false
 ## El dash de ahora: cuánto le queda (s) y a qué velocidad va.
 var _dash_left := 0.0
 var _dash_way := Vector3.FORWARD
+## LA VELOCIDAD DE COSTADO QUE PIDE MechDash mientras dura su dash (un golpe que la empuja igual le gana).
+var dash_override := false
+var dash_velocity := Vector3.ZERO
+## EL RETROCESO DE LO QUE DISPARA (ver `add_recoil`): una velocidad de costado que se frena sola.
+var recoil := Vector3.ZERO
+var _recoil_rate := 0.0
 ## Cuánto lleva el dash (s; ver `_dashing`).
 var _dash_clock := 0.0
 ## Cuánto falta para que pueda salir otro dash (s; el que dura más la espera: ver KinematicSettings.dash_cooldown).
@@ -159,6 +168,9 @@ func step(delta: float) -> void:
 	if pushed() or body.state != BalanceBody.State.STANDING:
 		# EMPUJADA, REVOLEADA O EN EL PISO: no se maneja (ver `knock`, `carry`, `knock_down`).
 		velocity = _pushed(k, delta, grounded)
+	elif dash_override:
+		# EL DASH DE LAS TECLAS (MechDash): la velocidad la dice él.
+		velocity = Vector3(dash_velocity.x, _rise(k, delta, grounded), dash_velocity.z)
 	elif _dash_left > 0.0:
 		# EN UN DASH: frenándose sola, torciéndose hacia donde se pide, sin gravedad.
 		velocity = _dashing(k, delta)
@@ -171,13 +183,24 @@ func step(delta: float) -> void:
 	_dash_was = body.dash
 	_jump_was = body.jump
 	if body.state == BalanceBody.State.STANDING and not pushed():
-		_turn(k, delta)
+		if key_turn != 0.0:
+			_yaw += key_turn * delta
+			_yaw_speed = 0.0
+			body.aim_yaw = _yaw
+		else:
+			_turn(k, delta)
 	else:
 		body.aim_yaw = _yaw
 		_yaw_speed = 0.0
 	rotation.y = _yaw
 	_fall_speed = maxf(-velocity.y, 0.0)
+	# EL RETROCESO SE SUMA A LO QUE ESTÉ HACIENDO y después se saca: no le quita el control, y un dash lo contrarresta.
+	var kicked := recoil if body.state == BalanceBody.State.STANDING else Vector3.ZERO
+	velocity += kicked
 	move_and_slide()
+	velocity -= kicked
+	recoil = Vector3.ZERO if is_on_wall() or body.state != BalanceBody.State.STANDING \
+		else recoil.move_toward(Vector3.ZERO, _recoil_rate * delta)
 	# ATERRIZÓ: se hunde según a cuánto bajaba (el resorte vertical; ver `body_spring`).
 	body_spring.land_full_speed = k.land_full_speed
 	body_spring.land_threshold = k.land_full_speed * 0.15
@@ -278,6 +301,16 @@ func _dashing(k: KinematicSettings, delta: float) -> Vector3:
 	_dash_clock += delta
 	_dash_left -= delta
 	return _dash_way * lerpf(start, k.walk_speed, share)
+
+
+## UN RETROCESO de `meters` hacia `way` (de largo 1), que se frena parejo en `time` s. A diferencia de un golpe, se sigue
+## manejando. Varios seguidos se suman.
+func add_recoil(way: Vector3, meters: float, time: float) -> void:
+	if meters <= 0.0:
+		return
+	var span := maxf(time, 0.01)
+	recoil += way * 2.0 * meters / span
+	_recoil_rate = recoil.length() / span
 
 
 ## UN EMPUJÓN: se corre `offset` (m, de costado) en `time` (s), con un saltito de `hop` m (un arco: sube y baja en

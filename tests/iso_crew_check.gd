@@ -13,6 +13,8 @@ var _bad := 0
 
 
 func _ready() -> void:
+	# Esta prueba es de las teclas: no depende de lo que el usuario tenga guardado en el F6.
+	MatchSettings.current.controls = MatchSettings.Controls.KEYS
 	add_to_group("character_spawner")
 	for argument in OS.get_cmdline_user_args():
 		if argument.begins_with("--salida="):
@@ -41,6 +43,8 @@ func _run(mech: CageMech) -> void:
 	await _wait(1.0)
 	_check("sin maniquíes", mech.cabin.dummies.is_empty())
 	var controller := local_player.player_controller
+	# El rumbo lo pone esta prueba: que no lo pise el mouse de verdad.
+	controller._shown = false
 	_check("la cámara activa es la isométrica", get_viewport().get_camera_3d() is IsoView)
 	controller.camera_yaw = 0.0
 	await _wait(0.3)

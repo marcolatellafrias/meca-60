@@ -22,3 +22,5 @@ var shield := false
 var fire := false
 ## Lo que gira que se está cargando desde adentro (el mando de su brazo, clic izquierdo mantenido; SpinTip).
 var spinning: Array[SpinTip] = []
+## Los cañones que disparan por su tecla de brazo (MechCrew): cada uno el suyo, también con dos cañones.
+var firing: Array[CannonTip] = []

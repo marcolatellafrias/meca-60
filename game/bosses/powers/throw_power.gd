@@ -11,15 +11,15 @@ extends BossPower
 ## ira). Si te alcanza, cuánta vida te saca y cuánto te tira (m).
 @export_range(0.2, 4.0, 0.05) var rip_time := 1.0
 @export_range(0.2, 4.0, 0.05) var lift_time := 1.1
-@export_range(0.3, 4.0, 0.05) var flight := 1.8
-@export_range(0.0, 80.0, 1.0) var arc := 35.0
-@export_range(3.0, 25.0, 0.5) var radius := 12.0
-@export_range(0.0, 30.0, 0.5) var stay := 8.0
+@export_range(0.3, 4.0, 0.05) var flight := 1.2
+@export_range(0.0, 80.0, 1.0) var arc := 10.0
+@export_range(3.0, 25.0, 0.5) var radius := 3.5
+@export_range(0.0, 30.0, 0.5) var stay := 3.0
 @export_range(0.2, 4.0, 0.05) var recover := 1.2
 @export_range(1, 3, 1) var count := 1
 @export_range(1, 3, 1) var count_rage := 2
 @export_range(0.0, 100.0, 1.0) var damage := 30.0
-@export_range(0.0, 60.0, 0.5) var push := 10.0
+@export_range(0.0, 60.0, 0.5) var push := 4.0
 
 @export_group("Cuerpo")
 ## Lo que usa del cuerpo (se elige entre lo que el cuerpo ofrece: ver BossPower).
@@ -35,8 +35,12 @@ var _dirt_clock := 0.0
 
 
 func _init() -> void:
-	reach_from = 35.0
-	reach_to = 130.0
+	reach_from = 6.0
+	reach_to = 13.0
+
+
+func reach_knobs() -> PackedStringArray:
+	return PackedStringArray(["arc", "radius", "push"])
 
 
 func title() -> String:
@@ -63,16 +67,17 @@ func act(b: BrawlerBrain, delta: float) -> void:
 			boss.pose = Brawler.Pose.DIG
 			b.face()
 			if _rock == null:
-				_dig = boss.global_position + waist * (boss.box().z * 0.5 + BrawlerRock.SIZE.z * 0.5 + 1.0)
+				_dig = boss.global_position + waist * (boss.box().z * 0.5 + BrawlerRock.size().z * 0.5 + Brawler.fx_scale())
 				_rock = _make(b)
 			# Sale del piso de a poco, levantando tierra.
 			var up := clampf(b.clock / maxf(rip_time, 0.01), 0.0, 1.0)
 			_dirt_clock -= delta
 			if _dirt_clock <= 0.0:
 				_dirt_clock = 0.25
-				b.boss.net.fx_dirt(_dig + Vector3(b.random.randf_range(-6.0, 6.0), 0.0, b.random.randf_range(-5.0, 5.0)),
-					0.8)
-			b.boss.net.fx_do(_rock, "hold", [_dig + Vector3.UP * lerpf(-BrawlerRock.SIZE.y * 0.5, BrawlerRock.SIZE.y * 0.5,
+				var k := Brawler.fx_scale()
+				b.boss.net.fx_dirt(_dig + Vector3(b.random.randf_range(-6.0, 6.0), 0.0, b.random.randf_range(-5.0, 5.0)) * k,
+					0.8 * k)
+			b.boss.net.fx_do(_rock, "hold", [_dig + Vector3.UP * lerpf(-BrawlerRock.size().y * 0.5, BrawlerRock.size().y * 0.5,
 				up), boss.waist_yaw, null], true)
 			if b.clock >= rip_time:
 				b.next(1)
@@ -80,7 +85,7 @@ func act(b: BrawlerBrain, delta: float) -> void:
 			b.stage = "arranca el piso: la levanta"
 			boss.pose = ready_pose as Brawler.Pose
 			b.face()
-			var over := boss.point(from_point) + Vector3.UP * (BrawlerRock.SIZE.y * 0.5 + 1.0)
+			var over := boss.point(from_point) + Vector3.UP * (BrawlerRock.size().y * 0.5 + 1.0)
 			b.boss.net.fx_do(_rock, "hold", [_rock.held_at().lerp(over, 1.0 - exp(-6.0 * delta)), boss.waist_yaw, b.ground()],
 				true)
 			if b.clock >= lift_time:
@@ -109,11 +114,11 @@ func tick(b: BrawlerBrain, _delta: float) -> void:
 		rock.just_landed = false
 		rocks.erase(rock)
 		var over := body != null and not body.grounded and body.mover != null
-		over = over and body.mover.global_position.y - rock.spot.y > BrawlerRock.SIZE.y + 2.0
+		over = over and body.mover.global_position.y - rock.spot.y > BrawlerRock.size().y + 2.0 * Brawler.fx_scale()
 		if not over and rock.covers(b.ground(), b.half_width()):
 			b.boss.net.fx_do(rock, "shatter")
 			hits += int(b.strike(damage, "la piedra", HitReaction.Kind.KNOCKDOWN, b.ground() - rock.spot, push,
-				rock.spot + Vector3.UP * BrawlerRock.SIZE.y))
+				rock.spot + Vector3.UP * BrawlerRock.size().y))
 		elif rock.covers(b.boss.global_position, b.boss.box().x * 0.5):
 			b.boss.net.fx_do(rock, "shatter")
 
@@ -134,7 +139,7 @@ func _make(b: BrawlerBrain) -> BrawlerRock:
 ## para un costado (alternando).
 func _ahead(b: BrawlerBrain, index: int) -> BrawlerRock:
 	var other := _make(b)
-	b.boss.net.fx_do(other, "hold", [_rock.held_at() + Vector3.UP * BrawlerRock.SIZE.y, b.boss.waist_yaw, null])
+	b.boss.net.fx_do(other, "hold", [_rock.held_at() + Vector3.UP * BrawlerRock.size().y, b.boss.waist_yaw, null])
 	var body := b.target as BalanceBody
 	var going := body.velocity() if body != null else Vector3.ZERO
 	going.y = 0.0

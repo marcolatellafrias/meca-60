@@ -4,7 +4,9 @@
 
 [resource]
 script = ExtResource("1_ol1k2")
-walk_speed = 4.0
+walk_speed = 7.0
+start_time = 0.0
+stop_time = 0.0
 jump_height = 4.0
 fly_speed = 4.0
 dash_distance = 9.0

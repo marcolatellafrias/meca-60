@@ -16,19 +16,19 @@ extends BossPower
 @export_range(1, 12, 1) var count := 4
 @export_range(0.1, 3.0, 0.05) var interval := 0.5
 @export_range(0.4, 5.0, 0.05) var flight := 1.6
-@export_range(0.0, 80.0, 1.0) var arc := 20.0
-@export_range(2.0, 30.0, 0.5) var radius := 7.0
-@export_range(0.0, 60.0, 1.0) var scatter := 16.0
+@export_range(0.0, 80.0, 1.0) var arc := 8.0
+@export_range(2.0, 30.0, 0.5) var radius := 3.0
+@export_range(0.0, 60.0, 1.0) var scatter := 5.0
 @export_range(0.0, 100.0, 1.0) var damage := 18.0
-@export_range(0.0, 40.0, 0.5) var push := 6.0
+@export_range(0.0, 40.0, 0.5) var push := 3.0
 @export_range(0.2, 4.0, 0.05) var recover := 1.0
 ## FÍSICAS: rebotan tantas veces antes de estallar (sin marca en el piso).
 @export var physical := false
 @export_range(0, 5, 1) var bounces := 2
 ## AL CAER, UN ANILLO que se abre por el piso (se salta): a qué velocidad (m/s) y hasta dónde (m).
 @export var ring := false
-@export_range(5.0, 80.0, 1.0) var ring_speed := 28.0
-@export_range(5.0, 120.0, 1.0) var ring_reach := 35.0
+@export_range(5.0, 80.0, 1.0) var ring_speed := 10.0
+@export_range(5.0, 120.0, 1.0) var ring_reach := 10.0
 
 @export_group("Cuerpo")
 ## Lo que usa del cuerpo (se elige entre lo que el cuerpo ofrece: ver BossPower).
@@ -46,11 +46,15 @@ var _brain: BrawlerBrain = null
 
 
 func _init() -> void:
-	reach_from = 15.0
-	reach_to = 130.0
+	reach_from = 4.0
+	reach_to = 13.0
 	in_calm = false
 	in_mode_1 = false
 	in_mode_2 = true
+
+
+func reach_knobs() -> PackedStringArray:
+	return PackedStringArray(["arc", "radius", "scatter", "push", "ring_speed", "ring_reach"])
 
 
 func title() -> String:
@@ -104,7 +108,6 @@ func _drop_one(b: BrawlerBrain, first: bool) -> void:
 	if not first:
 		off = Vector3.RIGHT.rotated(Vector3.UP, b.random.randf() * TAU) * b.random.randf_range(scatter * 0.3, scatter)
 	var to := b.ground() + off
-	to.y = 0.0
 	var size := radius * 0.35
 	var shot: BossShot
 	var mark: BossZone = null
@@ -125,7 +128,7 @@ func _blast(at: Vector3, mark: BossZone) -> void:
 	var b := _brain
 	if b == null or not is_instance_valid(b):
 		return
-	var spot := Vector3(at.x, 0.0, at.z)
+	var spot := Vector3(at.x, b.ground().y, at.z)
 	if OS.get_cmdline_user_args().has("--ver-bombas"):
 		print("   bomba: estalló a %.1f m de la meca, a %.1f m de alto" % [Vector2(at.x - b.ground().x, at.z - b.ground().z).length(), at.y])
 	if mark == null or not is_instance_valid(mark):

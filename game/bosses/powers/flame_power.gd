@@ -14,10 +14,10 @@ extends BossPower
 @export_range(0.0, 2.0, 0.05) var lock := 0.45
 @export_range(0.1, 3.0, 0.05) var burn := 0.8
 @export_range(1, 6, 1) var bursts := 3
-@export_range(10.0, 120.0, 1.0) var length := 60.0
-@export_range(2.0, 45.0, 0.5) var angle := 14.0
+@export_range(10.0, 120.0, 1.0) var length := 12.0
+@export_range(2.0, 45.0, 0.5) var angle := 22.0
 @export_range(0.0, 100.0, 1.0) var damage := 25.0
-@export_range(0.0, 40.0, 0.5) var push := 12.0
+@export_range(0.0, 40.0, 0.5) var push := 4.0
 @export_range(0.2, 6.0, 0.1) var recover := 1.8
 
 @export_group("Cuerpo")
@@ -34,10 +34,14 @@ var _left := 0
 
 
 func _init() -> void:
-	reach_from = 20.0
-	reach_to = 60.0
+	reach_from = 3.0
+	reach_to = 11.0
 	in_calm = false
 	in_mode_2 = true
+
+
+func reach_knobs() -> PackedStringArray:
+	return PackedStringArray(["length", "push"])
 
 
 func title() -> String:
@@ -94,7 +98,7 @@ func act(b: BrawlerBrain, _delta: float) -> void:
 			b.boss.net.fx_do(flame, "blow", [boss.point(from_point), waist, true], true)
 			if not b.hit_once and flame.covers(b.ground(), b.half_width()):
 				var landed := b.strike(damage, "el lanzallamas", HitReaction.Kind.PUSH, b.to_target(), push,
-					b.ground() + Vector3.UP * 8.0)
+					b.ground() + Vector3.UP * 8.0 * Brawler.fx_scale())
 				b.hit_once = b.hit_once or landed
 				hits += int(landed)
 			if b.clock >= burn:

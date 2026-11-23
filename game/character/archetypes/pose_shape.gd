@@ -99,7 +99,7 @@ extends Resource
 @export_range(0.05, 1.0, 0.01) var speed := 0.3
 ## LA VELOCIDAD MÁXIMA, en veces la de caminar, y cuánto tarda en llegar (s; 0, al instante). Ver EntityArchetype.
 @export_range(1.0, 4.0, 0.05) var sprint_multiplier := 2.2
-@export_range(0.0, 8.0, 0.05) var time_to_top := 3.0
+@export_range(0.0, 8.0, 0.05) var time_to_top := 0.0
 ## LA FUERZA: contra el peso de lo que lleva, cuánto lo frena (ver GrabbableInteractable.load_of); de a varios, se suma.
 @export_range(0.1, 2.5, 0.05) var strength := 1.0
 ## LA FUERZA DE BRAZOS, aparte de la de llevar (04/11/2026, el usuario: «quiero tener un independiente»; «un valor

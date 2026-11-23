@@ -48,9 +48,21 @@ guardar el panel, las perillas nuevas pasan a las copias.
 
 La **L** de la parcela deja un solo poder (aunque no tenga ira), para probarlo.
 
+## El alcance: nada fuera de la vista (22/11/2026)
+La misma regla que las habilidades de la meca (ver [[armamento]]). **`BossSettings.attack_range`** («ALCANCE DE LOS ATAQUES»,
+en el panel de todos los jefes; arranca en 13 m): los jefes rodean a 7–11 m, atacan desde 13 m o menos, y lo que tiran
+termina dentro de ese alcance. Las perillas de cada poder están pensadas para 13 m; **moviendo ese número se estiran juntas
+todas sus distancias y velocidades** (`BossPower.fit_reach`), así los tiempos de aviso no cambian. El jefe de la partida
+nace a 13 m de la boca del ascensor. Las medidas de las notas anteriores a ese día son de cuando atacaba de lejos.
+
+**La altura del piso:** las marcas, la piedra, la onda, la mano, el fuego y las bombas se ponen a la altura donde pelea el jefe.
+Hasta el 22/11/2026 suponían el piso en 0, y en la arena de la partida (a unos 26 m) quedaban debajo.
+
 ## La escala
-Una sola perilla para todos los jefes: `BossSettings.scale`, en el F7 de las filas de jefes, que se cambia en vivo. Cada jefe
-está dibujado en sus medidas de maqueta y va a esa escala. **Lo que sale de su cuerpo escala con él**: su caja, el
+Una sola perilla para todos los jefes: `BossSettings.scale`, en el F7 de las filas de jefes, que se cambia en vivo. **Va en
+0,3 desde el 22/11/2026** (el Luchador, unos 9,5 m de alto; la meca jaula, 6), para ver desde dónde ataca. Las medidas de
+las otras notas anteriores a ese día son de cuando iba más grande. Cada jefe está dibujado en sus medidas de maqueta y va a esa escala. **Lo que sale de su cuerpo y lo que tira escala con él** (la piedra y su pozo, el lomo de la onda, la mano del agarre y su
+cadena, el fuego, la nube de tierra: `Brawler.fx_scale`): su caja, el
 frente de la embestida, los puños y los brazos del trompo, la altura de la mano del agarre. **Las zonas tienen su
 propio tamaño**, en las perillas de cada poder: el ancho de la onda, el radio de la piedra, el cono del lanzallamas
 (el usuario: «las que dependen del tamaño… se escalarían automáticamente… las que son en área… las debería poder
@@ -160,3 +172,17 @@ modelarlos a mano». En `game/bosses/parts/`:
 3. **Rutinas de rodeo por modo** (ir por zonas, mantener un lado) y más poderes.
 4. **Ajustar los poderes a la meca jaula** (a escala humana): hoy casi todo le pega.
 5. Juntar los proyectiles con la artillería de la meca propia.
+
+## Las bolitas (`OrbsPower`, `BossOrbField`; 22/11/2026)
+El poder del contrato «Prueba: lluvia de bolitas», apagado en los demás. Larga uno de cinco patrones al azar: abanico, anillo con hueco, chorro, espiral y mezcla.
+
+| Tipo | Color | Qué hace |
+|---|---|---|
+| Común | blanca | va a 9 m/s |
+| Rápida | roja, chica | 1,8× |
+| Lenta | violeta, grande | 0,5× y saca más vida |
+| Rebota | verde | rebota hasta 3 veces en el anillo del piso |
+| Eléctrica | celeste | aturde (`MechStun`) |
+| Se parte | naranja | a los 0,9 s se abre en seis chicas |
+
+Cada máquina las mueve con las mismas reglas desde una sola orden de lanzarlas (`BossNet`), y si tocan a la meca lo decide el host. El escudo las frena, el dash intocable les pasa a través y el sobrevuelo les pasa por arriba. Las perillas, en el F5, pestaña del poder. Usa el cuerpo del Luchador.

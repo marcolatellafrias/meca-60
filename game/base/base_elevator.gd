@@ -17,10 +17,11 @@ extends Node3D
 signal launching()
 signal arrived()
 
-## La plataforma: un pelo más chica que la boca, un pelo más alta que el piso (para tapar la pintura del pozo).
+## La plataforma: un pelo más chica que la boca. LO QUE SE PISA VA A RAS DEL PISO (22/11/2026; el usuario: «diferencias de
+## altura leves que hace que se trabe la meca»: eran 5 cm); sólo LO QUE SE VE sube `LIFT`, para tapar la pintura del pozo.
 const MARGIN := 0.05
 const THICK := 0.3
-const LIFT := 0.05
+const LIFT := 0.035
 ## La baranda: lo que se ve, y lo que frena (más alto: que no se pueda saltar).
 const RAIL_SEEN := 1.2
 const RAIL_SOLID := 3.5
@@ -51,7 +52,8 @@ func build() -> void:
 	PhysicsLayers.mark_fixed(_platform)
 	_platform.position = BaseLayout.at(BaseLayout.ELEVATOR * 0.5, BaseLayout.NAVE * 0.5, 0.0)
 	add_child(_platform)
-	Clay.solid(_platform, Vector3(side, THICK, side), Vector3(0, LIFT - THICK * 0.5, 0), BaseLayout.ELEVATOR_COLOR)
+	Clay.shape_box(_platform, Vector3(side, THICK, side), Vector3(0, -THICK * 0.5, 0))
+	Clay.box(_platform, Vector3(side, THICK, side), Vector3(0, LIFT - THICK * 0.5, 0), BaseLayout.ELEVATOR_COLOR)
 	_stripes(side)
 	_build_rail(side)
 	_pedestal()
@@ -101,19 +103,18 @@ func _build_rail(side: float) -> void:
 func _pedestal() -> void:
 	var corner := Vector3(_half - PEDESTAL_INSET, LIFT, _half - PEDESTAL_INSET)
 	var facing := Basis(Vector3.UP, atan2(-1.0, -1.0))
-	Clay.solid(_platform, PEDESTAL, corner + Vector3.UP * PEDESTAL.y * 0.5, BaseLayout.CONSOLE_COLOR, facing)
-	var mount := Node3D.new()
-	mount.transform = Transform3D(facing, corner + Vector3.UP * (PEDESTAL.y - 0.2) + facing * Vector3(0, 0, PEDESTAL.z * 0.5))
-	_platform.add_child(mount)
-	var plate := ButtonArchetype.for_control(ControlArchetype.DOOR, SIGN_COLOR)
-	var area := Vector2(plate.half_cells()) * ProceduralDashboard.CELL * 0.5
-	Clay.box(mount, Vector3(area.x + 0.08, area.y + 0.08, 0.02), Vector3(0, 0, 0.01), Clay.DARK)
-	var holder := Node3D.new()
-	holder.position = Vector3(-area.x * 0.5, area.y * 0.5, 0.02)
-	mount.add_child(holder)
-	var touch := ButtonArchetype.button_of(plate.mount_half(0, holder, Vector2i.ZERO))
-	if touch != null:
-		touch.pressed.connect(_on_pressed)
+	var stand := StaticBody3D.new()
+	stand.name = "Pedestal"
+	stand.transform = Transform3D(facing, corner)
+	PhysicsLayers.mark_fixed(stand)
+	_platform.add_child(stand)
+	Clay.solid(stand, PEDESTAL, Vector3.UP * PEDESTAL.y * 0.5, BaseLayout.CONSOLE_COLOR)
+	Clay.box(stand, Vector3(0.34, 0.24, 0.02), Vector3(0.0, PEDESTAL.y - 0.2, PEDESTAL.z * 0.5 + 0.01), SIGN_COLOR)
+	# SE APUNTA EL PEDESTAL ENTERO (BaseLiftUse), como la puerta de la esclusa.
+	var use := BaseLiftUse.new()
+	use.elevator = self
+	use.position = Vector3.UP * PEDESTAL.y * 0.6
+	stand.add_child(use)
 	_sign = Label3D.new()
 	_sign.font_size = 64
 	_sign.pixel_size = 0.008
@@ -165,7 +166,7 @@ func launch() -> void:
 	await get_tree().create_timer(BaseHatch.SLIDE_TIME + 0.3).timeout
 	if top:
 		top.set_open(true)
-	var goal := _platform.position.y + BaseLayout.shaft_top() - 0.02 - LIFT
+	var goal := _platform.position.y + BaseLayout.shaft_top()
 	var tween := create_tween().set_process_mode(Tween.TWEEN_PROCESS_PHYSICS).set_trans(Tween.TRANS_SINE) \
 		.set_ease(Tween.EASE_IN_OUT)
 	tween.tween_property(_platform, "position:y", goal, (goal - _platform.position.y) / SPEED)

@@ -8,21 +8,16 @@ extends Camera3D
 const GROUP := "iso_view"
 ## Lo que hay detrás del personaje que se sigue dibujando, además de lo que entra en pantalla (m).
 const DEPTH := 200.0
-## Lo más cerca que va la cámara del personaje (m), y cada cuánto se mira qué tapa (s).
+## Lo más cerca que va la cámara del personaje (m).
 const MIN_AWAY := 30.0
-const CUT_EVERY := 0.1
-## Cuánto se despeja alrededor del personaje (m).
-const SEE_AROUND := 3.5
-## Desde qué alto algo cuenta como pared (m).
-const WALL_TALL := 2.5
-## La capa de lo que tapa: las demás cámaras la ven, ésta no.
-const HIDDEN_LAYER := 1 << 19
+const ZOOM_EASE := 4.0
 
 ## Dónde vale, en los ejes X y Z del padre. Vacío: en todos lados.
 var zone := Rect2()
 
 var _player: BoneInstantiator = null
-var _clock := 0.0
+## EL ZOOM DE AHORA: va suave hacia el de arriba de la meca o el de a pie (MatchSettings). En el sandbox, el de su panel.
+var _zoom := -1.0
 
 
 static func of(tree: SceneTree) -> IsoView:
@@ -42,15 +37,30 @@ func _exit_tree() -> void:
 	_bind(null)
 
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	var player := DesignSandbox.player_of(get_tree())
 	_bind(player if _serves(player) else null)
 	if not is_instance_valid(_player) or not is_instance_valid(_player.char_rigidbody):
 		return
-	_place(_player.char_rigidbody.global_position)
+	_place(_player.char_rigidbody.global_position, delta)
 	# Poseyendo algo, la cámara es la de poseer; al soltarlo vuelve ésta.
 	if not current and get_tree().get_first_node_in_group("driving") == null:
 		make_current()
+
+
+## Dónde está el mouse en la pantalla.
+func pointer() -> Vector2:
+	return get_viewport().get_mouse_position()
+
+
+## EL PUNTO DEL MUNDO BAJO EL MOUSE, a la altura `height`; INF si el rayo no llega a ella.
+func pointed_at(height: float) -> Vector3:
+	var screen := pointer()
+	var from := project_ray_origin(screen)
+	var way := project_ray_normal(screen)
+	if absf(way.y) < 0.001:
+		return Vector3.INF
+	return from + way * ((height - from.y) / way.y)
 
 
 func _serves(player: BoneInstantiator) -> bool:
@@ -72,67 +82,23 @@ func _bind(player: BoneInstantiator) -> void:
 		_player.player_controller.set_iso(self)
 
 
-func _place(aim: Vector3) -> void:
+func _goal_zoom() -> float:
+	if zone.has_area():
+		return IsoSettings.current.zoom
+	var game := MatchSettings.current
+	return game.zoom_aboard if _player.is_seated else game.zoom_foot
+
+
+func _place(aim: Vector3, delta: float) -> void:
 	var knobs := IsoSettings.current
+	var goal := _goal_zoom()
+	_zoom = goal if _zoom < 0.0 else lerpf(_zoom, goal, 1.0 - exp(-ZOOM_EASE * delta))
 	projection = Camera3D.PROJECTION_ORTHOGONAL if knobs.orthographic else Camera3D.PROJECTION_PERSPECTIVE
-	size = knobs.zoom
+	size = _zoom
 	fov = knobs.fov
 	# A la distancia en la que la perspectiva encuadra lo mismo que la ortográfica; así el zoom es uno solo.
-	var away := maxf(knobs.zoom * 0.5 / tan(deg_to_rad(knobs.fov) * 0.5), MIN_AWAY)
+	var away := maxf(_zoom * 0.5 / tan(deg_to_rad(knobs.fov) * 0.5), MIN_AWAY)
 	var turn := knobs.view_basis()
 	global_transform = Transform3D(turn, aim + turn.z * away)
 	near = 0.05
 	far = away + DEPTH
-	_clock -= get_process_delta_time()
-	if _clock <= 0.0:
-		_clock = CUT_EVERY
-		_cut_away(aim, global_position, knobs.cut)
-
-
-## ── LO QUE TAPA NO SE DIBUJA ─────────────────────────────────────────────────────────────────────────────────────────
-## Dos reglas, sobre lo fijo del mundo (ni las mecas ni los personajes): LO QUE EMPIEZA MÁS ARRIBA que `cut` sobre el
-## personaje (los techos, el piso de la arena visto desde la base) y LO QUE QUEDA ENTRE ÉL Y LA CÁMARA (una pared). Se
-## saca de la capa que ve esta cámara, así la de los ojos y las sombras no cambian.
-func _cut_away(aim: Vector3, eye: Vector3, height: float) -> void:
-	cull_mask = 0xFFFFF & ~HIDDEN_LAYER
-	var meshes: Array[MeshInstance3D] = []
-	_collect(get_parent(), meshes)
-	# Desde el piso donde está y alrededor: que no asome sólo la cabeza, y que se vea lo que tiene al lado (la meca).
-	var feet := Vector3(aim.x, _floor_y(aim), aim.z)
-	var back := eye - aim
-	var right := global_basis.x * SEE_AROUND
-	var near_way := Vector3(global_basis.z.x, 0.0, global_basis.z.z).normalized() * SEE_AROUND
-	var spots: Array[Vector3] = [feet, feet + right, feet - right, feet + near_way, feet - near_way]
-	for mesh in meshes:
-		var box := mesh.global_transform * mesh.get_aabb()
-		var hide_it := box.position.y > feet.y + height
-		# Sólo lo alto (una pared): una consola o un banco delante del personaje se siguen viendo.
-		if box.size.y >= WALL_TALL:
-			for spot in spots:
-				hide_it = hide_it or box.intersects_segment(spot + Vector3.UP * 0.1, spot + back) != null
-		if hide_it and mesh.layers != HIDDEN_LAYER:
-			mesh.set_meta(&"iso_layers", mesh.layers)
-			mesh.layers = HIDDEN_LAYER
-		elif not hide_it and mesh.has_meta(&"iso_layers"):
-			mesh.layers = mesh.get_meta(&"iso_layers")
-			mesh.remove_meta(&"iso_layers")
-
-
-## La altura del piso: la de la meca, si va sentado en ella; si no, la de sus pies.
-func _floor_y(aim: Vector3) -> float:
-	if _player.is_seated:
-		var at: Node = _player.current_seat
-		while at != null:
-			if at is BalanceBody:
-				return (at as BalanceBody).support.y
-			at = at.get_parent()
-	return aim.y - 1.0
-
-
-func _collect(node: Node, into: Array[MeshInstance3D]) -> void:
-	if node is BalanceBody or node is BoneInstantiator or node is RigidBody3D:
-		return
-	if node is MeshInstance3D:
-		into.append(node as MeshInstance3D)
-	for child in node.get_children():
-		_collect(child, into)

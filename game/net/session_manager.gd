@@ -279,6 +279,15 @@ func close_to_new_players() -> void:
 		Steam.setLobbyJoinable(lobby_id, false)
 
 
+## LA PARTIDA VOLVIÓ A LA ESCLUSA (BaseSync.restart): se puede volver a unir gente hasta que se abra.
+func reopen_to_new_players() -> void:
+	if not multiplayer.is_server():
+		return
+	closed = false
+	if enabled and lobby_id != 0:
+		Steam.setLobbyJoinable(lobby_id, true)
+
+
 const STARTED_NOTICE := "La partida ya empezó: no se puede unir nadie más"
 
 

@@ -51,8 +51,8 @@ func _ready() -> void:
 		mech.equipment = CageMechArchetype.ROW
 		# La de 3, con el escudo en el brazo derecho (el canje: un arma menos).
 		if crew == 2:
-			mech.loadout = [ArmLoadout.of(ArmLoadout.Motion.POSE, ArmLoadout.Tip.CANNON, true),
-				ArmLoadout.of(ArmLoadout.Motion.POSE, ArmLoadout.Tip.SHIELD, true)]
+			mech.loadout = [ArmLoadout.of(ArmLoadout.Tip.CANNON, true),
+				ArmLoadout.of(ArmLoadout.Tip.SHIELD, true)]
 		mech.position = Vector3((crew - 1) * GAP, Mech.standing_height(mech.cabin_shape), 0.0)
 		add_child(mech)
 		mechs.append(mech)
@@ -113,7 +113,7 @@ func _ready() -> void:
 	handle.mode_use_alt(true)
 	await get_tree().create_timer(0.5).timeout
 	handle.mode_use_alt(false)
-	print("  clic derecho medio segundo: la piña sale a ", snappedf(solo.melee.punch_pace, 0.01), "× la velocidad (",
+	print("  clic derecho medio segundo: la piña sale a ", 1.0, "× la velocidad (",
 		MechArm.Punch.keys()[solo.melee.punching], ")")
 	await get_tree().create_timer(1.0).timeout
 	handle.exit_mode()

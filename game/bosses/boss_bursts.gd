@@ -26,11 +26,11 @@ static func dirt(parent: Node, at: Vector3, size: float) -> void:
 	var chunks := Gradient.new()
 	chunks.set_color(0, DIRT.lightened(0.1))
 	chunks.set_color(1, DIRT.darkened(0.35))
-	burst(parent, at, int(50 * size), 1.4 * size, Vector2(10.0, 30.0) * sqrt(size), chunks, -45.0, 1.4, 70.0)
+	burst(parent, at, int(50 * size), 1.4 * size, Vector2(10.0, 30.0) * size, chunks, -45.0, 1.4, 70.0)
 	var cloud := Gradient.new()
 	cloud.set_color(0, Color(DUST, 0.7))
 	cloud.set_color(1, Color(DUST, 0.0))
-	var puff := burst(parent, at, int(26 * size), 4.0 * size, Vector2(4.0, 12.0) * sqrt(size), cloud, 2.0, 2.2, 90.0,
+	var puff := burst(parent, at, int(26 * size), 4.0 * size, Vector2(4.0, 12.0) * size, cloud, 2.0, 2.2, 90.0,
 		true)
 	if puff != null:
 		puff.damping_min = 3.0

@@ -7,7 +7,6 @@ extends KnobsPanel
 const PANEL_WIDTH := 400.0
 const LABELS := {
 	"punch_charge_time": "se carga del todo en (s)",
-	"punch_slowest": "cargada: velocidad de la piña (×; menos, más lenta)",
 	"punch_strongest": "cargada: fuerza del golpe (×)",
 }
 

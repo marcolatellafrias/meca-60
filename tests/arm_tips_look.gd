@@ -53,8 +53,8 @@ func _ready() -> void:
 	for tip in ArmLoadout.TIP_NAMES.size():
 		var mech := CageMech.new()
 		mech.scripted = true
-		mech.loadout = [ArmLoadout.of(ArmLoadout.Motion.POSE, tip, true),
-			ArmLoadout.of(ArmLoadout.Motion.MUSCLE, tip, true)]
+		mech.loadout = [ArmLoadout.of(tip, true),
+			ArmLoadout.of(tip, true)]
 		mech.position = Vector3(tip * GAP, Mech.standing_height(Mech.Cabin.CAGE), 0.0)
 		add_child(mech)
 		mechs.append(mech)

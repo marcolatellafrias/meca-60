@@ -5,6 +5,20 @@
 La sucursal en arcilla, **sin estética**: el plano de [[base]] armado de cajas, para recorrerlo con la meca y a pie.
 Lo estético de cada cosa lo agrega el usuario después.
 
+## La base pensada para la cámara (boceto en arcilla, 22/11/2026)
+**Vale sobre lo de abajo donde se contradiga.** El usuario: «empezar a pensar el mapa más en servicio a no tapar la
+visión, pero mantener algo más o menos diegético». Se itera esta única opción.
+- **Más grande**: elevador de 18 × 18 m, gimnasio de 28 × 18 m, y franja de los tableros de 16 m de fondo,
+  igual que el lado de la esclusa.
+- **Sin techo sobre lo jugable.** Del lado de la cámara y a los costados, **bordes hacia un vacío**: cordón amarillo, una
+  pared invisible y columnas de metal, bajas donde podrían tapar.
+- **Atrás, edificios macizos con techo**, de 6 m: a lo largo del fondo de la franja y en el rincón de la L.
+- **La esclusa** sin techo y con la pared de la cámara baja (lo que frena sigue alto).
+- **El botón del ascensor es el pedestal entero** (`BaseLiftUse`): se resalta y arranca con la E o el clic.
+- **La bolsa** cuelga de un pórtico. **El pozo** son dos rieles contra el edificio.
+- **Las dos compuertas siguen andando sin verse**, y **la arena no se ve hasta que el ascensor llega**: aparece de golpe.
+  Falta decidir cómo se pasa de la base a la arena.
+
 ## Qué hay (a escala humana, 17/11/2026)
 El plano de la esclusa de [[base]], para la meca jaula (≈ 7 m). *Hasta el 17/11/2026 era la base de la meca grande:
 el elevador de 24 m, la nave de 22 m y el ascensor de personal metido en la pared, que la esclusa reemplaza.*
@@ -139,3 +153,10 @@ del cañón de la jaula, sin mano, no la pierde ni la engorda), a escala de la m
 
 **La meca de la base es la jaula** (`CageMech`, con el equipo de su fila) desde el 17/11/2026; antes, la discreta de la
 meca grande. Los paneles de la jaula están en la fila (F2 a F4).
+
+## Los tubos de paquetes (22/11/2026)
+En **la pared corta, enfrente de la puerta de la esclusa**, hay dos huecos (`BaseSupplyTube`): munición, con un botón al lado que
+cambia el tipo, y reparación. Cuando se llevan el paquete de su lugar, cae otro; cada tubo deja hasta 4 sueltos. Los contratos
+pasaron a la pared del fondo, con la armería y los cosméticos. Manda el host (`BaseSupplies`), y los paquetes (`SupplyCrate`) no
+tienen física. **El F6 tiene «Dañar la meca»** para probar el kit: saca 30, nunca la mata, y lastimada echa humo (`MechSmoke`).
+Pruebas: `tests/supplies_loop_look.tscn` y `tests/supplies_net_check.tscn` (dos instancias).

@@ -89,10 +89,14 @@ func read() -> void:
 			var spinner := arm.tip as SpinTip
 			spinner.charging = (mine and spinner == tool.drill and Input.is_mouse_button_pressed(MOUSE_BUTTON_RIGHT)) \
 				or (inside and cockpit.spinning.has(spinner))
+	# El gatillo: la F poseyéndola, el mando del cañón desde adentro o la tecla de su brazo (su energía la cuida el cañón).
+	for arm in tool.arms:
+		if arm.tip is CannonTip:
+			var gun := arm.tip as CannonTip
+			gun.trigger = (gun == tool.cannon and ((mine and Input.is_physical_key_pressed(KEY_F)) \
+				or (not keyed and cockpit.fire))) or (not keyed and cockpit.firing.has(gun))
 	if tool.cannon == null:
 		return
-	# El gatillo: la F poseyéndola, o el mando del cañón desde adentro (su energía la cuida el cañón).
-	tool.cannon.trigger = (mine and Input.is_physical_key_pressed(KEY_F)) or (not keyed and cockpit.fire)
 	if mine:
 		tool.cannon.move_lever(Vector2(MechKeys.axis(KEY_RIGHT, KEY_LEFT), MechKeys.axis(KEY_UP, KEY_DOWN)), delta)
 

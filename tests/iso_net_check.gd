@@ -8,6 +8,8 @@ extends Node
 
 
 func _ready() -> void:
+	# Esta prueba es de las teclas: no depende de lo que el usuario tenga guardado en el F6.
+	MatchSettings.current.controls = MatchSettings.Controls.KEYS
 	var host := OS.get_cmdline_args().has("--host-local")
 	var world := (load("res://game/base/base_world.tscn") as PackedScene).instantiate()
 	add_child(world)

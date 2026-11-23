@@ -4,14 +4,14 @@ extends KnobsPanel
 ## EL EQUIPAMIENTO DE LA MECA (F5 de las filas de mecas; 16/11/2026, el usuario: «un menú nuevo, que ya que los brazos
 ## están unificados en todas las mecas, va a afectar a todas las mecas… en el que vos seleccionás qué cosas tiene
 ## equipada esa meca y podés guardarla»): el mismo panel en todas las filas, y cada fila guarda el suyo (MechLoadout, por
-## el nombre de la fila). Por brazo: cómo se mueve (discreto o con músculos), qué lleva en la punta y si lleva la placa
+## el nombre de la fila). Por brazo: qué lleva en la punta y si lleva la placa
 ## del acorazado. Como todos los de perillas (KnobsPanel): se mueve un borrador, y «Guardar» o «Volver a lo guardado»
 ## lo escriben y rearman las mecas.
 
 const PANEL_WIDTH := 380.0
 const LABELS := {
-	"left_motion": "cómo se mueve", "left_tip": "en la punta", "left_plate": "con la placa del acorazado",
-	"right_motion": "cómo se mueve", "right_tip": "en la punta", "right_plate": "con la placa del acorazado",
+	"left_tip": "en la punta", "left_plate": "con la placa del acorazado",
+	"right_tip": "en la punta", "right_plate": "con la placa del acorazado",
 }
 const ARMS: Array[String] = ["Brazo izquierdo", "Brazo derecho"]
 

@@ -86,6 +86,8 @@ func _ray_end() -> Vector3:
 const ISO_REACH := 1.6
 const ISO_CONE := 0.35
 const ISO_OUTLINE := 0.03
+## Un paquete al lado de otra cosa gana: es lo chico que se busca a propósito.
+const CRATE_PRIORITY := 0.2
 var iso := false:
 	set(on):
 		iso = on
@@ -136,6 +138,20 @@ func _iso_pick() -> Interactable:
 		var score := flat.normalized().dot(ahead)
 		if score > best_score:
 			best = boarding
+			best_score = score
+	# LOS PAQUETES NO TIENEN FÍSICA (SupplyCrate): se buscan por cercanía, en planta.
+	for node in get_tree().get_nodes_in_group(SupplyCrate.GROUP):
+		var crate := node as SupplyCrate
+		if not crate.can_interact():
+			continue
+		var flat := crate.global_position - from
+		var height := absf(flat.y)
+		flat.y = 0.0
+		if flat.length() > ISO_REACH + SupplyCrate.HALF or height > ISO_REACH * 1.5:
+			continue
+		var score := flat.normalized().dot(ahead) + CRATE_PRIORITY
+		if score > best_score:
+			best = crate
 			best_score = score
 	return best
 

@@ -300,7 +300,7 @@ func _try_slam(gap: float, how: String, at: float) -> String:
 		var wave: BrawlerWave = (_brain.power(BrawlerBrain.Act.SLAM) as SlamPower).waves[0]
 		if not wave.launched:
 			continue
-		var left := wave.way.dot(ground - wave.origin) - wave.front - BrawlerWave.RIDGE.y * 0.5 - 4.0
+		var left := wave.way.dot(ground - wave.origin) - wave.front - BrawlerWave.ridge().y * 0.5 - 4.0
 		if left <= at:
 			done = true
 			if how == "jump":

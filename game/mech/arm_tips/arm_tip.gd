@@ -2,8 +2,7 @@ class_name ArmTip
 extends Node3D
 
 ## LO QUE VA EN LA PUNTA DE UN BRAZO DE LA MECA (16/11/2026, el usuario: «unificar el sistema de los brazos, ver qué
-## cosas se equipan»): una pieza que se monta igual en un brazo discreto (PoseArm) o en uno con músculos (MuscleArm),
-## que sólo dicen cómo se mueve el brazo. Ésta, la de siempre: EL PUÑO COMÚN (MechHand). Las otras la extienden:
+## cosas se equipan»): una pieza que se monta en el brazo (PoseArm). Ésta, la de siempre: EL PUÑO COMÚN (MechHand). Las otras la extienden:
 ##   · HeavyFistTip, el puño pesado; PoleTip, el puño pesado agarrando el palo eléctrico.
 ##   · DrillTip y SawTip (SpinTip): se cargan girando y se descargan con un directo.
 ##   · CannonTip: el cañón de energía en lugar del antebrazo, con su palanca y sus cuatro modos.
@@ -47,22 +46,17 @@ func wanted(asked: Vector3) -> Vector3:
 	return asked
 
 
-## LO QUE GOLPEA DE LA PUNTA (puntos en el mundo; ver MechArm._strike). La de siempre: el medio del puño, en la punta
-## del antebrazo.
-func strike_points() -> PackedVector3Array:
-	var k := arm.measures.thick
-	return PackedVector3Array([forearm.global_transform * Vector3(0, 0, -arm.forearm_length() * 0.5 - MechHand.length() * k * 0.5)])
+## SU ZONA (ver MechSkills; vacía, no pega), con qué nombre pega y cuánto de su ficha lleva. La de siempre: el puño.
+func zone() -> Dictionary:
+	return MechSkills.fist()
 
 
-## LO QUE CHOCA DE LA PUNTA, además del puño (ver StrikeSettings): [forma, dónde va en la pieza del antebrazo]. La de
-## siempre, nada más.
-func solid_shapes() -> Array:
-	return []
+func zone_source() -> String:
+	return "golpe"
 
 
-## SI ES UN ARMA (el cañón): para StrikeSettings.weapon_collides.
-func is_weapon() -> bool:
-	return false
+func zone_power() -> float:
+	return 1.0
 
 
 ## EL GOLPE PRINCIPAL DE ESTA PUNTA, si no es una piña (puntos como MechArm.PUNCHES); vacío, la piña de siempre.
@@ -70,14 +64,9 @@ func strike_path() -> Array:
 	return []
 
 
-## AL CONECTAR un golpe: si la punta se encarga (y no el golpe de siempre).
 ## UNA PIÑA QUE MANDÓ EL DUEÑO por la red acaba de salir de este brazo (MechArmsNet): lo que la punta haga al tirarla.
 func on_net_punch() -> void:
 	pass
-
-
-func hit(_body: RigidBody3D, _at: Vector3, _velocity: Vector3) -> bool:
-	return false
 
 
 ## Si el antebrazo lleva placa (si la punta no lo reemplaza).

@@ -5,7 +5,7 @@ extends KnobsPanel
 ## las marcas de aviso en el piso, en vivo. Como todos los paneles de perillas (KnobsPanel): borrador, «Guardar» y «Volver a lo guardado».
 
 const LABELS := {"scale": "escala de todos los jefes (1: la maqueta)",
-	"floor_marks": "marcas de aviso en el piso"}
+	"floor_marks": "marcas de aviso en el piso", "attack_range": "ALCANCE DE LOS ATAQUES (m)"}
 
 
 func setup_panel() -> void:
@@ -23,6 +23,14 @@ func fresh() -> Resource:
 
 func saved_path() -> String:
 	return BossSettings.SAVED
+
+
+## El alcance estira los poderes de los jefes que están peleando.
+func applied() -> void:
+	for brawler in BrawlerArchetype.brawlers():
+		var brain := brawler.get_node_or_null("Cabeza") as BrawlerBrain
+		if brain != null:
+			brain.refresh_powers()
 
 
 func note() -> String:

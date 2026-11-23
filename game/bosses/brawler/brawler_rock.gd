@@ -10,8 +10,8 @@ extends Node3D
 
 enum State { HELD, FLYING, LANDED }
 
-## Lo que mide la piedra (m: ancho, alto, largo).
-const SIZE := Vector3(18.0, 7.0, 14.0)
+## Lo que mide la piedra (m: ancho, alto, largo), con el jefe a Brawler.FX_DRAWN_AT. La de ahora, `size()`.
+const SIZE := Vector3(10.0, 4.0, 8.0)
 const DIRT := Color(0.5, 0.42, 0.33)
 
 var state := State.HELD
@@ -32,28 +32,38 @@ var _stay := 6.0
 var _spin := Vector3.ZERO
 
 
+## Lo que mide ahora, a la escala del jefe.
+static func size() -> Vector3:
+	return SIZE * Brawler.fx_scale()
+
+
 ## LA ARMA: el pozo en `dig` (el piso, mundo, girado hacia `facing` en radianes) y la piedra todavía adentro.
 func setup(dig: Vector3, facing: float, hit_radius: float) -> void:
 	radius = hit_radius
+	var whole := size()
+	var k := Brawler.fx_scale()
 	_hole = Node3D.new()
 	_hole.name = "Pozo"
 	_hole.top_level = true
 	add_child(_hole)
-	_hole.global_transform = Transform3D(Basis(Vector3.UP, facing), Vector3(dig.x, 0.0, dig.z))
-	Clay.box(_hole, Vector3(SIZE.x, 0.06, SIZE.z), Vector3(0.0, 0.03, 0.0), Color(0.22, 0.18, 0.15))
+	_hole.global_transform = Transform3D(Basis(Vector3.UP, facing), dig)
+	Clay.box(_hole, Vector3(whole.x, 0.06, whole.z), Vector3(0.0, 0.03, 0.0), Color(0.22, 0.18, 0.15))
 	for side: float in [-1.0, 1.0]:
-		Clay.box(_hole, Vector3(SIZE.x + 2.0, 0.7, 1.2), Vector3(0.0, 0.2, side * (SIZE.z * 0.5 + 0.5)), DIRT.lightened(0.1))
-		Clay.box(_hole, Vector3(1.2, 0.7, SIZE.z), Vector3(side * (SIZE.x * 0.5 + 0.5), 0.2, 0.0), DIRT.lightened(0.1))
+		Clay.box(_hole, Vector3(whole.x + 2.0 * k, 0.7 * k, 1.2 * k), Vector3(0.0, 0.2 * k, side * (whole.z * 0.5 + 0.5 * k)),
+			DIRT.lightened(0.1))
+		Clay.box(_hole, Vector3(1.2 * k, 0.7 * k, whole.z), Vector3(side * (whole.x * 0.5 + 0.5 * k), 0.2 * k, 0.0),
+			DIRT.lightened(0.1))
 	_rock = Node3D.new()
 	_rock.name = "Piedra"
 	_rock.top_level = true
 	add_child(_rock)
-	Clay.box(_rock, SIZE, Vector3.ZERO, DIRT)
-	Clay.box(_rock, Vector3(SIZE.x * 0.7, 1.4, SIZE.z * 0.6), Vector3(0.8, SIZE.y * 0.5 + 0.5, -0.5), DIRT.darkened(0.2))
-	Clay.box(_rock, Vector3(3.0, 2.5, 3.0), Vector3(-SIZE.x * 0.5, -1.0, SIZE.z * 0.3), DIRT.darkened(0.1))
-	Clay.box(_rock, Vector3(SIZE.x * 0.9, 0.3, SIZE.z * 0.9), Vector3(0.0, SIZE.y * 0.5 + 0.1, 0.0),
+	Clay.box(_rock, whole, Vector3.ZERO, DIRT)
+	Clay.box(_rock, Vector3(whole.x * 0.7, 1.4 * k, whole.z * 0.6), Vector3(0.8 * k, whole.y * 0.5 + 0.5 * k, -0.5 * k),
+		DIRT.darkened(0.2))
+	Clay.box(_rock, Vector3(3.0, 2.5, 3.0) * k, Vector3(-whole.x * 0.5, -1.0 * k, whole.z * 0.3), DIRT.darkened(0.1))
+	Clay.box(_rock, Vector3(whole.x * 0.9, 0.3 * k, whole.z * 0.9), Vector3(0.0, whole.y * 0.5 + 0.1 * k, 0.0),
 		Color(0.45, 0.5, 0.35))
-	_rock.global_transform = Transform3D(Basis(Vector3.UP, facing), Vector3(dig.x, -SIZE.y * 0.5, dig.z))
+	_rock.global_transform = Transform3D(Basis(Vector3.UP, facing), dig + Vector3.DOWN * whole.y * 0.5)
 	_zone = BossZone.circle(self, radius)
 	_zone.marked = false
 
@@ -63,7 +73,7 @@ func hold(at: Vector3, facing: float, aim: Variant) -> void:
 	_rock.global_transform = Transform3D(Basis(Vector3.UP, facing), at)
 	if aim is Vector3:
 		_zone.marked = true
-		_zone.place(Vector3(aim.x, 0.0, aim.z))
+		_zone.place(aim)
 
 
 ## Dónde está la piedra (mundo).
@@ -74,7 +84,7 @@ func held_at() -> Vector3:
 ## LA TIRA hacia `target` (el piso): cae ahí en `flight` segundos, subiendo `arc` metros sobre la recta.
 func throw(target: Vector3, flight: float, arc: float, stay: float) -> void:
 	state = State.FLYING
-	spot = Vector3(target.x, 0.0, target.z)
+	spot = target
 	_from = _rock.global_position
 	_flight = maxf(flight, 0.1)
 	_arc = arc
@@ -103,7 +113,7 @@ func _physics_process(delta: float) -> void:
 			pass
 		State.FLYING:
 			var t := minf(_clock / _flight, 1.0)
-			var at := _from.lerp(spot + Vector3.UP * SIZE.y * 0.5, t) + Vector3.UP * _arc * 4.0 * t * (1.0 - t)
+			var at := _from.lerp(spot + Vector3.UP * size().y * 0.5, t) + Vector3.UP * _arc * 4.0 * t * (1.0 - t)
 			_rock.global_position = at
 			_rock.rotate_object_local(_spin.normalized() if _spin != Vector3.ZERO else Vector3.UP, _spin.length() * delta)
 			if t >= 1.0:
@@ -111,7 +121,7 @@ func _physics_process(delta: float) -> void:
 				just_landed = true
 				_clock = 0.0
 				_zone.marked = false
-				_rock.global_transform = Transform3D(Basis(Vector3.UP, randf() * TAU), spot + Vector3.UP * SIZE.y * 0.4)
+				_rock.global_transform = Transform3D(Basis(Vector3.UP, randf() * TAU), spot + Vector3.UP * size().y * 0.4)
 				# AL CAER: tierra para todos lados, a la medida del golpe, y el ruido.
 				BossBursts.dirt(get_parent(), spot, radius / 6.0)
 				BossSounds.play(BossSounds.Kind.KNOCKDOWN, spot, get_parent(), 4.0)
@@ -119,5 +129,5 @@ func _physics_process(delta: float) -> void:
 			if _clock > _stay:
 				_rock.global_position.y -= delta * 3.0
 				_hole.global_position.y -= delta * 0.3
-				if _rock.global_position.y < -SIZE.y:
+				if _rock.global_position.y < spot.y - size().y:
 					queue_free()

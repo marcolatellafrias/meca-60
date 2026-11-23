@@ -40,3 +40,23 @@ contraste, estereotipos) y **low poly**.
 fuerte, un cajón de botellas…). El 13/11/2026 se borraron sus bosquejos, el cajón y su contenido, las cajas largas de
 prueba y su ida y vuelta a Blender: hoy su catálogo son estos cinco cubos. El sistema de agarre
 (`GrabbableInteractable`) no se tocó: ya sabía de módulos de 63 cm.
+
+## Lo que ya anda (22/11/2026)
+Los paquetes son **cinemáticos**: se agarran con la E o el clic, van atados a las dos manos y no usan el agarre físico.
+Con un paquete, **la E o el clic cerca de la meca se lo ponen, antes de subirse**; lejos, lo dejan en el piso. Con las manos
+ocupadas no se rolea.
+
+| Paquete | Qué hace |
+|---|---|
+| Balas comunes | La carga de siempre |
+| Incendiarias | Prenden al blanco: sigue perdiendo vida 3 s |
+| Eléctricas | Cargan al blanco y, a las 24 balas, lo aturden 1,4 s |
+| Perforantes | 90 balas, pegan 1,7× y atraviesan |
+| Misiles comunes | Los de siempre |
+| Rebotadores | Explotan y saltan a explotar otra vez |
+| De racimo | Explotan y sueltan cuatro chicos |
+| Mina | Espera en el piso hasta que un blanco pasa cerca |
+| Kit de reparación | +40 de salud; con la salud llena no se gasta |
+
+**Lo especial dura una carga:** al vaciarse, el arma se recarga sola con la común. Todavía no hay paquetes en la arena: se prueban
+en la base.

@@ -12,6 +12,7 @@ config_version=5
 
 config/name="Meca 60"
 run/main_scene="res://game/sandbox/sandbox.tscn"
+run/main_scene.template="res://game/ui/main_menu.tscn"
 config/features=PackedStringArray("4.5")
 
 [audio]

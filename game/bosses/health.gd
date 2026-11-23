@@ -77,6 +77,15 @@ func _change(now: float, what: String, with_push: Vector3) -> void:
 			PartsRagdoll.fall_apart.call_deferred(get_parent())
 
 
+## LE DEVUELVE `amount` (un kit de reparación). Lo decide el host. Muerta, nada.
+func heal(amount: float) -> void:
+	if dead() or (NetFollow.online(self) and not multiplayer.is_server()):
+		return
+	_change(minf(left + amount, full), "reparada", Vector3.ZERO)
+	if NetFollow.online(self):
+		_set_left.rpc(left, last, Vector3.ZERO)
+
+
 func dead() -> bool:
 	return left <= 0.0
 

@@ -17,7 +17,7 @@ static func rows() -> Array[SandboxRow]:
 			.add(SandboxRow.Build.NEAR, [cage]) \
 			.panel(KEY_F1, CAGE_PANEL, CageMovesPanel.new()) \
 			.panel(KEY_F2, CAGE_SHAPE_PANEL, CageShapePanel.new()) \
-			.panel(KEY_F3, CAGE_ARMS_PANEL, ArmsPanel.new([ArmsPanel.Kind.POSE, ArmsPanel.Kind.MUSCLE])) \
+			.panel(KEY_F3, CAGE_ARMS_PANEL, ArmsPanel.new()) \
 			.panel(KEY_F4, LEGS_PANEL, LegsPanel.new()) \
 			.panel(KEY_F5, EQUIPMENT_PANEL, EquipmentPanel.new(cage)) \
 			.panel(KEY_F6, POSES_PANEL, ArmPosesPanel.new()) \
@@ -32,7 +32,7 @@ static func rows() -> Array[SandboxRow]:
 const LEGS_PANEL := "las piernas: los pasos (los mismos para todas las mecas)"
 const CAGE_PANEL := "la meca jaula: moverse, girar, saltar y volar, el dash, agacharse (sólo ella)"
 const CAGE_SHAPE_PANEL := "la meca jaula: la esfera de abajo, el tablero de arriba y la torre (sólo ella)"
-const CAGE_ARMS_PANEL := "los brazos: el cañón (discreto) y el palo (con músculos), los de todas las mecas"
+const CAGE_ARMS_PANEL := "los brazos: lo rápido de las piñas, en todas las mecas"
 ## Las poses de los brazos para probar (ArmPosesPanel; temporal).
 const POSES_PANEL := "las poses de los brazos para probar: el reposo del palo y del cañón, y el golpe (temporal)"
 ## Cómo se maneja desde adentro (CageHandlingPanel): lo de mantener apretado los mandos.

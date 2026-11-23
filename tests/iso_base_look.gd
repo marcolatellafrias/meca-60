@@ -24,16 +24,21 @@ func _run(world: BaseWorld) -> void:
 	await _wait(2.5)
 	var player := DesignSandbox.player_of(get_tree())
 	_check("hay jugador", is_instance_valid(player))
+	# El rumbo lo pone esta prueba: que no lo pise el mouse de verdad.
+	player.player_controller._shown = false
 	_check("la cámara es la isométrica", get_viewport().get_camera_3d() is IsoView)
 	await _shot("1_esclusa")
 	var base := world.get_node("Base") as Node3D
 	var airlock := base.find_child("Esclusa", true, false) as BaseAirlock
 	var elevator := base.find_child("Ascensor", true, false) as BaseElevator
 	elevator.arrived.connect(_noop)
-	# EL BOTÓN DE ADENTRO DE LA ESCLUSA, con la E: el que abre (el más cercano al que nace).
-	var door := _inner_button(airlock)
-	await _stand_before(player, door, door.global_basis.z)
-	_check("la E tiene a tiro el botón de la esclusa", _hovered(player) == door)
+	# LA PUERTA DE LA ESCLUSA, apuntándola a ella, desde dos metros y corrido hacia una de sus hojas.
+	var door := airlock.get_node("Adelante/Usar") as BaseDoorUse
+	_check("el botón del costado ya no está", airlock.find_children("*", "TouchComponent", true, false).size() == 1)
+	await _stand_before(player, door, door.global_basis.z, 2.0)
+	_check("la E tiene a tiro la puerta", _hovered(player) == door)
+	_check("la puerta se resalta entera", door.get_outline_targets() == [door.get_parent()])
+	await _shot("1b_puerta_resaltada")
 	player.intent.activate = true
 	await _wait(1.5)
 	_check("la E abrió la esclusa", not airlock.armed)
@@ -55,7 +60,7 @@ func _run(world: BaseWorld) -> void:
 	_check("la pantalla se cerró", UIState.gameplay_active())
 	BaseState.current.contract = 0
 	# EL BOTÓN DEL ASCENSOR, con la E, parado en la plataforma.
-	var lift := _nearest_button(elevator, elevator.global_position)
+	var lift := elevator.get_node("Plataforma/Pedestal/Usar") as BaseLiftUse
 	await _stand_before(player, lift, lift.global_basis.z)
 	_check("la E tiene a tiro el botón del ascensor", _hovered(player) == lift)
 	await _shot("4_base_ascensor")
@@ -98,16 +103,6 @@ func _nearest_button(root: Node, to: Vector3) -> TouchComponent:
 	return best
 
 
-## El de adentro de la esclusa: el que está más hacia su compuerta de adelante (−X en sus ejes).
-func _inner_button(airlock: BaseAirlock) -> TouchComponent:
-	var best: TouchComponent = null
-	for found: Node in airlock.find_children("*", "TouchComponent", true, false):
-		var button := found as TouchComponent
-		if best == null or airlock.to_local(button.global_position).x < airlock.to_local(best.global_position).x:
-			best = button
-	return best
-
-
 ## Lo para a `away` metros de `thing`, del lado de `front`, mirándolo.
 func _stand_before(player: BoneInstantiator, thing: Node3D, front: Vector3, away := 1.0) -> void:
 	var way := Vector3(front.x, 0.0, front.z).normalized()
@@ -115,7 +110,9 @@ func _stand_before(player: BoneInstantiator, thing: Node3D, front: Vector3, away
 	var feet_y := player.char_rigidbody.global_position.y - 1.0
 	player.place_at(Vector3(spot.x, feet_y, spot.z), atan2(way.x, way.z))
 	player.player_controller.camera_yaw = atan2(way.x, way.z)
-	await _wait(0.5)
+	# En pasos de física y no en tiempo: con un tirón de carga, medio segundo puede no alcanzar para que lo detecte.
+	for _i in 30:
+		await get_tree().physics_frame
 
 
 func _noop() -> void:
@@ -136,3 +133,5 @@ func _shot(title: String) -> void:
 		return
 	await RenderingServer.frame_post_draw
 	get_viewport().get_texture().get_image().save_png("%s/%s.png" % [_folder, title])
+	# De vuelta en un paso de física: mover un cuerpo desde el dibujo no toma (dejaba al jugador donde estaba).
+	await get_tree().physics_frame

@@ -1,5 +1,9 @@
 # Los brazos
 
+> **Cambio de rumbo (22/11/2026):** los brazos ya no son físicos. `MuscleArm`, `StrikeSettings` y el golpe que barría la
+> punta se borraron (están en el commit `5238ff8`). **Lo que pega es la zona de cada habilidad** (`MechSkills`). Lo de abajo
+> sobre músculos, choques y barrido queda como historia.
+
 Ver [[filas]] y [[meca-jaula]] (la meca que los lleva: el cañón en uno discreto, el palo en uno con músculos).
 *Hasta el 17/11/2026 eran también los dos caminos de la meca grande (la Meca discreta y la Meca física, con la fila
 Brazo); se borraron con ella y están en el commit 0bcaeaf.*
@@ -151,3 +155,14 @@ contra lo que lo sostiene (una piña sacude al torso) y pesa menos.
 ## Lo que falta
 - La mano no agarra.
 - Que la mano siga mejor lo pedido en la piña (hoy va atrás y llega con látigo): pedirle también velocidad.
+
+## Los golpes por segmentos (22/11/2026; F3, pestaña Golpes)
+- **Puño o palo, dos segmentos:** apretar paga 8. Soltar antes del 35 % de la carga pierde esa energía y no pega; desde ahí sale
+  **liviano**. Al llenarse (1 s) paga 10 más y sale **pesado**; sin energía para pagarlo, se queda en liviano.
+- **Cañón, tres segmentos de 0,8 s:** cada uno cuesta 12 y se paga al empezarlo. Soltar antes del primero no dispara. El primero
+  necesita tener su energía; los siguientes pueden dejar la batería en negativo, y entonces viene el stun al disparar. El daño
+  y el empuje son un tercio por segmento, y el largo salta de 9 a 11,5 y 14 m.
+- Mientras se carga no se recarga la batería. La barrita de cada brazo se dibuja por segmentos (`MechChargeBar`).
+
+## La piña al soltar (22/11/2026)
+El tramo que pega va a 4 veces la velocidad de la piña común (`MechArm.RELEASE_SPEED`); antes iba a 2.

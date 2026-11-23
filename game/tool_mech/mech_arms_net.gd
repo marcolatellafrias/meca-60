@@ -73,7 +73,15 @@ func _gather() -> Array:
 			tips.append([(arm.tip as SpinTip).charging])
 		else:
 			tips.append([])
-	return [mech.energy.level, mech.energy.stunned, mech.covering, mech.shield.held, tips]
+	return [mech.energy.level, mech.energy.stunned, mech.covering, mech.shield.held, tips, mech.shield.way, _windups()]
+
+
+## Lo armado de cada brazo (ver MechArm.windup_share).
+func _windups() -> Array:
+	var out: Array = []
+	for arm in mech.arms:
+		out.append(arm.windup_share)
+	return out
 
 
 func _apply(state: Array) -> void:
@@ -81,6 +89,10 @@ func _apply(state: Array) -> void:
 	mech.energy.stunned = float(state[1])
 	mech.covering = bool(state[2])
 	mech.shield.held = bool(state[3])
+	mech.shield.way = state[5]
+	var windups: Array = state[6]
+	for index in mini(windups.size(), mech.arms.size()):
+		mech.arms[index].windup_share = float(windups[index])
 	var tips: Array = state[4]
 	for index in mini(tips.size(), mech.arms.size()):
 		var tip := mech.arms[index].tip
@@ -114,11 +126,11 @@ func _send_punch(arm: MechArm) -> void:
 	var index := mech.arms.find(arm)
 	if index < 0 or arm.punching == MechArm.Punch.NONE:
 		return
-	_punch.rpc(index, int(arm.punching), arm.punch_pace, arm.punch_strength, arm.aimed_path())
+	_punch.rpc(index, int(arm.punching), arm.punch_strength, arm.aimed_path())
 
 
 @rpc("any_peer", "call_remote", "reliable")
-func _punch(index: int, kind: int, pace: float, strength: float, path: Array) -> void:
+func _punch(index: int, kind: int, strength: float, path: Array) -> void:
 	if multiplayer.get_remote_sender_id() != mech.net.authority or index >= mech.arms.size():
 		return
 	punches_received += 1
@@ -127,7 +139,6 @@ func _punch(index: int, kind: int, pace: float, strength: float, path: Array) ->
 	arm.punching = MechArm.Punch.NONE
 	arm.punch(kind as MechArm.Punch)
 	_applying = false
-	arm.punch_pace = pace
 	arm.punch_strength = strength
 	arm.aim_path(path)
 	if arm.tip != null:

@@ -6,6 +6,13 @@ Salió de un brainstorm de 44 ideas. El usuario eligió **pocas para la primera 
 tres alternativas de cada cosa y empezar a probar rápido para ver si funciona o no»). Las que quedaron afuera no se
 descartaron: vuelven si hacen falta.
 
+## Cambio de rumbo: habilidades por zonas (22/11/2026)
+**Manda sobre lo de abajo.** El usuario: «no es buena práctica que el mecha pueda hacer daño fuera de su zona de visión…
+todas las habilidades tienen una hitbox». Se deja «se va por la física» y se toma la alternativa de **ataques discretos,
+tipo hechizos**: skillshots en cono, línea o círculo, con alcance, que se ven antes de salir. Sin músculos en los brazos.
+**Pendiente:** si hay ataques básicos que peguen seguro y sin energía, con la proximidad como riesgo; y que los ataques del
+jefe sigan la misma regla.
+
 ## Lo fijo y lo que se cambia
 - **La meca en sí sale de su semilla y no se cambia**: los brazos y las piernas cambian un poco de diseño, y eso la hace
   más rápida, más lenta, etc. Es permanente, como un personaje.

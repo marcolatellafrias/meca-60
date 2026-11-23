@@ -23,8 +23,8 @@ extends Resource
 @export var in_mode_1 := true
 @export var in_mode_2 := false
 ## Desde y hasta qué distancia lo usa (m, de su medio al blanco).
-@export_range(0.0, 300.0, 1.0) var reach_from := 30.0
-@export_range(0.0, 300.0, 1.0) var reach_to := 120.0
+@export_range(0.0, 60.0, 0.5) var reach_from := 5.0
+@export_range(0.0, 60.0, 0.5) var reach_to := 13.0
 
 ## LO QUE OFRECE EL CUERPO, para elegir en el panel: los nombres de sus puntos, sus zonas de golpe, sus poses y sus
 ## aspectos. Hoy, los del Luchador (el único cuerpo); con otro cuerpo, su panel pone los suyos antes de armarse.
@@ -95,6 +95,18 @@ func tick(_b: BrawlerBrain, _delta: float) -> void:
 
 func drop(_b: BrawlerBrain) -> void:
 	pass
+
+
+## LAS PERILLAS EN METROS Y M/S, las que estira el alcance de los ataques (BossSettings.attack_range).
+func reach_knobs() -> PackedStringArray:
+	return PackedStringArray()
+
+
+## ESTA COPIA, ESTIRADA `share` veces: distancias y velocidades juntas, así los tiempos de aviso no cambian. Se llama sobre
+## una copia recién tomada de las perillas (ver BrawlerBrain.refresh_powers).
+func fit_reach(share: float) -> void:
+	for knob: String in ["reach_from", "reach_to"] + Array(reach_knobs()):
+		set(knob, float(get(knob)) * share)
 
 
 ## Las perillas de `from` pasan a esta copia (el panel guardó): lo que guarda mientras pelea, no.

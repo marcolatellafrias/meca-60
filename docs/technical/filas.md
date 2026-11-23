@@ -18,7 +18,7 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 | Multijugador | `MultiplayerArchetype` | `SandboxSession` | — | `net_check` | `game/net/` |
 | Partículas | `ParticleArchetype` | — | — | — | `game/particles/` |
 | Píxeles | `PixelArtArchetype` | `game/pixel_art/` entero, `tools/pixel_art_modelos_prueba.py` | `PixelPaintPanel` (F1) | `pixel_art_look` | `Clay`, `SupplyLook` (colores) |
-| Luchador de orugas | `BrawlerArchetype` | `game/bosses/brawler/` entero (`Brawler`, `BrawlerBody`, `BrawlerBrain`, `BrawlerWave`, `BrawlerRock`, `BrawlerHook`, `BrawlerFlame`, `BrawlerSettings`, `BrawlerPanel`), y de `game/bosses/`: `Health`, `FightBars`, `BossArena`, `HitReaction`, `BossSounds`, `BossHurtbox`, `BossBursts`, `BossSettings`, `BossSettingsPanel`, `BossMode`, `BossZone`, `BossShot` y `powers/` (`BossPower` y los seis poderes) | `BrawlerPanel` (F1, de la parcela), `BossSettingsPanel` (F7) | `brawler_look`, `brawler_fight_look`, `brawler_dodge_check`, `brawler_charge_movie`, `hit_reaction_look`, `brawler_shots_check`, `boss_modes_check`, `boss_panel_look` | la meca (la jaula, su blanco), `MoveRamp`, `MechKeys.axis`, `Clay`, `PhysicsLayers.FIXED`, `ParticleSystems` |
+| Luchador de orugas | `BrawlerArchetype` | `game/bosses/brawler/` entero (`Brawler`, `BrawlerBody`, `BrawlerBrain`, `BrawlerWave`, `BrawlerRock`, `BrawlerHook`, `BrawlerFlame`, `BrawlerSettings`, `BrawlerPanel`), y de `game/bosses/`: `Health`, `FightBars`, `BossArena`, `HitReaction`, `BossSounds`, `BossHurtbox`, `BossBursts`, `BossSettings`, `BossSettingsPanel`, `BossMode`, `BossZone`, `BossShot` y `powers/` (`BossPower` y sus poderes, con `OrbsPower`), `BossOrbField` | `BrawlerPanel` (F1, de la parcela), `BossSettingsPanel` (F7) | `brawler_look`, `brawler_fight_look`, `brawler_dodge_check`, `brawler_charge_movie`, `hit_reaction_look`, `brawler_shots_check`, `boss_modes_check`, `boss_panel_look` | la meca (la jaula, su blanco), `MoveRamp`, `MechKeys.axis`, `Clay`, `PhysicsLayers.FIXED`, `ParticleSystems` |
 | Taller de jefes | `BossWorkshopArchetype` | `game/bosses/parts/` entero (`BossParts`, `BossRecipe`, `BossFrame`) | `BossSettingsPanel` (F7) | `boss_parts_look` | `Clay`, `BossSettings`, los poderes (`BossPower.needs`) |
 | Maquetas de jefes | `BossMaquetteArchetype` | `game/bosses/maquettes/` entero (`BossMaquettes`, `HumanoidMaquettes`, `ArmedMaquettes`, `WalkerMaquettes`, `BossMaquetteArchetype`) | — | `boss_maquettes_look` | `Clay` |
 
@@ -28,7 +28,7 @@ compartido, en la última columna, se queda). Cómo está armado el código, en 
 piezas: `MechCabin`, `MechLeg`, `MechKeys`, `MechArm`, `MechHand`, `MechBody`; `MechArchetype`, las reglas de toda
 parcela con la meca; las puntas de los brazos, `arm_tips/`; los tableros, `boards/`; `ArmsPanel`, `KnobsPanel`;
 `Clay`), `game/tool_mech/` (`ToolMech`, `ToolMechKeys`, `MechEnergy`, `EnergyBolt`), `game/pose_arm/` y
-`game/muscle_arm/` (los dos brazos). Tests: `possess_check`, `equipment_check`, `arm_tips_look`, `hand_look`.
+(el brazo; los músculos se borraron el 22/11/2026). Tests: `possess_check`, `equipment_check`, `arm_tips_look`, `hand_look`.
 
 *Hasta el 17/11/2026 había también las filas de la meca grande —Meca por módulos, Meca del vórtice, Meca de tres, Meca
 de cápsulas, Meca discreta, Meca redonda, Meca física, Arena de esquivar, Meca cinemática, Laboratorio cinemático, Brazo

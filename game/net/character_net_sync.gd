@@ -93,6 +93,17 @@ func _receive_state(pos: Vector3, yaw: float, vel: Vector3, impact_xz: Vector2, 
 	while _buffer.size() > BUFFER_MAX:
 		_buffer.pop_front()
 
+## EL ROLL (CharacterRoll): el dueño avisa una vez y cada máquina lo dibuja.
+func tell_roll(way: Vector3) -> void:
+	if NetFollow.online(self):
+		_rolled.rpc(way)
+
+
+@rpc("authority", "reliable", "call_remote")
+func _rolled(way: Vector3) -> void:
+	(get_parent() as BoneInstantiator).roll.start(way)
+
+
 # ── Remoto: interpolar y aplicar al puppet ────────────────────────────────────
 
 ## Aplica el estado sincronizado (transform + pose) a la cápsula puppet. Lo llama el

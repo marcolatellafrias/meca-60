@@ -6,10 +6,9 @@ extends RefCounted
 ## Un solo piso, todo al mismo nivel:
 ##   · EL ELEVADOR, un cuadrado marcado del piso donde duerme la meca; arriba, la compuerta del techo (BaseHatch).
 ##   · EL GIMNASIO con la bolsa, a la altura de los brazos de la meca.
-##   · LA FRANJA DE LAS CONSOLAS, abajo del gimnasio, separada por la línea de peligro. Usa sus dos caras libres (el
-##     usuario: «tenemos… dos caras… vos estás dejando una vacía»): EL FONDO, con la armería y los cosméticos, cada uno en
-##     el medio de su mitad; y LA PARED BAJO EL ELEVADOR, con
-##     los contratos (al lado de la meca: lo último antes de salir).
+##   · LA FRANJA DE LAS CONSOLAS, abajo del gimnasio, separada por la línea de peligro. Usa sus dos caras libres: EL FONDO,
+##     con los contratos, la armería y los cosméticos, cada uno en el medio de su tercio; y LA PARED CORTA, enfrente de la
+##     puerta de la esclusa, con LOS DOS TUBOS DE PAQUETES (22/11/2026, BaseSupplyTube: munición y reparación).
 ##   · LA ESCLUSA (BaseAirlock), la sala de espera, en la punta de la franja: un cuadrado DEL LADO DEL FONDO DE LA FRANJA
 ##     (el usuario: «coincide siempre, por más de que cambie… el fondo de la franja… paramétrico»). Se aparece ahí; su
 ##     compuerta da a la franja y se abre una sola vez.
@@ -22,7 +21,7 @@ extends RefCounted
 ## LO MÁS GRANDE QUE PUEDEN SER las medidas del F1 (BaseSettings): la parcela se mide con eso.
 const MAX_DEPTH := 20.0
 const MAX_WIDTH := 30.0
-const MAX_STRIP := 12.0
+const MAX_STRIP := 24.0
 const WALL := 0.3
 ## El grosor del techo y el borde de la compuerta: el mismo cuadrado marcado del elevador.
 const ROOF := 0.35
@@ -35,11 +34,20 @@ const BAG_LOW := 1.0
 const BAG_HIGH := 4.6
 const BAG_CLEAR := 2.5
 ## Cuánto puede ocupar todo, con todo lo más grande. El plano queda centrado en eso.
-const SIZE := Vector2(MAX_DEPTH + MAX_WIDTH + MAX_STRIP, MAX_DEPTH + MAX_STRIP)
+const SIZE := Vector2(MAX_DEPTH + MAX_WIDTH + MAX_STRIP, MAX_DEPTH + MAX_STRIP + 8.0)
+## LO QUE RODEA EL PISO, pensado para esta cámara (22/11/2026): el fondo y el alto de los edificios de atrás, lo que cae
+## el borde hacia el vacío, el alto de la pared que no se ve y las columnas de metal (bajas del lado de la cámara).
+const BLOCK := 8.0
+const BLOCK_HIGH := 6.0
+const DROP := 6.0
+const FENCE_HIGH := 8.0
+const NEAR_BEAM := 3.0
+const SIDE_BEAM := 9.0
+const BEAM_EVERY := 6.0
 const OFFSET := Vector3(-SIZE.x * 0.5, 0.0, -SIZE.y * 0.5)
 ## El grupo de los nodos que tienen una base armada adentro (para rearmarla al guardar el F1).
 const GROUP := "base_plano"
-## LO DEL FONDO DE LA FRANJA: la armería y los cosméticos, cada uno en el medio de su mitad, de hasta CONSOLE_WIDTH. *Hasta
+## LO DEL FONDO DE LA FRANJA: los contratos, la armería y los cosméticos, cada uno en el medio de su tercio, de hasta CONSOLE_WIDTH. *Hasta
 ## el 17/11/2026 estaban también el cuadro del empleado del mes y los casilleros; el usuario los sacó de la primera
 ## versión: «no vamos a poner casillero ni memorial… una complejidad extra que le voy a agregar más tarde».*
 const CONSOLE_WIDTH := 5.0
@@ -76,6 +84,9 @@ const BAG_COLOR := Color(0.55, 0.33, 0.25)
 const CONSOLE_COLOR := Color(0.42, 0.44, 0.46)
 const SCREEN_COLOR := Color(0.45, 0.6, 0.5)
 const CAGE_COLOR := Color(0.5, 0.5, 0.48)
+const ROOF_COLOR := Color(0.5, 0.48, 0.45)
+const DROP_COLOR := Color(0.3, 0.29, 0.28)
+const BEAM_COLOR := Color(0.36, 0.39, 0.43)
 
 
 ## Un punto del plano (x, z, alto) en las coordenadas de la parcela.
@@ -145,17 +156,21 @@ static func build(parent: Node3D) -> StaticBody3D:
 	_walls(body)
 	_bag(parent)
 	_consoles(body)
-	_roof(body)
+	_tubes(parent)
+	_gantry(body)
 	_lights(body)
 	_shaft(body)
 	var hatch := BaseHatch.new()
 	hatch.name = "Compuerta"
 	parent.add_child(hatch)
 	hatch.build()
+	# sin techo no tienen qué cerrar y taparían la meca: siguen andando, sin verse, hasta decidir qué pasa con ellas
+	hatch.visible = false
 	var top := BaseHatch.new()
 	top.name = "Compuerta de arriba"
 	parent.add_child(top)
 	top.build(true)
+	top.visible = false
 	var elevator := BaseElevator.new()
 	elevator.name = "Ascensor"
 	parent.add_child(elevator)
@@ -198,74 +213,74 @@ static func _slab(body: StaticBody3D, x1: float, x2: float, z1: float, z2: float
 	Clay.solid(body, Vector3(x2 - x1, 0.4, z2 - z1), at((x1 + x2) * 0.5, (z1 + z2) * 0.5, -0.2), color)
 
 
-## LAS PAREDES, por el contorno de la L. La de la punta de la franja es de la esclusa (BaseAirlock), con su compuerta.
+## LOS EDIFICIOS (el usuario, 22/11/2026: «las paredes que van contrarias a mi ángulo de visión puedo mantenerlas… con una
+## altura más razonable… como edificios, le hacemos los techos»): sólo del lado de atrás de la cámara, macizos y con techo.
+## Uno a lo largo del fondo de la franja y otro en el rincón de la L, donde va la consola de contratos.
 static func _walls(body: StaticBody3D) -> void:
-	var outline: Array[Vector2] = [
-		Vector2(LENGTH, NAVE), Vector2(LENGTH, 0), Vector2(0, 0), Vector2(0, NAVE), Vector2(ELEVATOR, NAVE),
-		Vector2(ELEVATOR, NAVE + strip), Vector2(LENGTH, NAVE + strip),
-	]
-	for i in outline.size() - 1:
-		var a := outline[i]
-		var b := outline[i + 1]
-		# las de la franja, del alto de la franja
-		var high := strip_height if minf(a.y, b.y) >= NAVE - 0.01 and minf(a.x, b.x) >= ELEVATOR - 0.01 else height
-		var mid := (a + b) * 0.5
-		var length := a.distance_to(b) + WALL
-		var size := Vector3(length, high, WALL) if is_equal_approx(a.y, b.y) else Vector3(WALL, high, length)
-		Clay.solid(body, size, at(mid.x, mid.y, high * 0.5), WALL_COLOR)
-	# el dintel: la pared de la nave sobre el borde abierto de la franja, y sobre la esclusa
-	Clay.solid(body, Vector3(LENGTH - ELEVATOR + WALL, height - strip_height, WALL),
-		at((ELEVATOR + LENGTH) * 0.5, NAVE, (height + strip_height) * 0.5), WALL_COLOR)
+	_building(body, 0.0, LENGTH + strip, NAVE + strip, NAVE + strip + BLOCK)
+	_building(body, 0.0, ELEVATOR, NAVE, NAVE + strip)
+	_edge(body, Vector2(0, 0), Vector2(LENGTH, 0), Vector2(0, -1), NEAR_BEAM)
+	_edge(body, Vector2(0, 0), Vector2(0, NAVE), Vector2(-1, 0), SIDE_BEAM)
+	# baja: queda delante de la esclusa
+	_edge(body, Vector2(LENGTH, 0), Vector2(LENGTH, NAVE), Vector2(1, 0), NEAR_BEAM)
+	for piece: Rect2 in [Rect2(0, 0, LENGTH, NAVE), Rect2(ELEVATOR, NAVE, LENGTH + strip - ELEVATOR, strip)]:
+		Clay.box(body, Vector3(piece.size.x, DROP, piece.size.y),
+			at(piece.get_center().x, piece.get_center().y, -0.4 - DROP * 0.5), DROP_COLOR)
 
 
-## EL TECHO, sobre todo menos la compuerta del elevador.
-static func _roof(body: StaticBody3D) -> void:
-	var y := height + ROOF * 0.5
-	var far := ELEVATOR - HATCH_INSET
-	for piece: Rect2 in [
-			Rect2(0, 0, HATCH_INSET, NAVE), Rect2(far, 0, HATCH_INSET, NAVE),
-			Rect2(HATCH_INSET, 0, far - HATCH_INSET, HATCH_INSET),
-			Rect2(HATCH_INSET, NAVE - HATCH_INSET, far - HATCH_INSET, HATCH_INSET),
-			Rect2(ELEVATOR, 0, LENGTH - ELEVATOR, NAVE)]:
-		Clay.solid(body, Vector3(piece.size.x, ROOF, piece.size.y), at(piece.get_center().x, piece.get_center().y, y),
-			WALL_COLOR)
-	# el techo bajo de la franja
-	Clay.solid(body, Vector3(LENGTH - ELEVATOR, ROOF, strip), at((ELEVATOR + LENGTH) * 0.5, NAVE + strip * 0.5,
-		strip_height + ROOF * 0.5), WALL_COLOR)
+static func _building(body: StaticBody3D, x1: float, x2: float, z1: float, z2: float) -> void:
+	var middle := Vector2((x1 + x2) * 0.5, (z1 + z2) * 0.5)
+	var size := Vector2(x2 - x1, z2 - z1)
+	Clay.solid(body, Vector3(size.x, BLOCK_HIGH, size.y), at(middle.x, middle.y, BLOCK_HIGH * 0.5), WALL_COLOR)
+	Clay.box(body, Vector3(size.x + 0.3, 0.25, size.y + 0.3), at(middle.x, middle.y, BLOCK_HIGH + 0.125), ROOF_COLOR)
 
 
-## EL POZO DEL ASCENSOR (el usuario, 19/11/2026): cuatro paredes sobre la boca de la compuerta del techo, hasta la de
-## arriba, en el piso de la arena. Donde se guardan las hojas de las compuertas (los bolsillos, a los costados en X),
-## la pared empieza arriba del bolsillo de abajo y termina abajo del de arriba: las hojas pasan por ahí.
+## UN BORDE HACIA EL VACÍO (el usuario: «que los límites no sean paredes, sino… desniveles hacia un vacío… unos beams
+## metálicos»): un cordón pintado, una pared que no se ve para que nadie caiga, y del lado de afuera una estructura de
+## columnas con un travesaño. La del lado de la cámara es baja, para no tapar.
+static func _edge(body: StaticBody3D, a: Vector2, b: Vector2, out: Vector2, tall: float) -> void:
+	var along := (b - a).normalized()
+	var length := a.distance_to(b)
+	var middle := (a + b) * 0.5
+	var line := func(size_along: float, size_across: float) -> Vector2:
+		return Vector2(size_along, size_across) if absf(along.x) > 0.5 else Vector2(size_across, size_along)
+	var curb: Vector2 = line.call(length, 0.3)
+	Clay.box(body, Vector3(curb.x, 0.2, curb.y), at(middle.x - out.x * 0.15, middle.y - out.y * 0.15, 0.1), STRIPE_COLOR)
+	Clay.shape_box(body, Vector3(curb.x, FENCE_HIGH, curb.y),
+		at(middle.x + out.x * 0.15, middle.y + out.y * 0.15, FENCE_HIGH * 0.5))
+	var count := maxi(int(length / BEAM_EVERY), 1)
+	for i in count + 1:
+		var spot := a + along * (length * i / count) + out * 0.5
+		Clay.box(body, Vector3(0.35, tall + DROP, 0.35), at(spot.x, spot.y, (tall - DROP) * 0.5), BEAM_COLOR)
+	var rail: Vector2 = line.call(length + 0.35, 0.25)
+	var beam_at := middle + out * 0.5
+	for y: float in [tall, tall * 0.5]:
+		Clay.box(body, Vector3(rail.x, 0.25, rail.y), at(beam_at.x, beam_at.y, y), BEAM_COLOR)
+
+
+## LOS RIELES DEL ASCENSOR: dos columnas contra el edificio, del lado de atrás, por donde sube la plataforma. Reemplazan
+## las cuatro paredes del pozo, que la tapaban.
 static func _shaft(body: StaticBody3D) -> void:
-	var side := span()
-	var middle := ELEVATOR * 0.5
-	var bottom := height + ROOF
 	var top := shaft_top()
-	var pocket := ROOF + BaseHatch.POCKET_RISE
-	for sign: float in [-1.0, 1.0]:
-		# en Z, de punta a punta
-		var z := middle + sign * (side * 0.5 + WALL * 0.5)
-		Clay.solid(body, Vector3(side + WALL * 2.0, top - bottom, WALL), at(middle, z, (bottom + top) * 0.5), WALL_COLOR)
-		# en X, entre los bolsillos
-		var low := height + pocket
-		var high := top - 0.03 - pocket
-		var x := middle + sign * (side * 0.5 + WALL * 0.5)
-		Clay.solid(body, Vector3(WALL, high - low, side), at(x, middle, (low + high) * 0.5), WALL_COLOR)
+	for x: float in [HATCH_INSET, ELEVATOR - HATCH_INSET]:
+		Clay.box(body, Vector3(0.5, top, 0.4), at(x, NAVE - 0.2, top * 0.5), BEAM_COLOR)
 
 
-## LAS LUCES: con techo, el sol no entra. Lámparas colgadas, sin sombras.
+## EL PÓRTICO DE LA BOLSA: como no hay techo, cuelga de una viga entre dos columnas.
+static func _gantry(body: StaticBody3D) -> void:
+	for z: float in [0.6, NAVE - 0.6]:
+		Clay.box(body, Vector3(0.45, height, 0.45), at(bag_at.x, z, height * 0.5), BEAM_COLOR)
+	Clay.box(body, Vector3(0.5, 0.5, NAVE - 0.7), at(bag_at.x, NAVE * 0.5, height + 0.25), BEAM_COLOR)
+
+
+## LAS LUCES: lámparas sin sombras, repartidas sobre el piso.
 static func _lights(body: StaticBody3D) -> void:
-	var high := height - 1.5
-	var low := strip_height - 0.4
-	var middle := NAVE + strip * 0.5
-	for spot: Vector3 in [Vector3(ELEVATOR * 0.5, NAVE * 0.5, high), Vector3(ELEVATOR + width * 0.5, NAVE * 0.5, high),
-			Vector3(ELEVATOR + width * 0.3, middle, low), Vector3(ELEVATOR + width * 0.75, middle, low)]:
-		var where := at(spot.x, spot.y, spot.z)
-		Clay.sphere(body, 0.2, where, Color(1.0, 0.95, 0.8))
+	var high := BLOCK_HIGH + 3.0
+	for spot: Vector2 in [Vector2(ELEVATOR * 0.5, NAVE * 0.5), Vector2(ELEVATOR + width * 0.3, NAVE * 0.5),
+			Vector2(ELEVATOR + width * 0.75, NAVE * 0.5), Vector2(ELEVATOR + width * 0.5, NAVE + strip * 0.5)]:
 		var lamp := OmniLight3D.new()
-		lamp.position = where
-		lamp.omni_range = 16.0
+		lamp.position = at(spot.x, spot.y, high)
+		lamp.omni_range = 26.0
 		lamp.light_energy = 1.4
 		body.add_child(lamp)
 
@@ -280,19 +295,31 @@ static func _bag(parent: Node3D) -> void:
 	rig.build(BAG_RADIUS, BAG_HIGH - BAG_LOW, height - BaseBag.PLATE_THICK - BAG_HIGH, BAG_COLOR)
 
 
-## LAS TRES CONSOLAS: los contratos en la pared bajo el elevador (mirando a la franja), la armería y los cosméticos en
-## el fondo (mirando al gimnasio).
+## LAS TRES CONSOLAS, EN EL FONDO (mirando al gimnasio), cada una en el medio de su tercio, tan anchas como dé (hasta 5 m).
 static func _consoles(body: StaticBody3D) -> void:
 	var back := NAVE + strip - WALL * 0.5 - 0.5
-	var contracts_width := minf(strip - 1.6, 4.0)
-	_console(body, Vector2(ELEVATOR + WALL * 0.5 + 0.5, NAVE + strip * 0.5), Basis(Vector3.UP, -PI * 0.5),
-		contracts_width, "Contratos", BaseTerminal.Screen.CONTRACTS)
-	# las dos del fondo, repartidas a lo ancho: cada una en el medio de su mitad, tan anchas como dé (hasta 5 m)
 	var from := ELEVATOR + WALL * 0.5 + 1.0
 	var span := LENGTH - WALL * 0.5 - from
-	var console_width := minf(span * 0.5 - BACK_GAP * 2.0, CONSOLE_WIDTH)
-	_console(body, Vector2(from + span * 0.25, back), Basis(), console_width, "Armería", BaseTerminal.Screen.ARMORY)
-	_console(body, Vector2(from + span * 0.75, back), Basis(), console_width, "Cosméticos y pintura")
+	var console_width := minf(span / 3.0 - BACK_GAP * 2.0, CONSOLE_WIDTH)
+	_console(body, Vector2(from + span / 6.0, back), Basis(), console_width, "Contratos", BaseTerminal.Screen.CONTRACTS)
+	_console(body, Vector2(from + span * 0.5, back), Basis(), console_width, "Armería", BaseTerminal.Screen.ARMORY)
+	_console(body, Vector2(from + span * 5.0 / 6.0, back), Basis(), console_width, "Cosméticos y pintura")
+
+
+## LOS DOS TUBOS DE PAQUETES, en la pared corta, mirando a la puerta de la esclusa.
+static func _tubes(parent: Node3D) -> void:
+	var spots := [strip * 0.3, strip * 0.7]
+	var titles := ["MUNICIÓN", "REPARACIÓN"]
+	var repair: Array[int] = [SupplyKinds.Kind.REPAIR]
+	var drops: Array = [SupplyKinds.AMMO, repair]
+	for index in 2:
+		var tube := BaseSupplyTube.new()
+		tube.name = "Tubo de %s" % str(titles[index]).to_lower()
+		tube.transform = Transform3D(Basis(Vector3.UP, PI * 0.5), at(ELEVATOR, NAVE + float(spots[index])))
+		parent.add_child(tube)
+		var can_drop: Array[int] = []
+		can_drop.assign(drops[index])
+		tube.build(index, titles[index], can_drop)
 
 
 ## Una consola: su mueble y su pantalla inclinada, en un cuerpo propio para que se contornee sola al mirarla, con su

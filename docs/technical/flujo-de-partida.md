@@ -21,8 +21,8 @@
    character-parametric, la sesión arranca con «crear partida» (`SessionManager.host`) y el mundo, al cargar, avisa
    (`world_ready`) y nace el jugador (`CharacterSpawner`). Para mirarla: `tests/base_world_look.tscn`.
 2. **Aparecer en la esclusa**: los personajes nacen adentro (`BaseWorld.start_point`). — *Mundo*, **hecho**, mirando a la
-   compuerta. **El botón abre la compuerta para todos**: lo aprieta el capitán y el
-   host la abre en todos (`BaseAirlock._open`); el pedido de otro no hace nada. — *Mundo*, **hecho**. **Abrir la esclusa
+   compuerta. **La compuerta se apunta y se abre con la E** (`BaseDoorUse`; desde el 22/11/2026, sin
+   botón al costado): la usa el capitán y el host la abre en todos (`BaseAirlock._open`); el pedido de otro no hace nada. — *Mundo*, **hecho**. **Abrir la esclusa
    empieza la partida y desde ahí no se une nadie más** (el usuario: «no se puede unir alguien una vez iniciada la
    partida, la partida se inicia al abrir la compuerta inicial»): el lobby de Steam deja de aceptar y al que igual se
    conecte el host lo rechaza y vuelve al menú con el aviso (`SessionManager.close_to_new_players`). Para probarlo:
@@ -60,5 +60,46 @@
 9. **La vuelta**: la paga del contrato a la plata de la tripulación, lo que vuelve de la arena (ver [[progresion]]). —
    *Mundo*.
 
+## El piso, a una sola altura (22/11/2026)
+Lo que se pisa de la plataforma del ascensor va a ras del piso, abajo y al llegar a la arena: sus 5 cm de más trababan a
+la meca al volver a subirse. Sólo lo que se ve sobresale un pelo (`BaseElevator.LIFT`), para tapar la pintura de abajo.
+Prueba: `tests/base_floor_check.tscn` (mide todo el piso y hace cruzar la meca).
+
+## Las teclas F de la partida (`BasePanels`, 22/11/2026)
+Abren lo que ya existía, sin ir hasta la consola, y sólo hasta que arranca el ascensor:
+- **F1, el equipo de la meca** (`BaseEquipmentPanel`, el panel de equipamiento del sandbox): lo usa el capitán. «Guardar»
+  escribe el mismo archivo que el sandbox y rearma la meca en todas las máquinas (`BaseSync.equip`). **Quien va arriba queda
+  parado**, porque la meca se cambia por una nueva.
+- **F2, los contratos** (`ContractsScreen`): sólo firma. Salir a la arena sigue siendo el botón del ascensor.
+- Prueba: `tests/base_panels_check.tscn`.
+
+- **F6, la partida** (`BaseMatchPanel`, `MatchSettings`; 22/11/2026): la usa el capitán, también en la arena. Los controles,
+  el zoom arriba y a pie, y **Reiniciar**.
+
+## Invitar y exportar (23/11/2026)
+El host ve **el código de sala** arriba al medio hasta abrir la esclusa (`BaseRoomCode`); el otro lo escribe en UNIRSE. La exportación de Windows está en `export_presets.cfg`, sin tests ni docs, y **arranca en el menú** (`run/main_scene.template`); en el editor sigue arrancando el sandbox.
+
+## El loop: morir y reiniciar (22/11/2026)
+Al morir la meca o el jefe sale un cartel (`MatchEnd`). **Reiniciar** (`BaseSync.restart`) vuelve a armar la base en todas las
+máquinas con la misma sesión, contrato y equipo. Vuelve a la esclusa: hasta abrirla se puede unir alguien
+(`SessionManager.reopen_to_new_players`). Prueba: `tests/match_net_check.tscn`.
+
+## Los controles de clic (`MechCrew`, 22/11/2026)
+Con «clic en los cuadrados» las teclas de la meca no andan y el mouse se ve. WASD es **una palanca** que se queda donde la
+dejan (dos agarrándola se traba). El giro es **un interruptor**. La ametralladora y los misiles **se toman**: quedan de
+quien los tomó, uno por persona, con la mira en el mouse; clic en el mundo dispara y clic derecho suelta. El **escudo es un
+interruptor**: un clic lo prende y paga su activación, muestra su zona en el piso, sigue el mouse de quien lo prendió y gasta
+mientras dure; otro clic lo apaga y sin energía se apaga solo. Lo demás se mantiene con el clic. Todo lo decide el host.
+En este modo los cuadrados no llevan letras sino **símbolos** de lo que hacen (`MechKeyIcon`; los de los brazos, de lo que lleva
+cada uno), y la ametralladora es un cuadrado más: las habilidades van en una sola fila.
+
+## El stun (`MechStun`, 22/11/2026)
+Es un estado de la meca: `mech.stun.hit(segundos)` la aturde, venga de donde venga (el cañón pagado de más, una bolita
+eléctrica). Lo que dura es `MechEnergy.stunned`, que ya frena moverse y atacar y viaja por la red. Se ve en todas las
+máquinas: **los brazos caen y tiemblan** (`MechArm.limp`) y **le saltan rayos** (`ElectricFx`, que se le puede colgar a
+cualquier cosa). Prueba: `tests/boss_orbs_check.tscn`.
+
 ## Abierto
+- **La Armería de la consola todavía no cambia la meca**: compra y guarda en `BaseState.loadout`, que nadie lee. El equipo
+  real es `MechLoadout`. Falta decidir cómo se unen; las armas de espalda de la tienda aún no existen en la meca.
 - Si el host se va, se termina la partida ([[progresion]]): volver al menú con el aviso.
